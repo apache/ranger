@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
+package org.apache.ranger.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.JSONUtil;
@@ -35,203 +35,206 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_DELETE_CONTEXT;
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
 
 public abstract class AbstractAuditedResourceService<T extends XXDBBase, V extends VXDataObject> extends AbstractBaseResourceService<T, V> {
-	protected static final Logger logger = LoggerFactory.getLogger(AbstractAuditedResourceService.class);
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractAuditedResourceService.class);
 
-	@Autowired
-	JSONUtil jsonUtil;
+    protected final Map<String, VTrxLogAttr> trxLogAttrs  = new HashMap<>();
+    protected final String                   hiddenPasswordString;
+    private final   int                      classType;
+    private final   int                      parentClassType;
+    private final   List<VTrxLogAttr>        objNameAttrs = new ArrayList<>();
+    @Autowired
+    JSONUtil       jsonUtil;
+    @Autowired
+    RangerEnumUtil xaEnumUtil;
 
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
+    protected AbstractAuditedResourceService(int classType) {
+        this(classType, -1);
+    }
 
-	protected final Map<String, VTrxLogAttr> trxLogAttrs = new HashMap<>();
-	protected final String                   hiddenPasswordString;
-	private   final int                      classType;
-	private   final int                      parentClassType;
-	private   final List<VTrxLogAttr>        objNameAttrs = new ArrayList<>();
+    protected AbstractAuditedResourceService(int classType, int parentClassType) {
+        this.classType            = classType;
+        this.parentClassType      = parentClassType;
+        this.hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
+    }
 
-	protected AbstractAuditedResourceService(int classType) {
-		this(classType, -1);
-	}
+    @PostConstruct
+    public void init() {
+        for (VTrxLogAttr vTrxLog : trxLogAttrs.values()) {
+            if (vTrxLog.isObjName()) {
+                objNameAttrs.add(vTrxLog);
+            }
+        }
 
-	protected AbstractAuditedResourceService(int classType, int parentClassType) {
-		this.classType            = classType;
-		this.parentClassType      = parentClassType;
-		this.hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
-	}
+        if (objNameAttrs.isEmpty()) {
+            objNameAttrs.add(new VTrxLogAttr("name", "Name", false, true));
+        }
+    }
 
-	@PostConstruct
-	public void init() {
-		for (VTrxLogAttr vTrxLog : trxLogAttrs.values()) {
-			if (vTrxLog.isObjName()) {
-				objNameAttrs.add(vTrxLog);
-			}
-		}
+    public void createTransactionLog(XXTrxLogV2 trxLog) {
+        bizUtil.createTrxLog(Collections.singletonList(trxLog));
+    }
 
-		if (objNameAttrs.isEmpty()) {
-			objNameAttrs.add(new VTrxLogAttr("name", "Name", false, true));
-		}
-	}
+    public void createTransactionLog(XXTrxLogV2 trxLog, String attrName, String oldValue, String newValue) {
+        try {
+            ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
+            if ("Password".equalsIgnoreCase(attrName)) {
+                oldValue = hiddenPasswordString;
+                newValue = hiddenPasswordString;
+            }
 
-	public void createTransactionLog(XXTrxLogV2 trxLog) {
-		bizUtil.createTrxLog(Collections.singletonList(trxLog));
-	}
+            objChangeInfo.addAttribute(attrName, oldValue, newValue);
 
-	public void createTransactionLog(XXTrxLogV2 trxLog, String attrName, String oldValue, String newValue) {
-		try {
-			ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
-			if("Password".equalsIgnoreCase(attrName)) {
-				oldValue = hiddenPasswordString;
-				newValue = hiddenPasswordString;
-			}
+            trxLog.setChangeInfo(JsonUtilsV2.objToJson(objChangeInfo));
+        } catch (Exception excp) {
+            logger.warn("failed to convert attribute change info to json");
+        }
 
-			objChangeInfo.addAttribute(attrName, oldValue, newValue);
+        bizUtil.createTrxLog(Collections.singletonList(trxLog));
+    }
 
-			trxLog.setChangeInfo(JsonUtilsV2.objToJson(objChangeInfo));
-		} catch (Exception excp) {
-			logger.warn("failed to convert attribute change info to json");
-		}
+    public void createTransactionLog(V obj, V oldObj, int action, Long userId) {
+        List<XXTrxLogV2> trxLogList = getTransactionLog(obj, oldObj, action);
 
-		bizUtil.createTrxLog(Collections.singletonList(trxLog));
-	}
+        if (trxLogList != null) {
+            for (XXTrxLogV2 trxLog : trxLogList) {
+                trxLog.setAddedByUserId(userId);
+            }
 
-	public void createTransactionLog(V obj, V oldObj, int action, Long userId) {
-		List<XXTrxLogV2> trxLogList = getTransactionLog(obj, oldObj, action);
+            bizUtil.createTrxLog(trxLogList);
+        }
 
-		if (trxLogList != null) {
-			for (XXTrxLogV2 trxLog : trxLogList) {
-				trxLog.setAddedByUserId(userId);
-			}
+        createTransactionLog(obj, null, action);
+    }
 
-			bizUtil.createTrxLog(trxLogList);
-		}
+    public void createTransactionLog(V obj, V oldObj, int action) {
+        List<XXTrxLogV2> trxLogList = getTransactionLog(obj, oldObj, action);
 
-		createTransactionLog(obj, null, action);
-	}
+        if (trxLogList != null) {
+            bizUtil.createTrxLog(trxLogList);
+        }
+    }
 
-	public void createTransactionLog(V obj, V oldObj, int action) {
-		List<XXTrxLogV2> trxLogList = getTransactionLog(obj, oldObj, action);
+    public List<XXTrxLogV2> getTransactionLog(V obj, V oldObj, int action) {
+        if (obj == null || (action == OPERATION_UPDATE_CONTEXT && oldObj == null)) {
+            return null;
+        }
 
-		if (trxLogList != null) {
-			bizUtil.createTrxLog(trxLogList);
-		}
-	}
+        List<XXTrxLogV2> trxLogList = new ArrayList<>();
 
-	public List<XXTrxLogV2> getTransactionLog(V obj, V oldObj, int action) {
-		if (obj == null || (action == OPERATION_UPDATE_CONTEXT && oldObj == null)) {
-			return null;
-		}
+        try {
+            ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
 
-		List<XXTrxLogV2> trxLogList = new ArrayList<>();
+            for (VTrxLogAttr trxLog : trxLogAttrs.values()) {
+                processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
+            }
 
-		try {
-			ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
+            if (objChangeInfo.getAttributes() != null && objChangeInfo.getAttributes().size() > 0) {
+                for (AttributeChangeInfo changeInfo : objChangeInfo.getAttributes()) {
+                    if ("Password".equalsIgnoreCase(changeInfo.getAttributeName())) {
+                        changeInfo.setNewValue(hiddenPasswordString);
+                        changeInfo.setOldValue(hiddenPasswordString);
+                    }
+                }
+                trxLogList.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
+            }
+        } catch (Exception e) {
+            logger.warn("failed to get transaction log for object: type={}, id={}", obj.getClass().getName(), obj.getId(), e);
+        }
 
-			for (VTrxLogAttr trxLog : trxLogAttrs.values()) {
-				processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
-			}
+        return trxLogList;
+    }
 
-			if(objChangeInfo.getAttributes() != null && objChangeInfo.getAttributes().size() > 0) {
-				for(AttributeChangeInfo changeInfo : objChangeInfo.getAttributes()) {
-					if("Password".equalsIgnoreCase(changeInfo.getAttributeName())) {
-						changeInfo.setNewValue(hiddenPasswordString);
-						changeInfo.setOldValue(hiddenPasswordString);
-					}
-				}
-				trxLogList.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
-			}
-		} catch (Exception e) {
-			logger.warn("failed to get transaction log for object: type=" + obj.getClass().getName() + ", id=" + obj.getId(), e);
-		}
+    public String getObjectName(V obj) {
+        String ret = null;
 
-		return trxLogList;
-	}
+        for (VTrxLogAttr attr : objNameAttrs) {
+            ret = attr.getAttrValue(obj, xaEnumUtil);
 
-	public String getObjectName(V obj) {
-		String ret = null;
+            if (StringUtils.isNotBlank(ret)) {
+                break;
+            }
+        }
 
-		for (VTrxLogAttr attr : objNameAttrs) {
-			ret = attr.getAttrValue(obj, xaEnumUtil);
+        return ret;
+    }
 
-			if (StringUtils.isNotBlank(ret)) {
-				break;
-			}
-		}
+    public int getParentObjectType(V obj, V oldObj) {
+        return parentClassType;
+    }
 
-		return ret;
-	}
+    public String getParentObjectName(V obj, V oldObj) {
+        return null;
+    }
 
-	public int getParentObjectType(V obj, V oldObj) {
-		return parentClassType;
-	}
+    public Long getParentObjectId(V obj, V oldObj) {
+        return null;
+    }
 
-	public String getParentObjectName(V obj, V oldObj) {
-		return null;
-	}
+    public boolean skipTrxLogForAttribute(V obj, V oldObj, VTrxLogAttr trxLogAttr) {
+        return false;
+    }
 
-	public Long getParentObjectId(V obj, V oldObj) {
-		return null;
-	}
+    public String getTrxLogAttrValue(V obj, VTrxLogAttr trxLogAttr) {
+        return trxLogAttr.getAttrValue(obj, xaEnumUtil);
+    }
 
-	public boolean skipTrxLogForAttribute(V obj, V oldObj, VTrxLogAttr trxLogAttr) {
-		return false;
-	}
+    private void processFieldToCreateTrxLog(VTrxLogAttr trxLogAttr, V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo) {
+        if (skipTrxLogForAttribute(obj, oldObj, trxLogAttr)) {
+            return;
+        }
 
-	public String getTrxLogAttrValue(V obj, VTrxLogAttr trxLogAttr) {
-		return trxLogAttr.getAttrValue(obj, xaEnumUtil);
-	}
+        String value = getTrxLogAttrValue(obj, trxLogAttr);
 
-	private void processFieldToCreateTrxLog(VTrxLogAttr trxLogAttr, V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo) {
-		if (skipTrxLogForAttribute(obj, oldObj, trxLogAttr)) {
-			return;
-		}
+        if ((action == OPERATION_CREATE_CONTEXT || action == OPERATION_DELETE_CONTEXT) && StringUtils.isBlank(value)) {
+            return;
+        }
 
-		String value = getTrxLogAttrValue(obj, trxLogAttr);
+        final String prevValue;
+        final String newValue;
 
-		if ((action == OPERATION_CREATE_CONTEXT || action == OPERATION_DELETE_CONTEXT) && StringUtils.isBlank(value)) {
-			return;
-		}
+        if (action == OPERATION_CREATE_CONTEXT) {
+            prevValue = null;
+            newValue  = value;
+        } else if (action == OPERATION_DELETE_CONTEXT) {
+            prevValue = value;
+            newValue  = null;
+        } else if (action == OPERATION_UPDATE_CONTEXT) {
+            prevValue = getTrxLogAttrValue(oldObj, trxLogAttr);
+            newValue  = value;
+        } else {
+            prevValue = null;
+            newValue  = null;
+        }
 
-		final String prevValue;
-		final String newValue;
+        if ((StringUtils.isEmpty(prevValue) && StringUtils.isEmpty(newValue)) || StringUtils.equals(prevValue, newValue)) {
+            return;
+        }
 
-		if (action == OPERATION_CREATE_CONTEXT) {
-			prevValue = null;
-			newValue  = value;
-		} else if (action == OPERATION_DELETE_CONTEXT) {
-			prevValue = value;
-			newValue  = null;
-		} else if (action == OPERATION_UPDATE_CONTEXT) {
-			prevValue = getTrxLogAttrValue(oldObj, trxLogAttr);
-			newValue  = value;
-		} else {
-			prevValue = null;
-			newValue  = null;
-		}
+        objChangeInfo.addAttribute(trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
+    }
 
-		if ((StringUtils.isEmpty(prevValue) && StringUtils.isEmpty(newValue)) || StringUtils.equals(prevValue, newValue)) {
-			return;
-		}
+    private String toActionString(int action) {
+        switch (action) {
+            case OPERATION_CREATE_CONTEXT:
+                return "create";
+            case OPERATION_UPDATE_CONTEXT:
+                return "update";
+            case OPERATION_DELETE_CONTEXT:
+                return "delete";
+        }
 
-		objChangeInfo.addAttribute(trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
-	}
-
-	private String toActionString(int action) {
-		switch (action) {
-			case OPERATION_CREATE_CONTEXT:
-				return "create";
-			case OPERATION_UPDATE_CONTEXT:
-				return "update";
-			case OPERATION_DELETE_CONTEXT:
-				return "delete";
-		}
-
-		return "unknown";
-	}
+        return "unknown";
+    }
 }

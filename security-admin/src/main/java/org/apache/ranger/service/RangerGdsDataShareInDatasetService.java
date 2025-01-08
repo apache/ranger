@@ -17,7 +17,6 @@
 
 package org.apache.ranger.service;
 
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -61,36 +60,36 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
     public RangerGdsDataShareInDatasetService() {
         super(AppConstants.CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET, AppConstants.CLASS_TYPE_GDS_DATASET);
 
-        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_IN_DATASET_ID, "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_ID,            "obj.dataShareId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_NAME,          "dsh.name",        SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,    "XXGdsDataShare dsh",                   "obj.dataShareId = dsh.id"));
-        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_NAME_PARTIAL,  "dsh.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShare dsh",                   "obj.dataShareId = dsh.id"));
-        searchFields.add(new SearchField(SearchFilter.SERVICE_ID,               "dsh.serviceId",   SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,    "XXGdsDataShare dsh",                   "obj.dataShareId = dsh.id"));
-        searchFields.add(new SearchField(SearchFilter.SERVICE_NAME,             "s.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL,    "XXGdsDataShare dsh, XXService s",      "obj.dataShareId = dsh.id and dsh.serviceId = s.id"));
-        searchFields.add(new SearchField(SearchFilter.SERVICE_NAME_PARTIAL,     "s.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShare dsh, XXService s",      "obj.dataShareId = dsh.id and dsh.serviceId = s.id"));
-        searchFields.add(new SearchField(SearchFilter.ZONE_ID,                  "dsh.zoneId",      SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,    "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id"));
-        searchFields.add(new SearchField(SearchFilter.ZONE_NAME,                "z.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL,    "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id and dsh.zoneId = z.id"));
-        searchFields.add(new SearchField(SearchFilter.ZONE_NAME_PARTIAL,        "z.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id and dsh.zoneId = z.id"));
-        searchFields.add(new SearchField(SearchFilter.DATASET_ID,               "obj.datasetId",   SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField(SearchFilter.DATASET_NAME,             "d.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL,    "XXGdsDataset d", "obj.datasetId = d.id"));
-        searchFields.add(new SearchField(SearchFilter.DATASET_NAME_PARTIAL,     "d.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataset d", "obj.datasetId = d.id"));
-        searchFields.add(new SearchField(SearchFilter.PROJECT_ID,               "dip.projectId",   SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,    "XXGdsDataset d, XXGdsDatasetInProject dip",                 "obj.datasetId = d.id and d.id = dip.datasetId"));
-        searchFields.add(new SearchField(SearchFilter.PROJECT_NAME,             "p.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL,    "XXGdsDataset d, XXGdsDatasetInProject dip, XXGdsProject p", "obj.datasetId = d.id and d.id = dip.datasetId and dip.projectId = p.id"));
-        searchFields.add(new SearchField(SearchFilter.PROJECT_NAME_PARTIAL,     "p.name",          SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataset d, XXGdsDatasetInProject dip, XXGdsProject p", "obj.datasetId = d.id and d.id = dip.datasetId and dip.projectId = p.id"));
-        searchFields.add(new SearchField(SearchFilter.APPROVER,                 "obj.approverId",  SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField(SearchFilter.CREATED_BY,              "obj.addedByUserId",SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField(SearchFilter.SHARE_STATUS,            "obj.status",       SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_IN_DATASET_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_ID, "obj.dataShareId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_NAME, "dsh.name", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh", "obj.dataShareId = dsh.id"));
+        searchFields.add(new SearchField(SearchFilter.DATA_SHARE_NAME_PARTIAL, "dsh.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShare dsh", "obj.dataShareId = dsh.id"));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "dsh.serviceId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh", "obj.dataShareId = dsh.id"));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "s.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh, XXService s", "obj.dataShareId = dsh.id and dsh.serviceId = s.id"));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_NAME_PARTIAL, "s.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShare dsh, XXService s", "obj.dataShareId = dsh.id and dsh.serviceId = s.id"));
+        searchFields.add(new SearchField(SearchFilter.ZONE_ID, "dsh.zoneId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id"));
+        searchFields.add(new SearchField(SearchFilter.ZONE_NAME, "z.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id and dsh.zoneId = z.id"));
+        searchFields.add(new SearchField(SearchFilter.ZONE_NAME_PARTIAL, "z.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataShare dsh, XXSecurityZone z", "obj.dataShareId = dsh.id and dsh.zoneId = z.id"));
+        searchFields.add(new SearchField(SearchFilter.DATASET_ID, "obj.datasetId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.DATASET_NAME, "d.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXGdsDataset d", "obj.datasetId = d.id"));
+        searchFields.add(new SearchField(SearchFilter.DATASET_NAME_PARTIAL, "d.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataset d", "obj.datasetId = d.id"));
+        searchFields.add(new SearchField(SearchFilter.PROJECT_ID, "dip.projectId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGdsDataset d, XXGdsDatasetInProject dip", "obj.datasetId = d.id and d.id = dip.datasetId"));
+        searchFields.add(new SearchField(SearchFilter.PROJECT_NAME, "p.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXGdsDataset d, XXGdsDatasetInProject dip, XXGdsProject p", "obj.datasetId = d.id and d.id = dip.datasetId and dip.projectId = p.id"));
+        searchFields.add(new SearchField(SearchFilter.PROJECT_NAME_PARTIAL, "p.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDataset d, XXGdsDatasetInProject dip, XXGdsProject p", "obj.datasetId = d.id and d.id = dip.datasetId and dip.projectId = p.id"));
+        searchFields.add(new SearchField(SearchFilter.APPROVER, "obj.approverId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.CREATED_BY, "obj.addedByUserId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.SHARE_STATUS, "obj.status", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
 
-        sortFields.add(new SortField(SearchFilter.CREATE_TIME,              "obj.createTime"));
-        sortFields.add(new SortField(SearchFilter.UPDATE_TIME,              "obj.updateTime"));
+        sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+        sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.DATA_SHARE_IN_DATASET_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
 
-        trxLogAttrs.put("dataShareId",      new VTrxLogAttr("dataShareId", "DataShare ID"));
-        trxLogAttrs.put("datasetId",        new VTrxLogAttr("datasetId", "Dataset ID"));
-        trxLogAttrs.put("status",           new VTrxLogAttr("status", "Status", true));
+        trxLogAttrs.put("dataShareId", new VTrxLogAttr("dataShareId", "DataShare ID"));
+        trxLogAttrs.put("datasetId", new VTrxLogAttr("datasetId", "Dataset ID"));
+        trxLogAttrs.put("status", new VTrxLogAttr("status", "Status", true));
         trxLogAttrs.put("validitySchedule", new VTrxLogAttr("validitySchedule", "Validity Schedule"));
-        trxLogAttrs.put("profiles",         new VTrxLogAttr("profiles", "Profiles"));
-        trxLogAttrs.put("approver",         new VTrxLogAttr("approver", "Approver"));
+        trxLogAttrs.put("profiles", new VTrxLogAttr("profiles", "Profiles"));
+        trxLogAttrs.put("approver", new VTrxLogAttr("approver", "Approver"));
     }
 
     @Override
@@ -112,26 +111,52 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
     }
 
     @Override
-    public XXGdsDataShareInDataset preDelete(Long id) {
-        // Update ServiceVersionInfo for each service in the zone
-        XXGdsDataShareInDataset ret = super.preDelete(id);
+    protected XXGdsDataShareInDataset mapViewToEntityBean(RangerDataShareInDataset vObj, XXGdsDataShareInDataset xObj, int operationContext) {
+        XXGdsDataShare xDataShare = daoMgr.getXXGdsDataShare().getById(vObj.getDataShareId());
 
-        // TODO:
+        if (xDataShare == null) {
+            throw restErrorUtil.createRESTException("No data share found with ID: " + vObj.getDataShareId(), MessageEnums.INVALID_INPUT_DATA);
+        }
 
-        return ret;
+        XXGdsDataset xDataset = daoMgr.getXXGdsDataset().getById(vObj.getDatasetId());
+
+        if (xDataset == null) {
+            throw restErrorUtil.createRESTException("No dataset found with ID: " + vObj.getDatasetId(), MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        xObj.setGuid(vObj.getGuid());
+        xObj.setIsEnabled(vObj.getIsEnabled());
+        xObj.setDescription(vObj.getDescription());
+        xObj.setDataShareId(vObj.getDataShareId());
+        xObj.setDatasetId(vObj.getDatasetId());
+        xObj.setStatus((short) vObj.getStatus().ordinal());
+        xObj.setValidityPeriod(JsonUtils.objectToJson(vObj.getValiditySchedule()));
+        xObj.setProfiles(JsonUtils.objectToJson(vObj.getProfiles()));
+        xObj.setOptions(JsonUtils.mapToJson(vObj.getOptions()));
+        xObj.setAdditionalInfo(JsonUtils.mapToJson(vObj.getAdditionalInfo()));
+
+        final XXPortalUser user = xxPortalUserDao.findByLoginId(vObj.getApprover());
+        xObj.setApproverId(user == null ? null : user.getId());
+
+        return xObj;
     }
 
     @Override
-    public String getParentObjectName(RangerDataShareInDataset obj, RangerDataShareInDataset oldObj) {
-        Long         datasetId = obj != null ? obj.getDatasetId() : null;
-        XXGdsDataset dataset   = datasetId != null ? daoMgr.getXXGdsDataset().getById(datasetId) : null;
+    protected RangerDataShareInDataset mapEntityToViewBean(RangerDataShareInDataset vObj, XXGdsDataShareInDataset xObj) {
+        vObj.setGuid(xObj.getGuid());
+        vObj.setIsEnabled(xObj.getIsEnabled());
+        vObj.setVersion(xObj.getVersion());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setDataShareId(xObj.getDataShareId());
+        vObj.setDatasetId(xObj.getDatasetId());
+        vObj.setStatus(toShareStatus(xObj.getStatus()));
+        vObj.setValiditySchedule(JsonUtils.jsonToObject(xObj.getValidityPeriod(), RangerValiditySchedule.class));
+        vObj.setProfiles(JsonUtils.jsonToSetString(xObj.getProfiles()));
+        vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));
+        vObj.setAdditionalInfo(JsonUtils.jsonToMapStringString(xObj.getAdditionalInfo()));
+        vObj.setApprover(getUserName(xObj.getApproverId()));
 
-        return dataset != null ? dataset.getName() : null;
-    }
-
-    @Override
-    public Long getParentObjectId(RangerDataShareInDataset obj, RangerDataShareInDataset oldObj) {
-        return obj != null ? obj.getDatasetId() : null;
+        return vObj;
     }
 
     @Override
@@ -237,52 +262,26 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
     }
 
     @Override
-    protected XXGdsDataShareInDataset mapViewToEntityBean(RangerDataShareInDataset vObj, XXGdsDataShareInDataset xObj, int OPERATION_CONTEXT) {
-        XXGdsDataShare xDataShare = daoMgr.getXXGdsDataShare().getById(vObj.getDataShareId());
+    public XXGdsDataShareInDataset preDelete(Long id) {
+        // Update ServiceVersionInfo for each service in the zone
+        XXGdsDataShareInDataset ret = super.preDelete(id);
 
-        if (xDataShare == null) {
-            throw restErrorUtil.createRESTException("No data share found with ID: " + vObj.getDataShareId(), MessageEnums.INVALID_INPUT_DATA);
-        }
+        // TODO:
 
-        XXGdsDataset xDataset = daoMgr.getXXGdsDataset().getById(vObj.getDatasetId());
-
-        if (xDataset == null) {
-            throw restErrorUtil.createRESTException("No dataset found with ID: " + vObj.getDatasetId(), MessageEnums.INVALID_INPUT_DATA);
-        }
-
-        xObj.setGuid(vObj.getGuid());
-        xObj.setIsEnabled(vObj.getIsEnabled());
-        xObj.setDescription(vObj.getDescription());
-        xObj.setDataShareId(vObj.getDataShareId());
-        xObj.setDatasetId(vObj.getDatasetId());
-        xObj.setStatus((short) vObj.getStatus().ordinal());
-        xObj.setValidityPeriod(JsonUtils.objectToJson(vObj.getValiditySchedule()));
-        xObj.setProfiles(JsonUtils.objectToJson(vObj.getProfiles()));
-        xObj.setOptions(JsonUtils.mapToJson(vObj.getOptions()));
-        xObj.setAdditionalInfo(JsonUtils.mapToJson(vObj.getAdditionalInfo()));
-
-        final XXPortalUser user = xxPortalUserDao.findByLoginId(vObj.getApprover());
-        xObj.setApproverId(user == null? null : user.getId());
-
-        return xObj;
+        return ret;
     }
 
     @Override
-    protected RangerDataShareInDataset mapEntityToViewBean(RangerDataShareInDataset vObj, XXGdsDataShareInDataset xObj) {
-        vObj.setGuid(xObj.getGuid());
-        vObj.setIsEnabled(xObj.getIsEnabled());
-        vObj.setVersion(xObj.getVersion());
-        vObj.setDescription(xObj.getDescription());
-        vObj.setDataShareId(xObj.getDataShareId());
-        vObj.setDatasetId(xObj.getDatasetId());
-        vObj.setStatus(toShareStatus(xObj.getStatus()));
-        vObj.setValiditySchedule(JsonUtils.jsonToObject(xObj.getValidityPeriod(), RangerValiditySchedule.class));
-        vObj.setProfiles(JsonUtils.jsonToSetString(xObj.getProfiles()));
-        vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));
-        vObj.setAdditionalInfo(JsonUtils.jsonToMapStringString(xObj.getAdditionalInfo()));
-        vObj.setApprover(getUserName(xObj.getApproverId()));
+    public String getParentObjectName(RangerDataShareInDataset obj, RangerDataShareInDataset oldObj) {
+        Long         datasetId = obj != null ? obj.getDatasetId() : null;
+        XXGdsDataset dataset   = datasetId != null ? daoMgr.getXXGdsDataset().getById(datasetId) : null;
 
-        return vObj;
+        return dataset != null ? dataset.getName() : null;
+    }
+
+    @Override
+    public Long getParentObjectId(RangerDataShareInDataset obj, RangerDataShareInDataset oldObj) {
+        return obj != null ? obj.getDatasetId() : null;
     }
 
     public RangerDataShareInDataset getPopulatedViewObject(XXGdsDataShareInDataset xObj) {
@@ -292,7 +291,7 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
     public RangerDataShareInDatasetList searchDataShareInDatasets(SearchFilter filter) {
         LOG.debug("==> searchDataShareInDatasets({})", filter);
 
-        RangerDataShareInDatasetList ret      = new RangerDataShareInDatasetList();
+        RangerDataShareInDatasetList  ret      = new RangerDataShareInDatasetList();
         List<XXGdsDataShareInDataset> datasets = super.searchResources(filter, searchFields, sortFields, ret);
 
         if (datasets != null) {

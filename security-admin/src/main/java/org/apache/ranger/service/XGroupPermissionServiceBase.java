@@ -17,57 +17,53 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXGroupPermissionList;
 
-public abstract class XGroupPermissionServiceBase<T extends XXGroupPermission, V extends VXGroupPermission>
-		extends AbstractBaseResourceService<T, V> {
+import java.util.ArrayList;
+import java.util.List;
 
-	public static final String NAME = "XGroupPermission";
+public abstract class XGroupPermissionServiceBase<T extends XXGroupPermission, V extends VXGroupPermission> extends AbstractBaseResourceService<T, V> {
+    public static final String NAME = "XGroupPermission";
 
-	public XGroupPermissionServiceBase() {
+    public XGroupPermissionServiceBase() {
+    }
 
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXGroupPermissionList searchXGroupPermission(SearchCriteria searchCriteria) {
+        VXGroupPermissionList   returnList         = new VXGroupPermissionList();
+        List<VXGroupPermission> vXGroupPermissions = new ArrayList<VXGroupPermission>();
 
-	@Override
-	protected T mapViewToEntityBean(V vObj,
-			T mObj, int OPERATION_CONTEXT) {
-		mObj.setGroupId(vObj.getGroupId());
-		mObj.setModuleId(vObj.getModuleId());
-		mObj.setIsAllowed(vObj.getIsAllowed());
-		return mObj;
-	}
+        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		vObj.setGroupId(mObj.getGroupId());
-		vObj.setModuleId(mObj.getModuleId());
-		vObj.setIsAllowed(mObj.getIsAllowed());
-		return vObj;
-	}
+        // Iterate over the result list and create the return list
+        for (T gjXUser : resultList) {
+            VXGroupPermission vXGroupPermission = populateViewBean(gjXUser);
+            vXGroupPermissions.add(vXGroupPermission);
+        }
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXGroupPermissionList searchXGroupPermission(SearchCriteria searchCriteria) {
-		VXGroupPermissionList returnList = new VXGroupPermissionList();
-		List<VXGroupPermission> vXGroupPermissions = new ArrayList<VXGroupPermission>();
+        returnList.setvXGroupPermission(vXGroupPermissions);
+        return returnList;
+    }
 
-		List<T> resultList = searchResources(
-				searchCriteria, searchFields, sortFields, returnList);
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        mObj.setGroupId(vObj.getGroupId());
+        mObj.setModuleId(vObj.getModuleId());
+        mObj.setIsAllowed(vObj.getIsAllowed());
+        return mObj;
+    }
 
-		// Iterate over the result list and create the return list
-		for (T gjXUser : resultList) {
-			VXGroupPermission vXGroupPermission = populateViewBean(gjXUser);
-			vXGroupPermissions.add(vXGroupPermission);
-		}
-
-		returnList.setvXGroupPermission(vXGroupPermissions);
-		return returnList;
-	}
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        vObj.setGroupId(mObj.getGroupId());
+        vObj.setModuleId(mObj.getModuleId());
+        vObj.setIsAllowed(mObj.getIsAllowed());
+        return vObj;
+    }
 }

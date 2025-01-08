@@ -26,11 +26,9 @@ import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
 
-
 public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V extends RangerSecurityZone> extends RangerAuditedModelService<T, V> {
-
-	public RangerSecurityZoneServiceBase() {
-		super(AppConstants.CLASS_TYPE_RANGER_SECURITY_ZONE);
+    public RangerSecurityZoneServiceBase() {
+        super(AppConstants.CLASS_TYPE_RANGER_SECURITY_ZONE);
 
         searchFields.add(new SearchField(SearchFilter.ZONE_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.ZONE_NAME, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
@@ -40,33 +38,33 @@ public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V 
         sortFields.add(new SortField(SearchFilter.ZONE_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.ZONE_NAME, "obj.name"));
 
-		trxLogAttrs.put("name",            new VTrxLogAttr("name", "Zone Name", false, true));
-		trxLogAttrs.put("services",        new VTrxLogAttr("services", "Zone Services"));
-		trxLogAttrs.put("adminUsers",      new VTrxLogAttr("adminUsers", "Zone Admin Users"));
-		trxLogAttrs.put("adminUserGroups", new VTrxLogAttr("adminUserGroups", "Zone Admin User Groups"));
-		trxLogAttrs.put("auditUsers",      new VTrxLogAttr("auditUsers", "Zone Audit Users"));
-		trxLogAttrs.put("auditUserGroups", new VTrxLogAttr("auditUserGroups", "Zone Audit User Groups"));
-		trxLogAttrs.put("adminRoles",      new VTrxLogAttr("adminRoles", "Zone Admin Roles"));
-		trxLogAttrs.put("auditRoles",      new VTrxLogAttr("auditRoles", "Zone Audit Roles"));
-		trxLogAttrs.put("description",     new VTrxLogAttr("description", "Zone Description"));
-		trxLogAttrs.put("tagServices",     new VTrxLogAttr("tagServices", "Zone Tag Services"));
-	}
+        trxLogAttrs.put("name", new VTrxLogAttr("name", "Zone Name", false, true));
+        trxLogAttrs.put("services", new VTrxLogAttr("services", "Zone Services"));
+        trxLogAttrs.put("adminUsers", new VTrxLogAttr("adminUsers", "Zone Admin Users"));
+        trxLogAttrs.put("adminUserGroups", new VTrxLogAttr("adminUserGroups", "Zone Admin User Groups"));
+        trxLogAttrs.put("auditUsers", new VTrxLogAttr("auditUsers", "Zone Audit Users"));
+        trxLogAttrs.put("auditUserGroups", new VTrxLogAttr("auditUserGroups", "Zone Audit User Groups"));
+        trxLogAttrs.put("adminRoles", new VTrxLogAttr("adminRoles", "Zone Admin Roles"));
+        trxLogAttrs.put("auditRoles", new VTrxLogAttr("auditRoles", "Zone Audit Roles"));
+        trxLogAttrs.put("description", new VTrxLogAttr("description", "Zone Description"));
+        trxLogAttrs.put("tagServices", new VTrxLogAttr("tagServices", "Zone Tag Services"));
+    }
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
-		xObj.setName(vObj.getName());
-		xObj.setDescription(vObj.getDescription());
-		return xObj;
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
+        xObj.setName(vObj.getName());
+        xObj.setDescription(vObj.getDescription());
+        return xObj;
+    }
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T xObj) {
-		if (xObj.getId().equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
-			vObj.setName(StringUtils.EMPTY);
-		} else {
-			vObj.setName(xObj.getName());
-		}
-		vObj.setDescription(xObj.getDescription());
-		return vObj;
-	}
+    @Override
+    protected V mapEntityToViewBean(V vObj, T xObj) {
+        if (xObj.getId().equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+            vObj.setName(StringUtils.EMPTY);
+        } else {
+            vObj.setName(xObj.getName());
+        }
+        vObj.setDescription(xObj.getDescription());
+        return vObj;
+    }
 }

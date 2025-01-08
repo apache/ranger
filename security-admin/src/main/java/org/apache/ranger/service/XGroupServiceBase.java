@@ -17,14 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
-/**
- *
- */
-
-import java.util.ArrayList;
-import java.util.List;
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
@@ -36,81 +29,83 @@ import org.apache.ranger.view.VXGroupList;
 
 import javax.persistence.Query;
 
-public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
-		extends AbstractAuditedResourceService<T, V> {
-	public static final String NAME = "XGroup";
+import java.util.ArrayList;
+import java.util.List;
 
-	public XGroupServiceBase() {
-		super(AppConstants.CLASS_TYPE_XA_GROUP);
+public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup> extends AbstractAuditedResourceService<T, V> {
+    public static final String NAME = "XGroup";
 
-		trxLogAttrs.put("name",            new VTrxLogAttr("name", "Group Name", false, true));
-		trxLogAttrs.put("description",     new VTrxLogAttr("description", "Group Description"));
-		trxLogAttrs.put("otherAttributes", new VTrxLogAttr("otherAttributes", "Other Attributes"));
-		trxLogAttrs.put("syncSource",      new VTrxLogAttr("syncSource", "Sync Source"));
-	}
+    public XGroupServiceBase() {
+        super(AppConstants.CLASS_TYPE_XA_GROUP);
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
-		mObj.setName( vObj.getName());
-		mObj.setIsVisible(vObj.getIsVisible());
-		mObj.setDescription( vObj.getDescription());
-		mObj.setGroupType( vObj.getGroupType());
-		mObj.setCredStoreId( vObj.getCredStoreId());
-		mObj.setGroupSource(vObj.getGroupSource());
-		mObj.setOtherAttributes(vObj.getOtherAttributes());
-		mObj.setSyncSource(vObj.getSyncSource());
-		return mObj;
-	}
+        trxLogAttrs.put("name", new VTrxLogAttr("name", "Group Name", false, true));
+        trxLogAttrs.put("description", new VTrxLogAttr("description", "Group Description"));
+        trxLogAttrs.put("otherAttributes", new VTrxLogAttr("otherAttributes", "Other Attributes"));
+        trxLogAttrs.put("syncSource", new VTrxLogAttr("syncSource", "Sync Source"));
+    }
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		vObj.setName( mObj.getName());
-		vObj.setIsVisible( mObj.getIsVisible());
-		vObj.setDescription( mObj.getDescription());
-		vObj.setGroupType( mObj.getGroupType());
-		vObj.setCredStoreId( mObj.getCredStoreId());
-		vObj.setGroupSource(mObj.getGroupSource());
-		vObj.setOtherAttributes(mObj.getOtherAttributes());
-		vObj.setSyncSource(mObj.getSyncSource());
-		return vObj;
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
+        VXGroupList   returnList = new VXGroupList();
+        List<VXGroup> xGroupList = new ArrayList<>();
+        List<T>       resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
-		VXGroupList returnList   = new VXGroupList();
-		List<VXGroup> xGroupList = new ArrayList<VXGroup>();
-		List<T> resultList       = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        // Iterate over the result list and create the return list
+        for (T gjXGroup : resultList) {
+            VXGroup vXGroup = populateViewBean(gjXGroup);
+            xGroupList.add(vXGroup);
+        }
 
-		// Iterate over the result list and create the return list
-		for (T gjXGroup : resultList) {
-			VXGroup vXGroup = populateViewBean(gjXGroup);
-			xGroupList.add(vXGroup);
-		}
+        returnList.setVXGroups(xGroupList);
+        return returnList;
+    }
 
-		returnList.setVXGroups(xGroupList);
-		return returnList;
-	}
+    /**
+     * Searches the XGroup table and gets the group ids matching the search criteria.
+     */
+    public List<Long> searchXGroupsForIds(SearchCriteria searchCriteria) {
+        // construct the sort clause
+        String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
 
-	/**
-	 * Searches the XGroup table and gets the group ids matching the search criteria.
-	 */
-	public List<Long> searchXGroupsForIds(SearchCriteria searchCriteria){
-		// construct the sort clause
-		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
+        // get only the column id from the table
+        String q = "SELECT obj.id FROM " + className + " obj ";
 
-		// get only the column id from the table
-		String q = "SELECT obj.id FROM " + className + " obj ";
+        // construct the query object for retrieving the data
+        Query query = createQuery(q, sortClause, searchCriteria, searchFields, false);
 
-		// construct the query object for retrieving the data
-		Query query = createQuery(q, sortClause, searchCriteria, searchFields, false);
+        return getDao().getIds(query);
+    }
 
-		return getDao().getIds(query);
-	}
+    public List<GroupInfo> getGroups() {
+        return daoManager.getXXGroup().getAllGroupsInfo();
+    }
 
-	public List<GroupInfo> getGroups() {
-		return daoManager.getXXGroup().getAllGroupsInfo();
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        mObj.setName(vObj.getName());
+        mObj.setIsVisible(vObj.getIsVisible());
+        mObj.setDescription(vObj.getDescription());
+        mObj.setGroupType(vObj.getGroupType());
+        mObj.setCredStoreId(vObj.getCredStoreId());
+        mObj.setGroupSource(vObj.getGroupSource());
+        mObj.setOtherAttributes(vObj.getOtherAttributes());
+        mObj.setSyncSource(vObj.getSyncSource());
+        return mObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        vObj.setName(mObj.getName());
+        vObj.setIsVisible(mObj.getIsVisible());
+        vObj.setDescription(mObj.getDescription());
+        vObj.setGroupType(mObj.getGroupType());
+        vObj.setCredStoreId(mObj.getCredStoreId());
+        vObj.setGroupSource(mObj.getGroupSource());
+        vObj.setOtherAttributes(mObj.getOtherAttributes());
+        vObj.setSyncSource(mObj.getSyncSource());
+        return vObj;
+    }
 }

@@ -19,9 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
@@ -32,174 +29,173 @@ import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase<XXTagResourceMap, RangerTagResourceMap> {
+    public RangerTagResourceMapService() {
+        searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.tagId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME, "svc.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXServiceResource svcr, XXService svc", "obj.resourceId = svcr.id and svcr.serviceId = svc.id"));
 
-	public RangerTagResourceMapService() {
-		searchFields.add(new SearchField(SearchFilter.TAG_DEF_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.tagId", DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME, "svc.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXServiceResource svcr, XXService svc", "obj.resourceId = svcr.id and svcr.serviceId = svc.id"));
+        sortFields.add(new SortField(SearchFilter.TAG_DEF_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
+        sortFields.add(new SortField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId"));
+        sortFields.add(new SortField(SearchFilter.TAG_ID, "obj.tagId"));
+    }
 
-		sortFields.add(new SortField(SearchFilter.TAG_DEF_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
-		sortFields.add(new SortField(SearchFilter.TAG_RESOURCE_ID, "obj.resourceId"));
-		sortFields.add(new SortField(SearchFilter.TAG_ID, "obj.tagId"));
-	}
-	
-	@Override
-	protected void validateForCreate(RangerTagResourceMap vObj) {
+    @Override
+    public RangerTagResourceMap postCreate(XXTagResourceMap tagResMap) {
+        RangerTagResourceMap ret = super.postCreate(tagResMap);
 
-	}
+        daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagResourceMapCreate(tagResMap.getResourceId(), tagResMap.getTagId());
 
-	@Override
-	protected void validateForUpdate(RangerTagResourceMap vObj, XXTagResourceMap entityObj) {
+        return ret;
+    }
 
-	}
+    @Override
+    protected void validateForCreate(RangerTagResourceMap vObj) {
+    }
 
-	@Override
-	public RangerTagResourceMap postCreate(XXTagResourceMap tagResMap) {
-		RangerTagResourceMap ret = super.postCreate(tagResMap);
+    @Override
+    protected void validateForUpdate(RangerTagResourceMap vObj, XXTagResourceMap entityObj) {
+    }
 
-		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagResourceMapCreate(tagResMap.getResourceId(), tagResMap.getTagId());
+    @Override
+    protected XXTagResourceMap preDelete(Long id) {
+        XXTagResourceMap tagResMap = super.preDelete(id);
 
-		return ret;
-	}
+        if (tagResMap != null) {
+            daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagResourceMapDelete(tagResMap.getResourceId(), tagResMap.getTagId());
+        }
 
-	@Override
-	protected XXTagResourceMap preDelete(Long id) {
-		XXTagResourceMap tagResMap = super.preDelete(id);
+        return tagResMap;
+    }
 
-		if (tagResMap != null) {
-			daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagResourceMapDelete(tagResMap.getResourceId(), tagResMap.getTagId());
-		}
+    public RangerTagResourceMap getPopulatedViewObject(XXTagResourceMap xObj) {
+        return populateViewBean(xObj);
+    }
 
-		return tagResMap;
-	}
+    public List<RangerTagResourceMap> getByTagId(Long tagId) {
+        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
 
-	public RangerTagResourceMap getPopulatedViewObject(XXTagResourceMap xObj) {
-		return populateViewBean(xObj);
-	}
+        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagId(tagId);
 
+        if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
+            for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
+                RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
 
-	public List<RangerTagResourceMap> getByTagId(Long tagId) {
-		List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
+                ret.add(tagResourceMap);
+            }
+        }
 
-		List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagId(tagId);
-		
-		if(CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
-			for(XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
-				RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
+        return ret;
+    }
 
-				ret.add(tagResourceMap);
-			}
-		}
+    public List<RangerTagResourceMap> getByTagGuid(String tagGuid) {
+        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
 
-		return ret;
-	}
+        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagGuid(tagGuid);
 
-	public List<RangerTagResourceMap> getByTagGuid(String tagGuid) {
-		List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
+        if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
+            for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
+                RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
 
-		List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagGuid(tagGuid);
-		
-		if(CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
-			for(XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
-				RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
+                ret.add(tagResourceMap);
+            }
+        }
 
-				ret.add(tagResourceMap);
-			}
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public List<RangerTagResourceMap> getByResourceId(Long resourceId) {
+        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
 
-	public List<RangerTagResourceMap> getByResourceId(Long resourceId) {
-		List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
+        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceId(resourceId);
 
-		List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceId(resourceId);
-		
-		if(CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
-			for(XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
-				RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
+        if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
+            for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
+                RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
 
-				ret.add(tagResourceMap);
-			}
-		}
+                ret.add(tagResourceMap);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<Long> getTagIdsForResourceId(Long resourceId) {
-		List<Long> ret = daoMgr.getXXTagResourceMap().findTagIdsForResourceId(resourceId);
+    public List<Long> getTagIdsForResourceId(Long resourceId) {
+        List<Long> ret = daoMgr.getXXTagResourceMap().findTagIdsForResourceId(resourceId);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<RangerTagResourceMap> getByResourceGuid(String resourceGuid) {
-		List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
+    public List<RangerTagResourceMap> getByResourceGuid(String resourceGuid) {
+        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
 
-		List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceGuid(resourceGuid);
-		
-		if(CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
-			for(XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
-				RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
+        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceGuid(resourceGuid);
 
-				ret.add(tagResourceMap);
-			}
-		}
+        if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
+            for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
+                RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
 
-		return ret;
-	}
-	
-	public RangerTagResourceMap getByGuid(String guid) {
-		RangerTagResourceMap ret = null;
+                ret.add(tagResourceMap);
+            }
+        }
 
-		XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByGuid(guid);
+        return ret;
+    }
 
-		if(xxTagResourceMap != null) {
-			ret = populateViewBean(xxTagResourceMap);
-		}
+    public RangerTagResourceMap getByGuid(String guid) {
+        RangerTagResourceMap ret = null;
 
-		return ret;
-	}
-	
-	public RangerTagResourceMap getByTagAndResourceId(Long tagId, Long resourceId) {
-		RangerTagResourceMap ret = null;
+        XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByGuid(guid);
 
-		XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceId(tagId, resourceId);
+        if (xxTagResourceMap != null) {
+            ret = populateViewBean(xxTagResourceMap);
+        }
 
-		if(xxTagResourceMap != null) {
-			ret = populateViewBean(xxTagResourceMap);
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public RangerTagResourceMap getByTagAndResourceId(Long tagId, Long resourceId) {
+        RangerTagResourceMap ret = null;
 
-	public RangerTagResourceMap getByTagAndResourceGuid(String tagGuid, String resourceGuid) {
-		RangerTagResourceMap ret = null;
+        XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceId(tagId, resourceId);
 
-		XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceGuid(tagGuid, resourceGuid);
+        if (xxTagResourceMap != null) {
+            ret = populateViewBean(xxTagResourceMap);
+        }
 
-		if(xxTagResourceMap != null) {
-			ret = populateViewBean(xxTagResourceMap);
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public RangerTagResourceMap getByTagAndResourceGuid(String tagGuid, String resourceGuid) {
+        RangerTagResourceMap ret = null;
 
-	public List<RangerTagResourceMap> getTagResourceMapsByServiceId(Long serviceId) {
-		List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
+        XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceGuid(tagGuid, resourceGuid);
 
-		List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByServiceId(serviceId);
-		
-		if(CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
-			for(XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
-				RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
+        if (xxTagResourceMap != null) {
+            ret = populateViewBean(xxTagResourceMap);
+        }
 
-				ret.add(tagResourceMap);
-			}
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public List<RangerTagResourceMap> getTagResourceMapsByServiceId(Long serviceId) {
+        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
+
+        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByServiceId(serviceId);
+
+        if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
+            for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
+                RangerTagResourceMap tagResourceMap = populateViewBean(xxTagResourceMap);
+
+                ret.add(tagResourceMap);
+            }
+        }
+
+        return ret;
+    }
 }

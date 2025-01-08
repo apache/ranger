@@ -33,6 +33,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -42,21 +43,19 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Service
 public class RangerTransactionService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerTransactionService.class);
+
     private static final String PROP_THREADPOOL_SIZE          = "ranger.admin.transaction.service.threadpool.size";
     private static final String PROP_SUMMARY_LOG_INTERVAL_SEC = "ranger.admin.transaction.service.summary.log.interval.sec";
-
+    private final AtomicLong               scheduledTaskCount   = new AtomicLong(0);
+    private final AtomicLong               executedTaskCount    = new AtomicLong(0);
+    private final AtomicLong               failedTaskCount      = new AtomicLong(0);
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
-
-    private static final Logger LOG = LoggerFactory.getLogger(RangerTransactionService.class);
-
-    private ScheduledExecutorService scheduler            = null;
-    private AtomicLong               scheduledTaskCount   = new AtomicLong(0);
-    private AtomicLong               executedTaskCount    = new AtomicLong(0);
-    private AtomicLong               failedTaskCount      = new AtomicLong(0);
-    private long                     summaryLogIntervalMs = 5 * 60 * 1000;
-    private long                     nextLogSummaryTime   = System.currentTimeMillis() + summaryLogIntervalMs;
+    private       ScheduledExecutorService scheduler;
+    private       long                     summaryLogIntervalMs = 5 * 60 * 1000;
+    private       long                     nextLogSummaryTime   = System.currentTimeMillis() + summaryLogIntervalMs;
 
     @PostConstruct
     public void init() {
@@ -81,11 +80,9 @@ public class RangerTransactionService {
             scheduler.awaitTermination(5, TimeUnit.SECONDS);
 
             logSummary();
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             LOG.error("RangerTransactionService tasks interrupted");
-        }
-        finally {
+        } finally {
             if (!scheduler.isTerminated()) {
                 LOG.info("cancel non-finished RangerTransactionService tasks");
             }

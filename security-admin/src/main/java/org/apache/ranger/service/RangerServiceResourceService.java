@@ -19,11 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.CollectionUtils;
@@ -31,9 +26,9 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.entity.XXServiceResource;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
@@ -43,15 +38,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class RangerServiceResourceService extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceResourceService.class);
-
-    private             boolean       serviceUpdateNeeded = true;
     public static final TypeReference subsumedDataType    = new TypeReference<Map<String, RangerPolicy.RangerPolicyResource>>() {};
-
-    public static final TypeReference duplicatedDataType = new TypeReference<List<RangerTag>>() {};
+    public static final TypeReference duplicatedDataType  = new TypeReference<List<RangerTag>>() {};
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceResourceService.class);
+    private             boolean       serviceUpdateNeeded = true;
 
     public RangerServiceResourceService() {
         searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
@@ -64,23 +61,8 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
 
         sortFields.add(new SortField(SearchFilter.TAG_RESOURCE_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.TAG_SERVICE_ID, "obj.serviceId"));
-        sortFields.add(new SortField(SearchFilter.CREATE_TIME,  "obj.createTime"));
-        sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
-    }
-
-    @Override
-    protected void validateForCreate(RangerServiceResource vObj) {
-
-    }
-
-    @Override
-    protected void validateForUpdate(RangerServiceResource vObj, XXServiceResource entityObj) {
-        if (StringUtils.equals(entityObj.getGuid(), vObj.getGuid()) &&
-                StringUtils.equals(entityObj.getResourceSignature(), vObj.getResourceSignature())) {
-            serviceUpdateNeeded = false;
-        } else {
-            serviceUpdateNeeded = true;
-        }
+        sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+        sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
     }
 
     @Override
@@ -92,6 +74,15 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
         }
 
         return ret;
+    }
+
+    @Override
+    protected void validateForCreate(RangerServiceResource vObj) {
+    }
+
+    @Override
+    protected void validateForUpdate(RangerServiceResource vObj, XXServiceResource entityObj) {
+        serviceUpdateNeeded = !StringUtils.equals(entityObj.getGuid(), vObj.getGuid()) || !StringUtils.equals(entityObj.getResourceSignature(), vObj.getResourceSignature());
     }
 
     public RangerServiceResource getPopulatedViewObject(XXServiceResource xObj) {
@@ -162,7 +153,7 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
             if (StringUtils.isNotEmpty(serviceResourceElements)) {
                 ret.setServiceResourceElements(serviceResourceElements);
             } else {
-                LOG.info("Empty string representing serviceResourceElements in [" + ret + "]!!");
+                LOG.info("Empty string representing serviceResourceElements in [{}]!!", ret);
             }
         }
 
@@ -182,10 +173,10 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
             if (MapUtils.isNotEmpty(serviceResourceElements)) {
                 ret.setResourceElements(serviceResourceElements);
             } else {
-                LOG.info("Empty serviceResourceElement in [" + ret + "]!!");
+                LOG.info("Empty serviceResourceElement in [{}]!!", ret);
             }
         } else {
-            LOG.info("Empty string representing serviceResourceElements in [" + xxServiceResource + "]!!");
+            LOG.info("Empty string representing serviceResourceElements in [{}]!!", xxServiceResource);
         }
 
         return ret;

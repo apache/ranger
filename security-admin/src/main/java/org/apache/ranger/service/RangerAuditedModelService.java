@@ -31,213 +31,215 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class RangerAuditedModelService<T extends XXDBBase, V extends RangerBaseModelObject> extends RangerBaseModelService<T, V> {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAuditedModelService.class);
+    private static final Logger                   LOG          = LoggerFactory.getLogger(RangerAuditedModelService.class);
+    protected final      Map<String, VTrxLogAttr> trxLogAttrs  = new HashMap<>();
+    protected final      String                   hiddenPasswordString;
+    private final        int                      classType;
+    private final        int                      parentClassType;
+    private final        List<VTrxLogAttr>        objNameAttrs = new ArrayList<>();
+    @Autowired
+    RangerDataHistService dataHistService;
+    @Autowired
+    RangerEnumUtil        xaEnumUtil;
 
-	@Autowired
-	RangerDataHistService dataHistService;
+    protected RangerAuditedModelService(int classType) {
+        this(classType, 0);
+    }
 
-	@Autowired
-	RangerEnumUtil xaEnumUtil;
-	private final int               classType;
-	private final int               parentClassType;
-	private final List<VTrxLogAttr> objNameAttrs = new ArrayList<>();
+    protected RangerAuditedModelService(int classType, int parentClassType) {
+        super();
 
-	protected final Map<String, VTrxLogAttr> trxLogAttrs = new HashMap<>();
-	protected final String                   hiddenPasswordString;
+        this.classType            = classType;
+        this.parentClassType      = parentClassType;
+        this.hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 
-	protected RangerAuditedModelService(int classType) {
-		this(classType, 0);
-	}
+        LOG.debug("RangerAuditedModelService({}, {})", this.classType, this.parentClassType);
+    }
 
-	protected RangerAuditedModelService(int classType, int parentClassType) {
-		super();
+    @PostConstruct
+    public void init() {
+        for (VTrxLogAttr vTrxLog : trxLogAttrs.values()) {
+            if (vTrxLog.isObjName()) {
+                objNameAttrs.add(vTrxLog);
+            }
+        }
 
-		this.classType            = classType;
-		this.parentClassType      = parentClassType;
-		this.hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
+        if (objNameAttrs.isEmpty()) {
+            objNameAttrs.add(new VTrxLogAttr("name", "Name", false, true));
+        }
+    }
 
-		LOG.debug("RangerAuditedModelService({}, {})", this.classType, this.parentClassType);
-	}
+    public void onObjectChange(V current, V former, int action) {
+        switch (action) {
+            case RangerServiceService.OPERATION_CREATE_CONTEXT:
+                dataHistService.createObjectDataHistory(current, RangerDataHistService.ACTION_CREATE);
+                break;
 
-	@PostConstruct
-	public void init() {
-		for (VTrxLogAttr vTrxLog : trxLogAttrs.values()) {
-			if (vTrxLog.isObjName()) {
-				objNameAttrs.add(vTrxLog);
-			}
-		}
+            case RangerServiceService.OPERATION_UPDATE_CONTEXT:
+                dataHistService.createObjectDataHistory(current, RangerDataHistService.ACTION_UPDATE);
+                break;
 
-		if (objNameAttrs.isEmpty()) {
-			objNameAttrs.add(new VTrxLogAttr("name", "Name", false, true));
-		}
-	}
+            case RangerServiceService.OPERATION_DELETE_CONTEXT:
+                if (current == null) {
+                    current = former;
+                }
 
-	public void onObjectChange(V current, V former, int action) {
-		switch (action) {
-			case RangerServiceService.OPERATION_CREATE_CONTEXT:
-				dataHistService.createObjectDataHistory(current, RangerDataHistService.ACTION_CREATE);
-				break;
+                dataHistService.createObjectDataHistory(current, RangerDataHistService.ACTION_DELETE);
+                break;
+        }
 
-			case RangerServiceService.OPERATION_UPDATE_CONTEXT:
-				dataHistService.createObjectDataHistory(current, RangerDataHistService.ACTION_UPDATE);
-				break;
+        if (current != null && (former != null || action != OPERATION_UPDATE_CONTEXT) && action != 0) {
+            createTransactionLog(current, former, action);
+        }
+    }
 
-			case RangerServiceService.OPERATION_DELETE_CONTEXT:
-				if (current == null) {
-					current = former;
-				}
+    public void createTransactionLog(XXTrxLogV2 trxLog, String attrName, String oldValue, String newValue) {
+        try {
+            ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
 
-				dataHistService.createObjectDataHistory(current, RangerDataHistService.ACTION_DELETE);
-				break;
-		}
+            objChangeInfo.addAttribute(attrName, oldValue, newValue);
 
-		if (current != null && (former != null || action != OPERATION_UPDATE_CONTEXT) && action != 0) {
-			createTransactionLog(current, former, action);
-		}
-	}
+            trxLog.setChangeInfo(JsonUtilsV2.objToJson(objChangeInfo));
+        } catch (Exception excp) {
+            LOG.warn("failed to convert attribute change info to json");
+        }
 
-	public void createTransactionLog(XXTrxLogV2 trxLog, String attrName, String oldValue, String newValue) {
-		try {
-			ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
+        bizUtil.createTrxLog(Collections.singletonList(trxLog));
+    }
 
-			objChangeInfo.addAttribute(attrName, oldValue, newValue);
+    public void createTransactionLog(XXTrxLogV2 trxLog) {
+        bizUtil.createTrxLog(Collections.singletonList(trxLog));
+    }
 
-			trxLog.setChangeInfo(JsonUtilsV2.objToJson(objChangeInfo));
-		} catch (Exception excp) {
-			LOG.warn("failed to convert attribute change info to json");
-		}
+    public void createTransactionLog(V obj, V oldObj, int action) {
+        List<XXTrxLogV2> trxLogs = getTransactionLogs(obj, oldObj, action);
 
-		bizUtil.createTrxLog(Collections.singletonList(trxLog));
-	}
+        if (trxLogs != null) {
+            bizUtil.createTrxLog(trxLogs);
+        }
+    }
 
-	public void createTransactionLog(XXTrxLogV2 trxLog) {
-		bizUtil.createTrxLog(Collections.singletonList(trxLog));
-	}
+    public int getParentObjectType(V obj, V oldObj) {
+        return parentClassType;
+    }
 
-	public void createTransactionLog(V obj, V oldObj, int action) {
-		List<XXTrxLogV2> trxLogs = getTransactionLogs(obj, oldObj, action);
+    public String getParentObjectName(V obj, V oldObj) {
+        return null;
+    }
 
-		if (trxLogs != null) {
-			bizUtil.createTrxLog(trxLogs);
-		}
-	}
+    public Long getParentObjectId(V obj, V oldObj) {
+        return null;
+    }
 
-	private List<XXTrxLogV2> getTransactionLogs(V obj, V oldObj, int action) {
-		if (obj == null || (action == OPERATION_UPDATE_CONTEXT && oldObj == null)) {
-			return null;
-		}
+    public boolean skipTrxLogForAttribute(V obj, V oldObj, VTrxLogAttr trxLogAttr) {
+        return false;
+    }
 
-		List<XXTrxLogV2> ret = new ArrayList<>();
+    public String getTrxLogAttrValue(V obj, VTrxLogAttr trxLogAttr) {
+        return trxLogAttr.getAttrValue(obj, xaEnumUtil);
+    }
 
-		try {
-			ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
+    private List<XXTrxLogV2> getTransactionLogs(V obj, V oldObj, int action) {
+        if (obj == null || (action == OPERATION_UPDATE_CONTEXT && oldObj == null)) {
+            return null;
+        }
 
-			for (VTrxLogAttr trxLog : trxLogAttrs.values()) {
-				processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
-			}
+        List<XXTrxLogV2> ret = new ArrayList<>();
 
-			if(objChangeInfo.getAttributes() != null && objChangeInfo.getAttributes().size() > 0) {
-				ret.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
-			}
-		} catch (Exception excp) {
-			LOG.warn("failed to get transaction log for object: type=" + obj.getClass().getName() + ", id=" + obj.getId(), excp);
-		}
+        try {
+            ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
 
-		return ret;
-	}
+            for (VTrxLogAttr trxLog : trxLogAttrs.values()) {
+                processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
+            }
 
-	public int getParentObjectType(V obj, V oldObj) {
-		return parentClassType;
-	}
+            if (objChangeInfo.getAttributes() != null && objChangeInfo.getAttributes().size() > 0) {
+                ret.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
+            }
+        } catch (Exception excp) {
+            LOG.warn("failed to get transaction log for object: type={}, id={}", obj.getClass().getName(), obj.getId(), excp);
+        }
 
-	public String getParentObjectName(V obj, V oldObj) {
-		return null;
-	}
+        return ret;
+    }
 
-	public Long getParentObjectId(V obj, V oldObj) {
-		return null;
-	}
+    private String getObjectName(V obj) {
+        String ret = null;
 
-	public boolean skipTrxLogForAttribute(V obj, V oldObj, VTrxLogAttr trxLogAttr) {
-		return false;
-	}
+        for (VTrxLogAttr attr : objNameAttrs) {
+            ret = attr.getAttrValue(obj, xaEnumUtil);
 
-	public String getTrxLogAttrValue(V obj, VTrxLogAttr trxLogAttr) {
-		return trxLogAttr.getAttrValue(obj, xaEnumUtil);
-	}
+            if (StringUtils.isNotBlank(ret)) {
+                break;
+            }
+        }
 
-	private String getObjectName(V obj) {
-		String ret = null;
+        return ret;
+    }
 
-		for (VTrxLogAttr attr : objNameAttrs) {
-			ret = attr.getAttrValue(obj, xaEnumUtil);
+    private void processFieldToCreateTrxLog(VTrxLogAttr trxLogAttr, V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo) {
+        if (skipTrxLogForAttribute(obj, oldObj, trxLogAttr)) {
+            return;
+        }
 
-			if (StringUtils.isNotBlank(ret)) {
-				break;
-			}
-		}
+        String value = getTrxLogAttrValue(obj, trxLogAttr);
 
-		return ret;
-	}
+        if ((action == OPERATION_CREATE_CONTEXT || action == OPERATION_DELETE_CONTEXT) && StringUtils.isBlank(value)) {
+            return;
+        }
 
-	private void processFieldToCreateTrxLog(VTrxLogAttr trxLogAttr, V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo) {
-		if (skipTrxLogForAttribute(obj, oldObj, trxLogAttr)) {
-			return;
-		}
+        final String prevValue;
+        final String newValue;
 
-		String value = getTrxLogAttrValue(obj, trxLogAttr);
+        if (action == OPERATION_CREATE_CONTEXT) {
+            prevValue = null;
+            newValue  = value;
+        } else if (action == OPERATION_DELETE_CONTEXT) {
+            prevValue = value;
+            newValue  = null;
+        } else if (action == OPERATION_UPDATE_CONTEXT) {
+            prevValue = getTrxLogAttrValue(oldObj, trxLogAttr);
+            newValue  = value;
+        } else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
+            prevValue = null;
+            newValue  = value;
+        } else if (action == OPERATION_IMPORT_DELETE_CONTEXT) {
+            prevValue = value;
+            newValue  = null;
+        } else {
+            prevValue = null;
+            newValue  = null;
+        }
 
-		if ((action == OPERATION_CREATE_CONTEXT || action == OPERATION_DELETE_CONTEXT) && StringUtils.isBlank(value)) {
-			return;
-		}
+        if (StringUtils.equals(prevValue, newValue) || (StringUtils.isEmpty(prevValue) && StringUtils.isEmpty(newValue))) {
+            return;
+        }
 
-		final String prevValue;
-		final String newValue;
+        objChangeInfo.addAttribute(trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
+    }
 
-		if (action == OPERATION_CREATE_CONTEXT) {
-			prevValue = null;
-			newValue  = value;
-		} else if (action == OPERATION_DELETE_CONTEXT) {
-			prevValue = value;
-			newValue  = null;
-		} else if (action == OPERATION_UPDATE_CONTEXT) {
-			prevValue = getTrxLogAttrValue(oldObj, trxLogAttr);
-			newValue  = value;
-		} else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
-			prevValue = null;
-			newValue  = value;
-		} else if (action == OPERATION_IMPORT_DELETE_CONTEXT) {
-			prevValue = value;
-			newValue  = null;
-		} else {
-			prevValue = null;
-			newValue  = null;
-		}
+    private String toActionString(int action) {
+        switch (action) {
+            case OPERATION_CREATE_CONTEXT:
+                return "create";
+            case OPERATION_UPDATE_CONTEXT:
+                return "update";
+            case OPERATION_DELETE_CONTEXT:
+                return "delete";
+            case OPERATION_IMPORT_CREATE_CONTEXT:
+                return "Import Create";
+            case OPERATION_IMPORT_DELETE_CONTEXT:
+                return "Import Delete";
+        }
 
-		if (StringUtils.equals(prevValue, newValue) || (StringUtils.isEmpty(prevValue) && StringUtils.isEmpty(newValue))) {
-			return;
-		}
-
-		objChangeInfo.addAttribute(trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
-	}
-
-	private String toActionString(int action) {
-		switch (action) {
-			case OPERATION_CREATE_CONTEXT:
-				return "create";
-			case OPERATION_UPDATE_CONTEXT:
-				return "update";
-			case OPERATION_DELETE_CONTEXT:
-				return "delete";
-			case OPERATION_IMPORT_CREATE_CONTEXT:
-				return "Import Create";
-			case OPERATION_IMPORT_DELETE_CONTEXT:
-				return "Import Delete";
-		}
-
-		return "unknown";
-	}
+        return "unknown";
+    }
 }

@@ -17,13 +17,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -47,273 +40,265 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 @Service
 public class RangerPluginInfoService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginInfoService.class);
+    private final List<SortField>   sortFields   = new ArrayList<>();
+    private final List<SearchField> searchFields = new ArrayList<>();
+    @Autowired
+    RangerSearchUtil searchUtil;
+    @Autowired
+    RangerBizUtil bizUtil;
+    @Autowired
+    JSONUtil jsonUtil;
+    @Autowired
+    RangerDaoManager daoManager;
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginInfoService.class);
+    RangerPluginInfoService() {
+        searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.serviceName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.PLUGIN_HOST_NAME, "obj.hostName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.PLUGIN_APP_TYPE, "obj.appType", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.PLUGIN_IP_ADDRESS, "obj.ipAddress", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
-	@Autowired
-	RangerSearchUtil searchUtil;
+        sortFields.add(new SortField(SearchFilter.SERVICE_NAME, "obj.serviceName", true, SortField.SORT_ORDER.ASC));
+        sortFields.add(new SortField(SearchFilter.PLUGIN_HOST_NAME, "obj.hostName", true, SortField.SORT_ORDER.ASC));
+        sortFields.add(new SortField(SearchFilter.PLUGIN_APP_TYPE, "obj.appType", true, SortField.SORT_ORDER.ASC));
+    }
 
-	@Autowired
-	RangerBizUtil bizUtil;
+    public List<SearchField> getSearchFields() {
+        return searchFields;
+    }
 
-	@Autowired
-	JSONUtil jsonUtil;
+    public List<SortField> getSortFields() {
+        return sortFields;
+    }
 
-	@Autowired
-	RangerDaoManager daoManager;
+    public PList<RangerPluginInfo> searchRangerPluginInfo(SearchFilter searchFilter) {
+        PList<RangerPluginInfo> retList = new PList<>();
+        List<RangerPluginInfo>  objList = new ArrayList<>();
 
-	private List<SortField> sortFields = new ArrayList<SortField>();
-	private List<SearchField> searchFields = new ArrayList<SearchField>();
+        List<XXService> servicesWithTagService = daoManager.getXXService().getAllServicesWithTagService();
 
-	RangerPluginInfoService() {
+        // Rebuild searchFilter without serviceType
 
-		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.serviceName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.PLUGIN_HOST_NAME, "obj.hostName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.PLUGIN_APP_TYPE, "obj.appType", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.PLUGIN_IP_ADDRESS, "obj.ipAddress", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        String serviceTypeToSearch = searchFilter.getParam(SearchFilter.SERVICE_TYPE);
+        if (StringUtils.isNotBlank(serviceTypeToSearch)) {
+            searchFilter.removeParam(SearchFilter.SERVICE_TYPE);
+        }
+        String clusterNameToSearch = searchFilter.getParam(SearchFilter.CLUSTER_NAME);
 
-		sortFields.add(new SortField(SearchFilter.SERVICE_NAME, "obj.serviceName", true, SortField.SORT_ORDER.ASC));
-		sortFields.add(new SortField(SearchFilter.PLUGIN_HOST_NAME, "obj.hostName", true, SortField.SORT_ORDER.ASC));
-		sortFields.add(new SortField(SearchFilter.PLUGIN_APP_TYPE, "obj.appType", true, SortField.SORT_ORDER.ASC));
+        List<XXPluginInfo> xObjList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-	}
+        List<Object[]> objectsList = null;
+        if (CollectionUtils.isNotEmpty(xObjList)) {
+            objectsList = daoManager.getXXServiceVersionInfo().getAllWithServiceNames();
+        }
 
-	public List<SearchField> getSearchFields() {
-		return searchFields;
-	}
+        for (XXPluginInfo xObj : xObjList) {
+            XXServiceVersionInfo xxServiceVersionInfo    = null;
+            boolean              hasAssociatedTagService = false;
 
-	public List<SortField> getSortFields() {
-		return sortFields;
-	}
-
-	public PList<RangerPluginInfo> searchRangerPluginInfo(SearchFilter searchFilter) {
-		PList<RangerPluginInfo> retList = new PList<RangerPluginInfo>();
-		List<RangerPluginInfo> objList = new ArrayList<RangerPluginInfo>();
-
-		List<XXService> servicesWithTagService = daoManager.getXXService().getAllServicesWithTagService();
-
-                // Rebuild searchFilter without serviceType
-
-                String serviceTypeToSearch = searchFilter.getParam(SearchFilter.SERVICE_TYPE);
-                if (StringUtils.isNotBlank(serviceTypeToSearch)) {
-                        searchFilter.removeParam(SearchFilter.SERVICE_TYPE);
-                }
-                String clusterNameToSearch =  searchFilter.getParam(SearchFilter.CLUSTER_NAME);
-
-		List<XXPluginInfo> xObjList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
-
-		List<Object[]> objectsList = null;
-		if (CollectionUtils.isNotEmpty(xObjList)) {
-			objectsList = daoManager.getXXServiceVersionInfo().getAllWithServiceNames();
-		}
-
-		for (XXPluginInfo xObj : xObjList) {
-			XXServiceVersionInfo xxServiceVersionInfo = null;
-			boolean hasAssociatedTagService = false;
-
-			if (CollectionUtils.isNotEmpty(objectsList)) {
-				for (Object[] objects : objectsList) {
-					if (objects.length == 2) {
-						if (xObj.getServiceName().equals(objects[1])) {
-							if (objects[0] instanceof XXServiceVersionInfo) {
-								xxServiceVersionInfo = (XXServiceVersionInfo) objects[0];
-								for (XXService service : servicesWithTagService) {
-									if (service.getName().equals(xObj.getServiceName())) {
-										hasAssociatedTagService = true;
-										break;
-									}
-								}
-							} else {
-								LOG.warn("Expected first object to be XXServiceVersionInfo, got " + objects[0]);
-							}
-							break;
-						}
-					} else {
-						LOG.warn("Expected 2 objects in the list returned by getAllWithServiceNames(), received " + objects.length);
-					}
-				}
-			}
-
-			RangerPluginInfo obj = populateViewObjectWithServiceVersionInfo(xObj, xxServiceVersionInfo, hasAssociatedTagService);
-
-                        if (StringUtils.isBlank(serviceTypeToSearch) || StringUtils.equals(serviceTypeToSearch, obj.getServiceType())) {
-                                objList.add(obj);
+            if (CollectionUtils.isNotEmpty(objectsList)) {
+                for (Object[] objects : objectsList) {
+                    if (objects.length == 2) {
+                        if (xObj.getServiceName().equals(objects[1])) {
+                            if (objects[0] instanceof XXServiceVersionInfo) {
+                                xxServiceVersionInfo = (XXServiceVersionInfo) objects[0];
+                                for (XXService service : servicesWithTagService) {
+                                    if (service.getName().equals(xObj.getServiceName())) {
+                                        hasAssociatedTagService = true;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                LOG.warn("Expected first object to be XXServiceVersionInfo, got {}", objects[0]);
+                            }
+                            break;
                         }
-
-			if (StringUtils.isNotBlank(clusterNameToSearch)) {
-				Map<String, String> infoMap = obj.getInfo();
-				Set<Map.Entry<String, String>> infoSet = infoMap.entrySet();
-				for (Map.Entry<String, String> info : infoSet) {
-					if (StringUtils.equals(info.getKey(), SearchFilter.CLUSTER_NAME)) {
-						if (!StringUtils.equals(info.getValue(), clusterNameToSearch)) {
-							objList.remove(obj);
-						}
-						break;
-					}
-				}
-			}
-		}
-
-		retList.setList(objList);
-
-		return retList;
-	}
-
-	public RangerPluginInfo populateViewObject(XXPluginInfo xObj) {
-		RangerPluginInfo ret = new RangerPluginInfo();
-		ret.setId(xObj.getId());
-		ret.setCreateTime(xObj.getCreateTime());
-		ret.setUpdateTime(xObj.getUpdateTime());
-		ret.setServiceName(xObj.getServiceName());
-
-                String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
-                if (StringUtils.isNotBlank(serviceType)) {
-                        ret.setServiceType(serviceType);
+                    } else {
+                        LOG.warn("Expected 2 objects in the list returned by getAllWithServiceNames(), received {}", objects.length);
+                    }
                 }
-		ret.setHostName(xObj.getHostName());
-		ret.setAppType(xObj.getAppType());
-		ret.setIpAddress(xObj.getIpAddress());
-		ret.setInfo(jsonStringToMap(xObj.getInfo(), null, false));
-		return ret;
-	}
+            }
 
-	public XXPluginInfo populateDBObject(RangerPluginInfo modelObj) {
-		XXPluginInfo ret = new XXPluginInfo();
-		ret.setId(modelObj.getId());
-		ret.setCreateTime(modelObj.getCreateTime());
-		ret.setUpdateTime(modelObj.getUpdateTime());
-		ret.setServiceName(modelObj.getServiceName());
-		ret.setHostName(modelObj.getHostName());
-		ret.setAppType(modelObj.getAppType());
-		ret.setIpAddress(modelObj.getIpAddress());
-		ret.setInfo(mapToJsonString(modelObj.getInfo()));
-		return ret;
-	}
+            RangerPluginInfo obj = populateViewObjectWithServiceVersionInfo(xObj, xxServiceVersionInfo, hasAssociatedTagService);
 
-	private RangerPluginInfo populateViewObjectWithServiceVersionInfo(XXPluginInfo xObj, XXServiceVersionInfo xxServiceVersionInfo, boolean hasAssociatedTagService) {
-		RangerPluginInfo ret = new RangerPluginInfo();
-		ret.setId(xObj.getId());
-		ret.setCreateTime(xObj.getCreateTime());
-		ret.setUpdateTime(xObj.getUpdateTime());
-		ret.setServiceName(xObj.getServiceName());
+            if (StringUtils.isBlank(serviceTypeToSearch) || StringUtils.equals(serviceTypeToSearch, obj.getServiceType())) {
+                objList.add(obj);
+            }
 
-		String serviceDefName = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
-		if (StringUtils.isNotBlank(serviceDefName)) {
-			ret.setServiceType(serviceDefName);
-			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(serviceDefName);
+            if (StringUtils.isNotBlank(clusterNameToSearch)) {
+                Map<String, String>            infoMap = obj.getInfo();
+                Set<Map.Entry<String, String>> infoSet = infoMap.entrySet();
+                for (Map.Entry<String, String> info : infoSet) {
+                    if (StringUtils.equals(info.getKey(), SearchFilter.CLUSTER_NAME)) {
+                        if (!StringUtils.equals(info.getValue(), clusterNameToSearch)) {
+                            objList.remove(obj);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
 
-			ret.setServiceTypeDisplayName(xxServiceDef.getDisplayName());
-		}
-		ret.setHostName(xObj.getHostName());
-		ret.setAppType(xObj.getAppType());
-		ret.setIpAddress(xObj.getIpAddress());
-		ret.setInfo(jsonStringToMap(xObj.getInfo(), xxServiceVersionInfo, hasAssociatedTagService));
+        retList.setList(objList);
 
-		XXService xxService = daoManager.getXXService().findByName(ret.getServiceName());
-		if (xxService != null) {
-			ret.setServiceDisplayName(xxService.getDisplayName());
-		}
-		return ret;
-	}
+        return retList;
+    }
 
-	private List<XXPluginInfo> searchRangerObjects(SearchFilter searchCriteria, List<SearchField> searchFieldList, List<SortField> sortFieldList, PList<RangerPluginInfo> pList) {
+    public RangerPluginInfo populateViewObject(XXPluginInfo xObj) {
+        RangerPluginInfo ret = new RangerPluginInfo();
+        ret.setId(xObj.getId());
+        ret.setCreateTime(xObj.getCreateTime());
+        ret.setUpdateTime(xObj.getUpdateTime());
+        ret.setServiceName(xObj.getServiceName());
 
-		// Get total count of the rows which meet the search criteria
-		long count = -1;
-		if (searchCriteria.isGetCount()) {
-			count = getCountForSearchQuery(searchCriteria, searchFieldList);
-			if (count == 0) {
-				return Collections.emptyList();
-			}
-		}
+        String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
+        if (StringUtils.isNotBlank(serviceType)) {
+            ret.setServiceType(serviceType);
+        }
+        ret.setHostName(xObj.getHostName());
+        ret.setAppType(xObj.getAppType());
+        ret.setIpAddress(xObj.getIpAddress());
+        ret.setInfo(jsonStringToMap(xObj.getInfo(), null, false));
+        return ret;
+    }
 
-		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
+    public XXPluginInfo populateDBObject(RangerPluginInfo modelObj) {
+        XXPluginInfo ret = new XXPluginInfo();
+        ret.setId(modelObj.getId());
+        ret.setCreateTime(modelObj.getCreateTime());
+        ret.setUpdateTime(modelObj.getUpdateTime());
+        ret.setServiceName(modelObj.getServiceName());
+        ret.setHostName(modelObj.getHostName());
+        ret.setAppType(modelObj.getAppType());
+        ret.setIpAddress(modelObj.getIpAddress());
+        ret.setInfo(mapToJsonString(modelObj.getInfo()));
+        return ret;
+    }
 
-		String queryStr = "SELECT obj FROM " + XXPluginInfo.class.getName() + " obj ";
-		Query query = createQuery(queryStr, sortClause, searchCriteria, searchFieldList, false);
+    private RangerPluginInfo populateViewObjectWithServiceVersionInfo(XXPluginInfo xObj, XXServiceVersionInfo xxServiceVersionInfo, boolean hasAssociatedTagService) {
+        RangerPluginInfo ret = new RangerPluginInfo();
+        ret.setId(xObj.getId());
+        ret.setCreateTime(xObj.getCreateTime());
+        ret.setUpdateTime(xObj.getUpdateTime());
+        ret.setServiceName(xObj.getServiceName());
 
-		List<XXPluginInfo> resultList = daoManager.getXXPluginInfo().executeQueryInSecurityContext(XXPluginInfo.class, query);
+        String serviceDefName = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
+        if (StringUtils.isNotBlank(serviceDefName)) {
+            ret.setServiceType(serviceDefName);
+            XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(serviceDefName);
 
-		if (pList != null) {
-			pList.setResultSize(resultList.size());
-			pList.setPageSize(query.getMaxResults());
-			pList.setSortBy(searchCriteria.getSortBy());
-			pList.setSortType(searchCriteria.getSortType());
-			pList.setStartIndex(query.getFirstResult());
-			pList.setTotalCount(count);
-		}
-		return resultList;
-	}
+            ret.setServiceTypeDisplayName(xxServiceDef.getDisplayName());
+        }
+        ret.setHostName(xObj.getHostName());
+        ret.setAppType(xObj.getAppType());
+        ret.setIpAddress(xObj.getIpAddress());
+        ret.setInfo(jsonStringToMap(xObj.getInfo(), xxServiceVersionInfo, hasAssociatedTagService));
 
-	private Query createQuery(String searchString, String sortString, SearchFilter searchCriteria,
-								List<SearchField> searchFieldList, boolean isCountQuery) {
+        XXService xxService = daoManager.getXXService().findByName(ret.getServiceName());
+        if (xxService != null) {
+            ret.setServiceDisplayName(xxService.getDisplayName());
+        }
+        return ret;
+    }
 
-		EntityManager em = daoManager.getEntityManager();
-		return searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria,
-				searchFieldList, false, isCountQuery);
-	}
+    private List<XXPluginInfo> searchRangerObjects(SearchFilter searchCriteria, List<SearchField> searchFieldList, List<SortField> sortFieldList, PList<RangerPluginInfo> pList) {
+        // Get total count of the rows which meet the search criteria
+        long count = -1;
+        if (searchCriteria.isGetCount()) {
+            count = getCountForSearchQuery(searchCriteria, searchFieldList);
+            if (count == 0) {
+                return Collections.emptyList();
+            }
+        }
 
-	private long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
+        String sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
 
-		String countQueryStr = "SELECT COUNT(obj) FROM " + XXPluginInfo.class.getName() + " obj ";
+        String queryStr = "SELECT obj FROM " + XXPluginInfo.class.getName() + " obj ";
+        Query  query    = createQuery(queryStr, sortClause, searchCriteria, searchFieldList, false);
 
-		Query query = createQuery(countQueryStr, null, searchCriteria, searchFieldList, true);
-		Long count = daoManager.getXXPluginInfo().executeCountQueryInSecurityContext(XXPluginInfo.class, query);
+        List<XXPluginInfo> resultList = daoManager.getXXPluginInfo().executeQueryInSecurityContext(XXPluginInfo.class, query);
 
-		if (count == null) {
-			return 0;
-		}
-		return count;
-	}
+        if (pList != null) {
+            pList.setResultSize(resultList.size());
+            pList.setPageSize(query.getMaxResults());
+            pList.setSortBy(searchCriteria.getSortBy());
+            pList.setSortType(searchCriteria.getSortType());
+            pList.setStartIndex(query.getFirstResult());
+            pList.setTotalCount(count);
+        }
+        return resultList;
+    }
 
-	private String mapToJsonString(Map<String, String> map) {
-		String ret = null;
+    private Query createQuery(String searchString, String sortString, SearchFilter searchCriteria, List<SearchField> searchFieldList, boolean isCountQuery) {
+        EntityManager em = daoManager.getEntityManager();
+        return searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
+    }
 
-		if(map != null) {
-			try {
-				ret = jsonUtil.readMapToString(map);
-			} catch(Exception excp) {
-				LOG.error("Failed to convert map to JSON string: '" + map + "'", excp);
-			}
-		}
+    private long getCountForSearchQuery(SearchFilter searchCriteria, List<SearchField> searchFieldList) {
+        String countQueryStr = "SELECT COUNT(obj) FROM " + XXPluginInfo.class.getName() + " obj ";
 
-		return ret;
-	}
+        Query query = createQuery(countQueryStr, null, searchCriteria, searchFieldList, true);
+        Long  count = daoManager.getXXPluginInfo().executeCountQueryInSecurityContext(XXPluginInfo.class, query);
 
-	private Map<String, String> jsonStringToMap(String jsonStr, XXServiceVersionInfo xxServiceVersionInfo, boolean hasAssociatedTagService) {
+        if (count == null) {
+            return 0;
+        }
+        return count;
+    }
 
-		Map<String, String> ret = null;
+    private String mapToJsonString(Map<String, String> map) {
+        String ret = null;
 
-		try {
-			ret = jsonUtil.jsonToMap(jsonStr);
+        if (map != null) {
+            try {
+                ret = jsonUtil.readMapToString(map);
+            } catch (Exception excp) {
+                LOG.error("Failed to convert map to JSON string: {}", map, excp);
+            }
+        }
 
-			if (xxServiceVersionInfo != null) {
-				Long latestPolicyVersion = xxServiceVersionInfo.getPolicyVersion();
-				Date lastPolicyUpdateTime = xxServiceVersionInfo.getPolicyUpdateTime();
-				Long latestTagVersion = xxServiceVersionInfo.getTagVersion();
-				Date lastTagUpdateTime = xxServiceVersionInfo.getTagUpdateTime();
-				Long latestGdsVersion = xxServiceVersionInfo.getGdsVersion();
-				Date lastGdsUpdateTime = xxServiceVersionInfo.getGdsUpdateTime();
+        return ret;
+    }
 
-				ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_POLICY_VERSION, Long.toString(latestPolicyVersion));
-				ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_POLICY_UPDATE_TIME, Long.toString(lastPolicyUpdateTime.getTime()));
-				ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_GDS_VERSION, Long.toString(latestGdsVersion));
-				ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_GDS_UPDATE_TIME, Long.toString(lastGdsUpdateTime.getTime()));
-				if (hasAssociatedTagService) {
-					ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION, Long.toString(latestTagVersion));
-					ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME, Long.toString(lastTagUpdateTime.getTime()));
-				} else {
-					ret.remove(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION);
-					ret.remove(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME);
-				}
-			}
-		}
-		catch(Exception excp) {
-			LOG.error("Failed to convert JSON string to Map: '" + jsonStr + "'", excp);
-		}
+    private Map<String, String> jsonStringToMap(String jsonStr, XXServiceVersionInfo xxServiceVersionInfo, boolean hasAssociatedTagService) {
+        Map<String, String> ret = null;
 
-		return ret;
-	}
+        try {
+            ret = jsonUtil.jsonToMap(jsonStr);
+
+            if (xxServiceVersionInfo != null) {
+                Long latestPolicyVersion  = xxServiceVersionInfo.getPolicyVersion();
+                Date lastPolicyUpdateTime = xxServiceVersionInfo.getPolicyUpdateTime();
+                Long latestTagVersion     = xxServiceVersionInfo.getTagVersion();
+                Date lastTagUpdateTime    = xxServiceVersionInfo.getTagUpdateTime();
+                Long latestGdsVersion     = xxServiceVersionInfo.getGdsVersion();
+                Date lastGdsUpdateTime    = xxServiceVersionInfo.getGdsUpdateTime();
+
+                ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_POLICY_VERSION, Long.toString(latestPolicyVersion));
+                ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_POLICY_UPDATE_TIME, Long.toString(lastPolicyUpdateTime.getTime()));
+                ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_GDS_VERSION, Long.toString(latestGdsVersion));
+                ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_GDS_UPDATE_TIME, Long.toString(lastGdsUpdateTime.getTime()));
+                if (hasAssociatedTagService) {
+                    ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION, Long.toString(latestTagVersion));
+                    ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME, Long.toString(lastTagUpdateTime.getTime()));
+                } else {
+                    ret.remove(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION);
+                    ret.remove(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME);
+                }
+            }
+        } catch (Exception excp) {
+            LOG.error("Failed to convert JSON string to Map: {}", jsonStr, excp);
+        }
+
+        return ret;
+    }
 }

@@ -17,15 +17,14 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
-/**
- *
- */
+package org.apache.ranger.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.common.*;
+import org.apache.ranger.common.RangerSearchUtil;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.SortField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXTrxLogV2;
@@ -41,250 +40,244 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 @Scope("singleton")
 public class RangerTrxLogV2Service {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerTrxLogV2Service.class);
+    private static final Logger            LOG          = LoggerFactory.getLogger(RangerTrxLogV2Service.class);
+    private final        List<SortField>   sortFields   = new ArrayList<>();
+    private final        List<SearchField> searchFields = new ArrayList<>();
+    @Autowired
+    RangerSearchUtil searchUtil;
+    @Autowired
+    RangerDaoManager daoManager;
 
-	@Autowired
-	RangerSearchUtil searchUtil;
+    public RangerTrxLogV2Service() {
+        searchFields.add(new SearchField("attributeName", "obj.changeInfo", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField("action", "obj.action", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField("sessionId", "obj.sessionId", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("startDate", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField("endDate", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
+        searchFields.add(new SearchField("owner", "obj.addedByUserId", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("objectClassType", "obj.objectClassType", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("objectId", "obj.objectId", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
 
-	@Autowired
-	RangerDaoManager daoManager;
+        sortFields.add(new SortField("id", "obj.id", true, SortField.SORT_ORDER.DESC));
+        sortFields.add(new SortField("createDate", "obj.createTime", true, SortField.SORT_ORDER.DESC));
+    }
 
-	private final List<SortField>   sortFields   = new ArrayList<>();
-	private final List<SearchField> searchFields = new ArrayList<>();
+    public List<SearchField> getSearchFields() {
+        return searchFields;
+    }
 
-	public RangerTrxLogV2Service() {
-		searchFields.add(new SearchField("attributeName",   "obj.changeInfo",      SearchField.DATA_TYPE.STRING,   SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("action",          "obj.action",          SearchField.DATA_TYPE.STRING,   SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("sessionId",       "obj.sessionId",       SearchField.DATA_TYPE.STRING,   SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("startDate",       "obj.createTime",      SearchField.DATA_TYPE.DATE,     SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
-		searchFields.add(new SearchField("endDate",         "obj.createTime",      SearchField.DATA_TYPE.DATE,     SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
-		searchFields.add(new SearchField("owner",           "obj.addedByUserId",   SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("objectClassType", "obj.objectClassType", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("objectId",        "obj.objectId",        SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+    public List<SortField> getSortFields() {
+        return sortFields;
+    }
 
-		sortFields.add(new SortField("id", "obj.id", true, SortField.SORT_ORDER.DESC));
-		sortFields.add(new SortField("createDate", "obj.createTime", true, SortField.SORT_ORDER.DESC));
-	}
+    public PList<VXTrxLogV2> searchTrxLogs(SearchCriteria searchCriteria) {
+        PList<VXTrxLogV2> ret          = new PList<>();
+        List<XXTrxLogV2>  resultList   = searchTrxLogs(searchCriteria, ret);
+        Map<Long, String> uidNameCache = new HashMap<>();
+        List<VXTrxLogV2>  objList      = resultList.stream().map(xTrxLog -> toViewObject(xTrxLog, uidNameCache)).collect(Collectors.toList());
 
-	public List<SearchField> getSearchFields() {
-		return searchFields;
-	}
+        ret.setList(objList);
 
-	public List<SortField> getSortFields() {
-		return sortFields;
-	}
+        return ret;
+    }
 
-	public PList<VXTrxLogV2> searchTrxLogs(SearchCriteria searchCriteria) {
-		PList<VXTrxLogV2> ret          = new PList<>();
-		List<XXTrxLogV2>  resultList   = searchTrxLogs(searchCriteria, ret);
-		Map<Long, String> uidNameCache = new HashMap<>();
-		List<VXTrxLogV2>  objList      = resultList.stream().map(xTrxLog -> toViewObject(xTrxLog, uidNameCache)).collect(Collectors.toList());
+    public long getTrxLogsCount(SearchCriteria searchCriteria) {
+        String countQueryStr = "SELECT COUNT(obj) FROM " + XXTrxLogV2.class.getName() + " obj ";
+        Query  query         = createQuery(countQueryStr, null, searchCriteria, searchFields, true);
+        Long   count         = daoManager.getXXTrxLogV2().executeCountQueryInSecurityContext(XXTrxLogV2.class, query);
 
-		ret.setList(objList);
+        return count == null ? 0 : count;
+    }
 
-		return ret;
-	}
+    public List<VXTrxLogV2> findByTransactionId(String transactionId) {
+        final List<VXTrxLogV2> ret;
+        final List<XXTrxLogV2> trxLogsV2 = daoManager.getXXTrxLogV2().findByTransactionId(transactionId);
 
-	public long getTrxLogsCount(SearchCriteria searchCriteria) {
-		String countQueryStr = "SELECT COUNT(obj) FROM " + XXTrxLogV2.class.getName() + " obj ";
-		Query  query         = createQuery(countQueryStr, null, searchCriteria, searchFields, true);
-		Long   count         = daoManager.getXXTrxLogV2().executeCountQueryInSecurityContext(XXTrxLogV2.class, query);
+        if (trxLogsV2 != null && !trxLogsV2.isEmpty()) {
+            Map<Long, String> uidNameCache = new HashMap<>();
 
-		return count == null ? 0 : count;
-	}
+            ret = trxLogsV2.stream().map(xTrxLog -> toViewObject(xTrxLog, uidNameCache)).collect(Collectors.toList());
+        } else {
+            ret = Collections.emptyList();
+        }
 
-	public List<VXTrxLogV2> findByTransactionId(String transactionId) {
-		final List<VXTrxLogV2> ret;
-		final List<XXTrxLogV2> trxLogsV2 = daoManager.getXXTrxLogV2().findByTransactionId(transactionId);
+        return ret;
+    }
 
-		if (trxLogsV2 != null && !trxLogsV2.isEmpty()) {
-			Map<Long, String> uidNameCache = new HashMap<>();
+    public VXTrxLogV2 createResource(VXTrxLogV2 trxLog) {
+        XXTrxLogV2 dbObj    = trxLog != null ? toDBObject(trxLog) : null;
+        XXTrxLogV2 savedObj = dbObj != null ? daoManager.getXXTrxLogV2().create(dbObj) : null;
+        VXTrxLogV2 ret      = savedObj != null ? toViewObject(savedObj, null) : null;
 
-			ret = trxLogsV2.stream().map(xTrxLog -> toViewObject(xTrxLog, uidNameCache)).collect(Collectors.toList());
-		} else {
-			ret = Collections.emptyList();
-		}
+        LOG.debug("createResource({}): ret={}", trxLog, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public VXTrxLogV2 createResource(VXTrxLogV2 trxLog) {
-		XXTrxLogV2 dbObj    = trxLog != null ? toDBObject(trxLog) : null;
-		XXTrxLogV2 savedObj = dbObj != null ? daoManager.getXXTrxLogV2().create(dbObj) : null;
-		VXTrxLogV2 ret      = savedObj != null ? toViewObject(savedObj, null) : null;
+    public VXTrxLogV2 readResource(Long id) {
+        XXTrxLogV2 dbObj = id != null ? daoManager.getXXTrxLogV2().getById(id) : null;
+        VXTrxLogV2 ret   = dbObj != null ? toViewObject(dbObj, null) : null;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("createResource(" + trxLog + "): ret=" + ret);
-		}
+        LOG.debug("readResource({}): ret={}", id, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public VXTrxLogV2 readResource(Long id) {
-		XXTrxLogV2 dbObj = id != null ? daoManager.getXXTrxLogV2().getById(id) : null;
-		VXTrxLogV2 ret   = dbObj != null ? toViewObject(dbObj, null) : null;
+    public VXTrxLogV2 updateResource(VXTrxLogV2 trxLog) {
+        XXTrxLogV2 dbObj    = trxLog != null ? toDBObject(trxLog) : null;
+        XXTrxLogV2 savedObj = dbObj != null ? daoManager.getXXTrxLogV2().update(dbObj) : null;
+        VXTrxLogV2 ret      = savedObj != null ? toViewObject(savedObj, null) : null;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("readResource(" + id + "): ret=" + ret);
-		}
+        LOG.debug("updateResource({}): ret={}", trxLog, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public VXTrxLogV2 updateResource(VXTrxLogV2 trxLog) {
-		XXTrxLogV2 dbObj    = trxLog != null ? toDBObject(trxLog) : null;
-		XXTrxLogV2 savedObj = dbObj != null ? daoManager.getXXTrxLogV2().update(dbObj) : null;
-		VXTrxLogV2 ret      = savedObj != null ? toViewObject(savedObj, null) : null;
+    public boolean deleteResource(Long id) {
+        boolean ret = id != null && daoManager.getXXTrxLogV2().remove(id);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("updateResource(" + trxLog + "): ret=" + ret);
-		}
+        LOG.debug("deleteResource({}): ret={}", id, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public boolean deleteResource(Long id) {
-		boolean ret = id != null && daoManager.getXXTrxLogV2().remove(id);
+    private List<XXTrxLogV2> searchTrxLogs(SearchCriteria searchCriteria, PList<VXTrxLogV2> pList) {
+        // Get total count of the rows which meet the search criteria
+        long count = -1;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("deleteResource(" + id + "): ret=" + ret);
-		}
+        if (searchCriteria.isGetCount()) {
+            count = getTrxLogsCount(searchCriteria);
 
-		return ret;
-	}
+            if (count == 0) {
+                return Collections.emptyList();
+            }
+        }
 
-	private List<XXTrxLogV2> searchTrxLogs(SearchCriteria searchCriteria, PList<VXTrxLogV2> pList) {
-		// Get total count of the rows which meet the search criteria
-		long count = -1;
+        String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
+        String queryStr   = "SELECT obj FROM " + XXTrxLogV2.class.getName() + " obj ";
+        Query  query      = createQuery(queryStr, sortClause, searchCriteria, searchFields, false);
 
-		if (searchCriteria.isGetCount()) {
-			count = getTrxLogsCount(searchCriteria);
+        List<XXTrxLogV2> ret = daoManager.getXXTrxLogV2().executeQueryInSecurityContext(XXTrxLogV2.class, query);
 
-			if (count == 0) {
-				return Collections.emptyList();
-			}
-		}
+        if (pList != null) {
+            pList.setResultSize(ret.size());
+            pList.setPageSize(query.getMaxResults());
+            pList.setSortBy(searchCriteria.getSortBy());
+            pList.setSortType(searchCriteria.getSortType());
+            pList.setStartIndex(query.getFirstResult());
+            pList.setTotalCount(count);
+        }
 
-		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
-		String queryStr   = "SELECT obj FROM " + XXTrxLogV2.class.getName() + " obj ";
-		Query  query      = createQuery(queryStr, sortClause, searchCriteria, searchFields, false);
+        return ret;
+    }
 
-		List<XXTrxLogV2> ret = daoManager.getXXTrxLogV2().executeQueryInSecurityContext(XXTrxLogV2.class, query);
+    private Query createQuery(String searchString, String sortString, SearchCriteria searchCriteria, List<SearchField> searchFieldList, boolean isCountQuery) {
+        EntityManager em = daoManager.getEntityManager();
 
-		if (pList != null) {
-			pList.setResultSize(ret.size());
-			pList.setPageSize(query.getMaxResults());
-			pList.setSortBy(searchCriteria.getSortBy());
-			pList.setSortType(searchCriteria.getSortType());
-			pList.setStartIndex(query.getFirstResult());
-			pList.setTotalCount(count);
-		}
+        return searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
+    }
 
-		return ret;
-	}
+    private XXTrxLogV2 toDBObject(VXTrxLogV2 vObj) {
+        XXTrxLogV2 ret = new XXTrxLogV2(vObj.getObjectClassType(), vObj.getObjectId(), vObj.getObjectName(), vObj.getParentObjectClassType(), vObj.getParentObjectId(), vObj.getParentObjectName(), vObj.getAction());
 
-	private Query createQuery(String searchString, String sortString, SearchCriteria searchCriteria, List<SearchField> searchFieldList, boolean isCountQuery) {
-		EntityManager em = daoManager.getEntityManager();
+        ret.setChangeInfo(toJson(vObj.getChangeInfo()));
+        ret.setTransactionId(vObj.getTransactionId());
+        ret.setAction(vObj.getAction());
+        ret.setSessionId(vObj.getSessionId());
+        ret.setRequestId(vObj.getRequestId());
+        ret.setSessionType(vObj.getSessionType());
 
-		return searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
-	}
+        return ret;
+    }
 
-	private XXTrxLogV2 toDBObject(VXTrxLogV2 vObj) {
-		XXTrxLogV2 ret = new XXTrxLogV2(vObj.getObjectClassType(), vObj.getObjectId(), vObj.getObjectName(), vObj.getParentObjectClassType(), vObj.getParentObjectId(), vObj.getParentObjectName(), vObj.getAction());
+    private VXTrxLogV2 toViewObject(XXTrxLogV2 dbObj, Map<Long, String> userIdNameCache) {
+        VXTrxLogV2 ret = new VXTrxLogV2();
 
-		ret.setChangeInfo(toJson(vObj.getChangeInfo()));
-		ret.setTransactionId(vObj.getTransactionId());
-		ret.setAction(vObj.getAction());
-		ret.setSessionId(vObj.getSessionId());
-		ret.setRequestId(vObj.getRequestId());
-		ret.setSessionType(vObj.getSessionType());
+        ret.setId(dbObj.getId());
+        ret.setCreateDate(dbObj.getCreateTime());
+        ret.setCreatedBy(toUserName(dbObj.getAddedByUserId(), userIdNameCache));
+        ret.setObjectClassType(dbObj.getObjectClassType());
+        ret.setObjectId(dbObj.getObjectId());
+        ret.setObjectName(dbObj.getObjectName());
+        ret.setParentObjectClassType(dbObj.getParentObjectClassType());
+        ret.setParentObjectId(dbObj.getParentObjectId());
+        ret.setParentObjectName(dbObj.getParentObjectName());
+        ret.setChangeInfo(toObjectChangeInfo(dbObj.getChangeInfo()));
+        ret.setTransactionId(dbObj.getTransactionId());
+        ret.setAction(dbObj.getAction());
+        ret.setSessionId(dbObj.getSessionId());
+        ret.setRequestId(dbObj.getRequestId());
+        ret.setSessionType(dbObj.getSessionType());
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private VXTrxLogV2 toViewObject(XXTrxLogV2 dbObj, Map<Long, String> userIdNameCache) {
-		VXTrxLogV2 ret = new VXTrxLogV2();
+    private String toJson(ObjectChangeInfo changeInfo) {
+        String ret = null;
 
-		ret.setId(dbObj.getId());
-		ret.setCreateDate(dbObj.getCreateTime());
-		ret.setCreatedBy(toUserName(dbObj.getAddedByUserId(), userIdNameCache));
-		ret.setObjectClassType(dbObj.getObjectClassType());
-		ret.setObjectId(dbObj.getObjectId());
-		ret.setObjectName(dbObj.getObjectName());
-		ret.setParentObjectClassType(dbObj.getParentObjectClassType());
-		ret.setParentObjectId(dbObj.getParentObjectId());
-		ret.setParentObjectName(dbObj.getParentObjectName());
-		ret.setChangeInfo(toObjectChangeInfo(dbObj.getChangeInfo()));
-		ret.setTransactionId(dbObj.getTransactionId());
-		ret.setAction(dbObj.getAction());
-		ret.setSessionId(dbObj.getSessionId());
-		ret.setRequestId(dbObj.getRequestId());
-		ret.setSessionType(dbObj.getSessionType());
+        try {
+            ret = JsonUtilsV2.objToJson(changeInfo);
+        } catch (Exception excp) {
+            // ignore
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private String toJson(ObjectChangeInfo changeInfo) {
-		String ret = null;
+    private ObjectChangeInfo toObjectChangeInfo(String json) {
+        ObjectChangeInfo ret = null;
 
-		try {
-			ret = JsonUtilsV2.objToJson(changeInfo);
-		} catch (Exception excp) {
-			// ignore
-		}
+        try {
+            ret = JsonUtilsV2.jsonToObj(json, ObjectChangeInfo.class);
+        } catch (Exception excp) {
+            // ignore
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private ObjectChangeInfo toObjectChangeInfo(String json) {
-		ObjectChangeInfo ret = null;
+    private String toUserName(Long userId, Map<Long, String> userIdNameCache) {
+        String ret = null;
 
-		try {
-			ret = JsonUtilsV2.jsonToObj(json, ObjectChangeInfo.class);
-		} catch (Exception excp) {
-			// ignore
-		}
+        if (userId != null) {
+            ret = userIdNameCache != null ? userIdNameCache.get(userId) : null;
 
-		return ret;
-	}
+            if (ret == null) {
+                XXPortalUser user = daoManager.getXXPortalUser().findById(userId);
 
-	private String toUserName(Long userId, Map<Long, String> userIdNameCache) {
-		String ret = null;
+                if (user != null) {
+                    ret = user.getPublicScreenName();
 
-		if(userId != null) {
-			ret = userIdNameCache != null ? userIdNameCache.get(userId) : null;
+                    if (StringUtil.isEmpty(ret)) {
+                        ret = user.getFirstName();
 
-			if(ret == null) {
-				XXPortalUser user = daoManager.getXXPortalUser().findById(userId);
+                        if (StringUtil.isEmpty(ret)) {
+                            ret = user.getLoginId();
+                        } else {
+                            if (StringUtils.isNotEmpty(user.getLastName())) {
+                                ret += (" " + user.getLastName());
+                            }
+                        }
+                    }
 
-				if(user != null) {
-					ret = user.getPublicScreenName();
+                    if (ret != null && userIdNameCache != null) {
+                        userIdNameCache.put(userId, ret);
+                    }
+                }
+            }
+        }
 
-					if (StringUtil.isEmpty(ret)) {
-						ret = user.getFirstName();
-
-						if(StringUtil.isEmpty(ret)) {
-							ret = user.getLoginId();
-						} else {
-							if(StringUtils.isNotEmpty(user.getLastName())) {
-								ret += (" " + user.getLastName());
-							}
-						}
-					}
-
-					if (ret != null && userIdNameCache != null) {
-						userIdNameCache.put(userId, ret);
-					}
-				}
-			}
-		}
-
-		return ret;
-	}
+        return ret;
+    }
 }

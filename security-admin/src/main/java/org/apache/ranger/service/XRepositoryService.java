@@ -19,11 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
@@ -37,96 +32,86 @@ import org.apache.ranger.view.VXRepositoryList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
-public class XRepositoryService extends
-		PublicAPIServiceBase<VXAsset, VXRepository> {
+public class XRepositoryService extends PublicAPIServiceBase<VXAsset, VXRepository> {
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
+    String version;
 
-	String version;
+    public XRepositoryService() {
+        version = PropertiesUtil.getProperty("maven.project.version", "");
+    }
 
-	public XRepositoryService() {
-		version = PropertiesUtil.getProperty("maven.project.version", "");
-	}
+    public VXRepository mapXAToPublicObject(VXAsset vXAsset) {
+        VXRepository vRepo = new VXRepository();
+        vRepo = super.mapBaseAttributesToPublicObject(vXAsset, vRepo);
 
-	public VXRepository mapXAToPublicObject(VXAsset vXAsset) {
-		VXRepository vRepo = new VXRepository();
-		vRepo = super.mapBaseAttributesToPublicObject(vXAsset, vRepo);
+        vRepo.setName(vXAsset.getName());
+        vRepo.setDescription(vXAsset.getDescription());
+        vRepo.setRepositoryType(AppConstants.getLabelFor_AssetType(vXAsset.getAssetType()));
+        vRepo.setConfig(vXAsset.getConfig());
 
-		vRepo.setName(vXAsset.getName());
-		vRepo.setDescription(vXAsset.getDescription());
-		vRepo.setRepositoryType(AppConstants.getLabelFor_AssetType(vXAsset
-				.getAssetType()));
-		vRepo.setConfig(vXAsset.getConfig());
-		
-		int actStatus = vXAsset.getActiveStatus();
-		boolean isAct = (actStatus == RangerCommonEnums.STATUS_DISABLED) ? false
-				: true;
+        int     actStatus = vXAsset.getActiveStatus();
+        boolean isAct     = actStatus != RangerCommonEnums.STATUS_DISABLED;
 
-		vRepo.setIsActive(isAct);
-		vRepo.setVersion(version);
+        vRepo.setIsActive(isAct);
+        vRepo.setVersion(version);
 
-		return vRepo;
-	}
+        return vRepo;
+    }
 
-	public VXAsset mapPublicToXAObject(VXRepository vXRepo) {
+    public VXAsset mapPublicToXAObject(VXRepository vXRepo) {
+        VXAsset vXAsset = new VXAsset();
+        vXAsset = super.mapBaseAttributesToXAObject(vXRepo, vXAsset);
 
-		VXAsset vXAsset = new VXAsset();
-		vXAsset = super.mapBaseAttributesToXAObject(vXRepo, vXAsset);
+        vXAsset.setName(vXRepo.getName());
+        vXAsset.setDescription(vXRepo.getDescription());
+        vXAsset.setAssetType(AppConstants.getEnumFor_AssetType(vXRepo.getRepositoryType()));
+        vXAsset.setConfig(vXRepo.getConfig());
 
-		vXAsset.setName(vXRepo.getName());
-		vXAsset.setDescription(vXRepo.getDescription());
-		vXAsset.setAssetType(AppConstants.getEnumFor_AssetType(vXRepo
-				.getRepositoryType()));
-		vXAsset.setConfig(vXRepo.getConfig());
-		
-		int actStatus = (!vXRepo.getIsActive()) ? RangerCommonEnums.STATUS_DISABLED
-				: RangerCommonEnums.STATUS_ENABLED;
+        int actStatus = (!vXRepo.getIsActive()) ? RangerCommonEnums.STATUS_DISABLED : RangerCommonEnums.STATUS_ENABLED;
 
-		vXAsset.setActiveStatus(actStatus);
+        vXAsset.setActiveStatus(actStatus);
 
-		return vXAsset;
-	}
+        return vXAsset;
+    }
 
-	public SearchCriteria getMappedSearchParams(HttpServletRequest request,
-			SearchCriteria searchCriteria) {
+    public SearchCriteria getMappedSearchParams(HttpServletRequest request, SearchCriteria searchCriteria) {
+        Object typeObj   = searchCriteria.getParamValue("type");
+        Object statusObj = searchCriteria.getParamValue("status");
 
-		Object typeObj = searchCriteria.getParamValue("type");
-		Object statusObj = searchCriteria.getParamValue("status");
+        ArrayList<Integer> statusList = new ArrayList<>();
+        if (statusObj == null) {
+            statusList.add(RangerCommonEnums.STATUS_DISABLED);
+            statusList.add(RangerCommonEnums.STATUS_ENABLED);
+        } else {
+            Boolean status     = restErrorUtil.parseBoolean(request.getParameter("status"), "Invalid value for status", MessageEnums.INVALID_INPUT_DATA, null, "status");
+            int     statusEnum = (status == null || !status) ? AppConstants.STATUS_DISABLED : AppConstants.STATUS_ENABLED;
+            statusList.add(statusEnum);
+        }
+        searchCriteria.addParam("status", statusList);
 
-		ArrayList<Integer> statusList = new ArrayList<Integer>();
-		if (statusObj == null) {
-			statusList.add(RangerCommonEnums.STATUS_DISABLED);
-			statusList.add(RangerCommonEnums.STATUS_ENABLED);
-		} else {
-			Boolean status = restErrorUtil.parseBoolean(
-					request.getParameter("status"), "Invalid value for "
-							+ "status", MessageEnums.INVALID_INPUT_DATA, null,
-					"status");
-			int statusEnum = (status == null || status == false) ? AppConstants.STATUS_DISABLED
-					: AppConstants.STATUS_ENABLED;
-			statusList.add(statusEnum);
-		}
-		searchCriteria.addParam("status", statusList);
+        if (typeObj != null) {
+            String type     = typeObj.toString();
+            int    typeEnum = AppConstants.getEnumFor_AssetType(type);
+            searchCriteria.addParam("type", typeEnum);
+        }
+        return searchCriteria;
+    }
 
-		if (typeObj != null) {
-			String type = typeObj.toString();
-			int typeEnum = AppConstants.getEnumFor_AssetType(type);
-			searchCriteria.addParam("type", typeEnum);
-		}
-		return searchCriteria;
-	}
-
-	public VXRepositoryList mapToVXRepositoryList(VXAssetList vXAssetList) {
-
-		List<VXRepository> repoList = new ArrayList<VXRepository>();
-		for (VXAsset vXAsset : vXAssetList.getVXAssets()) {
-			VXRepository vXRepo = mapXAToPublicObject(vXAsset);
-			repoList.add(vXRepo);
-		}
-		VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
-		return vXRepositoryList;
-	}
-
+    public VXRepositoryList mapToVXRepositoryList(VXAssetList vXAssetList) {
+        List<VXRepository> repoList = new ArrayList<>();
+        for (VXAsset vXAsset : vXAssetList.getVXAssets()) {
+            VXRepository vXRepo = mapXAToPublicObject(vXAsset);
+            repoList.add(vXRepo);
+        }
+        VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
+        return vXRepositoryList;
+    }
 }
