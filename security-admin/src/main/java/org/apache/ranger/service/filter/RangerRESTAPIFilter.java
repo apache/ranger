@@ -44,8 +44,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RangerRESTAPIFilter extends LoggingFilter {
-    static volatile boolean initDone;
     Logger logger = LoggerFactory.getLogger(RangerRESTAPIFilter.class);
+    
+    static volatile boolean initDone;
+    
     boolean                  logStdOut            = true;
     HashMap<String, String>  regexPathMap         = new HashMap<>();
     HashMap<String, Pattern> regexPatternMap      = new HashMap<>();
@@ -70,7 +72,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
                 try {
                     request = super.filter(request);
                 } catch (Throwable t) {
-                    logger.error("Error FILTER logging. path={}", path, t);
+                    logger.error("Error FILTER logging. path = {}", path, t);
                 }
             }
         }
@@ -122,21 +124,23 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 
     private void loadPathPatterns() throws ClassNotFoundException {
         String pkg = "org.apache.ranger.service";
-        // List<Class> cList = findClasses(new File(dir), pkg);
+
         @SuppressWarnings("rawtypes")
         List<Class> cList = findClasses(pkg);
+
         for (@SuppressWarnings("rawtypes") Class klass : cList) {
             Annotation[] annotations = klass.getAnnotations();
             for (Annotation annotation : annotations) {
                 if (!(annotation instanceof Path)) {
                     continue;
                 }
+
                 Path path = (Path) annotation;
+
                 if (path.value().startsWith("crud")) {
                     continue;
                 }
-                // logger.info("path=" + path.value());
-                // Loop over the class methods
+                
                 for (Method m : klass.getMethods()) {
                     Annotation[] methodAnnotations = m.getAnnotations();
                     String       httpMethod        = null;
@@ -172,13 +176,13 @@ public class RangerRESTAPIFilter extends LoggingFilter {
                     Pattern regexPattern = Pattern.compile(regEx);
 
                     if (regexPatternMap.containsKey(regEx)) {
-                        logger.warn("Duplicate regex={}, fullPath={}", regEx, fullPath);
+                        logger.warn("Duplicate regex = {}, fullPath = {}", regEx, fullPath);
                     }
                     regexList.add(regEx);
                     regexPathMap.put(regEx, fullPath);
                     regexPatternMap.put(regEx, regexPattern);
 
-                    logger.info("path={}, servicePath={}, fullPath={}, regEx={}", path.value(), servicePath, fullPath, regEx);
+                    logger.info("path = {}, servicePath = {}, fullPath = {}, regEx = {}", path.value(), servicePath, fullPath, regEx);
                 }
             }
         }
@@ -196,8 +200,6 @@ public class RangerRESTAPIFilter extends LoggingFilter {
                     if (matcher.matches()) {
                         foundMatch   = true;
                         foundMatches = true;
-                        // logger.info("rX " + rX + " matched with rY=" + rY
-                        // + ". Moving rX to the top. Loop count=" + i);
                         break;
                     }
                 }
@@ -209,7 +211,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
             }
             regexList = tmpList;
             if (!foundMatches) {
-                logger.info("Done rearranging. loopCount={}", i);
+                logger.info("Done rearranging. loopCount = {}", i);
                 break;
             }
         }
@@ -218,9 +220,6 @@ public class RangerRESTAPIFilter extends LoggingFilter {
         }
 
         logger.info("Loaded {} API methods.", regexList.size());
-        // for (String regEx : regexList) {
-        // logger.info("regEx=" + regEx);
-        // }
     }
 
     @SuppressWarnings("rawtypes")
@@ -228,9 +227,6 @@ public class RangerRESTAPIFilter extends LoggingFilter {
         List<Class> classes = new ArrayList<>();
 
         ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(true);
-
-        // scanner.addIncludeFilter(new
-        // AnnotationTypeFilter(<TYPE_YOUR_ANNOTATION_HERE>.class));
 
         for (BeanDefinition bd : scanner.findCandidateComponents(packageName)) {
             classes.add(Class.forName(bd.getBeanClassName()));
