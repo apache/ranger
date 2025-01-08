@@ -73,8 +73,10 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractBaseResourceService.class);
 
     protected static final Map<Class<?>, String> tEntityValueMap = new HashMap<>();
+
     public final           List<SortField>       sortFields      = new ArrayList<>();
     public final           List<SearchField>     searchFields    = new ArrayList<>();
+
     protected final        Class<T>              tEntityClass;
     protected final        Class<V>              tViewClass;
     protected final        String                className;
@@ -83,6 +85,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     protected final        String                queryStr;
     protected final        String                distinctCountQueryStr;
     protected final        String                distinctQueryStr;
+
     @Autowired
     protected              RangerDaoManager      daoManager;
     @Autowired
@@ -191,12 +194,12 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
             // throw 401
             logger.debug("OBJECT SECURITY");
         }
-        // Need to delete all dependent common objects like Notes and
-        // UserDataPref
+
+        // Need to delete all dependent common objects like Notes and UserDataPref
         try {
             result = getDao().remove(resource);
         } catch (Exception e) {
-            logger.error("Error deleting {} => Id={}", getResourceName(), id, e);
+            logger.error("Error deleting {} => Id = {}", getResourceName(), id, e);
 
             throw restErrorUtil.createRESTException(getResourceName() + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, "" + id + ", error=" + e.getMessage());
         }
@@ -324,13 +327,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
             resourceName = "Object";
         }
         return resourceName;
-
-        // if (className.startsWith("M")) {
-        // return className.substring(1);
-        // } else if (className.startsWith("org.apache.ranger.entity.M")){
-        // return className.substring(14);
-        // }
-        // return className;
     }
 
     // ----------------------------------------------------------------------------------
@@ -363,10 +359,8 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     }
 
     /**
-     * Create Entity object and populate it from view object. Used in create
-     * operation
+     * Create Entity object and populate it from view object. Used in create operation
      */
-
     protected void mapBaseAttributesToEntityBean(T resource, V viewBean) {
         if (resource.getCreateTime() == null) {
             resource.setCreateTime(DateUtil.getUTCDate());
@@ -384,7 +378,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     // ----------------------------------------------------------------------------------
     // Update Operation
     // ----------------------------------------------------------------------------------
-
     protected T populateEntityBeanForCreate(T t, V viewBaseBean) {
         mapBaseAttributesToEntityBean(t, viewBaseBean);
         return mapViewToEntityBean(viewBaseBean, t, OPERATION_CREATE_CONTEXT);
@@ -464,8 +457,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
     protected V populateViewBean(T resource, V viewBean) {
         mapBaseAttributesToViewBean(resource, viewBean);
-        // TODO:Current:Open: Need to set original and updated
-        // content
+        // TODO:Current:Open: Need to set original and updated content
         return viewBean;
     }
 
@@ -502,6 +494,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
                 }
             }
         }
+
         if (resource.getUpdatedByUserId() != null) {
             XXPortalUser tUser = daoManager.getXXPortalUser().getById(resource.getUpdatedByUserId());
             if (tUser != null) {
@@ -523,7 +516,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     }
 
     protected Query createQuery(String searchString, String sortString, SearchCriteria searchCriteria, List<SearchField> searchFieldList, boolean isCountQuery) {
-//        EntityManager em = entityDao != null ? entityDao.getEntityManager() : daoManager.getEntityManager();
         EntityManager em = getDao().getEntityManager();
 
         Query query = searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
@@ -627,10 +619,6 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
             vList.setTotalCount(count);
         }
 
-        // if (filterEnabled) {
-        // getDao().disableVisiblityFilters(tClass);
-        // }
-
         return resultList;
     }
 
@@ -642,9 +630,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
                 Path<Object> tableField = null;
                 String       fieldName  = searchField.getFieldName();
 
-                // stuff to handle jpql syntax (e.g. obj.id, obj.city.city etc).
-                // There has to be better way of dealing with this. Will look
-                // again.
+                // stuff to handle jpql syntax (e.g. obj.id, obj.city.city etc). There has to be better way of dealing with this. Will look again.
                 int dotIndex = fieldName.indexOf(".");
                 if (dotIndex != -1) {
                     fieldName = fieldName.substring(dotIndex + 1);
@@ -687,7 +673,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
                     }
                 }
             }
-        } // for
+        }
 
         return userConditions;
     }
