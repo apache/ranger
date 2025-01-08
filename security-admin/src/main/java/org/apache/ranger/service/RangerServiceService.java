@@ -88,18 +88,14 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
                     String        freeTextPasswordMetaData = Joiner.on(",").skipNulls().join(util.getCryptAlgo(), new String(util.getEncryptKey()), new String(util.getSalt()), util.getIterationCount(), PasswordUtils.needsIv(util.getCryptAlgo()) ? util.getIvAsString() : null);
                     String        decryptedPwd             = PasswordUtils.decryptPassword(encryptedPwd);
                     if (StringUtils.equalsIgnoreCase(freeTextPasswordMetaData + "," + PasswordUtils.encryptPassword(freeTextPasswordMetaData + "," + decryptedPwd), encryptedPwd)) {
-                        configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd); // XXX: method name is
-                        // getConfigsWithDecryptedPassword,
-                        // then why do we store the
-                        // encryptedPwd?
+                        configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
+                        // XXX: method name is getConfigsWithDecryptedPassword, then why do we store the encryptedPwd?
                     }
                 } else {
                     String decryptedPwd = PasswordUtils.decryptPassword(encryptedPwd);
                     if (StringUtils.equalsIgnoreCase(PasswordUtils.encryptPassword(decryptedPwd), encryptedPwd)) {
-                        configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd); // XXX: method name is
-                        // getConfigsWithDecryptedPassword,
-                        // then why do we store the
-                        // encryptedPwd?
+                        configs.put(ServiceDBStore.CONFIG_KEY_PASSWORD, encryptedPwd);
+                        // XXX: method name is getConfigsWithDecryptedPassword, then why do we store the encryptedPwd?
                     }
                 }
             }
@@ -149,7 +145,6 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
 
     @Override
     protected void validateForCreate(RangerService vObj) {
-        // TODO Auto-generated method stub
     }
 
     @Override
