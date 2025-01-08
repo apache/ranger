@@ -129,8 +129,8 @@ const PrinciplePermissionComp = ({
               obj.type == "USER"
                 ? userGreyIcon
                 : obj.type == "GROUP"
-                ? groupGreyIcon
-                : roleGreyIcon
+                  ? groupGreyIcon
+                  : roleGreyIcon
             }
             height="20px"
             width="20px"
@@ -453,8 +453,8 @@ const PrinciplePermissionComp = ({
               {type == "dataset"
                 ? "Dataset"
                 : type == "datashare"
-                ? "Datashare"
-                : ""}{" "}
+                  ? "Datashare"
+                  : ""}{" "}
               Visibility
               {isDetailView && isAdmin && (
                 <Button

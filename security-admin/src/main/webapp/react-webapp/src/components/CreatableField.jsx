@@ -24,15 +24,14 @@ const CreatableField = (props) => {
   const { actionValues, creatableOnChange } = props;
   const [actionValue, setActionValue] = useState(actionValues);
   const [actionInputValue, setActionInputValue] = useState("");
-const prevProps = useRef(actionValues);
+  const prevProps = useRef(actionValues);
 
-useEffect(()=>{
-  if(JSON.stringify(prevProps) !== JSON.stringify(actionValues)){
-   prevProps.current = actionValues
-   setActionValue(prevProps.current)
-  }
-},[actionValues])
-
+  useEffect(() => {
+    if (JSON.stringify(prevProps) !== JSON.stringify(actionValues)) {
+      prevProps.current = actionValues;
+      setActionValue(prevProps.current);
+    }
+  }, [actionValues]);
 
   const handleChange = (value, input) => {
     setActionValue(value);
