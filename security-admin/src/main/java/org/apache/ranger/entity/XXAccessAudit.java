@@ -17,11 +17,10 @@
  * under the License.
  */
 
- package org.apache.ranger.entity;
+package org.apache.ranger.entity;
 
 /**
  * Access Audit
- *
  */
 
 import javax.persistence.Column;
@@ -29,82 +28,84 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="xa_access_audit")
+@Table(name = "xa_access_audit")
 public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="SEQ_NUM")
-	protected long sequenceNumber;
+    @Column(name = "SEQ_NUM")
+    protected long sequenceNumber;
 
-	@Column(name="EVENT_COUNT")
-	protected long eventCount;
+    @Column(name = "EVENT_COUNT")
+    protected long eventCount;
 
-	//event duration in ms
-	@Column(name="EVENT_DUR_MS")
-	protected long eventDuration;
+    //event duration in ms
+    @Column(name = "EVENT_DUR_MS")
+    protected long eventDuration;
+    @Column(name = "tags")
+    protected String tags;
 
-	public long getSequenceNumber() {
-		return sequenceNumber;
-	}
-	public void setSequenceNumber(long sequenceNumber) {
-		this.sequenceNumber = sequenceNumber;
-	}
-	public long getEventCount() {
-		return eventCount;
-	}
-	public void setEventCount(long eventCount) {
-		this.eventCount = eventCount;
-	}
-	public long getEventDuration() {
-		return eventDuration;
-	}
-	public void setEventDuration(long eventDuration) {
-		this.eventDuration = eventDuration;
-	}
+    public long getSequenceNumber() {
+        return sequenceNumber;
+    }
 
-	@Column(name="tags")
-	protected String tags;
-	
-	/**
-	 * @return the tags
-	 */
-	public String getTags() {
-		return tags;
-	}
-	/**
-	 * @param tags the tags to set
-	 */
-	public void setTags(String tags) {
-		this.tags = tags;
-	}
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	@Override
-	public String toString( ) {
-		String str = super.toString();
-		str += "sequenceNumber={" + sequenceNumber + "}";
-		str += "eventCount={" + eventCount + "}";
-		str += "eventDuration={" + eventDuration + "}";
-		str += "tags={" + tags + "}";
-		return str;
-	}
+    public void setSequenceNumber(long sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
 
-	/**
-	 * Checks for all attributes except referenced db objects
-	 * @return true if all attributes match
-	*/
-	@Override
-	public boolean equals( Object obj) {
-		if ( !super.equals(obj) ) {
-			return false;
-		}
-		XXAccessAudit other = (XXAccessAudit) obj;
-		if ((this.tags == null && other.tags != null) || (this.tags != null && !this.tags.equals(other.tags))) {
-			return false;
-		}
-		return true;
-	}
+    public long getEventCount() {
+        return eventCount;
+    }
 
+    public void setEventCount(long eventCount) {
+        this.eventCount = eventCount;
+    }
+
+    public long getEventDuration() {
+        return eventDuration;
+    }
+
+    public void setEventDuration(long eventDuration) {
+        this.eventDuration = eventDuration;
+    }
+
+    /**
+     * @return the tags
+     */
+    public String getTags() {
+        return tags;
+    }
+
+    /**
+     * @param tags the tags to set
+     */
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    /**
+     * This return the bean content in string format
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = super.toString();
+        str += "sequenceNumber={" + sequenceNumber + "}";
+        str += "eventCount={" + eventCount + "}";
+        str += "eventDuration={" + eventDuration + "}";
+        str += "tags={" + tags + "}";
+        return str;
+    }
+
+    /**
+     * Checks for all attributes except referenced db objects
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+        XXAccessAudit other = (XXAccessAudit) obj;
+        return (this.tags != null || other.tags == null) && (this.tags == null || this.tags.equals(other.tags));
+    }
 }
