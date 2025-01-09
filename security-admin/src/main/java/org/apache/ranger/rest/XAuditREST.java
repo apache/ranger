@@ -17,7 +17,28 @@
  * under the License.
  */
 
- package org.apache.ranger.rest;
+package org.apache.ranger.rest;
+
+import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.biz.XAuditMgr;
+import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.SearchUtil;
+import org.apache.ranger.common.annotation.RangerAnnotationClassName;
+import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.security.context.RangerAPIList;
+import org.apache.ranger.service.RangerTrxLogV2Service;
+import org.apache.ranger.service.XAccessAuditService;
+import org.apache.ranger.view.VXAccessAuditList;
+import org.apache.ranger.view.VXLong;
+import org.apache.ranger.view.VXTrxLog;
+import org.apache.ranger.view.VXTrxLogList;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -30,152 +51,124 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
-import org.apache.ranger.biz.XAuditMgr;
-import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.SearchUtil;
-import org.apache.ranger.common.annotation.RangerAnnotationClassName;
-import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
-import org.apache.ranger.security.context.RangerAPIList;
-import org.apache.ranger.service.XAccessAuditService;
-import org.apache.ranger.service.RangerTrxLogV2Service;
-import org.apache.ranger.view.VXAccessAuditList;
-import org.apache.ranger.view.VXLong;
-import org.apache.ranger.view.VXTrxLog;
-import org.apache.ranger.view.VXTrxLogList;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
-import org.apache.ranger.biz.RangerBizUtil;
-
 @Path("xaudit")
 @Component
 @Scope("request")
 @RangerAnnotationJSMgrName("XAuditMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class XAuditREST {
+    @Autowired
+    SearchUtil searchUtil;
 
-	@Autowired
-	SearchUtil searchUtil;
+    @Autowired
+    XAuditMgr xAuditMgr;
 
-	@Autowired
-	XAuditMgr xAuditMgr;
+    @Autowired
+    RangerTrxLogV2Service xTrxLogService;
 
-	@Autowired
-	RangerTrxLogV2Service xTrxLogService;
+    @Autowired
+    XAccessAuditService xAccessAuditService;
 
-	@Autowired
-	XAccessAuditService xAccessAuditService;
+    @Autowired
+    RangerBizUtil bizUtil;
 
-	@Autowired
-	RangerBizUtil bizUtil;
+    // Handle XTrxLog
+    @GET
+    @Path("/trx_log/{id}")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_TRX_LOG + "\")")
+    public VXTrxLog getXTrxLog(@PathParam("id") Long id) {
+        return xAuditMgr.getXTrxLog(id);
+    }
 
-	// Handle XTrxLog
-	@GET
-	@Path("/trx_log/{id}")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_TRX_LOG + "\")")
-	public VXTrxLog getXTrxLog(
-			@PathParam("id") Long id) {
-		 return xAuditMgr.getXTrxLog(id);
-	}
+    @POST
+    @Path("/trx_log")
+    @Consumes("application/json")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_TRX_LOG + "\")")
+    public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
+        return xAuditMgr.createXTrxLog(vXTrxLog);
+    }
 
-	@POST
-	@Path("/trx_log")
-	@Consumes({ "application/json" })
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_TRX_LOG + "\")")
-	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
-		 return xAuditMgr.createXTrxLog(vXTrxLog);
-	}
+    @PUT
+    @Path("/trx_log")
+    @Consumes("application/json")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_TRX_LOG + "\")")
+    public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
+        return xAuditMgr.updateXTrxLog(vXTrxLog);
+    }
 
-	@PUT
-	@Path("/trx_log")
-	@Consumes({ "application/json" })
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_TRX_LOG + "\")")
-	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
-		 return xAuditMgr.updateXTrxLog(vXTrxLog);
-	}
+    @DELETE
+    @Path("/trx_log/{id}")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_X_TRX_LOG + "\")")
+    @RangerAnnotationClassName(class_name = VXTrxLog.class)
+    public void deleteXTrxLog(@PathParam("id") Long id, @Context HttpServletRequest request) {
+        boolean force = false;
+        xAuditMgr.deleteXTrxLog(id, force);
+    }
 
-	@DELETE
-	@Path("/trx_log/{id}")
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_X_TRX_LOG + "\")")
-	@RangerAnnotationClassName(class_name = VXTrxLog.class)
-	public void deleteXTrxLog(@PathParam("id") Long id,
-			@Context HttpServletRequest request) {
-		 boolean force = false;
-		 xAuditMgr.deleteXTrxLog(id, force);
-	}
+    /**
+     * Implements the traditional search functionalities for XTrxLogs
+     *
+     * @param request
+     * @return
+     */
+    @GET
+    @Path("/trx_log")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_TRX_LOG + "\")")
+    public VXTrxLogList searchXTrxLogs(@Context HttpServletRequest request) {
+        SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xTrxLogService.getSortFields());
+        return xAuditMgr.searchXTrxLogs(searchCriteria);
+    }
 
-	/**
-	 * Implements the traditional search functionalities for XTrxLogs
-	 *
-	 * @param request
-	 * @return
-	 */
-	@GET
-	@Path("/trx_log")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_TRX_LOG + "\")")
-	public VXTrxLogList searchXTrxLogs(@Context HttpServletRequest request) {
-		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xTrxLogService.getSortFields());
-		 return xAuditMgr.searchXTrxLogs(searchCriteria);
-	}
+    @GET
+    @Path("/trx_log/count")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_TRX_LOGS + "\")")
+    public VXLong countXTrxLogs(@Context HttpServletRequest request) {
+        SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xTrxLogService.getSortFields());
 
-	@GET
-	@Path("/trx_log/count")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_TRX_LOGS + "\")")
-	public VXLong countXTrxLogs(@Context HttpServletRequest request) {
-		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
-		 request, xTrxLogService.getSortFields());
+        return xAuditMgr.getXTrxLogSearchCount(searchCriteria);
+    }
 
-		 return xAuditMgr.getXTrxLogSearchCount(searchCriteria);
-	}
+    /**
+     * Implements the traditional search functionalities for XAccessAudits
+     *
+     * @param request
+     * @return
+     */
+    @GET
+    @Path("/access_audit")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ACCESS_AUDITS + "\")")
+    public VXAccessAuditList searchXAccessAudits(@Context HttpServletRequest request) {
+        SearchCriteria searchCriteria  = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+        long           kmsServiceDefId = EmbeddedServiceDefsUtil.instance().getKmsServiceDefId();
 
+        if (kmsServiceDefId != -1) {
+            boolean includeKmsAuditLogs = bizUtil.isKeyAdmin() || bizUtil.isAuditKeyAdmin();
 
-	/**
-	 * Implements the traditional search functionalities for XAccessAudits
-	 *
-	 * @param request
-	 * @return
-	 */
-	@GET
-	@Path("/access_audit")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ACCESS_AUDITS + "\")")
-	public VXAccessAuditList searchXAccessAudits(@Context HttpServletRequest request) {
-		SearchCriteria searchCriteria  = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
-		long           kmsServiceDefId = EmbeddedServiceDefsUtil.instance().getKmsServiceDefId();
+            if (includeKmsAuditLogs) {
+                searchCriteria.getParamList().put("repoType", kmsServiceDefId);
+            } else {
+                searchCriteria.getParamList().put("-repoType", kmsServiceDefId);
+            }
+        }
 
-		if (kmsServiceDefId != -1) {
-			boolean includeKmsAuditLogs = bizUtil.isKeyAdmin() || bizUtil.isAuditKeyAdmin();
+        return xAuditMgr.searchXAccessAudits(searchCriteria);
+    }
 
-			if (includeKmsAuditLogs) {
-				searchCriteria.getParamList().put("repoType", kmsServiceDefId);
-			} else {
-				searchCriteria.getParamList().put("-repoType", kmsServiceDefId);
-			}
-		}
+    @GET
+    @Path("/access_audit/count")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ACCESS_AUDITS + "\")")
+    public VXLong countXAccessAudits(@Context HttpServletRequest request) {
+        VXLong ret = new VXLong();
 
-		return xAuditMgr.searchXAccessAudits(searchCriteria);
-	}
+        ret.setValue(searchXAccessAudits(request).getTotalCount());
 
-	@GET
-	@Path("/access_audit/count")
-	@Produces({ "application/json" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ACCESS_AUDITS + "\")")
-	public VXLong countXAccessAudits(@Context HttpServletRequest request) {
-		VXLong ret = new VXLong();
-
-		ret.setValue(searchXAccessAudits(request).getTotalCount());
-
-		return ret;
-	}
-
+        return ret;
+    }
 }
