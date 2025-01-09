@@ -24,7 +24,14 @@ import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.acl.AclOperation;
 import org.apache.kafka.common.resource.ResourceType;
-import org.apache.kafka.server.authorizer.*;
+import org.apache.kafka.server.authorizer.AclCreateResult;
+import org.apache.kafka.server.authorizer.AclDeleteResult;
+import org.apache.kafka.server.authorizer.Action;
+import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
+import org.apache.kafka.server.authorizer.AuthorizationResult;
+import org.apache.kafka.server.authorizer.Authorizer;
+import org.apache.kafka.server.authorizer.AuthorizerServerInfo;
+import org.apache.ranger.plugin.classloader.PluginClassLoaderActivator;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,189 +42,95 @@ import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 public class RangerKafkaAuthorizer implements Authorizer {
-  private static final Logger logger = LoggerFactory.getLogger(RangerKafkaAuthorizer.class);
+    private static final Logger logger = LoggerFactory.getLogger(RangerKafkaAuthorizer.class);
 
-  private static final String RANGER_PLUGIN_TYPE = "kafka";
-  private static final String RANGER_KAFKA_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer";
+    private static final String RANGER_PLUGIN_TYPE                     = "kafka";
+    private static final String RANGER_KAFKA_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer";
 
-  private Authorizer rangerKafkaAuthorizerImpl = null;
-  private RangerPluginClassLoader rangerPluginClassLoader = null;
+    private Authorizer              rangerKafkaAuthorizerImpl;
+    private RangerPluginClassLoader pluginClassLoader;
 
-  public RangerKafkaAuthorizer() {
-    logger.debug("==> RangerKafkaAuthorizer.RangerKafkaAuthorizer()");
+    public RangerKafkaAuthorizer() {
+        logger.debug("==> RangerKafkaAuthorizer.RangerKafkaAuthorizer()");
 
-    this.init();
+        this.init();
 
-    logger.debug("<== RangerKafkaAuthorizer.RangerKafkaAuthorizer()");
-  }
-
-  private static String toString(AuthorizableRequestContext requestContext) {
-    return requestContext == null ? null :
-        String.format("AuthorizableRequestContext{principal=%s, clientAddress=%s, clientId=%s}",
-            requestContext.principal(), requestContext.clientAddress(), requestContext.clientId());
-  }
-
-  private void init() {
-    logger.debug("==> RangerKafkaAuthorizer.init()");
-
-    try {
-
-      rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
-
-      @SuppressWarnings("unchecked")
-      Class<Authorizer> cls = (Class<Authorizer>) Class.forName(RANGER_KAFKA_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
-
-      activatePluginClassLoader();
-
-      rangerKafkaAuthorizerImpl = cls.newInstance();
-    } catch (Exception e) {
-      logger.error("Error Enabling RangerKafkaPlugin", e);
-      throw new IllegalStateException("Error Enabling RangerKafkaPlugin", e);
-    } finally {
-      deactivatePluginClassLoader();
+        logger.debug("<== RangerKafkaAuthorizer.RangerKafkaAuthorizer()");
     }
 
-    logger.debug("<== RangerKafkaAuthorizer.init()");
-  }
-
-  @Override
-  public void configure(Map<String, ?> configs) {
-    logger.debug("==> RangerKafkaAuthorizer.configure(Map<String, ?>)");
-
-    try {
-      activatePluginClassLoader();
-
-      rangerKafkaAuthorizerImpl.configure(configs);
-    } finally {
-      deactivatePluginClassLoader();
+    @Override
+    public void configure(Map<String, ?> configs) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "configure")) {
+            rangerKafkaAuthorizerImpl.configure(configs);
+        }
     }
 
-    logger.debug("<== RangerKafkaAuthorizer.configure(Map<String, ?>)");
-  }
-
-  @Override
-  public Map<Endpoint, ? extends CompletionStage<Void>> start(AuthorizerServerInfo authorizerServerInfo) {
-    logger.debug("==> RangerKafkaAuthorizer.start(AuthorizerServerInfo)");
-
-    try {
-      activatePluginClassLoader();
-
-      return rangerKafkaAuthorizerImpl.start(authorizerServerInfo);
-    } finally {
-      deactivatePluginClassLoader();
-      logger.debug("<== RangerKafkaAuthorizer.start(AuthorizerServerInfo)");
-    }
-  }
-
-  @Override
-  public void close() throws IOException {
-    logger.debug("==> RangerKafkaAuthorizer.close()");
-
-    try {
-      activatePluginClassLoader();
-
-      rangerKafkaAuthorizerImpl.close();
-    } finally {
-      deactivatePluginClassLoader();
+    @Override
+    public Map<Endpoint, ? extends CompletionStage<Void>> start(AuthorizerServerInfo authorizerServerInfo) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "start")) {
+            return rangerKafkaAuthorizerImpl.start(authorizerServerInfo);
+        }
     }
 
-    logger.debug("<== RangerKafkaAuthorizer.close()");
-  }
-
-  @Override
-  public List<AuthorizationResult> authorize(AuthorizableRequestContext requestContext, List<Action> actions) {
-    logger.debug("==> RangerKafkaAuthorizer.authorize(AuthorizableRequestContext={}, List<Action>={})", toString(requestContext), actions);
-
-    List<AuthorizationResult> ret;
-
-    try {
-      activatePluginClassLoader();
-
-      ret = rangerKafkaAuthorizerImpl.authorize(requestContext, actions);
-    } finally {
-      deactivatePluginClassLoader();
+    @Override
+    public List<AuthorizationResult> authorize(AuthorizableRequestContext requestContext, List<Action> actions) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "authorize")) {
+            return rangerKafkaAuthorizerImpl.authorize(requestContext, actions);
+        }
     }
 
-    logger.debug("<== RangerKafkaAuthorizer.authorize: {}", ret);
-
-    return ret;
-  }
-
-  @Override
-  public List<? extends CompletionStage<AclCreateResult>> createAcls(AuthorizableRequestContext requestContext, List<AclBinding> aclBindings) {
-    logger.debug("==> RangerKafkaAuthorizer.createAcls(AuthorizableRequestContext, List<AclBinding>)");
-
-    try {
-      activatePluginClassLoader();
-
-      return rangerKafkaAuthorizerImpl.createAcls(requestContext, aclBindings);
-    } finally {
-      deactivatePluginClassLoader();
-      logger.debug("<== RangerKafkaAuthorizer.createAcls(AuthorizableRequestContext, List<AclBinding>)");
-    }
-  }
-
-  @Override
-  public List<? extends CompletionStage<AclDeleteResult>> deleteAcls(AuthorizableRequestContext requestContext, List<AclBindingFilter> aclBindingFilters) {
-    logger.debug("==> RangerKafkaAuthorizer.deleteAcls(AuthorizableRequestContext, List<AclBindingFilter>)");
-
-    try {
-      activatePluginClassLoader();
-
-      return rangerKafkaAuthorizerImpl.deleteAcls(requestContext, aclBindingFilters);
-    } finally {
-      deactivatePluginClassLoader();
-      logger.debug("<== RangerKafkaAuthorizer.deleteAcls(AuthorizableRequestContext, List<AclBindingFilter>)");
-    }
-  }
-
-  @Override
-  public Iterable<AclBinding> acls(AclBindingFilter filter) {
-    logger.debug("==> RangerKafkaAuthorizer.acls(AclBindingFilter)");
-
-    try {
-      activatePluginClassLoader();
-
-      return rangerKafkaAuthorizerImpl.acls(filter);
-    } finally {
-      deactivatePluginClassLoader();
-      logger.debug("<== RangerKafkaAuthorizer.acls(AclBindingFilter)");
-    }
-  }
-
-  @Override
-  public AuthorizationResult authorizeByResourceType(AuthorizableRequestContext requestContext, AclOperation op, ResourceType resourceType) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("==> RangerKafkaAuthorizer.authorizeByResourceType(AuthorizableRequestContext={}, AclOperation={}, ResourceType={})",
-          toString(requestContext), op, resourceType);
+    @Override
+    public List<? extends CompletionStage<AclCreateResult>> createAcls(AuthorizableRequestContext requestContext, List<AclBinding> aclBindings) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "createAcls")) {
+            return rangerKafkaAuthorizerImpl.createAcls(requestContext, aclBindings);
+        }
     }
 
-    AuthorizationResult ret;
-
-    try {
-      activatePluginClassLoader();
-
-      ret = rangerKafkaAuthorizerImpl.authorizeByResourceType(requestContext, op, resourceType);
-    } finally {
-      deactivatePluginClassLoader();
+    @Override
+    public List<? extends CompletionStage<AclDeleteResult>> deleteAcls(AuthorizableRequestContext requestContext, List<AclBindingFilter> aclBindingFilters) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "deleteAcls")) {
+            return rangerKafkaAuthorizerImpl.deleteAcls(requestContext, aclBindingFilters);
+        }
     }
 
-    if (logger.isDebugEnabled()) {
-      logger.debug("<== RangerKafkaAuthorizer.authorizeByResourceType: {}", ret);
+    @Override
+    public Iterable<AclBinding> acls(AclBindingFilter filter) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "acls")) {
+            return rangerKafkaAuthorizerImpl.acls(filter);
+        }
     }
 
-    return ret;
-  }
-
-  private void activatePluginClassLoader() {
-    if (rangerPluginClassLoader != null) {
-      rangerPluginClassLoader.activate();
+    @Override
+    public AuthorizationResult authorizeByResourceType(AuthorizableRequestContext requestContext, AclOperation op, ResourceType resourceType) {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "authorizeByResourceType")) {
+            return rangerKafkaAuthorizerImpl.authorizeByResourceType(requestContext, op, resourceType);
+        }
     }
-  }
 
-  private void deactivatePluginClassLoader() {
-    if (rangerPluginClassLoader != null) {
-      rangerPluginClassLoader.deactivate();
+    @Override
+    public void close() throws IOException {
+        try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "close")) {
+            rangerKafkaAuthorizerImpl.close();
+        }
     }
-  }
+
+    private void init() {
+        logger.debug("==> RangerKafkaAuthorizer.init()");
+
+        try {
+            pluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+
+            @SuppressWarnings("unchecked")
+            Class<Authorizer> cls = (Class<Authorizer>) Class.forName(RANGER_KAFKA_AUTHORIZER_IMPL_CLASSNAME, true, pluginClassLoader);
+
+            try (PluginClassLoaderActivator ignored = new PluginClassLoaderActivator(pluginClassLoader, "init")) {
+                rangerKafkaAuthorizerImpl = cls.newInstance();
+            }
+        } catch (Exception e) {
+            logger.error("Error Enabling RangerKafkaPlugin", e);
+            throw new IllegalStateException("Error Enabling RangerKafkaPlugin", e);
+        }
+
+        logger.debug("<== RangerKafkaAuthorizer.init()");
+    }
 }

@@ -31,49 +31,60 @@ import java.util.Properties;
 */
 
 public class AuditFileCacheProvider extends BaseAuditHandler {
-    private static final Logger    logger = LoggerFactory.getLogger(AuditFileCacheProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuditFileCacheProvider.class);
 
-    AuditFileCacheProviderSpool fileSpooler = null;
-    AuditHandler                consumer    = null;
+    AuditFileCacheProviderSpool fileSpooler;
+    AuditHandler                consumer;
 
     AuditFileCacheProvider(AuditHandler consumer) {
         this.consumer = consumer;
     }
 
+    @Override
+    public boolean log(AuditEventBase event) {
+        boolean ret = false;
+
+        if (event != null) {
+            fileSpooler.stashLogs(event);
+
+            if (fileSpooler.isSpoolingSuccessful()) {
+                ret = true;
+            }
+        }
+
+        return ret;
+    }
+
     public void init(Properties prop, String basePropertyName) {
         String propPrefix = "xasecure.audit.filecache";
+
         if (basePropertyName != null) {
             propPrefix = basePropertyName;
         }
+
         super.init(prop, propPrefix);
+
         //init Consumer
         if (consumer != null) {
             consumer.init(prop, propPrefix);
         }
+
         //init AuditFileCacheSpooler
         fileSpooler = new AuditFileCacheProviderSpool(consumer);
-        fileSpooler.init(prop,propPrefix);
-    }
-    @Override
-    public boolean log(AuditEventBase event) {
-        boolean ret = false;
-        if ( event != null) {
-            fileSpooler.stashLogs(event);
-            if ( fileSpooler.isSpoolingSuccessful()) {
-                ret = true;
-            }
-        }
-        return ret;
+
+        fileSpooler.init(prop, propPrefix);
     }
 
     @Override
     public boolean log(Collection<AuditEventBase> events) {
         boolean ret = true;
-        if ( events != null) {
+
+        if (events != null) {
             for (AuditEventBase event : events) {
                 ret = log(event);
             }
         }
+
         return ret;
     }
 
@@ -83,6 +94,7 @@ public class AuditFileCacheProvider extends BaseAuditHandler {
         if (consumer != null) {
             consumer.start();
         }
+
         if (fileSpooler != null) {
             // start AuditFileSpool thread
             fileSpooler.start();
@@ -91,7 +103,8 @@ public class AuditFileCacheProvider extends BaseAuditHandler {
 
     @Override
     public void stop() {
-        logger.info("Stop called. name=" + getName());
+        logger.info("stop() called. name={}", getName());
+
         if (consumer != null) {
             consumer.stop();
         }
@@ -99,24 +112,27 @@ public class AuditFileCacheProvider extends BaseAuditHandler {
 
     @Override
     public void waitToComplete() {
-        logger.info("waitToComplete called. name=" + getName());
-        if ( consumer != null) {
+        logger.info("waitToComplete() called. name={}", getName());
+
+        if (consumer != null) {
             consumer.waitToComplete();
         }
     }
 
     @Override
     public void waitToComplete(long timeout) {
-        logger.info("waitToComplete called. name=" + getName());
-        if ( consumer != null) {
+        logger.info("waitToComplete(timeout={}) called. name={}", timeout, getName());
+
+        if (consumer != null) {
             consumer.waitToComplete(timeout);
         }
     }
 
     @Override
     public void flush() {
-        logger.info("waitToComplete. name=" + getName());
-        if ( consumer != null) {
+        logger.info("flush() called. name={}", getName());
+
+        if (consumer != null) {
             consumer.flush();
         }
     }

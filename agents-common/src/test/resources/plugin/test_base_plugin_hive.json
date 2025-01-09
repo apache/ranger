@@ -3,7 +3,7 @@
   "tagsFilename":      "/plugin/hive_tags.json",
   "rolesFilename":     "/plugin/hive_roles.json",
   "userStoreFilename": "/plugin/hive_user_store.json",
-  "gdsInfoFilename":   "/plugin/hive_gds_info.json",
+  "gdsInfoFilename":   "/policyengine/gds/gds_info_hive_access.json",
   "tests": [
     {
       "name": "table: sales.prospects, user: res-user, access: select",

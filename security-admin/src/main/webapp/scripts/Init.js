@@ -83,9 +83,6 @@ require.config({
         'select2': {
             deps: ['jquery', 'bootstrap']
         },
-        'bootbox': {
-            deps: ['jquery']
-        },
         'esprima': {
             'exports': 'esprima'
         },
@@ -94,6 +91,9 @@ require.config({
         },
         'Backgrid.ColumnManager' : {
             deps: ['backbone', 'backgrid', 'underscore', 'jquery']
+        },
+        'bootprompt': {
+            deps: ['jquery', 'bootstrap']
         },
     },
 
@@ -134,7 +134,6 @@ require.config({
         'jquery-toggles': '../libs/bower/jquery-toggles/js/toggles.min',
         'tag-it': '../libs/bower/tag-it/js/tag-it',
         'select2': '../libs/bower/select2/select2',
-        'bootbox': '../libs/bower/bootbox/js/bootbox',
         'visualsearch': '../libs/other/visualsearch/js/visualsearch',
         'globalize': '../libs/bower/globalize/lib/globalize',
         /* handlebars from the require handlerbars plugin below */
@@ -145,6 +144,7 @@ require.config({
         'esprima': '../libs/bower/esprima/esprima',
         'tmpl': '../templates',
         'Backgrid.ColumnManager': '../libs/other/backgrid-column-manager/Backgrid.ColumnManager.min',
+        'bootprompt' : '../libs/bower/bootprompt/bootprompt',
     },
 
     hbs: {

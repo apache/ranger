@@ -37,7 +37,6 @@ define(function(require){
 
 	require('backgrid-filter');
 	require('backgrid-paginator');
-	require('bootbox');
 
 	var ModulePermsTableLayout = Backbone.Marionette.Layout.extend(
 	/** @lends ModulePermsTableLayout */

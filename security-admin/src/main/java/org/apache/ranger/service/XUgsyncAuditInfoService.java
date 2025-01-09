@@ -134,6 +134,8 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
 		}
 
 		returnList.setVxUgsyncAuditInfoList(xUgsyncAuditInfoList);
+		returnList.setTotalCount(xUgsyncAuditInfoList.size());
+		returnList.setResultSize(xUgsyncAuditInfoList.size());
 		return returnList;
 	}
 

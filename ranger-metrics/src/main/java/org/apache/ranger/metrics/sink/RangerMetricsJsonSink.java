@@ -19,11 +19,6 @@
 
 package org.apache.ranger.metrics.sink;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import org.apache.commons.configuration2.SubsetConfiguration;
 import org.apache.hadoop.metrics2.AbstractMetric;
 import org.apache.hadoop.metrics2.MetricType;
@@ -32,10 +27,15 @@ import org.apache.hadoop.metrics2.MetricsSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
 public class RangerMetricsJsonSink implements MetricsSink {
     private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsJsonSink.class);
 
-    private final Set<String> contexts;
+    private final Set<String>                      contexts;
     private final Map<String, Map<String, Object>> metricsJson = new HashMap<>();
 
     public RangerMetricsJsonSink(Set<String> contexts) {
@@ -44,7 +44,7 @@ public class RangerMetricsJsonSink implements MetricsSink {
 
     @Override
     public void init(SubsetConfiguration conf) {
-     // Implementation not needed
+        // Implementation not needed
     }
 
     @Override
@@ -53,11 +53,11 @@ public class RangerMetricsJsonSink implements MetricsSink {
             if (contexts.contains(metricsRecord.context())) {
                 for (AbstractMetric metrics : metricsRecord.metrics()) {
                     if (metrics.type() == MetricType.COUNTER || metrics.type() == MetricType.GAUGE) {
-                        String recordName =  metricsRecord.name();
-                        Map<String, Object> record = metricsJson.get(recordName);
+                        String              recordName = metricsRecord.name();
+                        Map<String, Object> record     = metricsJson.get(recordName);
 
                         if (Objects.isNull(record)) {
-                            record = new HashMap<> ();
+                            record = new HashMap<>();
                         }
 
                         record.put(metrics.name(), metrics.value());
@@ -65,18 +65,16 @@ public class RangerMetricsJsonSink implements MetricsSink {
                     }
                 }
             } else {
-                if (LOG.isDebugEnabled()) {
-		    LOG.debug("=== RangerMetricsJsonSink:putMetrics(): skipping... "+ metricsRecord.context());
-		}
+                LOG.debug("<=== RangerMetricsJsonSink:putMetrics({}): skipping... ", metricsRecord.context());
             }
         } catch (Exception e) {
-            LOG.error("Exception occured while converting metrics into json.", e);
+            LOG.error("Exception occured while converting metrics into json", e);
         }
     }
 
     @Override
     public void flush() {
-     // Implementation not needed
+        // Implementation not needed
     }
 
     public Map<String, Map<String, Object>> getMetrics() {

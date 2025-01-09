@@ -19,34 +19,34 @@
 
 package org.apache.ranger.policyengine;
 
-import java.lang.reflect.Type;
-
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+
+import java.lang.reflect.Type;
 
 /**
  * {@link JsonDeserializer} to assist {@link Gson} with selecting proper type
  * when encountering RangerAccessRequest interface in the source json.
  */
 public class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
+    private final GsonBuilder gsonBuilder;
 
-	private GsonBuilder gsonBuilder;
+    public RangerAccessRequestDeserializer(GsonBuilder builder) {
+        this.gsonBuilder = builder;
+    }
 
-	public RangerAccessRequestDeserializer(final GsonBuilder builder) {
-		this.gsonBuilder = builder;
-	}
+    @Override
+    public RangerAccessRequest deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
+        RangerAccessRequestImpl ret = gsonBuilder.create().fromJson(jsonObj, RangerAccessRequestImpl.class);
 
-	@Override
-	public RangerAccessRequest deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
-		RangerAccessRequestImpl ret = gsonBuilder.create().fromJson(jsonObj, RangerAccessRequestImpl.class);
-		ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
-		return ret;
-	}
+        ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+
+        return ret;
+    }
 }

@@ -29,17 +29,15 @@ import java.util.List;
  * RangerService for Apache Kudu.
  */
 public class RangerServiceKudu extends RangerBaseService {
-
     @Override
     public HashMap<String, Object> validateConfig() throws Exception {
-      // TODO: implement configure validation for Kudu policies.
-      return new HashMap<>();
+        // TODO: implement configure validation for Kudu policies.
+        return new HashMap<>();
     }
 
     @Override
     public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-      // TODO: implement resource lookup for Kudu policies.
-      return new ArrayList<>();
+        // TODO: implement resource lookup for Kudu policies.
+        return new ArrayList<>();
     }
-
 }

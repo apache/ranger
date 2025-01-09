@@ -19,18 +19,11 @@
 
 package org.apache.ranger.services.elasticsearch.client;
 
-import java.lang.reflect.Type;
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.security.auth.Subject;
-import javax.ws.rs.core.MediaType;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -41,239 +34,246 @@ import org.apache.ranger.plugin.client.HadoopException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
+import javax.security.auth.Subject;
+import javax.ws.rs.core.MediaType;
+
+import java.lang.reflect.Type;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ElasticsearchClient extends BaseClient {
+    private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchClient.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchClient.class);
+    private static final String ELASTICSEARCH_INDEX_API_ENDPOINT = "/_all";
 
-	private static final String ELASTICSEARCH_INDEX_API_ENDPOINT = "/_all";
+    private final String elasticsearchUrl;
+    private final String userName;
 
-	private String elasticsearchUrl;
+    public ElasticsearchClient(String serviceName, Map<String, String> configs) {
+        super(serviceName, configs, "elasticsearch-client");
 
-	private String userName;
+        this.elasticsearchUrl = configs.get("elasticsearch.url");
+        this.userName         = configs.get("username");
 
-	public ElasticsearchClient(String serviceName, Map<String, String> configs) {
+        if (StringUtils.isEmpty(this.elasticsearchUrl)) {
+            LOG.error("No value found for configuration 'elasticsearch.url'. Elasticsearch resource lookup will fail.");
+        }
 
-		super(serviceName, configs, "elasticsearch-client");
-		this.elasticsearchUrl = configs.get("elasticsearch.url");
-		this.userName = configs.get("username");
+        if (StringUtils.isEmpty(this.userName)) {
+            LOG.error("No value found for configuration 'username'. Elasticsearch resource lookup will fail.");
+        }
 
-		if (StringUtils.isEmpty(this.elasticsearchUrl)) {
-			LOG.error("No value found for configuration 'elasticsearch.url'. Elasticsearch resource lookup will fail.");
-		}
+        LOG.debug("Elasticsearch client is build with url: [{}], user: [{}].", this.elasticsearchUrl, this.userName);
+    }
 
-		if (StringUtils.isEmpty(this.userName)) {
-			LOG.error("No value found for configuration 'username'. Elasticsearch resource lookup will fail.");
-		}
+    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) {
+        ElasticsearchClient elasticsearchClient = getElasticsearchClient(serviceName, configs);
+        List<String>        indexList           = elasticsearchClient.getIndexList(null, null);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Elasticsearch client is build with url: [" + this.elasticsearchUrl + "], user: [" + this.userName
-					+ "].");
-		}
-	}
+        boolean connectivityStatus = false;
 
-	public List<String> getIndexList(final String indexMatching, final List<String> existingIndices) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get elasticsearch index list for indexMatching: " + indexMatching + ", existingIndices: "
-					+ existingIndices);
-		}
-		Subject subj = getLoginSubject();
-		if (subj == null) {
-			return Collections.emptyList();
-		}
+        if (CollectionUtils.isNotEmpty(indexList)) {
+            LOG.debug("ConnectionTest list size {} elasticsearch indices.", indexList.size());
 
-		List<String> ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+            connectivityStatus = true;
+        }
 
-			@Override
-			public List<String> run() {
+        Map<String, Object> responseData = new HashMap<>();
 
-				String indexApi = null;
-				if (StringUtils.isNotEmpty(indexMatching)) {
-					indexApi = '/' + indexMatching;
-					if (!indexApi.endsWith("*")) {
-						indexApi += "*";
-					}
-				} else {
-					indexApi = ELASTICSEARCH_INDEX_API_ENDPOINT;
-				}
-				ClientResponse response = getClientResponse(elasticsearchUrl, indexApi, userName);
+        if (connectivityStatus) {
+            String successMsg = "ConnectionTest Successful.";
 
-				Map<String, Object> index2detailMap = getElasticsearchResourceResponse(response,
-						new TypeToken<HashMap<String, Object>>() {
-						}.getType());
-				if (MapUtils.isEmpty(index2detailMap)) {
-					return Collections.emptyList();
-				}
+            BaseClient.generateResponseDataMap(true, successMsg, successMsg, null, null, responseData);
+        } else {
+            String failureMsg = "Unable to retrieve any elasticsearch indices using given parameters.";
 
-				Set<String> indexResponses = index2detailMap.keySet();
-				if (CollectionUtils.isEmpty(indexResponses)) {
-					return Collections.emptyList();
-				}
+            BaseClient.generateResponseDataMap(false, failureMsg, failureMsg + DEFAULT_ERROR_MESSAGE, null, null, responseData);
+        }
 
-				return filterResourceFromResponse(indexMatching, existingIndices, new ArrayList<>(indexResponses));
-			}
-		});
+        return responseData;
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get elasticsearch index list result: " + ret);
-		}
-		return ret;
-	}
+    public static ElasticsearchClient getElasticsearchClient(String serviceName, Map<String, String> configs) {
+        ElasticsearchClient elasticsearchClient;
 
-	private static ClientResponse getClientResponse(String elasticsearchUrl, String elasticsearchApi, String userName) {
-		String[] elasticsearchUrls = elasticsearchUrl.trim().split("[,;]");
-		if (ArrayUtils.isEmpty(elasticsearchUrls)) {
-			return null;
-		}
+        LOG.debug("Getting elasticsearchClient for datasource: {}", serviceName);
 
-		ClientResponse response = null;
-		Client client = Client.create();
-		for (String currentUrl : elasticsearchUrls) {
-			if (StringUtils.isBlank(currentUrl)) {
-				continue;
-			}
+        if (MapUtils.isEmpty(configs)) {
+            String msgDesc = "Could not connect elasticsearch as connection configMap is empty.";
 
-			String url = currentUrl.trim() + elasticsearchApi;
-			try {
-				response = getClientResponse(url, client, userName);
+            LOG.error(msgDesc);
 
-				if (response != null) {
-					if (response.getStatus() == HttpStatus.SC_OK) {
-						break;
-					} else {
-						response.close();
-					}
-				}
-			} catch (Throwable t) {
-				String msgDesc = "Exception while getting elasticsearch response, elasticsearchUrl: " + url;
-				LOG.error(msgDesc, t);
-			}
-		}
-		client.destroy();
+            HadoopException hdpException = new HadoopException(msgDesc);
 
-		return response;
-	}
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
 
-	private static ClientResponse getClientResponse(String url, Client client, String userName) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("getClientResponse():calling " + url);
-		}
+            throw hdpException;
+        } else {
+            elasticsearchClient = new ElasticsearchClient(serviceName, configs);
+        }
 
-		ClientResponse response = client.resource(url).accept(MediaType.APPLICATION_JSON).
-			header("userName", userName).get(ClientResponse.class);
+        return elasticsearchClient;
+    }
 
-		if (response != null) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("getClientResponse():response.getStatus()= " + response.getStatus());
-			}
-			if (response.getStatus() != HttpStatus.SC_OK) {
-				LOG.warn("getClientResponse():response.getStatus()= " + response.getStatus() + " for URL " + url
-						+ ", failed to get elasticsearch resource list, response= " + response.getEntity(String.class));
-			}
-		}
-		return response;
-	}
+    public List<String> getIndexList(final String indexMatching, final List<String> existingIndices) {
+        LOG.debug("Get elasticsearch index list for indexMatching: {}, existingIndices: {}", indexMatching, existingIndices);
 
-	private <T> T getElasticsearchResourceResponse(ClientResponse response, Type type) {
-		T resource = null;
-		try {
-			if (response != null && response.getStatus() == HttpStatus.SC_OK) {
-				String jsonString = response.getEntity(String.class);
-				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Subject subj = getLoginSubject();
 
-				resource = gson.fromJson(jsonString, type);
-			} else {
-				String msgDesc = "Unable to get a valid response for " + "expected mime type : ["
-						+ MediaType.APPLICATION_JSON + "], elasticsearchUrl: " + elasticsearchUrl
-						+ " - got null response.";
-				LOG.error(msgDesc);
-				HadoopException hdpException = new HadoopException(msgDesc);
-				hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
-				throw hdpException;
-			}
-		} catch (HadoopException he) {
-			throw he;
-		} catch (Throwable t) {
-			String msgDesc = "Exception while getting elasticsearch resource response, elasticsearchUrl: "
-					+ elasticsearchUrl;
-			HadoopException hdpException = new HadoopException(msgDesc, t);
+        if (subj == null) {
+            return Collections.emptyList();
+        }
 
-			LOG.error(msgDesc, t);
+        List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
+            String indexApi;
 
-			hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + DEFAULT_ERROR_MESSAGE, null,
-					null);
-			throw hdpException;
+            if (StringUtils.isNotEmpty(indexMatching)) {
+                indexApi = '/' + indexMatching;
 
-		} finally {
-			if (response != null) {
-				response.close();
-			}
-		}
-		return resource;
-	}
+                if (!indexApi.endsWith("*")) {
+                    indexApi += "*";
+                }
+            } else {
+                indexApi = ELASTICSEARCH_INDEX_API_ENDPOINT;
+            }
 
-	private static List<String> filterResourceFromResponse(String resourceMatching, List<String> existingResources,
-			List<String> resourceResponses) {
-		List<String> resources = new ArrayList<String>();
-		for (String resourceResponse : resourceResponses) {
-			if (CollectionUtils.isNotEmpty(existingResources) && existingResources.contains(resourceResponse)) {
-				continue;
-			}
-			if (StringUtils.isEmpty(resourceMatching) || resourceMatching.startsWith("*")
-					|| resourceResponse.toLowerCase().startsWith(resourceMatching.toLowerCase())) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("filterResourceFromResponse(): Adding elasticsearch resource " + resourceResponse);
-				}
-				resources.add(resourceResponse);
-			}
-		}
-		return resources;
-	}
+            ClientResponse      response        = getClientResponse(elasticsearchUrl, indexApi, userName);
+            Map<String, Object> index2detailMap = getElasticsearchResourceResponse(response, new TypeToken<HashMap<String, Object>>() {}.getType());
 
-	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) {
-		ElasticsearchClient elasticsearchClient = getElasticsearchClient(serviceName, configs);
-		List<String> indexList = elasticsearchClient.getIndexList(null, null);
+            if (MapUtils.isEmpty(index2detailMap)) {
+                return Collections.emptyList();
+            }
 
-		boolean connectivityStatus = false;
-		if (CollectionUtils.isNotEmpty(indexList)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("ConnectionTest list size " + indexList.size() + " elasticsearch indices.");
-			}
-			connectivityStatus = true;
-		}
+            Set<String> indexResponses = index2detailMap.keySet();
 
-		Map<String, Object> responseData = new HashMap<String, Object>();
-		if (connectivityStatus) {
-			String successMsg = "ConnectionTest Successful.";
-			BaseClient.generateResponseDataMap(connectivityStatus, successMsg, successMsg, null, null, responseData);
-		} else {
-			String failureMsg = "Unable to retrieve any elasticsearch indices using given parameters.";
-			BaseClient.generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + DEFAULT_ERROR_MESSAGE, null,
-					null, responseData);
-		}
+            if (CollectionUtils.isEmpty(indexResponses)) {
+                return Collections.emptyList();
+            }
 
-		return responseData;
-	}
+            return filterResourceFromResponse(indexMatching, existingIndices, new ArrayList<>(indexResponses));
+        });
 
-	public static ElasticsearchClient getElasticsearchClient(String serviceName, Map<String, String> configs) {
-		ElasticsearchClient elasticsearchClient = null;
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Getting elasticsearchClient for datasource: " + serviceName);
-		}
-		if (MapUtils.isEmpty(configs)) {
-			String msgDesc = "Could not connect elasticsearch as connection configMap is empty.";
-			LOG.error(msgDesc);
-			HadoopException hdpException = new HadoopException(msgDesc);
-			hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
-			throw hdpException;
-		} else {
-			elasticsearchClient = new ElasticsearchClient(serviceName, configs);
-		}
-		return elasticsearchClient;
-	}
+        LOG.debug("Get elasticsearch index list result: {}", ret);
+
+        return ret;
+    }
+
+    private static ClientResponse getClientResponse(String elasticsearchUrl, String elasticsearchApi, String userName) {
+        String[] elasticsearchUrls = elasticsearchUrl.trim().split("[,;]");
+
+        if (ArrayUtils.isEmpty(elasticsearchUrls)) {
+            return null;
+        }
+
+        ClientResponse response = null;
+        Client         client   = Client.create();
+
+        for (String currentUrl : elasticsearchUrls) {
+            if (StringUtils.isBlank(currentUrl)) {
+                continue;
+            }
+
+            String url = currentUrl.trim() + elasticsearchApi;
+
+            try {
+                response = getClientResponse(url, client, userName);
+
+                if (response != null) {
+                    if (response.getStatus() == HttpStatus.SC_OK) {
+                        break;
+                    } else {
+                        response.close();
+                    }
+                }
+            } catch (Throwable t) {
+                String msgDesc = "Exception while getting elasticsearch response, elasticsearchUrl: " + url;
+
+                LOG.error(msgDesc, t);
+            }
+        }
+
+        client.destroy();
+
+        return response;
+    }
+
+    private static ClientResponse getClientResponse(String url, Client client, String userName) {
+        LOG.debug("getClientResponse():calling {}", url);
+
+        ClientResponse response = client.resource(url).accept(MediaType.APPLICATION_JSON).header("userName", userName).get(ClientResponse.class);
+
+        if (response != null) {
+            LOG.debug("getClientResponse():response.getStatus()= {}", response.getStatus());
+
+            if (response.getStatus() != HttpStatus.SC_OK) {
+                LOG.warn("getClientResponse():response.getStatus()= {} for URL {}, failed to get elasticsearch resource list, response= {}", response.getStatus(), url, response.getEntity(String.class));
+            }
+        }
+
+        return response;
+    }
+
+    private <T> T getElasticsearchResourceResponse(ClientResponse response, Type type) {
+        T resource;
+
+        try {
+            if (response != null && response.getStatus() == HttpStatus.SC_OK) {
+                String jsonString = response.getEntity(String.class);
+                Gson   gson       = new GsonBuilder().setPrettyPrinting().create();
+
+                resource = gson.fromJson(jsonString, type);
+            } else {
+                String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + MediaType.APPLICATION_JSON + "], elasticsearchUrl: " + elasticsearchUrl + " - got null response.";
+
+                LOG.error(msgDesc);
+
+                HadoopException hdpException = new HadoopException(msgDesc);
+
+                hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+
+                throw hdpException;
+            }
+        } catch (HadoopException he) {
+            throw he;
+        } catch (Throwable t) {
+            String msgDesc = "Exception while getting elasticsearch resource response, elasticsearchUrl: " + elasticsearchUrl;
+
+            HadoopException hdpException = new HadoopException(msgDesc, t);
+
+            LOG.error(msgDesc, t);
+
+            hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+
+            throw hdpException;
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+
+        return resource;
+    }
+
+    private static List<String> filterResourceFromResponse(String resourceMatching, List<String> existingResources, List<String> resourceResponses) {
+        List<String> resources = new ArrayList<>();
+
+        for (String resourceResponse : resourceResponses) {
+            if (CollectionUtils.isNotEmpty(existingResources) && existingResources.contains(resourceResponse)) {
+                continue;
+            }
+
+            if (StringUtils.isEmpty(resourceMatching) || resourceMatching.startsWith("*") || resourceResponse.toLowerCase().startsWith(resourceMatching.toLowerCase())) {
+                LOG.debug("filterResourceFromResponse(): Adding elasticsearch resource {}", resourceResponse);
+
+                resources.add(resourceResponse);
+            }
+        }
+
+        return resources;
+    }
 }

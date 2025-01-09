@@ -17,24 +17,25 @@
 
 package org.apache.ranger.services.hdfs;
 
-import java.io.File;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.AbstractRangerAdminClient;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
 
+import java.io.File;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.util.List;
+
 /**
  * A test implementation of the RangerAdminClient interface that just reads policies in from a file and returns them
  */
 public class RangerAdminClientImpl extends AbstractRangerAdminClient {
-    private final static String cacheFilename = "hdfs-policies.json";
-    private final static String tagFilename = "hdfs-policies-tag.json";
-    private String hdfsVersion = null;
+    private static final String cacheFilename = "hdfs-policies.json";
+    private static final String tagFilename   = "hdfs-policies-tag.json";
+
+    private String hdfsVersion;
 
     public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
         super.init(serviceName, appId, configPropertyPrefix, config);
@@ -43,47 +44,48 @@ public class RangerAdminClientImpl extends AbstractRangerAdminClient {
     }
 
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
 
         final String relativePath;
+
         if (StringUtils.isNotBlank(hdfsVersion)) {
             relativePath = "/src/test/resources/" + hdfsVersion + "/";
         } else {
             relativePath = "/src/test/resources/";
         }
 
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, relativePath + cacheFilename);
-        byte[] cacheBytes = Files.readAllBytes(cachePath);
+        java.nio.file.Path cachePath  = FileSystems.getDefault().getPath(basedir, relativePath + cacheFilename);
+        byte[]             cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
     }
 
     public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         String basedir = System.getProperty("basedir");
+
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
 
         final String relativePath;
+
         if (StringUtils.isNotBlank(hdfsVersion)) {
             relativePath = "/src/test/resources/" + hdfsVersion + "/";
         } else {
             relativePath = "/src/test/resources/";
         }
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, relativePath + tagFilename);
 
-        byte[] cacheBytes = Files.readAllBytes(cachePath);
+        java.nio.file.Path cachePath  = FileSystems.getDefault().getPath(basedir, relativePath + tagFilename);
+        byte[]             cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServiceTags.class);
     }
 
-    public List<String> getTagTypes(String tagTypePattern) throws Exception {
+    public List<String> getTagTypes(String tagTypePattern) {
         return null;
     }
-
-
 }

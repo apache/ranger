@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package org.apache.ranger.services.hive;
 
 public enum RangerHiveOperationType {
     CREATEDATABASE,
+    CREATEDATACONNECTOR,
     CREATEFUNCTION,
     CREATETABLE,
     CREATEVIEW,
@@ -56,6 +57,12 @@ public enum RangerHiveOperationType {
     ALTERTABLE_MERGEFILES,
     ALTERTABLE_PARTCOLTYPE,
     ALTERTABLE_PROPERTIES,
+    ALTERTABLE_SETPARTSPEC,
+    ALTERTABLE_EXECUTE,
+    ALTERTABLE_CONVERT,
+    ALTERDATACONNECTOR,
+    ALTERDATACONNECTOR_OWNER,
+    ALTERDATACONNECTOR_URL,
     ALTERTABLE_PROTECTMODE,
     ALTERTABLE_RENAME,
     ALTERTABLE_RENAMECOL,
@@ -69,6 +76,10 @@ public enum RangerHiveOperationType {
     ALTERTABLE_UPDATEPARTSTATS,
     ALTERTABLE_UPDATETABLESTATS,
     ALTERTABLE_UPDATECOLUMNS,
+    ALTERTABLE_CREATEBRANCH,
+    ALTERTABLE_DROPBRANCH,
+    ALTERTABLE_CREATETAG,
+    ALTERTABLE_DROPTAG,
     ALTERTABLE_EXCHANGEPARTITION,
     ALTERTABLE_OWNER,
     ALTERTBLPART_SKEWED_LOCATION,
@@ -77,11 +88,14 @@ public enum RangerHiveOperationType {
     ALTERVIEW_RENAME,
     ALTER_RESOURCEPLAN,
     ALTER_MATERIALIZED_VIEW_REWRITE,
+    ALTER_MATERIALIZED_VIEW_REBUILD,
     ALTER_MAPPING,
     ALTER_TRIGGER,
     ALTER_POOL,
     ALTER_SCHEDULED_QUERY,
     DROPVIEW_PROPERTIES,
+    PREPARE,
+    EXECUTE,
     MSCK,
     DROPFUNCTION,
     DROPINDEX,
@@ -89,6 +103,7 @@ public enum RangerHiveOperationType {
     DROPVIEW,
     DROP_MATERIALIZED_VIEW,
     DROPDATABASE,
+    DROPDATACONNECTOR,
     DROP_RESOURCEPLAN,
     DROP_TRIGGER,
     DROP_POOL,
@@ -110,8 +125,10 @@ public enum RangerHiveOperationType {
     SHOWCOLUMNS,
     DESCTABLE,
     SHOWDATABASES,
+    SHOWDATACONNECTORS,
     SWITCHDATABASE,
     DESCDATABASE,
+    DESCDATACONNECTOR,
     SHOWTABLES,
     TRUNCATETABLE,
     GRANT_PRIVILEGE,
@@ -160,6 +177,7 @@ public enum RangerHiveOperationType {
     SHOW_ROLE_PRINCIPALS,
     SHOW_TRANSACTIONS,
     ABORT_TRANSACTIONS,
+    ABORT_COMPACTION,
     START_TRANSACTION,
     REPLDUMP,
     REPLLOAD,
@@ -168,7 +186,6 @@ public enum RangerHiveOperationType {
     LLAP_CLUSTER_INFO,
     LLAP_CACHE_PURGE;
 
-    private RangerHiveOperationType() {
+    RangerHiveOperationType() {
     }
 }
-

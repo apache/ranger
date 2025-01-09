@@ -19,31 +19,30 @@
 
 package org.apache.ranger.metrics.source;
 
+import org.apache.hadoop.metrics2.MetricsCollector;
+import org.apache.ranger.metrics.RangerMetricsInfo;
+
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
-import java.lang.management.ThreadMXBean;
 import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.util.Objects;
 
-import org.apache.hadoop.metrics2.MetricsCollector;
-import org.apache.ranger.metrics.RangerMetricsInfo;
-
 public class RangerMetricsJvmSource extends RangerMetricsSource {
-    private long  memoryCurrent;
-    private long  memoryMaximum;
-    private long  gcCountTotal;
-    private long  gcTimeTotal;
-    private long  gcTimeMax;
-    private int   threadsBusy;
-    private int   threadsBlocked;
-    private int   threadsWaiting;
-    private int   threadsRemaining;
-    private int   processorsAvailable;
-    private float systemLoadAverage;
-
     private final String context;
+    private       long   memoryCurrent;
+    private       long   memoryMaximum;
+    private       long   gcCountTotal;
+    private       long   gcTimeTotal;
+    private       long   gcTimeMax;
+    private       int    threadsBusy;
+    private       int    threadsBlocked;
+    private       int    threadsWaiting;
+    private       int    threadsRemaining;
+    private       int    processorsAvailable;
+    private       float  systemLoadAverage;
 
     public RangerMetricsJvmSource(String context) {
         this.context = context;
@@ -56,44 +55,53 @@ public class RangerMetricsJvmSource extends RangerMetricsSource {
         memoryCurrent = memoryMXBean.getHeapMemoryUsage().getUsed();
         memoryMaximum = memoryMXBean.getHeapMemoryUsage().getCommitted();
 
-        // Threads
-        // reset
-        threadsBusy = threadsBlocked = threadsWaiting = threadsRemaining = 0;
+        // reset Threads
+        threadsBusy = 0;
+        threadsBlocked = 0;
+        threadsWaiting = 0;
+        threadsRemaining = 0;
 
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
         for (Long threadID : threadMXBean.getAllThreadIds()) {
             ThreadInfo threadInfo = threadMXBean.getThreadInfo(threadID, 0);
             if (Objects.nonNull(threadInfo)) {
-                switch(threadInfo.getThreadState().toString()) {
-                    case "RUNNABLE": threadsBusy++;    break;
-                    case "BLOCKED" : threadsBlocked++; break;
-                    case "WAITING" : threadsWaiting++; break;
+                switch (threadInfo.getThreadState().toString()) {
+                    case "RUNNABLE":
+                        threadsBusy++;
+                        break;
+                    case "BLOCKED":
+                        threadsBlocked++;
+                        break;
+                    case "WAITING":
+                        threadsWaiting++;
+                        break;
 
-                    default        : threadsRemaining++; break;
+                    default:
+                        threadsRemaining++;
+                        break;
                 }
             }
         }
 
         // Load
         OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
-        systemLoadAverage = (float) osMXBean.getSystemLoadAverage();
+        systemLoadAverage   = (float) osMXBean.getSystemLoadAverage();
         processorsAvailable = osMXBean.getAvailableProcessors();
 
         // GC
         long totalGarbageCollections = 0;
-        long garbageCollectionTime = 0;
+        long garbageCollectionTime   = 0;
 
-        for(GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
-
+        for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
             long count = gc.getCollectionCount();
 
-            if(count >= 0) {
+            if (count >= 0) {
                 totalGarbageCollections += count;
             }
 
             long time = gc.getCollectionTime();
 
-            if(time >= 0) {
+            if (time >= 0) {
                 garbageCollectionTime += time;
             }
 
@@ -103,23 +111,23 @@ public class RangerMetricsJvmSource extends RangerMetricsSource {
         }
 
         gcCountTotal = totalGarbageCollections;
-        gcTimeTotal = garbageCollectionTime;
+        gcTimeTotal  = garbageCollectionTime;
     }
 
     @Override
     protected void update(MetricsCollector collector, boolean all) {
         collector.addRecord("RangerJvm")
-        .setContext(this.context)
-        .addGauge(new RangerMetricsInfo("MemoryCurrent", "Ranger current memory utilization"), memoryCurrent)
-        .addGauge(new RangerMetricsInfo("MemoryMax", "Ranger max memory utilization"), memoryMaximum)
-        .addGauge(new RangerMetricsInfo("GcCountTotal", "Ranger app total GCs"), gcCountTotal)
-        .addGauge(new RangerMetricsInfo("GcTimeTotal", "Ranger app total GC time"), gcTimeTotal)
-        .addGauge(new RangerMetricsInfo("GcTimeMax", "Ranger app MAX GC time"), gcTimeMax)
-        .addGauge(new RangerMetricsInfo("ThreadsBusy", "Ranger busy threads"), threadsBusy)
-        .addGauge(new RangerMetricsInfo("ThreadsBlocked", "Ranger blocked threads"), threadsBlocked)
-        .addGauge(new RangerMetricsInfo("ThreadsWaiting", "Ranger waiting threads"), threadsWaiting)
-        .addGauge(new RangerMetricsInfo("ThreadsRemaining", "Ranger remaining threads"), threadsRemaining)
-        .addGauge(new RangerMetricsInfo("ProcessorsAvailable", "Ranger Processors available"), processorsAvailable)
-        .addGauge(new RangerMetricsInfo("SystemLoadAvg", "Ranger System Load Average"), systemLoadAverage);
+                .setContext(this.context)
+                .addGauge(new RangerMetricsInfo("MemoryCurrent", "Ranger current memory utilization"), memoryCurrent)
+                .addGauge(new RangerMetricsInfo("MemoryMax", "Ranger max memory utilization"), memoryMaximum)
+                .addGauge(new RangerMetricsInfo("GcCountTotal", "Ranger app total GCs"), gcCountTotal)
+                .addGauge(new RangerMetricsInfo("GcTimeTotal", "Ranger app total GC time"), gcTimeTotal)
+                .addGauge(new RangerMetricsInfo("GcTimeMax", "Ranger app MAX GC time"), gcTimeMax)
+                .addGauge(new RangerMetricsInfo("ThreadsBusy", "Ranger busy threads"), threadsBusy)
+                .addGauge(new RangerMetricsInfo("ThreadsBlocked", "Ranger blocked threads"), threadsBlocked)
+                .addGauge(new RangerMetricsInfo("ThreadsWaiting", "Ranger waiting threads"), threadsWaiting)
+                .addGauge(new RangerMetricsInfo("ThreadsRemaining", "Ranger remaining threads"), threadsRemaining)
+                .addGauge(new RangerMetricsInfo("ProcessorsAvailable", "Ranger Processors available"), processorsAvailable)
+                .addGauge(new RangerMetricsInfo("SystemLoadAvg", "Ranger System Load Average"), systemLoadAverage);
     }
 }

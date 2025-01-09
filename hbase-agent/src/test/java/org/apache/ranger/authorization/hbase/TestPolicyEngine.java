@@ -19,14 +19,12 @@
 
 package org.apache.ranger.authorization.hbase;
 
-
-import static org.junit.Assert.*;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.util.List;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hbase.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -34,9 +32,9 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
@@ -46,120 +44,123 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
 import org.junit.Test;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class TestPolicyEngine {
-	static RangerBasePlugin plugin = null;
-	static Gson             gsonBuilder  = null;
+    static RangerBasePlugin plugin;
+    static Gson             gsonBuilder;
 
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        plugin      = new RangerBasePlugin("hbase", "hbase");
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
+                .setPrettyPrinting()
+                .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
+                .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
+                .create();
+    }
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		plugin = new RangerBasePlugin("hbase", "hbase");
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-									   .setPrettyPrinting()
-									   .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
-									   .registerTypeAdapter(RangerAccessResource.class,  new RangerResourceDeserializer())
-									   .create();
-	}
+    @AfterClass
+    public static void tearDownAfterClass() throws Exception {
+    }
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
+    @Test
+    public void testPolicyEngine_hbase() {
+        String[] hbaseTestResourceFiles = {"/policyengine/test_policyengine_hbase.json"};
 
+        runTestsFromResourceFiles(hbaseTestResourceFiles);
+    }
 
-	@Test
-	public void testPolicyEngine_hbase() {
-		String[] hbaseTestResourceFiles = { "/policyengine/test_policyengine_hbase.json" };
+    @Test
+    public void testPolicyEngine_hbase_ignoreDescendantDeny() {
+        String[] hbaseTestResourceFiles = {"/policyengine/test_policyengine_hbase_ignoreDenyDescendant.json"};
 
-		runTestsFromResourceFiles(hbaseTestResourceFiles);
-	}
+        runTestsFromResourceFiles(hbaseTestResourceFiles);
+    }
 
-	private void runTestsFromResourceFiles(String[] resourceNames) {
-		for(String resourceName : resourceNames) {
-			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader   = new InputStreamReader(inStream);
+    private void runTestsFromResourceFiles(String[] resourceNames) {
+        for (String resourceName : resourceNames) {
+            InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+            InputStreamReader reader   = new InputStreamReader(inStream);
 
-			runTests(reader, resourceName);
-		}
-	}
+            runTests(reader, resourceName);
+        }
+    }
 
-	private void runTests(InputStreamReader reader, String testName) {
-		try {
-			PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
+    private void runTests(InputStreamReader reader, String testName) {
+        try {
+            PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 
-			assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
+            assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
-			ServicePolicies servicePolicies = new ServicePolicies();
-			servicePolicies.setServiceName(testCase.serviceName);
-			servicePolicies.setServiceDef(testCase.serviceDef);
-			servicePolicies.setPolicies(testCase.policies);
+            ServicePolicies servicePolicies = new ServicePolicies();
+            servicePolicies.setServiceName(testCase.serviceName);
+            servicePolicies.setServiceDef(testCase.serviceDef);
+            servicePolicies.setPolicies(testCase.policies);
 
-			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("hbase", null, testName, "cl1", "on-prem", policyEngineOptions));
-			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, null);
+            RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+            RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig("hbase", null, testName, "cl1", "on-prem", policyEngineOptions));
+            RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl(servicePolicies, pluginContext, null);
 
-			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(pluginContext.getConfig());
+            RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(pluginContext.getConfig());
 
-			for(TestData test : testCase.tests) {
-				RangerAccessResult expected = test.result;
-				RangerAccessRequest request = test.request;
+            for (TestData test : testCase.tests) {
+                RangerAccessResult  expected = test.result;
+                RangerAccessRequest request  = test.request;
 
-				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
+                RangerAccessResult result = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
-				assertNotNull("result was null! - " + test.name, result);
-				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
-				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
-			}
+                assertNotNull("result was null! - " + test.name, result);
+                assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
+                assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
+                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+            }
+        } catch (Throwable excp) {
+            excp.printStackTrace();
+        }
+    }
 
-		} catch(Throwable excp) {
-			excp.printStackTrace();
-		}
-		
-	}
+    static class PolicyEngineTestCase {
+        public String             serviceName;
+        public RangerServiceDef   serviceDef;
+        public List<RangerPolicy> policies;
+        public List<TestData>     tests;
 
-	static class PolicyEngineTestCase {
-		public String             serviceName;
-		public RangerServiceDef   serviceDef;
-		public List<RangerPolicy> policies;
-		public List<TestData>     tests;
-		
-		class TestData {
-			public String              name;
-			public RangerAccessRequest request;
-			public RangerAccessResult  result;
-		}
-	}
-	
-	static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
-		@Override
-		public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
-				JsonDeserializationContext context) throws JsonParseException {
-			RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
+        class TestData {
+            public String              name;
+            public RangerAccessRequest request;
+            public RangerAccessResult  result;
+        }
+    }
 
-			ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+    static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
+        @Override
+        public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
+                JsonDeserializationContext context) throws JsonParseException {
+            RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
 
-			return ret;
-		}
-	}
-	
-	static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
-		@Override
-		public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-				JsonDeserializationContext context) throws JsonParseException {
-			RangerAccessResourceImpl resource =  gsonBuilder.fromJson(jsonObj, RangerHBaseResource.class);
-			resource.setValue("table", resource.getValue("table"));
-			return resource;
-		}
-	}
+            ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+
+            return ret;
+        }
+    }
+
+    static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
+        @Override
+        public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
+                JsonDeserializationContext context) throws JsonParseException {
+            RangerAccessResourceImpl resource = gsonBuilder.fromJson(jsonObj, RangerHBaseResource.class);
+            resource.setValue("table", resource.getValue("table"));
+            return resource;
+        }
+    }
 }
-

@@ -36,7 +36,7 @@ public class RangerUserStoreUtil {
     private final Map<String, Map<String, String>> userAttributes;
     private final Map<String, Map<String, String>> groupAttributes;
 
-    private volatile Map<String, String> userEmailToName = null;
+    private volatile Map<String, String> userEmailToName;
 
     public RangerUserStoreUtil(RangerUserStore userStore) {
         this.userStore = userStore;
@@ -55,15 +55,54 @@ public class RangerUserStoreUtil {
         }
     }
 
-    public RangerUserStore getUserStore() { return userStore; }
+    public static String getPrintableOptions(Map<String, String> otherAttributes) {
+        if (MapUtils.isEmpty(otherAttributes)) {
+            return "{}";
+        }
 
-    public long getUserStoreVersion() { return userStoreVersion; }
+        StringBuilder ret = new StringBuilder("{");
 
-    public Set<String> getUserGroups(String userName) { return userGroups.get(userName); }
+        for (Map.Entry<String, String> entry : otherAttributes.entrySet()) {
+            ret.append(entry.getKey()).append(", ").append("[").append(entry.getValue()).append("]").append(",");
+        }
+        ret.append("}");
 
-    public Map<String, String> getUserAttributes(String userName) { return userAttributes.get(userName); }
+        return ret.toString();
+    }
 
-    public Map<String, String> getGroupAttributes(String groupName) { return groupAttributes.get(groupName); }
+    public static String getAttrVal(Map<String, Map<String, String>> attrMap, String name, String attrName) {
+        String ret = null;
+
+        if (StringUtils.isNotEmpty(name) && StringUtils.isNotEmpty(attrName)) {
+            Map<String, String> attrs = attrMap.get(name);
+
+            if (MapUtils.isNotEmpty(attrs)) {
+                ret = attrs.get(attrName);
+            }
+        }
+
+        return ret;
+    }
+
+    public RangerUserStore getUserStore() {
+        return userStore;
+    }
+
+    public long getUserStoreVersion() {
+        return userStoreVersion;
+    }
+
+    public Set<String> getUserGroups(String userName) {
+        return userGroups.get(userName);
+    }
+
+    public Map<String, String> getUserAttributes(String userName) {
+        return userAttributes.get(userName);
+    }
+
+    public Map<String, String> getGroupAttributes(String groupName) {
+        return groupAttributes.get(groupName);
+    }
 
     public String getUserNameFromEmail(String emailAddress) {
         Map<String, String> userEmailToName = this.userEmailToName;
@@ -81,6 +120,10 @@ public class RangerUserStoreUtil {
         }
 
         return userEmailToName != null ? userEmailToName.get(emailAddress) : null;
+    }
+
+    public String getCloudId(Map<String, Map<String, String>> attrMap, String name) {
+        return getAttrVal(attrMap, name, CLOUD_IDENTITY_NAME);
     }
 
     private Map<String, String> buildUserEmailToNameMap() {
@@ -104,33 +147,4 @@ public class RangerUserStoreUtil {
 
         return ret;
     }
-
-    public static String getPrintableOptions(Map<String, String> otherAttributes) {
-        if (MapUtils.isEmpty(otherAttributes)) return "{}";
-        StringBuilder ret = new StringBuilder();
-        ret.append("{");
-        for (Map.Entry<String, String> entry : otherAttributes.entrySet()) {
-            ret.append(entry.getKey()).append(", ").append("[").append(entry.getValue()).append("]").append(",");
-        }
-        ret.append("}");
-        return ret.toString();
-    }
-
-    public static String getAttrVal(Map<String, Map<String, String>> attrMap, String name, String attrName) {
-        String ret = null;
-
-        if (StringUtils.isNotEmpty(name) && StringUtils.isNotEmpty(attrName)) {
-            Map<String, String> attrs = attrMap.get(name);
-            if (MapUtils.isNotEmpty(attrs)) {
-                ret = attrs.get(attrName);
-            }
-        }
-        return ret;
-    }
-
-    public String getCloudId(Map<String, Map<String, String>> attrMap, String name) {
-        return getAttrVal(attrMap, name, CLOUD_IDENTITY_NAME);
-    }
 }
-
-

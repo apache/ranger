@@ -22,19 +22,19 @@ import { Button, Nav, Tab, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
 import { getUserProfile, setUserProfile } from "Utils/appState";
-import { InfoIcon } from "../utils/XAUtils";
+import { isSystemAdmin, isKeyAdmin, InfoIcon } from "Utils/XAUtils";
 import { BlockUi, scrollToError } from "../components/CommonComponents";
 import withRouter from "Hooks/withRouter";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
-import { cloneDeep, has, isEmpty, isUndefined } from "lodash";
-import { RegexMessage } from "../utils/XAMessages";
+import { cloneDeep, has, isEmpty } from "lodash";
+import { RegexMessage } from "Utils/XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
-import CustomBreadcrumb from "./CustomBreadcrumb";
 
 class UserProfile extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      isAdminRole: isSystemAdmin() || isKeyAdmin(),
       blockUI: false
     };
   }
@@ -78,10 +78,11 @@ class UserProfile extends Component {
   updatePassword = async (values) => {
     const userProps = getUserProfile();
 
-    let jsonData = {};
-    jsonData["loginId"] = userProps.loginId;
-    jsonData["oldPassword"] = values.oldPassword;
-    jsonData["updPassword"] = values.newPassword;
+    const jsonData = {
+      loginId: userProps.loginId,
+      oldPassword: values.oldPassword,
+      updPassword: values.newPassword
+    };
 
     try {
       this.setState({ blockUI: true });
@@ -113,12 +114,12 @@ class UserProfile extends Component {
     if (!values.oldPassword) {
       errors.oldPassword = "Required";
     }
+
     if (!values.newPassword) {
       errors.newPassword = "Required";
     }
 
     if (
-      values &&
       has(values, "newPassword") &&
       !RegexValidation.PASSWORD.regexExpression.test(values.newPassword)
     ) {
@@ -135,7 +136,7 @@ class UserProfile extends Component {
         "Re-enter New Password must match with New Password";
     }
 
-    if (values && has(values, "oldPassword") && has(values, "newPassword")) {
+    if (has(values, "oldPassword") && has(values, "newPassword")) {
       if (values.oldPassword === values.newPassword) {
         errors.newPassword = "New Password cannot be same as Old Password";
       }
@@ -152,7 +153,6 @@ class UserProfile extends Component {
     }
 
     if (
-      values &&
       has(values, "firstName") &&
       !RegexValidation.NAME_VALIDATION.regexExpressionForFirstAndLastName.test(
         values.firstName
@@ -162,7 +162,6 @@ class UserProfile extends Component {
     }
 
     if (
-      values &&
       !isEmpty(values?.lastName) &&
       !RegexValidation.NAME_VALIDATION.regexExpressionForFirstAndLastName.test(
         values.lastName
@@ -172,7 +171,7 @@ class UserProfile extends Component {
     }
 
     if (
-      (!isEmpty(values.emailAddress) || !isUndefined(values.emailAddress)) &&
+      !isEmpty(values.emailAddress) &&
       !RegexValidation.EMAIL_VALIDATION.regexExpressionForEmail.test(
         values.emailAddress
       )
@@ -185,14 +184,17 @@ class UserProfile extends Component {
 
   render() {
     const userProps = getUserProfile();
+    const { isAdminRole, blockUI } = this.state;
+    const isUserAllowed = !(
+      userProps.userSource === UserTypes.USER_INTERNAL.value && isAdminRole
+    );
     return (
       <div>
         <div className="header-wraper">
           <h3 className="wrap-header bold">User Profile</h3>
-          <CustomBreadcrumb />
         </div>
         <div className="wrap">
-          <BlockUi isUiBlock={this.state.blockUI} />
+          <BlockUi isUiBlock={blockUI} />
           <Tab.Container transition={false} defaultActiveKey="edit-basic-info">
             {userProps.userSource == UserTypes.USER_INTERNAL.value && (
               <Nav variant="tabs">
@@ -259,12 +261,7 @@ class UserProfile extends Component {
                                       ? "form-control border-danger"
                                       : "form-control"
                                   }
-                                  disabled={
-                                    userProps.userSource ==
-                                    UserTypes.USER_INTERNAL.value
-                                      ? false
-                                      : true
-                                  }
+                                  disabled={isUserAllowed}
                                   data-cy="firstName"
                                 />
                                 <InfoIcon
@@ -307,12 +304,7 @@ class UserProfile extends Component {
                                       ? "form-control border-danger"
                                       : "form-control"
                                   }
-                                  disabled={
-                                    userProps.userSource ==
-                                    UserTypes.USER_INTERNAL.value
-                                      ? false
-                                      : true
-                                  }
+                                  disabled={isUserAllowed}
                                   data-cy="lastName"
                                 />
                                 <InfoIcon
@@ -355,12 +347,7 @@ class UserProfile extends Component {
                                       ? "form-control border-danger"
                                       : "form-control"
                                   }
-                                  disabled={
-                                    userProps.userSource ==
-                                    UserTypes.USER_INTERNAL.value
-                                      ? false
-                                      : true
-                                  }
+                                  disabled={isUserAllowed}
                                   data-cy="emailAddress"
                                 />
                                 <InfoIcon
@@ -383,7 +370,6 @@ class UserProfile extends Component {
 
                         <Row className="form-group">
                           <Col xs={3}>
-                            {" "}
                             <label className="form-label float-end">
                               Select Role *
                             </label>
@@ -414,12 +400,7 @@ class UserProfile extends Component {
                               variant="primary"
                               type="submit"
                               size="sm"
-                              disabled={
-                                userProps.userSource ==
-                                UserTypes.USER_INTERNAL.value
-                                  ? false
-                                  : true
-                              }
+                              disabled={isUserAllowed}
                               data-id="save"
                               data-cy="save"
                             >

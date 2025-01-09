@@ -323,7 +323,6 @@ public class UserREST {
 			throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null, changePassword.getLoginId());
 		}
 
-		userManager.checkAccessForUpdate(gjUser);
 		changePassword.setId(gjUser.getId());
  		VXResponse ret = userManager.changePassword(changePassword);
 		return ret;
@@ -358,7 +357,6 @@ public class UserREST {
 			throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null, changeEmail.getLoginId());
 		}
 
-		userManager.checkAccessForUpdate(gjUser);
 		changeEmail.setId(gjUser.getId());
 		VXPortalUser ret = userManager.changeEmailAddress(gjUser, changeEmail);
 		return ret;

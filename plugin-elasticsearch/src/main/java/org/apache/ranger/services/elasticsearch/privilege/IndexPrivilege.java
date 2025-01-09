@@ -14,42 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.ranger.services.elasticsearch.privilege;
 
 import java.util.List;
 
 public class IndexPrivilege {
+    private String       privilege;
+    private List<String> actions;
 
-	private String privilege;
+    public IndexPrivilege(String privilege, List<String> actions) {
+        super();
 
-	private List<String> actions;
+        this.privilege = privilege;
+        this.actions   = actions;
+    }
 
-	public IndexPrivilege(String privilege, List<String> actions) {
-		super();
-		this.privilege = privilege;
-		this.actions = actions;
-	}
+    public String getPrivilege() {
+        return privilege;
+    }
 
-	public String getPrivilege() {
-		return privilege;
-	}
+    public void setPrivilege(String privilege) {
+        this.privilege = privilege;
+    }
 
-	public void setPrivilege(String privilege) {
-		this.privilege = privilege;
-	}
+    public List<String> getActions() {
+        return actions;
+    }
 
-	public List<String> getActions() {
-		return actions;
-	}
+    public void setActions(List<String> actions) {
+        this.actions = actions;
+    }
 
-	public void setActions(List<String> actions) {
-		this.actions = actions;
-	}
-
-	@Override
-	public String toString() {
-		return "IndexPrivilege [privilege=" + privilege + ", actions=" + actions + "]";
-	}
-
+    @Override
+    public String toString() {
+        return "IndexPrivilege [privilege=" + privilege + ", actions=" + actions + "]";
+    }
 }

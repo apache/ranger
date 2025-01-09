@@ -255,7 +255,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         vObj.setConditionExpr(xObj.getConditionExpr());
         vObj.setAccessTypes(JsonUtils.jsonToSetString(xObj.getAccessTypes()));
         vObj.setRowFilter(JsonUtils.jsonToObject(xObj.getRowFilter(), RangerPolicy.RangerPolicyItemRowFilterInfo.class));
-        vObj.setSubResourceMasks(JsonUtils.jsonToMapMaskInfo(xObj.getSubResourceMasks()));
+        vObj.setSubResourceMasks(JsonUtils.jsonToListGdsMaskInfo(xObj.getSubResourceMasks()));
         vObj.setProfiles(JsonUtils.jsonToSetString(xObj.getProfiles()));
         vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));
         vObj.setAdditionalInfo(JsonUtils.jsonToMapStringString(xObj.getAdditionalInfo()));

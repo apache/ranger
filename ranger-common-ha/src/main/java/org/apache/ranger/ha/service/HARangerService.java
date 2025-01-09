@@ -19,12 +19,10 @@
 
 package org.apache.ranger.ha.service;
 
-
 /**
  * Service interface to start any background jobs.
  */
 public interface HARangerService {
-
     void start() throws Exception;
 
     void stop() throws Exception;

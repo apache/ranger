@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -25,6 +25,10 @@
     <artifactId>ranger-util</artifactId>
     <name>Ranger Util</name>
     <description>Common Utilities of Ranger</description>
+    <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -34,8 +38,8 @@
     </dependencies>
     <build>
         <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-        <testSourceDirectory>${project.basedir}/src/test</testSourceDirectory>
         <scriptSourceDirectory>${project.basedir}/src/scripts</scriptSourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test</testSourceDirectory>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -43,20 +47,20 @@
                 <executions>
                     <execution>
                         <id>generate-version-annotation</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                         <phase>generate-sources</phase>
                         <configuration>
                             <target>
                                 <exec executable="python3" failonerror="true">
-                                    <arg value="${project.basedir}/src/scripts/saveVersion.py"/>
-                                    <arg value="${project.version}"/>
-                                    <arg value="${ranger.version.shortname}"/>
-                                    <arg value="${project.basedir}"/>
+                                    <arg value="${project.basedir}/src/scripts/saveVersion.py" />
+                                    <arg value="${project.version}" />
+                                    <arg value="${ranger.version.shortname}" />
+                                    <arg value="${project.basedir}" />
                                 </exec>
                             </target>
                         </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -66,10 +70,10 @@
                 <executions>
                     <execution>
                         <id>add-source</id>
-                        <phase>generate-sources</phase>
                         <goals>
                             <goal>add-source</goal>
                         </goals>
+                        <phase>generate-sources</phase>
                         <configuration>
                             <sources>
                                 <source>target/gen</source>

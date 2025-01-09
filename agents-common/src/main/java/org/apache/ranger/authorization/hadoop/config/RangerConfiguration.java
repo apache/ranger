@@ -17,84 +17,80 @@
  * under the License.
  */
 
-
 package org.apache.ranger.authorization.hadoop.config;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Properties;
 
 public class RangerConfiguration extends Configuration {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerConfiguration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerConfiguration.class);
 
-	protected RangerConfiguration() {
-		super(false);
-	}
+    protected RangerConfiguration() {
+        super(false);
+    }
 
-	public boolean addResourceIfReadable(String aResourceName) {
-		boolean ret = false;
+    public boolean addResourceIfReadable(String aResourceName) {
+        LOG.debug("==> addResourceIfReadable({})", aResourceName);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> addResourceIfReadable(" + aResourceName + ")");
-		}
+        boolean ret  = false;
+        URL     fUrl = getFileLocation(aResourceName);
 
-		URL fUrl = getFileLocation(aResourceName);
-		if (fUrl != null) {
-			LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
-			try {
-				addResource(fUrl);
-				ret = true;
-			} catch (Exception e) {
-				LOG.error("Unable to load the resource name [" + aResourceName + "]. Ignoring the resource:" + fUrl);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Resource loading failed for " + fUrl, e);
-				}
-			}
-		} else {
-			LOG.error("addResourceIfReadable(" + aResourceName + "): couldn't find resource file location");
-		}
+        if (fUrl != null) {
+            LOG.debug("addResourceIfReadable({}): resource file is {}", aResourceName, fUrl);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== addResourceIfReadable(" + aResourceName + "), result=" + ret);
-		}
-		return ret;
-	}
-	
-	public Properties getProperties() {
-		return getProps();
-	}
+            try {
+                addResource(fUrl);
 
-	private URL getFileLocation(String fileName) {
-		URL lurl = null;
-		if (!StringUtils.isEmpty(fileName)) {
-			lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
+                ret = true;
+            } catch (Exception e) {
+                LOG.error("Unable to load the resource name [{}]. Ignoring the resource:{}", aResourceName, fUrl);
 
-			if (lurl == null ) {
-				lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
-			}
+                LOG.debug("Resource loading failed for {}", fUrl, e);
+            }
+        } else {
+            LOG.debug("addResourceIfReadable({}): couldn't find resource file location", aResourceName);
+        }
 
-			if (lurl == null ) {
-				File f = new File(fileName);
-				if (f.exists()) {
-					try {
-						lurl=f.toURI().toURL();
-					} catch (MalformedURLException e) {
-						LOG.error("Unable to load the resource name [" + fileName + "]. Ignoring the resource:" + f.getPath());
-					}
-				} else {
-					if(LOG.isDebugEnabled()) {
-						LOG.debug("Conf file path " + fileName + " does not exists");
-					}
-				}
-			}
-		}
-		return lurl;
-	}
+        LOG.debug("<== addResourceIfReadable({}), result={}", aResourceName, ret);
+
+        return ret;
+    }
+
+    public Properties getProperties() {
+        return getProps();
+    }
+
+    private URL getFileLocation(String fileName) {
+        URL lurl = null;
+
+        if (!StringUtils.isEmpty(fileName)) {
+            lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
+
+            if (lurl == null) {
+                lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
+            }
+
+            if (lurl == null) {
+                File f = new File(fileName);
+                if (f.exists()) {
+                    try {
+                        lurl = f.toURI().toURL();
+                    } catch (MalformedURLException e) {
+                        LOG.error("Unable to load the resource name [{}]. Ignoring the resource:{}", fileName, f.getPath());
+                    }
+                } else {
+                    LOG.debug("Conf file path {} does not exists", fileName);
+                }
+            }
+        }
+
+        return lurl;
+    }
 }

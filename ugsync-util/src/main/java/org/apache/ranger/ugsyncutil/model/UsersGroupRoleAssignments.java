@@ -25,75 +25,73 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 import java.util.Map;
+
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UsersGroupRoleAssignments {
+    List<String> users;
+    Map<String, String> groupRoleAssignments;
+    Map<String, String> userRoleAssignments;
+    Map<String, String> whiteListGroupRoleAssignments;
+    Map<String, String> whiteListUserRoleAssignments;
 
-	List<String> users;
-	
-	Map<String, String> groupRoleAssignments;
+    boolean isReset;
+    boolean isLastPage;
 
-	Map<String, String> userRoleAssignments;
+    public boolean isLastPage() {
+        return isLastPage;
+    }
 
-	Map<String, String> whiteListGroupRoleAssignments;
+    public void setLastPage(boolean lastPage) {
+        isLastPage = lastPage;
+    }
 
-	Map<String, String> whiteListUserRoleAssignments;
+    public List<String> getUsers() {
+        return users;
+    }
 
-	boolean isReset = false;
-	boolean isLastPage = false;
-	public boolean isLastPage() {
-		return isLastPage;
-	}
-	public void setLastPage(boolean lastPage) {
-		isLastPage = lastPage;
-	}
+    public void setUsers(List<String> users) {
+        this.users = users;
+    }
 
-	public List<String> getUsers() {
-		return users;
-	}
+    public Map<String, String> getGroupRoleAssignments() {
+        return groupRoleAssignments;
+    }
 
-	public void setUsers(List<String> users) {
-		this.users = users;
-	}
+    public void setGroupRoleAssignments(Map<String, String> groupRoleAssignments) {
+        this.groupRoleAssignments = groupRoleAssignments;
+    }
 
-	public Map<String, String> getGroupRoleAssignments() {
-		return groupRoleAssignments;
-	}
+    public Map<String, String> getUserRoleAssignments() {
+        return userRoleAssignments;
+    }
 
-	public void setGroupRoleAssignments(Map<String, String> groupRoleAssignments) {
-		this.groupRoleAssignments = groupRoleAssignments;
-	}
+    public void setUserRoleAssignments(Map<String, String> userRoleAssignments) {
+        this.userRoleAssignments = userRoleAssignments;
+    }
 
-	public Map<String, String> getUserRoleAssignments() {
-		return userRoleAssignments;
-	}
+    public Map<String, String> getWhiteListGroupRoleAssignments() {
+        return whiteListGroupRoleAssignments;
+    }
 
-	public void setUserRoleAssignments(Map<String, String> userRoleAssignments) {
-		this.userRoleAssignments = userRoleAssignments;
-	}
+    public void setWhiteListGroupRoleAssignments(Map<String, String> whiteListGroupRoleAssignments) {
+        this.whiteListGroupRoleAssignments = whiteListGroupRoleAssignments;
+    }
 
-	public Map<String, String> getWhiteListGroupRoleAssignments() {
-		return whiteListGroupRoleAssignments;
-	}
+    public Map<String, String> getWhiteListUserRoleAssignments() {
+        return whiteListUserRoleAssignments;
+    }
 
-	public void setWhiteListGroupRoleAssignments(Map<String, String> whiteListGroupRoleAssignments) {
-		this.whiteListGroupRoleAssignments = whiteListGroupRoleAssignments;
-	}
+    public void setWhiteListUserRoleAssignments(Map<String, String> whiteListUserRoleAssignments) {
+        this.whiteListUserRoleAssignments = whiteListUserRoleAssignments;
+    }
 
-	public Map<String, String> getWhiteListUserRoleAssignments() {
-		return whiteListUserRoleAssignments;
-	}
+    public boolean isReset() {
+        return isReset;
+    }
 
-	public void setWhiteListUserRoleAssignments(Map<String, String> whiteListUserRoleAssignments) {
-		this.whiteListUserRoleAssignments = whiteListUserRoleAssignments;
-	}
-
-	public boolean isReset() {
-		return isReset;
-	}
-
-	public void setReset(boolean reset) {
-		isReset = reset;
-	}
+    public void setReset(boolean reset) {
+        isReset = reset;
+    }
 }

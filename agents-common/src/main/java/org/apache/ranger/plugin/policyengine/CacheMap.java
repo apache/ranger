@@ -25,9 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CacheMap<K, V> extends LinkedHashMap<K, V> {
-    private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(CacheMap.class);
 
+    private static final long serialVersionUID = 1L;
 
     private static final float RANGER_CACHE_DEFAULT_LOAD_FACTOR = 0.75f;
 
@@ -43,9 +43,7 @@ public class CacheMap<K, V> extends LinkedHashMap<K, V> {
     protected boolean removeEldestEntry(Map.Entry eldest) {
         boolean result = size() > initialCapacity;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("CacheMap.removeEldestEntry(), result:"+ result);
-        }
+        LOG.debug("CacheMap.removeEldestEntry(), result:{}", result);
 
         return result;
     }

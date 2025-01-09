@@ -19,19 +19,17 @@
 
 package org.apache.ranger.plugin.model;
 
-
-import org.junit.Assert;
-import org.junit.Test;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TestRangerPolicy {
-
     @Test
     public void test_01_Policy_SetListMethods() {
         RangerPolicy           policy         = new RangerPolicy();
@@ -69,7 +67,6 @@ public class TestRangerPolicy {
         List<String>                    users      = getList("user");
         List<String>                    groups     = getList("group");
         List<RangerPolicyItemCondition> conditions = getList(new RangerPolicyItemCondition());
-
 
         Assert.assertEquals("RangerPolicyItem.getAccesses()", 0, policyItem.getAccesses().size());
         policyItem.addAccess(new RangerPolicyItemAccess());
@@ -124,7 +121,7 @@ public class TestRangerPolicy {
         List<T> ret = new ArrayList<>();
 
         int count = getRandomNumber(10);
-        for(int i = 0; i < count; i ++) {
+        for (int i = 0; i < count; i++) {
             ret.add(value);
         }
 
@@ -132,6 +129,6 @@ public class TestRangerPolicy {
     }
 
     private int getRandomNumber(int maxValue) {
-        return (int)(Math.random() * maxValue);
+        return (int) (Math.random() * maxValue);
     }
 }

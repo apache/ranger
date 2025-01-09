@@ -17,140 +17,140 @@
  * under the License.
  */
 
- package org.apache.ranger.ugsyncutil.model;
+package org.apache.ranger.ugsyncutil.model;
 
 public class LdapSyncSourceInfo {
-	private String ldapUrl;
-	private String incrementalSycn;
-	private String groupSearchFirstEnabled;
-	private String groupSearchEnabled;
-	private String userSearchEnabled;
-	private String userSearchFilter;
-	private String groupSearchFilter;
-	private String groupHierarchyLevel;
+    private String ldapUrl;
+    private String incrementalSycn;
+    private String groupSearchFirstEnabled;
+    private String groupSearchEnabled;
+    private String userSearchEnabled;
+    private String userSearchFilter;
+    private String groupSearchFilter;
+    private String groupHierarchyLevel;
 
-	private long totalUsersSynced;
-	private long totalGroupsSynced;
-	private long totalUsersDeleted;
-	private long totalGroupsDeleted;
+    private long totalUsersSynced;
+    private long totalGroupsSynced;
+    private long totalUsersDeleted;
+    private long totalGroupsDeleted;
 
-	public String getLdapUrl() {
-		return ldapUrl;
-	}
+    public String getLdapUrl() {
+        return ldapUrl;
+    }
 
-	public void setLdapUrl(String ldapUrl) {
-		this.ldapUrl = ldapUrl;
-	}
+    public void setLdapUrl(String ldapUrl) {
+        this.ldapUrl = ldapUrl;
+    }
 
-	public String isIncrementalSycn() {
-		return incrementalSycn;
-	}
+    public String isIncrementalSycn() {
+        return incrementalSycn;
+    }
 
-	public void setIncrementalSycn(String incrementalSycn) {
-		this.incrementalSycn = incrementalSycn;
-	}
+    public void setIncrementalSycn(String incrementalSycn) {
+        this.incrementalSycn = incrementalSycn;
+    }
 
-	public String getUserSearchFilter() {
-		return userSearchFilter;
-	}
+    public String getUserSearchFilter() {
+        return userSearchFilter;
+    }
 
-	public void setUserSearchFilter(String userSearchFilter) {
-		this.userSearchFilter = userSearchFilter;
-	}
+    public void setUserSearchFilter(String userSearchFilter) {
+        this.userSearchFilter = userSearchFilter;
+    }
 
-	public String getGroupSearchFilter() {
-		return groupSearchFilter;
-	}
+    public String getGroupSearchFilter() {
+        return groupSearchFilter;
+    }
 
-	public void setGroupSearchFilter(String groupSearchFilter) {
-		this.groupSearchFilter = groupSearchFilter;
-	}
+    public void setGroupSearchFilter(String groupSearchFilter) {
+        this.groupSearchFilter = groupSearchFilter;
+    }
 
-	public String getGroupHierarchyLevel() {
-		return groupHierarchyLevel;
-	}
+    public String getGroupHierarchyLevel() {
+        return groupHierarchyLevel;
+    }
 
-	public void setGroupHierarchyLevel(String groupHierarchyLevel) {
-		this.groupHierarchyLevel = groupHierarchyLevel;
-	}
+    public void setGroupHierarchyLevel(String groupHierarchyLevel) {
+        this.groupHierarchyLevel = groupHierarchyLevel;
+    }
 
-	public long getTotalUsersSynced() {
-		return totalUsersSynced;
-	}
+    public long getTotalUsersSynced() {
+        return totalUsersSynced;
+    }
 
-	public void setTotalUsersSynced(long totalUsersSynced) {
-		this.totalUsersSynced = totalUsersSynced;
-	}
+    public void setTotalUsersSynced(long totalUsersSynced) {
+        this.totalUsersSynced = totalUsersSynced;
+    }
 
-	public long getTotalGroupsSynced() {
-		return totalGroupsSynced;
-	}
+    public long getTotalGroupsSynced() {
+        return totalGroupsSynced;
+    }
 
-	public void setTotalGroupsSynced(long totalGroupsSynced) {
-		this.totalGroupsSynced = totalGroupsSynced;
-	}
+    public void setTotalGroupsSynced(long totalGroupsSynced) {
+        this.totalGroupsSynced = totalGroupsSynced;
+    }
 
-	public String getGroupSearchFirstEnabled() {
-		return groupSearchFirstEnabled;
-	}
+    public String getGroupSearchFirstEnabled() {
+        return groupSearchFirstEnabled;
+    }
 
-	public void setGroupSearchFirstEnabled(String groupSearchFirstEnabled) {
-		this.groupSearchFirstEnabled = groupSearchFirstEnabled;
-	}
+    public void setGroupSearchFirstEnabled(String groupSearchFirstEnabled) {
+        this.groupSearchFirstEnabled = groupSearchFirstEnabled;
+    }
 
-	public String getGroupSearchEnabled() {
-		return groupSearchEnabled;
-	}
+    public String getGroupSearchEnabled() {
+        return groupSearchEnabled;
+    }
 
-	public void setGroupSearchEnabled(String groupSearchEnabled) {
-		this.groupSearchEnabled = groupSearchEnabled;
-	}
+    public void setGroupSearchEnabled(String groupSearchEnabled) {
+        this.groupSearchEnabled = groupSearchEnabled;
+    }
 
-	public String getUserSearchEnabled() {
-		return userSearchEnabled;
-	}
+    public String getUserSearchEnabled() {
+        return userSearchEnabled;
+    }
 
-	public void setUserSearchEnabled(String userSearchEnabled) {
-		this.userSearchEnabled = userSearchEnabled;
-	}
+    public void setUserSearchEnabled(String userSearchEnabled) {
+        this.userSearchEnabled = userSearchEnabled;
+    }
 
-	public long getTotalUsersDeleted() {
-		return totalUsersDeleted;
-	}
+    public long getTotalUsersDeleted() {
+        return totalUsersDeleted;
+    }
 
-	public void setTotalUsersDeleted(long totalUsersDeleted) {
-		this.totalUsersDeleted = totalUsersDeleted;
-	}
+    public void setTotalUsersDeleted(long totalUsersDeleted) {
+        this.totalUsersDeleted = totalUsersDeleted;
+    }
 
-	public long getTotalGroupsDeleted() {
-		return totalGroupsDeleted;
-	}
+    public long getTotalGroupsDeleted() {
+        return totalGroupsDeleted;
+    }
 
-	public void setTotalGroupsDeleted(long totalGroupsDeleted) {
-		this.totalGroupsDeleted = totalGroupsDeleted;
-	}
+    public void setTotalGroupsDeleted(long totalGroupsDeleted) {
+        this.totalGroupsDeleted = totalGroupsDeleted;
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		toString(sb);
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        toString(sb);
+        return sb.toString();
+    }
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("LdapSycnSourceInfo [ldapUrl= ").append(ldapUrl);
-		sb.append(", isIncrementalSync= ").append(incrementalSycn);
-		sb.append(", userSearchEnabled= ").append(userSearchEnabled);
-		sb.append(", groupSearchEnabled= ").append(groupSearchEnabled);
-		sb.append(", groupSearchFirstEnabled= ").append(groupSearchFirstEnabled);
-		sb.append(", userSearchFilter= ").append(userSearchFilter);
-		sb.append(", groupSearchFilter= ").append(groupSearchFilter);
-		sb.append(", groupHierarchyLevel= ").append(groupHierarchyLevel);
-		sb.append(", totalUsersSynced= ").append(totalUsersSynced);
-		sb.append(", totalGroupsSynced= ").append(totalGroupsSynced);
-		sb.append(", totalUsersDeleted= ").append(totalUsersDeleted);
-		sb.append(", totalGroupsDeleted= ").append(totalGroupsDeleted);
-		sb.append("]");
-		return sb;
-	}
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("LdapSycnSourceInfo [ldapUrl= ").append(ldapUrl);
+        sb.append(", isIncrementalSync= ").append(incrementalSycn);
+        sb.append(", userSearchEnabled= ").append(userSearchEnabled);
+        sb.append(", groupSearchEnabled= ").append(groupSearchEnabled);
+        sb.append(", groupSearchFirstEnabled= ").append(groupSearchFirstEnabled);
+        sb.append(", userSearchFilter= ").append(userSearchFilter);
+        sb.append(", groupSearchFilter= ").append(groupSearchFilter);
+        sb.append(", groupHierarchyLevel= ").append(groupHierarchyLevel);
+        sb.append(", totalUsersSynced= ").append(totalUsersSynced);
+        sb.append(", totalGroupsSynced= ").append(totalGroupsSynced);
+        sb.append(", totalUsersDeleted= ").append(totalUsersDeleted);
+        sb.append(", totalGroupsDeleted= ").append(totalGroupsDeleted);
+        sb.append("]");
+        return sb;
+    }
 }

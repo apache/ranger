@@ -22,18 +22,13 @@ package org.apache.ranger.services.nifi.registry.client;
  * Config property names from the NiFi Registry service definition.
  */
 public interface NiFiRegistryConfigs {
-
-    String NIFI_REG_URL = "nifi.registry.url";
-    String NIFI_REG_AUTHENTICATION_TYPE = "nifi.registry.authentication";
-
-    String NIFI_REG_SSL_KEYSTORE = "nifi.registry.ssl.keystore";
-    String NIFI_REG_SSL_KEYSTORE_TYPE = "nifi.registry.ssl.keystoreType";
-    String NIFI_REG_SSL_KEYSTORE_PASSWORD = "nifi.registry.ssl.keystorePassword";
-
-    String NIFI_REG_SSL_TRUSTSTORE = "nifi.registry.ssl.truststore";
-    String NIFI_REG_SSL_TRUSTSTORE_TYPE = "nifi.registry.ssl.truststoreType";
-    String NIFI_REG_SSL_TRUSTSTORE_PASSWORD = "nifi.registry.ssl.truststorePassword";
-
+    String NIFI_REG_URL                      = "nifi.registry.url";
+    String NIFI_REG_AUTHENTICATION_TYPE      = "nifi.registry.authentication";
+    String NIFI_REG_SSL_KEYSTORE             = "nifi.registry.ssl.keystore";
+    String NIFI_REG_SSL_KEYSTORE_TYPE        = "nifi.registry.ssl.keystoreType";
+    String NIFI_REG_SSL_KEYSTORE_PASSWORD    = "nifi.registry.ssl.keystorePassword";
+    String NIFI_REG_SSL_TRUSTSTORE           = "nifi.registry.ssl.truststore";
+    String NIFI_REG_SSL_TRUSTSTORE_TYPE      = "nifi.registry.ssl.truststoreType";
+    String NIFI_REG_SSL_TRUSTSTORE_PASSWORD  = "nifi.registry.ssl.truststorePassword";
     String NIFI_REG_SSL_USER_DEFAULT_CONTEXT = "nifi.registry.ssl.use.default.context";
-
 }

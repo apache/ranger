@@ -285,7 +285,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         vObj.setZone(zoneName);
         vObj.setConditionExpr(xObj.getConditionExpr());
         vObj.setDefaultAccessTypes(JsonUtils.jsonToSetString(xObj.getDefaultAccessTypes()));
-        vObj.setDefaultTagMasks(JsonUtils.jsonToListTagMaskInfo(xObj.getDefaultTagMasks()));
+        vObj.setDefaultTagMasks(JsonUtils.jsonToListGdsMaskInfo(xObj.getDefaultTagMasks()));
         vObj.setTermsOfUse(xObj.getTermsOfUse());
         vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));
         vObj.setAdditionalInfo(JsonUtils.jsonToMapStringString(xObj.getAdditionalInfo()));

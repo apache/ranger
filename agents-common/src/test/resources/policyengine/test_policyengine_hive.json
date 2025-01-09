@@ -469,7 +469,7 @@
       "resource":{"elements":{"database":"db1", "table":"table1"}},
       "accessType":"","user":"user1","userGroups":["users"],"requestData":"show columns in table1 from db1;"
      },
-     "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+     "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"DENY '_any access to db1/_/col1' for user1: table not specified but column was specified",

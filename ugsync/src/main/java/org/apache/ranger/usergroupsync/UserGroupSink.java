@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.usergroupsync;
+package org.apache.ranger.usergroupsync;
 
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 
@@ -25,13 +25,12 @@ import java.util.Map;
 import java.util.Set;
 
 public interface UserGroupSink {
-	void init() throws Throwable;
+    void init() throws Throwable;
 
-	void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable;
+    void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable;
 
-	void addOrUpdateUsersGroups(Map<String, Map<String, String>> sourceGroups,
-								Map<String, Map<String, String>> sourceUsers,
-								Map<String, Set<String>> sourceGroupUsers,
-								boolean computeDeletes) throws Throwable;
-
+    void addOrUpdateUsersGroups(Map<String, Map<String, String>> sourceGroups,
+            Map<String, Map<String, String>> sourceUsers,
+            Map<String, Set<String>> sourceGroupUsers,
+            boolean computeDeletes) throws Throwable;
 }

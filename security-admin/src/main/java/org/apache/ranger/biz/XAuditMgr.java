@@ -52,35 +52,35 @@ public class XAuditMgr extends XAuditMgrBase {
 	RangerBizUtil rangerBizUtil;
 
 	public VXTrxLog getXTrxLog(Long id) {
-		checkAdminAccess();
+		checkAllAdminsAccess();
 		return super.getXTrxLog(id);
 	}
 
 	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
 		checkAdminAccess();
-                rangerBizUtil.blockAuditorRoleUser();
+		rangerBizUtil.blockAuditorRoleUser();
 		return super.createXTrxLog(vXTrxLog);
 	}
 
 	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
 		checkAdminAccess();
-                rangerBizUtil.blockAuditorRoleUser();
+		rangerBizUtil.blockAuditorRoleUser();
 		return super.updateXTrxLog(vXTrxLog);
 	}
 
 	public void deleteXTrxLog(Long id, boolean force) {
 		checkAdminAccess();
-                rangerBizUtil.blockAuditorRoleUser();
+		rangerBizUtil.blockAuditorRoleUser();
 		super.deleteXTrxLog(id, force);
 	}
 
 	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
-		checkAdminAccess();
+		checkAllAdminsAccess();
 		return super.searchXTrxLogs(searchCriteria);
 	}
 
 	public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
-		checkAdminAccess();
+		checkAllAdminsAccess();
 		return super.getXTrxLogSearchCount(searchCriteria);
 	}
 
@@ -141,6 +141,14 @@ public class XAuditMgr extends XAuditMgrBase {
 			return cloudWatchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
 		} else {
 			return super.getXAccessAuditSearchCount(searchCriteria);
+		}
+	}
+
+	private boolean checkAllAdminsAccess(){
+		if (rangerBizUtil.isAdmin() || rangerBizUtil.isKeyAdmin() || rangerBizUtil.isAuditAdmin() || rangerBizUtil.isAuditKeyAdmin()){
+			return true;
+		} else {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User doesn't have permissions to perform this action", true);
 		}
 	}
 

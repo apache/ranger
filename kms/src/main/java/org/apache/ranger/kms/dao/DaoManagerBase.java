@@ -17,33 +17,35 @@
 
 package org.apache.ranger.kms.dao;
 
-import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.EntityManager;
+
 public abstract class DaoManagerBase {
-	final static Logger logger = LoggerFactory.getLogger(DaoManagerBase.class);
+    static final Logger logger = LoggerFactory.getLogger(DaoManagerBase.class);
 
-	abstract public EntityManager getEntityManager();
-
-	private RangerMasterKeyDao rangerMasterKeyDao = null;
-	private RangerKMSDao rangerKmsDao = null;
+    private RangerMasterKeyDao rangerMasterKeyDao;
+    private RangerKMSDao       rangerKmsDao;
 
     public DaoManagerBase() {
-	}
+    }
 
-	public RangerMasterKeyDao getRangerMasterKeyDao() {
-		if(rangerMasterKeyDao == null) {
-			rangerMasterKeyDao = new RangerMasterKeyDao(this);
-		}
+    public abstract EntityManager getEntityManager();
 
-		return rangerMasterKeyDao;
-	}
-	
-	public RangerKMSDao getRangerKMSDao(){
-		if(rangerKmsDao == null){
-			rangerKmsDao = new RangerKMSDao(this);
-		}
-		return rangerKmsDao;
-	}
+    public RangerMasterKeyDao getRangerMasterKeyDao() {
+        if (rangerMasterKeyDao == null) {
+            rangerMasterKeyDao = new RangerMasterKeyDao(this);
+        }
+
+        return rangerMasterKeyDao;
+    }
+
+    public RangerKMSDao getRangerKMSDao() {
+        if (rangerKmsDao == null) {
+            rangerKmsDao = new RangerKMSDao(this);
+        }
+
+        return rangerKmsDao;
+    }
 }

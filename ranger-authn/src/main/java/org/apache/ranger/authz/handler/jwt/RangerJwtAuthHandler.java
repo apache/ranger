@@ -18,20 +18,6 @@
  */
 package org.apache.ranger.authz.handler.jwt;
 
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.security.authentication.server.AuthenticationToken;
-import org.apache.hadoop.security.authentication.util.CertificateUtil;
-import org.apache.ranger.authz.handler.RangerAuthHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
@@ -44,23 +30,40 @@ import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.authentication.server.AuthenticationToken;
+import org.apache.hadoop.security.authentication.util.CertificateUtil;
+import org.apache.ranger.authz.handler.RangerAuthHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URL;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
 
 public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
     private static final Logger LOG = LoggerFactory.getLogger(RangerJwtAuthHandler.class);
 
-    private JWSVerifier        verifier            = null;
-    private String             jwksProviderUrl     = null;
-    public static final String TYPE                = "ranger-jwt";        // Constant that identifies the authentication mechanism.
-    public static final String KEY_PROVIDER_URL    = "jwks.provider-url"; // JWKS provider URL
-    public static final String KEY_JWT_PUBLIC_KEY  = "jwt.public-key";    // JWT token provider public key
-    public static final String KEY_JWT_COOKIE_NAME = "jwt.cookie-name";   // JWT cookie name
-    public static final String KEY_JWT_AUDIENCES   = "jwt.audiences";
-    public static final String JWT_AUTHZ_PREFIX    = "Bearer ";
-
-    protected List<String>               audiences = null;
-    protected JWKSource<SecurityContext> keySource = null;
+    public static final String      TYPE                = "ranger-jwt";        // Constant that identifies the authentication mechanism.
+    public static final String      KEY_PROVIDER_URL    = "jwks.provider-url"; // JWKS provider URL
+    public static final String      KEY_JWT_PUBLIC_KEY  = "jwt.public-key";    // JWT token provider public key
+    public static final String      KEY_JWT_COOKIE_NAME = "jwt.cookie-name";   // JWT cookie name
+    public static final String      KEY_JWT_AUDIENCES   = "jwt.audiences";
+    public static final String      JWT_AUTHZ_PREFIX    = "Bearer ";
 
     protected static String cookieName = "hadoop-jwt";
+
+    protected List<String>               audiences;
+    protected JWKSource<SecurityContext> keySource;
+    private   JWSVerifier                 verifier;
+    private   String               jwksProviderUrl;
+
+    public static boolean shouldProceedAuth(final String authHeader, final String jwtCookie) {
+        return (StringUtils.isNotBlank(authHeader) && authHeader.startsWith(JWT_AUTHZ_PREFIX)) || (StringUtils.isNotBlank(jwtCookie) && jwtCookie.startsWith(cookieName));
+    }
 
     @Override
     public void initialize(final Properties config) throws Exception {
@@ -71,7 +74,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         // mandatory configurations
         jwksProviderUrl = config.getProperty(KEY_PROVIDER_URL);
         if (!StringUtils.isBlank(jwksProviderUrl)) {
-	    keySource = new RemoteJWKSet<>(new URL(jwksProviderUrl));
+            keySource = new RemoteJWKSet<>(new URL(jwksProviderUrl));
         }
 
         // optional configurations
@@ -81,8 +84,8 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         if (StringUtils.isNotBlank(pemPublicKey)) {
             verifier = new RSASSAVerifier(CertificateUtil.parseRSAPublicKey(pemPublicKey));
         } else if (StringUtils.isBlank(jwksProviderUrl)) {
-	    throw new Exception("RangerJwtAuthHandler: Mandatory configs ('jwks.provider-url' & 'jwt.public-key') are missing, must provide atleast one.");
-	}
+            throw new Exception("RangerJwtAuthHandler: Mandatory configs ('jwks.provider-url' & 'jwt.public-key') are missing, must provide atleast one.");
+        }
 
         // setup custom cookie name if configured
         String customCookieName = config.getProperty(KEY_JWT_COOKIE_NAME);
@@ -100,6 +103,8 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
             LOG.debug("<<<=== RangerJwtAuthHandler.initialize()");
         }
     }
+
+    public abstract ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(JWSKeySelector<SecurityContext> keySelector);
 
     protected AuthenticationToken authenticate(final String jwtAuthHeader, final String jwtCookie, final String doAsUser) {
         if (LOG.isDebugEnabled()) {
@@ -250,8 +255,6 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         return valid;
     }
 
-    public abstract ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(final JWSKeySelector<SecurityContext> keySelector);
-
     /**
      * Validate whether any of the accepted audience claims is present in the issued
      * token claims list for audience. Override this method in subclasses in order
@@ -315,9 +318,5 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         }
 
         return valid;
-    }
-
-    public static boolean shouldProceedAuth(final String authHeader, final String jwtCookie) {
-        return (StringUtils.isNotBlank(authHeader) && authHeader.startsWith(JWT_AUTHZ_PREFIX)) || (StringUtils.isNotBlank(jwtCookie) && jwtCookie.startsWith(cookieName));
     }
 }

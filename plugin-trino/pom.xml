@@ -31,6 +31,8 @@
     <description>Ranger Security Plugin for Trino</description>
 
     <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -230,6 +232,10 @@
             <version>${zookeeper.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty</artifactId>
                 </exclusion>
@@ -243,10 +249,6 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
