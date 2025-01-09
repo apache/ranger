@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,23 +17,6 @@
  */
 
 package org.apache.ranger.authorization.knox;
-
-import java.io.IOException;
-import java.security.AccessController;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.security.auth.Subject;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.knox.gateway.filter.AbstractGatewayFilter;
 import org.apache.knox.gateway.security.GroupPrincipal;
@@ -47,172 +30,173 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.security.auth.Subject;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+import java.security.AccessController;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 public class RangerPDPKnoxFilter implements Filter {
+    private static final Logger LOG                       = LoggerFactory.getLogger(RangerPDPKnoxFilter.class);
+    private static final Logger PERF_KNOXAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("knoxauth.request");
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerPDPKnoxFilter.class);
+    private static final    String           KNOX_GATEWAY_JASS_CONFIG_SECTION = "com.sun.security.jgss.initiate";
+    private static volatile KnoxRangerPlugin plugin;
 
-	private static final Logger PERF_KNOXAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("knoxauth.request");
+    private String resourceRole;
 
-	private static final String KNOX_GATEWAY_JASS_CONFIG_SECTION = "com.sun.security.jgss.initiate";
+    @Override
+    public void init(FilterConfig filterConfig) {
+        resourceRole = getInitParameter(filterConfig, "resource.role");
 
-	private String resourceRole = null;
-	private static volatile KnoxRangerPlugin plugin = null;
+        KnoxRangerPlugin me = plugin;
 
-	@Override
-	public void init(FilterConfig filterConfig) throws ServletException {
-		resourceRole = getInitParameter(filterConfig, "resource.role");
+        if (me == null) {
+            synchronized (RangerPDPKnoxFilter.class) {
+                me = plugin;
 
-		KnoxRangerPlugin me = plugin;
+                if (me == null) {
+                    try {
+                        MiscUtil.setUGIFromJAASConfig(KNOX_GATEWAY_JASS_CONFIG_SECTION);
 
-		if(me == null) {
-			synchronized (RangerPDPKnoxFilter.class) {
-				me = plugin;
+                        LOG.info("LoginUser = {}", MiscUtil.getUGILoginUser());
+                    } catch (Throwable t) {
+                        LOG.error("Error while setting UGI for Knox Plugin...", t);
+                    }
 
-				if(me == null) {
-					try {
-						MiscUtil.setUGIFromJAASConfig(KNOX_GATEWAY_JASS_CONFIG_SECTION);
-						LOG.info("LoginUser=" + MiscUtil.getUGILoginUser());
-					} catch (Throwable t) {
-						LOG.error("Error while setting UGI for Knox Plugin...", t);
-					}
+                    LOG.info("Creating KnoxRangerPlugin");
 
-					LOG.info("Creating KnoxRangerPlugin");
-					plugin = new KnoxRangerPlugin();
-					plugin.init();
-				}
-			}
-		}
-	}
+                    plugin = new KnoxRangerPlugin();
 
-	private String getInitParameter(FilterConfig filterConfig, String paramName) {
-		return filterConfig.getInitParameter(paramName.toLowerCase());
-	}
+                    plugin.init();
+                }
+            }
+        }
+    }
 
-	public void destroy() {
-	}
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        String sourceUrl    = (String) request.getAttribute(AbstractGatewayFilter.SOURCE_REQUEST_CONTEXT_URL_ATTRIBUTE_NAME);
+        String topologyName = getTopologyName(sourceUrl);
+        String serviceName  = getServiceName();
 
-	public void doFilter(ServletRequest request, ServletResponse response,
-			FilterChain chain) throws IOException, ServletException {
+        RangerPerfTracer perf = null;
 
-		String sourceUrl = (String) request
-				.getAttribute(AbstractGatewayFilter.SOURCE_REQUEST_CONTEXT_URL_ATTRIBUTE_NAME);
-		String topologyName = getTopologyName(sourceUrl);
-		String serviceName = getServiceName();
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_KNOXAUTH_REQUEST_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_KNOXAUTH_REQUEST_LOG, "RangerPDPKnoxFilter.doFilter(url=" + sourceUrl + ", topologyName=" + topologyName + ")");
+        }
 
-		RangerPerfTracer perf = null;
+        Subject               subject           = Subject.getSubject(AccessController.getContext());
+        Set<PrimaryPrincipal> primaryPrincipals = subject.getPrincipals(PrimaryPrincipal.class);
+        String                primaryUser       = null;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_KNOXAUTH_REQUEST_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_KNOXAUTH_REQUEST_LOG, "RangerPDPKnoxFilter.doFilter(url=" + sourceUrl + ", topologyName=" + topologyName + ")");
-		}
+        if (!primaryPrincipals.isEmpty()) {
+            primaryUser = primaryPrincipals.stream().findFirst().get().getName();
+        }
 
-		Subject subject = Subject.getSubject(AccessController.getContext());
+        String                     impersonatedUser = null;
+        Set<ImpersonatedPrincipal> impersonations   = subject.getPrincipals(ImpersonatedPrincipal.class);
 
-		Set<PrimaryPrincipal> primaryPrincipals = subject.getPrincipals(
-				PrimaryPrincipal.class);
-		String primaryUser = null;
-		if (primaryPrincipals != null && primaryPrincipals.size() > 0) {
-			primaryUser = primaryPrincipals.stream().findFirst().get().getName();
-		}
+        if (!impersonations.isEmpty()) {
+            impersonatedUser = impersonations.stream().findFirst().get().getName();
+        }
 
-		String impersonatedUser = null;
-		Set<ImpersonatedPrincipal> impersonations = subject.getPrincipals(
-				ImpersonatedPrincipal.class);
-		if (impersonations != null && impersonations.size() > 0) {
-			impersonatedUser = impersonations.stream().findFirst().get().getName();
-		}
+        String user = (impersonatedUser != null) ? impersonatedUser : primaryUser;
 
-		String user = (impersonatedUser != null) ? impersonatedUser
-				: primaryUser;
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Checking access primaryUser: " + primaryUser + ", impersonatedUser: "
-					+ impersonatedUser + ", effectiveUser: " + user);
-		}
+        LOG.debug("Checking access primaryUser: {}, impersonatedUser: {}, effectiveUser: {}", primaryUser, impersonatedUser, user);
 
-		Set<GroupPrincipal> groupObjects = subject.getPrincipals(GroupPrincipal.class);
-		Set<String> groups = new HashSet<String>();
-		for (GroupPrincipal obj : groupObjects) {
-			groups.add(obj.getName());
-		}
+        Set<GroupPrincipal> groupObjects = subject.getPrincipals(GroupPrincipal.class);
+        Set<String>         groups       = new HashSet<>();
 
-		String clientIp = request.getRemoteAddr();
-		List<String> forwardedAddresses = getForwardedAddresses(request);
+        for (GroupPrincipal obj : groupObjects) {
+            groups.add(obj.getName());
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Checking access primaryUser: " + primaryUser
-					+ ", impersonatedUser: " + impersonatedUser
-					+ ", effectiveUser: " + user + ", groups: " + groups
-					+ ", clientIp: " + clientIp + ", remoteIp: " + clientIp + ", forwardedAddresses: " + forwardedAddresses);
-		}
+        String       clientIp           = request.getRemoteAddr();
+        List<String> forwardedAddresses = getForwardedAddresses(request);
 
-		RangerAccessRequest accessRequest = new RequestBuilder()
-			.service(serviceName)
-			.topology(topologyName)
-			.user(user)
-			.groups(groups)
-			.clientIp(clientIp)
-			.remoteIp(clientIp)
-			.forwardedAddresses(forwardedAddresses)
-			.build();
+        LOG.debug("Checking access primaryUser: {}, impersonatedUser: {}, effectiveUser: {}, groups: {}, clientIp: {}, remoteIp: {}, forwardedAddresses: {}", primaryUser, impersonatedUser, user, groups, clientIp, clientIp, forwardedAddresses);
 
-		boolean accessAllowed = false;
+        RangerAccessRequest accessRequest = new RequestBuilder().service(serviceName).topology(topologyName).user(user).groups(groups).clientIp(clientIp).remoteIp(clientIp).forwardedAddresses(forwardedAddresses).build();
+        boolean             accessAllowed = false;
 
-		if (plugin != null) {
-			RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
+        if (plugin != null) {
+            RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
 
-			accessAllowed = result != null && result.getIsAllowed();
-		}
+            accessAllowed = result != null && result.getIsAllowed();
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Access allowed: " + accessAllowed);
-		}
+        LOG.debug("Access allowed: {}", accessAllowed);
 
-		RangerPerfTracer.log(perf);
+        RangerPerfTracer.log(perf);
 
-		if (accessAllowed) {
-			chain.doFilter(request, response);
-		} else {
-			sendForbidden((HttpServletResponse) response);
-		}
-	}
+        if (accessAllowed) {
+            chain.doFilter(request, response);
+        } else {
+            sendForbidden((HttpServletResponse) response);
+        }
+    }
 
-	private List<String> getForwardedAddresses(ServletRequest request) {
-		List<String> forwardedAddresses = null;
-		if (request instanceof HttpServletRequest) {
-			HttpServletRequest httpRequest = (HttpServletRequest) request;
-			String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
-			if(xForwardedFor != null) {
-				forwardedAddresses = Arrays.asList(xForwardedFor.split(","));
-			}
-		}
-		return forwardedAddresses;
-	}
+    public void destroy() {
+    }
 
-	private void sendForbidden(HttpServletResponse res) {
-		sendErrorCode(res, 403);
-	}
+    private String getInitParameter(FilterConfig filterConfig, String paramName) {
+        return filterConfig.getInitParameter(paramName.toLowerCase());
+    }
 
-	private void sendErrorCode(HttpServletResponse res, int code) {
-		try {
-			res.sendError(code);
-		} catch (IOException e) {
-			LOG.error("Error while redirecting:", e);
-		}
-	}
+    private List<String> getForwardedAddresses(ServletRequest request) {
+        List<String> forwardedAddresses = null;
 
-	private String getTopologyName(String requestUrl) {
-		if (requestUrl == null) {
-			return null;
-		}
-		String url = requestUrl.trim();
-		String[] tokens = url.split("/");
-		if (tokens.length > 2) {
-			return tokens[2];
-		} else {
-			return null;
-		}
-	}
+        if (request instanceof HttpServletRequest) {
+            HttpServletRequest httpRequest   = (HttpServletRequest) request;
+            String             xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
 
-	private String getServiceName() {
-		return resourceRole;
-	}
+            if (xForwardedFor != null) {
+                forwardedAddresses = Arrays.asList(xForwardedFor.split(","));
+            }
+        }
+
+        return forwardedAddresses;
+    }
+
+    private void sendForbidden(HttpServletResponse res) {
+        sendErrorCode(res, 403);
+    }
+
+    private void sendErrorCode(HttpServletResponse res, int code) {
+        try {
+            res.sendError(code);
+        } catch (IOException e) {
+            LOG.error("Error while redirecting: ", e);
+        }
+    }
+
+    private String getTopologyName(String requestUrl) {
+        if (requestUrl == null) {
+            return null;
+        }
+
+        String   url    = requestUrl.trim();
+        String[] tokens = url.split("/");
+
+        if (tokens.length > 2) {
+            return tokens[2];
+        } else {
+            return null;
+        }
+    }
+
+    private String getServiceName() {
+        return resourceRole;
+    }
 }
