@@ -1490,6 +1490,16 @@ public class XUserREST {
 
 		boolean isValid = false;
 		try {
+			isValid = serviceUtil.isValidService(serviceName, request);
+		} catch (WebApplicationException webException) {
+			httpCode = webException.getResponse().getStatus();
+			logMsg = webException.getResponse().getEntity().toString();
+		} catch (Exception e) {
+			httpCode = HttpServletResponse.SC_BAD_REQUEST;
+			logMsg = e.getMessage();
+		}
+
+		try {
 			XXService xService = rangerDaoManager.getXXService().findByName(serviceName);
 			if (xService != null) {
 				isValid = true;
