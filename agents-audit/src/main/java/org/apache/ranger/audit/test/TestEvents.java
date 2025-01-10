@@ -17,7 +17,8 @@
  * under the License.
  */
 
- package org.apache.ranger.audit.test;
+package org.apache.ranger.audit.test;
+
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.model.EnumRepositoryType;
@@ -32,8 +33,13 @@ import java.util.Date;
 import java.util.Properties;
 
 public class TestEvents {
-
     private static final Logger LOG = LoggerFactory.getLogger(TestEvents.class);
+
+    private static final String AUDIT_PROPERTIES_FILE = "xasecure-audit.properties";
+
+    private TestEvents() {
+        // to block instantiation
+    }
 
     public static void main(String[] args) {
         LOG.info("==> TestEvents.main()");
@@ -41,17 +47,15 @@ public class TestEvents {
         try {
             Properties auditProperties = new Properties();
 
-            String AUDIT_PROPERTIES_FILE = "xasecure-audit.properties";
-
             File propFile = new File(AUDIT_PROPERTIES_FILE);
 
-            if(!propFile.exists()) {
-                LOG.info("Loading Audit properties file" + AUDIT_PROPERTIES_FILE);
-                try(FileInputStream fileInputStream = new FileInputStream(propFile)) {
+            if (!propFile.exists()) {
+                LOG.info("Loading Audit properties file {}", AUDIT_PROPERTIES_FILE);
+                try (FileInputStream fileInputStream = new FileInputStream(propFile)) {
                     auditProperties.load(fileInputStream);
                 }
             } else {
-                LOG.info("Audit properties file missing: " + AUDIT_PROPERTIES_FILE);
+                LOG.info("Audit properties file missing: {}", AUDIT_PROPERTIES_FILE);
 
                 auditProperties.setProperty("xasecure.audit.is.enabled", "true");
                 auditProperties.setProperty("xasecure.audit.log4j.is.enabled", "false");
@@ -65,7 +69,7 @@ public class TestEvents {
 
             AuditHandler provider = factory.getAuditProvider();
 
-            LOG.info("provider=" + provider.toString());
+            LOG.info("provider={}", provider);
 
             String strEventCount          = args.length > 0 ? args[0] : auditProperties.getProperty("xasecure.audit.test.event.count");
             String strEventPauseTimeInMs  = args.length > 1 ? args[1] : auditProperties.getProperty("xasecure.audit.test.event.pause.time.ms");
@@ -75,13 +79,14 @@ public class TestEvents {
             int eventPauseTime      = (strEventPauseTimeInMs == null) ? 0 : Integer.parseInt(strEventPauseTimeInMs);
             int sleepTimeBeforeExit = ((strSleepTimeBeforeExit == null) ? 0 : Integer.parseInt(strSleepTimeBeforeExit)) * 1000;
 
-            for(int i = 0; i < eventCount; i++) {
+            for (int i = 0; i < eventCount; i++) {
                 AuditEventBase event = getTestEvent(i);
 
-                LOG.info("==> TestEvents.main(" + (i+1) + "): adding " + event.getClass().getName());
+                LOG.info("==> TestEvents.main({}): adding {}", (i + 1), event.getClass().getName());
+
                 provider.log(event);
 
-                if(eventPauseTime > 0) {
+                if (eventPauseTime > 0) {
                     Thread.sleep(eventPauseTime);
                 }
             }
@@ -90,18 +95,18 @@ public class TestEvents {
 
             // incase of HdfsAuditProvider, logs are saved to local file system which gets sent to HDFS asynchronusly in a separate thread.
             // So, at this point it is possible that few local log files haven't made to HDFS.
-            if(sleepTimeBeforeExit > 0) {
-                LOG.info("waiting for " + sleepTimeBeforeExit + "ms before exiting..");
+            if (sleepTimeBeforeExit > 0) {
+                LOG.info("waiting for {}ms before exiting..", sleepTimeBeforeExit);
 
                 try {
                     Thread.sleep(sleepTimeBeforeExit);
-                } catch(Exception excp) {
+                } catch (Exception excp) {
                     LOG.info("error while waiting before exiting..");
                 }
             }
 
             provider.stop();
-        } catch(Exception excp) {
+        } catch (Exception excp) {
             LOG.info(excp.getLocalizedMessage());
             excp.printStackTrace();
         }
@@ -113,48 +118,48 @@ public class TestEvents {
         AuthzAuditEvent event = new AuthzAuditEvent();
 
         event.setClientIP("127.0.0.1");
-        event.setAccessResult((short)(idx % 2 > 0 ? 1 : 0));
+        event.setAccessResult((short) (idx % 2 > 0 ? 1 : 0));
         event.setAclEnforcer("ranger-acl");
 
-        switch(idx % 5) {
+        switch (idx % 5) {
             case 0:
                 event.setRepositoryName("hdfsdev");
                 event.setRepositoryType(EnumRepositoryType.HDFS);
                 event.setResourcePath("/tmp/test-audit.log");
                 event.setResourceType("file");
                 event.setAccessType("read");
-                if(idx % 2 > 0) {
+                if (idx % 2 > 0) {
                     event.setAclEnforcer("hadoop-acl");
                 }
-            break;
+                break;
             case 1:
                 event.setRepositoryName("hbasedev");
                 event.setRepositoryType(EnumRepositoryType.HBASE);
                 event.setResourcePath("test_table/test_cf/test_col");
                 event.setResourceType("column");
                 event.setAccessType("read");
-            break;
+                break;
             case 2:
                 event.setRepositoryName("hivedev");
                 event.setRepositoryType(EnumRepositoryType.HIVE);
                 event.setResourcePath("test_database/test_table/test_col");
                 event.setResourceType("column");
                 event.setAccessType("select");
-            break;
+                break;
             case 3:
                 event.setRepositoryName("knoxdev");
                 event.setRepositoryType(EnumRepositoryType.KNOX);
                 event.setResourcePath("topologies/ranger-admin");
                 event.setResourceType("service");
                 event.setAccessType("get");
-            break;
+                break;
             case 4:
                 event.setRepositoryName("stormdev");
                 event.setRepositoryType(EnumRepositoryType.STORM);
                 event.setResourcePath("topologies/read-finance-stream");
                 event.setResourceType("topology");
                 event.setAccessType("submit");
-            break;
+                break;
         }
         event.setEventTime(new Date());
         event.setResultReason(Integer.toString(idx));

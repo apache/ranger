@@ -48,6 +48,7 @@
         <cglib.version>2.2.0-b23</cglib.version>
         <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
+        <checkstyle.skip>true</checkstyle.skip>
         <checkstyle.version>8.29</checkstyle.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
         <com.microsoft.azure.adal4j.version>1.6.4</com.microsoft.azure.adal4j.version>
@@ -71,7 +72,7 @@
         <commons.csv.version>1.0</commons.csv.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
-        <commons.io.version>2.11.0</commons.io.version>
+        <commons.io.version>2.17.0</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <commons.lang3.version>3.3.2</commons.lang3.version>
         <commons.logging.version>1.2</commons.logging.version>
@@ -204,6 +205,7 @@
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.language>java</sonar.language>
+        <spotbugs.failOnViolation>false</spotbugs.failOnViolation>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
         <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
         <springframework.security.version>5.7.12</springframework.security.version>
@@ -566,7 +568,7 @@
             <plugin>
                 <groupId>org.apache.rat</groupId>
                 <artifactId>apache-rat-plugin</artifactId>
-                <version>0.11</version>
+                <version>0.16.1</version>
                 <configuration>
                     <excludeSubProjects>false</excludeSubProjects>
                     <excludes>
@@ -577,6 +579,7 @@
                         <exclude>**/src/main/webapp/fonts/**</exclude>
                         <exclude>**/src/main/webapp/libs/**</exclude>
                         <exclude>.git/**</exclude>
+                        <exclude>.gitattributes/**</exclude>
                         <exclude>.github/pull_request_template.md</exclude>
                         <exclude>.pc/**</exclude>
                         <exclude>debian/**</exclude>
@@ -660,14 +663,17 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs.plugin.version}</version>
-                <configuration>
-                    <includeFilterFile>./dev-support/spotbugsIncludeFile.xml</includeFilterFile>
-                </configuration>
                 <executions>
                     <execution>
+                        <id>spotbugs-check</id>
                         <goals>
                             <goal>check</goal>
                         </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <failOnError>${spotbugs.failOnViolation}</failOnError>
+                            <includeFilterFile>./dev-support/spotbugsIncludeFile.xml</includeFilterFile>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -703,6 +709,7 @@
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <configLocation>./dev-support/checkstyle.xml</configLocation>
                             <suppressionsLocation>./dev-support/checkstyle-suppressions.xml</suppressionsLocation>
+                            <skip>${checkstyle.skip}</skip>
                             <failOnViolation>${checkstyle.failOnViolation}</failOnViolation>
                         </configuration>
                     </execution>
@@ -779,25 +786,6 @@
     </issueManagement>
     <repositories>
         <repository>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>apache.snapshots.https</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repository.apache.org/content/repositories/snapshots</url>
-        </repository>
-        <repository>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>apache.public.https</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repository.apache.org/content/repositories/public</url>
-        </repository>
-        <repository>
             <id>jetbrains-pty4j</id>
             <name>jetbrains-intellij-dependencies</name>
             <url>https://packages.jetbrains.team/maven/p/ij/intellij-dependencies</url>
@@ -852,6 +840,7 @@
                 <module>plugin-trino</module>
                 <module>plugin-yarn</module>
                 <module>ranger-atlas-plugin-shim</module>
+                <module>ranger-authn</module>
                 <module>ranger-common-ha</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-examples</module>
@@ -862,6 +851,7 @@
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>
                 <module>ranger-kylin-plugin-shim</module>
+                <module>ranger-metrics</module>
                 <module>ranger-ozone-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-presto-plugin-shim</module>
@@ -1165,6 +1155,7 @@
                 <module>plugin-kms</module>
                 <module>plugin-kudu</module>
                 <module>plugin-kylin</module>
+                <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-ozone</module>
@@ -1203,7 +1194,6 @@
                 <module>ugsync-util</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
-                <module>unixauthnative</module>
                 <module>unixauthservice</module>
             </modules>
         </profile>
@@ -1258,6 +1248,7 @@
                 <module>plugin-trino</module>
                 <module>plugin-yarn</module>
                 <module>ranger-atlas-plugin-shim</module>
+                <module>ranger-authn</module>
                 <module>ranger-common-ha</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-examples</module>
@@ -1268,6 +1259,7 @@
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>
                 <module>ranger-kylin-plugin-shim</module>
+                <module>ranger-metrics</module>
                 <module>ranger-ozone-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-presto-plugin-shim</module>

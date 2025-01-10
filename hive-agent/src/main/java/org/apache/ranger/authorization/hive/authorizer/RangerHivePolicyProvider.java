@@ -25,6 +25,8 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyChangeL
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs.AccessResult;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs.Privilege;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
@@ -36,135 +38,117 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class RangerHivePolicyProvider implements HivePolicyProvider {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerHivePolicyProvider.class);
-
+    private static final Logger LOG                              = LoggerFactory.getLogger(RangerHivePolicyProvider.class);
     private static final Logger PERF_HIVEACLPROVIDER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hiveACLProvider.request");
 
-	private final RangerHiveAuthContextListener authContextListener = new RangerHiveAuthContextListener();
+    private final RangerHiveAuthContextListener authContextListener = new RangerHiveAuthContextListener();
+    private final Set<String>                   hivePrivileges;
+    private final RangerBasePlugin              rangerPlugin;
+    private final RangerHiveAuthorizer          authorizer;
 
-	private final Set<String> hivePrivileges;
+    public RangerHivePolicyProvider(@NotNull RangerBasePlugin hivePlugin, @NotNull RangerHiveAuthorizer authorizer) {
+        Set<String> privileges = new HashSet<>();
 
-	private final RangerBasePlugin  rangerPlugin;
-	private final RangerHiveAuthorizer authorizer;
+        for (Privilege privilege : Privilege.values()) {
+            privileges.add(privilege.name().toLowerCase());
+        }
 
-	public RangerHivePolicyProvider(@NotNull RangerBasePlugin hivePlugin, @NotNull RangerHiveAuthorizer authorizer) {
+        this.hivePrivileges = new HashSet<>(privileges);
+        this.rangerPlugin   = hivePlugin;
+        this.authorizer     = authorizer;
+    }
 
-		Set<String> privileges = new HashSet<>();
-		for (HiveResourceACLs.Privilege privilege : HiveResourceACLs.Privilege.values()) {
-			privileges.add(privilege.name().toLowerCase());
-		}
-
-		this.hivePrivileges = new HashSet<>(privileges);
-		this.rangerPlugin   = hivePlugin;
-		this.authorizer     = authorizer;
-	}
-
-	@Override
+    @Override
     public HiveResourceACLs getResourceACLs(HivePrivilegeObject hiveObject) {
+        RangerPerfTracer perf = null;
 
-	    HiveResourceACLs ret;
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEACLPROVIDER_REQUEST_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_HIVEACLPROVIDER_REQUEST_LOG, "RangerHivePolicyProvider.getResourceACLS()");
+        }
 
-	    RangerPerfTracer perf = null;
+        // Extract and build RangerHiveResource from inputObject
+        RangerHiveResource hiveResource = authorizer.createHiveResource(hiveObject);
+        HiveResourceACLs   ret          = getResourceACLs(hiveResource);
 
-	    if (RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEACLPROVIDER_REQUEST_LOG)) {
-		    perf = RangerPerfTracer.getPerfTracer(PERF_HIVEACLPROVIDER_REQUEST_LOG, "RangerHivePolicyProvider.getResourceACLS()");
-	    }
-	    // Extract and build RangerHiveResource from inputObject
-	    RangerHiveResource hiveResource = authorizer.createHiveResource(hiveObject);
-	    ret = getResourceACLs(hiveResource);
-	    RangerPerfTracer.log(perf);
-		return ret;
+        RangerPerfTracer.log(perf);
+
+        return ret;
     }
 
-	@Override
-	public void registerHivePolicyChangeListener(HivePolicyChangeListener listener) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHiveACLProviderFactory.registerACLProviderChangeListener()");
-		}
-		authContextListener.providerChangeListeners.add(listener);
+    @Override
+    public void registerHivePolicyChangeListener(HivePolicyChangeListener listener) {
+        LOG.debug("==> RangerHiveACLProviderFactory.registerACLProviderChangeListener()");
 
-		rangerPlugin.registerAuthContextEventListener(authContextListener);
+        authContextListener.providerChangeListeners.add(listener);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHiveACLProviderFactory.registerACLProviderChangeListener()");
-		}
-	}
+        rangerPlugin.registerAuthContextEventListener(authContextListener);
 
-	public HiveResourceACLs getResourceACLs(RangerHiveResource hiveResource) {
-	    HiveResourceACLs ret;
-
-	    RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
-
-	    RangerResourceACLs acls = rangerPlugin.getResourceACLs(request);
-
-	    if (LOG.isDebugEnabled()) {
-	    	LOG.debug("HiveResource:[" + hiveResource.getAsString() + "], Computed ACLS:[" + acls + "]");
-	    }
-
-	    Map<String, Map<HiveResourceACLs.Privilege, HiveResourceACLs.AccessResult>> userPermissions = convertRangerACLsToHiveACLs(acls.getUserACLs());
-	    Map<String, Map<HiveResourceACLs.Privilege, HiveResourceACLs.AccessResult>> groupPermissions = convertRangerACLsToHiveACLs(acls.getGroupACLs());
-
-	    ret = new RangerHiveResourceACLs(userPermissions, groupPermissions);
-
-	    return ret;
+        LOG.debug("<== RangerHiveACLProviderFactory.registerACLProviderChangeListener()");
     }
 
-    private Map<String, Map<HiveResourceACLs.Privilege, HiveResourceACLs.AccessResult>> convertRangerACLsToHiveACLs(Map<String, Map<String, RangerResourceACLs.AccessResult>> rangerACLs) {
+    public HiveResourceACLs getResourceACLs(RangerHiveResource hiveResource) {
+        RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
+        RangerResourceACLs      acls    = rangerPlugin.getResourceACLs(request);
 
-	    Map<String, Map<HiveResourceACLs.Privilege, HiveResourceACLs.AccessResult>> ret = new HashMap<>();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("HiveResource:[{}], Computed ACLS:[{}]", hiveResource.getAsString(), acls);
+        }
 
-	    if (MapUtils.isNotEmpty(rangerACLs)) {
+        Map<String, Map<Privilege, AccessResult>> userPermissions  = convertRangerACLsToHiveACLs(acls.getUserACLs());
+        Map<String, Map<Privilege, AccessResult>> groupPermissions = convertRangerACLsToHiveACLs(acls.getGroupACLs());
 
-		    for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry : rangerACLs.entrySet()) {
-
-			    Map<HiveResourceACLs.Privilege, HiveResourceACLs.AccessResult> permissions = new HashMap<>();
-
-			    ret.put(entry.getKey(), permissions);
-
-			    for (Map.Entry<String, RangerResourceACLs.AccessResult> permission : entry.getValue().entrySet()) {
-
-				    if (hivePrivileges.contains(permission.getKey())) {
-
-					    HiveResourceACLs.Privilege privilege = HiveResourceACLs.Privilege.valueOf(StringUtils.upperCase(permission.getKey()));
-
-					    HiveResourceACLs.AccessResult accessResult;
-
-					    int rangerResultValue = permission.getValue().getResult();
-
-					    if (rangerResultValue == RangerPolicyEvaluator.ACCESS_ALLOWED) {
-						    accessResult = HiveResourceACLs.AccessResult.ALLOWED;
-					    } else if (rangerResultValue == RangerPolicyEvaluator.ACCESS_DENIED) {
-						    accessResult = HiveResourceACLs.AccessResult.NOT_ALLOWED;
-					    } else if (rangerResultValue == RangerPolicyEvaluator.ACCESS_CONDITIONAL) {
-						    accessResult = HiveResourceACLs.AccessResult.CONDITIONAL_ALLOWED;
-					    } else {
-						    // Should not get here
-						    accessResult = HiveResourceACLs.AccessResult.NOT_ALLOWED;
-					    }
-
-					    permissions.put(privilege, accessResult);
-				    }
-
-			    }
-		    }
-	    }
-
-	    return ret;
+        return new RangerHiveResourceACLs(userPermissions, groupPermissions);
     }
 
-	static class RangerHiveAuthContextListener implements RangerAuthContextListener {
-		Set<HivePolicyChangeListener> providerChangeListeners = new HashSet<>();
+    private Map<String, Map<Privilege, AccessResult>> convertRangerACLsToHiveACLs(Map<String, Map<String, RangerResourceACLs.AccessResult>> rangerACLs) {
+        Map<String, Map<Privilege, AccessResult>> ret = new HashMap<>();
 
-		public void contextChanged() {
-			for (HivePolicyChangeListener eventListener : providerChangeListeners) {
-				eventListener.notifyPolicyChange(null);
-			}
-		}
-	}
+        if (MapUtils.isNotEmpty(rangerACLs)) {
+            for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry : rangerACLs.entrySet()) {
+                Map<Privilege, AccessResult> permissions = new HashMap<>();
+
+                ret.put(entry.getKey(), permissions);
+
+                for (Map.Entry<String, RangerResourceACLs.AccessResult> permission : entry.getValue().entrySet()) {
+                    if (hivePrivileges.contains(permission.getKey())) {
+                        Privilege    privilege         = Privilege.valueOf(StringUtils.upperCase(permission.getKey()));
+                        int          rangerResultValue = permission.getValue().getResult();
+                        AccessResult accessResult;
+
+                        if (rangerResultValue == RangerPolicyEvaluator.ACCESS_ALLOWED) {
+                            accessResult = AccessResult.ALLOWED;
+                        } else if (rangerResultValue == RangerPolicyEvaluator.ACCESS_DENIED) {
+                            accessResult = AccessResult.NOT_ALLOWED;
+                        } else if (rangerResultValue == RangerPolicyEvaluator.ACCESS_CONDITIONAL) {
+                            accessResult = AccessResult.CONDITIONAL_ALLOWED;
+                        } else {
+                            // Should not get here
+                            accessResult = AccessResult.NOT_ALLOWED;
+                        }
+
+                        permissions.put(privilege, accessResult);
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    static class RangerHiveAuthContextListener implements RangerAuthContextListener {
+        Set<HivePolicyChangeListener> providerChangeListeners = new HashSet<>();
+
+        public void contextChanged() {
+            for (HivePolicyChangeListener eventListener : providerChangeListeners) {
+                eventListener.notifyPolicyChange(null);
+            }
+        }
+    }
 }

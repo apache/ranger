@@ -28,8 +28,19 @@ import java.security.KeyStore;
 public class RangerAdminConfig extends RangerConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAdminConfig.class);
 
-    private static volatile RangerAdminConfig sInstance = null;
+    private static volatile RangerAdminConfig sInstance;
+
     private final boolean isFipsEnabled;
+
+    private RangerAdminConfig() {
+        super();
+
+        addAdminResources();
+
+        String storeType = get(RangerConfigConstants.RANGER_KEYSTORE_TYPE, KeyStore.getDefaultType());
+
+        isFipsEnabled = StringUtils.equalsIgnoreCase("bcfks", storeType);
+    }
 
     public static RangerAdminConfig getInstance() {
         RangerAdminConfig ret = RangerAdminConfig.sInstance;
@@ -39,7 +50,8 @@ public class RangerAdminConfig extends RangerConfiguration {
                 ret = RangerAdminConfig.sInstance;
 
                 if (ret == null) {
-                    ret = RangerAdminConfig.sInstance = new RangerAdminConfig();
+                    ret                         = new RangerAdminConfig();
+                    RangerAdminConfig.sInstance = ret;
                 }
             }
         }
@@ -47,49 +59,33 @@ public class RangerAdminConfig extends RangerConfiguration {
         return ret;
     }
 
-    private RangerAdminConfig() {
-        super();
-        addAdminResources();
-        String storeType = get(RangerConfigConstants.RANGER_KEYSTORE_TYPE, KeyStore.getDefaultType());
-        isFipsEnabled = StringUtils.equalsIgnoreCase("bcfks", storeType) ? true : false;
-        
+    public boolean isFipsEnabled() {
+        return isFipsEnabled;
     }
 
     private boolean addAdminResources() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> addAdminResources()");
-        }
+        LOG.debug("==> addAdminResources()");
 
         String defaultCfg = "ranger-admin-default-site.xml";
         String addlCfg    = "ranger-admin-site.xml";
         String coreCfg    = "core-site.xml";
 
-        boolean ret = true;
-
-        if (!addResourceIfReadable(defaultCfg)) {
-            ret = false;
-        }
+        boolean ret = addResourceIfReadable(defaultCfg);
 
         if (!addResourceIfReadable(addlCfg)) {
             ret = false;
         }
 
-        if (!addResourceIfReadable(coreCfg)){
+        if (!addResourceIfReadable(coreCfg)) {
             ret = false;
         }
 
-        if (! ret) {
+        if (!ret) {
             LOG.error("Could not add ranger-admin resources to RangerAdminConfig.");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== addAdminResources(), result=" + ret);
-        }
+        LOG.debug("<== addAdminResources(), result={}", ret);
 
         return ret;
-    }
-
-    public boolean isFipsEnabled() {
-        return isFipsEnabled;
     }
 }

@@ -20,7 +20,13 @@ package org.apache.ranger.examples.sampleclient;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -28,6 +34,9 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerServiceTags;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -36,16 +45,21 @@ import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class SampleClient {
     private static final Logger LOG = LoggerFactory.getLogger(SampleClient.class);
 
+    private SampleClient(){
+    }
 
     @SuppressWarnings("static-access")
     public static void main(String[] args) throws RangerServiceException {
-        Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").setPrettyPrinting().create();
-        Options options  = new Options();
+        Gson    gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").setPrettyPrinting().create();
+        Options options     = new Options();
 
         Option host = OptionBuilder.hasArgs(1).isRequired().withLongOpt("host").withDescription("hostname").create('h');
         Option auth = OptionBuilder.hasArgs(1).isRequired().withLongOpt("authType").withDescription("Authentication Type").create('k');
@@ -60,7 +74,7 @@ public class SampleClient {
         options.addOption(conf);
 
         CommandLineParser parser = new BasicParser();
-        CommandLine cmd;
+        CommandLine       cmd;
 
         try {
             cmd = parser.parse(options, args);
@@ -76,101 +90,113 @@ public class SampleClient {
 
         RangerClient rangerClient = new RangerClient(hostName, authType, userName, password, cfg);
 
-        String serviceDefName     = "sampleServiceDef";
-        String serviceName        = "sampleService";
-        String policyName         = "samplePolicy";
-        String zoneName           = null;
-        String roleName           = "sampleRole";
-        Map<String,String> filter = Collections.emptyMap();
-
+        String              serviceDefName = "sampleServiceDef";
+        String              serviceName    = "sampleService";
+        String              policyName     = "samplePolicy";
+        String              zoneName       = null;
+        String              roleName       = "sampleRole";
+        Map<String, String> filter         = Collections.emptyMap();
 
         /*
         Create a new Service Definition
          */
 
-        RangerServiceDef.RangerServiceConfigDef config = new RangerServiceDef.RangerServiceConfigDef();
+        RangerServiceConfigDef config = new RangerServiceConfigDef();
+
         config.setItemId(1L);
         config.setName("sampleConfig");
         config.setType("string");
-        List<RangerServiceDef.RangerServiceConfigDef> configs = Collections.singletonList(config);
 
-        RangerServiceDef.RangerAccessTypeDef accessType = new RangerServiceDef.RangerAccessTypeDef();
+        List<RangerServiceConfigDef> configs = Collections.singletonList(config);
+
+        RangerAccessTypeDef accessType = new RangerAccessTypeDef();
+
         accessType.setItemId(1L);
         accessType.setName("sampleAccess");
-        List<RangerServiceDef.RangerAccessTypeDef> accessTypes = Collections.singletonList(accessType);
 
-        RangerServiceDef.RangerResourceDef resourceDef = new RangerServiceDef.RangerResourceDef();
+        List<RangerAccessTypeDef> accessTypes = Collections.singletonList(accessType);
+
+        RangerResourceDef resourceDef = new RangerResourceDef();
+
         resourceDef.setItemId(1L);
         resourceDef.setName("root");
         resourceDef.setType("string");
-        List<RangerServiceDef.RangerResourceDef> resourceDefs = Collections.singletonList(resourceDef);
+
+        List<RangerResourceDef> resourceDefs = Collections.singletonList(resourceDef);
 
         RangerServiceDef serviceDef = new RangerServiceDef();
+
         serviceDef.setName(serviceDefName);
         serviceDef.setConfigs(configs);
         serviceDef.setAccessTypes(accessTypes);
         serviceDef.setResources(resourceDefs);
 
         RangerServiceDef createdServiceDef = rangerClient.createServiceDef(serviceDef);
+
         LOG.info("New Service Definition created successfully {}", gsonBuilder.toJson(createdServiceDef));
 
         /*
         Create a new Service
          */
         RangerService service = new RangerService();
+
         service.setType(serviceDefName);
         service.setName(serviceName);
 
         RangerService createdService = rangerClient.createService(service);
+
         LOG.info("New Service created successfully {}", gsonBuilder.toJson(createdService));
 
         /*
         All Services
          */
-        List<RangerService> services = rangerClient.findServices(filter);
-        String allServiceNames = "";
-        for (RangerService svc: services) {
+        List<RangerService> services        = rangerClient.findServices(filter);
+        String              allServiceNames = "";
+
+        for (RangerService svc : services) {
             allServiceNames = allServiceNames.concat(svc.getName() + " ");
         }
-        LOG.info("List of Services : {}", allServiceNames);
 
+        LOG.info("List of Services : {}", allServiceNames);
         /*
         Policy Management
          */
 
-
         /*
         Create a new Policy
          */
-        Map<String, RangerPolicy.RangerPolicyResource> resource = Collections.singletonMap(
-                "root", new RangerPolicy.RangerPolicyResource(Collections.singletonList("/path/to/sample/resource"),false,false));
-        RangerPolicy policy = new RangerPolicy();
+        Map<String, RangerPolicyResource> resource = Collections.singletonMap("root", new RangerPolicyResource(Collections.singletonList("/path/to/sample/resource"), false, false));
+        RangerPolicy                      policy   = new RangerPolicy();
+
         policy.setService(serviceName);
         policy.setZoneName(zoneName);
         policy.setName(policyName);
         policy.setResources(resource);
 
         RangerPolicy createdPolicy = rangerClient.createPolicy(policy);
+
         LOG.info("Created policy {} in zone {}: {}", policyName, zoneName, gsonBuilder.toJson(createdPolicy));
 
         /*
         Get a policy by name and Zone
         */
         RangerPolicy fetchedPolicy = rangerClient.getPolicyByNameAndZone(serviceName, policyName, zoneName);
-        LOG.info("Fetched policy {} in zone {}: {}", policyName, zoneName ,gsonBuilder.toJson(fetchedPolicy));
+
+        LOG.info("Fetched policy {} in zone {}: {}", policyName, zoneName, gsonBuilder.toJson(fetchedPolicy));
 
         /*
         Update a policy by name and Zone
         */
         RangerPolicy updatedPolicy = rangerClient.updatePolicyByNameAndZone(serviceName, policyName, zoneName, fetchedPolicy);
-        LOG.info("Updated policy {} in zone {}: {}", policyName, zoneName ,gsonBuilder.toJson(updatedPolicy));
+
+        LOG.info("Updated policy {} in zone {}: {}", policyName, zoneName, gsonBuilder.toJson(updatedPolicy));
 
         /*
         Delete a policy by name and zone
         */
         rangerClient.deletePolicyByNameAndZone(serviceName, policyName, zoneName);
-        LOG.info("Deleted policy {} in zone {}", policyName, zoneName);
 
+        LOG.info("Deleted policy {} in zone {}", policyName, zoneName);
 
         /* import tags */
         RangerTagDef tagDefTest1 = new RangerTagDef("test1");
@@ -214,7 +240,7 @@ public class SampleClient {
         serviceTags.setTags(Collections.emptyMap());
         serviceTags.setResourceToTagIds(Collections.emptyMap());
 
-        LOG.info("Deleting tags: {}" + serviceTags);
+        LOG.info("Deleting tags: {}", serviceTags);
 
         rangerClient.importServiceTags(serviceName, serviceTags);
 
@@ -226,15 +252,15 @@ public class SampleClient {
         Delete a Service
          */
         rangerClient.deleteService(serviceName);
-        LOG.info("Service {} successfully deleted", serviceName);
 
+        LOG.info("Service {} successfully deleted", serviceName);
 
         /*
         Delete a Service Definition
          */
         rangerClient.deleteServiceDef(serviceDefName);
-        LOG.info("Service Definition {} successfully deleted", serviceDefName);
 
+        LOG.info("Service Definition {} successfully deleted", serviceDefName);
 
         /*
         Role Management
@@ -244,34 +270,44 @@ public class SampleClient {
         Create a role in Ranger
          */
         RangerRole sampleRole = new RangerRole();
+
         sampleRole.setName(roleName);
         sampleRole.setDescription("Sample Role");
-        sampleRole.setUsers(Collections.singletonList(new RangerRole.RoleMember(null,true)));
+        sampleRole.setUsers(Collections.singletonList(new RangerRole.RoleMember(null, true)));
+
         sampleRole = rangerClient.createRole(serviceName, sampleRole);
+
         LOG.info("New Role successfully created {}", gsonBuilder.toJson(sampleRole));
 
         /*
         Update a role in Ranger
          */
         sampleRole.setDescription("Updated Sample Role");
+
         RangerRole updatedRole = rangerClient.updateRole(sampleRole.getId(), sampleRole);
+
         LOG.info("Role {} successfully updated {}", roleName, gsonBuilder.toJson(updatedRole));
 
         /*
         Get all roles in Ranger
          */
         List<RangerRole> allRoles = rangerClient.findRoles(filter);
+
         LOG.info("List of Roles {}", gsonBuilder.toJson(allRoles));
+
         String allRoleNames = "";
-        for (RangerRole role: allRoles) {
+
+        for (RangerRole role : allRoles) {
             allRoleNames = allRoleNames.concat(role.getName() + " ");
         }
+
         LOG.info("List of Roles : {}", allRoleNames);
 
         /*
         Delete a role in Ranger
          */
         rangerClient.deleteRole(roleName, userName, serviceName);
+
         LOG.info("Role {} successfully deleted", roleName);
     }
 }

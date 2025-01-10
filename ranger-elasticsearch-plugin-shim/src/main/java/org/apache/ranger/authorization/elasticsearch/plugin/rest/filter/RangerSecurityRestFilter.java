@@ -32,56 +32,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerSecurityRestFilter extends AbstractLifecycleComponent implements RestHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityRestFilter.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityRestFilter.class);
+    private final RestHandler   restHandler;
+    private final ThreadContext threadContext;
 
-	private final RestHandler restHandler;
+    public RangerSecurityRestFilter(final ThreadContext threadContext, final RestHandler restHandler) {
+        super();
 
-	private final ThreadContext threadContext;
+        this.restHandler   = restHandler;
+        this.threadContext = threadContext;
+    }
 
-	public RangerSecurityRestFilter(final ThreadContext threadContext,
-			final RestHandler restHandler) {
-		super();
-		this.restHandler = restHandler;
-		this.threadContext = threadContext;
-	}
+    @Override
+    public void handleRequest(final RestRequest request, final RestChannel channel, final NodeClient client) throws Exception {
+        // Now only support to get user from request,
+        // it should work with other elasticsearch identity authentication plugins in fact.
+        UsernamePasswordToken user = UsernamePasswordToken.parseToken(request);
 
-	@Override
-	public void handleRequest(final RestRequest request, final RestChannel channel, final NodeClient client)
-			throws Exception {
-		// Now only support to get user from request,
-		// it should work with other elasticsearch identity authentication plugins in fact.
-		UsernamePasswordToken user = UsernamePasswordToken.parseToken(request);
-		if (user == null) {
-			throw new ElasticsearchStatusException("Error: User is null, the request requires user authentication.",
-					RestStatus.UNAUTHORIZED);
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Success to parse user[{}] from request[{}].", user, request);
-			}
-		}
-		threadContext.putTransient(UsernamePasswordToken.USERNAME, user.getUsername());
+        if (user == null) {
+            throw new ElasticsearchStatusException("Error: User is null, the request requires user authentication.", RestStatus.UNAUTHORIZED);
+        } else {
+            LOG.debug("Success to parse user[{}] from request[{}].", user, request);
+        }
 
-		String clientIPAddress = RequestUtils.getClientIPAddress(request);
-		if (StringUtils.isNotEmpty(clientIPAddress)) {
-			threadContext.putTransient(RequestUtils.CLIENT_IP_ADDRESS, clientIPAddress);
-		}
+        threadContext.putTransient(UsernamePasswordToken.USERNAME, user.getUsername());
 
-		this.restHandler.handleRequest(request, channel, client);
-	}
+        String clientIPAddress = RequestUtils.getClientIPAddress(request);
+
+        if (StringUtils.isNotEmpty(clientIPAddress)) {
+            threadContext.putTransient(RequestUtils.CLIENT_IP_ADDRESS, clientIPAddress);
+        }
+
+        this.restHandler.handleRequest(request, channel, client);
+    }
 
     @Override
     protected void doStart() {
-
     }
 
     @Override
     protected void doStop() {
-
     }
 
     @Override
     protected void doClose() {
-
     }
 }

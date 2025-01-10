@@ -26,6 +26,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
@@ -41,46 +42,16 @@ import java.util.Map;
 import java.util.Set;
 
 public class CachedResourceEvaluators {
-    private final Map<String, Map<Map<String, RangerAccessRequest.ResourceElementMatchingScope>, Collection<RangerServiceResourceMatcher>>> cache     = new HashMap<>();
-    private final RangerReadWriteLock                                                                                                       cacheLock = new RangerReadWriteLock(true);
-
-    private static final Logger LOG = LoggerFactory.getLogger(CachedResourceEvaluators.class);
+    private static final Logger LOG                           = LoggerFactory.getLogger(CachedResourceEvaluators.class);
     private static final Logger PERF_EVALUATORS_RETRIEVAL_LOG = RangerPerfTracer.getPerfLogger("CachedResourceEvaluators.retrieval");
+
+    private final Map<String, Map<Map<String, ResourceElementMatchingScope>, Collection<RangerServiceResourceMatcher>>> cache     = new HashMap<>();
+    private final RangerReadWriteLock                                                                                   cacheLock = new RangerReadWriteLock(true);
 
     public CachedResourceEvaluators() {}
 
-    public Collection<RangerServiceResourceMatcher> getEvaluators(String resourceKey, Map<String, RangerAccessRequest.ResourceElementMatchingScope> scopes) {
-        Collection<RangerServiceResourceMatcher> ret;
-
-        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getReadLock()) {
-            ret = cache.getOrDefault(resourceKey, Collections.emptyMap()).get(scopes);
-        }
-
-        return ret;
-    }
-
-    public void cacheEvaluators(String resource, Map<String, RangerAccessRequest.ResourceElementMatchingScope> scopes, Collection<RangerServiceResourceMatcher> evaluators) {
-        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
-            cache.computeIfAbsent(resource, k -> new HashMap<>()).put(scopes, evaluators);
-        }
-    }
-
-    public void removeCacheEvaluators(Set<String> resources) {
-        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
-            resources.forEach(cache::remove);
-        }
-    }
-
-    public void clearCache() {
-        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
-            cache.clear();
-        }
-    }
-
     public static Collection<RangerServiceResourceMatcher> getEvaluators(RangerAccessRequest request, Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie, CachedResourceEvaluators cache) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> CachedResourceEvaluators.getEvaluators(request=" + request + ")");
-        }
+        LOG.debug("==> CachedResourceEvaluators.getEvaluators(request={})", request);
 
         Collection<RangerServiceResourceMatcher> ret      = null;
         final RangerAccessResource               resource = request.getResource();
@@ -103,7 +74,7 @@ public class CachedResourceEvaluators {
             ret = RangerResourceEvaluatorsRetriever.getEvaluators(serviceResourceTrie, resource.getAsMap(), request.getResourceElementMatchingScopes(), predicate);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Found [" + ret.size() + "] service-resource-matchers for service-resource [" + resource.getAsString() + "]");
+                LOG.debug("Found [{}] service-resource-matchers for service-resource [{}]", ret.size(), resource.getAsString());
             }
 
             if (predicate != null) {
@@ -111,7 +82,7 @@ public class CachedResourceEvaluators {
             }
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Found [" + ret.size() + "] service-resource-matchers for service-resource [" + resource.getAsString() + "] in the cache");
+                LOG.debug("Found [{}] service-resource-matchers for service-resource [{}] in the cache", ret.size(), resource.getAsString());
             }
         }
 
@@ -121,9 +92,7 @@ public class CachedResourceEvaluators {
             ret = new ArrayList<>();
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== CachedResourceEvaluators.getEvaluators(request=" + request + "): evaluators=" + ret);
-        }
+        LOG.debug("<== CachedResourceEvaluators.getEvaluators(request={}): evaluators={}", request, ret);
 
         return ret;
     }
@@ -131,7 +100,7 @@ public class CachedResourceEvaluators {
     public static boolean excludeDescendantMatches(RangerAccessResource resource) {
         final boolean ret;
 
-        String               leafName = resource.getLeafName();
+        String leafName = resource.getLeafName();
 
         if (StringUtils.isNotEmpty(leafName)) {
             RangerServiceDefHelper                        helper      = new RangerServiceDefHelper(resource.getServiceDef());
@@ -150,6 +119,34 @@ public class CachedResourceEvaluators {
             ret = false;
         }
         return ret;
+    }
+
+    public Collection<RangerServiceResourceMatcher> getEvaluators(String resourceKey, Map<String, ResourceElementMatchingScope> scopes) {
+        Collection<RangerServiceResourceMatcher> ret;
+
+        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getReadLock()) {
+            ret = cache.getOrDefault(resourceKey, Collections.emptyMap()).get(scopes);
+        }
+
+        return ret;
+    }
+
+    public void cacheEvaluators(String resource, Map<String, ResourceElementMatchingScope> scopes, Collection<RangerServiceResourceMatcher> evaluators) {
+        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
+            cache.computeIfAbsent(resource, k -> new HashMap<>()).put(scopes, evaluators);
+        }
+    }
+
+    public void removeCacheEvaluators(Set<String> resources) {
+        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
+            resources.forEach(cache::remove);
+        }
+    }
+
+    public void clearCache() {
+        try (RangerReadWriteLock.RangerLock ignored = cacheLock.getWriteLock()) {
+            cache.clear();
+        }
     }
 
     private static class SelfOrAncestorPredicate implements Predicate {

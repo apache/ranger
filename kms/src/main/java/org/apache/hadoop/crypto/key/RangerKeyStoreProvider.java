@@ -17,6 +17,21 @@
 
 package org.apache.hadoop.crypto.key;
 
+import org.apache.hadoop.classification.InterfaceAudience;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.ranger.kms.dao.DaoManager;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableReadLock;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableTryWriteLock;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableWriteLock;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.spec.SecretKeySpec;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -38,19 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import javax.crypto.KeyGenerator;
-import javax.crypto.spec.SecretKeySpec;
-import org.apache.hadoop.classification.InterfaceAudience;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableReadLock;
-import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableTryWriteLock;
-import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableWriteLock;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
-import org.apache.hadoop.fs.Path;
-import org.apache.ranger.credentialapi.CredentialReader;
-import org.apache.ranger.kms.dao.DaoManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @InterfaceAudience.Private
 public class RangerKeyStoreProvider extends KeyProvider {
@@ -77,7 +79,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
     private static final String AZURE_CLIENT_SECRET_ALIAS    = "ranger.kms.azure.client.secret.alias";
     private static final String AZURE_CLIENT_SECRET          = "ranger.kms.azure.client.secret";
     private static final String AWS_KMS_ENABLED              = "ranger.kms.awskms.enabled";
-    private static final String AWS_CLIENT_SECRETKEY_ALIAS   = RangerAWSKMSProvider.AWS_CLIENT_SECRETKEY+".alias";
+    private static final String AWS_CLIENT_SECRETKEY_ALIAS   = RangerAWSKMSProvider.AWS_CLIENT_SECRETKEY + ".alias";
     private static final String AWS_CLIENT_SECRETKEY         = RangerAWSKMSProvider.AWS_CLIENT_SECRETKEY;
     private static final String TENCENT_KMS_ENABLED          = "ranger.kms.tencentkms.enabled";
     private static final String TENCENT_CLIENT_SECRET        = RangerTencentKMSProvider.TENCENT_CLIENT_SECRET;
@@ -86,17 +88,15 @@ public class RangerKeyStoreProvider extends KeyProvider {
 
     private final RangerKeyStore        dbStore;
     private final char[]                masterKey;
-    private final Map<String, Metadata> cache = new HashMap<>();
-    private final ReadWriteLock         lock  = new ReentrantReadWriteLock(true);
+    private final Map<String, Metadata> cache   = new HashMap<>();
+    private final ReadWriteLock         lock    = new ReentrantReadWriteLock(true);
     private final boolean               keyVaultEnabled;
-    private       boolean               changed = false;
+    private       boolean               changed;
 
     public RangerKeyStoreProvider(Configuration conf) throws Throwable {
         super(conf);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> RangerKeyStoreProvider(conf)");
-        }
+        logger.debug("==> RangerKeyStoreProvider(conf)");
 
         conf = getDBKSConf();
 
@@ -106,7 +106,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 
         String password = conf.get(ENCRYPTION_KEY);
 
-        if (password == null || password.trim().equals("")  || password.trim().equals("_") || password.trim().equals("crypted")) {
+        if (password == null || password.trim().equals("") || password.trim().equals("_") || password.trim().equals("crypted")) {
             throw new IOException("The Ranger MasterKey Password is empty or not a valid Password");
         }
 
@@ -216,9 +216,8 @@ public class RangerKeyStoreProvider extends KeyProvider {
             logger.info("Ranger KMS Database is enabled for storing master key.");
 
             masterKeyProvider = new RangerMasterKey(daoManager);
-
-            dbStore   = new RangerKeyStore(daoManager);
-            masterKey = this.generateAndGetMasterKey(masterKeyProvider, password);
+            dbStore           = new RangerKeyStore(daoManager);
+            masterKey         = this.generateAndGetMasterKey(masterKeyProvider, password);
         }
 
         reloadKeys();
@@ -234,119 +233,8 @@ public class RangerKeyStoreProvider extends KeyProvider {
     }
 
     @Override
-    public KeyVersion createKey(String name, byte[] material, Options options) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> createKey({})", name);
-        }
-
-        KeyVersion ret;
-
-        try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
-            reloadKeys();
-
-            if (dbStore.engineContainsAlias(name) || cache.containsKey(name)) {
-                throw new IOException("Key " + name + " already exists");
-            }
-
-            Metadata meta = new Metadata(options.getCipher(), options.getBitLength(), options.getDescription(), options.getAttributes(), new Date(), 1);
-
-            if (options.getBitLength() != 8 * material.length) {
-                throw new IOException("Wrong key length. Required " + options.getBitLength() + ", but got " + (8 * material.length));
-            }
-
-            String versionName = buildVersionName(name, 0);
-
-            ret = innerSetKeyVersion(name, versionName, material, meta);
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== createKey({})", name);
-        }
-
-        return ret;
-    }
-
-    @Override
-    public void deleteKey(String name) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> deleteKey({})", name);
-        }
-
-        try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
-            reloadKeys();
-
-            Metadata meta = getMetadata(name);
-
-            if (meta == null) {
-                throw new IOException("Key " + name + " does not exist");
-            }
-
-            for (int v = 0; v < meta.getVersions(); ++v) {
-                String versionName = buildVersionName(name, v);
-
-                try {
-                    if (dbStore.engineContainsAlias(versionName)) {
-                        dbStore.engineDeleteEntry(versionName);
-                    }
-                } catch (KeyStoreException e) {
-                    throw new IOException("Problem removing " + versionName, e);
-                }
-            }
-
-            try {
-                if (dbStore.engineContainsAlias(name)) {
-                    dbStore.engineDeleteEntry(name);
-                }
-            } catch (KeyStoreException e) {
-                throw new IOException("Problem removing " + name + " from " + this, e);
-            }
-
-            cache.remove(name);
-
-            changed = true;
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== deleteKey({})", name);
-        }
-    }
-
-    @Override
-    public void flush() throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> flush()");
-        }
-
-        if (changed) {
-            try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
-                try {
-                    dbStore.engineStore(null, masterKey);
-
-                    reloadKeys();
-                } catch (NoSuchAlgorithmException e) {
-                    throw new IOException("No such algorithm storing key", e);
-                } catch (CertificateException e) {
-                    throw new IOException("Certificate exception storing key", e);
-                }
-
-                changed = false;
-            } catch (IOException ioe) {
-                reloadKeys();
-
-                throw ioe;
-            }
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== flush()");
-        }
-    }
-
-    @Override
     public KeyVersion getKeyVersion(String versionName) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getKeyVersion({})", versionName);
-        }
+        logger.debug("==> getKeyVersion({})", versionName);
 
         KeyVersion ret = null;
 
@@ -374,7 +262,6 @@ public class RangerKeyStoreProvider extends KeyProvider {
                             ret = new KeyVersion(getBaseName(versionName), versionName, decryptKeyByte);
                         }
                     }
-
                 } catch (NoSuchAlgorithmException e) {
                     throw new IOException("Can't get algorithm for key " + e.getMessage());
                 } catch (CertificateException e) {
@@ -408,18 +295,38 @@ public class RangerKeyStoreProvider extends KeyProvider {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getKeyVersion({})", versionName);
+        logger.debug("<== getKeyVersion({})", versionName);
+
+        return ret;
+    }
+
+    @Override
+    public List<String> getKeys() throws IOException {
+        logger.debug("==> getKeys()");
+
+        ArrayList<String> ret = new ArrayList<>();
+
+        reloadKeys();
+
+        Enumeration<String> e = dbStore.engineAliases();
+
+        while (e.hasMoreElements()) {
+            String alias = e.nextElement();
+
+            // only include the metadata key names in the list of names
+            if (!alias.contains("@")) {
+                ret.add(alias);
+            }
         }
+
+        logger.debug("<== getKeys(): count={}", ret.size());
 
         return ret;
     }
 
     @Override
     public List<KeyVersion> getKeyVersions(String name) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getKeyVersions({})", name);
-        }
+        logger.debug("==> getKeyVersions({})", name);
 
         List<KeyVersion> ret = new ArrayList<>();
 
@@ -440,46 +347,14 @@ public class RangerKeyStoreProvider extends KeyProvider {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getKeyVersions({}): count={}", name, ret.size());
-        }
-
-        return ret;
-    }
-
-    @Override
-    public List<String> getKeys() throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getKeys()");
-        }
-
-        ArrayList<String> ret = new ArrayList<>();
-
-        reloadKeys();
-
-        Enumeration<String> e = dbStore.engineAliases();
-
-        while (e.hasMoreElements()) {
-            String alias = e.nextElement();
-
-            // only include the metadata key names in the list of names
-            if (!alias.contains("@")) {
-                ret.add(alias);
-            }
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getKeys(): count={}", ret.size());
-        }
+        logger.debug("<== getKeyVersions({}): count={}", name, ret.size());
 
         return ret;
     }
 
     @Override
     public Metadata getMetadata(String name) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getMetadata({})", name);
-        }
+        logger.debug("==> getMetadata({})", name);
 
         Metadata ret;
         boolean  addToCache = false;
@@ -526,18 +401,84 @@ public class RangerKeyStoreProvider extends KeyProvider {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getMetadata({}): ret={}", name, ret);
-        }
+        logger.debug("<== getMetadata({}): ret={}", name, ret);
 
         return ret;
     }
 
     @Override
-    public KeyVersion rollNewVersion(String name, byte[] material) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> rollNewVersion({})", name);
+    public KeyVersion createKey(String name, byte[] material, Options options) throws IOException {
+        logger.debug("==> createKey({})", name);
+
+        KeyVersion ret;
+
+        try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
+            reloadKeys();
+
+            if (dbStore.engineContainsAlias(name) || cache.containsKey(name)) {
+                throw new IOException("Key " + name + " already exists");
+            }
+
+            Metadata meta = new Metadata(options.getCipher(), options.getBitLength(), options.getDescription(), options.getAttributes(), new Date(), 1);
+
+            if (options.getBitLength() != 8 * material.length) {
+                throw new IOException("Wrong key length. Required " + options.getBitLength() + ", but got " + (8 * material.length));
+            }
+
+            String versionName = buildVersionName(name, 0);
+
+            ret = innerSetKeyVersion(name, versionName, material, meta);
         }
+
+        logger.debug("<== createKey({})", name);
+
+        return ret;
+    }
+
+    @Override
+    public void deleteKey(String name) throws IOException {
+        logger.debug("==> deleteKey({})", name);
+
+        try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
+            reloadKeys();
+
+            Metadata meta = getMetadata(name);
+
+            if (meta == null) {
+                throw new IOException("Key " + name + " does not exist");
+            }
+
+            for (int v = 0; v < meta.getVersions(); ++v) {
+                String versionName = buildVersionName(name, v);
+
+                try {
+                    if (dbStore.engineContainsAlias(versionName)) {
+                        dbStore.engineDeleteEntry(versionName);
+                    }
+                } catch (KeyStoreException e) {
+                    throw new IOException("Problem removing " + versionName, e);
+                }
+            }
+
+            try {
+                if (dbStore.engineContainsAlias(name)) {
+                    dbStore.engineDeleteEntry(name);
+                }
+            } catch (KeyStoreException e) {
+                throw new IOException("Problem removing " + name + " from " + this, e);
+            }
+
+            cache.remove(name);
+
+            changed = true;
+        }
+
+        logger.debug("<== deleteKey({})", name);
+    }
+
+    @Override
+    public KeyVersion rollNewVersion(String name, byte[] material) throws IOException {
+        logger.debug("==> rollNewVersion({})", name);
 
         KeyVersion ret = null;
 
@@ -560,17 +501,40 @@ public class RangerKeyStoreProvider extends KeyProvider {
             ret = innerSetKeyVersion(name, versionName, material, meta);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== rollNewVersion({}): ret={}", name, ret);
-        }
+        logger.debug("<== rollNewVersion({}): ret={}", name, ret);
 
         return ret;
     }
 
-    private static Configuration getConfiguration(boolean loadHadoopDefaults, String... resources) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getConfiguration()");
+    @Override
+    public void flush() throws IOException {
+        logger.debug("==> flush()");
+
+        if (changed) {
+            try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
+                try {
+                    dbStore.engineStore(null, masterKey);
+
+                    reloadKeys();
+                } catch (NoSuchAlgorithmException e) {
+                    throw new IOException("No such algorithm storing key", e);
+                } catch (CertificateException e) {
+                    throw new IOException("Certificate exception storing key", e);
+                }
+
+                changed = false;
+            } catch (IOException ioe) {
+                reloadKeys();
+
+                throw ioe;
+            }
         }
+
+        logger.debug("<== flush()");
+    }
+
+    private static Configuration getConfiguration(boolean loadHadoopDefaults, String... resources) {
+        logger.debug("==> getConfiguration()");
 
         Configuration conf    = new Configuration(loadHadoopDefaults);
         String        confDir = System.getProperty(KMS_CONFIG_DIR);
@@ -597,17 +561,13 @@ public class RangerKeyStoreProvider extends KeyProvider {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getConfiguration()");
-        }
+        logger.debug("<== getConfiguration()");
 
         return conf;
     }
 
     private static void getFromJceks(Configuration conf, String path, String alias, String key) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getFromJceks()");
-        }
+        logger.debug("==> getFromJceks()");
 
         // update credential from keystore
         if (conf != null) {
@@ -626,15 +586,11 @@ public class RangerKeyStoreProvider extends KeyProvider {
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getFromJceks()");
-        }
+        logger.debug("<== getFromJceks()");
     }
 
     private char[] generateAndGetMasterKey(final RangerKMSMKI masterKeyProvider, final String password) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> generateAndGetMasterKey()");
-        }
+        logger.debug("==> generateAndGetMasterKey()");
 
         char[] ret;
 
@@ -650,29 +606,21 @@ public class RangerKeyStoreProvider extends KeyProvider {
             throw new RuntimeException("Error while getting Ranger Master key, Error - ", cause);
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== generateAndGetMasterKey()");
-        }
+        logger.debug("<== generateAndGetMasterKey()");
 
         return ret;
     }
 
     private void loadKeys(char[] masterKey) throws NoSuchAlgorithmException, CertificateException, IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> loadKeys()");
-        }
+        logger.debug("==> loadKeys()");
 
         dbStore.engineLoad(null, masterKey);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== loadKeys()");
-        }
+        logger.debug("<== loadKeys()");
     }
 
     private KeyVersion innerSetKeyVersion(String name, String versionName, byte[] material, Metadata meta) throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> innerSetKeyVersion(name={}, versionName={})", name, versionName);
-        }
+        logger.debug("==> innerSetKeyVersion(name={}, versionName={})", name, versionName);
 
         saveKey(name, meta);
 
@@ -696,9 +644,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 
         KeyVersion ret = new KeyVersion(name, versionName, material);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== innerSetKeyVersion(name={}, versionName={}): ret={}", name, versionName, ret);
-        }
+        logger.debug("<== innerSetKeyVersion(name={}, versionName={}): ret={}", name, versionName, ret);
 
         return ret;
     }
@@ -721,10 +667,10 @@ public class RangerKeyStoreProvider extends KeyProvider {
                 }
 
                 dbStore.addSecureKeyByteEntry(name, ezkey, metadata.getCipher(), metadata.getBitLength(),
-                                              metadata.getDescription(), metadata.getVersions(), attributes);
+                        metadata.getDescription(), metadata.getVersions(), attributes);
             } else {
                 dbStore.addKeyEntry(name, new KeyMetadata(metadata), masterKey, metadata.getAlgorithm(),
-                                    metadata.getBitLength(), metadata.getDescription(), metadata.getVersions(), attributes);
+                        metadata.getBitLength(), metadata.getDescription(), metadata.getVersions(), attributes);
             }
 
             cache.put(name, metadata);
@@ -734,21 +680,17 @@ public class RangerKeyStoreProvider extends KeyProvider {
     }
 
     private void reloadKeys() throws IOException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> reloadKeys()");
-        }
+        logger.debug("==> reloadKeys()");
 
-        try (AutoClosableWriteLock ignored  = new AutoClosableWriteLock(lock)) {
+        try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
             cache.clear();
 
             loadKeys(masterKey);
-        } catch (NoSuchAlgorithmException|CertificateException e) {
+        } catch (NoSuchAlgorithmException | CertificateException e) {
             throw new IOException("Can't load Keys");
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== reloadKeys()");
-        }
+        logger.debug("<== reloadKeys()");
     }
 
     /**
@@ -757,9 +699,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
     public static class Factory extends KeyProviderFactory {
         @Override
         public KeyProvider createProvider(URI providerName, Configuration conf) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("==> createProvider({})", providerName);
-            }
+            logger.debug("==> createProvider({})", providerName);
 
             KeyProvider ret = null;
 
@@ -767,15 +707,13 @@ public class RangerKeyStoreProvider extends KeyProvider {
                 if (SCHEME_NAME.equals(providerName.getScheme())) {
                     ret = new RangerKeyStoreProvider(conf);
                 } else {
-                    logger.warn(providerName.getScheme() + ": unrecognized schema");
+                    logger.warn("{}: unrecognized schema", providerName.getScheme());
                 }
             } catch (Throwable e) {
                 logger.error("createProvider() error", e);
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("<== createProvider({})", providerName);
-            }
+            logger.debug("<== createProvider({})", providerName);
 
             return ret;
         }
@@ -786,8 +724,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
      * the metadata in a KeyStore even though isn't really a key.
      */
     public static class KeyMetadata implements Key, Serializable {
-        private final static long serialVersionUID = 8405872419967874451L;
-
+        private static final long serialVersionUID = 8405872419967874451L;
         Metadata metadata;
 
         protected KeyMetadata(Metadata meta) {

@@ -28,6 +28,8 @@
     <name>SOLR Security Plugin</name>
     <description>SOLR Security Plugin</description>
     <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>

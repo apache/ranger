@@ -16,20 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ranger.authorization.hadoop;
 
-import java.util.Set;
+package org.apache.ranger.authorization.kms.authorizer;
 
-public interface HDFSAccessVerifier {
-	class AccessContext {
-		String agentId;
-		int repositoryType;
-		String sessionId;
-		String clientType;
-		String clientIP;
-		String requestData;
-	}
-	
-	boolean isAccessGranted(String aPathName, String aPathOwnerName, String access, String username, Set<String> groups);
-	boolean isAuditLogEnabled(String aPathName);
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+
+class RangerKMSResource extends RangerAccessResourceImpl {
+    private static final String KEY_NAME = "keyname";
+
+    public RangerKMSResource(String keyname) {
+        setValue(KEY_NAME, keyname != null ? keyname : null);
+    }
 }

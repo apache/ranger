@@ -28,6 +28,8 @@
     <name>Knox Security Plugin</name>
     <description>Knox Security Plugins</description>
     <properties>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
+        <checkstyle.skip>false</checkstyle.skip>
         <knox.jetty.version>9.4.56.v20240826</knox.jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>

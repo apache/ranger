@@ -30,55 +30,44 @@ import java.util.Set;
 
 // Policy Condition to check if resource Tags does contain any of the policy Condition Tags
 public class RangerAnyOfExpectedTagsPresentConditionEvaluator extends RangerAbstractConditionEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAnyOfExpectedTagsPresentConditionEvaluator.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAnyOfExpectedTagsPresentConditionEvaluator.class);
+    private final Set<String> policyConditionTags = new HashSet<>();
 
-	private final Set<String> policyConditionTags = new HashSet<>();
+    @Override
+    public void init() {
+        LOG.debug("==> RangerAnyOfExpectedTagsPresentConditionEvaluator.init({})", condition);
 
-	@Override
-	public void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAnyOfExpectedTagsPresentConditionEvaluator.init(" + condition + ")");
-		}
+        super.init();
 
-		super.init();
+        if (condition != null) {
+            for (String value : condition.getValues()) {
+                policyConditionTags.add(value.trim());
+            }
+        }
 
-		if (condition != null ) {
-			for (String value : condition.getValues()) {
-				policyConditionTags.add(value.trim());
-			}
-		}
+        LOG.debug("<== RangerAnyOfExpectedTagsPresentConditionEvaluator.init({}): Tags[{}]", condition, policyConditionTags);
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAnyOfExpectedTagsPresentConditionEvaluator.init(" + condition + "): Tags[" + policyConditionTags + "]");
-		}
-	}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerAnyOfExpectedTagsPresentConditionEvaluator.isMatched({})", request);
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
+        boolean               matched      = false;
+        Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAnyOfExpectedTagsPresentConditionEvaluator.isMatched(" + request + ")");
-		}
+        if (resourceTags != null) {
+            // check if resource Tags does contain any of the policy Condition Tags
+            for (RangerTagForEval tag : resourceTags) {
+                if (policyConditionTags.contains(tag.getType())) {
+                    matched = true;
+                    break;
+                }
+            }
+        }
 
-		boolean               matched      = false;
-		Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+        LOG.debug("<== RangerAnyOfExpectedTagsPresentConditionEvaluator.isMatched({}): {}", request, matched);
 
-		if (resourceTags != null) {
-			// check if resource Tags does contain any of the policy Condition Tags
-			for (RangerTagForEval tag : resourceTags) {
-				if (policyConditionTags.contains(tag.getType())) {
-					matched = true;
-					break;
-				}
-			}
-		}
-
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAnyOfExpectedTagsPresentConditionEvaluator.isMatched(" + request+ "): " + matched);
-		}
-
-		return matched;
-	}
+        return matched;
+    }
 }

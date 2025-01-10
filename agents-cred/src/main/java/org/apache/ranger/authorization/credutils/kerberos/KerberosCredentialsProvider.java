@@ -25,28 +25,33 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.AuthSchemes;
 
 public class KerberosCredentialsProvider implements CredentialsProvider {
-    private AuthScope authScope;
+    private AuthScope   authScope;
     private Credentials credentials;
 
     @Override
     public void setCredentials(AuthScope authscope, Credentials credentials) {
-        if (authscope.getScheme().regionMatches(true, 0, AuthSchemes.SPNEGO, 0, AuthSchemes.SPNEGO.length()) == false) {
+        if (!authscope.getScheme().regionMatches(true, 0, AuthSchemes.SPNEGO, 0, AuthSchemes.SPNEGO.length())) {
             throw new IllegalArgumentException("Only " + AuthSchemes.SPNEGO + " auth scheme is supported in AuthScope");
         }
-        this.authScope = authscope;
+
+        this.authScope   = authscope;
         this.credentials = credentials;
     }
 
     @Override
     public Credentials getCredentials(AuthScope authscope) {
-        assert this.authScope != null && authscope != null;
-        return authscope.match(this.authScope) > -1 ? this.credentials : null;
+        Credentials ret = null;
+
+        if (this.authScope != null && authscope != null) {
+            ret = authscope.match(this.authScope) > -1 ? this.credentials : null;
+        }
+
+        return ret;
     }
 
     @Override
     public void clear() {
-        this.authScope = null;
+        this.authScope   = null;
         this.credentials = null;
     }
-
 }

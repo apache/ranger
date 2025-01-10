@@ -50,6 +50,7 @@ import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.PasswordUtils.PasswordGenerator;
 import org.apache.ranger.service.*;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
@@ -110,6 +111,7 @@ public class XUserMgr extends XUserMgrBase {
 	private static final String USER = "User";
 	private static final String GROUP = "Group";
 	private static final int MAX_DB_TRANSACTION_RETRIES = 5;
+	private static final int PASSWORD_LENGTH = 16;
 
 	@Autowired
 	RangerBizUtil msBizUtil;
@@ -187,6 +189,20 @@ public class XUserMgr extends XUserMgrBase {
 	public VXUser createXUser(VXUser vXUser) {
 		checkAdminAccess();
 		xaBizUtil.blockAuditorRoleUser();
+
+		if (vXUser.getUserSource() == RangerCommonEnums.USER_FEDERATED) {
+			if (StringUtils.isEmpty(vXUser.getPassword())) {
+				PasswordGenerator passwordGenerator = new PasswordGenerator.PasswordGeneratorBuilder()
+						.useLower(true)
+						.useUpper(true)
+						.useDigits(true)
+						.useSymbols(true)
+						.build();
+				String passWd = passwordGenerator.generate(PASSWORD_LENGTH);
+				vXUser.setPassword(passWd);
+			}
+		}
+
 		validatePassword(vXUser);
 		String userName = vXUser.getName();
 		String firstName = vXUser.getFirstName();
