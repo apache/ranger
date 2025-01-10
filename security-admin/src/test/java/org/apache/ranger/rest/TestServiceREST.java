@@ -27,7 +27,7 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
-import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
+import org.apache.ranger.biz.ServiceDBStore.JsonFileNameType;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
@@ -1456,7 +1456,7 @@ public class TestServiceREST {
         Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
         serviceREST.getPoliciesInJson(request, response, false);
 
-        Mockito.verify(svcStore).getObjectInJson(rangerPolicyList, response, JSON_FILE_NAME_TYPE.POLICY);
+        Mockito.verify(svcStore).getObjectInJson(rangerPolicyList, response, JsonFileNameType.POLICY);
     }
 
     @Test
@@ -1653,7 +1653,7 @@ public class TestServiceREST {
         String type = "usergroup";
         String ret = "{\"groupCount\":1,\"userCountOfUserRole\":0,\"userCountOfKeyAdminRole\":1,"
                 + "\"userCountOfSysAdminRole\":3,\"userCountOfKeyadminAuditorRole\":0,\"userCountOfSysAdminAuditorRole\":0,\"userTotalCount\":4}";
-        ServiceDBStore.METRIC_TYPE metricType = ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type);
+        ServiceDBStore.MetricType metricType = ServiceDBStore.MetricType.getMetricTypeByName(type);
         Mockito.when(svcStore.getMetricByType(metricType)).thenReturn(ret);
         serviceREST.getMetricByType(type);
         Mockito.verify(svcStore).getMetricByType(metricType);

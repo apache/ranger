@@ -17,11 +17,6 @@
 
 package org.apache.ranger.biz;
 
-import java.util.*;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -31,13 +26,13 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.plugin.model.RangerSecurityZone;
-import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
-import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.RangerSecurityZone.SecurityZoneSummary;
 import org.apache.ranger.plugin.model.RangerSecurityZone.ZoneServiceSummary;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.store.AbstractPredicateUtil;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
@@ -50,9 +45,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
 @Component
 public class SecurityZoneDBStore implements SecurityZoneStore {
     private static final Logger LOG = LoggerFactory.getLogger(SecurityZoneDBStore.class);
+
     private static final String RANGER_GLOBAL_STATE_NAME = "RangerSecurityZone";
 
     @Autowired
@@ -65,36 +71,21 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     RESTErrorUtil restErrorUtil;
 
     @Autowired
-	SecurityZoneRefUpdater securityZoneRefUpdater;
+    SecurityZoneRefUpdater securityZoneRefUpdater;
 
     @Autowired
     RangerBizUtil bizUtil;
 
-    AbstractPredicateUtil predicateUtil = null;
+    AbstractPredicateUtil predicateUtil;
 
     @Autowired
     ServiceMgr serviceMgr;
 
     public void init() throws Exception {}
 
-    @PostConstruct
-    public void initStore() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> SecurityZoneDBStore.initStore()");
-        }
-
-        predicateUtil = new SecurityZonePredicateUtil();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== SecurityZoneDBStore.initStore()");
-        }
-    }
-
     @Override
     public RangerSecurityZone createSecurityZone(RangerSecurityZone securityZone) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> SecurityZoneDBStore.createSecurityZone()");
-        }
+        LOG.debug("==> SecurityZoneDBStore.createSecurityZone()");
 
         XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(securityZone.getName());
 
@@ -114,7 +105,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     }
 
     @Override
-	public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
+    public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
         RangerSecurityZone oldSecurityZone = securityZoneService.read(securityZone.getId());
 
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
@@ -125,9 +116,9 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(updatedSecurityZone);
         boolean isRenamed = !StringUtils.equals(securityZone.getName(), (null == oldSecurityZone) ? null : oldSecurityZone.getName());
-		if (isRenamed) {
-			securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
-		}
+        if (isRenamed) {
+            securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
+        }
         securityZoneService.createTransactionLog(updatedSecurityZone, oldSecurityZone, RangerBaseModelService.OPERATION_UPDATE_CONTEXT);
         return securityZone;
     }
@@ -146,7 +137,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
         securityZoneService.delete(securityZone);
         securityZoneService.createTransactionLog(securityZone, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
-        }
+    }
 
     @Override
     public void deleteSecurityZoneById(Long zoneId) throws Exception {
@@ -214,10 +205,19 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
                 }
             }
         } catch (Exception excp) {
-            LOG.error("Failed to get security zones for service:[" + serviceName + "]", excp);
+            LOG.error("Failed to get security zones for service:[{}]", serviceName, excp);
         }
 
         return ret;
+    }
+
+    @PostConstruct
+    public void initStore() {
+        LOG.debug("==> SecurityZoneDBStore.initStore()");
+
+        predicateUtil = new SecurityZonePredicateUtil();
+
+        LOG.debug("<== SecurityZoneDBStore.initStore()");
     }
 
     public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList(HttpServletRequest request) {
@@ -264,7 +264,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     }
 
     public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(Long serviceId, Boolean isTagService, HttpServletRequest request) {
-        if (serviceId == null){
+        if (serviceId == null) {
             throw restErrorUtil.createRESTException("Invalid value for serviceId", MessageEnums.INVALID_INPUT_DATA);
         }
 
@@ -302,7 +302,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             }
         }
 
-        List<SecurityZoneSummary>  paginatedList;
+        List<SecurityZoneSummary> paginatedList;
 
         if (summaryList.size() > startIndex) {
             int endIndex = Math.min((startIndex + maxRows), summaryList.size());
@@ -357,8 +357,8 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     private List<ZoneServiceSummary> getSecurityZoneServiceSummary(RangerSecurityZone securityZone) {
         List<ZoneServiceSummary> ret = new ArrayList<>();
 
-        if(MapUtils.isNotEmpty(securityZone.getServices())) {
-            for(Map.Entry<String, RangerSecurityZoneService> entry : securityZone.getServices().entrySet()) {
+        if (MapUtils.isNotEmpty(securityZone.getServices())) {
+            for (Map.Entry<String, RangerSecurityZoneService> entry : securityZone.getServices().entrySet()) {
                 String                    serviceName = entry.getKey();
                 RangerSecurityZoneService zoneService = entry.getValue();
                 XXService                 xService    = daoMgr.getXXService().findByName(serviceName);
@@ -369,7 +369,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
                 summary.setName(serviceName);
                 summary.setType(serviceDef.getName());
                 summary.setDisplayName(xService.getDisplayName());
-                summary.setResourceCount((long)zoneService.getResources().size());
+                summary.setResourceCount((long) zoneService.getResources().size());
 
                 ret.add(summary);
             }

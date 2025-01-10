@@ -30,7 +30,7 @@ import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
-import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
+import org.apache.ranger.biz.ServiceDBStore.JsonFileNameType;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -402,7 +402,7 @@ public class RoleREST {
             List<RangerRole> roleLists = getAllFilteredRoleList(request);
 
             if (CollectionUtils.isNotEmpty(roleLists)) {
-                svcStore.getObjectInJson(roleLists, response, JSON_FILE_NAME_TYPE.ROLE);
+                svcStore.getObjectInJson(roleLists, response, JsonFileNameType.ROLE);
             } else {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 

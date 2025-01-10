@@ -39,7 +39,7 @@ import org.apache.ranger.biz.RangerPolicyAdminCacheForEngineOptions;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
-import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
+import org.apache.ranger.biz.ServiceDBStore.JsonFileNameType;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
@@ -2125,7 +2125,7 @@ public class ServiceREST {
 
                 bizUtil.blockAuditorRoleUser();
 
-                svcStore.getObjectInJson(policyLists, response, JSON_FILE_NAME_TYPE.POLICY);
+                svcStore.getObjectInJson(policyLists, response, JsonFileNameType.POLICY);
             } else {
                 checkPoliciesExists = true;
 
@@ -2892,7 +2892,7 @@ public class ServiceREST {
         String ret;
 
         try {
-            ServiceDBStore.METRIC_TYPE metricType = ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type);
+            ServiceDBStore.MetricType metricType = ServiceDBStore.MetricType.getMetricTypeByName(type);
 
             if (metricType == null) {
                 throw restErrorUtil.createRESTException("Metric type=" + type + ", not supported.");
