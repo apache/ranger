@@ -51,11 +51,14 @@ import java.util.stream.Collectors;
 @Service
 @Scope("singleton")
 public class RangerTrxLogV2Service {
-    private static final Logger            LOG          = LoggerFactory.getLogger(RangerTrxLogV2Service.class);
-    private final        List<SortField>   sortFields   = new ArrayList<>();
-    private final        List<SearchField> searchFields = new ArrayList<>();
+    private static final Logger LOG = LoggerFactory.getLogger(RangerTrxLogV2Service.class);
+
+    private final List<SortField>   sortFields   = new ArrayList<>();
+    private final List<SearchField> searchFields = new ArrayList<>();
+
     @Autowired
     RangerSearchUtil searchUtil;
+
     @Autowired
     RangerDaoManager daoManager;
 

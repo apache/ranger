@@ -49,8 +49,10 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
 
         for (XXTagAttributeDef xAttrTag : tagAttrDefList) {
             RangerTagAttributeDef attrDef = populateRangerTagAttributeDef(xAttrTag);
+
             attributeDefList.add(attrDef);
         }
+
         return attributeDefList;
     }
 
@@ -60,8 +62,10 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
      */
     public RangerTagAttributeDef populateRangerTagAttributeDef(XXTagAttributeDef xObj) {
         RangerTagAttributeDef attrDef = new RangerTagAttributeDef();
+
         attrDef.setName(xObj.getName());
         attrDef.setType(xObj.getType());
+
         return attrDef;
     }
 
@@ -81,17 +85,18 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
         xTagAttrDef.setTagDefId(parentObj.getId());
         xTagAttrDef.setName(attrDef.getName());
         xTagAttrDef.setType(attrDef.getType());
+
         return xTagAttrDef;
     }
 
     public PList<V> searchRangerTagDefs(SearchFilter searchFilter) {
         PList<V> retList    = new PList<>();
         List<V>  tagDefList = new ArrayList<>();
-
         List<T> xTagDefList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
         for (T xTagDef : xTagDefList) {
             V tagDef = populateViewBean(xTagDef);
+
             tagDefList.add(tagDef);
         }
 
@@ -114,6 +119,7 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
         xObj.setIsEnabled(vObj.getIsEnabled());
         xObj.setName(vObj.getName());
         xObj.setSource(vObj.getSource());
+
         return xObj;
     }
 
@@ -126,6 +132,7 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
         vObj.setSource(xObj.getSource());
 
         List<RangerTagAttributeDef> attributeDefs = getAttributeDefForTagDef(xObj);
+
         vObj.setAttributeDefs(attributeDefs);
 
         return vObj;

@@ -37,17 +37,18 @@ public abstract class XUserPermissionServiceBase<T extends XXUserPermission, V e
      */
     public VXUserPermissionList searchXUserPermission(SearchCriteria searchCriteria) {
         VXUserPermissionList   returnList        = new VXUserPermissionList();
-        List<VXUserPermission> vXUserPermissions = new ArrayList<VXUserPermission>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<VXUserPermission> vXUserPermissions = new ArrayList<>();
+        List<T>                resultList        = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXUser : resultList) {
             VXUserPermission vXUserPermission = populateViewBean(gjXUser);
+
             vXUserPermissions.add(vXUserPermission);
         }
 
         returnList.setvXModuleDef(vXUserPermissions);
+
         return returnList;
     }
 
@@ -55,8 +56,8 @@ public abstract class XUserPermissionServiceBase<T extends XXUserPermission, V e
     protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
         // Assuming that vObj.userId coming from UI/Client would be of XXUser, but in DB it should be of XXPortalUser so
         // have to map XXUser.ID to XXPortalUser.ID and if portalUser does not exist then not allowing to create/update
-
         XXPortalUser portalUser = daoManager.getXXPortalUser().findByXUserId(vObj.getUserId());
+
         if (portalUser == null) {
             throw restErrorUtil.createRESTException("Invalid UserId: [" + vObj.getUserId() + "], Please make sure while create/update given userId should be of x_user", MessageEnums.INVALID_INPUT_DATA);
         }
@@ -80,29 +81,34 @@ public abstract class XUserPermissionServiceBase<T extends XXUserPermission, V e
         // XXUserPermission.userID from XXPortalUser.ID to XXUser.ID
         XXUser xUser = daoManager.getXXUser().findByPortalUserId(mObj.getUserId());
         Long   userId;
+
         if (xUser != null) {
             userId = xUser.getId();
         } else {
             // In this case rather throwing exception, send it as null
             userId = null;
         }
+
         vObj.setUserId(userId);
         vObj.setModuleId(mObj.getModuleId());
         vObj.setIsAllowed(mObj.getIsAllowed());
+
         return vObj;
     }
 
     protected void validateXUserPermForCreate(XXUserPermission mObj) {
         XXUserPermission xUserPerm = daoManager.getXXUserPermission().findByModuleIdAndPortalUserId(mObj.getUserId(), mObj.getModuleId());
+
         if (xUserPerm != null) {
-            throw restErrorUtil.createRESTException("User with ID [" + mObj.getUserId() + "] " + "is already " + "assigned to the module with ID [" + mObj.getModuleId() + "]", MessageEnums.ERROR_DUPLICATE_OBJECT);
+            throw restErrorUtil.createRESTException("User with ID [" + mObj.getUserId() + "] is already assigned to the module with ID [" + mObj.getModuleId() + "]", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }
     }
 
     protected void validateXUserPermForUpdate(XXUserPermission mObj) {
         XXUserPermission xUserPerm = daoManager.getXXUserPermission().findByModuleIdAndPortalUserId(mObj.getUserId(), mObj.getModuleId());
+
         if (xUserPerm != null && !xUserPerm.getId().equals(mObj.getId())) {
-            throw restErrorUtil.createRESTException("User with ID [" + mObj.getUserId() + "] " + "is already " + "assigned to the module with ID [" + mObj.getModuleId() + "]", MessageEnums.ERROR_DUPLICATE_OBJECT);
+            throw restErrorUtil.createRESTException("User with ID [" + mObj.getUserId() + "] is already assigned to the module with ID [" + mObj.getModuleId() + "]", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }
     }
 }

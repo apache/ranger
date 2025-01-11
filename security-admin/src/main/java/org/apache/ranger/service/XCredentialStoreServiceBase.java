@@ -39,17 +39,18 @@ public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V
      */
     public VXCredentialStoreList searchXCredentialStores(SearchCriteria searchCriteria) {
         VXCredentialStoreList   returnList           = new VXCredentialStoreList();
-        List<VXCredentialStore> xCredentialStoreList = new ArrayList<VXCredentialStore>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<VXCredentialStore> xCredentialStoreList = new ArrayList<>();
+        List<T>                 resultList           = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXCredentialStore : resultList) {
             VXCredentialStore vXCredentialStore = populateViewBean(gjXCredentialStore);
+
             xCredentialStoreList.add(vXCredentialStore);
         }
 
         returnList.setVXCredentialStores(xCredentialStoreList);
+
         return returnList;
     }
 
@@ -57,6 +58,7 @@ public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V
     protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
         mObj.setName(vObj.getName());
         mObj.setDescription(vObj.getDescription());
+
         return mObj;
     }
 
@@ -64,6 +66,7 @@ public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V
     protected V mapEntityToViewBean(V vObj, T mObj) {
         vObj.setName(mObj.getName());
         vObj.setDescription(mObj.getDescription());
+
         return vObj;
     }
 }

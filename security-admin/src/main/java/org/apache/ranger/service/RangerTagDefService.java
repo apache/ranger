@@ -61,9 +61,8 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
     }
 
     public RangerTagDef getTagDefByGuid(String guid) {
-        RangerTagDef ret = null;
-
-        XXTagDef xxTagDef = daoMgr.getXXTagDef().findByGuid(guid);
+        RangerTagDef ret      = null;
+        XXTagDef     xxTagDef = daoMgr.getXXTagDef().findByGuid(guid);
 
         if (xxTagDef != null) {
             ret = populateViewBean(xxTagDef);
@@ -73,9 +72,8 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
     }
 
     public RangerTagDef getTagDefByName(String name) {
-        RangerTagDef ret = null;
-
-        XXTagDef xxTagDef = daoMgr.getXXTagDef().findByName(name);
+        RangerTagDef ret      = null;
+        XXTagDef     xxTagDef = daoMgr.getXXTagDef().findByName(name);
 
         if (xxTagDef != null) {
             ret = populateViewBean(xxTagDef);
@@ -85,9 +83,8 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
     }
 
     public List<RangerTagDef> getTagDefsByServiceId(Long serviceId) {
-        List<RangerTagDef> ret = new ArrayList<>();
-
-        List<XXTagDef> xxTagDefs = daoMgr.getXXTagDef().findByServiceId(serviceId);
+        List<RangerTagDef> ret       = new ArrayList<>();
+        List<XXTagDef>     xxTagDefs = daoMgr.getXXTagDef().findByServiceId(serviceId);
 
         if (CollectionUtils.isNotEmpty(xxTagDefs)) {
             for (XXTagDef xxTagDef : xxTagDefs) {
@@ -108,13 +105,16 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
     @Override
     protected XXTagDef mapViewToEntityBean(RangerTagDef vObj, XXTagDef xObj, int operationContext) {
         XXTagDef ret = super.mapViewToEntityBean(vObj, xObj, operationContext);
+
         ret.setTagAttrDefs(JsonUtils.listToJson(vObj.getAttributeDefs()));
+
         return ret;
     }
 
     @Override
     protected RangerTagDef mapEntityToViewBean(RangerTagDef vObj, XXTagDef xObj) {
         RangerTagDef ret = super.mapEntityToViewBean(vObj, xObj);
+
         if (StringUtils.isNotEmpty(xObj.getTagAttrDefs())) {
             try {
                 List<RangerTagDef.RangerTagAttributeDef> attributeDefs = (List<RangerTagDef.RangerTagAttributeDef>) JsonUtils.jsonToObject(xObj.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
@@ -123,6 +123,7 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
                 logger.error("Error occurred while processing json", e);
             }
         }
+
         return ret;
     }
 

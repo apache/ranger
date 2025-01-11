@@ -127,6 +127,7 @@ public class RangerGdsDatasetInProjectService extends RangerGdsBaseModelService<
         xObj.setAdditionalInfo(JsonUtils.mapToJson(vObj.getAdditionalInfo()));
 
         final XXPortalUser user = xxPortalUserDao.findByLoginId(vObj.getApprover());
+
         xObj.setApproverId(user == null ? null : user.getId());
 
         return xObj;

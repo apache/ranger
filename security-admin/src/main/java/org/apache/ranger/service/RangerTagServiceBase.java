@@ -45,7 +45,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
     GUIDUtil guidUtil;
 
     @Autowired
-    RangerAuditFields rangerAuditFields;
+    RangerAuditFields<T> rangerAuditFields;
 
     @Autowired
     RangerConfigUtil configUtil;
@@ -64,13 +64,13 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
     }
 
     public PList<V> searchRangerTags(SearchFilter searchFilter) {
-        PList<V> retList = new PList<>();
-        List<V>  tagList = new ArrayList<>();
-
-        List<T> xTagList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
+        PList<V> retList  = new PList<>();
+        List<V>  tagList  = new ArrayList<>();
+        List<T>  xTagList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
         for (T xTag : xTagList) {
             V tag = populateViewBean(xTag);
+
             tagList.add(tag);
         }
 
@@ -80,6 +80,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
         retList.setStartIndex(searchFilter.getStartIndex());
         retList.setSortType(searchFilter.getSortType());
         retList.setSortBy(searchFilter.getSortBy());
+
         return retList;
     }
 
@@ -110,12 +111,14 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
         }
 
         xObj.setOptions(JsonUtils.mapToJson(options));
+
         return xObj;
     }
 
     @Override
     protected V mapEntityToViewBean(V vObj, T xObj) {
         XXTagDef xTagDef = daoMgr.getXXTagDef().getById(xObj.getType());
+
         if (xTagDef == null) {
             throw restErrorUtil.createRESTException("No TagDefinition found with name :" + xObj.getType(), MessageEnums.INVALID_INPUT_DATA);
         }
@@ -139,6 +142,7 @@ public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag>
         vObj.setOptions(options);
 
         Map<String, String> attributes = getAttributesForTag(xObj);
+
         vObj.setAttributes(attributes);
 
         return vObj;

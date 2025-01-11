@@ -42,6 +42,7 @@ import java.util.Map.Entry;
 public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
     public XAssetService() {
         super();
+
         searchFields.add(new SearchField("status", "obj.activeStatus", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("name", "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("type", "obj.assetType", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
@@ -49,8 +50,10 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 
     public void validateConfig(VXAsset vObj) {
         HashMap<String, Object> configrationMap = null;
+
         if (vObj.getAssetType() == AppConstants.ASSET_HDFS) {
             TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {};
+
             try {
                 configrationMap = JsonUtilsV2.getMapper().readValue(vObj.getConfig(), typeRef);
             } catch (Exception e) {
@@ -73,23 +76,28 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
                 Map<String, String>   configMap        = jsonUtil.jsonToMap(config);
                 Entry<String, String> passwordEntry    = getPasswordEntry(configMap);
                 Entry<String, String> isEncryptedEntry = getIsEncryptedEntry(configMap);
+
                 if (passwordEntry != null) {
                     if (isEncryptedEntry == null || !"true".equalsIgnoreCase(isEncryptedEntry.getValue()) || isForced) {
                         String password        = passwordEntry.getValue();
                         String encryptPassword = PasswordUtils.encryptPassword(password);
                         String decryptPassword = PasswordUtils.decryptPassword(encryptPassword);
+
                         if (decryptPassword != null && decryptPassword.equalsIgnoreCase(password)) {
                             configMap.put(passwordEntry.getKey(), encryptPassword);
                             configMap.put("isencrypted", "true");
                         }
                     }
                 }
+
                 config = jsonUtil.readMapToString(configMap);
             }
         } catch (IOException e) {
             String errorMessage = "Password encryption error";
+
             throw restErrorUtil.createRESTException(errorMessage, MessageEnums.INVALID_INPUT_DATA, null, null, e.getMessage());
         }
+
         return config;
     }
 
@@ -99,31 +107,40 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
                 Map<String, String>   configMap        = jsonUtil.jsonToMap(config);
                 Entry<String, String> passwordEntry    = getPasswordEntry(configMap);
                 Entry<String, String> isEncryptedEntry = getIsEncryptedEntry(configMap);
+
                 if (isEncryptedEntry != null && passwordEntry != null) {
                     if (!stringUtil.isEmpty(isEncryptedEntry.getValue()) && "true".equalsIgnoreCase(isEncryptedEntry.getValue())) {
                         String encryptPassword = passwordEntry.getValue();
                         String decryptPassword = PasswordUtils.decryptPassword(encryptPassword);
+
                         configMap.put(passwordEntry.getKey(), decryptPassword);
                     }
                 }
+
                 config = jsonUtil.readMapToString(configMap);
             }
         } catch (IOException e) {
             String errorMessage = "Password decryption error";
+
             throw restErrorUtil.createRESTException(errorMessage, MessageEnums.INVALID_INPUT_DATA, null, null, e.getMessage());
         }
+
         return config;
     }
 
     @Override
     protected void validateForCreate(VXAsset vObj) {
         XXAsset xxAsset = daoManager.getXXAsset().findByAssetName(vObj.getName());
+
         if (xxAsset != null) {
             String errorMessage = "Repository Name already exists";
+
             throw restErrorUtil.createRESTException(errorMessage, MessageEnums.INVALID_INPUT_DATA, null, null, vObj.toString());
         }
-        if (vObj.getName() == null || vObj.getName().trim().length() == 0) {
+
+        if (vObj.getName() == null || vObj.getName().trim().isEmpty()) {
             String errorMessage = "Repository Name can't be empty";
+
             throw restErrorUtil.createRESTException(errorMessage, MessageEnums.INVALID_INPUT_DATA, null, null, vObj.toString());
         }
 
@@ -142,32 +159,42 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
     @Override
     protected XXAsset mapViewToEntityBean(VXAsset vObj, XXAsset mObj, int operationContext) {
         XXAsset ret = null;
+
         if (vObj != null && mObj != null) {
             String oldConfig = mObj.getConfig();
+
             ret = super.mapViewToEntityBean(vObj, mObj, operationContext);
+
             String config = ret.getConfig();
+
             if (config != null && !config.isEmpty()) {
                 Map<String, String>   configMap     = jsonUtil.jsonToMap(config);
                 Entry<String, String> passwordEntry = getPasswordEntry(configMap);
+
                 if (passwordEntry != null) {
                     // If "*****" then get password from db and update
                     String password = passwordEntry.getValue();
+
                     if (password != null) {
                         if (password.equals(hiddenPasswordString)) {
                             if (oldConfig != null && !oldConfig.isEmpty()) {
                                 Map<String, String>   oldConfigMap     = jsonUtil.jsonToMap(oldConfig);
                                 Entry<String, String> oldPasswordEntry = getPasswordEntry(oldConfigMap);
+
                                 if (oldPasswordEntry != null) {
                                     configMap.put(oldPasswordEntry.getKey(), oldPasswordEntry.getValue());
                                 }
                             }
                         }
+
                         config = jsonUtil.readMapToString(configMap);
                     }
                 }
             }
+
             ret.setConfig(config);
         }
+
         return ret;
     }
 
@@ -175,15 +202,20 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
     protected VXAsset mapEntityToViewBean(VXAsset vObj, XXAsset mObj) {
         VXAsset ret    = super.mapEntityToViewBean(vObj, mObj);
         String  config = ret.getConfig();
+
         if (config != null && !config.isEmpty()) {
             Map<String, String>   configMap     = jsonUtil.jsonToMap(config);
             Entry<String, String> passwordEntry = getPasswordEntry(configMap);
+
             if (passwordEntry != null) {
                 configMap.put(passwordEntry.getKey(), hiddenPasswordString);
             }
+
             config = jsonUtil.readMapToString(configMap);
         }
+
         ret.setConfig(config);
+
         return ret;
     }
 
@@ -202,12 +234,14 @@ public class XAssetService extends XAssetServiceBase<XXAsset, VXAsset> {
 
     private Entry<String, String> getIsEncryptedEntry(Map<String, String> configMap) {
         Entry<String, String> entry = null;
+
         for (Entry<String, String> e : configMap.entrySet()) {
             if (e.getKey().toLowerCase().contains("isencrypted")) {
                 entry = e;
                 break;
             }
         }
+
         return entry;
     }
 }

@@ -50,16 +50,17 @@ public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends V
     public VXPortalUserList searchXPortalUsers(SearchCriteria searchCriteria) {
         VXPortalUserList   returnList      = new VXPortalUserList();
         List<VXPortalUser> xPortalUserList = new ArrayList<>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<T>            resultList      = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXPortalUser : resultList) {
             VXPortalUser vXPortalUser = populateViewBean(gjXPortalUser);
+
             xPortalUserList.add(vXPortalUser);
         }
 
         returnList.setVXPortalUsers(xPortalUserList);
+
         return returnList;
     }
 
@@ -76,6 +77,7 @@ public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends V
         mObj.setNotes(vObj.getNotes());
         mObj.setOtherAttributes(vObj.getOtherAttributes());
         mObj.setSyncSource(vObj.getSyncSource());
+
         return mObj;
     }
 
@@ -92,6 +94,7 @@ public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends V
         vObj.setNotes(mObj.getNotes());
         vObj.setOtherAttributes(mObj.getOtherAttributes());
         vObj.setSyncSource(mObj.getSyncSource());
+
         return vObj;
     }
 }

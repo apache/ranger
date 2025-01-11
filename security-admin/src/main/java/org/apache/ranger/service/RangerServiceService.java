@@ -112,34 +112,38 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
         serviceVersionInfo.setTagVersion(1L);
         serviceVersionInfo.setRoleVersion(1L);
         serviceVersionInfo.setGdsVersion(1L);
+
         Date now = new Date();
+
         serviceVersionInfo.setPolicyUpdateTime(now);
         serviceVersionInfo.setTagUpdateTime(now);
         serviceVersionInfo.setRoleUpdateTime(now);
         serviceVersionInfo.setGdsUpdateTime(now);
 
-        XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
-
-        XXServiceVersionInfo createdServiceVersionInfo = serviceVersionInfoDao.create(serviceVersionInfo);
+        XXServiceVersionInfoDao serviceVersionInfoDao     = daoMgr.getXXServiceVersionInfo();
+        XXServiceVersionInfo    createdServiceVersionInfo = serviceVersionInfoDao.create(serviceVersionInfo);
 
         return createdServiceVersionInfo != null ? super.postCreate(xObj) : null;
     }
 
     @Override
     protected RangerService populateViewBean(XXService xService) {
-        RangerService vService = super.populateViewBean(xService);
-
+        RangerService            vService         = super.populateViewBean(xService);
         HashMap<String, String>  configs          = new HashMap<>();
         List<XXServiceConfigMap> svcConfigMapList = daoMgr.getXXServiceConfigMap().findByServiceId(xService.getId());
+
         for (XXServiceConfigMap svcConfMap : svcConfigMapList) {
             String configValue = svcConfMap.getConfigvalue();
 
             if (StringUtils.equalsIgnoreCase(svcConfMap.getConfigkey(), ServiceDBStore.CONFIG_KEY_PASSWORD)) {
                 configValue = ServiceDBStore.HIDDEN_PASSWORD_STR;
             }
+
             configs.put(svcConfMap.getConfigkey(), configValue);
         }
+
         vService.setConfigs(configs);
+
         return vService;
     }
 
@@ -163,13 +167,13 @@ public class RangerServiceService extends RangerServiceServiceBase<XXService, Ra
             }
 
             XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
-
-            XXServiceVersionInfo serviceVersionInfo = serviceVersionInfoDao.findByServiceId(id);
+            XXServiceVersionInfo    serviceVersionInfo    = serviceVersionInfoDao.findByServiceId(id);
 
             if (serviceVersionInfo != null) {
                 serviceVersionInfoDao.remove(serviceVersionInfo.getId());
             }
         }
+
         return ret;
     }
 

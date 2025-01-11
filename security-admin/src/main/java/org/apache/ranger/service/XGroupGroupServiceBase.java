@@ -40,16 +40,17 @@ public abstract class XGroupGroupServiceBase<T extends XXGroupGroup, V extends V
     public VXGroupGroupList searchXGroupGroups(SearchCriteria searchCriteria) {
         VXGroupGroupList   returnList      = new VXGroupGroupList();
         List<VXGroupGroup> xGroupGroupList = new ArrayList<>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<T>            resultList      = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXGroupGroup : resultList) {
             V vXGroupGroup = populateViewBean(gjXGroupGroup);
+
             xGroupGroupList.add(vXGroupGroup);
         }
 
         returnList.setVXGroupGroups(xGroupGroupList);
+
         return returnList;
     }
 
@@ -58,6 +59,7 @@ public abstract class XGroupGroupServiceBase<T extends XXGroupGroup, V extends V
         mObj.setName(vObj.getName());
         mObj.setParentGroupId(vObj.getParentGroupId());
         mObj.setGroupId(vObj.getGroupId());
+
         return mObj;
     }
 
@@ -66,6 +68,7 @@ public abstract class XGroupGroupServiceBase<T extends XXGroupGroup, V extends V
         vObj.setName(mObj.getName());
         vObj.setParentGroupId(mObj.getParentGroupId());
         vObj.setGroupId(mObj.getGroupId());
+
         return vObj;
     }
 }

@@ -74,34 +74,41 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
     protected static final Map<Class<?>, String> tEntityValueMap = new HashMap<>();
 
-    public final           List<SortField>       sortFields      = new ArrayList<>();
-    public final           List<SearchField>     searchFields    = new ArrayList<>();
+    public final List<SortField>   sortFields      = new ArrayList<>();
+    public final List<SearchField> searchFields    = new ArrayList<>();
 
-    protected final        Class<T>              tEntityClass;
-    protected final        Class<V>              tViewClass;
-    protected final        String                className;
-    protected final        String                viewClassName;
-    protected final        String                countQueryStr;
-    protected final        String                queryStr;
-    protected final        String                distinctCountQueryStr;
-    protected final        String                distinctQueryStr;
+    protected final Class<T> tEntityClass;
+    protected final Class<V> tViewClass;
+    protected final String   className;
+    protected final String   viewClassName;
+    protected final String   countQueryStr;
+    protected final String   queryStr;
+    protected final String   distinctCountQueryStr;
+    protected final String   distinctQueryStr;
 
     @Autowired
-    protected              RangerDaoManager      daoManager;
+    protected RangerDaoManager daoManager;
+
     @Autowired
-    protected              SearchUtil            searchUtil;
+    protected SearchUtil searchUtil;
+
     @Autowired
-    protected              RESTErrorUtil         restErrorUtil;
+    protected RESTErrorUtil restErrorUtil;
+
     @Autowired
-    BaseDao<T>                        entityDao;
+    BaseDao<T> entityDao;
+
     @Autowired
-    StringUtil                        stringUtil;
+    StringUtil stringUtil;
+
     @Autowired
     RangerDomainObjectSecurityHandler objectSecurityHandler;
+
     @Autowired
-    RangerBizUtil                     bizUtil;
+    RangerBizUtil bizUtil;
+
     @Autowired
-    RangerConfigUtil                  msConfigUtil;
+    RangerConfigUtil msConfigUtil;
 
     @SuppressWarnings("unchecked")
     public AbstractBaseResourceService() {
@@ -121,6 +128,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
             logger.error("Cannot find class for template", new Throwable());
         }
+
         if (tEntityClass != null) {
             className = tEntityClass.getName();
         } else {
@@ -134,11 +142,11 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         }
 
         // Get total count of the rows which meet the search criteria
-        countQueryStr = "SELECT COUNT(obj) FROM " + className + " obj ";
-        queryStr      = "SELECT obj FROM " + className + " obj ";
-
+        countQueryStr         = "SELECT COUNT(obj) FROM " + className + " obj ";
+        queryStr              = "SELECT obj FROM " + className + " obj ";
         distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM " + className + " obj ";
         distinctQueryStr      = "SELECT distinct obj FROM " + className + " obj ";
+
         sortFields.add(new SortField("id", "obj.id", true, SORT_ORDER.ASC));
     }
 
@@ -152,21 +160,20 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
         resource = getDao().create(resource);
 
-        V view = postCreate(resource);
-        return view;
+        return postCreate(resource);
     }
 
     public V readResource(Long id) {
         // T resource = preRead(id);
 
         T resource = getDao().getById(id);
+
         if (resource == null) {
             // Returns code 404 with DATA_NOT_FOUND as the error message
             throw restErrorUtil.createRESTException(getResourceName() + " not found", MessageEnums.DATA_NOT_FOUND, id, null, "preRead: " + id + " not found.", HttpServletResponse.SC_NOT_FOUND);
         }
 
-        V viewBean = readResource(resource);
-        return viewBean;
+        return readResource(resource);
     }
 
     public V updateResource(V viewBaseBean) {
@@ -178,13 +185,14 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         }
 
         resource = getDao().update(resource);
-        V viewBean = postUpdate(resource);
-        return viewBean;
+
+        return postUpdate(resource);
     }
 
     public boolean deleteResource(Long id) {
-        boolean result   = false;
+        boolean result;
         T       resource = preDelete(id);
+
         if (resource == null) {
             throw restErrorUtil.createRESTException(getResourceName() + " not found", MessageEnums.DATA_NOT_FOUND, id, null, getResourceName() + ":" + id);
         }
@@ -214,15 +222,18 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     // ----------------------------------------------------------------------------------
     public V populateViewBean(T resource) {
         V viewBean = createViewObject();
+
         populateViewBean(resource, viewBean);
+
         return mapEntityToViewBean(viewBean, resource);
     }
 
     public VXLong getSearchCount(SearchCriteria searchCriteria, List<SearchField> searchFieldList) {
-        long count = getCountForSearchQuery(searchCriteria, searchFieldList);
-
+        long   count  = getCountForSearchQuery(searchCriteria, searchFieldList);
         VXLong vXLong = new VXLong();
+
         vXLong.setValue(count);
+
         return vXLong;
     }
 
@@ -232,9 +243,9 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         EntityManager       em              = getDao().getEntityManager();
         CriteriaBuilder     criteriaBuilder = em.getCriteriaBuilder();
         CriteriaQuery<Long> criteria        = criteriaBuilder.createQuery(Long.class);
+        Root<T>             from            = criteria.from(tEntityClass);
+        Expression<Long>    countExpression = criteriaBuilder.count(from.get("id"));
 
-        Root<T>          from            = criteria.from(tEntityClass);
-        Expression<Long> countExpression = criteriaBuilder.count(from.get("id"));
         criteria.select(countExpression);
 
         Predicate resourceConditions = buildResourceSpecificConditions(criteriaBuilder, from, searchCriteria);
@@ -248,21 +259,24 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
         TypedQuery<Long> countQuery = em.createQuery(criteria);
         long             count      = getDao().executeCountQueryInSecurityContext(tEntityClass, countQuery);
+        VXLong           vXLong     = new VXLong();
 
-        VXLong vXLong = new VXLong();
         vXLong.setValue(count);
+
         return vXLong;
     }
 
-    public void setSortClause(SearchCriteria searchCriteria, List<SortField> sortFields, CriteriaBuilder criteriaBuilder, CriteriaQuery<? extends Object> criteria, Root<? extends XXDBBase> from) {
+    public void setSortClause(SearchCriteria searchCriteria, List<SortField> sortFields, CriteriaBuilder criteriaBuilder, CriteriaQuery<?> criteria, Root<? extends XXDBBase> from) {
         String sortBy      = searchCriteria.getSortBy();
         String sortByField = null;
 
         if (!stringUtil.isEmpty(sortBy)) {
             sortBy = sortBy.trim();
+
             for (SortField sortField : sortFields) {
                 if (sortBy.equalsIgnoreCase(sortField.getParamName())) {
                     sortByField = sortField.getFieldName();
+
                     // Override the sortBy using the normalized value
                     // searchCriteria.setSortBy(sortByField);
                     break;
@@ -274,6 +288,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
             for (SortField sortField : sortFields) {
                 if (sortField.isDefault()) {
                     sortByField = sortField.getFieldName();
+
                     // Override the sortBy using the default value
                     searchCriteria.setSortBy(sortField.getParamName());
                     searchCriteria.setSortType(sortField.getDefaultOrder().name());
@@ -284,12 +299,14 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
         if (sortByField != null) {
             int dotIndex = sortByField.indexOf(".");
+
             if (dotIndex != -1) {
                 sortByField = sortByField.substring(dotIndex + 1);
             }
 
             // Add sort type
             String sortType = searchCriteria.getSortType();
+
             if ("desc".equalsIgnoreCase(sortType)) {
                 criteria.orderBy(criteriaBuilder.desc(from.get(sortByField)));
             } else {
@@ -299,13 +316,16 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     }
 
     public Map<Long, V> convertVListToVMap(List<V> vObjList) {
-        Map<Long, V> ret = new HashMap<Long, V>();
+        Map<Long, V> ret = new HashMap<>();
+
         if (vObjList == null) {
             return ret;
         }
+
         for (V vObj : vObjList) {
             ret.put(vObj.getId(), vObj);
         }
+
         return ret;
     }
 
@@ -323,9 +343,11 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
     protected String getResourceName() {
         String resourceName = tEntityValueMap.get(tEntityClass);
+
         if (resourceName == null || resourceName.isEmpty()) {
             resourceName = "Object";
         }
+
         return resourceName;
     }
 
@@ -337,6 +359,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         if (entityDao == null) {
             throw new NullPointerException("entityDao is not injected by Spring!");
         }
+
         return entityDao;
     }
 
@@ -380,6 +403,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     // ----------------------------------------------------------------------------------
     protected T populateEntityBeanForCreate(T t, V viewBaseBean) {
         mapBaseAttributesToEntityBean(t, viewBaseBean);
+
         return mapViewToEntityBean(viewBaseBean, t, OPERATION_CREATE_CONTEXT);
     }
 
@@ -388,13 +412,14 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         validateForCreate(viewBaseBean);
 
         T t = createEntityObject();
+
         t = populateEntityBeanForCreate(t, viewBaseBean);
+
         return t;
     }
 
     protected V postCreate(T resource) {
-        V view = populateViewBean(resource);
-        return view;
+        return populateViewBean(resource);
     }
 
     protected T preRead(Long id) {
@@ -402,8 +427,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     }
 
     protected V postRead(T resource) {
-        V viewBean = populateViewBean(resource);
-        return viewBean;
+        return populateViewBean(resource);
     }
 
     /**
@@ -411,23 +435,25 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
      */
     protected T populateEntityBeanForUpdate(T t, V viewBaseBean) {
         mapBaseAttributesToEntityBean(t, viewBaseBean);
+
         return mapViewToEntityBean(viewBaseBean, t, OPERATION_UPDATE_CONTEXT);
     }
 
     protected T preUpdate(V viewBaseBean) {
         T resource = getDao().getById(viewBaseBean.getId());
+
         if (resource == null) {
             // Returns code 400 with DATA_NOT_FOUND as the error message
             throw restErrorUtil.createRESTException(getResourceName() + " not found", MessageEnums.DATA_NOT_FOUND, viewBaseBean.getId(), null, "preUpdate: id not found.");
         }
+
         validateForUpdate(viewBaseBean, resource);
 
         return populateEntityBeanForUpdate(resource, viewBaseBean);
     }
 
     protected V postUpdate(T resource) {
-        V view = populateViewBean(resource);
-        return view;
+        return populateViewBean(resource);
     }
 
     // ----------------------------------------------------------------------------------
@@ -435,10 +461,12 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     // ----------------------------------------------------------------------------------
     protected T preDelete(Long id) {
         T resource = getDao().getById(id);
+
         if (resource == null) {
             // Return without error
             logger.info("Delete ignored for non-existent {} id={}", getResourceName(), id);
         }
+
         return resource;
     }
 
@@ -457,6 +485,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
     protected V populateViewBean(T resource, V viewBean) {
         mapBaseAttributesToViewBean(resource, viewBean);
+
         // TODO:Current:Open: Need to set original and updated content
         return viewBean;
     }
@@ -478,6 +507,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
         if (ownerId != null) {
             XXPortalUser tUser = daoManager.getXXPortalUser().getById(resource.getAddedByUserId());
+
             if (tUser != null) {
                 if (tUser.getPublicScreenName() != null && !tUser.getPublicScreenName().trim().isEmpty() && !"null".equalsIgnoreCase(tUser.getPublicScreenName().trim())) {
                     viewBean.setOwner(tUser.getPublicScreenName());
@@ -497,6 +527,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
         if (resource.getUpdatedByUserId() != null) {
             XXPortalUser tUser = daoManager.getXXPortalUser().getById(resource.getUpdatedByUserId());
+
             if (tUser != null) {
                 if (tUser.getPublicScreenName() != null && !tUser.getPublicScreenName().trim().isEmpty() && !"null".equalsIgnoreCase(tUser.getPublicScreenName().trim())) {
                     viewBean.setUpdatedBy(tUser.getPublicScreenName());
@@ -518,12 +549,12 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
     protected Query createQuery(String searchString, String sortString, SearchCriteria searchCriteria, List<SearchField> searchFieldList, boolean isCountQuery) {
         EntityManager em = getDao().getEntityManager();
 
-        Query query = searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
-        return query;
+        return searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
     }
 
     protected long getCountForSearchQuery(SearchCriteria searchCriteria, List<SearchField> searchFieldList) {
         String q = countQueryStr;
+
         // Get total count of the rows which meet the search criteria
         if (searchCriteria.isDistinct()) {
             q = distinctCountQueryStr;
@@ -534,32 +565,38 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
         // Make the database call to get the total count
         Long count = getDao().executeCountQueryInSecurityContext(tEntityClass, query);
+
         if (count == null) {
             // If no data that meets the criteria, return 0
             return 0;
         }
-        return count.longValue();
+
+        return count;
     }
 
     protected List<T> searchResources(SearchCriteria searchCriteria, List<SearchField> searchFieldList, List<SortField> sortFieldList, VList vList) {
         // Get total count of the rows which meet the search criteria
         long count = -1;
+
         if (searchCriteria.isGetCount()) {
             count = getCountForSearchQuery(searchCriteria, searchFieldList);
+
             if (count == 0) {
                 return Collections.emptyList();
             }
         }
+
         // construct the sort clause
         String sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
 
         String q = queryStr;
+
         if (searchCriteria.isDistinct()) {
             q = distinctQueryStr;
         }
-        // construct the query object for retrieving the data
-        Query query = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
 
+        // construct the query object for retrieving the data
+        Query   query      = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
         List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, query);
 
         if (vList != null) {
@@ -571,6 +608,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
             vList.setTotalCount(count);
             vList.setResultSize(resultList.size());
         }
+
         return resultList;
     }
 
@@ -593,9 +631,13 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         long count = -1;
         if (searchCriteria.isGetCount()) {
             Expression<Long> countExpression = criteriaBuilder.count(from.get("id"));
+
             criteria.select(countExpression);
+
             TypedQuery<Long> countQuery = em.createQuery(criteria);
+
             count = getDao().executeCountQueryInSecurityContext(tEntityClass, countQuery);
+
             if (count == 0) {
                 return Collections.emptyList();
             }
@@ -605,7 +647,9 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         setSortClause(searchCriteria, sortFieldList, criteriaBuilder, criteria, from);
 
         criteria.select(from);
+
         TypedQuery<T> typedQuery = em.createQuery(criteria);
+
         searchUtil.updateQueryPageSize(typedQuery, searchCriteria);
 
         List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, typedQuery);
@@ -627,24 +671,29 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
         for (SearchField searchField : searchFields) {
             if (paramList.containsKey(searchField.getClientFieldName())) {
-                Path<Object> tableField = null;
+                Path<Object> tableField;
                 String       fieldName  = searchField.getFieldName();
 
                 // stuff to handle jpql syntax (e.g. obj.id, obj.city.city etc). There has to be better way of dealing with this. Will look again.
                 int dotIndex = fieldName.indexOf(".");
+
                 if (dotIndex != -1) {
                     fieldName = fieldName.substring(dotIndex + 1);
                 }
+
                 dotIndex = fieldName.indexOf(".");
+
                 if (dotIndex == -1) {
                     tableField = from.get(fieldName);
                 } else {
                     String joinTable = fieldName.substring(0, dotIndex);
+
                     fieldName  = fieldName.substring(dotIndex + 1);
                     tableField = from.join(joinTable).get(fieldName);
                 }
 
                 Object value = paramList.get(searchField.getClientFieldName());
+
                 if (value == null) {
                     userConditions = cb.and(userConditions, cb.isNull(tableField));
                     continue;
@@ -658,9 +707,11 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
                     if (searchField.getSearchType() == SearchField.SEARCH_TYPE.FULL) {
                         Expression<String> literal = cb.lower(cb.literal(strFieldValue));
+
                         userConditions = cb.and(userConditions, cb.equal(tableFieldWithLowerExpr, literal));
                     } else {
                         Expression<String> literal = cb.lower(cb.literal("%" + strFieldValue + "%"));
+
                         userConditions = cb.and(userConditions, cb.like(tableFieldWithLowerExpr, literal));
                     }
                 } else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST) {
@@ -686,15 +737,13 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
      * @param resource
      * @return
      */
-    @SuppressWarnings("unchecked")
     private V readResource(T resource) {
         // object security
         if (!objectSecurityHandler.hasAccess(resource, Permission.PermissionType.READ)) {
             throw restErrorUtil.create403RESTException(getResourceName() + " access denied. classType=" + resource.getMyClassType() + ", className=" + resource.getClass().getName() + ", objectId=" + resource.getId() + ", object=" + resource);
         }
 
-        V viewBean = postRead(resource);
-        return viewBean;
+        return postRead(resource);
     }
 
     static {

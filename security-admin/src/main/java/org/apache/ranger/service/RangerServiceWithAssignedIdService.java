@@ -48,13 +48,14 @@ public class RangerServiceWithAssignedIdService extends RangerServiceServiceBase
 
     @Override
     protected RangerService populateViewBean(XXServiceWithAssignedId xService) {
-        RangerService vService = super.populateViewBean(xService);
-
-        HashMap<String, String>  configs          = new HashMap<String, String>();
+        RangerService            vService         = super.populateViewBean(xService);
+        HashMap<String, String>  configs          = new HashMap<>();
         List<XXServiceConfigMap> svcConfigMapList = daoMgr.getXXServiceConfigMap().findByServiceId(xService.getId());
+
         for (XXServiceConfigMap svcConfMap : svcConfigMapList) {
             configs.put(svcConfMap.getConfigkey(), svcConfMap.getConfigvalue());
         }
+
         vService.setConfigs(configs);
 
         return vService;

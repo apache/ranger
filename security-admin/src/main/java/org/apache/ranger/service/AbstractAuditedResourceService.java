@@ -51,11 +51,14 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
 
     protected final Map<String, VTrxLogAttr> trxLogAttrs  = new HashMap<>();
     protected final String                   hiddenPasswordString;
-    private final   int                      classType;
-    private final   int                      parentClassType;
-    private final   List<VTrxLogAttr>        objNameAttrs = new ArrayList<>();
+
+    private final   int               classType;
+    private final   int               parentClassType;
+    private final   List<VTrxLogAttr> objNameAttrs = new ArrayList<>();
+
     @Autowired
     JSONUtil       jsonUtil;
+
     @Autowired
     RangerEnumUtil xaEnumUtil;
 
@@ -89,6 +92,7 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
     public void createTransactionLog(XXTrxLogV2 trxLog, String attrName, String oldValue, String newValue) {
         try {
             ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
+
             if ("Password".equalsIgnoreCase(attrName)) {
                 oldValue = hiddenPasswordString;
                 newValue = hiddenPasswordString;
@@ -140,13 +144,14 @@ public abstract class AbstractAuditedResourceService<T extends XXDBBase, V exten
                 processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
             }
 
-            if (objChangeInfo.getAttributes() != null && objChangeInfo.getAttributes().size() > 0) {
+            if (objChangeInfo.getAttributes() != null && !objChangeInfo.getAttributes().isEmpty()) {
                 for (AttributeChangeInfo changeInfo : objChangeInfo.getAttributes()) {
                     if ("Password".equalsIgnoreCase(changeInfo.getAttributeName())) {
                         changeInfo.setNewValue(hiddenPasswordString);
                         changeInfo.setOldValue(hiddenPasswordString);
                     }
                 }
+
                 trxLogList.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
             }
         } catch (Exception e) {

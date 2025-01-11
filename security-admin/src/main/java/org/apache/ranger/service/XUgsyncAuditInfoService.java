@@ -42,6 +42,7 @@ import java.util.List;
 @Scope("singleton")
 public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyncAuditInfo, VXUgsyncAuditInfo> {
     public static final String NAME = "XUgsyncAuditInfo";
+
     @Autowired
     JSONUtil jsonUtil;
 
@@ -65,9 +66,8 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
      */
     public VXUgsyncAuditInfoList searchXUgsyncAuditInfoList(SearchCriteria searchCriteria) {
         VXUgsyncAuditInfoList   returnList           = new VXUgsyncAuditInfoList();
-        List<VXUgsyncAuditInfo> xUgsyncAuditInfoList = new ArrayList<VXUgsyncAuditInfo>();
-
-        List<XXUgsyncAuditInfo> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<VXUgsyncAuditInfo> xUgsyncAuditInfoList = new ArrayList<>();
+        List<XXUgsyncAuditInfo> resultList           = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (XXUgsyncAuditInfo gjXUgsyncAuditInfo : resultList) {
@@ -79,14 +79,14 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
         }
 
         returnList.setVxUgsyncAuditInfoList(xUgsyncAuditInfoList);
+
         return returnList;
     }
 
     public VXUgsyncAuditInfoList searchXUgsyncAuditInfoBySyncSource(String syncSource) {
         VXUgsyncAuditInfoList   returnList           = new VXUgsyncAuditInfoList();
-        List<VXUgsyncAuditInfo> xUgsyncAuditInfoList = new ArrayList<VXUgsyncAuditInfo>();
-
-        List<XXUgsyncAuditInfo> resultList = daoManager.getXXUgsyncAuditInfo().findBySyncSource(syncSource);
+        List<VXUgsyncAuditInfo> xUgsyncAuditInfoList = new ArrayList<>();
+        List<XXUgsyncAuditInfo> resultList           = daoManager.getXXUgsyncAuditInfo().findBySyncSource(syncSource);
 
         // Iterate over the result list and create the return list
         for (XXUgsyncAuditInfo gjXUgsyncAuditInfo : resultList) {
@@ -100,14 +100,17 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
         returnList.setVxUgsyncAuditInfoList(xUgsyncAuditInfoList);
         returnList.setTotalCount(xUgsyncAuditInfoList.size());
         returnList.setResultSize(xUgsyncAuditInfoList.size());
+
         return returnList;
     }
 
     public VXUgsyncAuditInfo createUgsyncAuditInfo(VXUgsyncAuditInfo vxUgsyncAuditInfo) {
         Long sessionId = ContextUtil.getCurrentUserSession() != null ? ContextUtil.getCurrentUserSession().getSessionId() : null;
+
         if (sessionId != null) {
             vxUgsyncAuditInfo.setSessionId("" + sessionId);
         }
+
         vxUgsyncAuditInfo.setEventTime(DateUtil.getUTCDate());
         vxUgsyncAuditInfo.setUserName(ContextUtil.getCurrentUserLoginId());
 
@@ -134,6 +137,7 @@ public class XUgsyncAuditInfoService extends XUgsyncAuditInfoServiceBase<XXUgsyn
         mObj.setNoOfModifiedGroups(vObj.getNoOfModifiedGroups());
         mObj.setSyncSourceInfo(jsonUtil.readMapToString(vObj.getSyncSourceInfo()));
         mObj.setSessionId(vObj.getSessionId());
+
         return mObj;
     }
 

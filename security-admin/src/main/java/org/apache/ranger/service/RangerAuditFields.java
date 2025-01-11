@@ -29,6 +29,7 @@ public class RangerAuditFields<T extends XXDBBase> {
         xObj.setUpdateTime(parentObj.getUpdateTime());
         xObj.setAddedByUserId(parentObj.getAddedByUserId());
         xObj.setUpdatedByUserId(parentObj.getUpdatedByUserId());
+
         return xObj;
     }
 
@@ -37,6 +38,7 @@ public class RangerAuditFields<T extends XXDBBase> {
         xObj.setUpdateTime(DateUtil.getUTCDate());
         xObj.setAddedByUserId(ContextUtil.getCurrentUserId());
         xObj.setUpdatedByUserId(ContextUtil.getCurrentUserId());
+
         return xObj;
     }
 }

@@ -68,10 +68,13 @@ import java.util.Set;
 import static org.apache.ranger.plugin.util.ServiceDefUtil.IMPLICIT_CONDITION_EXPRESSION_EVALUATOR;
 
 public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef> extends RangerBaseModelService<T, V> {
-    public static final  String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
-    private static final Logger LOG                                       = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
+
+    public static final String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
+
     private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS  = "__accessTypeRestrictions";
     private static final String OPTION_RESOURCE_IS_VALID_LEAF             = "__isValidLeaf";
+
     @Autowired
     RangerAuditFields<?> rangerAuditFields;
 
@@ -99,10 +102,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
     public XXServiceConfigDef populateRangerServiceConfigDefToXX(RangerServiceConfigDef vObj, XXServiceConfigDef xObj, XXServiceDef serviceDef, int operationContext) {
         if (serviceDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerServiceConfigDefToXX, serviceDef can not be null");
+
             throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
         xObj.setDefid(serviceDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
@@ -119,11 +124,13 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         xObj.setRbkeydescription(vObj.getRbKeyDescription());
         xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
         xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
         return xObj;
     }
 
     public RangerServiceConfigDef populateXXToRangerServiceConfigDef(XXServiceConfigDef xObj) {
         RangerServiceConfigDef vObj = new RangerServiceConfigDef();
+
         vObj.setItemId(xObj.getItemId());
         vObj.setName(xObj.getName());
         vObj.setType(xObj.getType());
@@ -138,16 +145,19 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         vObj.setRbKeyLabel(xObj.getRbkeylabel());
         vObj.setRbKeyDescription(xObj.getRbkeydescription());
         vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
+
         return vObj;
     }
 
     public XXResourceDef populateRangerResourceDefToXX(RangerResourceDef vObj, XXResourceDef xObj, XXServiceDef serviceDef, int operationContext) {
         if (serviceDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerResourceDefToXX, serviceDef can not be null");
+
             throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
         xObj.setDefid(serviceDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
@@ -176,7 +186,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         }
 
         xObj.setMatcheroptions(mapToJsonString(matcherOptions));
-
         xObj.setValidationRegEx(vObj.getValidationRegEx());
         xObj.setValidationMessage(vObj.getValidationMessage());
         xObj.setUiHint(vObj.getUiHint());
@@ -186,11 +195,13 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         xObj.setRbkeydescription(vObj.getRbKeyDescription());
         xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
         xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
         return xObj;
     }
 
     public RangerResourceDef populateXXToRangerResourceDef(XXResourceDef xObj) {
         RangerResourceDef vObj = new RangerResourceDef();
+
         vObj.setItemId(xObj.getItemId());
         vObj.setName(xObj.getName());
         vObj.setType(xObj.getType());
@@ -223,7 +234,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         }
 
         vObj.setMatcherOptions(matcherOptions);
-
         vObj.setValidationRegEx(xObj.getValidationRegEx());
         vObj.setValidationMessage(xObj.getValidationMessage());
         vObj.setUiHint(xObj.getUiHint());
@@ -235,6 +245,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
         XXResourceDef parent     = daoMgr.getXXResourceDef().getById(xObj.getParent());
         String        parentName = (parent != null) ? parent.getName() : null;
+
         vObj.setParent(parentName);
 
         return vObj;
@@ -243,10 +254,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
     public XXAccessTypeDef populateRangerAccessTypeDefToXX(RangerAccessTypeDef vObj, XXAccessTypeDef xObj, XXServiceDef serviceDef, int operationContext) {
         if (serviceDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerAccessTypeDefToXX, serviceDef can not be null");
+
             throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
         xObj.setDefid(serviceDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
@@ -290,10 +303,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
     public XXPolicyConditionDef populateRangerPolicyConditionDefToXX(RangerPolicyConditionDef vObj, XXPolicyConditionDef xObj, XXServiceDef serviceDef, int operationContext) {
         if (serviceDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerPolicyConditionDefToXX, serviceDef can not be null");
+
             throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
         xObj.setDefid(serviceDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
@@ -308,11 +323,13 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         xObj.setRbkeydescription(vObj.getRbKeyDescription());
         xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
         xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
         return xObj;
     }
 
     public RangerPolicyConditionDef populateXXToRangerPolicyConditionDef(XXPolicyConditionDef xObj) {
         RangerPolicyConditionDef vObj = new RangerPolicyConditionDef();
+
         vObj.setItemId(xObj.getItemId());
         vObj.setName(xObj.getName());
         vObj.setEvaluator(xObj.getEvaluator());
@@ -325,6 +342,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         vObj.setRbKeyLabel(xObj.getRbkeylabel());
         vObj.setRbKeyDescription(xObj.getRbkeydescription());
         vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
+
         return vObj;
     }
 
@@ -335,51 +353,61 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
         xObj.setDefid(serviceDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
         xObj.setEnricher(vObj.getEnricher());
         xObj.setEnricherOptions(mapToJsonString(vObj.getEnricherOptions()));
         xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
         return xObj;
     }
 
     public RangerContextEnricherDef populateXXToRangerContextEnricherDef(XXContextEnricherDef xObj) {
         RangerContextEnricherDef vObj = new RangerContextEnricherDef();
+
         vObj.setItemId(xObj.getItemId());
         vObj.setName(xObj.getName());
         vObj.setEnricher(xObj.getEnricher());
         vObj.setEnricherOptions(jsonStringToMap(xObj.getEnricherOptions()));
+
         return vObj;
     }
 
     public XXEnumDef populateRangerEnumDefToXX(RangerEnumDef vObj, XXEnumDef xObj, XXServiceDef serviceDef, int operationContext) {
         if (serviceDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerEnumDefToXX, serviceDef can not be null");
+
             throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
         xObj.setDefid(serviceDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
         xObj.setDefaultindex(vObj.getDefaultIndex());
+
         return xObj;
     }
 
     public RangerEnumDef populateXXToRangerEnumDef(XXEnumDef xObj) {
         RangerEnumDef vObj = new RangerEnumDef();
+
         vObj.setItemId(xObj.getItemId());
         vObj.setName(xObj.getName());
         vObj.setDefaultIndex(xObj.getDefaultindex());
 
         List<XXEnumElementDef>     xElements = daoMgr.getXXEnumElementDef().findByEnumDefId(xObj.getId());
-        List<RangerEnumElementDef> elements  = new ArrayList<RangerEnumElementDef>();
+        List<RangerEnumElementDef> elements  = new ArrayList<>();
 
         for (XXEnumElementDef xEle : xElements) {
             RangerEnumElementDef element = populateXXToRangerEnumElementDef(xEle);
+
             elements.add(element);
         }
+
         vObj.setElements(elements);
 
         return vObj;
@@ -388,35 +416,42 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
     public XXEnumElementDef populateRangerEnumElementDefToXX(RangerEnumElementDef vObj, XXEnumElementDef xObj, XXEnumDef enumDef, int operationContext) {
         if (enumDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerEnumElementDefToXX, enumDef can not be null");
+
             throw restErrorUtil.createRESTException("enumDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, enumDef);
+
         xObj.setEnumdefid(enumDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
         xObj.setLabel(vObj.getLabel());
         xObj.setRbkeylabel(vObj.getRbKeyLabel());
         xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
         return xObj;
     }
 
     public RangerEnumElementDef populateXXToRangerEnumElementDef(XXEnumElementDef xObj) {
         RangerEnumElementDef vObj = new RangerEnumElementDef();
+
         vObj.setItemId(xObj.getItemId());
         vObj.setName(xObj.getName());
         vObj.setLabel(xObj.getLabel());
         vObj.setRbKeyLabel(xObj.getRbkeylabel());
+
         return vObj;
     }
 
     public XXDataMaskTypeDef populateRangerDataMaskDefToXX(RangerDataMaskTypeDef vObj, XXDataMaskTypeDef xObj, XXServiceDef serviceDef, int operationContext) {
         if (serviceDef == null) {
             LOG.error("RangerServiceDefServiceBase.populateRangerDataMaskDefToXX, serviceDef can not be null");
+
             throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
         xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
         xObj.setDefid(serviceDef.getId());
         xObj.setItemId(vObj.getItemId());
         xObj.setName(vObj.getName());
@@ -427,11 +462,13 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         xObj.setRbkeylabel(vObj.getRbKeyLabel());
         xObj.setRbKeyDescription(vObj.getRbKeyDescription());
         xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
         return xObj;
     }
 
     public RangerDataMaskTypeDef populateXXToRangerDataMaskTypeDef(XXDataMaskTypeDef xObj) {
         RangerDataMaskTypeDef vObj = new RangerDataMaskTypeDef();
+
         vObj.setItemId(xObj.getItemId());
         vObj.setName(xObj.getName());
         vObj.setLabel(xObj.getLabel());
@@ -449,12 +486,14 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         int                  startIndex    = searchFilter.getStartIndex();
         int                  pageSize      = searchFilter.getMaxRows();
         String               denyCondition = searchFilter.getParam(SearchFilter.FETCH_DENY_CONDITION);
+
         searchFilter.setStartIndex(0);
         searchFilter.setMaxRows(Integer.MAX_VALUE);
 
         boolean isAuditPage          = searchFilter.getParam("pageSource") != null;
         List<T> xSvcDefList          = searchResources(searchFilter, searchFields, sortFields, retList);
-        List<T> permittedServiceDefs = new ArrayList<T>();
+        List<T> permittedServiceDefs = new ArrayList<>();
+
         for (T xSvcDef : xSvcDefList) {
             if ((bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage)) || ("true".equals(denyCondition))) {
                 if (!bizUtil.isGdsServiceDef(xSvcDef)) {
@@ -462,9 +501,11 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
                 }
             }
         }
+
         if (!permittedServiceDefs.isEmpty()) {
             populatePageList(permittedServiceDefs, startIndex, pageSize, retList);
         }
+
         return retList;
     }
 
@@ -509,7 +550,6 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         xObj.setRbkeylabel(vObj.getRbKeyLabel());
         xObj.setRbkeydescription(vObj.getRbKeyDescription());
         xObj.setIsEnabled(vObj.getIsEnabled());
-
         xObj.setDefOptions(mapToJsonString(vObj.getOptions()));
 
         return xObj;
@@ -528,85 +568,111 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
         vObj.setRbKeyDescription(xObj.getRbkeydescription());
         vObj.setIsEnabled(xObj.getIsEnabled());
         vObj.setDisplayName(xObj.getDisplayName());
+
         return vObj;
     }
 
     @Override
     protected V populateViewBean(T xServiceDef) {
-        V    serviceDef   = super.populateViewBean(xServiceDef);
-        Long serviceDefId = xServiceDef.getId();
+        V                        serviceDef   = super.populateViewBean(xServiceDef);
+        Long                     serviceDefId = xServiceDef.getId();
+        List<XXServiceConfigDef> xConfigs     = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
 
-        List<XXServiceConfigDef> xConfigs = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
         if (!stringUtil.isEmpty(xConfigs)) {
-            List<RangerServiceConfigDef> configs = new ArrayList<RangerServiceConfigDef>();
+            List<RangerServiceConfigDef> configs = new ArrayList<>();
+
             for (XXServiceConfigDef xConfig : xConfigs) {
                 RangerServiceConfigDef config = populateXXToRangerServiceConfigDef(xConfig);
+
                 configs.add(config);
             }
+
             serviceDef.setConfigs(configs);
         }
 
         List<XXResourceDef> xResources = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
+
         if (!stringUtil.isEmpty(xResources)) {
-            List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
+            List<RangerResourceDef> resources = new ArrayList<>();
+
             for (XXResourceDef xResource : xResources) {
                 RangerResourceDef resource = populateXXToRangerResourceDef(xResource);
+
                 resources.add(resource);
             }
+
             serviceDef.setResources(resources);
         }
 
         List<XXAccessTypeDef>     xAccessTypes  = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
         Map<String, List<String>> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByServiceDefId(serviceDefId);
+
         if (!stringUtil.isEmpty(xAccessTypes)) {
-            List<RangerAccessTypeDef> accessTypes = new ArrayList<RangerAccessTypeDef>();
+            List<RangerAccessTypeDef> accessTypes = new ArrayList<>();
+
             for (XXAccessTypeDef xAtd : xAccessTypes) {
                 RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd, impliedGrants.get(xAtd.getName()));
+
                 accessTypes.add(accessType);
             }
+
             serviceDef.setAccessTypes(accessTypes);
         }
 
         serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(serviceDef.getAccessTypes()));
 
         List<XXPolicyConditionDef> xPolicyConditions = daoMgr.getXXPolicyConditionDef().findByServiceDefId(serviceDefId);
+
         if (!stringUtil.isEmpty(xPolicyConditions)) {
-            List<RangerPolicyConditionDef> policyConditions = new ArrayList<RangerPolicyConditionDef>();
+            List<RangerPolicyConditionDef> policyConditions = new ArrayList<>();
+
             for (XXPolicyConditionDef xPolicyCondDef : xPolicyConditions) {
                 RangerPolicyConditionDef policyCondition = populateXXToRangerPolicyConditionDef(xPolicyCondDef);
+
                 policyConditions.add(policyCondition);
             }
+
             serviceDef.setPolicyConditions(policyConditions);
         }
 
         List<XXContextEnricherDef> xContextEnrichers = daoMgr.getXXContextEnricherDef().findByServiceDefId(serviceDefId);
+
         if (!stringUtil.isEmpty(xContextEnrichers)) {
-            List<RangerContextEnricherDef> contextEnrichers = new ArrayList<RangerContextEnricherDef>();
+            List<RangerContextEnricherDef> contextEnrichers = new ArrayList<>();
+
             for (XXContextEnricherDef xContextEnricherDef : xContextEnrichers) {
                 RangerContextEnricherDef contextEnricher = populateXXToRangerContextEnricherDef(xContextEnricherDef);
+
                 contextEnrichers.add(contextEnricher);
             }
+
             serviceDef.setContextEnrichers(contextEnrichers);
         }
 
         List<XXEnumDef> xEnumList = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
+
         if (!stringUtil.isEmpty(xEnumList)) {
-            List<RangerEnumDef> enums = new ArrayList<RangerEnumDef>();
+            List<RangerEnumDef> enums = new ArrayList<>();
+
             for (XXEnumDef xEnum : xEnumList) {
                 RangerEnumDef vEnum = populateXXToRangerEnumDef(xEnum);
+
                 enums.add(vEnum);
             }
+
             serviceDef.setEnums(enums);
         }
 
-        RangerDataMaskDef  dataMaskDef  = new RangerDataMaskDef();
-        RangerRowFilterDef rowFilterDef = new RangerRowFilterDef();
-
+        RangerDataMaskDef       dataMaskDef    = new RangerDataMaskDef();
+        RangerRowFilterDef      rowFilterDef   = new RangerRowFilterDef();
         List<XXDataMaskTypeDef> xDataMaskTypes = daoMgr.getXXDataMaskTypeDef().findByServiceDefId(serviceDefId);
+
         if (!stringUtil.isEmpty(xDataMaskTypes)) {
-            List<RangerDataMaskTypeDef> dataMaskTypes = new ArrayList<RangerDataMaskTypeDef>();
+            List<RangerDataMaskTypeDef> dataMaskTypes = new ArrayList<>();
+
             for (XXDataMaskTypeDef xDataMaskType : xDataMaskTypes) {
                 RangerDataMaskTypeDef dataMaskType = populateXXToRangerDataMaskTypeDef(xDataMaskType);
+
                 dataMaskTypes.add(dataMaskType);
             }
 
@@ -644,6 +710,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
                 }
             }
         }
+
         serviceDef.setDataMaskDef(dataMaskDef);
         serviceDef.setRowFilterDef(rowFilterDef);
 
@@ -668,16 +735,15 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
                     }
 
                     String[] nvArr = optionString.split("=");
-
-                    String name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
-                    String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
+                    String   name  = nvArr.length > 0 ? nvArr[0].trim() : null;
+                    String   value = nvArr.length > 1 ? nvArr[1].trim() : null;
 
                     if (StringUtils.isEmpty(name)) {
                         continue;
                     }
 
                     if (ret == null) {
-                        ret = new HashMap<String, String>();
+                        ret = new HashMap<>();
                     }
 
                     ret.put(name, value);
@@ -726,11 +792,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
     }
 
     private void populatePageList(List<T> xxObjList, int startIndex, int pageSize, RangerServiceDefList retList) {
-        List<RangerServiceDef> onePageList = new ArrayList<RangerServiceDef>();
+        List<RangerServiceDef> onePageList = new ArrayList<>();
 
         for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
             onePageList.add(populateViewBean(xxObjList.get(i)));
         }
+
         retList.setServiceDefs(onePageList);
         retList.setStartIndex(startIndex);
         retList.setPageSize(pageSize);

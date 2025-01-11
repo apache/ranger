@@ -148,9 +148,8 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
     protected RangerDataShare mapEntityToViewBean(RangerDataShare vObj, XXGdsDataShare xObj) {
         XXService      xService      = daoMgr.getXXService().getById(xObj.getServiceId());
         XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().getById(xObj.getZoneId());
-
-        String serviceName = xService != null ? xService.getName() : null;
-        String zoneName    = xSecurityZone != null ? xSecurityZone.getName() : null;
+        String         serviceName   = xService != null ? xService.getName() : null;
+        String         zoneName      = xSecurityZone != null ? xSecurityZone.getName() : null;
 
         vObj.setGuid(xObj.getGuid());
         vObj.setIsEnabled(xObj.getIsEnabled());

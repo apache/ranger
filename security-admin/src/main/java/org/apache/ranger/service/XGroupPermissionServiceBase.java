@@ -37,17 +37,18 @@ public abstract class XGroupPermissionServiceBase<T extends XXGroupPermission, V
      */
     public VXGroupPermissionList searchXGroupPermission(SearchCriteria searchCriteria) {
         VXGroupPermissionList   returnList         = new VXGroupPermissionList();
-        List<VXGroupPermission> vXGroupPermissions = new ArrayList<VXGroupPermission>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<VXGroupPermission> vXGroupPermissions = new ArrayList<>();
+        List<T>                 resultList         = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXUser : resultList) {
             VXGroupPermission vXGroupPermission = populateViewBean(gjXUser);
+
             vXGroupPermissions.add(vXGroupPermission);
         }
 
         returnList.setvXGroupPermission(vXGroupPermissions);
+
         return returnList;
     }
 
@@ -56,6 +57,7 @@ public abstract class XGroupPermissionServiceBase<T extends XXGroupPermission, V
         mObj.setGroupId(vObj.getGroupId());
         mObj.setModuleId(vObj.getModuleId());
         mObj.setIsAllowed(vObj.getIsAllowed());
+
         return mObj;
     }
 
@@ -64,6 +66,7 @@ public abstract class XGroupPermissionServiceBase<T extends XXGroupPermission, V
         vObj.setGroupId(mObj.getGroupId());
         vObj.setModuleId(mObj.getModuleId());
         vObj.setIsAllowed(mObj.getIsAllowed());
+
         return vObj;
     }
 }

@@ -85,11 +85,11 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
      * @return
      */
     public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
-        VXAccessAuditList   returnList       = new VXAccessAuditList();
-        List<VXAccessAudit> xAccessAuditList = new ArrayList<>();
-
+        VXAccessAuditList   returnList          = new VXAccessAuditList();
+        List<VXAccessAudit> xAccessAuditList    = new ArrayList<>();
         List<XXAccessAudit> resultList          = searchResources(searchCriteria, searchFields, sortFields, returnList);
         final boolean       hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
+
         // Iterate over the result list and create the return list
         for (XXAccessAudit gjXAccessAudit : resultList) {
             VXAccessAudit vXAccessAudit = populateViewBean(gjXAccessAudit);
@@ -98,6 +98,7 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
                 if (StringUtils.equalsIgnoreCase(vXAccessAudit.getAclEnforcer(), RangerHadoopConstants.DEFAULT_XASECURE_MODULE_ACL_NAME)) {
                     vXAccessAudit.setAclEnforcer(RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
                 }
+
                 if (!hiveQueryVisibility && "hive".equalsIgnoreCase(vXAccessAudit.getServiceType())) {
                     vXAccessAudit.setRequestData(null);
                 } else if ("hive".equalsIgnoreCase(vXAccessAudit.getServiceType()) && ("grant".equalsIgnoreCase(vXAccessAudit.getAccessType()) || "revoke".equalsIgnoreCase(vXAccessAudit.getAccessType()))) {
@@ -107,11 +108,13 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
                         logger.warn("Error while encoding request data");
                     }
                 }
+
                 xAccessAuditList.add(vXAccessAudit);
             }
         }
 
         returnList.setVXAccessAudits(xAccessAuditList);
+
         return returnList;
     }
 
@@ -138,6 +141,7 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
         mObj.setEventCount(vObj.getEventCount());
         mObj.setEventDuration(vObj.getEventDuration());
         mObj.setTags(vObj.getTags());
+
         return mObj;
     }
 
@@ -165,8 +169,10 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
         vObj.setTags(mObj.getTags());
 
         XXService xService = daoManager.getXXService().findByName(mObj.getRepoName());
+
         if (xService != null) {
             vObj.setRepoDisplayName(xService.getDisplayName());
+
             XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 
             if (xServiceDef != null) {
@@ -180,6 +186,7 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 
     public VXAccessAudit populateViewBean(XXAccessAudit gjXAccessAudit) {
         VXAccessAudit vXAccessAudit = new VXAccessAudit();
+
         return mapEntityToViewBean(vXAccessAudit, gjXAccessAudit);
     }
 

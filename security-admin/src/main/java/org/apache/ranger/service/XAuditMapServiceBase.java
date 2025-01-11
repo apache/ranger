@@ -34,6 +34,7 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
 
     public XAuditMapServiceBase() {
         super(AppConstants.CLASS_TYPE_XA_AUDIT_MAP, AppConstants.CLASS_TYPE_XA_RESOURCE);
+
         //trxLogAttrs.put("groupId", new VTrxLogAttr("groupId", "Group Audit", false));
         //trxLogAttrs.put("userId", new VTrxLogAttr("userId", "User Audit", false));
         trxLogAttrs.put("auditType", new VTrxLogAttr("auditType", "Audit Type", true));
@@ -46,16 +47,17 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
     public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
         VXAuditMapList   returnList    = new VXAuditMapList();
         List<VXAuditMap> xAuditMapList = new ArrayList<>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<T>          resultList    = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXAuditMap : resultList) {
             VXAuditMap vXAuditMap = populateViewBean(gjXAuditMap);
+
             xAuditMapList.add(vXAuditMap);
         }
 
         returnList.setVXAuditMaps(xAuditMapList);
+
         return returnList;
     }
 
@@ -70,6 +72,7 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
         mObj.setGroupId(vObj.getGroupId());
         mObj.setUserId(vObj.getUserId());
         mObj.setAuditType(vObj.getAuditType());
+
         return mObj;
     }
 
@@ -79,6 +82,7 @@ public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAud
         vObj.setGroupId(mObj.getGroupId());
         vObj.setUserId(mObj.getUserId());
         vObj.setAuditType(mObj.getAuditType());
+
         return vObj;
     }
 }

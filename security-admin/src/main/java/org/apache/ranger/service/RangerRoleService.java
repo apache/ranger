@@ -81,7 +81,9 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
     @Override
     protected XXRole mapViewToEntityBean(RangerRole rangerRole, XXRole xxRole, int operationContext) {
         XXRole ret = super.mapViewToEntityBean(rangerRole, xxRole, operationContext);
+
         ret.setRoleText(JsonUtils.objectToJson(rangerRole));
+
         return ret;
     }
 
@@ -91,10 +93,12 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
 
         if (StringUtils.isNotEmpty(xxRole.getRoleText())) {
             logger.debug("roleText={}", xxRole.getRoleText());
+
             RangerRole roleFromJsonData = JsonUtils.jsonToObject(xxRole.getRoleText(), RangerRole.class);
 
             if (roleFromJsonData != null) {
                 logger.debug("Role object built from JSON :[{}]", roleFromJsonData);
+
                 ret.setOptions(roleFromJsonData.getOptions());
                 ret.setUsers(roleFromJsonData.getUsers());
                 ret.setGroups(roleFromJsonData.getGroups());
@@ -118,6 +122,7 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
 
     private void addContainingRoles(Long roleId, Set<Long> allRoles) {
         logger.debug("==> addContainingRoles(roleId={})", roleId);
+
         if (!allRoles.contains(roleId)) {
             allRoles.add(roleId);
 
@@ -127,6 +132,7 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                 addContainingRoles(role, allRoles);
             }
         }
+
         logger.debug("<== addContainingRoles(roleId={})", roleId);
     }
 
@@ -160,16 +166,21 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
 
             for (Long roleId : roleIds) {
                 List<Long> affectedServiceIds = daoMgr.getXXPolicy().findServiceIdsByRoleId(roleId);
+
                 allAffectedServiceIds.addAll(affectedServiceIds);
             }
 
             XXServiceDao serviceDao = daoMgr.getXXService();
+
             if (CollectionUtils.isNotEmpty(allAffectedServiceIds)) {
                 for (final Long serviceId : allAffectedServiceIds) {
                     Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
+
                     daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+
                     XXService serviceDbObj = serviceDao.getById(serviceId);
                     boolean   isTagService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getTagServiceDefId();
+
                     if (isTagService) {
                         updateRoleVersionOfAllServicesRefferingTag(daoMgr, serviceDao, serviceId);
                     }
@@ -182,10 +193,12 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
 
     private void updateRoleVersionOfAllServicesRefferingTag(RangerDaoManager daoManager, XXServiceDao serviceDao, Long serviceId) {
         List<XXService> referringServices = serviceDao.findByTagServiceId(serviceId);
+
         if (CollectionUtils.isNotEmpty(referringServices)) {
             for (XXService referringService : referringServices) {
                 final Long referringServiceId = referringService.getId();
                 Runnable   roleVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, referringServiceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
+
                 daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(roleVersionUpdater);
             }
         }

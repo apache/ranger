@@ -46,8 +46,10 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 
         for (XXServiceDef xxServiceDef : xxServiceDefList) {
             RangerServiceDef serviceDef = populateViewBean(xxServiceDef);
+
             serviceDefList.add(serviceDef);
         }
+
         return serviceDefList;
     }
 
@@ -70,29 +72,33 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 
     @Override
     protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDef xObj) {
-        RangerServiceDef ret = super.mapEntityToViewBean(vObj, xObj);
-
+        RangerServiceDef    ret               = super.mapEntityToViewBean(vObj, xObj);
         Map<String, String> serviceDefOptions = ret.getOptions();
 
         if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES) == null) {
             boolean enableDenyAndExceptionsInPoliciesHiddenOption = config.getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true);
+
             if (enableDenyAndExceptionsInPoliciesHiddenOption || StringUtils.equalsIgnoreCase(ret.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                 serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "true");
             } else {
                 serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "false");
             }
+
             ret.setOptions(serviceDefOptions);
         }
 
         if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES) == null) {
             boolean enableTagBasedPoliciesHiddenOption = config.getBoolean("ranger.servicedef.enableTagBasedPolicies", true);
+
             if (enableTagBasedPoliciesHiddenOption) {
                 serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, "true");
             } else {
                 serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, "false");
             }
+
             ret.setOptions(serviceDefOptions);
         }
+
         return ret;
     }
 }

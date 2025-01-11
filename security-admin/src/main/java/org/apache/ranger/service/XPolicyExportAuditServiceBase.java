@@ -41,9 +41,8 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
      */
     public VXPolicyExportAuditList searchXPolicyExportAudits(SearchCriteria searchCriteria) {
         VXPolicyExportAuditList   returnList             = new VXPolicyExportAuditList();
-        List<VXPolicyExportAudit> xPolicyExportAuditList = new ArrayList<VXPolicyExportAudit>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<VXPolicyExportAudit> xPolicyExportAuditList = new ArrayList<>();
+        List<T>                   resultList             = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXPolicyExportAudit : resultList) {
@@ -53,10 +52,12 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
             if (xxService != null) {
                 vXPolicyExportAudit.setRepositoryDisplayName(xxService.getDisplayName());
             }
+
             xPolicyExportAuditList.add(vXPolicyExportAudit);
         }
 
         returnList.setVXPolicyExportAudits(xPolicyExportAuditList);
+
         return returnList;
     }
 
@@ -72,6 +73,7 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
         mObj.setClusterName(vObj.getClusterName());
         mObj.setZoneName(vObj.getZoneName());
         mObj.setPolicyVersion(vObj.getPolicyVersion());
+
         return mObj;
     }
 
@@ -88,6 +90,7 @@ public abstract class XPolicyExportAuditServiceBase<T extends XXPolicyExportAudi
         vObj.setClusterName(mObj.getClusterName());
         vObj.setZoneName(mObj.getZoneName());
         vObj.setPolicyVersion(mObj.getPolicyVersion());
+
         return vObj;
     }
 }

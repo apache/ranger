@@ -77,25 +77,33 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
     public VXUser getXUserByUserName(String userName) {
         XXUser xxUser = daoManager.getXXUser().findByUserName(userName);
+
         if (xxUser == null) {
             throw restErrorUtil.createRESTException(userName + " is Not Found", MessageEnums.DATA_NOT_FOUND);
         }
+
         return populateViewBean(xxUser);
     }
 
     public VXUser createXUserWithOutLogin(VXUser vxUser) {
         XXUser  xxUser     = daoManager.getXXUser().findByUserName(vxUser.getName());
         boolean userExists = true;
+
         if (xxUser == null) {
             xxUser     = new XXUser();
             userExists = false;
         }
+
         XXPortalUser xxPortalUser = daoManager.getXXPortalUser().findByLoginId(vxUser.getName());
+
         if (xxPortalUser != null && xxPortalUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
             vxUser.setIsVisible(xxUser.getIsVisible());
         }
+
         xxUser = mapViewToEntityBean(vxUser, xxUser, 0);
+
         XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
+
         if (xXPortalUser != null) {
             xxUser.setAddedByUserId(createdByUserId);
             xxUser.setUpdatedByUserId(createdByUserId);
@@ -106,33 +114,38 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
         } else {
             xxUser = getDao().create(xxUser);
         }
+
         vxUser = postCreate(xxUser);
+
         return vxUser;
     }
 
     public VXUser readResourceWithOutLogin(Long id) {
         XXUser resource = getDao().getById(id);
+
         if (resource == null) {
             // Returns code 400 with DATA_NOT_FOUND as the error message
             throw restErrorUtil.createRESTException(getResourceName() + " not found", MessageEnums.DATA_NOT_FOUND, id, null, "preRead: " + id + " not found.");
         }
 
-        VXUser vxUser = populateViewBean(resource);
-        return vxUser;
+        return populateViewBean(resource);
     }
 
     public Map<Long, XXUser> getXXPortalUserIdXXUserMap() {
         Map<Long, XXUser> xXPortalUserIdXXUserMap = new HashMap<>();
+
         try {
             Map<String, XXUser> xXUserMap  = new HashMap<>();
             List<XXUser>        xXUserList = daoManager.getXXUser().getAll();
+
             if (!CollectionUtils.isEmpty(xXUserList)) {
                 for (XXUser xxUser : xXUserList) {
                     xXUserMap.put(xxUser.getName(), xxUser);
                 }
             }
-            xXUserList = null;
+
             List<XXPortalUser> xXPortalUserList = daoManager.getXXPortalUser().getAll();
+
             if (!CollectionUtils.isEmpty(xXPortalUserList)) {
                 for (XXPortalUser xXPortalUser : xXPortalUserList) {
                     if (xXUserMap.containsKey(xXPortalUser.getLoginId())) {
@@ -141,51 +154,62 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
                 }
             }
         } catch (Exception ex) {
+            // ignored
         }
+
         return xXPortalUserIdXXUserMap;
     }
 
     public VXUserList lookupXUsers(SearchCriteria searchCriteria, VXUserList vXUserList) {
-        List<VXUser> xUserList = new ArrayList<>();
-
-        @SuppressWarnings("unchecked")
+        List<VXUser> xUserList  = new ArrayList<>();
         List<XXUser> resultList = searchResources(searchCriteria, searchFields, sortFields, vXUserList);
 
         for (XXUser xXUser : resultList) {
             VXUser vObj = super.mapEntityToViewBean(createViewObject(), xXUser);
+
             vObj.setIsVisible(xXUser.getIsVisible());
+
             xUserList.add(vObj);
         }
 
         vXUserList.setVXUsers(xUserList);
+
         return vXUserList;
     }
 
     public Map<Long, Object[]> getXXPortalUserIdXXUserNameMap() {
         Map<Long, Object[]> xXPortalUserIdXXUserMap = new HashMap<>();
+
         try {
             List<Object[]> xxUserList = daoManager.getXXUser().getAllUserIdNames();
+
             if (!CollectionUtils.isEmpty(xxUserList)) {
                 for (Object[] obj : xxUserList) {
                     xXPortalUserIdXXUserMap.put((Long) obj[0], obj);
                 }
             }
         } catch (Exception ex) {
+            // ignored
         }
+
         return xXPortalUserIdXXUserMap;
     }
 
     @Override
     public VXUser populateViewBean(XXUser xUser) {
         VXUser vObj = super.populateViewBean(xUser);
+
         vObj.setIsVisible(xUser.getIsVisible());
+
         populateGroupList(xUser.getId(), vObj);
+
         return vObj;
     }
 
     @Override
     protected void validateForCreate(VXUser vObj) {
         XXUser xUser = daoManager.getXXUser().findByUserName(vObj.getName());
+
         if (xUser != null) {
             throw restErrorUtil.createRESTException(vObj.getName() + " already exists", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }
@@ -195,6 +219,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
     protected void validateForUpdate(VXUser vObj, XXUser mObj) {
         String vObjName = vObj.getName();
         String mObjName = mObj.getName();
+
         if (vObjName != null && mObjName != null) {
             if (!vObjName.trim().equalsIgnoreCase(mObjName.trim())) {
                 validateForCreate(vObj);
@@ -206,7 +231,9 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
     protected VXUser mapEntityToViewBean(VXUser vObj, XXUser mObj) {
         VXUser ret      = super.mapEntityToViewBean(vObj, mObj);
         String userName = ret.getName();
+
         populateUserAttributes(userName, ret);
+
         return ret;
     }
 
@@ -214,14 +241,17 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
         List<XXGroupUser> xGroupUserList = daoManager.getXXGroupUser().findByUserId(xUserId);
         Set<Long>         groupIdList    = new LinkedHashSet<>();
         Set<String>       groupNameList  = new LinkedHashSet<>();
+
         if (xGroupUserList != null) {
             for (XXGroupUser xGroupUser : xGroupUserList) {
                 groupIdList.add(xGroupUser.getParentGroupId());
+
                 groupNameList.add(xGroupUser.getName());
             }
         }
-        List<Long>   groups     = new ArrayList<Long>(groupIdList);
-        List<String> groupNames = new ArrayList<String>(groupNameList);
+        List<Long>   groups     = new ArrayList<>(groupIdList);
+        List<String> groupNames = new ArrayList<>(groupNameList);
+
         vObj.setGroupIdList(groups);
         vObj.setGroupNameList(groupNames);
     }
@@ -230,25 +260,32 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
         if (userName != null && !userName.isEmpty()) {
             List<String> userRoleList = new ArrayList<>();
             XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(userName);
+
             if (xXPortalUser != null) {
                 vObj.setFirstName(xXPortalUser.getFirstName());
                 vObj.setLastName(xXPortalUser.getLastName());
                 vObj.setPassword(PropertiesUtil.getProperty("ranger.password.hidden"));
+
                 String emailAddress = xXPortalUser.getEmailAddress();
+
                 if (emailAddress != null && stringUtil.validateEmail(emailAddress)) {
                     vObj.setEmailAddress(xXPortalUser.getEmailAddress());
                 }
+
                 vObj.setStatus(xXPortalUser.getStatus());
                 vObj.setUserSource(xXPortalUser.getUserSource());
+
                 List<XXPortalUserRole> gjUserRoleList = daoManager.getXXPortalUserRole().findByParentId(xXPortalUser.getId());
 
                 for (XXPortalUserRole gjUserRole : gjUserRoleList) {
                     userRoleList.add(gjUserRole.getUserRole());
                 }
             }
-            if (userRoleList == null || userRoleList.isEmpty()) {
+
+            if (userRoleList.isEmpty()) {
                 userRoleList.add(RangerConstants.ROLE_USER);
             }
+
             vObj.setUserRoleList(userRoleList);
         }
     }

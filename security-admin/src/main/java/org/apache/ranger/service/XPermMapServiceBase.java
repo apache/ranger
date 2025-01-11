@@ -50,16 +50,17 @@ public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermM
     public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
         VXPermMapList   returnList   = new VXPermMapList();
         List<VXPermMap> xPermMapList = new ArrayList<>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<T>         resultList   = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXPermMap : resultList) {
             VXPermMap vXPermMap = populateViewBean(gjXPermMap);
+
             xPermMapList.add(vXPermMap);
         }
 
         returnList.setVXPermMaps(xPermMapList);
+
         return returnList;
     }
 
@@ -104,6 +105,7 @@ public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermM
         mObj.setIsWildCard(vObj.isIsWildCard());
         mObj.setGrantOrRevoke(vObj.isGrantOrRevoke());
         mObj.setIpAddress(vObj.getIpAddress());
+
         return mObj;
     }
 
@@ -119,6 +121,7 @@ public abstract class XPermMapServiceBase<T extends XXPermMap, V extends VXPermM
         vObj.setIsWildCard(mObj.isIsWildCard());
         vObj.setGrantOrRevoke(mObj.isGrantOrRevoke());
         vObj.setIpAddress(mObj.getIpAddress());
+
         return vObj;
     }
 }

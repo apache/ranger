@@ -28,6 +28,7 @@ public abstract class PublicAPIServiceBase<VXA extends VXDataObject, VX extends 
         vPublicObj.setUpdateDate(vXAObj.getUpdateDate());
         vPublicObj.setOwner(vXAObj.getOwner());
         vPublicObj.setUpdatedBy(vXAObj.getUpdatedBy());
+
         return vPublicObj;
     }
 

@@ -44,16 +44,21 @@ import java.util.List;
 @Service
 @Scope("singleton")
 public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
-    public static final String      NAME = "User";
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    private static      UserService instance;
+
+    public static final String NAME = "User";
+
+    private static UserService instance;
+
     @Autowired
-    RangerConfigUtil       configUtil;
+    RangerConfigUtil configUtil;
+
     @Autowired
     XUserPermissionService xUserPermissionService;
 
     public UserService() {
         super();
+
         instance = this;
     }
 
@@ -61,6 +66,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         if (instance == null) {
             logger.error("Instance is null", new Throwable());
         }
+
         return instance;
     }
 
@@ -73,9 +79,10 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         userProfile.setPublicScreenName(user.getPublicScreenName());
         userProfile.setStatus(user.getStatus());
         userProfile.setUserRoleList(new ArrayList<>());
-        UserSessionBase sess = ContextUtil.getCurrentUserSession();
 
-        String emailAddress = user.getEmailAddress();
+        UserSessionBase sess         = ContextUtil.getCurrentUserSession();
+        String          emailAddress = user.getEmailAddress();
+
         if (emailAddress != null && stringUtil.validateEmail(emailAddress)) {
             userProfile.setEmailAddress(user.getEmailAddress());
         }
@@ -94,35 +101,46 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
     @Override
     protected void validateForCreate(VXPortalUser userProfile) {
         List<VXMessage> messageList = new ArrayList<>();
+
         if (stringUtil.isEmpty(userProfile.getEmailAddress())) {
             logger.info("Empty Email Address.{}", userProfile);
+
             messageList.add(MessageEnums.NO_INPUT_DATA.getMessage(null, "emailAddress"));
         }
 
         if (stringUtil.isEmpty(userProfile.getFirstName())) {
             logger.info("Empty firstName.{}", userProfile);
+
             messageList.add(MessageEnums.NO_INPUT_DATA.getMessage(null, "firstName"));
         }
+
         if (stringUtil.isEmpty(userProfile.getLastName())) {
             logger.info("Empty lastName.{}", userProfile);
+
             messageList.add(MessageEnums.NO_INPUT_DATA.getMessage(null, "lastName"));
         }
+
         // firstName
         if (!stringUtil.isValidName(userProfile.getFirstName())) {
             logger.info("Invalid first name.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "firstName"));
         }
+
         userProfile.setFirstName(stringUtil.toCamelCaseAllWords(userProfile.getFirstName()));
 
         // lastName
         if (!stringUtil.isValidName(userProfile.getLastName())) {
             logger.info("Invalid last name.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "lastName"));
         }
+
         userProfile.setLastName(stringUtil.toCamelCaseAllWords(userProfile.getLastName()));
 
         if (!stringUtil.validateEmail(userProfile.getEmailAddress())) {
             logger.info("Invalid email address.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "emailAddress"));
         }
 
@@ -135,18 +153,21 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         // password
         if (!stringUtil.validatePassword(userProfile.getPassword(), new String[] {userProfile.getFirstName(), userProfile.getLastName()})) {
             logger.info("Invalid password.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "password"));
         }
 
         // firstName
         if (!stringUtil.validateString(StringUtil.VALIDATION_NAME, userProfile.getFirstName())) {
             logger.info("Invalid first name.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "firstName"));
         }
 
         // lastName
         if (!stringUtil.validateString(StringUtil.VALIDATION_NAME, userProfile.getLastName())) {
             logger.info("Invalid last name.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "lastName"));
         }
 
@@ -155,10 +176,13 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 
         if (!messageList.isEmpty()) {
             VXResponse gjResponse = new VXResponse();
+
             gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
             gjResponse.setMsgDesc("Validation failure");
             gjResponse.setMessageList(messageList);
+
             logger.info("Validation Error in createUser() userProfile={}, error={}", userProfile, gjResponse);
+
             throw restErrorUtil.createRESTException(gjResponse);
         }
     }
@@ -186,12 +210,14 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         // firstName
         if (!stringUtil.isValidName(userProfile.getFirstName())) {
             logger.info("Invalid first name.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "firstName"));
         }
 
         // lastName
         if (!stringUtil.isValidName(userProfile.getLastName())) {
             logger.info("Invalid last name.{}", userProfile);
+
             messageList.add(MessageEnums.INVALID_INPUT_DATA.getMessage(null, "lastName"));
         }
 
@@ -204,6 +230,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         if (userProfile.getUserRoleList() != null) {
             // First let's normalize it
             splitUserRoleList(userProfile.getUserRoleList());
+
             for (String userRole : userProfile.getUserRoleList()) {
                 restErrorUtil.validateStringList(userRole, configUtil.getRoles(), "serverMsg.userRole", null, "userRoleList");
             }
@@ -213,10 +240,13 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
 
         if (!messageList.isEmpty()) {
             VXResponse gjResponse = new VXResponse();
+
             gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
             gjResponse.setMsgDesc("Validation failure");
             gjResponse.setMessageList(messageList);
+
             logger.info("Validation Error in updateUser() userProfile={}, error={}", userProfile, gjResponse);
+
             throw restErrorUtil.createRESTException(gjResponse);
         }
     }
@@ -230,6 +260,7 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         mObj.setPassword(userProfile.getPassword());
         mObj.setPublicScreenName(bizUtil.generatePublicName(userProfile, null));
         mObj.setUserSource(userProfile.getUserSource());
+
         return mObj;
     }
 
@@ -242,12 +273,15 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         userProfile.setPublicScreenName(user.getPublicScreenName());
         userProfile.setStatus(user.getStatus());
         userProfile.setUserRoleList(new ArrayList<>());
+
         String emailAddress = user.getEmailAddress();
+
         if (emailAddress != null && stringUtil.validateEmail(emailAddress)) {
             userProfile.setEmailAddress(user.getEmailAddress());
         }
 
         UserSessionBase sess = ContextUtil.getCurrentUserSession();
+
         if (sess != null) {
             userProfile.setUserSource(sess.getAuthProvider());
         }
@@ -257,15 +291,19 @@ public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
         for (XXPortalUserRole gjUserRole : gjUserRoleList) {
             userProfile.getUserRoleList().add(gjUserRole.getUserRole());
         }
+
         return userProfile;
     }
 
     void splitUserRoleList(Collection<String> collection) {
         Collection<String> newCollection = new ArrayList<>();
+
         for (String role : collection) {
             String[] roles = role.split(",");
+
             newCollection.addAll(Arrays.asList(roles));
         }
+
         collection.clear();
         collection.addAll(newCollection);
     }

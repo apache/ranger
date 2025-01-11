@@ -50,6 +50,7 @@ public class XRepositoryService extends PublicAPIServiceBase<VXAsset, VXReposito
 
     public VXRepository mapXAToPublicObject(VXAsset vXAsset) {
         VXRepository vRepo = new VXRepository();
+
         vRepo = super.mapBaseAttributesToPublicObject(vXAsset, vRepo);
 
         vRepo.setName(vXAsset.getName());
@@ -68,6 +69,7 @@ public class XRepositoryService extends PublicAPIServiceBase<VXAsset, VXReposito
 
     public VXAsset mapPublicToXAObject(VXRepository vXRepo) {
         VXAsset vXAsset = new VXAsset();
+
         vXAsset = super.mapBaseAttributesToXAObject(vXRepo, vXAsset);
 
         vXAsset.setName(vXRepo.getName());
@@ -83,35 +85,41 @@ public class XRepositoryService extends PublicAPIServiceBase<VXAsset, VXReposito
     }
 
     public SearchCriteria getMappedSearchParams(HttpServletRequest request, SearchCriteria searchCriteria) {
-        Object typeObj   = searchCriteria.getParamValue("type");
-        Object statusObj = searchCriteria.getParamValue("status");
-
+        Object             typeObj    = searchCriteria.getParamValue("type");
+        Object             statusObj  = searchCriteria.getParamValue("status");
         ArrayList<Integer> statusList = new ArrayList<>();
+
         if (statusObj == null) {
             statusList.add(RangerCommonEnums.STATUS_DISABLED);
             statusList.add(RangerCommonEnums.STATUS_ENABLED);
         } else {
             Boolean status     = restErrorUtil.parseBoolean(request.getParameter("status"), "Invalid value for status", MessageEnums.INVALID_INPUT_DATA, null, "status");
             int     statusEnum = (status == null || !status) ? AppConstants.STATUS_DISABLED : AppConstants.STATUS_ENABLED;
+
             statusList.add(statusEnum);
         }
+
         searchCriteria.addParam("status", statusList);
 
         if (typeObj != null) {
             String type     = typeObj.toString();
             int    typeEnum = AppConstants.getEnumFor_AssetType(type);
+
             searchCriteria.addParam("type", typeEnum);
         }
+
         return searchCriteria;
     }
 
     public VXRepositoryList mapToVXRepositoryList(VXAssetList vXAssetList) {
         List<VXRepository> repoList = new ArrayList<>();
+
         for (VXAsset vXAsset : vXAssetList.getVXAssets()) {
             VXRepository vXRepo = mapXAToPublicObject(vXAsset);
+
             repoList.add(vXRepo);
         }
-        VXRepositoryList vXRepositoryList = new VXRepositoryList(repoList);
-        return vXRepositoryList;
+
+        return new VXRepositoryList(repoList);
     }
 }

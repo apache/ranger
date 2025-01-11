@@ -36,15 +36,16 @@ import java.util.Map;
 public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroupPermission, VXGroupPermission> {
     public XGroupPermissionService() {
         searchFields.add(new SearchField("id", "obj.id", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-
         searchFields.add(new SearchField("groupPermissionList", "obj.groupId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXModuleDef xXModuleDef", "xXModuleDef.id = obj.groupId "));
     }
 
     public List<VXGroupPermission> getPopulatedVXGroupPermissionList(List<XXGroupPermission> xgroupPermissionList, Map<Long, String> xXGroupMap, VXModuleDef vModuleDef) {
         List<VXGroupPermission> vXGroupPermissionList = new ArrayList<>();
+
         for (XXGroupPermission xgroupPermission : xgroupPermissionList) {
             if (xXGroupMap.containsKey(xgroupPermission.getGroupId())) {
                 VXGroupPermission vXGrpPerm = new VXGroupPermission();
+
                 vXGrpPerm.setId(xgroupPermission.getId());
                 vXGrpPerm.setGroupId(xgroupPermission.getGroupId());
                 vXGrpPerm.setModuleId(xgroupPermission.getModuleId());
@@ -53,9 +54,11 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
                 vXGrpPerm.setUpdateDate(xgroupPermission.getUpdateTime());
                 vXGrpPerm.setGroupName(xXGroupMap.get(xgroupPermission.getGroupId()));
                 vXGrpPerm.setModuleName(vModuleDef.getModule());
+
                 vXGroupPermissionList.add(vXGrpPerm);
             }
         }
+
         return vXGroupPermissionList;
     }
 
@@ -69,24 +72,29 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
         }
 
         vObj.setGroupName(xGroup.getName());
+
         return vObj;
     }
 
     @Override
     public Map<Long, VXGroupPermission> convertVListToVMap(List<VXGroupPermission> vObjList) {
         Map<Long, VXGroupPermission> ret = new HashMap<>();
+
         if (vObjList == null) {
             return ret;
         }
+
         for (VXGroupPermission vObj : vObjList) {
             ret.put(vObj.getGroupId(), vObj);
         }
+
         return ret;
     }
 
     @Override
     protected void validateForCreate(VXGroupPermission vObj) {
         XXGroupPermission xGroupPerm = daoManager.getXXGroupPermission().findByModuleIdAndGroupId(vObj.getGroupId(), vObj.getModuleId());
+
         if (xGroupPerm != null) {
             throw restErrorUtil.createRESTException("Group with ID [" + vObj.getGroupId() + "] " + "is already " + "assigned to the module with ID [" + vObj.getModuleId() + "]", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }
@@ -95,6 +103,7 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
     @Override
     protected void validateForUpdate(VXGroupPermission vObj, XXGroupPermission mObj) {
         XXGroupPermission xGroupPerm = daoManager.getXXGroupPermission().findByModuleIdAndGroupId(vObj.getGroupId(), vObj.getModuleId());
+
         if (xGroupPerm != null && !xGroupPerm.getId().equals(vObj.getId())) {
             throw restErrorUtil.createRESTException("Group with ID [" + vObj.getGroupId() + "] " + "is already " + "assigned to the module with ID [" + vObj.getModuleId() + "]", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }

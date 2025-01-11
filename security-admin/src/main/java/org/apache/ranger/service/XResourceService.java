@@ -98,39 +98,44 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
 
     public VXResourceList searchXResourcesWithoutLogin(SearchCriteria searchCriteria) {
         VXResourceList returnList = super.searchXResources(searchCriteria);
+
         if (returnList != null && returnList.getResultSize() > 0) {
             for (VXResource vXResource : returnList.getVXResources()) {
                 populateAuditList(vXResource);
             }
         }
+
         return returnList;
     }
 
     @Override
     public VXResource createResource(VXResource vXResource) {
-        VXResource resource = super.createResource(vXResource);
-
+        VXResource       resource        = super.createResource(vXResource);
         List<VXAuditMap> newAuditMapList = new ArrayList<>();
         List<VXAuditMap> vxAuditMapList  = vXResource.getAuditList();
+
         if (vxAuditMapList != null) {
             for (VXAuditMap vxAuditMap : vxAuditMapList) {
                 vxAuditMap.setResourceId(resource.getId());
+
                 vxAuditMap = xAuditMapService.createResource(vxAuditMap);
+
                 newAuditMapList.add(vxAuditMap);
             }
         }
 
         List<VXPermMap> newPermMapList = new ArrayList<>();
         List<VXPermMap> vxPermMapList  = vXResource.getPermMapList();
+
         if (vxPermMapList != null) {
             for (VXPermMap permMap : vxPermMapList) {
                 if (permMap.getUserId() == null && permMap.getGroupId() == null && vxAuditMapList == null) {
-                    if (vxAuditMapList == null) {
-                        throw restErrorUtil.createRESTException("Please provide" + " valid group/user permissions for policy.", MessageEnums.INVALID_INPUT_DATA);
-                    }
+                    throw restErrorUtil.createRESTException("Please provide valid group/user permissions for policy.", MessageEnums.INVALID_INPUT_DATA);
                 } else {
                     permMap.setResourceId(resource.getId());
+
                     permMap = xPermMapService.createResource(permMap);
+
                     newPermMapList.add(permMap);
                 }
             }
@@ -138,14 +143,15 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
 
         resource.setPermMapList(newPermMapList);
         resource.setAuditList(newAuditMapList);
+
         return resource;
     }
 
     @Override
     public VXResource readResource(Long id) {
         VXResource vXResource = super.readResource(id);
-
         VXResponse vXResponse = xaBizUtil.hasPermission(vXResource, AppConstants.XA_PERM_TYPE_ADMIN);
+
         if (vXResponse.getStatusCode() == VXResponse.STATUS_ERROR) {
             throw restErrorUtil.createRESTException("You don't have permission to perform this action", MessageEnums.OPER_NO_PERMISSION, id, "Resource", "Trying to read unauthorized resource.");
         }
@@ -153,14 +159,17 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
         populateAssetProperties(vXResource);
         populatePermList(vXResource);
         populateAuditList(vXResource);
+
         return vXResource;
     }
 
     @Override
     public VXResource populateViewBean(XXResource xXResource) {
         VXResource vXResource = super.populateViewBean(xXResource);
+
         populateAssetProperties(vXResource);
         populatePermList(vXResource);
+
         return vXResource;
     }
 
@@ -169,20 +178,26 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
         if (vObj == null) {
             throw restErrorUtil.createRESTException("Policy not provided.", MessageEnums.DATA_NOT_FOUND);
         }
+
         Long assetId = vObj.getAssetId();
+
         if (assetId != null) {
             XXAsset xAsset = daoManager.getXXAsset().getById(assetId);
+
             if (xAsset == null) {
                 throw restErrorUtil.createRESTException("The repository for which " + "the policy is created, doesn't exist in the system.", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
             }
         } else {
             logger.debug("Asset id not provided.");
+
             throw restErrorUtil.createRESTException("Please provide repository" + " id for policy.", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
         }
 
         String resourceName = vObj.getName();
+
         if (stringUtil.isEmpty(resourceName)) {
             logger.error("Resource name not found for : {}", vObj);
+
             throw restErrorUtil.createRESTException("Please provide valid resources.", MessageEnums.INVALID_INPUT_DATA);
         }
     }
@@ -194,6 +209,7 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
                 throw restErrorUtil.createRESTException("Please provide the " + "resource path.", MessageEnums.INVALID_INPUT_DATA);
             }
         }
+
         if ((vObj != null && mObj != null) && (!vObj.getName().equalsIgnoreCase(mObj.getName()) || vObj.getIsRecursive() != mObj.getIsRecursive() || vObj.getResourceType() != mObj.getResourceType())) {
             validateForCreate(vObj);
         }
@@ -203,19 +219,25 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
     public VXResourceList searchXResources(SearchCriteria searchCriteria) {
         VXResourceList  returnList;
         UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+
         // If user is system admin
         if (currentUserSession != null && currentUserSession.isUserAdmin()) {
             returnList = super.searchXResources(searchCriteria);
         } else { // need to be optimize
             returnList = new VXResourceList();
+
             int startIndex = searchCriteria.getStartIndex();
             int pageSize   = searchCriteria.getMaxRows();
+
             searchCriteria.setStartIndex(0);
             searchCriteria.setMaxRows(Integer.MAX_VALUE);
+
             List<XXResource> resultList            = searchResources(searchCriteria, searchFields, sortFields, returnList);
             List<XXResource> adminPermResourceList = new ArrayList<>();
+
             for (XXResource xXResource : resultList) {
                 VXResponse vXResponse = xaBizUtil.hasPermission(populateViewBean(xXResource), AppConstants.XA_PERM_TYPE_ADMIN);
+
                 if (vXResponse.getStatusCode() == VXResponse.STATUS_SUCCESS) {
                     adminPermResourceList.add(xXResource);
                 }
@@ -225,67 +247,83 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
                 populatePageList(adminPermResourceList, startIndex, pageSize, returnList);
             }
         }
+
         if (returnList != null && returnList.getResultSize() > 0) {
             for (VXResource vXResource : returnList.getVXResources()) {
                 populateAuditList(vXResource);
             }
         }
+
         return returnList;
     }
 
     @Override
     protected XXResource mapViewToEntityBean(VXResource vObj, XXResource mObj, int operationContext) {
         XXResource ret = null;
+
         if (vObj != null && mObj != null) {
             ret = super.mapViewToEntityBean(vObj, mObj, operationContext);
+
             ret.setUdfs(vObj.getUdfs());
-            XXPortalUser xXPortalUser = null;
+
             if (ret.getAddedByUserId() == null || ret.getAddedByUserId() == 0) {
                 if (!stringUtil.isEmpty(vObj.getOwner())) {
-                    xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
+
                     if (xXPortalUser != null) {
                         ret.setAddedByUserId(xXPortalUser.getId());
                     }
                 }
             }
+
             if (ret.getUpdatedByUserId() == null || ret.getUpdatedByUserId() == 0) {
                 if (!stringUtil.isEmpty(vObj.getUpdatedBy())) {
-                    xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
+
                     if (xXPortalUser != null) {
                         ret.setUpdatedByUserId(xXPortalUser.getId());
                     }
                 }
             }
         }
+
         return ret;
     }
 
     @Override
     protected VXResource mapEntityToViewBean(VXResource vObj, XXResource mObj) {
         VXResource ret = null;
+
         if (mObj != null && vObj != null) {
             ret = super.mapEntityToViewBean(vObj, mObj);
+
             ret.setUdfs(mObj.getUdfs());
+
             populateAssetProperties(ret);
-            XXPortalUser xXPortalUser = null;
+
             if (stringUtil.isEmpty(ret.getOwner())) {
-                xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+
                 if (xXPortalUser != null) {
                     ret.setOwner(xXPortalUser.getLoginId());
                 }
             }
+
             if (stringUtil.isEmpty(ret.getUpdatedBy())) {
-                xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+
                 if (xXPortalUser != null) {
                     ret.setUpdatedBy(xXPortalUser.getLoginId());
                 }
             }
         }
+
         return ret;
     }
 
     private void populateAssetProperties(VXResource vXResource) {
         XXAsset xxAsset = daoManager.getXXAsset().getById(vXResource.getAssetId());
+
         if (xxAsset != null) {
             vXResource.setAssetName(xxAsset.getName());
             vXResource.setAssetType(xxAsset.getAssetType());
@@ -299,6 +337,7 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
         for (XXAuditMap xAuditMap : xAuditMapList) {
             vXAuditMapList.add(xAuditMapService.populateViewBean(xAuditMap));
         }
+
         vXResource.setAuditList(vXAuditMapList);
     }
 
@@ -309,15 +348,19 @@ public class XResourceService extends XResourceServiceBase<XXResource, VXResourc
         for (XXPermMap xPermMap : xPermMapList) {
             vXPermMapList.add(xPermMapService.populateViewBean(xPermMap));
         }
+
         vXResource.setPermMapList(vXPermMapList);
     }
 
     private void populatePageList(List<XXResource> resourceList, int startIndex, int pageSize, VXResourceList vxResourceList) {
         List<VXResource> onePageList = new ArrayList<>();
+
         for (int i = startIndex; i < pageSize + startIndex && i < resourceList.size(); i++) {
             VXResource vXResource = populateViewBean(resourceList.get(i));
+
             onePageList.add(vXResource);
         }
+
         vxResourceList.setVXResources(onePageList);
         vxResourceList.setStartIndex(startIndex);
         vxResourceList.setPageSize(pageSize);

@@ -42,21 +42,28 @@ public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXM
     public VXModuleDefList searchModuleDef(SearchCriteria searchCriteria) {
         VXModuleDefList   returnList      = new VXModuleDefList();
         List<VXModuleDef> vXModuleDefList = new ArrayList<>();
+
         searchCriteria.setMaxRows(Integer.MAX_VALUE);
+
         List<T>      resultList  = searchResources(searchCriteria, searchFields, sortFields, returnList);
         Map<Long, T> matchModule = new HashMap<>();
+
         for (T moduleDef : resultList) {
             matchModule.put(moduleDef.getId(), moduleDef);
         }
 
-        List<T> moduleDefList = new ArrayList<T>(matchModule.values());
+        List<T> moduleDefList = new ArrayList<>(matchModule.values());
         // Iterate over the result list and create the return list
+
         for (T gjXModuleDef : moduleDefList) {
             VXModuleDef vXModuleDef = populateViewBean(gjXModuleDef);
+
             vXModuleDefList.add(vXModuleDef);
         }
+
         returnList.setTotalCount(vXModuleDefList.size());
         returnList.setvXModuleDef(vXModuleDefList);
+
         return returnList;
     }
 
@@ -64,6 +71,7 @@ public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXM
     protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
         mObj.setModule(vObj.getModule());
         mObj.setUrl(vObj.getUrl());
+
         return mObj;
     }
 
@@ -71,6 +79,7 @@ public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXM
     protected V mapEntityToViewBean(V vObj, T mObj) {
         vObj.setModule(mObj.getModule());
         vObj.setUrl(mObj.getUrl());
+
         return vObj;
     }
 }

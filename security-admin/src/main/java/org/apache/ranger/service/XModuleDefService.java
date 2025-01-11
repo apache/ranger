@@ -64,26 +64,33 @@ public class XModuleDefService extends XModuleDefServiceBase<XXModuleDef, VXModu
     public VXModuleDefList searchModuleDef(SearchCriteria searchCriteria) {
         VXModuleDefList   returnList      = new VXModuleDefList();
         List<VXModuleDef> vXModuleDefList = new ArrayList<>();
+
         searchCriteria.setMaxRows(Integer.MAX_VALUE);
         searchCriteria.setDistinct(true);
+
         List<XXModuleDef> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+
         // Filter out duplicate values retrieved from database in case of user & group permission lookup
         Map<Long, XXModuleDef> matchModule = new HashMap<>();
+
         for (XXModuleDef moduleDef : resultList) {
             matchModule.put(moduleDef.getId(), moduleDef);
         }
-        List<XXModuleDef> moduleDefList = new ArrayList<XXModuleDef>(matchModule.values());
 
+        List<XXModuleDef>   moduleDefList           = new ArrayList<>(matchModule.values());
         Map<Long, Object[]> xXPortalUserIdXXUserMap = xUserService.getXXPortalUserIdXXUserNameMap();
         Map<Long, String>   xXGroupMap              = xGroupService.getXXGroupIdNameMap();
 
         // Iterate over the result list and create the return list
         for (XXModuleDef gjXModuleDef : moduleDefList) {
             VXModuleDef vXModuleDef = populateViewBean(gjXModuleDef, xXPortalUserIdXXUserMap, xXGroupMap, false);
+
             vXModuleDefList.add(vXModuleDef);
         }
+
         returnList.setTotalCount(vXModuleDefList.size());
         returnList.setvXModuleDef(vXModuleDefList);
+
         return returnList;
     }
 
@@ -93,47 +100,61 @@ public class XModuleDefService extends XModuleDefServiceBase<XXModuleDef, VXModu
         List<VXGroupPermission> vXGroupPermissionList = new ArrayList<>();
         List<XXUserPermission>  xuserPermissionList   = daoManager.getXXUserPermission().findByModuleId(xObj.getId(), isUpdate);
         List<XXGroupPermission> xgroupPermissionList  = daoManager.getXXGroupPermission().findByModuleId(xObj.getId(), isUpdate);
+
         if (CollectionUtils.isEmpty(xXPortalUserIdXXUserMap)) {
             for (XXUserPermission xUserPerm : xuserPermissionList) {
                 VXUserPermission vXUserPerm = xUserPermService.populateViewBean(xUserPerm);
+
                 vXUserPermissionList.add(vXUserPerm);
             }
         } else {
             vXUserPermissionList = xUserPermService.getPopulatedVXUserPermissionList(xuserPermissionList, xXPortalUserIdXXUserMap, vModuleDef);
         }
+
         if (CollectionUtils.isEmpty(xXGroupMap)) {
             for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
                 VXGroupPermission vXGrpPerm = xGrpPermService.populateViewBean(xGrpPerm);
+
                 vXGroupPermissionList.add(vXGrpPerm);
             }
         } else {
             vXGroupPermissionList = xGrpPermService.getPopulatedVXGroupPermissionList(xgroupPermissionList, xXGroupMap, vModuleDef);
         }
+
         vModuleDef.setUserPermList(vXUserPermissionList);
         vModuleDef.setGroupPermList(vXGroupPermissionList);
+
         return vModuleDef;
     }
 
     public VXModulePermissionList searchModuleDefList(SearchCriteria searchCriteria) {
         VXModulePermissionList   returnList             = new VXModulePermissionList();
         List<VXModulePermission> vXModulePermissionList = new ArrayList<>();
+
         searchCriteria.setMaxRows(Integer.MAX_VALUE);
         searchCriteria.setDistinct(true);
+
         List<XXModuleDef> moduleDefList = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (XXModuleDef gjXModuleDef : moduleDefList) {
             VXModulePermission obj = new VXModulePermission();
+
             obj.setId(gjXModuleDef.getId());
             obj.setModule(gjXModuleDef.getModule());
+
             List<String> userNameList  = daoManager.getXXUserPermission().findModuleUsersByModuleId(gjXModuleDef.getId());
             List<String> groupNameList = daoManager.getXXGroupPermission().findModuleGroupsByModuleId(gjXModuleDef.getId());
+
             obj.setUserNameList(userNameList);
             obj.setGroupNameList(groupNameList);
+
             vXModulePermissionList.add(obj);
         }
+
         returnList.setTotalCount(vXModulePermissionList.size());
         returnList.setvXModulePermissionList(vXModulePermissionList);
+
         return returnList;
     }
 
@@ -146,24 +167,30 @@ public class XModuleDefService extends XModuleDefServiceBase<XXModuleDef, VXModu
         List<VXGroupPermission> vXGroupPermissionList   = new ArrayList<>();
         List<XXUserPermission>  xuserPermissionList     = daoManager.getXXUserPermission().findByModuleId(xObj.getId(), false);
         List<XXGroupPermission> xgroupPermissionList    = daoManager.getXXGroupPermission().findByModuleId(xObj.getId(), false);
+
         if (CollectionUtils.isEmpty(xXPortalUserIdXXUserMap)) {
             for (XXUserPermission xUserPerm : xuserPermissionList) {
                 VXUserPermission vXUserPerm = xUserPermService.populateViewBean(xUserPerm);
+
                 vXUserPermissionList.add(vXUserPerm);
             }
         } else {
             vXUserPermissionList = xUserPermService.getPopulatedVXUserPermissionList(xuserPermissionList, xXPortalUserIdXXUserMap, vModuleDef);
         }
+
         if (CollectionUtils.isEmpty(xXGroupMap)) {
             for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
                 VXGroupPermission vXGrpPerm = xGrpPermService.populateViewBean(xGrpPerm);
+
                 vXGroupPermissionList.add(vXGrpPerm);
             }
         } else {
             vXGroupPermissionList = xGrpPermService.getPopulatedVXGroupPermissionList(xgroupPermissionList, xXGroupMap, vModuleDef);
         }
+
         vModuleDef.setUserPermList(vXUserPermissionList);
         vModuleDef.setGroupPermList(vXGroupPermissionList);
+
         return vModuleDef;
     }
 

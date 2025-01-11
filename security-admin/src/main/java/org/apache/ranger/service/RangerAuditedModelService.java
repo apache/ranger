@@ -39,16 +39,20 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class RangerAuditedModelService<T extends XXDBBase, V extends RangerBaseModelObject> extends RangerBaseModelService<T, V> {
-    private static final Logger                   LOG          = LoggerFactory.getLogger(RangerAuditedModelService.class);
-    protected final      Map<String, VTrxLogAttr> trxLogAttrs  = new HashMap<>();
-    protected final      String                   hiddenPasswordString;
-    private final        int                      classType;
-    private final        int                      parentClassType;
-    private final        List<VTrxLogAttr>        objNameAttrs = new ArrayList<>();
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAuditedModelService.class);
+
+    protected final Map<String, VTrxLogAttr> trxLogAttrs  = new HashMap<>();
+    protected final String                   hiddenPasswordString;
+
+    private final int               classType;
+    private final int               parentClassType;
+    private final List<VTrxLogAttr> objNameAttrs = new ArrayList<>();
+
     @Autowired
     RangerDataHistService dataHistService;
+
     @Autowired
-    RangerEnumUtil        xaEnumUtil;
+    RangerEnumUtil xaEnumUtil;
 
     protected RangerAuditedModelService(int classType) {
         this(classType, 0);
@@ -161,7 +165,7 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
                 processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
             }
 
-            if (objChangeInfo.getAttributes() != null && objChangeInfo.getAttributes().size() > 0) {
+            if (objChangeInfo.getAttributes() != null && !objChangeInfo.getAttributes().isEmpty()) {
                 ret.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
             }
         } catch (Exception excp) {

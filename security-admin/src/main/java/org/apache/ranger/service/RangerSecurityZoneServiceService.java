@@ -54,12 +54,16 @@ import java.util.Set;
 @Scope("singleton")
 public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceBase<XXSecurityZone, RangerSecurityZone> {
     private static final Logger logger = LoggerFactory.getLogger(RangerSecurityZoneServiceService.class);
+
     private final Map<Long, Set<String>> serviceNamesInZones    = new HashMap<>();
     private final Map<Long, Set<String>> tagServiceNamesInZones = new HashMap<>();
+
     @Autowired
     ServiceDBStore serviceDBStore;
+
     @Autowired
-    GdsDBStore     gdsStore;
+    GdsDBStore gdsStore;
+
     boolean compressJsonData;
 
     public RangerSecurityZoneServiceService() {
@@ -83,10 +87,9 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
     public RangerSecurityZone postCreate(XXSecurityZone xObj) {
         // Ensure to update ServiceVersionInfo for each service in the zone
 
-        RangerSecurityZone ret          = super.postCreate(xObj);
-        Set<String>        serviceNames = ret.getServices().keySet();
-
-        List<String> tagServiceNames = ret.getTagServices();
+        RangerSecurityZone ret             = super.postCreate(xObj);
+        Set<String>        serviceNames    = ret.getServices().keySet();
+        List<String>       tagServiceNames = ret.getTagServices();
 
         // Create default zone policies
         try {
@@ -108,11 +111,11 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         // Update ServiceVersionInfo for all affected services
         RangerSecurityZone ret = super.postUpdate(xObj);
 
-        Set<String> oldServiceNames     = new HashSet(serviceNamesInZones.remove(xObj.getId()));
+        Set<String> oldServiceNames     = new HashSet<>(serviceNamesInZones.remove(xObj.getId()));
         Set<String> updatedServiceNames = ret.getServices().keySet();
 
-        Set<String> oldTagServiceNames     = new HashSet(tagServiceNamesInZones.remove(xObj.getId()));
-        Set<String> updatedTagServiceNames = new HashSet<String>(ret.getTagServices());
+        Set<String> oldTagServiceNames     = new HashSet<>(tagServiceNamesInZones.remove(xObj.getId()));
+        Set<String> updatedTagServiceNames = new HashSet<>(ret.getTagServices());
 
         Collection<String> newServiceNames     = CollectionUtils.subtract(updatedServiceNames, oldServiceNames);
         Collection<String> deletedServiceNames = CollectionUtils.subtract(oldServiceNames, updatedServiceNames);
@@ -131,8 +134,10 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
             updateServiceInfos(oldServiceNames);
         } catch (Exception exception) {
             logger.error("postUpdate processing failed for security-zone:[{}]", ret, exception);
+
             ret = null;
         }
+
         return ret;
     }
 
@@ -211,9 +216,8 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 
     @Override
     protected XXSecurityZone mapViewToEntityBean(RangerSecurityZone securityZone, XXSecurityZone xxSecurityZone, int operationContext) {
-        XXSecurityZone ret = super.mapViewToEntityBean(securityZone, xxSecurityZone, operationContext);
-
-        String json = JsonUtils.objectToJson(securityZone);
+        XXSecurityZone ret  = super.mapViewToEntityBean(securityZone, xxSecurityZone, operationContext);
+        String         json = JsonUtils.objectToJson(securityZone);
 
         if (StringUtils.isNotEmpty(json) && compressJsonData) {
             try {

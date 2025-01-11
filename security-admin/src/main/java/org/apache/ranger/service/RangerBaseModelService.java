@@ -52,37 +52,43 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class RangerBaseModelService<T extends XXDBBase, V extends RangerBaseModelObject> {
-    public static final  int               OPERATION_CREATE_CONTEXT        = 1;
-    public static final  int               OPERATION_UPDATE_CONTEXT        = 2;
-    public static final  int               OPERATION_DELETE_CONTEXT        = 3;
-    public static final  int               OPERATION_IMPORT_CREATE_CONTEXT = 4;
-    public static final  int               OPERATION_IMPORT_DELETE_CONTEXT = 5;
+    private static final Logger LOG = LoggerFactory.getLogger(RangerBaseModelService.class);
 
-    private static final Logger            LOG                             = LoggerFactory.getLogger(RangerBaseModelService.class);
+    public static final int OPERATION_CREATE_CONTEXT        = 1;
+    public static final int OPERATION_UPDATE_CONTEXT        = 2;
+    public static final int OPERATION_DELETE_CONTEXT        = 3;
+    public static final int OPERATION_IMPORT_CREATE_CONTEXT = 4;
+    public static final int OPERATION_IMPORT_DELETE_CONTEXT = 5;
 
-    public final         List<SortField>   sortFields                      = new ArrayList<>();
-    public final         List<SearchField> searchFields                    = new ArrayList<>();
+    public final List<SortField>   sortFields   = new ArrayList<>();
+    public final List<SearchField> searchFields = new ArrayList<>();
 
-    protected final      Class<T>          tEntityClass;
-    protected final      Class<V>          tViewClass;
-    protected final      String            tClassName;
-    protected final      String            countQueryStr;
-    protected final      String            distinctCountQueryStr;
-    protected final      String            queryStr;
-    protected final      String            distinctQueryStr;
+    protected final Class<T> tEntityClass;
+    protected final Class<V> tViewClass;
+    protected final String   tClassName;
+    protected final String   countQueryStr;
+    protected final String   distinctCountQueryStr;
+    protected final String   queryStr;
+    protected final String   distinctQueryStr;
 
     @Autowired
-    protected            RangerDaoManager  daoMgr;
+    protected RangerDaoManager daoMgr;
+
     @Autowired
-    protected            StringUtil        stringUtil;
+    protected StringUtil stringUtil;
+
     @Autowired
-    protected            RESTErrorUtil     restErrorUtil;
+    protected RESTErrorUtil restErrorUtil;
+
     @Autowired
-    protected            RangerSearchUtil  searchUtil;
+    protected RangerSearchUtil searchUtil;
+
     @Autowired
-    protected            BaseDao<T>        entityDao;
+    protected BaseDao<T> entityDao;
+
     @Autowired
     RangerBizUtil bizUtil;
+
     private Boolean populateExistingBaseFields;
 
     @SuppressWarnings("unchecked")
@@ -104,14 +110,12 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
             tViewClass   = null;
         }
 
-        tClassName = (tEntityClass != null) ? tEntityClass.getName() : "XXDBBase";
-
+        tClassName                 = (tEntityClass != null) ? tEntityClass.getName() : "XXDBBase";
         populateExistingBaseFields = false;
-
-        countQueryStr         = "SELECT COUNT(obj) FROM " + tClassName + " obj ";
-        distinctCountQueryStr = "SELECT COUNT(distinct obj.id) FROM " + tClassName + " obj ";
-        queryStr              = "SELECT obj FROM " + tClassName + " obj ";
-        distinctQueryStr      = "SELECT DISTINCT obj FROM " + tClassName + " obj ";
+        countQueryStr              = "SELECT COUNT(obj) FROM " + tClassName + " obj ";
+        distinctCountQueryStr      = "SELECT COUNT(distinct obj.id) FROM " + tClassName + " obj ";
+        queryStr                   = "SELECT obj FROM " + tClassName + " obj ";
+        distinctQueryStr           = "SELECT DISTINCT obj FROM " + tClassName + " obj ";
     }
 
     public T preCreate(V vObj) {
@@ -128,31 +132,38 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
     public V create(V vObj) {
         T resource = preCreate(vObj);
+
         resource = getDao().create(resource);
         vObj     = postCreate(resource);
+
         return vObj;
     }
 
     public V create(V vObj, boolean flush) {
         T resource = preCreate(vObj);
+
         resource = getDao().create(resource, flush);
         vObj     = postCreate(resource);
+
         return vObj;
     }
 
     public V read(Long id) {
         T resource = getDao().getById(id);
+
         if (resource == null) {
             throw restErrorUtil.createRESTException(tViewClass.getName() + " :Data Not Found for given Id", MessageEnums.DATA_NOT_FOUND, id, null, "readResource : No Object found with given id.");
         }
+
         return populateViewBean(resource);
     }
 
     public V update(V viewBaseBean) {
         T resource = preUpdate(viewBaseBean);
+
         resource = getDao().update(resource);
-        V viewBean = postUpdate(resource);
-        return viewBean;
+
+        return postUpdate(resource);
     }
 
     public V postUpdate(T resource) {
@@ -161,44 +172,53 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
     public T preUpdate(V viewBaseBean) {
         T resource = getDao().getById(viewBaseBean.getId());
+
         if (resource == null) {
             throw restErrorUtil.createRESTException(tEntityClass.getSimpleName() + " not found", MessageEnums.DATA_NOT_FOUND, viewBaseBean.getId(), null, "preUpdate: id not found.");
         }
+
         validateForUpdate(viewBaseBean, resource);
+
         return populateEntityBeanForUpdate(resource, viewBaseBean);
     }
 
     public boolean delete(V vObj) {
-        boolean result   = false;
+        boolean result;
         Long    id       = vObj.getId();
         T       resource = preDelete(id);
+
         if (resource == null) {
             throw restErrorUtil.createRESTException(tEntityClass.getSimpleName() + " not found", MessageEnums.DATA_NOT_FOUND, id, null, tEntityClass.getSimpleName() + ":" + id);
         }
+
         try {
             result = getDao().remove(resource);
         } catch (Exception e) {
             LOG.error("Error deleting {}. Id={}", tEntityClass.getSimpleName(), id, e);
 
-            throw restErrorUtil.createRESTException(tEntityClass.getSimpleName() + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, "" + id + ", error=" + e.getMessage());
+            throw restErrorUtil.createRESTException(tEntityClass.getSimpleName() + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, id + ", error=" + e.getMessage());
         }
+
         return result;
     }
 
     public boolean delete(V vObj, boolean flush) {
-        boolean result   = false;
+        boolean result;
         Long    id       = vObj.getId();
         T       resource = preDelete(id);
+
         if (resource == null) {
             throw restErrorUtil.createRESTException(tEntityClass.getSimpleName() + " not found", MessageEnums.DATA_NOT_FOUND, id, null, tEntityClass.getSimpleName() + ":" + id);
         }
+
         try {
             result = getDao().remove(resource);
         } catch (Exception e) {
             LOG.error("Error deleting {}. Id={}", tEntityClass.getSimpleName(), id, e);
 
-            throw restErrorUtil.createRESTException(tEntityClass.getSimpleName() + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, "" + id + ", error=" + e.getMessage());
+            throw restErrorUtil.createRESTException(tEntityClass.getSimpleName() + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, id + ", error=" + e.getMessage());
         }
+
         return result;
     }
 
@@ -213,8 +233,10 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
     public List<T> searchResources(SearchFilter searchCriteria, List<SearchField> searchFieldList, List<SortField> sortFieldList, VList vList) {
         // Get total count of the rows which meet the search criteria
         long count = -1;
+
         if (searchCriteria.isGetCount()) {
             count = getCountForSearchQuery(searchCriteria, searchFieldList);
+
             if (count == 0) {
                 return Collections.emptyList();
             }
@@ -233,6 +255,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
             vList.setStartIndex(query.getFirstResult());
             vList.setTotalCount(count);
         }
+
         return resultList;
     }
 
@@ -242,7 +265,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
         Query  query = createQuery(q, null, searchCriteria, searchFieldList, true);
         Long   count = getDao().executeCountQueryInSecurityContext(tEntityClass, query);
 
-        return (count == null) ? 0 : count.longValue();
+        return (count == null) ? 0 : count;
     }
 
     protected abstract T mapViewToEntityBean(V viewBean, T t, int operationContext);
@@ -255,6 +278,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
         } catch (Throwable e) {
             LOG.error("Error instantiating entity class. tEntityClass={}", tEntityClass.toString(), e);
         }
+
         return null;
     }
 
@@ -264,6 +288,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
         } catch (Throwable e) {
             LOG.error("Error instantiating view class. tViewClass={}", tViewClass.toString(), e);
         }
+
         return null;
     }
 
@@ -271,11 +296,13 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
         if (entityDao == null) {
             throw new NullPointerException("entityDao is not injected by Spring!");
         }
+
         return entityDao;
     }
 
     protected V populateViewBean(T entityObj) {
         V vObj = createViewObject();
+
         vObj.setId(entityObj.getId());
         vObj.setCreateTime(entityObj.getCreateTime());
         vObj.setUpdateTime(entityObj.getUpdateTime());
@@ -339,28 +366,30 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
     protected T preDelete(Long id) {
         T resource = getDao().getById(id);
+
         if (resource == null) {
             // Return without error
             LOG.info("Delete ignored for non-existent Object, id={}", id);
         }
+
         return resource;
     }
 
     protected List<T> searchRangerObjects(SearchFilter searchCriteria, List<SearchField> searchFieldList, List<SortField> sortFieldList, PList<V> pList) {
         // Get total count of the rows which meet the search criteria
         long count = -1;
+
         if (searchCriteria.isGetCount()) {
             count = getCountForSearchQuery(searchCriteria, searchFieldList);
+
             if (count == 0) {
                 return Collections.emptyList();
             }
         }
 
-        String sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
-
-        String q     = queryStr;
-        Query  query = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
-
+        String  sortClause = searchUtil.constructSortClause(searchCriteria, sortFieldList);
+        String  q          = queryStr;
+        Query   query      = createQuery(q, sortClause, searchCriteria, searchFieldList, false);
         List<T> resultList = getDao().executeQueryInSecurityContext(tEntityClass, query);
 
         if (pList != null) {
@@ -371,18 +400,18 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
             pList.setStartIndex(query.getFirstResult());
             pList.setTotalCount(count);
         }
+
         return resultList;
     }
 
     protected Query createQuery(String searchString, String sortString, SearchFilter searchCriteria, List<SearchField> searchFieldList, boolean isCountQuery) {
-        EntityManager em    = getDao().getEntityManager();
-        Query         query = searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
-        return query;
+        EntityManager em = getDao().getEntityManager();
+
+        return searchUtil.createSearchQuery(em, searchString, sortString, searchCriteria, searchFieldList, false, isCountQuery);
     }
 
     protected String getUserScreenName(Long userId) {
-        String ret = null;
-
+        String       ret = null;
         XXPortalUser xPortalUser = userId == null ? null : daoMgr.getXXPortalUser().getById(userId);
 
         if (xPortalUser != null) {
@@ -405,62 +434,32 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
     }
 
     protected String getUserName(Long userId) {
-        String ret = null;
-
         XXPortalUser xPortalUser = userId == null ? null : daoMgr.getXXPortalUser().getById(userId);
 
-        if (xPortalUser != null) {
-            ret = xPortalUser.getLoginId();
-        }
-
-        return ret;
+        return xPortalUser != null ? xPortalUser.getLoginId() : null;
     }
 
     protected String getGroupName(Long groupId) {
-        String ret = null;
-
         XXGroup xGroup = groupId == null ? null : daoMgr.getXXGroup().getById(groupId);
 
-        if (xGroup != null) {
-            ret = xGroup.getName();
-        }
-
-        return ret;
+        return xGroup != null ? xGroup.getName() : null;
     }
 
     protected String getAccessTypeName(Long accessTypeDefId) {
-        String ret = null;
-
         XXAccessTypeDef accessTypeDef = accessTypeDefId == null ? null : daoMgr.getXXAccessTypeDef().getById(accessTypeDefId);
 
-        if (accessTypeDef != null) {
-            ret = accessTypeDef.getName();
-        }
-
-        return ret;
+        return accessTypeDef != null ? accessTypeDef.getName() : null;
     }
 
     protected String getConditionName(Long conditionDefId) {
-        String ret = null;
-
         XXPolicyConditionDef conditionDef = conditionDefId == null ? null : daoMgr.getXXPolicyConditionDef().getById(conditionDefId);
 
-        if (conditionDef != null) {
-            ret = conditionDef.getName();
-        }
-
-        return ret;
+        return conditionDef != null ? conditionDef.getName() : null;
     }
 
     protected String getResourceName(Long resourceDefId) {
-        String ret = null;
-
         XXResourceDef resourceDef = resourceDefId == null ? null : daoMgr.getXXResourceDef().getById(resourceDefId);
 
-        if (resourceDef != null) {
-            ret = resourceDef.getName();
-        }
-
-        return ret;
+        return resourceDef != null ? resourceDef.getName() : null;
     }
 }

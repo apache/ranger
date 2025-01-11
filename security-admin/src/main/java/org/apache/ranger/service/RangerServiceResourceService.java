@@ -45,10 +45,12 @@ import java.util.Map;
 
 @Service
 public class RangerServiceResourceService extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
-    public static final TypeReference subsumedDataType    = new TypeReference<Map<String, RangerPolicy.RangerPolicyResource>>() {};
-    public static final TypeReference duplicatedDataType  = new TypeReference<List<RangerTag>>() {};
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceResourceService.class);
-    private             boolean       serviceUpdateNeeded = true;
+
+    public static final TypeReference<Map<String, RangerPolicy.RangerPolicyResource>> subsumedDataType   = new TypeReference<Map<String, RangerPolicy.RangerPolicyResource>>() {};
+    public static final TypeReference<List<RangerTag>>                                duplicatedDataType = new TypeReference<List<RangerTag>>() {};
+
+    private boolean serviceUpdateNeeded = true;
 
     public RangerServiceResourceService() {
         searchFields.add(new SearchField(SearchFilter.TAG_RESOURCE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
@@ -90,9 +92,8 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
     }
 
     public RangerServiceResource getServiceResourceByGuid(String guid) {
-        RangerServiceResource ret = null;
-
-        XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByGuid(guid);
+        RangerServiceResource ret               = null;
+        XXServiceResource     xxServiceResource = daoMgr.getXXServiceResource().findByGuid(guid);
 
         if (xxServiceResource != null) {
             ret = populateViewBean(xxServiceResource);
@@ -102,9 +103,8 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
     }
 
     public List<RangerServiceResource> getByServiceId(Long serviceId) {
-        List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
-
-        List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
+        List<RangerServiceResource> ret                = new ArrayList<>();
+        List<XXServiceResource>     xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
 
         if (CollectionUtils.isNotEmpty(xxServiceResources)) {
             for (XXServiceResource xxServiceResource : xxServiceResources) {
@@ -118,9 +118,8 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
     }
 
     public RangerServiceResource getByServiceAndResourceSignature(Long serviceId, String resourceSignature) {
-        RangerServiceResource ret = null;
-
-        XXServiceResource xxServiceResource = daoMgr.getXXServiceResource().findByServiceAndResourceSignature(serviceId, resourceSignature);
+        RangerServiceResource ret               = null;
+        XXServiceResource     xxServiceResource = daoMgr.getXXServiceResource().findByServiceAndResourceSignature(serviceId, resourceSignature);
 
         if (xxServiceResource != null) {
             ret = populateViewBean(xxServiceResource);
@@ -130,9 +129,8 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
     }
 
     public List<RangerServiceResource> getTaggedResourcesInServiceId(Long serviceId) {
-        List<RangerServiceResource> ret = new ArrayList<RangerServiceResource>();
-
-        List<XXServiceResource> xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
+        List<RangerServiceResource> ret                = new ArrayList<>();
+        List<XXServiceResource>     xxServiceResources = daoMgr.getXXServiceResource().findByServiceId(serviceId);
 
         if (CollectionUtils.isNotEmpty(xxServiceResources)) {
             for (XXServiceResource xxServiceResource : xxServiceResources) {
@@ -148,8 +146,10 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
     @Override
     protected XXServiceResource mapViewToEntityBean(RangerServiceResource serviceResource, XXServiceResource xxServiceResource, int operationContext) {
         XXServiceResource ret = super.mapViewToEntityBean(serviceResource, xxServiceResource, operationContext);
+
         if (MapUtils.isNotEmpty(serviceResource.getResourceElements())) {
             String serviceResourceElements = JsonUtils.mapToJson(serviceResource.getResourceElements());
+
             if (StringUtils.isNotEmpty(serviceResourceElements)) {
                 ret.setServiceResourceElements(serviceResourceElements);
             } else {
@@ -163,13 +163,16 @@ public class RangerServiceResourceService extends RangerServiceResourceServiceBa
     @Override
     protected RangerServiceResource mapEntityToViewBean(RangerServiceResource serviceResource, XXServiceResource xxServiceResource) {
         RangerServiceResource ret = super.mapEntityToViewBean(serviceResource, xxServiceResource);
+
         if (StringUtils.isNotEmpty(xxServiceResource.getServiceResourceElements())) {
             Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements = null;
+
             try {
-                serviceResourceElements = (Map<String, RangerPolicy.RangerPolicyResource>) JsonUtils.jsonToObject(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+                serviceResourceElements = JsonUtils.jsonToObject(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
             } catch (JsonProcessingException e) {
                 LOG.error("Error occurred while processing JSON  ", e);
             }
+
             if (MapUtils.isNotEmpty(serviceResourceElements)) {
                 ret.setResourceElements(serviceResourceElements);
             } else {

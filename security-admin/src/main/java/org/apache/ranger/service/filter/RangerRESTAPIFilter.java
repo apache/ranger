@@ -45,9 +45,9 @@ import java.util.regex.Pattern;
 
 public class RangerRESTAPIFilter extends LoggingFilter {
     Logger logger = LoggerFactory.getLogger(RangerRESTAPIFilter.class);
-    
+
     static volatile boolean initDone;
-    
+
     boolean                  logStdOut            = true;
     HashMap<String, String>  regexPathMap         = new HashMap<>();
     HashMap<String, Pattern> regexPatternMap      = new HashMap<>();
@@ -65,6 +65,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
         if (!initDone) {
             init();
         }
+
         if (logStdOut) {
             String path = request.getRequestUri().getPath();
 
@@ -93,6 +94,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
             if (response.getMediaType() == null) {
                 logger.info("DELETE ME: Response= mediaType is null");
             }
+
             if (response.getMediaType() == null || !"image".equals(response.getMediaType().getType())) {
                 response = super.filter(request, response);
             }
@@ -105,6 +107,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
         if (initDone) {
             return;
         }
+
         synchronized (RangerRESTAPIFilter.class) {
             if (initDone) {
                 return;
@@ -118,6 +121,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
             } catch (Throwable t) {
                 logger.error("Error parsing REST classes for PATH patterns. Error ignored, but should be fixed immediately", t);
             }
+
             initDone = true;
         }
     }
@@ -130,6 +134,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 
         for (@SuppressWarnings("rawtypes") Class klass : cList) {
             Annotation[] annotations = klass.getAnnotations();
+
             for (Annotation annotation : annotations) {
                 if (!(annotation instanceof Path)) {
                     continue;
@@ -140,11 +145,12 @@ public class RangerRESTAPIFilter extends LoggingFilter {
                 if (path.value().startsWith("crud")) {
                     continue;
                 }
-                
+
                 for (Method m : klass.getMethods()) {
                     Annotation[] methodAnnotations = m.getAnnotations();
                     String       httpMethod        = null;
                     String       servicePath       = null;
+
                     for (Annotation methodAnnotation : methodAnnotations) {
                         if (methodAnnotation instanceof GET) {
                             httpMethod = "GET";
@@ -165,19 +171,24 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 
                     String fullPath = path.value();
                     String regEx    = httpMethod + ":" + path.value();
+
                     if (servicePath != null) {
                         if (!servicePath.startsWith("/")) {
                             servicePath = "/" + servicePath;
                         }
+
                         UriTemplate ut = new UriTemplate(servicePath);
-                        regEx = httpMethod + ":" + path.value() + ut.getPattern().getRegex();
+
+                        regEx     = httpMethod + ":" + path.value() + ut.getPattern().getRegex();
                         fullPath += servicePath;
                     }
+
                     Pattern regexPattern = Pattern.compile(regEx);
 
                     if (regexPatternMap.containsKey(regEx)) {
                         logger.warn("Duplicate regex = {}, fullPath = {}", regEx, fullPath);
                     }
+
                     regexList.add(regEx);
                     regexPathMap.put(regEx, fullPath);
                     regexPatternMap.put(regEx, regexPattern);
@@ -186,23 +197,29 @@ public class RangerRESTAPIFilter extends LoggingFilter {
                 }
             }
         }
+
         // ReOrder list
-        int i = 0;
+        int i;
+
         for (i = 0; i < 10; i++) {
             boolean      foundMatches = false;
             List<String> tmpList      = new ArrayList<>();
+
             for (int x = 0; x < regexList.size(); x++) {
                 boolean foundMatch = false;
                 String  rX         = regexList.get(x);
+
                 for (int y = 0; y < x; y++) {
                     String  rY      = regexList.get(y);
                     Matcher matcher = regexPatternMap.get(rY).matcher(rX);
+
                     if (matcher.matches()) {
                         foundMatch   = true;
                         foundMatches = true;
                         break;
                     }
                 }
+
                 if (foundMatch) {
                     tmpList.add(0, rX);
                 } else {
@@ -215,6 +232,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
                 break;
             }
         }
+
         if (i == 10) {
             logger.warn("Couldn't rearrange even after {} loops", i);
         }

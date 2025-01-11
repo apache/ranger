@@ -27,8 +27,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
@@ -47,15 +45,18 @@ public class RangerTransactionService {
 
     private static final String PROP_THREADPOOL_SIZE          = "ranger.admin.transaction.service.threadpool.size";
     private static final String PROP_SUMMARY_LOG_INTERVAL_SEC = "ranger.admin.transaction.service.summary.log.interval.sec";
-    private final AtomicLong               scheduledTaskCount   = new AtomicLong(0);
-    private final AtomicLong               executedTaskCount    = new AtomicLong(0);
-    private final AtomicLong               failedTaskCount      = new AtomicLong(0);
+
+    private final AtomicLong scheduledTaskCount = new AtomicLong(0);
+    private final AtomicLong executedTaskCount  = new AtomicLong(0);
+    private final AtomicLong failedTaskCount    = new AtomicLong(0);
+
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
-    private       ScheduledExecutorService scheduler;
-    private       long                     summaryLogIntervalMs = 5 * 60 * 1000;
-    private       long                     nextLogSummaryTime   = System.currentTimeMillis() + summaryLogIntervalMs;
+
+    private ScheduledExecutorService scheduler;
+    private long                     summaryLogIntervalMs = 5 * 60 * 1000;
+    private long                     nextLogSummaryTime   = System.currentTimeMillis() + summaryLogIntervalMs;
 
     @PostConstruct
     public void init() {
@@ -76,6 +77,7 @@ public class RangerTransactionService {
     public void destroy() {
         try {
             LOG.info("attempt to shutdown RangerTransactionService");
+
             scheduler.shutdown();
             scheduler.awaitTermination(5, TimeUnit.SECONDS);
 
@@ -86,37 +88,35 @@ public class RangerTransactionService {
             if (!scheduler.isTerminated()) {
                 LOG.info("cancel non-finished RangerTransactionService tasks");
             }
+
             scheduler.shutdownNow();
+
             LOG.info("RangerTransactionService shutdown finished");
         }
     }
 
     public void scheduleToExecuteInOwnTransaction(final Runnable task, final long delayInMillis) {
         try {
-            scheduler.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    if (task != null) {
-                        try {
-                            //Create new  transaction
-                            TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-                            txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            scheduler.schedule(() -> {
+                if (task != null) {
+                    try {
+                        //Create new  transaction
+                        TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
-                            txTemplate.execute(new TransactionCallback<Object>() {
-                                public Object doInTransaction(TransactionStatus status) {
-                                    task.run();
-                                    return null;
-                                }
-                            });
-                        } catch (Exception e) {
-                            failedTaskCount.getAndIncrement();
+                        txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-                            LOG.error("Failed to commit TransactionService transaction", e);
-                            LOG.error("Ignoring...");
-                        } finally {
-                            executedTaskCount.getAndIncrement();
-                            logSummaryIfNeeded();
-                        }
+                        txTemplate.execute(status -> {
+                            task.run();
+                            return null;
+                        });
+                    } catch (Exception e) {
+                        failedTaskCount.getAndIncrement();
+
+                        LOG.error("Failed to commit TransactionService transaction", e);
+                        LOG.error("Ignoring...");
+                    } finally {
+                        executedTaskCount.getAndIncrement();
+                        logSummaryIfNeeded();
                     }
                 }
             }, delayInMillis, MILLISECONDS);
@@ -126,7 +126,7 @@ public class RangerTransactionService {
             logSummaryIfNeeded();
         } catch (Exception e) {
             LOG.error("Failed to schedule TransactionService transaction:", e);
-            LOG.error("Ignroing...");
+            LOG.error("Ignoring...");
         }
     }
 

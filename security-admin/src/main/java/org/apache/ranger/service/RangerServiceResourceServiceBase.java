@@ -43,15 +43,16 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
     GUIDUtil guidUtil;
 
     public PList<V> searchServiceResources(SearchFilter searchFilter) {
-        PList<V> retList      = new PList<V>();
-        List<V>  resourceList = new ArrayList<V>();
-
-        List<T> xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
+        PList<V> retList       = new PList<>();
+        List<V>  resourceList  = new ArrayList<>();
+        List<T>  xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
         for (T xResource : xResourceList) {
             V taggedRes = populateViewBean(xResource);
+
             resourceList.add(taggedRes);
         }
+
         retList.setList(resourceList);
         retList.setResultSize(resourceList.size());
         retList.setPageSize(searchFilter.getMaxRows());
@@ -72,6 +73,7 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
         xObj.setResourceSignature(vObj.getResourceSignature());
 
         XXService xService = daoMgr.getXXService().findByName(vObj.getServiceName());
+
         if (xService == null) {
             throw restErrorUtil.createRESTException("Error Populating XXServiceResource. No Service found with name: " + vObj.getServiceName(), MessageEnums.INVALID_INPUT_DATA);
         }
@@ -101,14 +103,13 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 
     Map<String, RangerPolicyResource> getServiceResourceElements(T xObj) {
         List<XXServiceResourceElement>                 resElementList   = daoMgr.getXXServiceResourceElement().findByResourceId(xObj.getId());
-        Map<String, RangerPolicy.RangerPolicyResource> resourceElements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+        Map<String, RangerPolicy.RangerPolicyResource> resourceElements = new HashMap<>();
 
         for (XXServiceResourceElement resElement : resElementList) {
-            List<String> resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
+            List<String>         resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
+            XXResourceDef        xResDef         = daoMgr.getXXResourceDef().getById(resElement.getResDefId());
+            RangerPolicyResource policyRes       = new RangerPolicyResource();
 
-            XXResourceDef xResDef = daoMgr.getXXResourceDef().getById(resElement.getResDefId());
-
-            RangerPolicyResource policyRes = new RangerPolicyResource();
             policyRes.setIsExcludes(resElement.getIsExcludes());
             policyRes.setIsRecursive(resElement.getIsRecursive());
             policyRes.setValues(resValueMapList);

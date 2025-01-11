@@ -40,16 +40,17 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
     public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
         VXAccessAuditList   returnList       = new VXAccessAuditList();
         List<VXAccessAudit> xAccessAuditList = new ArrayList<>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<T>             resultList       = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXAccessAudit : resultList) {
             VXAccessAudit vXAccessAudit = populateViewBean(gjXAccessAudit);
+
             xAccessAuditList.add(vXAccessAudit);
         }
 
         returnList.setVXAccessAudits(xAccessAuditList);
+
         return returnList;
     }
 
@@ -76,6 +77,7 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
         mObj.setSequenceNumber(vObj.getSequenceNumber());
         mObj.setEventCount(vObj.getEventCount());
         mObj.setEventDuration(vObj.getEventDuration());
+
         return mObj;
     }
 
@@ -102,6 +104,7 @@ public abstract class XAccessAuditServiceBase<T extends XXAccessAudit, V extends
         vObj.setSequenceNumber(mObj.getSequenceNumber());
         vObj.setEventCount(mObj.getEventCount());
         vObj.setEventDuration(mObj.getEventDuration());
+
         return vObj;
     }
 }

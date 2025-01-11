@@ -47,9 +47,7 @@ public class RangerPolicyWithAssignedIdService extends RangerPolicyServiceBase<X
     protected RangerPolicy populateViewBean(XXPolicyWithAssignedId xPolicy) {
         RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
 
-        RangerPolicy vPolicy = retriever.getPolicy(xPolicy.getId());
-
-        return vPolicy;
+        return retriever.getPolicy(xPolicy.getId());
     }
 
     @Override

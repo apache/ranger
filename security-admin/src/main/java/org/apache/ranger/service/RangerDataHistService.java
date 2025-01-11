@@ -46,27 +46,28 @@ public class RangerDataHistService {
     public static final String ACTION_CREATE = "Create";
     public static final String ACTION_UPDATE = "Update";
     public static final String ACTION_DELETE = "Delete";
+
     @Autowired
-    RESTErrorUtil    restErrorUtil;
+    RESTErrorUtil restErrorUtil;
+
     @Autowired
     RangerDaoManager daoMgr;
+
     @Autowired
-    JSONUtil         jsonUtil;
+    JSONUtil jsonUtil;
 
     public void createObjectDataHistory(RangerBaseModelObject baseModelObj, String action) {
         if (baseModelObj == null || action == null) {
             throw restErrorUtil.createRESTException("Error while creating DataHistory. " + "Object or Action can not be null.", MessageEnums.DATA_NOT_FOUND);
         }
 
-        Integer classType  = null;
-        String  objectName = null;
-        String  content    = null;
-
-        Long   objectId    = baseModelObj.getId();
-        String objectGuid  = baseModelObj.getGuid();
-        Date   currentDate = DateUtil.getUTCDate();
-
-        XXDataHist xDataHist = new XXDataHist();
+        Integer    classType   = null;
+        String     objectName  = null;
+        String     content     = null;
+        Long       objectId    = baseModelObj.getId();
+        String     objectGuid  = baseModelObj.getGuid();
+        Date       currentDate = DateUtil.getUTCDate();
+        XXDataHist xDataHist   = new XXDataHist();
 
         xDataHist.setObjectId(baseModelObj.getId());
         xDataHist.setObjectGuid(objectGuid);
@@ -78,19 +79,24 @@ public class RangerDataHistService {
 
         if (baseModelObj instanceof RangerServiceDef) {
             RangerServiceDef serviceDef = (RangerServiceDef) baseModelObj;
+
             objectName = serviceDef.getName();
             classType  = AppConstants.CLASS_TYPE_XA_SERVICE_DEF;
             content    = jsonUtil.writeObjectAsString(serviceDef);
         } else if (baseModelObj instanceof RangerService) {
             RangerService service = (RangerService) baseModelObj;
+
             objectName = service.getName();
             classType  = AppConstants.CLASS_TYPE_XA_SERVICE;
             content    = jsonUtil.writeObjectAsString(service);
         } else if (baseModelObj instanceof RangerPolicy) {
             RangerPolicy policy = (RangerPolicy) baseModelObj;
+
             objectName = policy.getName();
             classType  = AppConstants.CLASS_TYPE_RANGER_POLICY;
+
             policy.setServiceType(policy.getServiceType());
+
             content = jsonUtil.writeObjectAsString(policy);
         } else if (baseModelObj instanceof RangerDataset) {
             RangerDataset dataset = (RangerDataset) baseModelObj;
@@ -133,7 +139,8 @@ public class RangerDataHistService {
         xDataHist.setObjectClassType(classType);
         xDataHist.setObjectName(objectName);
         xDataHist.setContent(content);
-        xDataHist = daoMgr.getXXDataHist().create(xDataHist);
+
+        daoMgr.getXXDataHist().create(xDataHist);
 
         if (ACTION_UPDATE.equalsIgnoreCase(action) || ACTION_DELETE.equalsIgnoreCase(action)) {
             XXDataHist prevHist = daoMgr.getXXDataHist().findLatestByObjectClassTypeAndObjectId(classType, objectId);
@@ -145,7 +152,8 @@ public class RangerDataHistService {
             prevHist.setUpdateTime(currentDate);
             prevHist.setToTime(currentDate);
             prevHist.setObjectName(objectName);
-            prevHist = daoMgr.getXXDataHist().update(prevHist);
+
+            daoMgr.getXXDataHist().update(prevHist);
         }
     }
 }

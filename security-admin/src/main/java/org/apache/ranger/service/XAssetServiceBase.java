@@ -54,10 +54,12 @@ public abstract class XAssetServiceBase<T extends XXAsset, V extends VXAsset> ex
         // Iterate over the result list and create the return list
         for (T gjXAsset : resultList) {
             VXAsset vXAsset = populateViewBean(gjXAsset);
+
             xAssetList.add(vXAsset);
         }
 
         returnList.setVXAssets(xAssetList);
+
         return returnList;
     }
 
@@ -69,6 +71,7 @@ public abstract class XAssetServiceBase<T extends XXAsset, V extends VXAsset> ex
         mObj.setAssetType(vObj.getAssetType());
         mObj.setConfig(vObj.getConfig());
         mObj.setSupportNative(vObj.isSupportNative());
+
         return mObj;
     }
 
@@ -80,6 +83,7 @@ public abstract class XAssetServiceBase<T extends XXAsset, V extends VXAsset> ex
         vObj.setAssetType(mObj.getAssetType());
         vObj.setConfig(mObj.getConfig());
         vObj.setSupportNative(mObj.isSupportNative());
+
         return vObj;
     }
 }

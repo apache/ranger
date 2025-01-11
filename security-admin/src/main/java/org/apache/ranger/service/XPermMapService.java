@@ -50,6 +50,7 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
     public String getGroupName(Long groupId) {
         if (groupId != null && groupId != 0) {
             VXGroup vXGroup = xGroupService.readResource(groupId);
+
             return vXGroup.getName();
         } else {
             return null;
@@ -59,6 +60,7 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
     public String getUserName(Long userId) {
         if (userId != null && userId != 0) {
             VXUser vXUser = xUserService.readResource(userId);
+
             return vXUser.getName();
         } else {
             return null;
@@ -68,17 +70,21 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
     @Override
     public VXPermMap populateViewBean(XXPermMap xXPermMap) {
         VXPermMap map = super.populateViewBean(xXPermMap);
+
         if (map.getPermFor() == AppConstants.XA_PERM_FOR_GROUP) {
             String groupName = getGroupName(map.getGroupId());
+
             if (groupName != null) {
                 map.setGroupName(groupName);
             }
         } else if (map.getPermFor() == AppConstants.XA_PERM_FOR_USER) {
             String username = getUserName(map.getUserId());
+
             if (username != null) {
                 map.setUserName(username);
             }
         }
+
         return map;
     }
 
@@ -95,48 +101,58 @@ public class XPermMapService extends XPermMapServiceBase<XXPermMap, VXPermMap> {
     @Override
     protected XXPermMap mapViewToEntityBean(VXPermMap vObj, XXPermMap mObj, int operationContext) {
         XXPermMap ret = null;
+
         if (vObj != null && mObj != null) {
             ret = super.mapViewToEntityBean(vObj, mObj, operationContext);
-            XXPortalUser xXPortalUser = null;
+
             if (ret.getAddedByUserId() == null || ret.getAddedByUserId() == 0) {
                 if (!stringUtil.isEmpty(vObj.getOwner())) {
-                    xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
+
                     if (xXPortalUser != null) {
                         ret.setAddedByUserId(xXPortalUser.getId());
                     }
                 }
             }
+
             if (ret.getUpdatedByUserId() == null || ret.getUpdatedByUserId() == 0) {
                 if (!stringUtil.isEmpty(vObj.getUpdatedBy())) {
-                    xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
+
                     if (xXPortalUser != null) {
                         ret.setUpdatedByUserId(xXPortalUser.getId());
                     }
                 }
             }
         }
+
         return ret;
     }
 
     @Override
     protected VXPermMap mapEntityToViewBean(VXPermMap vObj, XXPermMap mObj) {
         VXPermMap ret = null;
+
         if (mObj != null && vObj != null) {
             ret = super.mapEntityToViewBean(vObj, mObj);
-            XXPortalUser xXPortalUser = null;
+
             if (stringUtil.isEmpty(ret.getOwner())) {
-                xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+
                 if (xXPortalUser != null) {
                     ret.setOwner(xXPortalUser.getLoginId());
                 }
             }
+
             if (stringUtil.isEmpty(ret.getUpdatedBy())) {
-                xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+
                 if (xXPortalUser != null) {
                     ret.setUpdatedBy(xXPortalUser.getLoginId());
                 }
             }
         }
+
         return ret;
     }
 }

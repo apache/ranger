@@ -54,6 +54,7 @@ public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V 
     protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
         xObj.setName(vObj.getName());
         xObj.setDescription(vObj.getDescription());
+
         return xObj;
     }
 
@@ -64,7 +65,9 @@ public abstract class RangerSecurityZoneServiceBase<T extends XXSecurityZone, V 
         } else {
             vObj.setName(xObj.getName());
         }
+
         vObj.setDescription(xObj.getDescription());
+
         return vObj;
     }
 }

@@ -72,15 +72,15 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
     }
 
     public RangerServiceList searchRangerServices(SearchFilter searchFilter) {
-        RangerServiceList retList = new RangerServiceList();
+        RangerServiceList retList    = new RangerServiceList();
+        int               startIndex = searchFilter.getStartIndex();
+        int               pageSize   = searchFilter.getMaxRows();
 
-        int startIndex = searchFilter.getStartIndex();
-        int pageSize   = searchFilter.getMaxRows();
         searchFilter.setStartIndex(0);
         searchFilter.setMaxRows(Integer.MAX_VALUE);
 
         List<T> xSvcList          = searchResources(searchFilter, searchFields, sortFields, retList);
-        List<T> permittedServices = new ArrayList<T>();
+        List<T> permittedServices = new ArrayList<>();
 
         for (T xSvc : xSvcList) {
             if (bizUtil.hasAccess(xSvc, null)) {
@@ -111,6 +111,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 
         Long   tagServiceId   = null;
         String tagServiceName = vObj.getTagService();
+
         if (!StringUtils.isEmpty(tagServiceName)) {
             XXService xTagService = daoMgr.getXXService().findByName(tagServiceName);
 
@@ -125,11 +126,14 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
         xObj.setName(vObj.getName());
         xObj.setDisplayName(vObj.getDisplayName());
         xObj.setTagService(tagServiceId);
+
         if (operationContext == OPERATION_CREATE_CONTEXT) {
             xObj.setTagVersion(vObj.getTagVersion());
         }
+
         xObj.setDescription(vObj.getDescription());
         xObj.setIsEnabled(vObj.getIsEnabled());
+
         return xObj;
     }
 
@@ -137,6 +141,7 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
     protected V mapEntityToViewBean(V vObj, T xObj) {
         XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xObj.getType());
         XXService    xTagService = xObj.getTagService() != null ? daoMgr.getXXService().getById(xObj.getTagService()) : null;
+
         vObj.setType(xServiceDef.getName());
         vObj.setGuid(xObj.getGuid());
         vObj.setVersion(xObj.getVersion());
@@ -144,7 +149,9 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
         vObj.setDisplayName(xObj.getDisplayName());
         vObj.setDescription(xObj.getDescription());
         vObj.setTagService(xTagService != null ? xTagService.getName() : null);
+
         XXServiceVersionInfo versionInfoObj = daoMgr.getXXServiceVersionInfo().findByServiceId(xObj.getId());
+
         if (versionInfoObj != null) {
             vObj.setPolicyVersion(versionInfoObj.getPolicyVersion());
             vObj.setTagVersion(versionInfoObj.getTagVersion());
@@ -156,16 +163,19 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
             vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
             vObj.setTagUpdateTime(xObj.getTagUpdateTime());
         }
+
         vObj.setIsEnabled(xObj.getIsenabled());
+
         return vObj;
     }
 
     private void populatePageList(List<T> xxObjList, int startIndex, int pageSize, RangerServiceList retList) {
-        List<RangerService> onePageList = new ArrayList<RangerService>();
+        List<RangerService> onePageList = new ArrayList<>();
 
         for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
             onePageList.add(populateViewBean(xxObjList.get(i)));
         }
+
         retList.setServices(onePageList);
         retList.setStartIndex(startIndex);
         retList.setPageSize(pageSize);

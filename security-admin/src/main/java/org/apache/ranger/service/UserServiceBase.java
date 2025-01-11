@@ -40,16 +40,17 @@ public abstract class UserServiceBase<T extends XXPortalUser, V extends VXPortal
     public VXPortalUserList searchUsers(SearchCriteria searchCriteria) {
         VXPortalUserList   returnList = new VXPortalUserList();
         List<VXPortalUser> userList   = new ArrayList<>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<T>            resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjUser : resultList) {
             VXPortalUser vUser = populateViewBean(gjUser);
+
             userList.add(vUser);
         }
 
         returnList.setVXPortalUsers(userList);
+
         return returnList;
     }
 

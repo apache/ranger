@@ -136,6 +136,7 @@ public class RangerGdsDataShareInDatasetService extends RangerGdsBaseModelServic
         xObj.setAdditionalInfo(JsonUtils.mapToJson(vObj.getAdditionalInfo()));
 
         final XXPortalUser user = xxPortalUserDao.findByLoginId(vObj.getApprover());
+
         xObj.setApproverId(user == null ? null : user.getId());
 
         return xObj;

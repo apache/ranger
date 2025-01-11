@@ -37,6 +37,7 @@ public class RangerPolicyLabelsService<T extends XXPolicyLabel, V extends Ranger
 
     public RangerPolicyLabelsService() {
         super();
+
         searchFields.add(new SearchField(SearchFilter.POLICY_LABEL, "obj.policyLabel", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
         sortFields.add(new SortField(SearchFilter.POLICY_LABEL_ID, "obj.id", true, SORT_ORDER.ASC));
     }

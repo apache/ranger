@@ -56,10 +56,12 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup> ex
         // Iterate over the result list and create the return list
         for (T gjXGroup : resultList) {
             VXGroup vXGroup = populateViewBean(gjXGroup);
+
             xGroupList.add(vXGroup);
         }
 
         returnList.setVXGroups(xGroupList);
+
         return returnList;
     }
 
@@ -93,6 +95,7 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup> ex
         mObj.setGroupSource(vObj.getGroupSource());
         mObj.setOtherAttributes(vObj.getOtherAttributes());
         mObj.setSyncSource(vObj.getSyncSource());
+
         return mObj;
     }
 
@@ -106,6 +109,7 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup> ex
         vObj.setGroupSource(mObj.getGroupSource());
         vObj.setOtherAttributes(mObj.getOtherAttributes());
         vObj.setSyncSource(mObj.getSyncSource());
+
         return vObj;
     }
 }

@@ -78,9 +78,8 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public List<RangerTagResourceMap> getByTagId(Long tagId) {
-        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
-
-        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagId(tagId);
+        List<RangerTagResourceMap> ret               = new ArrayList<>();
+        List<XXTagResourceMap>     xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagId(tagId);
 
         if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
             for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
@@ -94,9 +93,8 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public List<RangerTagResourceMap> getByTagGuid(String tagGuid) {
-        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
-
-        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagGuid(tagGuid);
+        List<RangerTagResourceMap> ret               = new ArrayList<>();
+        List<XXTagResourceMap>     xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByTagGuid(tagGuid);
 
         if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
             for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
@@ -110,9 +108,8 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public List<RangerTagResourceMap> getByResourceId(Long resourceId) {
-        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
-
-        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceId(resourceId);
+        List<RangerTagResourceMap> ret               = new ArrayList<>();
+        List<XXTagResourceMap>     xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceId(resourceId);
 
         if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
             for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
@@ -126,15 +123,12 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public List<Long> getTagIdsForResourceId(Long resourceId) {
-        List<Long> ret = daoMgr.getXXTagResourceMap().findTagIdsForResourceId(resourceId);
-
-        return ret;
+        return daoMgr.getXXTagResourceMap().findTagIdsForResourceId(resourceId);
     }
 
     public List<RangerTagResourceMap> getByResourceGuid(String resourceGuid) {
-        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
-
-        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceGuid(resourceGuid);
+        List<RangerTagResourceMap> ret               = new ArrayList<>();
+        List<XXTagResourceMap>     xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByResourceGuid(resourceGuid);
 
         if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
             for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {
@@ -148,9 +142,8 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public RangerTagResourceMap getByGuid(String guid) {
-        RangerTagResourceMap ret = null;
-
-        XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByGuid(guid);
+        RangerTagResourceMap ret              = null;
+        XXTagResourceMap     xxTagResourceMap = daoMgr.getXXTagResourceMap().findByGuid(guid);
 
         if (xxTagResourceMap != null) {
             ret = populateViewBean(xxTagResourceMap);
@@ -160,9 +153,8 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public RangerTagResourceMap getByTagAndResourceId(Long tagId, Long resourceId) {
-        RangerTagResourceMap ret = null;
-
-        XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceId(tagId, resourceId);
+        RangerTagResourceMap ret              = null;
+        XXTagResourceMap     xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceId(tagId, resourceId);
 
         if (xxTagResourceMap != null) {
             ret = populateViewBean(xxTagResourceMap);
@@ -172,9 +164,8 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public RangerTagResourceMap getByTagAndResourceGuid(String tagGuid, String resourceGuid) {
-        RangerTagResourceMap ret = null;
-
-        XXTagResourceMap xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceGuid(tagGuid, resourceGuid);
+        RangerTagResourceMap ret              = null;
+        XXTagResourceMap     xxTagResourceMap = daoMgr.getXXTagResourceMap().findByTagAndResourceGuid(tagGuid, resourceGuid);
 
         if (xxTagResourceMap != null) {
             ret = populateViewBean(xxTagResourceMap);
@@ -184,9 +175,8 @@ public class RangerTagResourceMapService extends RangerTagResourceMapServiceBase
     }
 
     public List<RangerTagResourceMap> getTagResourceMapsByServiceId(Long serviceId) {
-        List<RangerTagResourceMap> ret = new ArrayList<RangerTagResourceMap>();
-
-        List<XXTagResourceMap> xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByServiceId(serviceId);
+        List<RangerTagResourceMap> ret               = new ArrayList<>();
+        List<XXTagResourceMap>     xxTagResourceMaps = daoMgr.getXXTagResourceMap().findByServiceId(serviceId);
 
         if (CollectionUtils.isNotEmpty(xxTagResourceMaps)) {
             for (XXTagResourceMap xxTagResourceMap : xxTagResourceMaps) {

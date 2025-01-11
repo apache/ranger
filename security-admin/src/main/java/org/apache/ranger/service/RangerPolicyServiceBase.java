@@ -138,28 +138,37 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
     @Override
     protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
         XXService xService = daoMgr.getXXService().findByName(vObj.getService());
+
         if (xService == null) {
             throw restErrorUtil.createRESTException("No corresponding service found for policyName: " + vObj.getName() + "Service Not Found : " + vObj.getService(), MessageEnums.INVALID_INPUT_DATA);
         }
+
         Long zoneId = convertZoneNameToZoneId(vObj.getZoneName(), vObj);
+
         xObj.setZoneId(zoneId);
 
         XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
+
         if (xServiceDef != null) {
             vObj.setServiceType(xServiceDef.getName());
         }
 
         String guid = vObj.getGuid();
+
         if (StringUtils.isEmpty(guid)) {
             guid = guidUtil.genGUID();
             vObj.setGuid(guid);
         }
+
         Integer policyPriority = vObj.getPolicyPriority();
+
         if (policyPriority == null) {
             policyPriority = RangerPolicy.POLICY_PRIORITY_NORMAL;
             vObj.setPolicyPriority(policyPriority);
         }
+
         Integer policyType = vObj.getPolicyType();
+
         if (policyType == null) {
             policyType = RangerPolicy.POLICY_TYPE_ACCESS;
             vObj.setPolicyType(policyType);
@@ -187,7 +196,6 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
         }
 
         xObj.setOptions(JsonUtils.mapToJson(options));
-
         xObj.setPolicyText(JsonUtils.objectToJson(vObj));
 
         return xObj;
@@ -197,6 +205,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
     protected V mapEntityToViewBean(V vObj, T xObj) {
         XXService    xService    = daoMgr.getXXService().getById(xObj.getService());
         XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
+
         vObj.setGuid(xObj.getGuid());
         vObj.setVersion(xObj.getVersion());
         vObj.setService(xService.getName());
@@ -208,7 +217,9 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
         vObj.setResourceSignature(xObj.getResourceSignature());
         vObj.setIsEnabled(xObj.getIsEnabled());
         vObj.setIsAuditEnabled(xObj.getIsAuditEnabled());
+
         String zoneName = convertZoneIdToZoneName(xObj.getZoneId(), vObj);
+
         vObj.setZoneName(zoneName);
 
         String policyText = xObj.getPolicyText();
@@ -228,10 +239,13 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
         if (StringUtils.isEmpty(zoneName)) {
             return RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
         }
+
         XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
+
         if (zone == null) {
             throw restErrorUtil.createRESTException("No corresponding zone found for policyName: " + vObj.getName() + "Zone Not Found : " + zoneName, MessageEnums.INVALID_INPUT_DATA);
         }
+
         return zone.getId();
     }
 
@@ -239,13 +253,17 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
         if (zoneId == null) {
             throw restErrorUtil.createRESTException("No corresponding zone found for policyName: " + vObj.getName() + "Zone Not Found : " + zoneId, MessageEnums.INVALID_INPUT_DATA);
         }
+
         if (zoneId.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
             return StringUtils.EMPTY;
         }
+
         XXSecurityZone zone = daoMgr.getXXSecurityZoneDao().findByZoneId(zoneId);
+
         if (zone == null) {
             throw restErrorUtil.createRESTException("No corresponding zone found for policyName: " + vObj.getName() + "Zone Not Found : " + zoneId, MessageEnums.INVALID_INPUT_DATA);
         }
+
         return zone.getName();
     }
 }

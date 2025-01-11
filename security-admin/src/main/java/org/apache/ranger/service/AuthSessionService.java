@@ -55,10 +55,12 @@ public class AuthSessionService extends AbstractBaseResourceService<XXAuthSessio
         // Iterate over the result list and create the return list
         for (XXAuthSession gjObj : resultList) {
             VXAuthSession viewObj = populateViewBean(gjObj);
+
             viewList.add(viewObj);
         }
 
         returnList.setVXAuthSessions(viewList);
+
         return returnList;
     }
 
@@ -75,6 +77,7 @@ public class AuthSessionService extends AbstractBaseResourceService<XXAuthSessio
     @Override
     protected XXAuthSession mapViewToEntityBean(VXAuthSession vXAuthSession, XXAuthSession t, int operationContext) {
         logger.error("This method is not required and shouldn't be called.", new Throwable().fillInStackTrace());
+
         return null;
     }
 
@@ -87,7 +90,6 @@ public class AuthSessionService extends AbstractBaseResourceService<XXAuthSessio
         viewObj.setDeviceType(resource.getDeviceType());
         viewObj.setId(resource.getId());
         viewObj.setRequestIP(resource.getRequestIP());
-
         viewObj.setRequestUserAgent(resource.getRequestUserAgent());
 
         if (resource.getUserId() != null) {

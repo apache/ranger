@@ -42,11 +42,8 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
     public XGroupService() {
         searchFields.add(new SearchField("name", "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("groupSource", "obj.groupSource", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-
         searchFields.add(new SearchField("isVisible", "obj.isVisible", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-
         searchFields.add(new SearchField("userId", "groupUser.userId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXGroupUser groupUser", "obj.id = groupUser.parentGroupId"));
-
         searchFields.add(new SearchField("syncSource", "obj.syncSource", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
         createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
@@ -60,6 +57,7 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
         if (xxGroup == null) {
             throw restErrorUtil.createRESTException(groupName + " is Not Found", MessageEnums.DATA_NOT_FOUND);
         }
+
         return super.populateViewBean(xxGroup);
     }
 
@@ -73,46 +71,58 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
         }
 
         xxGroup = mapViewToEntityBean(vxGroup, xxGroup, 0);
+
         XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
+
         if (xXPortalUser != null) {
             xxGroup.setAddedByUserId(createdByUserId);
             xxGroup.setUpdatedByUserId(createdByUserId);
         }
+
         if (groupExists) {
             getDao().update(xxGroup);
         } else {
             getDao().create(xxGroup);
         }
+
         xxGroup = daoManager.getXXGroup().findByGroupName(vxGroup.getName());
         vxGroup = postCreate(xxGroup);
+
         return vxGroup;
     }
 
     public VXGroup readResourceWithOutLogin(Long id) {
         XXGroup resource = getDao().getById(id);
+
         if (resource == null) {
             // Returns code 400 with DATA_NOT_FOUND as the error message
             throw restErrorUtil.createRESTException(getResourceName() + " not found", MessageEnums.DATA_NOT_FOUND, id, null, "preRead: " + id + " not found.");
         }
 
         VXGroup view = populateViewBean(resource);
+
         if (view != null) {
             view.setGroupSource(resource.getGroupSource());
         }
+
         return view;
     }
 
     public Map<Long, XXGroup> getXXGroupIdXXGroupMap() {
         Map<Long, XXGroup> xXGroupMap = new HashMap<>();
+
         try {
             List<XXGroup> xXGroupList = daoManager.getXXGroup().getAll();
+
             if (!CollectionUtils.isEmpty(xXGroupList)) {
                 for (XXGroup xXGroup : xXGroupList) {
                     xXGroupMap.put(xXGroup.getId(), xXGroup);
                 }
             }
         } catch (Exception ex) {
+            // ignore
         }
+
         return xXGroupMap;
     }
 
@@ -131,13 +141,16 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
     @Override
     public VXGroup populateViewBean(XXGroup xGroup) {
         VXGroup vObj = super.populateViewBean(xGroup);
+
         vObj.setIsVisible(xGroup.getIsVisible());
+
         return vObj;
     }
 
     @Override
     protected void validateForCreate(VXGroup vObj) {
         XXGroup xxGroup = daoManager.getXXGroup().findByGroupName(vObj.getName());
+
         if (xxGroup != null) {
             throw restErrorUtil.createRESTException("XGroup already exists", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }

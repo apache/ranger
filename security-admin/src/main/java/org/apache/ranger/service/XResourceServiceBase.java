@@ -62,16 +62,17 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
     public VXResourceList searchXResources(SearchCriteria searchCriteria) {
         VXResourceList   returnList    = new VXResourceList();
         List<VXResource> xResourceList = new ArrayList<>();
-
-        List<T> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        List<T>          resultList    = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
         // Iterate over the result list and create the return list
         for (T gjXResource : resultList) {
             VXResource vXResource = populateViewBean(gjXResource);
+
             xResourceList.add(vXResource);
         }
 
         returnList.setVXResources(xResourceList);
+
         return returnList;
     }
 
@@ -110,6 +111,7 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
         mObj.setPolicyName(vObj.getPolicyName());
         mObj.setTopologies(vObj.getTopologies());
         mObj.setServices(vObj.getServices());
+
         return mObj;
     }
 
@@ -135,6 +137,7 @@ public abstract class XResourceServiceBase<T extends XXResource, V extends VXRes
         vObj.setPolicyName(mObj.getPolicyName());
         vObj.setTopologies(mObj.getTopologies());
         vObj.setServices(mObj.getServices());
+
         return vObj;
     }
 }

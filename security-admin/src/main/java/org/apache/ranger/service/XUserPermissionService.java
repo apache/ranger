@@ -42,11 +42,12 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
 
     public List<VXUserPermission> getPopulatedVXUserPermissionList(List<XXUserPermission> xuserPermissionList, Map<Long, Object[]> xXPortalUserIdXXUserMap, VXModuleDef vModuleDef) {
         List<VXUserPermission> vXUserPermissionList = new ArrayList<>();
-        Object[]               xXUser               = null;
+
         for (XXUserPermission xuserPermission : xuserPermissionList) {
             if (xXPortalUserIdXXUserMap.containsKey(xuserPermission.getUserId())) {
-                xXUser = xXPortalUserIdXXUserMap.get(xuserPermission.getUserId());
+                Object[]         xXUser     = xXPortalUserIdXXUserMap.get(xuserPermission.getUserId());
                 VXUserPermission vXUserPerm = new VXUserPermission();
+
                 vXUserPerm.setId(xuserPermission.getId());
                 vXUserPerm.setUserId((Long) xXUser[1]);
                 vXUserPerm.setModuleId(xuserPermission.getModuleId());
@@ -56,22 +57,25 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
                 vXUserPerm.setModuleName(vModuleDef.getModule());
                 vXUserPerm.setLoginId((String) xXUser[2]);
                 vXUserPerm.setUserName((String) xXUser[2]);
+
                 vXUserPermissionList.add(vXUserPerm);
             }
         }
+
         return vXUserPermissionList;
     }
 
     @Override
     public VXUserPermission populateViewBean(XXUserPermission xObj) {
-        VXUserPermission vObj = super.populateViewBean(xObj);
+        VXUserPermission vObj        = super.populateViewBean(xObj);
+        XXPortalUser     xPortalUser = daoManager.getXXPortalUser().getById(xObj.getUserId());
 
-        XXPortalUser xPortalUser = daoManager.getXXPortalUser().getById(xObj.getUserId());
         if (xPortalUser != null) {
             vObj.setUserName(xPortalUser.getLoginId());
         }
 
         XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(xObj.getModuleId());
+
         if (xModuleDef != null) {
             vObj.setModuleName(xModuleDef.getModule());
         }
@@ -82,12 +86,15 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
     @Override
     public Map<Long, VXUserPermission> convertVListToVMap(List<VXUserPermission> vObjList) {
         Map<Long, VXUserPermission> ret = new HashMap<>();
+
         if (vObjList == null) {
             return ret;
         }
+
         for (VXUserPermission vObj : vObjList) {
             ret.put(vObj.getUserId(), vObj);
         }
+
         return ret;
     }
 

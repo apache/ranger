@@ -45,7 +45,7 @@ import java.util.Map;
 public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     private static final Logger logger = LoggerFactory.getLogger(RangerTagService.class);
 
-    private static final TypeReference subsumedDataType = new TypeReference<Map<String, String>>() {};
+    private static final TypeReference<Map<String, String>> subsumedDataType = new TypeReference<Map<String, String>>() {};
 
     public RangerTagService() {
         searchFields.add(new SearchField(SearchFilter.TAG_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
@@ -65,9 +65,8 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     }
 
     public RangerTag getTagByGuid(String guid) {
-        RangerTag ret = null;
-
-        XXTag xxTag = daoMgr.getXXTag().findByGuid(guid);
+        RangerTag ret   = null;
+        XXTag     xxTag = daoMgr.getXXTag().findByGuid(guid);
 
         if (xxTag != null) {
             ret = populateViewBean(xxTag);
@@ -77,9 +76,8 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     }
 
     public List<RangerTag> getTagsByType(String name) {
-        List<RangerTag> ret = new ArrayList<>();
-
-        List<XXTag> xxTags = daoMgr.getXXTag().findByName(name);
+        List<RangerTag> ret    = new ArrayList<>();
+        List<XXTag>     xxTags = daoMgr.getXXTag().findByName(name);
 
         if (CollectionUtils.isNotEmpty(xxTags)) {
             for (XXTag xxTag : xxTags) {
@@ -93,15 +91,15 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     }
 
     public List<RangerTag> getTagsForResourceId(Long resourceId) {
-        List<RangerTag> ret = new ArrayList<>();
-
+        List<RangerTag>   ret                   = new ArrayList<>();
         XXServiceResource serviceResourceEntity = daoMgr.getXXServiceResource().getById(resourceId);
 
         if (serviceResourceEntity != null) {
             String tagsText = serviceResourceEntity.getTags();
+
             if (StringUtils.isNotEmpty(tagsText)) {
                 try {
-                    ret = (List<RangerTag>) JsonUtils.jsonToObject(tagsText, RangerServiceResourceService.duplicatedDataType);
+                    ret = JsonUtils.jsonToObject(tagsText, RangerServiceResourceService.duplicatedDataType);
                 } catch (JsonProcessingException e) {
                     logger.error("Error occurred while processing json", e);
                 }
@@ -112,15 +110,15 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     }
 
     public List<RangerTag> getTagsForResourceGuid(String resourceGuid) {
-        List<RangerTag> ret = new ArrayList<>();
-
+        List<RangerTag>   ret                   = new ArrayList<>();
         XXServiceResource serviceResourceEntity = daoMgr.getXXServiceResource().findByGuid(resourceGuid);
 
         if (serviceResourceEntity != null) {
             String tagsText = serviceResourceEntity.getTags();
+
             if (StringUtils.isNotEmpty(tagsText)) {
                 try {
-                    ret = (List<RangerTag>) JsonUtils.jsonToObject(tagsText, RangerServiceResourceService.duplicatedDataType);
+                    ret = JsonUtils.jsonToObject(tagsText, RangerServiceResourceService.duplicatedDataType);
                 } catch (JsonProcessingException e) {
                     logger.error("Error occurred while processing json", e);
                 }
@@ -131,9 +129,8 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     }
 
     public List<RangerTag> getTagsByServiceId(Long serviceId) {
-        List<RangerTag> ret = new ArrayList<>();
-
-        List<XXTag> xxTags = daoMgr.getXXTag().findByServiceId(serviceId);
+        List<RangerTag> ret    = new ArrayList<>();
+        List<XXTag>     xxTags = daoMgr.getXXTag().findByServiceId(serviceId);
 
         if (CollectionUtils.isNotEmpty(xxTags)) {
             for (XXTag xxTag : xxTags) {
@@ -190,21 +187,26 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
     @Override
     protected XXTag mapViewToEntityBean(RangerTag vObj, XXTag xObj, int operationContext) {
         XXTag ret = super.mapViewToEntityBean(vObj, xObj, operationContext);
+
         ret.setTagAttrs(JsonUtils.mapToJson(vObj.getAttributes()));
+
         return ret;
     }
 
     @Override
     protected RangerTag mapEntityToViewBean(RangerTag vObj, XXTag xObj) {
         RangerTag ret = super.mapEntityToViewBean(vObj, xObj);
+
         if (StringUtils.isNotEmpty(xObj.getTagAttrs())) {
             try {
-                Map<String, String> attributes = (Map<String, String>) JsonUtils.jsonToObject(xObj.getTagAttrs(), RangerTagService.subsumedDataType);
+                Map<String, String> attributes = JsonUtils.jsonToObject(xObj.getTagAttrs(), RangerTagService.subsumedDataType);
+
                 ret.setAttributes(attributes);
             } catch (JsonProcessingException e) {
                 logger.error("Error occurred while processing json", e);
             }
         }
+
         return ret;
     }
 }

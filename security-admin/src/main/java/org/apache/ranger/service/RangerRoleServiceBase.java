@@ -64,9 +64,11 @@ public abstract class RangerRoleServiceBase<T extends XXRole, V extends RangerRo
         xObj.setDescription(vObj.getDescription());
 
         Map<String, Object> options = vObj.getOptions();
+
         if (options == null) {
             options = new HashMap<>();
         }
+
         xObj.setOptions(JsonUtils.mapToJson(options));
 
         return xObj;

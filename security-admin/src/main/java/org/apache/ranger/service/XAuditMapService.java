@@ -48,48 +48,58 @@ public class XAuditMapService extends XAuditMapServiceBase<XXAuditMap, VXAuditMa
     @Override
     protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int operationContext) {
         XXAuditMap ret = null;
+
         if (vObj != null && mObj != null) {
             ret = super.mapViewToEntityBean(vObj, mObj, operationContext);
-            XXPortalUser xXPortalUser = null;
+
             if (ret.getAddedByUserId() == null || ret.getAddedByUserId() == 0) {
                 if (!stringUtil.isEmpty(vObj.getOwner())) {
-                    xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
+
                     if (xXPortalUser != null) {
                         ret.setAddedByUserId(xXPortalUser.getId());
                     }
                 }
             }
+
             if (ret.getUpdatedByUserId() == null || ret.getUpdatedByUserId() == 0) {
                 if (!stringUtil.isEmpty(vObj.getUpdatedBy())) {
-                    xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
+
                     if (xXPortalUser != null) {
                         ret.setUpdatedByUserId(xXPortalUser.getId());
                     }
                 }
             }
         }
+
         return ret;
     }
 
     @Override
     protected VXAuditMap mapEntityToViewBean(VXAuditMap vObj, XXAuditMap mObj) {
         VXAuditMap ret = null;
+
         if (mObj != null && vObj != null) {
             ret = super.mapEntityToViewBean(vObj, mObj);
-            XXPortalUser xXPortalUser = null;
+
             if (stringUtil.isEmpty(ret.getOwner())) {
-                xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+
                 if (xXPortalUser != null) {
                     ret.setOwner(xXPortalUser.getLoginId());
                 }
             }
+
             if (stringUtil.isEmpty(ret.getUpdatedBy())) {
-                xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+
                 if (xXPortalUser != null) {
                     ret.setUpdatedBy(xXPortalUser.getLoginId());
                 }
             }
         }
+
         return ret;
     }
 }

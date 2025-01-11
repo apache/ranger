@@ -63,10 +63,12 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser> exten
         for (XXUser gjXUser : resultList) {
             @SuppressWarnings("unchecked")
             VXUser vXUser = populateViewBean((T) gjXUser);
+
             xUserList.add(vXUser);
         }
 
         returnList.setVXUsers(xUserList);
+
         return returnList;
     }
 
@@ -99,6 +101,7 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser> exten
         mObj.setCredStoreId(vObj.getCredStoreId());
         mObj.setOtherAttributes(vObj.getOtherAttributes());
         mObj.setSyncSource(vObj.getSyncSource());
+
         return mObj;
     }
 
@@ -111,6 +114,7 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser> exten
         vObj.setCredStoreId(mObj.getCredStoreId());
         vObj.setOtherAttributes(mObj.getOtherAttributes());
         vObj.setSyncSource(mObj.getSyncSource());
+
         return vObj;
     }
 }
