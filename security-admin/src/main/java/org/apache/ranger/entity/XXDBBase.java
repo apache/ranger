@@ -52,7 +52,6 @@ public abstract class XXDBBase implements java.io.Serializable {
      * Date/Time creation of this user.
      * <ul>
      * </ul>
-     *
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "CREATE_TIME")
@@ -62,7 +61,6 @@ public abstract class XXDBBase implements java.io.Serializable {
      * Date value.
      * <ul>
      * </ul>
-     *
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "UPDATE_TIME")
@@ -72,7 +70,6 @@ public abstract class XXDBBase implements java.io.Serializable {
      * Added by
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "ADDED_BY_ID")
     protected Long addedByUserId;
@@ -81,7 +78,6 @@ public abstract class XXDBBase implements java.io.Serializable {
      * Last updated by
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "UPD_BY_ID")
     protected Long updatedByUserId;
@@ -118,6 +114,7 @@ public abstract class XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>id</b>
+     *
      * @return Long - value of member attribute <b>id</b>.
      */
     public abstract Long getId();
@@ -125,12 +122,14 @@ public abstract class XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>id</b>.
      * You cannot set null to the attribute.
+     *
      * @param id Value to set member attribute <b>id</b>
      */
     public abstract void setId(Long id);
 
     /**
      * Returns the value for the member attribute <b>createTime</b>
+     *
      * @return Date - value of member attribute <b>createTime</b>.
      */
     public Date getCreateTime() {
@@ -140,6 +139,7 @@ public abstract class XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>createTime</b>.
      * You cannot set null to the attribute.
+     *
      * @param createTime Value to set member attribute <b>createTime</b>
      */
     public void setCreateTime(Date createTime) {
@@ -148,6 +148,7 @@ public abstract class XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>updateTime</b>
+     *
      * @return Date - value of member attribute <b>updateTime</b>.
      */
     public Date getUpdateTime() {
@@ -157,6 +158,7 @@ public abstract class XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>updateTime</b>.
      * You cannot set null to the attribute.
+     *
      * @param updateTime Value to set member attribute <b>updateTime</b>
      */
     public void setUpdateTime(Date updateTime) {
@@ -165,6 +167,7 @@ public abstract class XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>addedByUserId</b>
+     *
      * @return Long - value of member attribute <b>addedByUserId</b>.
      */
     public Long getAddedByUserId() {
@@ -174,6 +177,7 @@ public abstract class XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>addedByUserId</b>.
      * You cannot set null to the attribute.
+     *
      * @param addedByUserId Value to set member attribute <b>addedByUserId</b>
      */
     public void setAddedByUserId(Long addedByUserId) {
@@ -182,6 +186,7 @@ public abstract class XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>updatedByUserId</b>
+     *
      * @return Long - value of member attribute <b>updatedByUserId</b>.
      */
     public Long getUpdatedByUserId() {
@@ -191,6 +196,7 @@ public abstract class XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>updatedByUserId</b>.
      * You cannot set null to the attribute.
+     *
      * @param updatedByUserId Value to set member attribute <b>updatedByUserId</b>
      */
     public void setUpdatedByUserId(Long updatedByUserId) {
@@ -204,14 +210,12 @@ public abstract class XXDBBase implements java.io.Serializable {
 
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
     public boolean equals(Object obj) {
         XXDBBase other = (XXDBBase) obj;
-//        	if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-//            		return false;
-//        	}
         if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
             return false;
         }
@@ -226,6 +230,7 @@ public abstract class XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override

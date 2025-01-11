@@ -32,8 +32,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_condition")
-public class XXPolicyRefCondition extends XXDBBase implements
-        java.io.Serializable {
+public class XXPolicyRefCondition extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXPolicyRefCondition
@@ -123,8 +122,7 @@ public class XXPolicyRefCondition extends XXDBBase implements
      */
     @Override
     public String toString() {
-        return "XXPolicyRefCondition [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", conditionDefId="
-                + conditionDefId + ", conditionName=" + conditionName + "]";
+        return "XXPolicyRefCondition [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", conditionDefId=" + conditionDefId + ", conditionName=" + conditionName + "]";
     }
 
     /**

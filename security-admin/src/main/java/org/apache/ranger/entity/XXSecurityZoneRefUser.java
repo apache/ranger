@@ -112,12 +112,7 @@ public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializa
 
         XXSecurityZoneRefUser other = (XXSecurityZoneRefUser) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
-                Objects.equals(zoneId, other.zoneId) &&
-                Objects.equals(userId, other.userId) &&
-                Objects.equals(userName, other.userName) &&
-                Objects.equals(userType, other.userType);
+        return super.equals(obj) && Objects.equals(id, other.id) && Objects.equals(zoneId, other.zoneId) && Objects.equals(userId, other.userId) && Objects.equals(userName, other.userName) && Objects.equals(userType, other.userType);
     }
 
     /* (non-Javadoc)
@@ -125,8 +120,7 @@ public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializa
      */
     @Override
     public String toString() {
-        return "XXSecurityZoneRefUser [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", userId="
-                + userId + ", userName=" + userName + ", userType=" + userType + "]";
+        return "XXSecurityZoneRefUser [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", userId=" + userId + ", userName=" + userName + ", userType=" + userType + "]";
     }
 
     /**

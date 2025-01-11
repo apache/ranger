@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_policy_condition_def")
-public class XXPolicyConditionDef extends XXDBBase implements
-        java.io.Serializable {
+public class XXPolicyConditionDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXPolicyConditionDef
@@ -175,6 +174,11 @@ public class XXPolicyConditionDef extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -275,8 +279,9 @@ public class XXPolicyConditionDef extends XXDBBase implements
         }
         if (rbKeyLabel == null) {
             return other.rbKeyLabel == null;
-        } else
+        } else {
             return rbKeyLabel.equals(other.rbKeyLabel);
+        }
     }
 
     /*

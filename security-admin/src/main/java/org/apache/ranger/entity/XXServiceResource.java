@@ -137,15 +137,21 @@ public class XXServiceResource extends XXDBBase implements Serializable {
         this.isEnabled = isEnabled;
     }
 
-    public String getServiceResourceElements() {return serviceResourceElements;}
+    public String getServiceResourceElements() {
+        return serviceResourceElements;
+    }
 
     public void setServiceResourceElements(String serviceResourceElements) {
         this.serviceResourceElements = serviceResourceElements;
     }
 
-    public String getTags()          {return tags;}
+    public String getTags() {
+        return tags;
+    }
 
-    public void setTags(String tags) {this.tags = tags;}
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
 
     @Override
     public int getMyClassType() {
@@ -250,8 +256,9 @@ public class XXServiceResource extends XXDBBase implements Serializable {
         }
         if (tags == null) {
             return other.tags == null;
-        } else
+        } else {
             return tags.equals(other.tags);
+        }
     }
 
     /*

@@ -125,8 +125,7 @@ public class XXSecurityZoneRefGroup extends XXDBBase implements java.io.Serializ
      */
     @Override
     public String toString() {
-        return "XXSecurityZoneRefGroup [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", groupId="
-                + groupId + ", groupName=" + groupName + ", groupType=" + groupType + "]";
+        return "XXSecurityZoneRefGroup [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", groupId=" + groupId + ", groupName=" + groupName + ", groupType=" + groupType + "]";
     }
 
     /**

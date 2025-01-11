@@ -85,6 +85,72 @@ public class XXPluginInfo implements java.io.Serializable {
         return object1.equals(object2);
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (this == obj) {
+            return true;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        XXPluginInfo other = (XXPluginInfo) obj;
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+            return false;
+        }
+        if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
+            return false;
+        }
+        if ((this.updateTime == null && other.updateTime != null) || (this.updateTime != null && !this.updateTime.equals(other.updateTime))) {
+            return false;
+        }
+        if ((this.serviceName == null && other.serviceName != null) || (this.serviceName != null && !this.serviceName.equals(other.serviceName))) {
+            return false;
+        }
+        if ((this.hostName == null && other.hostName != null) || (this.hostName != null && !this.hostName.equals(other.hostName))) {
+            return false;
+        }
+        if ((this.appType == null && other.appType != null) || (this.appType != null && !this.appType.equals(other.appType))) {
+            return false;
+        }
+        if ((this.ipAddress == null && other.ipAddress != null) || (this.ipAddress != null && !this.ipAddress.equals(other.ipAddress))) {
+            return false;
+        }
+        return (this.info != null || other.info == null) && (this.info == null || this.info.equals(other.info));
+    }
+
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = "XXPluginInfo={";
+        str += "id={" + id + "} ";
+        str += "createTime={" + createTime + "} ";
+        str += "updateTime={" + updateTime + "} ";
+        str += "serviceName={" + serviceName + "} ";
+        str += "hostName={" + hostName + "} ";
+        str += "appType={" + appType + "} ";
+        str += "ipAddress={" + ipAddress + "} ";
+        str += "info={" + info + "} ";
+        str += "}";
+        return str;
+    }
+
     public int getMyClassType() {
         return AppConstants.CLASS_TYPE_NONE;
     }
@@ -155,66 +221,5 @@ public class XXPluginInfo implements java.io.Serializable {
 
     public void setInfo(String info) {
         this.info = info;
-    }
-
-    /**
-     * Checks for all attributes except referenced db objects
-     *
-     * @return true if all attributes match
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (this == obj) {
-            return true;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        XXPluginInfo other = (XXPluginInfo) obj;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
-            return false;
-        }
-        if ((this.updateTime == null && other.updateTime != null) || (this.updateTime != null && !this.updateTime.equals(other.updateTime))) {
-            return false;
-        }
-        if ((this.serviceName == null && other.serviceName != null) || (this.serviceName != null && !this.serviceName.equals(other.serviceName))) {
-            return false;
-        }
-        if ((this.hostName == null && other.hostName != null) || (this.hostName != null && !this.hostName.equals(other.hostName))) {
-            return false;
-        }
-        if ((this.appType == null && other.appType != null) || (this.appType != null && !this.appType.equals(other.appType))) {
-            return false;
-        }
-        if ((this.ipAddress == null && other.ipAddress != null) || (this.ipAddress != null && !this.ipAddress.equals(other.ipAddress))) {
-            return false;
-        }
-        return (this.info != null || other.info == null) && (this.info == null || this.info.equals(other.info));
-    }
-
-    /**
-     * This return the bean content in string format
-     *
-     * @return formatedStr
-     */
-    @Override
-    public String toString() {
-        String str = "XXPluginInfo={";
-        str += "id={" + id + "} ";
-        str += "createTime={" + createTime + "} ";
-        str += "updateTime={" + updateTime + "} ";
-        str += "serviceName={" + serviceName + "} ";
-        str += "hostName={" + hostName + "} ";
-        str += "appType={" + appType + "} ";
-        str += "ipAddress={" + ipAddress + "} ";
-        str += "info={" + info + "} ";
-        str += "}";
-        return str;
     }
 }

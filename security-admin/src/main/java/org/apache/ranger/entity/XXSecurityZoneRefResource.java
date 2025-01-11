@@ -116,8 +116,7 @@ public class XXSecurityZoneRefResource extends XXDBBase implements java.io.Seria
      */
     @Override
     public String toString() {
-        return "XXSecurityZoneRefResource [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", resourceDefId="
-                + resourceDefId + ", resourceName=" + resourceName + "]";
+        return "XXSecurityZoneRefResource [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", resourceDefId=" + resourceDefId + ", resourceName=" + resourceName + "]";
     }
 
     /**

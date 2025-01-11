@@ -44,24 +44,24 @@ public class XXRMSNotification implements Serializable {
     @SequenceGenerator(name = "X_RMS_NOTIFICATION_SEQ", sequenceName = "X_RMS_NOTIFICATION_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RMS_NOTIFICATION_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     @Column(name = "hms_name", length = 128)
     protected String hmsName;
     @Column(name = "notification_id")
-    protected Long notificationId;
+    protected Long   notificationId;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "change_timestamp")
-    protected Date changeTimestamp;
+    protected Date   changeTimestamp;
     @Column(name = "change_type", length = 64)
     protected String changeType;
     @Column(name = "hl_resource_id")
-    protected Long hlResourceId;
+    protected Long   hlResourceId;
     @Column(name = "hl_service_id")
-    protected Long hlServiceId;
+    protected Long   hlServiceId;
     @Column(name = "ll_resource_id")
-    protected Long llResourceId;
+    protected Long   llResourceId;
     @Column(name = "ll_service_id")
-    protected Long llServiceId;
+    protected Long   llServiceId;
 
     public Long getId() {
         return id;
@@ -127,7 +127,9 @@ public class XXRMSNotification implements Serializable {
         this.llResourceId = llResourceId;
     }
 
-    public Long getLlServiceId() {return llServiceId;}
+    public Long getLlServiceId() {
+        return llServiceId;
+    }
 
     public void setLlServiceId(Long llServiceId) {
         this.llServiceId = llServiceId;

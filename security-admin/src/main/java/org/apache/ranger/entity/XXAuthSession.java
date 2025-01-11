@@ -76,23 +76,23 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * Max value for enum AuthStatus_MAX
      */
-    public static final int AuthStatus_MAX = 6;
+    public static final int AuthStatus_MAX               = 6;
     /**
      * AUTH_TYPE_UNKNOWN is an element of enum AuthType. Its value is "AUTH_TYPE_UNKNOWN".
      */
-    public static final int AUTH_TYPE_UNKNOWN  = 0;
+    public static final int AUTH_TYPE_UNKNOWN            = 0;
     /**
      * AUTH_TYPE_PASSWORD is an element of enum AuthType. Its value is "AUTH_TYPE_PASSWORD".
      */
-    public static final int AUTH_TYPE_PASSWORD = 1;
+    public static final int AUTH_TYPE_PASSWORD           = 1;
     /**
      * AUTH_TYPE_KERBEROS is an element of enum AuthType. Its value is "AUTH_TYPE_KERBEROS".
      */
-    public static final int AUTH_TYPE_KERBEROS = 2;
+    public static final int AUTH_TYPE_KERBEROS           = 2;
     /**
      * AUTH_TYPE_SSO is an element of enum AuthType. Its value is "AUTH_TYPE_SSO".
      */
-    public static final int AUTH_TYPE_SSO = 3;
+    public static final int AUTH_TYPE_SSO                = 3;
 
     /**
      * Enum values for AuthType
@@ -100,106 +100,96 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * AUTH_TYPE_TRUSTED_PROXY is an element of enum AuthType. Its value is "AUTH_TYPE_TRUSTED_PROXY".
      */
-    public static final int AUTH_TYPE_TRUSTED_PROXY = 4;
+    public static final  int    AUTH_TYPE_TRUSTED_PROXY = 4;
     /**
      * Max value for enum AuthType_MAX
      */
-    public static final int AuthType_MAX = 4;
-    private static final long serialVersionUID = 1L;
+    public static final  int    AuthType_MAX            = 4;
+    private static final long   serialVersionUID        = 1L;
     @Id
     @SequenceGenerator(name = "X_AUTH_SESS_SEQ", sequenceName = "X_AUTH_SESS_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_AUTH_SESS_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected            Long   id;
     /**
      * Login ID of the user
      * <ul>
      * <li>The maximum length for this attribute is <b>767</b>.
      * </ul>
-     *
      */
     @Column(name = "LOGIN_ID", nullable = false, length = 767)
-    protected String loginId;
+    protected            String loginId;
     /**
      * Id of the user
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "USER_ID")
-    protected Long userId;
+    protected            Long   userId;
     /**
      * External session id. Currently spring/http session
      * <ul>
      * <li>The maximum length for this attribute is <b>512</b>.
      * </ul>
-     *
      */
     @Column(name = "EXT_SESS_ID", length = 512)
-    protected String extSessionId;
+    protected            String extSessionId;
     /**
      * Date and time of authentication
      * <ul>
      * </ul>
-     *
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "AUTH_TIME", nullable = false)
-    protected Date authTime = DateUtil.getUTCDate();
+    protected            Date   authTime                = DateUtil.getUTCDate();
     /**
      * Authentication status
      * <ul>
      * <li>This attribute is of type enum XXAuthSession::AuthStatus
      * </ul>
-     *
      */
     @Column(name = "AUTH_STATUS", nullable = false)
-    protected int authStatus = AUTH_STATUS_UNKNOWN;
+    protected            int    authStatus              = AUTH_STATUS_UNKNOWN;
     /**
      * Authentication type
      * <ul>
      * <li>This attribute is of type enum XXAuthSession::AuthType
      * </ul>
-     *
      */
     @Column(name = "AUTH_TYPE", nullable = false)
-    protected int authType = AUTH_TYPE_UNKNOWN;
+    protected            int    authType                = AUTH_TYPE_UNKNOWN;
     /**
      * Authentication provider
      * <ul>
      * <li>This attribute is of type enum XXAuthSession::AuthType
      * </ul>
-     *
      */
     @Column(name = "AUTH_PROVIDER", nullable = false)
-    protected int authProvider = AUTH_TYPE_UNKNOWN;
+    protected            int    authProvider            = AUTH_TYPE_UNKNOWN;
     /**
      * Type of the device
      * <ul>
      * <li>This attribute is of type enum CommonEnums::DeviceType
      * </ul>
-     *
      */
     @Column(name = "DEVICE_TYPE", nullable = false)
-    protected int deviceType = RangerConstants.DEVICE_UNKNOWN;
+    protected            int    deviceType              = RangerConstants.DEVICE_UNKNOWN;
     /**
      * IP where the request came from
      * <ul>
      * <li>The maximum length for this attribute is <b>48</b>.
      * </ul>
-     *
      */
     @Column(name = "REQ_IP", nullable = false, length = 48)
-    protected String requestIP;
+    protected            String requestIP;
     /**
      * UserAgent of the requesting device
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "REQ_UA", length = 1024)
-    protected String requestUserAgent;
+    protected            String requestUserAgent;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -244,8 +234,14 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -286,6 +282,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -307,6 +304,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>loginId</b>
+     *
      * @return String - value of member attribute <b>loginId</b>.
      */
     public String getLoginId() {
@@ -316,6 +314,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>loginId</b>.
      * You cannot set null to the attribute.
+     *
      * @param loginId Value to set member attribute <b>loginId</b>
      */
     public void setLoginId(String loginId) {
@@ -324,6 +323,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>userId</b>
+     *
      * @return Long - value of member attribute <b>userId</b>.
      */
     public Long getUserId() {
@@ -333,6 +333,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>userId</b>.
      * You cannot set null to the attribute.
+     *
      * @param userId Value to set member attribute <b>userId</b>
      */
     public void setUserId(Long userId) {
@@ -341,6 +342,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>extSessionId</b>
+     *
      * @return String - value of member attribute <b>extSessionId</b>.
      */
     public String getExtSessionId() {
@@ -350,6 +352,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>extSessionId</b>.
      * You cannot set null to the attribute.
+     *
      * @param extSessionId Value to set member attribute <b>extSessionId</b>
      */
     public void setExtSessionId(String extSessionId) {
@@ -358,6 +361,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>authTime</b>
+     *
      * @return Date - value of member attribute <b>authTime</b>.
      */
     public Date getAuthTime() {
@@ -367,6 +371,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>authTime</b>.
      * You cannot set null to the attribute.
+     *
      * @param authTime Value to set member attribute <b>authTime</b>
      */
     public void setAuthTime(Date authTime) {
@@ -375,6 +380,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>authStatus</b>
+     *
      * @return int - value of member attribute <b>authStatus</b>.
      */
     public int getAuthStatus() {
@@ -384,6 +390,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>authStatus</b>.
      * You cannot set null to the attribute.
+     *
      * @param authStatus Value to set member attribute <b>authStatus</b>
      */
     public void setAuthStatus(int authStatus) {
@@ -392,6 +399,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>authType</b>
+     *
      * @return int - value of member attribute <b>authType</b>.
      */
     public int getAuthType() {
@@ -401,6 +409,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>authType</b>.
      * You cannot set null to the attribute.
+     *
      * @param authType Value to set member attribute <b>authType</b>
      */
     public void setAuthType(int authType) {
@@ -409,6 +418,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>authProvider</b>
+     *
      * @return int - value of member attribute <b>authProvider</b>.
      */
     public int getAuthProvider() {
@@ -418,6 +428,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>authProvider</b>.
      * You cannot set null to the attribute.
+     *
      * @param authProvider Value to set member attribute <b>authProvider</b>
      */
     public void setAuthProvider(int authProvider) {
@@ -426,6 +437,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>deviceType</b>
+     *
      * @return int - value of member attribute <b>deviceType</b>.
      */
     public int getDeviceType() {
@@ -435,6 +447,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>deviceType</b>.
      * You cannot set null to the attribute.
+     *
      * @param deviceType Value to set member attribute <b>deviceType</b>
      */
     public void setDeviceType(int deviceType) {
@@ -443,6 +456,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>requestIP</b>
+     *
      * @return String - value of member attribute <b>requestIP</b>.
      */
     public String getRequestIP() {
@@ -452,6 +466,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>requestIP</b>.
      * You cannot set null to the attribute.
+     *
      * @param requestIP Value to set member attribute <b>requestIP</b>
      */
     public void setRequestIP(String requestIP) {
@@ -460,6 +475,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>requestUserAgent</b>
+     *
      * @return String - value of member attribute <b>requestUserAgent</b>.
      */
     public String getRequestUserAgent() {
@@ -469,6 +485,7 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>requestUserAgent</b>.
      * You cannot set null to the attribute.
+     *
      * @param requestUserAgent Value to set member attribute <b>requestUserAgent</b>
      */
     public void setRequestUserAgent(String requestUserAgent) {

@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_policy_resource_map")
-public class XXPolicyResourceMap extends XXDBBase implements
-        java.io.Serializable {
+public class XXPolicyResourceMap extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXPolicyResourceMap
@@ -87,6 +86,11 @@ public class XXPolicyResourceMap extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -130,8 +134,9 @@ public class XXPolicyResourceMap extends XXDBBase implements
         }
         if (value == null) {
             return other.value == null;
-        } else
+        } else {
             return value.equals(other.value);
+        }
     }
 
     /*

@@ -43,13 +43,12 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_RESOURCE_SEQ", sequenceName = "X_RESOURCE_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RESOURCE_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     /**
      * Name
      * <ul>
      * <li>The maximum length for this attribute is <b>4000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_NAME", length = 4000)
     protected String name;
@@ -60,7 +59,6 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>4000</b>.
      * </ul>
-     *
      */
     @Column(name = "DESCR", length = 4000)
     protected String description;
@@ -69,32 +67,28 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>This attribute is of type enum CommonEnums::ResourceType
      * </ul>
-     *
      */
     @Column(name = "RES_TYPE", nullable = false)
-    protected int resourceType = AppConstants.RESOURCE_PATH;
+    protected int    resourceType   = AppConstants.RESOURCE_PATH;
     /**
      * Id of the asset
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "ASSET_ID", nullable = false)
-    protected Long assetId;
+    protected Long   assetId;
     /**
      * Id of the parent
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "PARENT_ID")
-    protected Long parentId;
+    protected Long   parentId;
     /**
      * Path for the parent
      * <ul>
      * <li>The maximum length for this attribute is <b>4000</b>.
      * </ul>
-     *
      */
     @Column(name = "PARENT_PATH", length = 4000)
     protected String parentPath;
@@ -103,25 +97,22 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>This attribute is of type enum CommonEnums::BooleanValue
      * </ul>
-     *
      */
     @Column(name = "IS_ENCRYPT", nullable = false)
-    protected int isEncrypt = RangerConstants.BOOL_FALSE;
+    protected int    isEncrypt      = RangerConstants.BOOL_FALSE;
     /**
      * Is recursive
      * <ul>
      * <li>This attribute is of type enum CommonEnums::BooleanValue
      * </ul>
-     *
      */
     @Column(name = "IS_RECURSIVE", nullable = false)
-    protected int isRecursive = RangerConstants.BOOL_NONE;
+    protected int    isRecursive    = RangerConstants.BOOL_NONE;
     /**
      * Group to which this resource belongs to
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_GROUP", length = 1024)
     protected String resourceGroup;
@@ -130,7 +121,6 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>10000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_DBS", length = 10000)
     protected String databases;
@@ -139,7 +129,6 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>10000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_TABLES", length = 10000)
     protected String tables;
@@ -148,7 +137,6 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>10000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_COL_FAMS", length = 10000)
     protected String columnFamilies;
@@ -157,7 +145,6 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>10000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_COLS", length = 10000)
     protected String columns;
@@ -166,7 +153,6 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>10000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_UDFS", length = 10000)
     protected String udfs;
@@ -175,34 +161,30 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>This attribute is of type enum CommonEnums::ActiveStatus
      * </ul>
-     *
      */
     @Column(name = "RES_STATUS", nullable = false)
-    protected int resourceStatus = RangerConstants.STATUS_ENABLED;
+    protected int    resourceStatus = RangerConstants.STATUS_ENABLED;
     /**
      * Table Type
      * <ul>
      * <li>This attribute is of type enum CommonEnums::PolicyType
      * </ul>
-     *
      */
     @Column(name = "TABLE_TYPE", nullable = false)
-    protected int tableType = AppConstants.POLICY_INCLUSION;
+    protected int    tableType      = AppConstants.POLICY_INCLUSION;
     /**
      * Resource Status
      * <ul>
      * <li>This attribute is of type enum CommonEnums::PolicyType
      * </ul>
-     *
      */
     @Column(name = "COL_TYPE", nullable = false)
-    protected int    columnType = AppConstants.POLICY_INCLUSION;
+    protected int    columnType     = AppConstants.POLICY_INCLUSION;
     /**
      * Topologoies
      * <ul>
      * <li>The maximum length for this attribute is <b>10000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_TOPOLOGIES", length = 10000)
     protected String topologies;
@@ -211,10 +193,10 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>10000</b>.
      * </ul>
-     *
      */
     @Column(name = "RES_SERVICES", length = 10000)
     protected String services;
+
     /**
      * Default constructor. This will set all the attributes to default value.
      */
@@ -274,8 +256,14 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -336,16 +324,15 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
             return false;
         }
 
-        if ((this.topologies == null && other.topologies != null)
-                || (this.topologies != null && !this.topologies.equals(other.topologies))) {
+        if ((this.topologies == null && other.topologies != null) || (this.topologies != null && !this.topologies.equals(other.topologies))) {
             return false;
         }
-        return (this.services != null || other.services == null)
-                && (this.services == null || this.services.equals(other.services));
+        return (this.services != null || other.services == null) && (this.services == null || this.services.equals(other.services));
     }
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -386,6 +373,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>name</b>
+     *
      * @return String - value of member attribute <b>name</b>.
      */
     public String getName() {
@@ -395,6 +383,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>name</b>.
      * You cannot set null to the attribute.
+     *
      * @param name Value to set member attribute <b>name</b>
      */
     public void setName(String name) {
@@ -403,6 +392,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>description</b>
+     *
      * @return String - value of member attribute <b>description</b>.
      */
     public String getDescription() {
@@ -412,6 +402,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>description</b>.
      * You cannot set null to the attribute.
+     *
      * @param description Value to set member attribute <b>description</b>
      */
     public void setDescription(String description) {
@@ -420,6 +411,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>resourceType</b>
+     *
      * @return int - value of member attribute <b>resourceType</b>.
      */
     public int getResourceType() {
@@ -429,6 +421,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>resourceType</b>.
      * You cannot set null to the attribute.
+     *
      * @param resourceType Value to set member attribute <b>resourceType</b>
      */
     public void setResourceType(int resourceType) {
@@ -437,6 +430,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>assetId</b>
+     *
      * @return Long - value of member attribute <b>assetId</b>.
      */
     public Long getAssetId() {
@@ -446,6 +440,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>assetId</b>.
      * You cannot set null to the attribute.
+     *
      * @param assetId Value to set member attribute <b>assetId</b>
      */
     public void setAssetId(Long assetId) {
@@ -454,6 +449,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>parentId</b>
+     *
      * @return Long - value of member attribute <b>parentId</b>.
      */
     public Long getParentId() {
@@ -463,6 +459,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>parentId</b>.
      * You cannot set null to the attribute.
+     *
      * @param parentId Value to set member attribute <b>parentId</b>
      */
     public void setParentId(Long parentId) {
@@ -471,6 +468,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>parentPath</b>
+     *
      * @return String - value of member attribute <b>parentPath</b>.
      */
     public String getParentPath() {
@@ -480,6 +478,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>parentPath</b>.
      * You cannot set null to the attribute.
+     *
      * @param parentPath Value to set member attribute <b>parentPath</b>
      */
     public void setParentPath(String parentPath) {
@@ -488,6 +487,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>isEncrypt</b>
+     *
      * @return int - value of member attribute <b>isEncrypt</b>.
      */
     public int getIsEncrypt() {
@@ -497,6 +497,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>isEncrypt</b>.
      * You cannot set null to the attribute.
+     *
      * @param isEncrypt Value to set member attribute <b>isEncrypt</b>
      */
     public void setIsEncrypt(int isEncrypt) {
@@ -505,6 +506,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>isRecursive</b>
+     *
      * @return int - value of member attribute <b>isRecursive</b>.
      */
     public int getIsRecursive() {
@@ -514,6 +516,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>isRecursive</b>.
      * You cannot set null to the attribute.
+     *
      * @param isRecursive Value to set member attribute <b>isRecursive</b>
      */
     public void setIsRecursive(int isRecursive) {
@@ -522,6 +525,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>resourceGroup</b>
+     *
      * @return String - value of member attribute <b>resourceGroup</b>.
      */
     public String getResourceGroup() {
@@ -531,6 +535,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>resourceGroup</b>.
      * You cannot set null to the attribute.
+     *
      * @param resourceGroup Value to set member attribute <b>resourceGroup</b>
      */
     public void setResourceGroup(String resourceGroup) {
@@ -539,6 +544,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>databases</b>
+     *
      * @return String - value of member attribute <b>databases</b>.
      */
     public String getDatabases() {
@@ -548,6 +554,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>databases</b>.
      * You cannot set null to the attribute.
+     *
      * @param databases Value to set member attribute <b>databases</b>
      */
     public void setDatabases(String databases) {
@@ -556,6 +563,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>tables</b>
+     *
      * @return String - value of member attribute <b>tables</b>.
      */
     public String getTables() {
@@ -565,6 +573,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>tables</b>.
      * You cannot set null to the attribute.
+     *
      * @param tables Value to set member attribute <b>tables</b>
      */
     public void setTables(String tables) {
@@ -573,6 +582,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>columnFamilies</b>
+     *
      * @return String - value of member attribute <b>columnFamilies</b>.
      */
     public String getColumnFamilies() {
@@ -582,6 +592,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>columnFamilies</b>.
      * You cannot set null to the attribute.
+     *
      * @param columnFamilies Value to set member attribute <b>columnFamilies</b>
      */
     public void setColumnFamilies(String columnFamilies) {
@@ -590,6 +601,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>columns</b>
+     *
      * @return String - value of member attribute <b>columns</b>.
      */
     public String getColumns() {
@@ -599,6 +611,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>columns</b>.
      * You cannot set null to the attribute.
+     *
      * @param columns Value to set member attribute <b>columns</b>
      */
     public void setColumns(String columns) {
@@ -607,6 +620,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>udfs</b>
+     *
      * @return String - value of member attribute <b>udfs</b>.
      */
     public String getUdfs() {
@@ -616,6 +630,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>udfs</b>.
      * You cannot set null to the attribute.
+     *
      * @param udfs Value to set member attribute <b>udfs</b>
      */
     public void setUdfs(String udfs) {
@@ -624,6 +639,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>resourceStatus</b>
+     *
      * @return int - value of member attribute <b>resourceStatus</b>.
      */
     public int getResourceStatus() {
@@ -633,6 +649,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>resourceStatus</b>.
      * You cannot set null to the attribute.
+     *
      * @param resourceStatus Value to set member attribute <b>resourceStatus</b>
      */
     public void setResourceStatus(int resourceStatus) {
@@ -641,6 +658,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>tableType</b>
+     *
      * @return int - value of member attribute <b>tableType</b>.
      */
     public int getTableType() {
@@ -650,6 +668,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>tableType</b>.
      * You cannot set null to the attribute.
+     *
      * @param tableType Value to set member attribute <b>tableType</b>
      */
     public void setTableType(int tableType) {
@@ -658,6 +677,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>columnType</b>
+     *
      * @return int - value of member attribute <b>columnType</b>.
      */
     public int getColumnType() {
@@ -667,6 +687,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>columnType</b>.
      * You cannot set null to the attribute.
+     *
      * @param columnType Value to set member attribute <b>columnType</b>
      */
     public void setColumnType(int columnType) {
@@ -675,6 +696,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>topologies</b>
+     *
      * @return String - value of member attribute <b>topologies</b>.
      */
     public String getTopologies() {
@@ -684,6 +706,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>topologies</b>.
      * You cannot set null to the attribute.
+     *
      * @param topologies Value to set member attribute <b>topologies</b>
      */
     public void setTopologies(String topologies) {
@@ -692,6 +715,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>services</b>
+     *
      * @return String - value of member attribute <b>services</b>.
      */
     public String getServices() {
@@ -701,6 +725,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>services</b>.
      * You cannot set null to the attribute.
+     *
      * @param services Value to set member attribute <b>services</b>
      */
     public void setServices(String services) {

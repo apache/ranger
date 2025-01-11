@@ -132,7 +132,9 @@ public class XXRMSServiceResource extends XXDBBase {
         this.isEnabled = isEnabled;
     }
 
-    public String getServiceResourceElements() {return serviceResourceElements;}
+    public String getServiceResourceElements() {
+        return serviceResourceElements;
+    }
 
     public void setServiceResourceElements(String serviceResourceElements) {
         this.serviceResourceElements = serviceResourceElements;
@@ -230,8 +232,9 @@ public class XXRMSServiceResource extends XXDBBase {
         }
         if (serviceResourceElements == null) {
             return other.serviceResourceElements == null;
-        } else
+        } else {
             return serviceResourceElements.equals(other.serviceResourceElements);
+        }
     }
 
     /*

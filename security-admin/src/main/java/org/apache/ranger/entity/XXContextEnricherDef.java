@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_context_enricher_def")
-public class XXContextEnricherDef extends XXDBBase implements
-        java.io.Serializable {
+public class XXContextEnricherDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXContextEnricherDef
@@ -111,6 +110,11 @@ public class XXContextEnricherDef extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -175,8 +179,9 @@ public class XXContextEnricherDef extends XXDBBase implements
         }
         if (order == null) {
             return other.order == null;
-        } else
+        } else {
             return order.equals(other.order);
+        }
     }
 
     /*
@@ -188,10 +193,7 @@ public class XXContextEnricherDef extends XXDBBase implements
     public String toString() {
         String str = "XXContextEnricherDef={";
         str += super.toString();
-        str += " [id=" + id + ", defId=" + defId + ", itemId=" + itemId
-                + ", name=" + name + ", enricher=" + enricherOptions
-                + ", enricherOptions=" + enricherOptions + ", order=" + order
-                + "]";
+        str += " [id=" + id + ", defId=" + defId + ", itemId=" + itemId + ", name=" + name + ", enricher=" + enricherOptions + ", enricherOptions=" + enricherOptions + ", order=" + order + "]";
         str += "}";
         return str;
     }

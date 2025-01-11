@@ -50,6 +50,11 @@ public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serial
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -64,11 +69,6 @@ public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serial
         XXSecurityZone other = (XXSecurityZone) obj;
 
         return Objects.equals(id, other.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), id);
     }
 
     @Override

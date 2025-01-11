@@ -37,17 +37,25 @@ public abstract class XXGlobalStateBase extends XXDBBase {
     @Column(name = "app_data")
     protected String appData;
 
-    public Long getVersion()     {return version;}
+    public Long getVersion() {
+        return version;
+    }
 
-    public String getStateName() {return stateName;}
+    public String getStateName() {
+        return stateName;
+    }
 
     public void setStateName(String stateName) {
         this.stateName = stateName;
     }
 
-    public String getAppData()             {return appData;}
+    public String getAppData() {
+        return appData;
+    }
 
-    public void setAppData(String appData) {this.appData = appData;}
+    public void setAppData(String appData) {
+        this.appData = appData;
+    }
 
     @Override
     public int hashCode() {
@@ -82,4 +90,3 @@ public abstract class XXGlobalStateBase extends XXDBBase {
         return str;
     }
 }
-

@@ -310,6 +310,11 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
         this.displayName = displayName;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -385,8 +390,9 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
         }
         if (isEnabled == null) {
             return other.isEnabled == null;
-        } else
+        } else {
             return isEnabled.equals(other.isEnabled);
+        }
     }
 
     /*

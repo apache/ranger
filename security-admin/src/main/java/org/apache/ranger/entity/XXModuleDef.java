@@ -30,14 +30,13 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "x_modules_master")
 public class XXModuleDef extends XXDBBase implements java.io.Serializable {
-
     private static final long serialVersionUID = 1L;
 
     @Id
     @SequenceGenerator(name = "X_MODULES_MASTER_SEQ", sequenceName = "X_MODULES_MASTER_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_MODULES_MASTER_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     @Column(name = "MODULE", nullable = false)
     protected String module;
     @Column(name = "URL", nullable = false)
@@ -91,6 +90,11 @@ public class XXModuleDef extends XXDBBase implements java.io.Serializable {
     }
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -118,8 +122,9 @@ public class XXModuleDef extends XXDBBase implements java.io.Serializable {
         }
         if (url == null) {
             return other.url == null;
-        } else
+        } else {
             return url.equals(other.url);
+        }
     }
 
     @Override

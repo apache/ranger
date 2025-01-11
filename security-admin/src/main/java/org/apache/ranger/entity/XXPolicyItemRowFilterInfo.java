@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_rowfilter")
-public class XXPolicyItemRowFilterInfo extends XXDBBase implements
-        java.io.Serializable {
+public class XXPolicyItemRowFilterInfo extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXPolicyItemRowFilterInfo
@@ -79,6 +78,11 @@ public class XXPolicyItemRowFilterInfo extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -115,8 +119,9 @@ public class XXPolicyItemRowFilterInfo extends XXDBBase implements
         }
         if (policyItemId == null) {
             return other.policyItemId == null;
-        } else
+        } else {
             return policyItemId.equals(other.policyItemId);
+        }
     }
 
     /*
@@ -126,8 +131,7 @@ public class XXPolicyItemRowFilterInfo extends XXDBBase implements
      */
     @Override
     public String toString() {
-        return "XXPolicyItemDataMaskInfo [" + super.toString() + " id=" + id
-                + ", policyItemId=" + policyItemId + ", filterExpr=" + filterExpr + "]";
+        return "XXPolicyItemDataMaskInfo [" + super.toString() + " id=" + id + ", policyItemId=" + policyItemId + ", filterExpr=" + filterExpr + "]";
     }
 
     /**

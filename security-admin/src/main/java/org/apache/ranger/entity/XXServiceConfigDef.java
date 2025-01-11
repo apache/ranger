@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_service_config_def")
-public class XXServiceConfigDef extends XXDBBase implements
-        java.io.Serializable {
+public class XXServiceConfigDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXServiceConfigDef
@@ -191,6 +190,11 @@ public class XXServiceConfigDef extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -301,8 +305,9 @@ public class XXServiceConfigDef extends XXDBBase implements
         }
         if (type == null) {
             return other.type == null;
-        } else
+        } else {
             return type.equals(other.type);
+        }
     }
 
     /*

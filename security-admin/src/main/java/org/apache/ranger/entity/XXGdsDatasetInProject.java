@@ -85,62 +85,116 @@ public class XXGdsDatasetInProject extends XXDBBase implements Serializable {
     @Column(name = "approver_id")
     protected Long approverId;
 
-    public String getGuid()                              {return guid;}
+    public String getGuid() {
+        return guid;
+    }
 
-    public void setGuid(String guid)                     {this.guid = guid;}
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
 
-    public Long getVersion()                             {return version;}
+    public Long getVersion() {
+        return version;
+    }
 
-    public void setVersion(Long version)                 {this.version = version;}
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
-    public Boolean getIsEnabled()                        {return isEnabled;}
+    public Boolean getIsEnabled() {
+        return isEnabled;
+    }
 
-    public void setIsEnabled(Boolean isEnabled)          {this.isEnabled = isEnabled;}
+    public void setIsEnabled(Boolean isEnabled) {
+        this.isEnabled = isEnabled;
+    }
 
-    public String getDescription()                       {return description;}
+    public String getDescription() {
+        return description;
+    }
 
-    public void setDescription(String description)       {this.description = description;}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public Long getDatasetId()                           {return datasetId;}
+    public Long getDatasetId() {
+        return datasetId;
+    }
 
-    public void setDatasetId(Long datasetId)             {this.datasetId = datasetId;}
+    public void setDatasetId(Long datasetId) {
+        this.datasetId = datasetId;
+    }
 
-    public Long getProjectId()                           {return projectId;}
+    public Long getProjectId() {
+        return projectId;
+    }
 
-    public void setProjectId(Long projectId)             {this.projectId = projectId;}
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
+    }
 
-    public Short getStatus()                             {return status;}
+    public Short getStatus() {
+        return status;
+    }
 
-    public void setStatus(Short status)                  {this.status = status;}
+    public void setStatus(Short status) {
+        this.status = status;
+    }
 
-    public String getValidityPeriod()                    {return validityPeriod;}
+    public String getValidityPeriod() {
+        return validityPeriod;
+    }
 
-    public void setValidityPeriod(String validityPeriod) {this.validityPeriod = validityPeriod;}
+    public void setValidityPeriod(String validityPeriod) {
+        this.validityPeriod = validityPeriod;
+    }
 
-    public String getProfiles()                          {return profiles;}
+    public String getProfiles() {
+        return profiles;
+    }
 
-    public void setProfiles(String profiles)             {this.profiles = profiles;}
+    public void setProfiles(String profiles) {
+        this.profiles = profiles;
+    }
 
-    public String getOptions()                           {return options;}
+    public String getOptions() {
+        return options;
+    }
 
-    public void setOptions(String options)               {this.options = options;}
+    public void setOptions(String options) {
+        this.options = options;
+    }
 
-    public String getAdditionalInfo()                    {return additionalInfo;}
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
 
-    public void setAdditionalInfo(String additionalInfo) {this.additionalInfo = additionalInfo;}
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
 
-    public Long getApproverId()                          {return approverId;}
+    public Long getApproverId() {
+        return approverId;
+    }
 
-    public void setApproverId(Long approverId)           {this.approverId = approverId;}
+    public void setApproverId(Long approverId) {
+        this.approverId = approverId;
+    }
 
     @Override
-    public int getMyClassType() {return AppConstants.CLASS_TYPE_GDS_DATASET_IN_PROJECT;}
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_GDS_DATASET_IN_PROJECT;
+    }
 
     @Override
-    public Long getId() {return id;}
+    public Long getId() {
+        return id;
+    }
 
     @Override
-    public void setId(Long id) {this.id = id;}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public int hashCode() {

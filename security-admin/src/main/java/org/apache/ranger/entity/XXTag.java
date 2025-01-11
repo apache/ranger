@@ -69,9 +69,6 @@ public class XXTag extends XXDBBase implements Serializable {
      */
     public String getGuid() {
         return guid;
-    }    @Override
-    public void setId(Long id) {
-        this.id = id;
     }
 
     /**
@@ -79,9 +76,6 @@ public class XXTag extends XXDBBase implements Serializable {
      */
     public void setGuid(String guid) {
         this.guid = guid;
-    }    @Override
-    public Long getId() {
-        return id;
     }
 
     /**
@@ -112,9 +106,13 @@ public class XXTag extends XXDBBase implements Serializable {
         this.type = type;
     }
 
-    public Short getOwner()           {return owner;}
+    public Short getOwner() {
+        return owner;
+    }
 
-    public void setOwner(Short owner) {this.owner = owner;}
+    public void setOwner(Short owner) {
+        this.owner = owner;
+    }
 
     public String getOptions() {
         return this.options;
@@ -124,30 +122,28 @@ public class XXTag extends XXDBBase implements Serializable {
         this.options = options;
     }
 
-    public String getTagAttrs()              {return tagAttrs;}
+    public String getTagAttrs() {
+        return tagAttrs;
+    }
 
-    public void setTagAttrs(String tagAttrs) {this.tagAttrs = tagAttrs;}
+    public void setTagAttrs(String tagAttrs) {
+        this.tagAttrs = tagAttrs;
+    }
 
     @Override
     public int getMyClassType() {
         return AppConstants.CLASS_TYPE_XA_TAG;
     }
 
-    public StringBuilder toString(StringBuilder sb) {
-        sb.append("{ ");
-        sb.append(super.toString() + "} ");
-        sb.append("id={").append(id).append("} ");
-        sb.append("guid={").append(guid).append("} ");
-        sb.append("type={").append(type).append("} ");
-        sb.append("owned_by={").append(owner).append("} ");
-        sb.append("options={").append(options).append("} ");
-        sb.append("tagAttrs={").append(tagAttrs).append("} ");
-        sb.append(" }");
-
-        return sb;
+    @Override
+    public Long getId() {
+        return id;
     }
 
-
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     /*
      * (non-Javadoc)
@@ -225,8 +221,9 @@ public class XXTag extends XXDBBase implements Serializable {
         } else if (!options.equals(other.options)) {
             if (tagAttrs == null) {
                 return other.tagAttrs == null;
-            } else
+            } else {
                 return tagAttrs.equals(other.tagAttrs);
+            }
         }
         return true;
     }
@@ -243,5 +240,17 @@ public class XXTag extends XXDBBase implements Serializable {
         return sb.toString();
     }
 
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("{ ");
+        sb.append(super.toString() + "} ");
+        sb.append("id={").append(id).append("} ");
+        sb.append("guid={").append(guid).append("} ");
+        sb.append("type={").append(type).append("} ");
+        sb.append("owned_by={").append(owner).append("} ");
+        sb.append("options={").append(options).append("} ");
+        sb.append("tagAttrs={").append(tagAttrs).append("} ");
+        sb.append(" }");
 
+        return sb;
+    }
 }

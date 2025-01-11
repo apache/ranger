@@ -304,10 +304,17 @@ public abstract class XXPolicyBase extends XXDBBase {
         this.policyText = policyText;
     }
 
-    public Long getZoneId() {return zoneId;}
+    public Long getZoneId() {
+        return zoneId;
+    }
 
     public void setZoneId(Long zoneId) {
         this.zoneId = zoneId;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     /*
@@ -409,8 +416,9 @@ public abstract class XXPolicyBase extends XXDBBase {
 
         if (zoneId == null) {
             return other.zoneId == null;
-        } else
+        } else {
             return zoneId.equals(other.zoneId);
+        }
     }
 
     /*

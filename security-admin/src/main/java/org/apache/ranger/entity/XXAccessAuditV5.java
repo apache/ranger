@@ -34,12 +34,12 @@ import javax.persistence.Table;
 public class XXAccessAuditV5 extends XXAccessAuditBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     @Column(name = "SEQ_NUM")
-    protected long sequenceNumber;
+    protected            long sequenceNumber;
     @Column(name = "EVENT_COUNT")
-    protected long eventCount;
+    protected            long eventCount;
     //event duration in ms
     @Column(name = "EVENT_DUR_MS")
-    protected long eventDuration;
+    protected            long eventDuration;
 
     @Override
     public int getMyClassType() {
@@ -48,6 +48,7 @@ public class XXAccessAuditV5 extends XXAccessAuditBase implements java.io.Serial
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override

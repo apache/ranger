@@ -42,21 +42,19 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_PORTAL_USER_ROLE_SEQ", sequenceName = "X_PORTAL_USER_ROLE_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_PORTAL_USER_ROLE_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     /**
      * Id of the user
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "USER_ID", nullable = false)
-    protected Long userId;
+    protected Long   userId;
     /**
      * Role of the user
      * <ul>
      * <li>The maximum length for this attribute is <b>128</b>.
      * </ul>
-     *
      */
     @Column(name = "USER_ROLE", length = 128)
     protected String userRole;
@@ -65,10 +63,9 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>This attribute is of type enum CommonEnums::ActiveStatus
      * </ul>
-     *
      */
     @Column(name = "STATUS", nullable = false)
-    protected int status = RangerConstants.STATUS_DISABLED;
+    protected int    status = RangerConstants.STATUS_DISABLED;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -96,8 +93,14 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -117,6 +120,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -132,6 +136,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>userId</b>
+     *
      * @return Long - value of member attribute <b>userId</b>.
      */
     public Long getUserId() {
@@ -141,6 +146,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>userId</b>.
      * You cannot set null to the attribute.
+     *
      * @param userId Value to set member attribute <b>userId</b>
      */
     public void setUserId(Long userId) {
@@ -149,6 +155,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>userRole</b>
+     *
      * @return String - value of member attribute <b>userRole</b>.
      */
     public String getUserRole() {
@@ -158,6 +165,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>userRole</b>.
      * You cannot set null to the attribute.
+     *
      * @param userRole Value to set member attribute <b>userRole</b>
      */
     public void setUserRole(String userRole) {
@@ -166,6 +174,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>status</b>
+     *
      * @return int - value of member attribute <b>status</b>.
      */
     public int getStatus() {
@@ -175,6 +184,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>status</b>.
      * You cannot set null to the attribute.
+     *
      * @param status Value to set member attribute <b>status</b>
      */
     public void setStatus(int status) {

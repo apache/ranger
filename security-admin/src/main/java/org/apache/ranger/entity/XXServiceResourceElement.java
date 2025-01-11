@@ -191,8 +191,9 @@ public class XXServiceResourceElement extends XXDBBase implements Serializable {
         }
         if (resourceId == null) {
             return other.resourceId == null;
-        } else
+        } else {
             return resourceId.equals(other.resourceId);
+        }
     }
 
     /*

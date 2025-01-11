@@ -349,6 +349,11 @@ public class XXDataHist implements java.io.Serializable {
         this.content = content;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -434,8 +439,9 @@ public class XXDataHist implements java.io.Serializable {
         }
         if (version == null) {
             return other.version == null;
-        } else
+        } else {
             return version.equals(other.version);
+        }
     }
 
     /*

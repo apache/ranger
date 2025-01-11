@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_user_perm")
-public class XXPolicyItemUserPerm extends XXDBBase implements
-        java.io.Serializable {
+public class XXPolicyItemUserPerm extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXPolicyItemUserPerm
@@ -87,6 +86,11 @@ public class XXPolicyItemUserPerm extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -130,8 +134,9 @@ public class XXPolicyItemUserPerm extends XXDBBase implements
         }
         if (userId == null) {
             return other.userId == null;
-        } else
+        } else {
             return userId.equals(other.userId);
+        }
     }
 
     /*
@@ -143,9 +148,7 @@ public class XXPolicyItemUserPerm extends XXDBBase implements
     public String toString() {
         String str = "XXPolicyItemUserPerm={";
         str += super.toString();
-        str += " [id=" + id + ", policyItemId="
-                + policyItemId + ", userId=" + userId + ", order=" + order
-                + "]";
+        str += " [id=" + id + ", policyItemId=" + policyItemId + ", userId=" + userId + ", order=" + order + "]";
         str += "}";
         return str;
     }

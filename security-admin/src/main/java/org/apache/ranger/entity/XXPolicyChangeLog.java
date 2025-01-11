@@ -132,25 +132,33 @@ public class XXPolicyChangeLog implements java.io.Serializable {
         this.changeType = changeType;
     }
 
-    public String getServiceType() {return this.serviceType;}
+    public String getServiceType() {
+        return this.serviceType;
+    }
 
     public void setServiceType(String serviceType) {
         this.serviceType = serviceType;
     }
 
-    public Integer getPolicyType() {return this.policyType;}
+    public Integer getPolicyType() {
+        return this.policyType;
+    }
 
     public void setPolicyType(Integer policyType) {
         this.policyType = policyType;
     }
 
-    public String getZoneName() {return this.zoneName;}
+    public String getZoneName() {
+        return this.zoneName;
+    }
 
     public void setZoneName(String zoneName) {
         this.zoneName = zoneName;
     }
 
-    public Long getPolicyId() {return this.policyId;}
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
     public void setPolicyId(Long policyId) {
         this.policyId = policyId;
@@ -162,6 +170,11 @@ public class XXPolicyChangeLog implements java.io.Serializable {
 
     public void setPolicyGuid(String policyGuid) {
         this.policyGuid = policyGuid;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     /**
@@ -186,10 +199,7 @@ public class XXPolicyChangeLog implements java.io.Serializable {
 
         XXPolicyChangeLog other = (XXPolicyChangeLog) obj;
 
-        return Objects.equals(this.id, other.id) && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.policyVersion, other.policyVersion)
-                && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceType, other.serviceType)
-                && Objects.equals(this.policyType, other.policyType) && Objects.equals(this.zoneName, other.zoneName) && Objects.equals(this.policyId, other.policyId)
-                && Objects.equals(this.policyGuid, other.policyGuid);
+        return Objects.equals(this.id, other.id) && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.policyVersion, other.policyVersion) && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceType, other.serviceType) && Objects.equals(this.policyType, other.policyType) && Objects.equals(this.zoneName, other.zoneName) && Objects.equals(this.policyId, other.policyId) && Objects.equals(this.policyGuid, other.policyGuid);
     }
 
     /**
@@ -214,4 +224,3 @@ public class XXPolicyChangeLog implements java.io.Serializable {
         return str;
     }
 }
-

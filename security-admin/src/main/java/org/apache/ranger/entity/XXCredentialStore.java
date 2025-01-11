@@ -42,13 +42,12 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
     @SequenceGenerator(name = "X_CRED_STORE_SEQ", sequenceName = "X_CRED_STORE_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_CRED_STORE_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     /**
      * Name
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "STORE_NAME", nullable = false, length = 1024)
     protected String name;
@@ -57,7 +56,6 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>4000</b>.
      * </ul>
-     *
      */
     @Column(name = "DESCR", nullable = false, length = 4000)
     protected String description;
@@ -94,8 +92,14 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -112,6 +116,7 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -126,6 +131,7 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>name</b>
+     *
      * @return String - value of member attribute <b>name</b>.
      */
     public String getName() {
@@ -135,6 +141,7 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>name</b>.
      * You cannot set null to the attribute.
+     *
      * @param name Value to set member attribute <b>name</b>
      */
     public void setName(String name) {
@@ -143,6 +150,7 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>description</b>
+     *
      * @return String - value of member attribute <b>description</b>.
      */
     public String getDescription() {
@@ -152,6 +160,7 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>description</b>.
      * You cannot set null to the attribute.
+     *
      * @param description Value to set member attribute <b>description</b>
      */
     public void setDescription(String description) {

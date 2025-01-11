@@ -43,80 +43,71 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_PERM_MAP_SEQ", sequenceName = "X_PERM_MAP_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_PERM_MAP_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long    id;
     /**
      * Group to which the permission belongs to
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "PERM_GROUP", length = 1024)
-    protected String permGroup;
+    protected String  permGroup;
     /**
      * Id of the resource
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "RES_ID")
-    protected Long resourceId;
+    protected Long    resourceId;
     /**
      * Id of the group
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "GROUP_ID")
-    protected Long groupId;
+    protected Long    groupId;
     /**
      * Id of the user
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "USER_ID")
-    protected Long userId;
+    protected Long    userId;
     /**
      * Permission for user or group
      * <ul>
      * <li>This attribute is of type enum CommonEnums::XAPermForType
      * </ul>
-     *
      */
     @Column(name = "PERM_FOR", nullable = false)
-    protected int permFor = AppConstants.XA_PERM_FOR_UNKNOWN;
+    protected int     permFor       = AppConstants.XA_PERM_FOR_UNKNOWN;
     /**
      * Type of permission
      * <ul>
      * <li>This attribute is of type enum CommonEnums::XAPermType
      * </ul>
-     *
      */
     @Column(name = "PERM_TYPE", nullable = false)
-    protected int permType = AppConstants.XA_PERM_TYPE_UNKNOWN;
+    protected int     permType      = AppConstants.XA_PERM_TYPE_UNKNOWN;
     /**
      * Is recursive
      * <ul>
      * <li>This attribute is of type enum CommonEnums::BooleanValue
      * </ul>
-     *
      */
     @Column(name = "IS_RECURSIVE", nullable = false)
-    protected int isRecursive = RangerConstants.BOOL_NONE;
+    protected int     isRecursive   = RangerConstants.BOOL_NONE;
     /**
      * Is wild card
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "IS_WILD_CARD", nullable = false)
-    protected boolean isWildCard = true;
+    protected boolean isWildCard    = true;
     /**
      * Grant is true and revoke is false
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "GRANT_REVOKE", nullable = false)
     protected boolean grantOrRevoke = true;
@@ -125,7 +116,6 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "IP_ADDRESS", length = 1024)
     protected String  ipAddress;
@@ -169,8 +159,14 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -208,6 +204,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -229,6 +226,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>permGroup</b>
+     *
      * @return String - value of member attribute <b>permGroup</b>.
      */
     public String getPermGroup() {
@@ -238,6 +236,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>permGroup</b>.
      * You cannot set null to the attribute.
+     *
      * @param permGroup Value to set member attribute <b>permGroup</b>
      */
     public void setPermGroup(String permGroup) {
@@ -246,6 +245,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>resourceId</b>
+     *
      * @return Long - value of member attribute <b>resourceId</b>.
      */
     public Long getResourceId() {
@@ -255,6 +255,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>resourceId</b>.
      * You cannot set null to the attribute.
+     *
      * @param resourceId Value to set member attribute <b>resourceId</b>
      */
     public void setResourceId(Long resourceId) {
@@ -263,6 +264,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>groupId</b>
+     *
      * @return Long - value of member attribute <b>groupId</b>.
      */
     public Long getGroupId() {
@@ -272,6 +274,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>groupId</b>.
      * You cannot set null to the attribute.
+     *
      * @param groupId Value to set member attribute <b>groupId</b>
      */
     public void setGroupId(Long groupId) {
@@ -280,6 +283,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>userId</b>
+     *
      * @return Long - value of member attribute <b>userId</b>.
      */
     public Long getUserId() {
@@ -289,6 +293,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>userId</b>.
      * You cannot set null to the attribute.
+     *
      * @param userId Value to set member attribute <b>userId</b>
      */
     public void setUserId(Long userId) {
@@ -297,6 +302,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>permFor</b>
+     *
      * @return int - value of member attribute <b>permFor</b>.
      */
     public int getPermFor() {
@@ -306,6 +312,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>permFor</b>.
      * You cannot set null to the attribute.
+     *
      * @param permFor Value to set member attribute <b>permFor</b>
      */
     public void setPermFor(int permFor) {
@@ -314,6 +321,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>permType</b>
+     *
      * @return int - value of member attribute <b>permType</b>.
      */
     public int getPermType() {
@@ -323,6 +331,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>permType</b>.
      * You cannot set null to the attribute.
+     *
      * @param permType Value to set member attribute <b>permType</b>
      */
     public void setPermType(int permType) {
@@ -331,6 +340,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>isRecursive</b>
+     *
      * @return int - value of member attribute <b>isRecursive</b>.
      */
     public int getIsRecursive() {
@@ -340,6 +350,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>isRecursive</b>.
      * You cannot set null to the attribute.
+     *
      * @param isRecursive Value to set member attribute <b>isRecursive</b>
      */
     public void setIsRecursive(int isRecursive) {
@@ -348,6 +359,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>isWildCard</b>
+     *
      * @return boolean - value of member attribute <b>isWildCard</b>.
      */
     public boolean isIsWildCard() {
@@ -357,6 +369,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>isWildCard</b>.
      * You cannot set null to the attribute.
+     *
      * @param isWildCard Value to set member attribute <b>isWildCard</b>
      */
     public void setIsWildCard(boolean isWildCard) {
@@ -365,6 +378,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>grantOrRevoke</b>
+     *
      * @return boolean - value of member attribute <b>grantOrRevoke</b>.
      */
     public boolean isGrantOrRevoke() {
@@ -374,6 +388,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>grantOrRevoke</b>.
      * You cannot set null to the attribute.
+     *
      * @param grantOrRevoke Value to set member attribute <b>grantOrRevoke</b>
      */
     public void setGrantOrRevoke(boolean grantOrRevoke) {

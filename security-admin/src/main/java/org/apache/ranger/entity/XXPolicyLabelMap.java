@@ -81,6 +81,11 @@ public class XXPolicyLabelMap extends XXDBBase implements Serializable {
     }
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -115,8 +120,9 @@ public class XXPolicyLabelMap extends XXDBBase implements Serializable {
         }
         if (policyLabelId == null) {
             return other.policyLabelId == null;
-        } else
+        } else {
             return policyLabelId.equals(other.policyLabelId);
+        }
     }
 
     @Override

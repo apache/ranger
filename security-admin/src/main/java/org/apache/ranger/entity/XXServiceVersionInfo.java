@@ -103,6 +103,67 @@ public class XXServiceVersionInfo implements java.io.Serializable {
         return object1.equals(object2);
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        final boolean ret;
+
+        if (this == obj) {
+            ret = true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            ret = false;
+        } else {
+            XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
+
+            ret = super.equals(obj) &&
+                    Objects.equals(id, other.id) &&
+                    Objects.equals(version, other.version) &&
+                    Objects.equals(serviceId, other.serviceId) &&
+                    Objects.equals(policyVersion, other.policyVersion) &&
+                    Objects.equals(policyUpdateTime, other.policyUpdateTime) &&
+                    Objects.equals(tagVersion, other.tagVersion) &&
+                    Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
+                    Objects.equals(roleVersion, other.roleVersion) &&
+                    Objects.equals(roleUpdateTime, other.roleUpdateTime) &&
+                    Objects.equals(gdsVersion, other.gdsVersion) &&
+                    Objects.equals(gdsUpdateTime, other.gdsUpdateTime);
+        }
+
+        return ret;
+    }
+
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = "XXServiceVersionInfo={";
+        str += "id={" + id + "} ";
+        str += "version={" + version + "} ";
+        str += "serviceId={" + serviceId + "} ";
+        str += "policyVersion={" + policyVersion + "} ";
+        str += "policyUpdateTime={" + policyUpdateTime + "} ";
+        str += "tagVersion={" + tagVersion + "} ";
+        str += "tagUpdateTime={" + tagUpdateTime + "} ";
+        str += "setRoleVersion={" + roleVersion + "}";
+        str += "setRoleUpdateTime={" + roleUpdateTime + "}";
+        str += "gdsVersion={" + gdsVersion + "} ";
+        str += "gdsUpdateTime={" + gdsUpdateTime + "} ";
+        str += "}";
+        return str;
+    }
+
     public int getMyClassType() {
         return AppConstants.CLASS_TYPE_NONE;
     }
@@ -197,61 +258,5 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 
     public void setGdsUpdateTime(Date updateTime) {
         this.gdsUpdateTime = updateTime;
-    }
-
-    /**
-     * Checks for all attributes except referenced db objects
-     *
-     * @return true if all attributes match
-     */
-    @Override
-    public boolean equals(Object obj) {
-        final boolean ret;
-
-        if (this == obj) {
-            ret = true;
-        } else if (obj == null || getClass() != obj.getClass()) {
-            ret = false;
-        } else {
-            XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
-
-            ret = super.equals(obj) &&
-                    Objects.equals(id, other.id) &&
-                    Objects.equals(version, other.version) &&
-                    Objects.equals(serviceId, other.serviceId) &&
-                    Objects.equals(policyVersion, other.policyVersion) &&
-                    Objects.equals(policyUpdateTime, other.policyUpdateTime) &&
-                    Objects.equals(tagVersion, other.tagVersion) &&
-                    Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
-                    Objects.equals(roleVersion, other.roleVersion) &&
-                    Objects.equals(roleUpdateTime, other.roleUpdateTime) &&
-                    Objects.equals(gdsVersion, other.gdsVersion) &&
-                    Objects.equals(gdsUpdateTime, other.gdsUpdateTime);
-        }
-
-        return ret;
-    }
-
-    /**
-     * This return the bean content in string format
-     *
-     * @return formatedStr
-     */
-    @Override
-    public String toString() {
-        String str = "XXServiceVersionInfo={";
-        str += "id={" + id + "} ";
-        str += "version={" + version + "} ";
-        str += "serviceId={" + serviceId + "} ";
-        str += "policyVersion={" + policyVersion + "} ";
-        str += "policyUpdateTime={" + policyUpdateTime + "} ";
-        str += "tagVersion={" + tagVersion + "} ";
-        str += "tagUpdateTime={" + tagUpdateTime + "} ";
-        str += "setRoleVersion={" + roleVersion + "}";
-        str += "setRoleUpdateTime={" + roleUpdateTime + "}";
-        str += "gdsVersion={" + gdsVersion + "} ";
-        str += "gdsUpdateTime={" + gdsUpdateTime + "} ";
-        str += "}";
-        return str;
     }
 }

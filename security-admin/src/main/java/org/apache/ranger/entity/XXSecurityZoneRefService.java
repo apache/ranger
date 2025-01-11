@@ -116,8 +116,7 @@ public class XXSecurityZoneRefService extends XXDBBase implements java.io.Serial
      */
     @Override
     public String toString() {
-        return "XXSecurityZoneRefService [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", serviceId="
-                + serviceId + ", serviceName=" + serviceName + "]";
+        return "XXSecurityZoneRefService [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", serviceId=" + serviceId + ", serviceName=" + serviceName + "]";
     }
 
     /**

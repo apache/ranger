@@ -31,7 +31,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "x_user_module_perm")
 public class XXUserPermission extends XXDBBase implements java.io.Serializable {
-
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -115,6 +114,11 @@ public class XXUserPermission extends XXDBBase implements java.io.Serializable {
     }
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -149,13 +153,13 @@ public class XXUserPermission extends XXDBBase implements java.io.Serializable {
         }
         if (userId == null) {
             return other.userId == null;
-        } else
+        } else {
             return userId.equals(other.userId);
+        }
     }
 
     @Override
     public String toString() {
-
         String str = "VXUserPermission={";
         str += super.toString();
         str += "id={" + id + "} ";

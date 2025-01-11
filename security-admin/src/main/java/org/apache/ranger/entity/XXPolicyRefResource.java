@@ -32,8 +32,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_resource")
-public class XXPolicyRefResource extends XXDBBase implements
-        java.io.Serializable {
+public class XXPolicyRefResource extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXPolicyRefResource
@@ -123,8 +122,7 @@ public class XXPolicyRefResource extends XXDBBase implements
      */
     @Override
     public String toString() {
-        return "XXPolicyRefResource [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", resourceDefId="
-                + resourceDefId + ", resource_name=" + resourceName + "]";
+        return "XXPolicyRefResource [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", resourceDefId=" + resourceDefId + ", resource_name=" + resourceName + "]";
     }
 
     /**

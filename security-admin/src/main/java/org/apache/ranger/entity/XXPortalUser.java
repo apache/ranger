@@ -48,13 +48,12 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_PORTAL_USER_SEQ", sequenceName = "X_PORTAL_USER_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_PORTAL_USER_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     /**
      * First name of the user
      * <ul>
      * <li>The maximum length for this attribute is <b>1022</b>.
      * </ul>
-     *
      */
     @Column(name = "FIRST_NAME", length = 1022)
     protected String firstName;
@@ -63,7 +62,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>1022</b>.
      * </ul>
-     *
      */
     @Column(name = "LAST_NAME", length = 1022)
     protected String lastName;
@@ -72,7 +70,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>2048</b>.
      * </ul>
-     *
      */
     @Column(name = "PUB_SCR_NAME", length = 2048)
     protected String publicScreenName;
@@ -81,7 +78,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>767</b>.
      * </ul>
-     *
      */
     @Column(name = "LOGIN_ID", unique = true, length = 767)
     protected String loginId;
@@ -89,7 +85,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>512</b>.
      * </ul>
-     *
      */
     @Column(name = "PASSWORD", nullable = false, length = 512)
     protected String password;
@@ -98,7 +93,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>512</b>.
      * </ul>
-     *
      */
     @Column(name = "EMAIL", unique = true, length = 512)
     protected String emailAddress;
@@ -107,25 +101,22 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>This attribute is of type enum CommonEnums::ActivationStatus
      * </ul>
-     *
      */
     @Column(name = "STATUS", nullable = false)
-    protected int status = RangerConstants.ACT_STATUS_DISABLED;
+    protected int    status              = RangerConstants.ACT_STATUS_DISABLED;
     /**
      * Source of the user
      * <ul>
      * <li>This attribute is of type enum CommonEnums::UserSource
      * </ul>
-     *
      */
     @Column(name = "USER_SRC", nullable = false)
-    protected int userSource = RangerConstants.USER_APP;
+    protected int    userSource          = RangerConstants.USER_APP;
     /**
      * Note
      * <ul>
      * <li>The maximum length for this attribute is <b>4000</b>.
      * </ul>
-     *
      */
     @Column(name = "NOTES", length = 4000)
     protected String notes;
@@ -133,7 +124,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * Additional store attributes.
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "OTHER_ATTRIBUTES")
     protected String otherAttributes;
@@ -141,7 +131,6 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * Sync Source Attribute.
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "SYNC_SOURCE")
     protected String syncSource;
@@ -149,7 +138,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     protected String oldPasswords;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "PASSWORD_UPDATED_TIME")
-    protected Date passwordUpdatedTime = DateUtil.getUTCDate();
+    protected Date   passwordUpdatedTime = DateUtil.getUTCDate();
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -188,8 +177,14 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -227,6 +222,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -250,6 +246,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>firstName</b>
+     *
      * @return String - value of member attribute <b>firstName</b>.
      */
     public String getFirstName() {
@@ -259,6 +256,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>firstName</b>.
      * You cannot set null to the attribute.
+     *
      * @param firstName Value to set member attribute <b>firstName</b>
      */
     public void setFirstName(String firstName) {
@@ -267,6 +265,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>lastName</b>
+     *
      * @return String - value of member attribute <b>lastName</b>.
      */
     public String getLastName() {
@@ -276,6 +275,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>lastName</b>.
      * You cannot set null to the attribute.
+     *
      * @param lastName Value to set member attribute <b>lastName</b>
      */
     public void setLastName(String lastName) {
@@ -284,6 +284,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>publicScreenName</b>
+     *
      * @return String - value of member attribute <b>publicScreenName</b>.
      */
     public String getPublicScreenName() {
@@ -293,6 +294,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>publicScreenName</b>.
      * You cannot set null to the attribute.
+     *
      * @param publicScreenName Value to set member attribute <b>publicScreenName</b>
      */
     public void setPublicScreenName(String publicScreenName) {
@@ -301,6 +303,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>loginId</b>
+     *
      * @return String - value of member attribute <b>loginId</b>.
      */
     public String getLoginId() {
@@ -310,6 +313,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>loginId</b>.
      * You cannot set null to the attribute.
+     *
      * @param loginId Value to set member attribute <b>loginId</b>
      */
     public void setLoginId(String loginId) {
@@ -318,6 +322,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>password</b>
+     *
      * @return String - value of member attribute <b>password</b>.
      */
     public String getPassword() {
@@ -327,6 +332,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>password</b>.
      * You cannot set null to the attribute.
+     *
      * @param password Value to set member attribute <b>password</b>
      */
     public void setPassword(String password) {
@@ -335,6 +341,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>emailAddress</b>
+     *
      * @return String - value of member attribute <b>emailAddress</b>.
      */
     public String getEmailAddress() {
@@ -344,6 +351,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>emailAddress</b>.
      * You cannot set null to the attribute.
+     *
      * @param emailAddress Value to set member attribute <b>emailAddress</b>
      */
     public void setEmailAddress(String emailAddress) {
@@ -352,6 +360,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>status</b>
+     *
      * @return int - value of member attribute <b>status</b>.
      */
     public int getStatus() {
@@ -361,6 +370,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>status</b>.
      * You cannot set null to the attribute.
+     *
      * @param status Value to set member attribute <b>status</b>
      */
     public void setStatus(int status) {
@@ -369,6 +379,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>userSource</b>
+     *
      * @return int - value of member attribute <b>userSource</b>.
      */
     public int getUserSource() {
@@ -378,6 +389,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>userSource</b>.
      * You cannot set null to the attribute.
+     *
      * @param userSource Value to set member attribute <b>userSource</b>
      */
     public void setUserSource(int userSource) {
@@ -386,6 +398,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>notes</b>
+     *
      * @return String - value of member attribute <b>notes</b>.
      */
     public String getNotes() {
@@ -395,6 +408,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>notes</b>.
      * You cannot set null to the attribute.
+     *
      * @param notes Value to set member attribute <b>notes</b>
      */
     public void setNotes(String notes) {
@@ -412,6 +426,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets JSON {@link String} representation of additional store attributes.
      * This method accepts null values.
+     *
      * @param otherAttributes
      */
     public void setOtherAttributes(String otherAttributes) {
@@ -422,11 +437,14 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * @return JSON {@link String} representation of sync source attribute if available,
      * <code>null</code> otherwise.
      */
-    public String getSyncSource() {return syncSource;}
+    public String getSyncSource() {
+        return syncSource;
+    }
 
     /**
      * This method sets JSON {@link String} representation of sync source attribute.
      * This method accepts null values.
+     *
      * @param syncSource
      */
     public void setSyncSource(String syncSource) {

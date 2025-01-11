@@ -246,6 +246,11 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -390,8 +395,9 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
         }
         if (rowFilterOptions == null) {
             return other.rowFilterOptions == null;
-        } else
+        } else {
             return rowFilterOptions.equals(other.rowFilterOptions);
+        }
     }
 
     /*
@@ -406,8 +412,8 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
                 + level + ", parent=" + parent + ", mandatory=" + mandatory
                 + ", lookUpSupported=" + lookUpSupported
                 + ", recursiveSupported=" + recursiveSupported
-                + ", excludesSupported=" + excludesSupported + ", matcher="
-                + matcher + ", matcherOptions=" + matcherOptions
+                + ", excludesSupported=" + excludesSupported + ", matcher=" + matcher
+                + ", matcherOptions=" + matcherOptions
                 + ", validationRegEx=" + validationRegEx
                 + ", validationMessage=" + validationMessage
                 + ", uiHint=" + uiHint
@@ -808,7 +814,11 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
         this.dataMaskOptions = dataMaskOptions;
     }
 
-    public String getRowFilterOptions()                      {return rowFilterOptions;}
+    public String getRowFilterOptions() {
+        return rowFilterOptions;
+    }
 
-    public void setRowFilterOptions(String rowFilterOptions) {this.rowFilterOptions = rowFilterOptions;}
+    public void setRowFilterOptions(String rowFilterOptions) {
+        this.rowFilterOptions = rowFilterOptions;
+    }
 }

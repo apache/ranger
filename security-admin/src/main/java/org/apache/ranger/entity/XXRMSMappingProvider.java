@@ -45,14 +45,14 @@ public class XXRMSMappingProvider implements Serializable {
     @SequenceGenerator(name = "X_RMS_MAPPING_PROVIDER_SEQ", sequenceName = "X_RMS_MAPPING_PROVIDER_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RMS_MAPPING_PROVIDER_SEQ")
     @Column(name = "id")
-    protected Long id;
+    protected Long   id;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "change_timestamp")
-    protected Date changeTimestamp;
+    protected Date   changeTimestamp;
     @Column(name = "name")
     protected String name;
     @Column(name = "last_known_version")
-    protected Long lastKnownVersion;
+    protected Long   lastKnownVersion;
 
     public XXRMSMappingProvider() {}
 
@@ -157,8 +157,9 @@ public class XXRMSMappingProvider implements Serializable {
         }
         if (lastKnownVersion == null) {
             return other.lastKnownVersion == null;
-        } else
+        } else {
             return lastKnownVersion.equals(other.lastKnownVersion);
+        }
     }
 
     /*

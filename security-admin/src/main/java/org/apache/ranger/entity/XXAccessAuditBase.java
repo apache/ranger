@@ -46,31 +46,28 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     @SequenceGenerator(name = "XA_ACCESS_AUDIT_SEQ", sequenceName = "XA_ACCESS_AUDIT_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "XA_ACCESS_AUDIT_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     /**
      * Repository Type
      * <ul>
      * <li>This attribute is of type enum CommonEnums::AssetType
      * </ul>
-     *
      */
     @Column(name = "AUDIT_TYPE", nullable = false)
-    protected int auditType = AppConstants.ASSET_UNKNOWN;
+    protected int    auditType    = AppConstants.ASSET_UNKNOWN;
     /**
      * Access Result
      * <ul>
      * <li>This attribute is of type enum CommonEnums::AccessResult
      * </ul>
-     *
      */
     @Column(name = "ACCESS_RESULT")
-    protected int accessResult = RangerConstants.ACCESS_RESULT_DENIED;
+    protected int    accessResult = RangerConstants.ACCESS_RESULT_DENIED;
     /**
      * Access Type
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "ACCESS_TYPE", length = 255)
     protected String accessType;
@@ -79,7 +76,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "ACL_ENFORCER", length = 255)
     protected String aclEnforcer;
@@ -88,7 +84,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "AGENT_ID", length = 255)
     protected String agentId;
@@ -97,7 +92,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "CLIENT_IP", length = 255)
     protected String clientIP;
@@ -106,7 +100,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "CLIENT_TYPE", length = 255)
     protected String clientType;
@@ -114,16 +107,14 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * Policy Id
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "POLICY_ID")
-    protected long policyId;
+    protected long   policyId;
     /**
      * Repository Name
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "REPO_NAME", length = 255)
     protected String repoName;
@@ -131,16 +122,14 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * Repository Type
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "REPO_TYPE")
-    protected int repoType;
+    protected int    repoType;
     /**
      * Reason of result
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "RESULT_REASON", length = 255)
     protected String resultReason;
@@ -149,7 +138,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "SESSION_ID", length = 255)
     protected String sessionId;
@@ -157,17 +145,15 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * Event Time
      * <ul>
      * </ul>
-     *
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "EVENT_TIME")
-    protected Date eventTime = DateUtil.getUTCDate();
+    protected Date   eventTime    = DateUtil.getUTCDate();
     /**
      * Requesting User
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "REQUEST_USER", length = 255)
     protected String requestUser;
@@ -176,7 +162,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>2000</b>.
      * </ul>
-     *
      */
     @Column(name = "ACTION", length = 2000)
     protected String action;
@@ -185,7 +170,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>2000</b>.
      * </ul>
-     *
      */
     @Column(name = "REQUEST_DATA", length = 2000)
     protected String requestData;
@@ -194,7 +178,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>2000</b>.
      * </ul>
-     *
      */
     @Column(name = "RESOURCE_PATH", length = 2000)
     protected String resourcePath;
@@ -203,7 +186,6 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "RESOURCE_TYPE", length = 255)
     protected String resourceType;
@@ -241,8 +223,14 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -307,6 +295,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -336,6 +325,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>auditType</b>
+     *
      * @return int - value of member attribute <b>auditType</b>.
      */
     public int getAuditType() {
@@ -345,6 +335,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>auditType</b>.
      * You cannot set null to the attribute.
+     *
      * @param auditType Value to set member attribute <b>auditType</b>
      */
     public void setAuditType(int auditType) {
@@ -353,6 +344,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>accessResult</b>
+     *
      * @return int - value of member attribute <b>accessResult</b>.
      */
     public int getAccessResult() {
@@ -362,6 +354,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>accessResult</b>.
      * You cannot set null to the attribute.
+     *
      * @param accessResult Value to set member attribute <b>accessResult</b>
      */
     public void setAccessResult(int accessResult) {
@@ -370,6 +363,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>accessType</b>
+     *
      * @return String - value of member attribute <b>accessType</b>.
      */
     public String getAccessType() {
@@ -379,6 +373,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>accessType</b>.
      * You cannot set null to the attribute.
+     *
      * @param accessType Value to set member attribute <b>accessType</b>
      */
     public void setAccessType(String accessType) {
@@ -387,6 +382,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>aclEnforcer</b>
+     *
      * @return String - value of member attribute <b>aclEnforcer</b>.
      */
     public String getAclEnforcer() {
@@ -396,6 +392,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>aclEnforcer</b>.
      * You cannot set null to the attribute.
+     *
      * @param aclEnforcer Value to set member attribute <b>aclEnforcer</b>
      */
     public void setAclEnforcer(String aclEnforcer) {
@@ -404,6 +401,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>agentId</b>
+     *
      * @return String - value of member attribute <b>agentId</b>.
      */
     public String getAgentId() {
@@ -413,6 +411,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>agentId</b>.
      * You cannot set null to the attribute.
+     *
      * @param agentId Value to set member attribute <b>agentId</b>
      */
     public void setAgentId(String agentId) {
@@ -421,6 +420,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>clientIP</b>
+     *
      * @return String - value of member attribute <b>clientIP</b>.
      */
     public String getClientIP() {
@@ -430,6 +430,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>clientIP</b>.
      * You cannot set null to the attribute.
+     *
      * @param clientIP Value to set member attribute <b>clientIP</b>
      */
     public void setClientIP(String clientIP) {
@@ -438,6 +439,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>clientType</b>
+     *
      * @return String - value of member attribute <b>clientType</b>.
      */
     public String getClientType() {
@@ -447,6 +449,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>clientType</b>.
      * You cannot set null to the attribute.
+     *
      * @param clientType Value to set member attribute <b>clientType</b>
      */
     public void setClientType(String clientType) {
@@ -455,6 +458,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>policyId</b>
+     *
      * @return long - value of member attribute <b>policyId</b>.
      */
     public long getPolicyId() {
@@ -464,6 +468,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>policyId</b>.
      * You cannot set null to the attribute.
+     *
      * @param policyId Value to set member attribute <b>policyId</b>
      */
     public void setPolicyId(long policyId) {
@@ -472,6 +477,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>repoName</b>
+     *
      * @return String - value of member attribute <b>repoName</b>.
      */
     public String getRepoName() {
@@ -481,6 +487,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>repoName</b>.
      * You cannot set null to the attribute.
+     *
      * @param repoName Value to set member attribute <b>repoName</b>
      */
     public void setRepoName(String repoName) {
@@ -489,6 +496,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>repoType</b>
+     *
      * @return int - value of member attribute <b>repoType</b>.
      */
     public int getRepoType() {
@@ -498,6 +506,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>repoType</b>.
      * You cannot set null to the attribute.
+     *
      * @param repoType Value to set member attribute <b>repoType</b>
      */
     public void setRepoType(int repoType) {
@@ -506,6 +515,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>resultReason</b>
+     *
      * @return String - value of member attribute <b>resultReason</b>.
      */
     public String getResultReason() {
@@ -515,6 +525,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>resultReason</b>.
      * You cannot set null to the attribute.
+     *
      * @param resultReason Value to set member attribute <b>resultReason</b>
      */
     public void setResultReason(String resultReason) {
@@ -523,6 +534,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>sessionId</b>
+     *
      * @return String - value of member attribute <b>sessionId</b>.
      */
     public String getSessionId() {
@@ -532,6 +544,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>sessionId</b>.
      * You cannot set null to the attribute.
+     *
      * @param sessionId Value to set member attribute <b>sessionId</b>
      */
     public void setSessionId(String sessionId) {
@@ -540,6 +553,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>eventTime</b>
+     *
      * @return Date - value of member attribute <b>eventTime</b>.
      */
     public Date getEventTime() {
@@ -549,6 +563,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>eventTime</b>.
      * You cannot set null to the attribute.
+     *
      * @param eventTime Value to set member attribute <b>eventTime</b>
      */
     public void setEventTime(Date eventTime) {
@@ -557,6 +572,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>requestUser</b>
+     *
      * @return String - value of member attribute <b>requestUser</b>.
      */
     public String getRequestUser() {
@@ -566,6 +582,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>requestUser</b>.
      * You cannot set null to the attribute.
+     *
      * @param requestUser Value to set member attribute <b>requestUser</b>
      */
     public void setRequestUser(String requestUser) {
@@ -574,6 +591,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>action</b>
+     *
      * @return String - value of member attribute <b>action</b>.
      */
     public String getAction() {
@@ -583,6 +601,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>action</b>.
      * You cannot set null to the attribute.
+     *
      * @param action Value to set member attribute <b>action</b>
      */
     public void setAction(String action) {
@@ -591,6 +610,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>requestData</b>
+     *
      * @return String - value of member attribute <b>requestData</b>.
      */
     public String getRequestData() {
@@ -600,6 +620,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>requestData</b>.
      * You cannot set null to the attribute.
+     *
      * @param requestData Value to set member attribute <b>requestData</b>
      */
     public void setRequestData(String requestData) {
@@ -608,6 +629,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>resourcePath</b>
+     *
      * @return String - value of member attribute <b>resourcePath</b>.
      */
     public String getResourcePath() {
@@ -617,6 +639,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>resourcePath</b>.
      * You cannot set null to the attribute.
+     *
      * @param resourcePath Value to set member attribute <b>resourcePath</b>
      */
     public void setResourcePath(String resourcePath) {
@@ -625,6 +648,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
 
     /**
      * Returns the value for the member attribute <b>resourceType</b>
+     *
      * @return String - value of member attribute <b>resourceType</b>.
      */
     public String getResourceType() {
@@ -634,6 +658,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     /**
      * This method sets the value to the member attribute <b>resourceType</b>.
      * You cannot set null to the attribute.
+     *
      * @param resourceType Value to set member attribute <b>resourceType</b>
      */
     public void setResourceType(String resourceType) {

@@ -114,8 +114,7 @@ public class XXSecurityZoneRefRole extends XXDBBase implements java.io.Serializa
      */
     @Override
     public String toString() {
-        return "XXSecurityZoneRefRole [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", roleId="
-                + roleId + ", roleName=" + roleName + "]";
+        return "XXSecurityZoneRefRole [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", roleId=" + roleId + ", roleName=" + roleName + "]";
     }
 
     /**

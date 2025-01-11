@@ -41,7 +41,7 @@ import java.util.Map;
 
 @Component
 public class RangerAdminMetricsWrapper {
-    private static final Logger LOG= LoggerFactory.getLogger(RangerAdminMetricsWrapper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminMetricsWrapper.class);
 
     private static final String context = "admin";
 

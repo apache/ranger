@@ -65,6 +65,11 @@ public class XXServiceDef extends XXServiceDefBase implements java.io.Serializab
     }
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -78,8 +83,9 @@ public class XXServiceDef extends XXServiceDefBase implements java.io.Serializab
         XXServiceDef other = (XXServiceDef) obj;
         if (id == null) {
             return other.id == null;
-        } else
+        } else {
             return id.equals(other.id);
+        }
     }
 
     @Override

@@ -60,19 +60,33 @@ public class XXGdsDatasetPolicyMap implements Serializable {
         setPolicyId(policyId);
     }
 
-    public Long getId()                      {return id;}
+    public Long getId() {
+        return id;
+    }
 
-    public void setId(Long id)               {this.id = id;}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getDatasetId()               {return datasetId;}
+    public Long getDatasetId() {
+        return datasetId;
+    }
 
-    public void setDatasetId(Long datasetId) {this.datasetId = datasetId;}
+    public void setDatasetId(Long datasetId) {
+        this.datasetId = datasetId;
+    }
 
-    public Long getPolicyId()                {return policyId;}
+    public Long getPolicyId() {
+        return policyId;
+    }
 
-    public void setPolicyId(Long policyId)   {this.policyId = policyId;}
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-    public int getMyClassType()              {return AppConstants.CLASS_TYPE_GDS_DATASET_POLICY_MAP;}
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_GDS_DATASET_POLICY_MAP;
+    }
 
     @Override
     public int hashCode() {

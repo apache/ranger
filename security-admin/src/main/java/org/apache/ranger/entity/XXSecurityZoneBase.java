@@ -43,25 +43,37 @@ public abstract class XXSecurityZoneBase extends XXDBBase {
     @Column(name = "description")
     protected String description;
 
-    public Long getVersion()       {return version;}
+    public Long getVersion() {
+        return version;
+    }
 
-    public String getName()        {return name;}
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getJsonData()    {return jsonData;}
+    public String getJsonData() {
+        return jsonData;
+    }
 
     public void setJsonData(String jsonData) {
         this.jsonData = jsonData;
     }
 
-    public byte[] getGzJsonData()  {return gzJsonData;}
+    public byte[] getGzJsonData() {
+        return gzJsonData;
+    }
 
-    public void setGzJsonData(byte[] gzJsonData) {this.gzJsonData = gzJsonData;}
+    public void setGzJsonData(byte[] gzJsonData) {
+        this.gzJsonData = gzJsonData;
+    }
 
-    public String getDescription() {return description;}
+    public String getDescription() {
+        return description;
+    }
 
     public void setDescription(String description) {
         this.description = description;

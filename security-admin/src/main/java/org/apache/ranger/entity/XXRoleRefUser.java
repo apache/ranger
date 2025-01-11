@@ -37,7 +37,6 @@ import java.util.Objects;
 @Cacheable
 @Table(name = "x_role_ref_user")
 public class XXRoleRefUser extends XXDBBase implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     /**
@@ -139,8 +138,7 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
      */
     @Override
     public String toString() {
-        return "XXRoleRefUser [" + super.toString() + " id=" + id + ", roleId=" + roleId + ", userId=" + userId
-                + ", userName=" + userName + ", userType=" + userType + "]";
+        return "XXRoleRefUser [" + super.toString() + " id=" + id + ", roleId=" + roleId + ", userId=" + userId + ", userName=" + userName + ", userType=" + userType + "]";
     }
 
     /**

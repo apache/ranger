@@ -122,9 +122,13 @@ public class XXTagChangeLog implements java.io.Serializable {
         this.serviceId = serviceId;
     }
 
-    public Integer getChangeType()                {return this.changeType;}
+    public Integer getChangeType() {
+        return this.changeType;
+    }
 
-    public void setChangeType(Integer changeType) {this.changeType = changeType;}
+    public void setChangeType(Integer changeType) {
+        this.changeType = changeType;
+    }
 
     public Long getServiceTagsVersion() {
         return this.serviceTagsVersion;
@@ -134,16 +138,25 @@ public class XXTagChangeLog implements java.io.Serializable {
         this.serviceTagsVersion = serviceTagsVersion;
     }
 
-    public Long getServiceResourceId() {return this.serviceResourceId;}
+    public Long getServiceResourceId() {
+        return this.serviceResourceId;
+    }
 
     public void setServiceResourceId(Long serviceResourceId) {
         this.serviceResourceId = serviceResourceId;
     }
 
-    public Long getTagId() {return this.tagId;}
+    public Long getTagId() {
+        return this.tagId;
+    }
 
     public void setTagId(Long tagId) {
         this.tagId = tagId;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     /**
@@ -168,9 +181,7 @@ public class XXTagChangeLog implements java.io.Serializable {
 
         XXTagChangeLog other = (XXTagChangeLog) obj;
 
-        return Objects.equals(this.id, other.id) && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.serviceId, other.serviceId)
-                && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceTagsVersion, other.serviceTagsVersion)
-                && Objects.equals(this.serviceResourceId, other.serviceResourceId) && Objects.equals(this.tagId, other.tagId);
+        return Objects.equals(this.id, other.id) && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceTagsVersion, other.serviceTagsVersion) && Objects.equals(this.serviceResourceId, other.serviceResourceId) && Objects.equals(this.tagId, other.tagId);
     }
 
     /**
@@ -192,5 +203,3 @@ public class XXTagChangeLog implements java.io.Serializable {
         return str;
     }
 }
-
-

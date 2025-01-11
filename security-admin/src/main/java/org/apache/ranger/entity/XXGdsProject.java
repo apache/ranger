@@ -76,50 +76,92 @@ public class XXGdsProject extends XXDBBase implements Serializable {
     @Column(name = "additional_info")
     protected String additionalInfo;
 
-    public String getGuid()                              {return guid;}
+    public String getGuid() {
+        return guid;
+    }
 
-    public void setGuid(String guid)                     {this.guid = guid;}
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
 
-    public Long getVersion()                             {return version;}
+    public Long getVersion() {
+        return version;
+    }
 
-    public void setVersion(Long version)                 {this.version = version;}
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
-    public Boolean getIsEnabled()                        {return isEnabled;}
+    public Boolean getIsEnabled() {
+        return isEnabled;
+    }
 
-    public void setIsEnabled(Boolean isEnabled)          {this.isEnabled = isEnabled;}
+    public void setIsEnabled(Boolean isEnabled) {
+        this.isEnabled = isEnabled;
+    }
 
-    public String getName()                              {return name;}
+    public String getName() {
+        return name;
+    }
 
-    public void setName(String name)                     {this.name = name;}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getDescription()                       {return description;}
+    public String getDescription() {
+        return description;
+    }
 
-    public void setDescription(String description)       {this.description = description;}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public String getAcl()                               {return acl;}
+    public String getAcl() {
+        return acl;
+    }
 
-    public void setAcl(String acl)                       {this.acl = acl;}
+    public void setAcl(String acl) {
+        this.acl = acl;
+    }
 
-    public String getTermsOfUse()                        {return termsOfUse;}
+    public String getTermsOfUse() {
+        return termsOfUse;
+    }
 
-    public void setTermsOfUse(String termsOfUse)         {this.termsOfUse = termsOfUse;}
+    public void setTermsOfUse(String termsOfUse) {
+        this.termsOfUse = termsOfUse;
+    }
 
-    public String getOptions()                           {return options;}
+    public String getOptions() {
+        return options;
+    }
 
-    public void setOptions(String options)               {this.options = options;}
+    public void setOptions(String options) {
+        this.options = options;
+    }
 
-    public String getAdditionalInfo()                    {return additionalInfo;}
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
 
-    public void setAdditionalInfo(String additionalInfo) {this.additionalInfo = additionalInfo;}
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
 
     @Override
-    public int getMyClassType() {return AppConstants.CLASS_TYPE_GDS_PROJECT;}
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_GDS_PROJECT;
+    }
 
     @Override
-    public Long getId() {return id;}
+    public Long getId() {
+        return id;
+    }
 
     @Override
-    public void setId(Long id) {this.id = id;}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public int hashCode() {

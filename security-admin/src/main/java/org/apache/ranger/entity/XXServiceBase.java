@@ -340,6 +340,11 @@ public abstract class XXServiceBase extends XXDBBase {
         return this.isEnabled;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *

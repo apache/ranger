@@ -43,46 +43,41 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_TRX_LOG_SEQ", sequenceName = "X_TRX_LOG_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_TRX_LOG_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     /**
      * Name of the class to which the object id belongs to
      * <ul>
      * <li>This attribute is of type enum CommonEnums::ClassTypes
      * </ul>
-     *
      */
     @Column(name = "CLASS_TYPE", nullable = false)
-    protected int objectClassType = RangerConstants.CLASS_TYPE_NONE;
+    protected int    objectClassType = RangerConstants.CLASS_TYPE_NONE;
     /**
      * Id of the object to which this notes refers to
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "OBJECT_ID")
-    protected Long objectId;
+    protected Long   objectId;
     /**
      * Object Id of the parent object
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "PARENT_OBJECT_ID")
-    protected Long parentObjectId;
+    protected Long   parentObjectId;
     /**
      * Object Class Type of the parent object
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "PARENT_OBJECT_CLASS_TYPE", nullable = false)
-    protected int parentObjectClassType;
+    protected int    parentObjectClassType;
     /**
      * Name of the attribute that was changed
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "PARENT_OBJECT_NAME", length = 1024)
     protected String parentObjectName;
@@ -91,7 +86,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "OBJECT_NAME", length = 1024)
     protected String objectName;
@@ -100,7 +94,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "ATTR_NAME", length = 255)
     protected String attributeName;
@@ -109,7 +102,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "PREV_VAL", length = 1024)
     protected String previousValue;
@@ -118,7 +110,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "NEW_VAL", length = 1024)
     protected String newValue;
@@ -127,7 +118,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "TRX_ID", length = 1024)
     protected String transactionId;
@@ -136,7 +126,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>255</b>.
      * </ul>
-     *
      */
     @Column(name = "ACTION", length = 255)
     protected String action;
@@ -145,7 +134,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>The maximum length for this attribute is <b>512</b>.
      * </ul>
-     *
      */
     @Column(name = "SESS_ID", length = 512)
     protected String sessionId;
@@ -153,7 +141,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * Request Id
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "REQ_ID")
     protected String requestId;
@@ -161,7 +148,6 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * Session Type
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "SESS_TYPE")
     protected String sessionType;
@@ -207,8 +193,14 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -261,6 +253,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -285,6 +278,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>objectClassType</b>
+     *
      * @return int - value of member attribute <b>objectClassType</b>.
      */
     public int getObjectClassType() {
@@ -294,6 +288,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>objectClassType</b>.
      * You cannot set null to the attribute.
+     *
      * @param objectClassType Value to set member attribute <b>objectClassType</b>
      */
     public void setObjectClassType(int objectClassType) {
@@ -302,6 +297,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>objectId</b>
+     *
      * @return Long - value of member attribute <b>objectId</b>.
      */
     public Long getObjectId() {
@@ -311,6 +307,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>objectId</b>.
      * You cannot set null to the attribute.
+     *
      * @param objectId Value to set member attribute <b>objectId</b>
      */
     public void setObjectId(Long objectId) {
@@ -319,6 +316,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>parentObjectId</b>
+     *
      * @return Long - value of member attribute <b>parentObjectId</b>.
      */
     public Long getParentObjectId() {
@@ -328,6 +326,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>parentObjectId</b>.
      * You cannot set null to the attribute.
+     *
      * @param parentObjectId Value to set member attribute <b>parentObjectId</b>
      */
     public void setParentObjectId(Long parentObjectId) {
@@ -336,6 +335,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>parentObjectClassType</b>
+     *
      * @return int - value of member attribute <b>parentObjectClassType</b>.
      */
     public int getParentObjectClassType() {
@@ -345,6 +345,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>parentObjectClassType</b>.
      * You cannot set null to the attribute.
+     *
      * @param parentObjectClassType Value to set member attribute <b>parentObjectClassType</b>
      */
     public void setParentObjectClassType(int parentObjectClassType) {
@@ -353,6 +354,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>parentObjectName</b>
+     *
      * @return String - value of member attribute <b>parentObjectName</b>.
      */
     public String getParentObjectName() {
@@ -362,6 +364,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>parentObjectName</b>.
      * You cannot set null to the attribute.
+     *
      * @param parentObjectName Value to set member attribute <b>parentObjectName</b>
      */
     public void setParentObjectName(String parentObjectName) {
@@ -370,6 +373,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>objectName</b>
+     *
      * @return String - value of member attribute <b>objectName</b>.
      */
     public String getObjectName() {
@@ -379,6 +383,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>objectName</b>.
      * You cannot set null to the attribute.
+     *
      * @param objectName Value to set member attribute <b>objectName</b>
      */
     public void setObjectName(String objectName) {
@@ -387,6 +392,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>attributeName</b>
+     *
      * @return String - value of member attribute <b>attributeName</b>.
      */
     public String getAttributeName() {
@@ -396,6 +402,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>attributeName</b>.
      * You cannot set null to the attribute.
+     *
      * @param attributeName Value to set member attribute <b>attributeName</b>
      */
     public void setAttributeName(String attributeName) {
@@ -404,6 +411,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>previousValue</b>
+     *
      * @return String - value of member attribute <b>previousValue</b>.
      */
     public String getPreviousValue() {
@@ -413,6 +421,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>previousValue</b>.
      * You cannot set null to the attribute.
+     *
      * @param previousValue Value to set member attribute <b>previousValue</b>
      */
     public void setPreviousValue(String previousValue) {
@@ -421,6 +430,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>newValue</b>
+     *
      * @return String - value of member attribute <b>newValue</b>.
      */
     public String getNewValue() {
@@ -430,6 +440,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>newValue</b>.
      * You cannot set null to the attribute.
+     *
      * @param newValue Value to set member attribute <b>newValue</b>
      */
     public void setNewValue(String newValue) {
@@ -438,6 +449,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>transactionId</b>
+     *
      * @return String - value of member attribute <b>transactionId</b>.
      */
     public String getTransactionId() {
@@ -447,6 +459,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>transactionId</b>.
      * You cannot set null to the attribute.
+     *
      * @param transactionId Value to set member attribute <b>transactionId</b>
      */
     public void setTransactionId(String transactionId) {
@@ -455,6 +468,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>action</b>
+     *
      * @return String - value of member attribute <b>action</b>.
      */
     public String getAction() {
@@ -464,6 +478,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>action</b>.
      * You cannot set null to the attribute.
+     *
      * @param action Value to set member attribute <b>action</b>
      */
     public void setAction(String action) {
@@ -472,6 +487,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>sessionId</b>
+     *
      * @return String - value of member attribute <b>sessionId</b>.
      */
     public String getSessionId() {
@@ -481,6 +497,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>sessionId</b>.
      * You cannot set null to the attribute.
+     *
      * @param sessionId Value to set member attribute <b>sessionId</b>
      */
     public void setSessionId(String sessionId) {
@@ -489,6 +506,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>requestId</b>
+     *
      * @return String - value of member attribute <b>requestId</b>.
      */
     public String getRequestId() {
@@ -498,6 +516,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>requestId</b>.
      * You cannot set null to the attribute.
+     *
      * @param requestId Value to set member attribute <b>requestId</b>
      */
     public void setRequestId(String requestId) {
@@ -506,6 +525,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>sessionType</b>
+     *
      * @return String - value of member attribute <b>sessionType</b>.
      */
     public String getSessionType() {
@@ -515,6 +535,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>sessionType</b>.
      * You cannot set null to the attribute.
+     *
      * @param sessionType Value to set member attribute <b>sessionType</b>
      */
     public void setSessionType(String sessionType) {

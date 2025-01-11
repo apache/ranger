@@ -106,6 +106,11 @@ public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable 
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
      *

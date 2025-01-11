@@ -47,7 +47,6 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      * Id of the resource
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "RES_ID")
     protected Long resourceId;
@@ -55,7 +54,6 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      * Id of the group
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "GROUP_ID")
     protected Long groupId;
@@ -63,7 +61,6 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      * Id of the user
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "USER_ID")
     protected Long userId;
@@ -72,10 +69,9 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      * <ul>
      * <li>This attribute is of type enum CommonEnums::XAAuditType
      * </ul>
-     *
      */
     @Column(name = "AUDIT_TYPE", nullable = false)
-    protected int auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
+    protected int  auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -108,8 +104,14 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -132,6 +134,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -148,6 +151,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>resourceId</b>
+     *
      * @return Long - value of member attribute <b>resourceId</b>.
      */
     public Long getResourceId() {
@@ -157,6 +161,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>resourceId</b>.
      * You cannot set null to the attribute.
+     *
      * @param resourceId Value to set member attribute <b>resourceId</b>
      */
     public void setResourceId(Long resourceId) {
@@ -165,6 +170,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>groupId</b>
+     *
      * @return Long - value of member attribute <b>groupId</b>.
      */
     public Long getGroupId() {
@@ -174,6 +180,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>groupId</b>.
      * You cannot set null to the attribute.
+     *
      * @param groupId Value to set member attribute <b>groupId</b>
      */
     public void setGroupId(Long groupId) {
@@ -182,6 +189,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>userId</b>
+     *
      * @return Long - value of member attribute <b>userId</b>.
      */
     public Long getUserId() {
@@ -191,6 +199,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>userId</b>.
      * You cannot set null to the attribute.
+     *
      * @param userId Value to set member attribute <b>userId</b>
      */
     public void setUserId(Long userId) {
@@ -199,6 +208,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>auditType</b>
+     *
      * @return int - value of member attribute <b>auditType</b>.
      */
     public int getAuditType() {
@@ -208,6 +218,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>auditType</b>.
      * You cannot set null to the attribute.
+     *
      * @param auditType Value to set member attribute <b>auditType</b>
      */
     public void setAuditType(int auditType) {

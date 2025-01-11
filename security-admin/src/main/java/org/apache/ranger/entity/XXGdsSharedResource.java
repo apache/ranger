@@ -100,82 +100,156 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
     @Column(name = "additional_info")
     protected String additionalInfo;
 
-    public String getGuid()                                    {return guid;}
+    public String getGuid() {
+        return guid;
+    }
 
-    public void setGuid(String guid)                           {this.guid = guid;}
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
 
-    public Long getVersion()                                   {return version;}
+    public Long getVersion() {
+        return version;
+    }
 
-    public void setVersion(Long version)                       {this.version = version;}
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
-    public Boolean getIsEnabled()                              {return isEnabled;}
+    public Boolean getIsEnabled() {
+        return isEnabled;
+    }
 
-    public void setIsEnabled(Boolean isEnabled)                {this.isEnabled = isEnabled;}
+    public void setIsEnabled(Boolean isEnabled) {
+        this.isEnabled = isEnabled;
+    }
 
-    public String getName()                                    {return name;}
+    public String getName() {
+        return name;
+    }
 
-    public void setName(String name)                           {this.name = name;}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getDescription()                             {return description;}
+    public String getDescription() {
+        return description;
+    }
 
-    public void setDescription(String description)             {this.description = description;}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public Long getDataShareId()                               {return dataShareId;}
+    public Long getDataShareId() {
+        return dataShareId;
+    }
 
-    public void setDataShareId(Long dataShareId)               {this.dataShareId = dataShareId;}
+    public void setDataShareId(Long dataShareId) {
+        this.dataShareId = dataShareId;
+    }
 
-    public String getResource()                                {return resource;}
+    public String getResource() {
+        return resource;
+    }
 
-    public void setResource(String resource)                   {this.resource = resource;}
+    public void setResource(String resource) {
+        this.resource = resource;
+    }
 
-    public String getSubResource()                             {return subResource;}
+    public String getSubResource() {
+        return subResource;
+    }
 
-    public void setSubResource(String subResource)             {this.subResource = subResource;}
+    public void setSubResource(String subResource) {
+        this.subResource = subResource;
+    }
 
-    public String getSubResourceType()                         {return subResourceType;}
+    public String getSubResourceType() {
+        return subResourceType;
+    }
 
-    public void setSubResourceType(String subResourceType)     {this.subResourceType = subResourceType;}
+    public void setSubResourceType(String subResourceType) {
+        this.subResourceType = subResourceType;
+    }
 
-    public String getResourceSignature()                       {return resourceSignature;}
+    public String getResourceSignature() {
+        return resourceSignature;
+    }
 
-    public void setResourceSignature(String resourceSignature) {this.resourceSignature = resourceSignature;}
+    public void setResourceSignature(String resourceSignature) {
+        this.resourceSignature = resourceSignature;
+    }
 
-    public String getConditionExpr()                           {return conditionExpr;}
+    public String getConditionExpr() {
+        return conditionExpr;
+    }
 
-    public void setConditionExpr(String conditionExpr)         {this.conditionExpr = conditionExpr;}
+    public void setConditionExpr(String conditionExpr) {
+        this.conditionExpr = conditionExpr;
+    }
 
-    public String getAccessTypes()                             {return accessTypes;}
+    public String getAccessTypes() {
+        return accessTypes;
+    }
 
-    public void setAccessTypes(String accessTypes)             {this.accessTypes = accessTypes;}
+    public void setAccessTypes(String accessTypes) {
+        this.accessTypes = accessTypes;
+    }
 
-    public String getRowFilter()                               {return rowFilter;}
+    public String getRowFilter() {
+        return rowFilter;
+    }
 
-    public void setRowFilter(String rowFilter)                 {this.rowFilter = rowFilter;}
+    public void setRowFilter(String rowFilter) {
+        this.rowFilter = rowFilter;
+    }
 
-    public String getSubResourceMasks()                        {return subResourceMasks;}
+    public String getSubResourceMasks() {
+        return subResourceMasks;
+    }
 
-    public void setSubResourceMasks(String subResourceMasks)   {this.subResourceMasks = subResourceMasks;}
+    public void setSubResourceMasks(String subResourceMasks) {
+        this.subResourceMasks = subResourceMasks;
+    }
 
-    public String getProfiles()                                {return profiles;}
+    public String getProfiles() {
+        return profiles;
+    }
 
-    public void setProfiles(String profiles)                   {this.profiles = profiles;}
+    public void setProfiles(String profiles) {
+        this.profiles = profiles;
+    }
 
-    public String getOptions()                                 {return options;}
+    public String getOptions() {
+        return options;
+    }
 
-    public void setOptions(String options)                     {this.options = options;}
+    public void setOptions(String options) {
+        this.options = options;
+    }
 
-    public String getAdditionalInfo()                          {return additionalInfo;}
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
 
-    public void setAdditionalInfo(String additionalInfo)       {this.additionalInfo = additionalInfo;}
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
 
     @Override
-    public int getMyClassType() {return AppConstants.CLASS_TYPE_GDS_SHARED_RESOURCE;}
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_GDS_SHARED_RESOURCE;
+    }
 
     @Override
-    public Long getId() {return id;}
+    public Long getId() {
+        return id;
+    }
 
     @Override
-    public void setId(Long id) {this.id = id;}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public int hashCode() {

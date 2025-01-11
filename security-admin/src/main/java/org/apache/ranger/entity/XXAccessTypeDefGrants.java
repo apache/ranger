@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_access_type_def_grants")
-public class XXAccessTypeDefGrants extends XXDBBase implements
-        java.io.Serializable {
+public class XXAccessTypeDefGrants extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXAccessTypeDefGrants
@@ -79,6 +78,11 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -115,8 +119,9 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
         }
         if (impliedGrant == null) {
             return other.impliedGrant == null;
-        } else
+        } else {
             return impliedGrant.equals(other.impliedGrant);
+        }
     }
 
     /*
@@ -126,8 +131,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements
      */
     @Override
     public String toString() {
-        return "XXAccessTypeDefGrants [" + super.toString() + " id=" + id
-                + ", atdId=" + atdId + ", impliedGrant=" + impliedGrant + "]";
+        return "XXAccessTypeDefGrants [" + super.toString() + " id=" + id + ", atdId=" + atdId + ", impliedGrant=" + impliedGrant + "]";
     }
 
     /**

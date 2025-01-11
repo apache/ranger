@@ -134,6 +134,11 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -306,7 +311,11 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
         this.dataMaskOptions = dataMaskOptions;
     }
 
-    public String getRowFilterOptions()                      {return rowFilterOptions;}
+    public String getRowFilterOptions() {
+        return rowFilterOptions;
+    }
 
-    public void setRowFilterOptions(String rowFilterOptions) {this.rowFilterOptions = rowFilterOptions;}
+    public void setRowFilterOptions(String rowFilterOptions) {
+        this.rowFilterOptions = rowFilterOptions;
+    }
 }

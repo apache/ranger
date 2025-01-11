@@ -94,6 +94,11 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -136,8 +141,9 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
         }
         if (resDefId == null) {
             return other.resDefId == null;
-        } else
+        } else {
             return resDefId.equals(other.resDefId);
+        }
     }
 
     /*

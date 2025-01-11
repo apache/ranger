@@ -166,8 +166,9 @@ public class XXTagAttribute extends XXDBBase implements Serializable {
         }
         if (value == null) {
             return other.value == null;
-        } else
+        } else {
             return value.equals(other.value);
+        }
     }
 
     /*

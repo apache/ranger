@@ -50,6 +50,11 @@ public class XXGlobalState extends XXGlobalStateBase implements java.io.Serializ
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -67,13 +72,7 @@ public class XXGlobalState extends XXGlobalStateBase implements java.io.Serializ
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), id);
-    }
-
-    @Override
     public String toString() {
         return "GlobalState [id=" + id + "]";
     }
 }
-

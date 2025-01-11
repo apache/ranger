@@ -40,6 +40,11 @@ public class XXRole extends XXRoleBase implements java.io.Serializable {
     protected            Long id;
 
     @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -54,17 +59,6 @@ public class XXRole extends XXRoleBase implements java.io.Serializable {
         XXRole other = (XXRole) obj;
 
         return Objects.equals(id, other.id);
-    }    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), id);
-    }    @Override
-    public Long getId() {
-        return id;
     }
 
     @Override
@@ -72,7 +66,13 @@ public class XXRole extends XXRoleBase implements java.io.Serializable {
         return "Role [id=" + id + "]";
     }
 
+    @Override
+    public Long getId() {
+        return id;
+    }
 
-
-
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

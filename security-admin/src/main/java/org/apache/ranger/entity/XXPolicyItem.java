@@ -50,7 +50,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "guid", unique = true, nullable = false, length = 512)
-    protected String GUID;
+    protected String guid;
 
     /**
      * policyId of the XXPolicyItem
@@ -119,6 +119,11 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -142,11 +147,11 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
         if (delegateAdmin != other.delegateAdmin) {
             return false;
         }
-        if (GUID == null) {
-            if (other.GUID != null) {
+        if (guid == null) {
+            if (other.guid != null) {
                 return false;
             }
-        } else if (!GUID.equals(other.GUID)) {
+        } else if (!guid.equals(other.guid)) {
             return false;
         }
         if (id == null) {
@@ -186,8 +191,9 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
         }
         if (comments == null) {
             return other.comments == null;
-        } else
+        } else {
             return comments.equals(other.comments);
+        }
     }
 
     /*
@@ -198,7 +204,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
     @Override
     public String toString() {
         return "XXPolicyItem [" + super.toString() + " id=" + id + ", guid="
-                + GUID + ", policyId=" + policyId
+                + guid + ", policyId=" + policyId
                 + ", delegateAdmin=" + delegateAdmin + ", itemType=" + itemType + ", order=" + order + "]";
     }
 
@@ -206,14 +212,14 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
      * @return the gUID
      */
     public String getGUID() {
-        return GUID;
+        return guid;
     }
 
     /**
      * @param gUID the gUID to set
      */
     public void setGUID(String gUID) {
-        GUID = gUID;
+        guid = gUID;
     }
 
     /**

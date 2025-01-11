@@ -37,7 +37,6 @@ import java.util.Objects;
 @Cacheable
 @Table(name = "x_role_ref_group")
 public class XXRoleRefGroup extends XXDBBase implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     /**
@@ -139,8 +138,7 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
      */
     @Override
     public String toString() {
-        return "XXRoleRefGroup [" + super.toString() + " id=" + id + ", roleId=" + roleId + ", groupId=" + groupId
-                + ", groupName=" + groupName + ", groupType=" + groupType + "]";
+        return "XXRoleRefGroup [" + super.toString() + " id=" + id + ", roleId=" + roleId + ", groupId=" + groupId + ", groupName=" + groupName + ", groupType=" + groupType + "]";
     }
 
     /**

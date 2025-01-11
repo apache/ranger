@@ -49,6 +49,11 @@ public class XXServiceWithAssignedId extends XXServiceBase {
     }
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -62,8 +67,9 @@ public class XXServiceWithAssignedId extends XXServiceBase {
         XXServiceWithAssignedId other = (XXServiceWithAssignedId) obj;
         if (id == null) {
             return other.id == null;
-        } else
+        } else {
             return id.equals(other.id);
+        }
     }
 
     @Override

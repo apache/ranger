@@ -30,8 +30,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_service_config_map")
-public class XXServiceConfigMap extends XXDBBase implements
-        java.io.Serializable {
+public class XXServiceConfigMap extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * id of the XXServiceConfigMap
@@ -87,6 +86,11 @@ public class XXServiceConfigMap extends XXDBBase implements
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -130,8 +134,9 @@ public class XXServiceConfigMap extends XXDBBase implements
         }
         if (serviceId == null) {
             return other.serviceId == null;
-        } else
+        } else {
             return serviceId.equals(other.serviceId);
+        }
     }
 
     /*

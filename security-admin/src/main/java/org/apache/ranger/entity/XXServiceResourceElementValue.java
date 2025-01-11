@@ -19,7 +19,7 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
+import org.apache.ranger.common.AppConstants;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -30,7 +30,7 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.apache.ranger.common.AppConstants;
+import java.io.Serializable;
 
 @Entity
 @Cacheable
@@ -166,8 +166,9 @@ public class XXServiceResourceElementValue extends XXDBBase implements Serializa
         }
         if (value == null) {
             return other.value == null;
-        } else
+        } else {
             return value.equals(other.value);
+        }
     }
 
     /*

@@ -166,8 +166,9 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
         }
         if (resourceId == null) {
             return other.resourceId == null;
-        } else
+        } else {
             return resourceId.equals(other.resourceId);
+        }
     }
 
     /*

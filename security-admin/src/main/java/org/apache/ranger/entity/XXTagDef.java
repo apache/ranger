@@ -134,9 +134,13 @@ public class XXTagDef extends XXDBBase implements Serializable {
         this.source = source;
     }
 
-    public String getTagAttrDefs()                 {return tagAttrDefs;}
+    public String getTagAttrDefs() {
+        return tagAttrDefs;
+    }
 
-    public void setTagAttrDefs(String tagAttrDefs) {this.tagAttrDefs = tagAttrDefs;}
+    public void setTagAttrDefs(String tagAttrDefs) {
+        this.tagAttrDefs = tagAttrDefs;
+    }
 
     @Override
     public int getMyClassType() {
@@ -233,8 +237,9 @@ public class XXTagDef extends XXDBBase implements Serializable {
         }
         if (tagAttrDefs == null) {
             return other.tagAttrDefs == null;
-        } else
+        } else {
             return tagAttrDefs.equals(other.tagAttrDefs);
+        }
     }
 
     /*

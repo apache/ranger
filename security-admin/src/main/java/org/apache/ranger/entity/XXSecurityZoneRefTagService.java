@@ -76,17 +76,12 @@ public class XXSecurityZoneRefTagService extends XXDBBase implements java.io.Ser
 
         XXSecurityZoneRefTagService other = (XXSecurityZoneRefTagService) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
-                Objects.equals(zoneId, other.zoneId) &&
-                Objects.equals(tagServiceId, other.tagServiceId) &&
-                Objects.equals(tagServiceName, other.tagServiceName);
+        return super.equals(obj) && Objects.equals(id, other.id) && Objects.equals(zoneId, other.zoneId) && Objects.equals(tagServiceId, other.tagServiceId) && Objects.equals(tagServiceName, other.tagServiceName);
     }
 
     @Override
     public String toString() {
-        return "XXSecurityZoneRefTagService [id=" + id + ", zoneId=" + zoneId + ", tagServiceId=" + tagServiceId
-                + ", tagServiceName=" + tagServiceName + "]";
+        return "XXSecurityZoneRefTagService [id=" + id + ", zoneId=" + zoneId + ", tagServiceId=" + tagServiceId + ", tagServiceName=" + tagServiceName + "]";
     }
 
     public Long getZoneId() {

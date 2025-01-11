@@ -42,13 +42,12 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_GROUP_USERS_SEQ", sequenceName = "X_GROUP_USERS_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_GROUP_USERS_SEQ")
     @Column(name = "ID")
-    protected Long id;
+    protected Long   id;
     /**
      * Name
      * <ul>
      * <li>The maximum length for this attribute is <b>1024</b>.
      * </ul>
-     *
      */
     @Column(name = "GROUP_NAME", nullable = false, length = 1024)
     protected String name;
@@ -56,18 +55,16 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
      * Id of the group
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "P_GROUP_ID")
-    protected Long parentGroupId;
+    protected Long   parentGroupId;
     /**
      * Id of the user
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "USER_ID")
-    protected Long userId;
+    protected Long   userId;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -101,8 +98,14 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Checks for all attributes except referenced db objects
+     *
      * @return true if all attributes match
      */
     @Override
@@ -122,6 +125,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -137,6 +141,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>name</b>
+     *
      * @return String - value of member attribute <b>name</b>.
      */
     public String getName() {
@@ -146,6 +151,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>name</b>.
      * You cannot set null to the attribute.
+     *
      * @param name Value to set member attribute <b>name</b>
      */
     public void setName(String name) {
@@ -154,6 +160,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>parentGroupId</b>
+     *
      * @return Long - value of member attribute <b>parentGroupId</b>.
      */
     public Long getParentGroupId() {
@@ -163,6 +170,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>parentGroupId</b>.
      * You cannot set null to the attribute.
+     *
      * @param parentGroupId Value to set member attribute <b>parentGroupId</b>
      */
     public void setParentGroupId(Long parentGroupId) {
@@ -171,6 +179,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
 
     /**
      * Returns the value for the member attribute <b>userId</b>
+     *
      * @return Long - value of member attribute <b>userId</b>.
      */
     public Long getUserId() {
@@ -180,6 +189,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
     /**
      * This method sets the value to the member attribute <b>userId</b>.
      * You cannot set null to the attribute.
+     *
      * @param userId Value to set member attribute <b>userId</b>
      */
     public void setUserId(Long userId) {

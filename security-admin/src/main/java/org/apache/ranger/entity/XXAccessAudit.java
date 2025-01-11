@@ -40,7 +40,7 @@ public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializ
 
     //event duration in ms
     @Column(name = "EVENT_DUR_MS")
-    protected long eventDuration;
+    protected long   eventDuration;
     @Column(name = "tags")
     protected String tags;
 
@@ -82,8 +82,28 @@ public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializ
         this.tags = tags;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {
+            return false;
+        }
+        XXAccessAudit other = (XXAccessAudit) obj;
+        return (this.tags != null || other.tags == null) && (this.tags == null || this.tags.equals(other.tags));
+    }
+
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
@@ -94,18 +114,5 @@ public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializ
         str += "eventDuration={" + eventDuration + "}";
         str += "tags={" + tags + "}";
         return str;
-    }
-
-    /**
-     * Checks for all attributes except referenced db objects
-     * @return true if all attributes match
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
-        XXAccessAudit other = (XXAccessAudit) obj;
-        return (this.tags != null || other.tags == null) && (this.tags == null || this.tags.equals(other.tags));
     }
 }

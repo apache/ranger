@@ -73,6 +73,11 @@ public class XXPolicyLabel extends XXDBBase implements Serializable {
     }
 
     @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -100,8 +105,9 @@ public class XXPolicyLabel extends XXDBBase implements Serializable {
         }
         if (policyLabel == null) {
             return other.policyLabel == null;
-        } else
+        } else {
             return policyLabel.equals(other.policyLabel);
+        }
     }
 
     @Override

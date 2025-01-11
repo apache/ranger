@@ -110,6 +110,11 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -167,8 +172,9 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
         }
         if (rbKeyLabel == null) {
             return other.rbKeyLabel == null;
-        } else
+        } else {
             return rbKeyLabel.equals(other.rbKeyLabel);
+        }
     }
 
     /*

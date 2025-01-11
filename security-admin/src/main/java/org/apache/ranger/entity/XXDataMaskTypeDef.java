@@ -142,6 +142,11 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -234,8 +239,9 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
         }
         if (order == null) {
             return other.order == null;
-        } else
+        } else {
             return order.equals(other.order);
+        }
     }
 
     /*

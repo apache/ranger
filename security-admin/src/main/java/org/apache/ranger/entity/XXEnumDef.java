@@ -94,6 +94,11 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
         this.id = id;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -144,8 +149,9 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
         }
         if (name == null) {
             return other.name == null;
-        } else
+        } else {
             return name.equals(other.name);
+        }
     }
 
     /*

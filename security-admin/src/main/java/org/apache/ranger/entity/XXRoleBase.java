@@ -43,27 +43,37 @@ public abstract class XXRoleBase extends XXDBBase {
     @Column(name = "role_text")
     protected String roleText;
 
-    public Long getVersion()       {return version;}
+    public Long getVersion() {
+        return version;
+    }
 
-    public String getName()        {return name;}
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getDescription() {return description;}
+    public String getDescription() {
+        return description;
+    }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public String getOptions()     {return options;}
+    public String getOptions() {
+        return options;
+    }
 
     public void setOptions(String options) {
         this.options = options;
     }
 
-    public String getRoleText()    {return roleText;}
+    public String getRoleText() {
+        return roleText;
+    }
 
     public void setRoleText(String roleText) {
         this.roleText = roleText;
@@ -103,4 +113,3 @@ public abstract class XXRoleBase extends XXDBBase {
         return str;
     }
 }
-
