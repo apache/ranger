@@ -20,28 +20,30 @@
 package org.apache.ranger.rest;
 
 public class TagRESTConstants {
-	public static final String TAGDEF_NAME_AND_VERSION = "tags";
+    public static final String TAGDEF_NAME_AND_VERSION            = "tags";
+    public static final String SERVICE_NAME_PARAM                 = "serviceName";
+    public static final String LAST_KNOWN_TAG_VERSION_PARAM       = "lastKnownVersion";
+    public static final String LAST_ACTIVATION_TIME               = "lastActivationTime";
+    public static final String PATTERN_PARAM                      = "pattern";
+    static final        String TAGDEFS_RESOURCE                   = "/tagdefs/";
+    static final        String TAGDEFS_RESOURCE_PAGINATED         = "/tagdefs/paginated";
+    static final        String TAGDEF_RESOURCE                    = "/tagdef/";
+    static final        String TAGS_RESOURCE                      = "/tags/";
+    static final        String TAGS_RESOURCE_PAGINATED            = "/tags/paginated";
+    static final        String TAG_RESOURCE                       = "/tag/";
+    static final        String RESOURCES_RESOURCE                 = "/resources/";
+    static final        String RESOURCES_RESOURCE_PAGINATED       = "/resources/paginated";
+    static final        String RESOURCE_RESOURCE                  = "/resource/";
+    static final        String TAGRESOURCEMAPS_RESOURCE           = "/tagresourcemaps/";
+    static final        String TAGRESOURCEMAPS_RESOURCE_PAGINATED = "/tagresourcemaps/paginated";
+    static final        String IMPORT_SERVICETAGS_RESOURCE        = "/importservicetags/";
+    static final        String TAGRESOURCEMAP_RESOURCE            = "/tagresourcemap/";
+    static final        String TAGTYPES_RESOURCE                  = "/types/";
+    static final        String TAGTYPES_LOOKUP_RESOURCE           = "/types/lookup/";
+    static final        String TAGS_DOWNLOAD                      = "/download/";
+    static final        String TAGS_SECURE_DOWNLOAD               = "/secure/download/";
 
-	static final String TAGDEFS_RESOURCE         = "/tagdefs/";
-	static final String TAGDEFS_RESOURCE_PAGINATED = "/tagdefs/paginated";
-	static final String TAGDEF_RESOURCE          = "/tagdef/";
-	static final String TAGS_RESOURCE            = "/tags/";
-	static final String TAGS_RESOURCE_PAGINATED  = "/tags/paginated";
-	static final String TAG_RESOURCE             = "/tag/";
-	static final String RESOURCES_RESOURCE       = "/resources/";
-	static final String RESOURCES_RESOURCE_PAGINATED = "/resources/paginated";
-	static final String RESOURCE_RESOURCE        = "/resource/";
-	static final String TAGRESOURCEMAPS_RESOURCE = "/tagresourcemaps/";
-	static final String TAGRESOURCEMAPS_RESOURCE_PAGINATED = "/tagresourcemaps/paginated";
-	static final String IMPORT_SERVICETAGS_RESOURCE = "/importservicetags/";
-	static final String TAGRESOURCEMAP_RESOURCE  = "/tagresourcemap/";
-	static final String TAGTYPES_RESOURCE        = "/types/";
-	static final String TAGTYPES_LOOKUP_RESOURCE = "/types/lookup/";
-	static final String TAGS_DOWNLOAD            = "/download/";
-	static final String TAGS_SECURE_DOWNLOAD            = "/secure/download/";
-
-	public static final String SERVICE_NAME_PARAM           = "serviceName";
-	public static final String LAST_KNOWN_TAG_VERSION_PARAM = "lastKnownVersion";
-	public static final String LAST_ACTIVATION_TIME = "lastActivationTime";
-	public static final String PATTERN_PARAM                = "pattern";
+    private TagRESTConstants() {
+        //To block instantiation
+    }
 }
