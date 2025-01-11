@@ -19,9 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.plugin.model.RangerServerHealth;
 import org.apache.ranger.util.RangerServerHealthUtil;
@@ -30,6 +27,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 @Path("actuator")
 @Component
@@ -46,10 +47,10 @@ public class RangerHealthREST {
     */
     @GET
     @Path("/health")
-    @Produces({"application/json"})
+    @Produces("application/json")
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public RangerServerHealth getRangerServerHealth() {
-        String  dbVersion = xaBizUtil.getDBVersion();
+        String dbVersion = xaBizUtil.getDBVersion();
 
         return rangerServerHealthUtil.getRangerServerHealth(dbVersion);
     }
