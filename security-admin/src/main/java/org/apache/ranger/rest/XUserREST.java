@@ -1531,7 +1531,7 @@ public class XUserREST {
     public VXUgsyncAuditInfo postUserGroupAuditInfo(VXUgsyncAuditInfo vxUgsyncAuditInfo) {
         return xUserMgr.postUserGroupAuditInfo(vxUgsyncAuditInfo);
     }
-
+    
     @GET
     @Path("/ugsync/groupusers")
     @Produces("application/json")
