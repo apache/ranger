@@ -105,6 +105,7 @@ public class XAuditREST {
     @RangerAnnotationClassName(class_name = VXTrxLog.class)
     public void deleteXTrxLog(@PathParam("id") Long id, @Context HttpServletRequest request) {
         boolean force = false;
+
         xAuditMgr.deleteXTrxLog(id, force);
     }
 
@@ -120,6 +121,7 @@ public class XAuditREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_TRX_LOG + "\")")
     public VXTrxLogList searchXTrxLogs(@Context HttpServletRequest request) {
         SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xTrxLogService.getSortFields());
+
         return xAuditMgr.searchXTrxLogs(searchCriteria);
     }
 

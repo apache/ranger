@@ -66,7 +66,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -167,16 +166,19 @@ public class PublicAPIsv2 {
         logger.debug("==> PublicAPIsv2.getSecurityZoneHeaderInfoList()");
 
         List<RangerSecurityZoneHeaderInfo> ret;
+
         try {
             ret = securityZoneStore.getSecurityZoneHeaderInfoList(request);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
             logger.error("PublicAPIsv2.getSecurityZoneHeaderInfoList() failed", excp);
+
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
 
         logger.debug("<== PublicAPIsv2.getSecurityZoneHeaderInfoList():{}", ret);
+
         return ret;
     }
 
@@ -209,12 +211,14 @@ public class PublicAPIsv2 {
         logger.debug("==> PublicAPIsv2.getServiceHeaderInfoListByZoneId({})", zoneId);
 
         List<RangerServiceHeaderInfo> ret;
+
         try {
             ret = securityZoneStore.getServiceHeaderInfoListByZoneId(zoneId, request);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
             logger.error("PublicAPIsv2.getServiceHeaderInfoListByZoneId() failed", excp);
+
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
 
@@ -355,7 +359,9 @@ public class PublicAPIsv2 {
 
         // ignore serviceDef.id - if specified. Retrieve using the given name and use id from the retrieved object
         RangerServiceDef existingServiceDef = getServiceDefByName(name);
+
         serviceDef.setId(existingServiceDef.getId());
+
         if (StringUtils.isEmpty(serviceDef.getGuid())) {
             serviceDef.setGuid(existingServiceDef.getGuid());
         }
@@ -393,6 +399,7 @@ public class PublicAPIsv2 {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteServiceDefByName(@PathParam("name") String name, @Context HttpServletRequest request) {
         RangerServiceDef serviceDef = serviceREST.getServiceDefByName(name);
+
         serviceREST.deleteServiceDef(serviceDef.getId(), request);
     }
 
@@ -465,10 +472,13 @@ public class PublicAPIsv2 {
     public RangerService updateServiceByName(RangerService service, @PathParam("name") String name, @Context HttpServletRequest request) {
         // ignore service.id - if specified. Retrieve using the given name and use id from the retrieved object
         RangerService existingService = getServiceByName(name);
+
         service.setId(existingService.getId());
+
         if (StringUtils.isEmpty(service.getGuid())) {
             service.setGuid(existingService.getGuid());
         }
+
         if (StringUtils.isEmpty(service.getName())) {
             service.setName(existingService.getName());
         }
@@ -506,6 +516,7 @@ public class PublicAPIsv2 {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
     public void deleteServiceByName(@PathParam("name") String name) {
         RangerService service = serviceREST.getServiceByName(name);
+
         serviceREST.deleteService(service.getId());
     }
 
@@ -524,17 +535,17 @@ public class PublicAPIsv2 {
     @Path("/api/policy/")
     @Produces("application/json")
     public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
-        List<RangerPolicy> ret = new ArrayList<>();
-
         logger.debug("==> PublicAPIsv2.getPolicies()");
 
-        ret = serviceREST.getPolicies(request).getPolicies();
+        List<RangerPolicy> ret                   = serviceREST.getPolicies(request).getPolicies();
+        boolean            includeMetaAttributes = Boolean.parseBoolean(request.getParameter("includeMetaAttributes"));
 
-        boolean includeMetaAttributes = Boolean.parseBoolean(request.getParameter("includeMetaAttributes"));
         if (includeMetaAttributes) {
             ret = serviceREST.getPoliciesWithMetaAttributes(ret);
         }
+
         logger.debug("<== PublicAPIsv2.getPolicies(Request: {} Result Size: {}", request.getQueryString(), ret.size());
+
         return ret;
     }
 
@@ -573,8 +584,11 @@ public class PublicAPIsv2 {
     @Produces("application/json")
     public RangerPolicy getPolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName, @DefaultValue("") @QueryParam("ZoneName") String zoneName) {
         logger.debug("==> PublicAPIsv2.getPolicyByGUIDAndServiceNameAndZoneName({}, {}, {})", guid, serviceName, zoneName);
+
         RangerPolicy rangerPolicy = serviceREST.getPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+
         logger.debug("<== PublicAPIsv2.getPolicyByGUIDAndServiceNameAndZoneName({}, {}, {})", guid, serviceName, zoneName);
+
         return rangerPolicy;
     }
 
@@ -617,13 +631,16 @@ public class PublicAPIsv2 {
         if (policy.getService() == null || !policy.getService().equals(serviceName)) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "service name mismatch", true);
         }
+
         RangerPolicy oldPolicy = getPolicyByName(serviceName, policyName, zoneName, request);
 
         // ignore policy.id - if specified. Retrieve using the given serviceName+policyName and use id from the retrieved object
         policy.setId(oldPolicy.getId());
+
         if (StringUtils.isEmpty(policy.getGuid())) {
             policy.setGuid(oldPolicy.getGuid());
         }
+
         if (StringUtils.isEmpty(policy.getName())) {
             policy.setName(StringUtils.trim(oldPolicy.getName()));
         }
@@ -661,8 +678,11 @@ public class PublicAPIsv2 {
         if (serviceName == null || policyName == null) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Invalid service name or policy name", true);
         }
+
         RangerPolicy policy = getPolicyByName(serviceName, policyName, zoneName, request);
+
         serviceREST.deletePolicy(policy.getId());
+
         logger.debug("<== PublicAPIsv2.deletePolicyByName({}, {})", serviceName, policyName);
     }
 
@@ -670,7 +690,9 @@ public class PublicAPIsv2 {
     @Path("/api/policy/guid/{guid}")
     public void deletePolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName, @DefaultValue("") @QueryParam("zoneName") String zoneName) {
         logger.debug("==> PublicAPIsv2.deletePolicyByGUIDAndServiceNameAndZoneName({}, {}, {})", guid, serviceName, zoneName);
+
         serviceREST.deletePolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+
         logger.debug("<== PublicAPIsv2.deletePolicyByGUIDAndServiceNameAndZoneName({}, {}, {})", guid, serviceName, zoneName);
     }
 
@@ -728,6 +750,7 @@ public class PublicAPIsv2 {
         List<RangerPluginInfo> ret = serviceREST.getPluginsInfo(request).getPluginInfoList();
 
         logger.debug("<== PublicAPIsv2.getPluginsInfo()");
+
         return ret;
     }
 
@@ -778,9 +801,11 @@ public class PublicAPIsv2 {
     @Produces("application/json")
     public RangerRole createRole(@QueryParam("serviceName") String serviceName, RangerRole role, @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup, @Context HttpServletRequest request) {
         logger.info("==> PublicAPIsv2.createRole");
-        RangerRole ret;
-        ret = roleREST.createRole(serviceName, role, createNonExistUserGroup);
+
+        RangerRole ret = roleREST.createRole(serviceName, role, createNonExistUserGroup);
+
         logger.info("<== PublicAPIsv2.createRole({})", ret.getName());
+
         return ret;
     }
 
@@ -886,7 +911,8 @@ public class PublicAPIsv2 {
     @Consumes("application/json")
     @Produces("application/json")
     public RESTResponse grantRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest grantRoleRequest, @Context HttpServletRequest request) {
-        logger.debug("==> PublicAPIsv2.grantRoleUsersAndRoles({})", grantRoleRequest.toString());
+        logger.debug("==> PublicAPIsv2.grantRoleUsersAndRoles({})", grantRoleRequest);
+
         return roleREST.grantRole(serviceName, grantRoleRequest, request);
     }
 

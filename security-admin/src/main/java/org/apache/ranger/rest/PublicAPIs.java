@@ -106,10 +106,10 @@ public class PublicAPIs {
         logger.debug("==> PublicAPIs.getRepository({})", id);
 
         RangerService service = serviceREST.getService(id);
-
-        VXRepository ret = serviceUtil.toVXRepository(service);
+        VXRepository  ret     = serviceUtil.toVXRepository(service);
 
         logger.debug("<= PublicAPIs.getRepository({})", id);
+
         return ret;
     }
 
@@ -120,15 +120,11 @@ public class PublicAPIs {
     public VXRepository createRepository(VXRepository vXRepository) {
         logger.debug("==> PublicAPIs.createRepository({})", vXRepository);
 
-        VXAsset vXAsset = serviceUtil.publicObjecttoVXAsset(vXRepository);
-
-        RangerService service = serviceUtil.toRangerService(vXAsset);
-
+        VXAsset       vXAsset        = serviceUtil.publicObjecttoVXAsset(vXRepository);
+        RangerService service        = serviceUtil.toRangerService(vXAsset);
         RangerService createdService = serviceREST.createService(service);
-
-        VXAsset retvXAsset = serviceUtil.toVXAsset(createdService);
-
-        VXRepository ret = serviceUtil.vXAssetToPublicObject(retvXAsset);
+        VXAsset       retvXAsset     = serviceUtil.toVXAsset(createdService);
+        VXRepository  ret            = serviceUtil.vXAssetToPublicObject(retvXAsset);
 
         logger.debug("<== PublicAPIs.createRepository({})", ret);
 
@@ -143,22 +139,21 @@ public class PublicAPIs {
         logger.debug("==> PublicAPIs.updateRepository({})", id);
 
         XXService existing = daoMgr.getXXService().getById(id);
+
         if (existing == null) {
             throw restErrorUtil.createRESTException("Repository not found for Id: " + id, MessageEnums.DATA_NOT_FOUND);
         }
 
         vXRepository.setId(id);
 
-        VXAsset vXAsset = serviceUtil.publicObjecttoVXAsset(vXRepository);
-
+        VXAsset       vXAsset = serviceUtil.publicObjecttoVXAsset(vXRepository);
         RangerService service = serviceUtil.toRangerService(vXAsset);
+
         service.setVersion(existing.getVersion());
 
         RangerService updatedService = serviceREST.updateService(service, null);
-
-        VXAsset retvXAsset = serviceUtil.toVXAsset(updatedService);
-
-        VXRepository ret = serviceUtil.vXAssetToPublicObject(retvXAsset);
+        VXAsset       retvXAsset     = serviceUtil.toVXAsset(updatedService);
+        VXRepository  ret            = serviceUtil.vXAssetToPublicObject(retvXAsset);
 
         logger.debug("<== PublicAPIs.updateRepository({})", ret);
 
@@ -183,11 +178,9 @@ public class PublicAPIs {
     public VXRepositoryList searchRepositories(@Context HttpServletRequest request) {
         logger.debug("==> PublicAPIs.searchRepositories()");
 
-        SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
-
+        SearchFilter        filter      = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
         List<RangerService> serviceList = serviceREST.getServices(filter);
-
-        VXRepositoryList ret = null;
+        VXRepositoryList    ret         = null;
 
         if (serviceList != null) {
             ret = serviceUtil.rangerServiceListToPublicObjectList(serviceList);
@@ -217,10 +210,8 @@ public class PublicAPIs {
     public VXPolicy getPolicy(@PathParam("id") Long id) {
         logger.debug("==> PublicAPIs.getPolicy() {}", id);
 
-        RangerPolicy  policy  = null;
         RangerService service = null;
-
-        policy = serviceREST.getPolicy(id);
+        RangerPolicy  policy  = serviceREST.getPolicy(id);
 
         if (policy != null) {
             service = serviceREST.getServiceByName(policy.getService());
@@ -243,6 +234,7 @@ public class PublicAPIs {
         if (vXPolicy == null) {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Policy object is null in create policy api", false);
         }
+
         RangerService service = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
         RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXPolicy, service);
 
@@ -255,7 +247,7 @@ public class PublicAPIs {
             ret = serviceUtil.toVXPolicy(createdPolicy, service);
         }
 
-        logger.debug("<== PublicAPIs.createPolicy({}): ", policy, ret);
+        logger.debug("<== PublicAPIs.createPolicy({}): {}", policy, ret);
 
         return ret;
     }
@@ -272,6 +264,7 @@ public class PublicAPIs {
         }
 
         XXPolicy existing = daoMgr.getXXPolicy().getById(id);
+
         if (existing == null) {
             throw restErrorUtil.createRESTException("Policy not found for Id: " + id, MessageEnums.DATA_NOT_FOUND);
         }
@@ -314,6 +307,7 @@ public class PublicAPIs {
         logger.debug("==> PublicAPIs.searchPolicies(): ");
 
         SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, policyService.sortFields);
+
         // get all policies from the store; pick the page to return after applying filter
         int savedStartIndex = filter.getStartIndex();
         int savedMaxRows    = filter.getMaxRows();
@@ -327,9 +321,11 @@ public class PublicAPIs {
         filter.setMaxRows(savedMaxRows);
 
         VXPolicyList vXPolicyList = null;
+
         if (rangerPolicyList != null) {
             vXPolicyList = serviceUtil.rangerPolicyListToPublic(rangerPolicyList, filter);
         }
+
         logger.debug("<== PublicAPIs.searchPolicies(): {}", vXPolicyList);
         return vXPolicyList;
     }

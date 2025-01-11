@@ -894,7 +894,7 @@ public class TestServiceREST {
         HttpServletRequest request      = Mockito.mock(HttpServletRequest.class);
         RangerPolicy       rangerPolicy = rangerPolicy();
 
-        List<RangerPolicy> ret    = Mockito.mock(List.class);
+        List<RangerPolicy> ret    = Collections.emptyList();
         SearchFilter       filter = new SearchFilter();
 
         filter.setParam(SearchFilter.POLICY_NAME, "policyName");

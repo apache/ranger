@@ -67,12 +67,14 @@ public class MetricsREST {
 
         Map<String, Object> jvm       = new LinkedHashMap<>();
         Map<String, Object> vmDetails = new LinkedHashMap<>();
+
         vmDetails.put("JVM Machine Actual Name", JVM_MACHINE_ACTUAL_NAME);
         vmDetails.put("version", VERSION);
         vmDetails.put("JVM Machine Representation Name", JVM_MACHINE_REPRESENTATION_NAME);
         vmDetails.put("Up time of JVM", RUNTIME.getUptime());
         vmDetails.put("JVM Vendor Name", JVM_VENDOR_NAME);
         vmDetails.putAll(jvmMetricUtil.getValues());
+
         jvm.put("jvm", vmDetails);
 
         LOG.debug("<== MetricsREST.getStatus(): jvm={}", jvm);
@@ -85,7 +87,9 @@ public class MetricsREST {
     @Produces(MediaType.TEXT_PLAIN)
     public String getMetricsPrometheus() {
         LOG.debug("==> MetricsREST.getMetricsPrometheus()");
+
         String ret = "";
+
         try {
             ret = rangerAdminMetricsWrapper.getRangerMetricsInPrometheusFormat();
         } catch (Exception e) {
@@ -93,6 +97,7 @@ public class MetricsREST {
         }
 
         LOG.debug("<== MetricsREST.getMetricsPrometheus(): ret={}", ret);
+
         return ret;
     }
 
@@ -103,6 +108,7 @@ public class MetricsREST {
         LOG.debug("==> MetricsREST.getMetricsJson()");
 
         Map<String, Map<String, Object>> ret = null;
+
         try {
             ret = rangerAdminMetricsWrapper.getRangerMetrics();
         } catch (Exception e) {
@@ -110,6 +116,7 @@ public class MetricsREST {
         }
 
         LOG.debug("<== MetricsREST.getMetricsJson(): ret={}", ret);
+
         return ret;
     }
 }

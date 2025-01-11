@@ -85,9 +85,11 @@ import java.util.Map;
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class TagREST {
-    public static final String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
     private static final Logger LOG      = LoggerFactory.getLogger(TagREST.class);
     private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.TagREST");
+
+    public static final String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
+
     @Autowired
     RESTErrorUtil restErrorUtil;
 
@@ -149,6 +151,7 @@ public class TagREST {
 
         try {
             RangerTagDef exist = validator.preCreateTagDef(tagDef, updateIfExists);
+
             if (exist == null) {
                 ret = tagStore.createTagDef(tagDef);
             } else if (updateIfExists) {
@@ -174,6 +177,7 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagDef updateTagDef(@PathParam("id") Long id, RangerTagDef tagDef) {
         LOG.debug("==> TagREST.updateTagDef({})", id);
+
         if (tagDef.getId() == null) {
             tagDef.setId(id);
         } else if (!tagDef.getId().equals(id)) {
@@ -186,8 +190,10 @@ public class TagREST {
             ret = tagStore.updateTagDef(tagDef);
         } catch (Exception excp) {
             LOG.error("updateTagDef({}) failed", id, excp);
+
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
+
         LOG.debug("<== TagREST.updateTagDef({})", id);
 
         return ret;
@@ -218,6 +224,7 @@ public class TagREST {
 
         try {
             RangerTagDef exist = tagStore.getTagDefByGuid(guid);
+
             if (exist != null) {
                 tagStore.deleteTagDef(exist.getId());
             }
@@ -357,7 +364,7 @@ public class TagREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
         }
 
-        LOG.debug("<== TagREST.getTagDefs(): count={}", ((ret == null || ret.getList() == null) ? 0 : ret.getList().size()));
+        LOG.debug("<== TagREST.getTagDefs(): count={}", ret.getList() == null ? 0 : ret.getList().size());
 
         return ret;
     }
@@ -373,7 +380,7 @@ public class TagREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User don't have permission to perform this action", true);
         }
 
-        List<String> ret = null;
+        List<String> ret;
 
         try {
             ret = tagStore.getTagTypes();
@@ -400,6 +407,7 @@ public class TagREST {
 
         try {
             RangerTag exist = validator.preCreateTag(tag);
+
             if (exist == null) {
                 ret = tagStore.createTag(tag);
             } else if (updateIfExists) {
@@ -428,11 +436,14 @@ public class TagREST {
 
         try {
             validator.preUpdateTag(id, tag);
+
             ret = tagStore.updateTag(tag);
         } catch (Exception excp) {
             LOG.error("updateTag({}) failed", id, excp);
+
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
+
         LOG.debug("<== TagREST.updateTag({}): {}", id, ret);
 
         return ret;
@@ -450,11 +461,14 @@ public class TagREST {
 
         try {
             validator.preUpdateTagByGuid(guid, tag);
+
             ret = tagStore.updateTag(tag);
         } catch (Exception excp) {
             LOG.error("updateTagByGuid({}) failed", guid, excp);
+
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
+
         LOG.debug("<== TagREST.updateTagByGuid({}): {}", guid, ret);
 
         return ret;
@@ -471,6 +485,7 @@ public class TagREST {
             tagStore.deleteTag(id);
         } catch (Exception excp) {
             LOG.error("deleteTag({}) failed", id, excp);
+
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
 
@@ -485,6 +500,7 @@ public class TagREST {
 
         try {
             RangerTag exist = validator.preDeleteTagByGuid(guid);
+
             tagStore.deleteTag(exist.getId());
         } catch (Exception excp) {
             LOG.error("deleteTagByGuid({}) failed", guid, excp);
@@ -501,6 +517,7 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTag getTag(@PathParam("id") Long id) {
         LOG.debug("==> TagREST.getTag({})", id);
+
         RangerTag ret;
 
         try {
@@ -522,6 +539,7 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTag getTagByGuid(@PathParam("guid") String guid) {
         LOG.debug("==> TagREST.getTagByGuid({})", guid);
+
         RangerTag ret;
 
         try {
@@ -543,6 +561,7 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerTag> getTagsByType(@PathParam("type") String type) {
         LOG.debug("==> TagREST.getTagsByType({})", type);
+
         List<RangerTag> ret;
 
         try {
@@ -582,6 +601,7 @@ public class TagREST {
         if (CollectionUtils.isEmpty(ret)) {
             LOG.debug("getAllTags() - No tags found");
         }
+
         LOG.debug("<== TagREST.getAllTags(): {}", ret);
 
         return ret;
@@ -612,7 +632,7 @@ public class TagREST {
             LOG.debug("getTags() - No tags found");
         }
 
-        LOG.debug("<== TagREST.getTags(): count={}", ((ret == null || ret.getList() == null) ? 0 : ret.getList().size()));
+        LOG.debug("<== TagREST.getTags(): count={}", ret.getList() == null ? 0 : ret.getList().size());
 
         return ret;
     }
@@ -634,10 +654,11 @@ public class TagREST {
         }
 
         RangerService rangerService = null;
+
         try {
             rangerService = svcStore.getServiceByName(serviceName);
         } catch (Exception e) {
-            LOG.error("{} No Service Found for ServiceName:", HttpServletResponse.SC_BAD_REQUEST, serviceName);
+            LOG.error("{} No Service Found for ServiceName: {}", HttpServletResponse.SC_BAD_REQUEST, serviceName);
         }
 
         if (rangerService == null) {
@@ -702,6 +723,7 @@ public class TagREST {
 
         try {
             RangerServiceResource exist = validator.preCreateServiceResource(resource);
+
             if (exist == null) {
                 ret = tagStore.createServiceResource(resource);
             } else if (updateIfExists) {
@@ -727,10 +749,12 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource updateServiceResource(@PathParam("id") Long id, RangerServiceResource resource) {
         LOG.debug("==> TagREST.updateServiceResource({})", id);
+
         RangerServiceResource ret;
 
         try {
             validator.preUpdateServiceResource(id, resource);
+
             ret = tagStore.updateServiceResource(resource);
         } catch (Exception excp) {
             LOG.error("updateServiceResource({}) failed", resource, excp);
@@ -739,6 +763,7 @@ public class TagREST {
         }
 
         LOG.debug("<== TagREST.updateServiceResource({}): {}", id, ret);
+
         return ret;
     }
 
@@ -749,16 +774,21 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource updateServiceResourceByGuid(@PathParam("guid") String guid, RangerServiceResource resource) {
         LOG.debug("==> TagREST.updateServiceResourceByGuid({}, {})", guid, resource);
+
         RangerServiceResource ret;
+
         try {
             validator.preUpdateServiceResourceByGuid(guid, resource);
+
             ret = tagStore.updateServiceResource(resource);
         } catch (Exception excp) {
             LOG.error("updateServiceResourceByGuid({}, {}) failed", guid, resource, excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
+
         LOG.debug("<== TagREST.updateServiceResourceByGuid({}, {}): {}", guid, resource, ret);
+
         return ret;
     }
 
@@ -767,6 +797,7 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteServiceResource(@PathParam("id") Long id) {
         LOG.debug("==> TagREST.deleteServiceResource({})", id);
+
         try {
             validator.preDeleteServiceResource(id);
             tagStore.deleteServiceResource(id);
@@ -787,14 +818,17 @@ public class TagREST {
 
         try {
             RangerServiceResource exist = validator.preDeleteServiceResourceByGuid(guid, deleteReferences);
+
             if (deleteReferences) {
                 List<RangerTagResourceMap> tagResourceMaps = tagStore.getTagResourceMapsForResourceGuid(exist.getGuid());
+
                 if (CollectionUtils.isNotEmpty(tagResourceMaps)) {
                     for (RangerTagResourceMap tagResourceMap : tagResourceMaps) {
                         deleteTagResourceMap(tagResourceMap.getId());
                     }
                 }
             }
+
             tagStore.deleteServiceResource(exist.getId());
         } catch (Exception excp) {
             LOG.error("deleteServiceResourceByGuid({}, {}) failed", guid, deleteReferences, excp);
@@ -811,7 +845,9 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource getServiceResource(@PathParam("id") Long id) {
         LOG.debug("==> TagREST.getServiceResource({})", id);
+
         RangerServiceResource ret;
+
         try {
             ret = tagStore.getServiceResource(id);
         } catch (Exception excp) {
@@ -819,7 +855,9 @@ public class TagREST {
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
+
         LOG.debug("<== TagREST.getServiceResource({}): {}", id, ret);
+
         return ret;
     }
 
@@ -829,7 +867,9 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource getServiceResourceByGuid(@PathParam("guid") String guid) {
         LOG.debug("==> TagREST.getServiceResourceByGuid({})", guid);
+
         RangerServiceResource ret;
+
         try {
             ret = tagStore.getServiceResourceByGuid(guid);
         } catch (Exception excp) {
@@ -837,7 +877,9 @@ public class TagREST {
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
         }
+
         LOG.debug("<== TagREST.getServiceResourceByGuid({}): {}", guid, ret);
+
         return ret;
     }
 
@@ -848,7 +890,7 @@ public class TagREST {
     public List<RangerServiceResource> getServiceResourcesByService(@PathParam("serviceName") String serviceName) {
         LOG.debug("==> TagREST.getServiceResourcesByService({})", serviceName);
 
-        List<RangerServiceResource> ret = null;
+        List<RangerServiceResource> ret;
 
         try {
             ret = tagStore.getServiceResourcesByService(serviceName);
@@ -873,7 +915,7 @@ public class TagREST {
     public RangerServiceResource getServiceResourceByServiceAndResourceSignature(@PathParam("serviceName") String serviceName, @PathParam("resourceSignature") String resourceSignature) {
         LOG.debug("==> TagREST.getServiceResourceByServiceAndResourceSignature({}, {})", serviceName, resourceSignature);
 
-        RangerServiceResource ret = null;
+        RangerServiceResource ret;
 
         try {
             ret = tagStore.getServiceResourceByServiceAndResourceSignature(serviceName, resourceSignature);
@@ -942,8 +984,10 @@ public class TagREST {
 
         try {
             SearchFilter filter = searchUtil.getSearchFilter(request, rangerServiceResourceWithTagsService.sortFields);
+
             searchUtil.extractIntList(request, filter, SearchFilter.TAG_RESOURCE_IDS, "Tag resource list");
             searchUtil.extractStringList(request, filter, SearchFilter.TAG_NAMES, "Tag type List", "tagTypes", null, null);
+
             ret = tagStore.getPaginatedServiceResourcesWithTags(filter);
         } catch (Exception excp) {
             LOG.error("getServiceResources() failed", excp);
@@ -968,6 +1012,7 @@ public class TagREST {
 
         try {
             tagResourceMap = tagStore.getTagResourceMapForTagAndResourceGuid(tagGuid, resourceGuid);
+
             if (tagResourceMap == null) {
                 tagResourceMap = validator.preCreateTagResourceMap(tagGuid, resourceGuid);
 
@@ -991,6 +1036,7 @@ public class TagREST {
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagResourceMap(@PathParam("id") Long id) {
         LOG.debug("==> TagREST.deleteTagResourceMap({})", id);
+
         try {
             validator.preDeleteTagResourceMap(id);
             tagStore.deleteTagResourceMap(id);
@@ -1011,6 +1057,7 @@ public class TagREST {
 
         try {
             RangerTagResourceMap exist = validator.preDeleteTagResourceMapByGuid(guid);
+
             tagStore.deleteTagResourceMap(exist.getId());
         } catch (Exception excp) {
             LOG.error("deleteTagResourceMapByGuid({}) failed", guid, excp);
@@ -1029,6 +1076,7 @@ public class TagREST {
 
         try {
             RangerTagResourceMap exist = validator.preDeleteTagResourceMap(tagGuid, resourceGuid);
+
             tagStore.deleteTagResourceMap(exist.getId());
         } catch (Exception excp) {
             LOG.error("deleteTagResourceMap({}, {}) failed", tagGuid, resourceGuid, excp);
@@ -1088,7 +1136,7 @@ public class TagREST {
     public RangerTagResourceMap getTagResourceMap(@QueryParam("tagGuid") String tagGuid, @QueryParam("resourceGuid") String resourceGuid) {
         LOG.debug("==> TagREST.getTagResourceMap({}, {})", tagGuid, resourceGuid);
 
-        RangerTagResourceMap ret = null;
+        RangerTagResourceMap ret;
 
         try {
             ret = tagStore.getTagResourceMapForTagAndResourceGuid(tagGuid, resourceGuid);
@@ -1172,6 +1220,7 @@ public class TagREST {
 
         try {
             ServiceTagsProcessor serviceTagsProcessor = new ServiceTagsProcessor(tagStore);
+
             serviceTagsProcessor.process(serviceTags);
         } catch (Exception excp) {
             LOG.error("importServiceTags() failed", excp);
@@ -1200,9 +1249,10 @@ public class TagREST {
 
         ServiceTags ret               = null;
         int         httpCode          = HttpServletResponse.SC_OK;
-        String      logMsg            = null;
         Long        downloadedVersion = null;
         String      clusterName       = null;
+        String      logMsg;
+
         if (request != null) {
             clusterName = !StringUtils.isEmpty(request.getParameter(SearchFilter.CLUSTER_NAME)) ? request.getParameter(SearchFilter.CLUSTER_NAME) : "";
         }
@@ -1218,7 +1268,6 @@ public class TagREST {
                 logMsg            = "No change since last update";
             } else {
                 downloadedVersion = ret.getTagVersion();
-                httpCode          = HttpServletResponse.SC_OK;
                 logMsg            = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
             }
         } catch (WebApplicationException webException) {
@@ -1235,6 +1284,7 @@ public class TagREST {
 
         if (httpCode != HttpServletResponse.SC_OK) {
             boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+
             throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
         }
 
@@ -1259,22 +1309,26 @@ public class TagREST {
 
         ServiceTags ret               = null;
         int         httpCode          = HttpServletResponse.SC_OK;
-        String      logMsg            = null;
-        boolean     isAllowed         = false;
         boolean     isAdmin           = bizUtil.isAdmin();
         boolean     isKeyAdmin        = bizUtil.isKeyAdmin();
         Long        downloadedVersion = null;
         String      clusterName       = null;
+        String      logMsg;
+        boolean     isAllowed;
+
         if (request != null) {
             clusterName = !StringUtils.isEmpty(request.getParameter(SearchFilter.CLUSTER_NAME)) ? request.getParameter(SearchFilter.CLUSTER_NAME) : "";
         }
 
         try {
             XXService xService = daoManager.getXXService().findByName(serviceName);
+
             if (xService == null) {
                 LOG.error("Requested Service not found. serviceName={}", serviceName);
+
                 throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Service:" + serviceName + " not found", false);
             }
+
             XXServiceDef  xServiceDef   = daoManager.getXXServiceDef().getById(xService.getType());
             RangerService rangerService = svcStore.getServiceByName(serviceName);
 
@@ -1300,11 +1354,11 @@ public class TagREST {
                     logMsg            = "No change since last update";
                 } else {
                     downloadedVersion = ret.getTagVersion();
-                    httpCode          = HttpServletResponse.SC_OK;
                     logMsg            = "Returning " + (ret.getTags() != null ? ret.getTags().size() : 0) + " tags. Tag version=" + ret.getTagVersion();
                 }
             } else {
                 LOG.error("getSecureServiceTagsIfUpdated({}, {}, {}) failed as User doesn't have permission to download tags", serviceName, lastKnownVersion, lastActivationTime);
+
                 httpCode = HttpServletResponse.SC_FORBIDDEN; // assert user is authenticated.
                 logMsg   = "User doesn't have permission to download tags";
             }
@@ -1322,6 +1376,7 @@ public class TagREST {
 
         if (httpCode != HttpServletResponse.SC_OK) {
             boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+
             throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
         }
 

@@ -81,12 +81,18 @@ public class XKeyREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_KEYS + "\")")
     public VXKmsKeyList searchKeys(@Context HttpServletRequest request, @QueryParam("provider") String provider) {
-        VXKmsKeyList vxKmsKeyList = new VXKmsKeyList();
+        VXKmsKeyList vxKmsKeyList = null;
+
         try {
             vxKmsKeyList = keyMgr.searchKeys(request, provider);
         } catch (Exception e) {
             handleError(e);
+        } finally {
+            if (vxKmsKeyList == null) {
+                vxKmsKeyList = new VXKmsKeyList();
+            }
         }
+
         return vxKmsKeyList;
     }
 
@@ -102,19 +108,28 @@ public class XKeyREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ROLLOVER_KEYS + "\")")
     public VXKmsKey rolloverKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
-        VXKmsKey vxKmsKey = new VXKmsKey();
+        VXKmsKey vxKmsKey = null;
+
         try {
             String name = vXKey.getName();
+
             if (name == null || name.isEmpty()) {
                 throw restErrorUtil.createRESTException("Please provide a valid " + "alias.", MessageEnums.INVALID_INPUT_DATA);
             }
+
             if (vXKey.getCipher() == null || vXKey.getCipher().trim().isEmpty()) {
                 vXKey.setCipher(null);
             }
+
             vxKmsKey = keyMgr.rolloverKey(provider, vXKey);
         } catch (Exception e) {
             handleError(e);
+        } finally {
+            if (vxKmsKey == null) {
+                vxKmsKey = new VXKmsKey();
+            }
         }
+
         return vxKmsKey;
     }
 
@@ -132,6 +147,7 @@ public class XKeyREST {
             if (name == null || name.isEmpty()) {
                 throw restErrorUtil.createRESTException("Please provide a valid " + "alias.", MessageEnums.INVALID_INPUT_DATA);
             }
+
             keyMgr.deleteKey(provider, name);
         } catch (Exception e) {
             handleError(e);
@@ -150,19 +166,28 @@ public class XKeyREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_KEY + "\")")
     public VXKmsKey createKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
-        VXKmsKey vxKmsKey = new VXKmsKey();
+        VXKmsKey vxKmsKey = null;
+
         try {
             String name = vXKey.getName();
+
             if (name == null || name.isEmpty()) {
                 throw restErrorUtil.createRESTException("Please provide a valid " + "alias.", MessageEnums.INVALID_INPUT_DATA);
             }
+
             if (vXKey.getCipher() == null || vXKey.getCipher().trim().isEmpty()) {
                 vXKey.setCipher(null);
             }
+
             vxKmsKey = keyMgr.createKey(provider, vXKey);
         } catch (Exception e) {
             handleError(e);
+        } finally {
+            if (vxKmsKey == null) {
+                vxKmsKey = new VXKmsKey();
+            }
         }
+
         return vxKmsKey;
     }
 
@@ -176,24 +201,35 @@ public class XKeyREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_KEY + "\")")
     public VXKmsKey getKey(@PathParam("alias") String name, @QueryParam("provider") String provider) {
-        VXKmsKey vxKmsKey = new VXKmsKey();
+        VXKmsKey vxKmsKey = null;
+
         try {
             if (name == null || name.isEmpty()) {
                 throw restErrorUtil.createRESTException("Please provide a valid " + "alias.", MessageEnums.INVALID_INPUT_DATA);
             }
+
             vxKmsKey = keyMgr.getKey(provider, name);
         } catch (Exception e) {
             handleError(e);
+        } finally {
+            if (vxKmsKey == null) {
+                vxKmsKey = new VXKmsKey();
+            }
         }
+
         return vxKmsKey;
     }
 
     private void handleError(Exception e) {
         String message = e.getMessage();
+
         if (e instanceof UniformInterfaceException) {
             UniformInterfaceException uie = (UniformInterfaceException) e;
+
             message = uie.getResponse().getEntity(String.class);
+
             logger.error(message);
+
             try {
                 JsonNode rootNode = JsonUtilsV2.getMapper().readTree(message);
                 JsonNode excpNode = rootNode != null ? rootNode.get("RemoteException") : null;
@@ -204,15 +240,17 @@ public class XKeyREST {
                 logger.error("Unable to parse the error message, So sending error message as it is - Error : {}", e1.getMessage());
             }
         }
-        if (!(message == null) && !(message.isEmpty()) && message.contains("Connection refused")) {
+
+        if (message == null) {
+            message = UNAUTHENTICATED_MSG;
+        } else if (message.contains("Connection refused")) {
             message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";
-        } else if (!(message == null) && !(message.isEmpty()) && (message.contains("response status of 403") || message.contains("HTTP Status 403"))) {
+        } else if (message.contains("response status of 403") || message.contains("HTTP Status 403")) {
             message = UNAUTHENTICATED_MSG;
-        } else if (!(message == null) && !(message.isEmpty()) && (message.contains("response status of 401") || message.contains("HTTP Status 401 - Authentication required"))) {
-            message = UNAUTHENTICATED_MSG;
-        } else if (message == null) {
+        } else if (message.contains("response status of 401") || message.contains("HTTP Status 401 - Authentication required")) {
             message = UNAUTHENTICATED_MSG;
         }
+
         throw restErrorUtil.createRESTException(message, MessageEnums.ERROR_SYSTEM);
     }
 }

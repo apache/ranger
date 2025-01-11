@@ -77,21 +77,28 @@ public class UserREST {
     private static final List<SortField> SORT_FIELDS = Arrays.asList(new SortField("requestDate", "requestDate"), new SortField("approvedDate", "approvedDate"), new SortField("activationDate", "activationDate"), new SortField("emailAddress", "emailAddress"), new SortField("firstName", "firstName"), new SortField("lastName", "lastName"));
 
     @Autowired
-    StringUtil       stringUtil;
+    StringUtil stringUtil;
+
     @Autowired
     RangerDaoManager daoManager;
+
     @Autowired
     RangerConfigUtil configUtil;
+
     @Autowired
-    RESTErrorUtil    restErrorUtil;
+    RESTErrorUtil restErrorUtil;
+
     @Autowired
-    SearchUtil       searchUtil;
+    SearchUtil searchUtil;
+
     @Autowired
-    UserMgr          userManager;
+    UserMgr userManager;
+
     @Autowired
-    RangerRestUtil   msRestUtil;
+    RangerRestUtil msRestUtil;
+
     @Autowired
-    XUserMgr         xUserMgr;
+    XUserMgr xUserMgr;
 
     /**
      * Implements the traditional search functionalities for UserProfile
@@ -144,15 +151,18 @@ public class UserREST {
     public VXPortalUser getUserProfileForUser(@PathParam("userId") Long userId) {
         try {
             VXPortalUser userProfile = userManager.getUserProfile(userId);
+
             if (userProfile != null) {
                 logger.debug("getUserProfile() Found User userId={}", userId);
             } else {
                 logger.debug("getUserProfile() Not found userId={}", userId);
             }
+
             return userProfile;
         } catch (Throwable t) {
-            logger.error("getUserProfile() no user session. error={}", t);
+            logger.error("getUserProfile() no user session. error={}", String.valueOf(t));
         }
+
         return null;
     }
 
@@ -173,11 +183,12 @@ public class UserREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
     public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile, @Context HttpServletRequest servletRequest) {
-        VXPortalUser vxPortalUser;
-        vxPortalUser = userManager.createDefaultAccountUser(userProfile);
+        VXPortalUser vxPortalUser = userManager.createDefaultAccountUser(userProfile);
+
         if (vxPortalUser != null) {
             xUserMgr.assignPermissionToUser(vxPortalUser, true);
         }
+
         return vxPortalUser;
     }
 
@@ -188,14 +199,20 @@ public class UserREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE + "\")")
     public VXPortalUser update(VXPortalUser userProfile, @Context HttpServletRequest servletRequest) {
         logger.info("update:{}", userProfile.getEmailAddress());
+
         XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userProfile.getId());
+
         userManager.checkAccess(gjUser);
+
         if (gjUser != null) {
             msRestUtil.validateVUserProfileForUpdate(gjUser, userProfile);
+
             gjUser = userManager.updateUser(userProfile);
+
             return userManager.mapXXPortalUserVXPortalUser(gjUser);
         } else {
             logger.info("update(): Invalid userId provided: userId={}", userProfile.getId());
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, userProfile.toString());
         }
     }
@@ -208,8 +225,11 @@ public class UserREST {
     public VXResponse setUserRoles(@PathParam("userId") Long userId, VXStringList roleList) {
         userManager.checkAccess(userId);
         userManager.setUserRoles(userId, roleList.getVXStrings());
+
         VXResponse response = new VXResponse();
+
         response.setStatusCode(VXResponse.STATUS_SUCCESS);
+
         return response;
     }
 
@@ -227,10 +247,13 @@ public class UserREST {
     @RangerAnnotationClassName(class_name = VXPortalUser.class)
     public VXPortalUser deactivateUser(@PathParam("userId") Long userId) {
         XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userId);
+
         if (gjUser == null) {
             logger.info("update(): Invalid userId provided: userId={}", userId);
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "" + userId);
         }
+
         return userManager.deactivateUser(gjUser);
     }
 
@@ -246,11 +269,16 @@ public class UserREST {
     public VXPortalUser getUserProfile(@Context HttpServletRequest request) {
         try {
             logger.debug("getUserProfile(). httpSessionId={}", request.getSession().getId());
+
             Map<String, String> configProperties  = new HashMap<>();
-            Long                inactivityTimeout = PropertiesUtil.getLongProperty("ranger.service.inactivity.timeout", 15 * 60);
+            long                inactivityTimeout = PropertiesUtil.getLongProperty("ranger.service.inactivity.timeout", 15 * 60);
+
             configProperties.put("inactivityTimeout", Long.toString(inactivityTimeout));
+
             VXPortalUser userProfile = userManager.getUserProfileByLoginId();
+
             userProfile.setConfigProperties(configProperties);
+
             return userProfile;
         } catch (Throwable t) {
             logger.error("getUserProfile() no user session. error={}", t, t);
@@ -270,23 +298,27 @@ public class UserREST {
     public VXResponse changePassword(@PathParam("userId") Long userId, VXPasswordChange changePassword) {
         if (changePassword == null || stringUtil.isEmpty(changePassword.getLoginId())) {
             logger.warn("SECURITY:changePassword(): Invalid loginId provided. loginId was empty or null");
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
         } else if (changePassword.getId() == null) {
             changePassword.setId(userId);
         } else if (!changePassword.getId().equals(userId)) {
             logger.warn("SECURITY:changePassword(): userId mismatch");
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
         }
 
         XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(changePassword.getLoginId());
+
         if (gjUser == null) {
             logger.warn("SECURITY:changePassword(): Invalid loginId provided: loginId={}", changePassword.getLoginId());
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, changePassword.getLoginId());
         }
 
         changePassword.setId(gjUser.getId());
-        VXResponse ret = userManager.changePassword(changePassword);
-        return ret;
+
+        return userManager.changePassword(changePassword);
     }
 
     /**
@@ -301,23 +333,28 @@ public class UserREST {
     public VXPortalUser changeEmailAddress(@PathParam("userId") Long userId, VXPasswordChange changeEmail) {
         if (changeEmail == null || stringUtil.isEmpty(changeEmail.getLoginId())) {
             logger.warn("SECURITY:changeEmail(): Invalid loginId provided. loginId was empty or null");
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
         } else if (changeEmail.getId() == null) {
             changeEmail.setId(userId);
         } else if (!changeEmail.getId().equals(userId)) {
             logger.warn("SECURITY:changeEmail(): userId mismatch");
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
         }
 
         logger.info("changeEmail:{}", changeEmail.getLoginId());
+
         XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(changeEmail.getLoginId());
+
         if (gjUser == null) {
             logger.warn("SECURITY:changeEmail(): Invalid loginId provided: loginId={}", changeEmail.getLoginId());
+
             throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, changeEmail.getLoginId());
         }
 
         changeEmail.setId(gjUser.getId());
-        VXPortalUser ret = userManager.changeEmailAddress(gjUser, changeEmail);
-        return ret;
+
+        return userManager.changeEmailAddress(gjUser, changeEmail);
     }
 }

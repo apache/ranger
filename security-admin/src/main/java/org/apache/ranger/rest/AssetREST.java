@@ -149,8 +149,7 @@ public class AssetREST {
         logger.debug("==> AssetREST.getXAsset({})", id);
 
         RangerService service = serviceREST.getService(id);
-
-        VXAsset ret = serviceUtil.toVXAsset(service);
+        VXAsset       ret     = serviceUtil.toVXAsset(service);
 
         logger.debug("<== AssetREST.getXAsset({}): {}", id, ret);
 
@@ -165,11 +164,9 @@ public class AssetREST {
     public VXAsset createXAsset(VXAsset vXAsset) {
         logger.debug("==> AssetREST.createXAsset({})", vXAsset);
 
-        RangerService service = serviceUtil.toRangerService(vXAsset);
-
+        RangerService service        = serviceUtil.toRangerService(vXAsset);
         RangerService createdService = serviceREST.createService(service);
-
-        VXAsset ret = serviceUtil.toVXAsset(createdService);
+        VXAsset       ret            = serviceUtil.toVXAsset(createdService);
 
         logger.debug("<== AssetREST.createXAsset({}):{}", vXAsset, ret);
 
@@ -184,11 +181,9 @@ public class AssetREST {
     public VXAsset updateXAsset(VXAsset vXAsset) {
         logger.debug("==> AssetREST.updateXAsset({})", vXAsset);
 
-        RangerService service = serviceUtil.toRangerService(vXAsset);
-
+        RangerService service        = serviceUtil.toRangerService(vXAsset);
         RangerService updatedService = serviceREST.updateService(service, null);
-
-        VXAsset ret = serviceUtil.toVXAsset(updatedService);
+        VXAsset       ret            = serviceUtil.toVXAsset(updatedService);
 
         logger.debug("<== AssetREST.updateXAsset({}):{}", vXAsset, ret);
 
@@ -216,8 +211,7 @@ public class AssetREST {
         logger.debug("==> AssetREST.configTest({})", vXAsset);
 
         RangerService service = serviceUtil.toRangerService(vXAsset);
-
-        VXResponse ret = serviceREST.validateConfig(service);
+        VXResponse    ret     = serviceREST.validateConfig(service);
 
         logger.debug("<== AssetREST.testConfig({}):{}", vXAsset, ret);
 
@@ -231,14 +225,13 @@ public class AssetREST {
     public VXAssetList searchXAssets(@Context HttpServletRequest request) {
         logger.debug("==> AssetREST.searchXAssets()");
 
-        VXAssetList ret = new VXAssetList();
-
-        SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
-
+        VXAssetList         ret      = new VXAssetList();
+        SearchFilter        filter   = searchUtil.getSearchFilterFromLegacyRequestForRepositorySearch(request, xAssetService.sortFields);
         List<RangerService> services = serviceREST.getServices(filter);
 
         if (services != null) {
             List<VXAsset> assets = new ArrayList<>();
+
             for (RangerService service : services) {
                 VXAsset asset = serviceUtil.toVXAsset(service);
 
@@ -296,10 +289,8 @@ public class AssetREST {
     public VXResource getXResource(@PathParam("id") Long id) {
         logger.debug("==> AssetREST.getXResource({})", id);
 
-        RangerPolicy  policy  = null;
         RangerService service = null;
-
-        policy = serviceREST.getPolicy(id);
+        RangerPolicy  policy  = serviceREST.getPolicy(id);
 
         if (policy != null) {
             service = serviceREST.getServiceByName(policy.getService());
@@ -319,12 +310,10 @@ public class AssetREST {
     public VXResource createXResource(VXResource vXResource) {
         logger.debug("==> AssetREST.createXResource({})", vXResource);
 
-        RangerService service = serviceREST.getService(vXResource.getAssetId());
-        RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXResource, service);
-
+        RangerService service      = serviceREST.getService(vXResource.getAssetId());
+        RangerPolicy  policy       = serviceUtil.toRangerPolicy(vXResource, service);
         RangerPolicy createdPolicy = serviceREST.createPolicy(policy, null);
-
-        VXResource ret = serviceUtil.toVXResource(createdPolicy, service);
+        VXResource   ret           = serviceUtil.toVXResource(createdPolicy, service);
 
         logger.debug("<== AssetREST.createXResource({}): {}", vXResource, ret);
 
@@ -345,12 +334,10 @@ public class AssetREST {
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "resource Id mismatch", true);
         }
 
-        RangerService service = serviceREST.getService(vXResource.getAssetId());
-        RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXResource, service);
-
-        RangerPolicy updatedPolicy = serviceREST.updatePolicy(policy, policy.getId());
-
-        VXResource ret = serviceUtil.toVXResource(updatedPolicy, service);
+        RangerService service       = serviceREST.getService(vXResource.getAssetId());
+        RangerPolicy  policy        = serviceUtil.toRangerPolicy(vXResource, service);
+        RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy, policy.getId());
+        VXResource    ret           = serviceUtil.toVXResource(updatedPolicy, service);
 
         logger.debug("<== AssetREST.updateXResource({}): {}", vXResource, ret);
 
@@ -374,18 +361,16 @@ public class AssetREST {
     public VXResourceList searchXResources(@Context HttpServletRequest request) {
         logger.debug("==> AssetREST.searchXResources()");
 
-        VXResourceList ret = new VXResourceList();
-
-        SearchFilter filter = searchUtil.getSearchFilterFromLegacyRequest(request, xResourceService.sortFields);
-
+        VXResourceList     ret      = new VXResourceList();
+        SearchFilter       filter   = searchUtil.getSearchFilterFromLegacyRequest(request, xResourceService.sortFields);
         List<RangerPolicy> policies = serviceREST.getPolicies(filter);
 
         if (policies != null) {
             List<VXResource> resources = new ArrayList<>();
-            for (RangerPolicy policy : policies) {
-                RangerService service = serviceREST.getServiceByName(policy.getService());
 
-                VXResource resource = serviceUtil.toVXResource(policy, service);
+            for (RangerPolicy policy : policies) {
+                RangerService service  = serviceREST.getServiceByName(policy.getService());
+                VXResource    resource = serviceUtil.toVXResource(policy, service);
 
                 if (resource != null) {
                     resources.add(resource);
@@ -473,6 +458,7 @@ public class AssetREST {
     @RangerAnnotationClassName(class_name = VXCredentialStore.class)
     public void deleteXCredentialStore(@PathParam("id") Long id, @Context HttpServletRequest request) {
         boolean force = false;
+
         assetMgr.deleteXCredentialStore(id, force);
     }
 
@@ -481,6 +467,7 @@ public class AssetREST {
     @Produces("application/json")
     public VXCredentialStoreList searchXCredentialStores(@Context HttpServletRequest request) {
         SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xCredentialStoreService.sortFields);
+
         return assetMgr.searchXCredentialStores(searchCriteria);
     }
 
@@ -489,6 +476,7 @@ public class AssetREST {
     @Produces("application/json")
     public VXLong countXCredentialStores(@Context HttpServletRequest request) {
         SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xCredentialStoreService.sortFields);
+
         return assetMgr.getXCredentialStoreSearchCount(searchCriteria);
     }
 
@@ -498,6 +486,7 @@ public class AssetREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_POLICY_EXPORT_AUDITS + "\")")
     public VXPolicyExportAuditList searchXPolicyExportAudits(@Context HttpServletRequest request) {
         SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xPolicyExportAudits.sortFields);
+
         searchUtil.extractString(request, searchCriteria, "agentId", "The XA agent id pulling the policies.", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "clientIP", "The XA agent ip pulling the policies.", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "repositoryName", "Repository name for which export was done.", StringUtil.VALIDATION_TEXT);
@@ -506,6 +495,7 @@ public class AssetREST {
         searchUtil.extractDate(request, searchCriteria, "endDate", "End Date", null);
         searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "zoneName", "Zone Name", StringUtil.VALIDATION_TEXT);
+
         return assetMgr.searchXPolicyExportAudits(searchCriteria);
     }
 
@@ -515,6 +505,7 @@ public class AssetREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_REPORT_LOGS + "\")")
     public VXTrxLogList getReportLogs(@Context HttpServletRequest request) {
         SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xTrxLogService.getSortFields());
+
         searchUtil.extractInt(request, searchCriteria, "objectClassType", "audit type.");
         searchUtil.extractInt(request, searchCriteria, "objectId", "Object ID");
         searchUtil.extractString(request, searchCriteria, "attributeName", "Attribute Name", StringUtil.VALIDATION_TEXT);
@@ -523,6 +514,7 @@ public class AssetREST {
         searchUtil.extractString(request, searchCriteria, "owner", "Owner", StringUtil.VALIDATION_TEXT);
         searchUtil.extractDate(request, searchCriteria, "startDate", "Trasaction date since", "MM/dd/yyyy");
         searchUtil.extractDate(request, searchCriteria, "endDate", "Trasaction date till", "MM/dd/yyyy");
+
         return assetMgr.getReportLogs(searchCriteria);
     }
 
@@ -540,6 +532,7 @@ public class AssetREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_ACCESS_LOGS + "\")")
     public VXAccessAuditList getAccessLogs(@Context HttpServletRequest request, @QueryParam("timeZone") String timeZone) {
         SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+
         searchUtil.extractString(request, searchCriteria, "accessType", "Access Type", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "aclEnforcer", "Access Enforcer", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "agentId", "Application", StringUtil.VALIDATION_TEXT);
@@ -558,41 +551,40 @@ public class AssetREST {
         searchUtil.extractInt(request, searchCriteria, "assetId", "Asset ID");
         searchUtil.extractLong(request, searchCriteria, "policyId", "Policy ID");
         searchUtil.extractInt(request, searchCriteria, "repoType", "Service Type");
-
         searchUtil.extractDate(request, searchCriteria, "startDate", "Start Date", "MM/dd/yyyy");
         searchUtil.extractDate(request, searchCriteria, "endDate", "End Date", "MM/dd/yyyy");
-
         searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
         searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
         searchUtil.extractStringList(request, searchCriteria, "zoneName", "Zone Name List", "zoneName", null, null);
-
         searchUtil.extractString(request, searchCriteria, "agentHost", "Agent Host Name", StringUtil.VALIDATION_TEXT);
-
         searchUtil.extractString(request, searchCriteria, "eventId", "Event Id", null);
 
         boolean      isKeyAdmin      = msBizUtil.isKeyAdmin();
         boolean      isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
         XXServiceDef xxServiceDef    = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
+
         if (isKeyAdmin && xxServiceDef != null || isAuditKeyAdmin && xxServiceDef != null) {
             searchCriteria.getParamList().put("repoType", xxServiceDef.getId());
         } else if (xxServiceDef != null) {
             searchCriteria.getParamList().put("-repoType", xxServiceDef.getId());
         }
+
         VXAccessAuditList vxAccessAuditList = assetMgr.getAccessLogs(searchCriteria);
 
         if (timeZone != null && !StringUtils.isBlank(timeZone)) {
             vxAccessAuditList.getVXAccessAudits().forEach(vxAccessAudit -> {
                 String zonedEventTime = convertToTimeZone(vxAccessAudit.getEventTime(), timeZone);
+
                 if (zonedEventTime == null || zonedEventTime.isEmpty()) {
                     throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Passed timeZone value is invalid", true);
                 }
+
                 vxAccessAudit.setZonedEventTime(zonedEventTime);
             });
         } else {
-            vxAccessAuditList.getVXAccessAudits().forEach(vxAccessAudit -> {
-                vxAccessAudit.setZonedEventTime(new SimpleDateFormat(RestUtil.ZONED_EVENT_TIME_FORMAT).format(vxAccessAudit.getEventTime()));
-            });
+            vxAccessAuditList.getVXAccessAudits().forEach(vxAccessAudit -> vxAccessAudit.setZonedEventTime(new SimpleDateFormat(RestUtil.ZONED_EVENT_TIME_FORMAT).format(vxAccessAudit.getEventTime())));
         }
+
         return vxAccessAuditList;
     }
 
@@ -601,23 +593,26 @@ public class AssetREST {
     @Consumes("application/json")
     @Produces("application/json")
     public VXPolicy grantPermission(@Context HttpServletRequest request, VXPolicy vXPolicy) {
-        RESTResponse ret = null;
+        RESTResponse ret;
 
         logger.debug("==> AssetREST.grantPermission({})", vXPolicy);
 
         if (vXPolicy != null) {
             String             serviceName        = vXPolicy.getRepositoryName();
             GrantRevokeRequest grantRevokeRequest = serviceUtil.toGrantRevokeRequest(vXPolicy);
+
             try {
                 ret = serviceREST.grantAccess(serviceName, grantRevokeRequest, request);
             } catch (WebApplicationException excp) {
                 throw excp;
             } catch (Throwable e) {
                 logger.error("{} Grant Access Failed for the request {}", HttpServletResponse.SC_BAD_REQUEST, vXPolicy, e);
+
                 throw restErrorUtil.createRESTException("Grant Access Failed for the request: " + vXPolicy + ". " + e.getMessage());
             }
         } else {
             logger.error("{} Bad Request parameter", HttpServletResponse.SC_BAD_REQUEST);
+
             throw restErrorUtil.createRESTException("Bad Request parameter");
         }
 
@@ -632,27 +627,31 @@ public class AssetREST {
     @Consumes("application/json")
     @Produces("application/json")
     public VXPolicy revokePermission(@Context HttpServletRequest request, VXPolicy vXPolicy) {
-        RESTResponse ret = null;
+        RESTResponse ret;
 
         logger.debug("==> AssetREST.revokePermission({})", vXPolicy);
 
         if (vXPolicy != null) {
             String             serviceName        = vXPolicy.getRepositoryName();
             GrantRevokeRequest grantRevokeRequest = serviceUtil.toGrantRevokeRequest(vXPolicy);
+
             try {
                 ret = serviceREST.revokeAccess(serviceName, grantRevokeRequest, request);
             } catch (WebApplicationException excp) {
                 throw excp;
             } catch (Throwable e) {
                 logger.error("{} Revoke Access Failed for the request {}", HttpServletResponse.SC_BAD_REQUEST, vXPolicy, e);
+
                 throw restErrorUtil.createRESTException("Revoke Access Failed for the request: " + vXPolicy + ". " + e.getMessage());
             }
         } else {
             logger.error("{} Bad Request parameter", HttpServletResponse.SC_BAD_REQUEST);
+
             throw restErrorUtil.createRESTException("Bad Request parameter");
         }
 
         logger.debug("<== AssetREST.revokePermission({})", ret);
+
         return vXPolicy;
     }
 
@@ -662,15 +661,16 @@ public class AssetREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_UGSYNC_AUDITS + "\")")
     public VXUgsyncAuditInfoList getUgsyncAudits(@Context HttpServletRequest request) {
         SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
+
         searchUtil.extractString(request, searchCriteria, "userName", "User Name", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "sessionId", "Session Id", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "syncSource", "Sync Source", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "syncSourceInfo", "Sync Source Info", StringUtil.VALIDATION_TEXT);
         searchUtil.extractLong(request, searchCriteria, "noOfUsers", "No of Users");
         searchUtil.extractLong(request, searchCriteria, "noOfGroups", "No of Groups");
-
         searchUtil.extractDate(request, searchCriteria, "startDate", "Start Date", "MM/dd/yyyy");
         searchUtil.extractDate(request, searchCriteria, "endDate", "End Date", "MM/dd/yyyy");
+
         return assetMgr.getUgsyncAudits(searchCriteria);
     }
 
@@ -680,8 +680,6 @@ public class AssetREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_UGSYNC_AUDITS_BY_SYNCSOURCE + "\")")
     public VXUgsyncAuditInfoList getUgsyncAuditsBySyncSource(@PathParam("syncSource") String syncSource) {
-        VXUgsyncAuditInfoList vxUgsyncAuditInfoList = new VXUgsyncAuditInfoList();
-        vxUgsyncAuditInfoList = assetMgr.getUgsyncAuditsBySyncSource(syncSource);
-        return vxUgsyncAuditInfoList;
+        return assetMgr.getUgsyncAuditsBySyncSource(syncSource);
     }
 }
