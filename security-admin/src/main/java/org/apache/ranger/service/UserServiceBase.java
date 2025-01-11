@@ -17,53 +17,50 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 
-public abstract class UserServiceBase<T extends XXPortalUser, V extends VXPortalUser>
-		extends AbstractBaseResourceService<T, V> {
-	public static final String NAME = "User";
+import java.util.ArrayList;
+import java.util.List;
 
-	public UserServiceBase() {
+public abstract class UserServiceBase<T extends XXPortalUser, V extends VXPortalUser> extends AbstractBaseResourceService<T, V> {
+    public static final String NAME = "User";
 
-	}
+    public UserServiceBase() {
+    }
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
-		return mObj;
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXPortalUserList searchUsers(SearchCriteria searchCriteria) {
+        VXPortalUserList   returnList = new VXPortalUserList();
+        List<VXPortalUser> userList   = new ArrayList<>();
+        List<T>            resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		return vObj;
-	}
+        // Iterate over the result list and create the return list
+        for (T gjUser : resultList) {
+            VXPortalUser vUser = populateViewBean(gjUser);
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXPortalUserList searchUsers(SearchCriteria searchCriteria) {
-		VXPortalUserList returnList = new VXPortalUserList();
-		List<VXPortalUser> userList = new ArrayList<VXPortalUser>();
+            userList.add(vUser);
+        }
 
-		List<T> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+        returnList.setVXPortalUsers(userList);
 
-		// Iterate over the result list and create the return list
-		for (T gjUser : resultList) {
-			VXPortalUser vUser = populateViewBean(gjUser);
-			userList.add(vUser);
-		}
+        return returnList;
+    }
 
-		returnList.setVXPortalUsers(userList);
-		return returnList;
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        return mObj;
+    }
 
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        return vObj;
+    }
 }

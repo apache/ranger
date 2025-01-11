@@ -19,62 +19,67 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXModuleDefList;
-import java.util.Map;
+
+import java.util.ArrayList;
 import java.util.HashMap;
-public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXModuleDef>
-		extends AbstractBaseResourceService<T, V> {
+import java.util.List;
+import java.util.Map;
 
-	public static final String NAME = "XModuleDef";
+public abstract class XModuleDefServiceBase<T extends XXModuleDef, V extends VXModuleDef> extends AbstractBaseResourceService<T, V> {
+    public static final String NAME = "XModuleDef";
 
-	public XModuleDefServiceBase() {
+    public XModuleDefServiceBase() {
+    }
 
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXModuleDefList searchModuleDef(SearchCriteria searchCriteria) {
+        VXModuleDefList   returnList      = new VXModuleDefList();
+        List<VXModuleDef> vXModuleDefList = new ArrayList<>();
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T mObj,
-			int OPERATION_CONTEXT) {
-		mObj.setModule(vObj.getModule());
-		mObj.setUrl(vObj.getUrl());
-		return mObj;
-	}
+        searchCriteria.setMaxRows(Integer.MAX_VALUE);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		vObj.setModule(mObj.getModule());
-		vObj.setUrl(mObj.getUrl());
-		return vObj;
-	}
+        List<T>      resultList  = searchResources(searchCriteria, searchFields, sortFields, returnList);
+        Map<Long, T> matchModule = new HashMap<>();
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXModuleDefList searchModuleDef(SearchCriteria searchCriteria) {
-		VXModuleDefList returnList = new VXModuleDefList();
-		List<VXModuleDef> vXModuleDefList = new ArrayList<VXModuleDef>();
-                searchCriteria.setMaxRows(Integer.MAX_VALUE);
-		List<T> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
-                Map<Long, T> matchModule = new HashMap<Long,T>();
-                for (T moduleDef : resultList) {
-                        matchModule.put(moduleDef.getId(),  moduleDef);
-                }
+        for (T moduleDef : resultList) {
+            matchModule.put(moduleDef.getId(), moduleDef);
+        }
 
-                List <T> moduleDefList=new ArrayList<T>(matchModule.values());
-		// Iterate over the result list and create the return list
-                for (T gjXModuleDef : moduleDefList) {
-			VXModuleDef vXModuleDef = populateViewBean(gjXModuleDef);
-			vXModuleDefList.add(vXModuleDef);
-		}
-                returnList.setTotalCount(vXModuleDefList.size());
-		returnList.setvXModuleDef(vXModuleDefList);
-		return returnList;
-	}
+        List<T> moduleDefList = new ArrayList<>(matchModule.values());
+        // Iterate over the result list and create the return list
+
+        for (T gjXModuleDef : moduleDefList) {
+            VXModuleDef vXModuleDef = populateViewBean(gjXModuleDef);
+
+            vXModuleDefList.add(vXModuleDef);
+        }
+
+        returnList.setTotalCount(vXModuleDefList.size());
+        returnList.setvXModuleDef(vXModuleDefList);
+
+        return returnList;
+    }
+
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        mObj.setModule(vObj.getModule());
+        mObj.setUrl(vObj.getUrl());
+
+        return mObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        vObj.setModule(mObj.getModule());
+        vObj.setUrl(mObj.getUrl());
+
+        return vObj;
+    }
 }

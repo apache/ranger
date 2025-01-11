@@ -17,9 +17,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.HashMap;
-import java.util.List;
-
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceWithAssignedId;
@@ -27,50 +24,49 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
+
 @Service
 public class RangerServiceWithAssignedIdService extends RangerServiceServiceBase<XXServiceWithAssignedId, RangerService> {
+    @Autowired
+    JSONUtil jsonUtil;
 
-	@Autowired
-	JSONUtil jsonUtil;
+    public RangerService getPopulatedViewObject(XXServiceWithAssignedId xService) {
+        return this.populateViewBean(xService);
+    }
 
-	@Override
-	protected XXServiceWithAssignedId mapViewToEntityBean(RangerService vObj, XXServiceWithAssignedId xObj, int OPERATION_CONTEXT) {
-		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
-	}
+    @Override
+    protected XXServiceWithAssignedId mapViewToEntityBean(RangerService vObj, XXServiceWithAssignedId xObj, int operationContext) {
+        return super.mapViewToEntityBean(vObj, xObj, operationContext);
+    }
 
-	@Override
-	protected RangerService mapEntityToViewBean(RangerService vObj, XXServiceWithAssignedId xObj) {
-		return super.mapEntityToViewBean(vObj, xObj);
-	}
-	
-	@Override
-	protected void validateForCreate(RangerService vObj) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    protected RangerService mapEntityToViewBean(RangerService vObj, XXServiceWithAssignedId xObj) {
+        return super.mapEntityToViewBean(vObj, xObj);
+    }
 
-	@Override
-	protected void validateForUpdate(RangerService vService, XXServiceWithAssignedId xService) {
-		
-	}
-	
-	@Override
-	protected RangerService populateViewBean(XXServiceWithAssignedId xService) {
-		RangerService vService = super.populateViewBean(xService);
-		
-		HashMap<String, String> configs = new HashMap<String, String>();
-		List<XXServiceConfigMap> svcConfigMapList = daoMgr.getXXServiceConfigMap()
-				.findByServiceId(xService.getId());
-		for(XXServiceConfigMap svcConfMap : svcConfigMapList) {
-			configs.put(svcConfMap.getConfigkey(), svcConfMap.getConfigvalue());
-		}
-		vService.setConfigs(configs);
-		
-		return vService;
-	}
-	
-	public RangerService getPopulatedViewObject(XXServiceWithAssignedId xService) {
-		return this.populateViewBean(xService);
-	}
+    @Override
+    protected RangerService populateViewBean(XXServiceWithAssignedId xService) {
+        RangerService            vService         = super.populateViewBean(xService);
+        HashMap<String, String>  configs          = new HashMap<>();
+        List<XXServiceConfigMap> svcConfigMapList = daoMgr.getXXServiceConfigMap().findByServiceId(xService.getId());
 
+        for (XXServiceConfigMap svcConfMap : svcConfigMapList) {
+            configs.put(svcConfMap.getConfigkey(), svcConfMap.getConfigvalue());
+        }
+
+        vService.setConfigs(configs);
+
+        return vService;
+    }
+
+    @Override
+    protected void validateForCreate(RangerService vObj) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    protected void validateForUpdate(RangerService vService, XXServiceWithAssignedId xService) {
+    }
 }

@@ -31,41 +31,36 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Scope("singleton")
-public class RangerPolicyLabelsService<T extends XXPolicyLabel, V extends RangerPolicy>
-		extends RangerBaseModelService<T, V> {
+public class RangerPolicyLabelsService<T extends XXPolicyLabel, V extends RangerPolicy> extends RangerBaseModelService<T, V> {
+    @Autowired
+    RangerAuditFields<?> rangerAuditFields;
 
-	@Autowired
-	RangerAuditFields<?> rangerAuditFields;
+    public RangerPolicyLabelsService() {
+        super();
 
-	public RangerPolicyLabelsService() {
-		super();
-		searchFields.add(
-				new SearchField(SearchFilter.POLICY_LABEL, "obj.policyLabel", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
-		sortFields.add(new SortField(SearchFilter.POLICY_LABEL_ID, "obj.id", true, SORT_ORDER.ASC));
-	}
+        searchFields.add(new SearchField(SearchFilter.POLICY_LABEL, "obj.policyLabel", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
+        sortFields.add(new SortField(SearchFilter.POLICY_LABEL_ID, "obj.id", true, SORT_ORDER.ASC));
+    }
 
-	@Override
-	protected T mapViewToEntityBean(V viewBean, T t, int OPERATION_CONTEXT) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    protected T mapViewToEntityBean(V viewBean, T t, int operationContext) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	protected V mapEntityToViewBean(V viewBean, T t) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    protected V mapEntityToViewBean(V viewBean, T t) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	protected void validateForCreate(V vObj) {
-		// TODO Auto-generated method stub
+    @Override
+    protected void validateForCreate(V vObj) {
+        // TODO Auto-generated method stub
+    }
 
-	}
-
-	@Override
-	protected void validateForUpdate(V vObj, T entityObj) {
-		// TODO Auto-generated method stub
-
-	}
-
+    @Override
+    protected void validateForUpdate(V vObj, T entityObj) {
+        // TODO Auto-generated method stub
+    }
 }
