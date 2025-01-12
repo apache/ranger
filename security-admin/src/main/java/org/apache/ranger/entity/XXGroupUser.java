@@ -33,6 +33,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_group_users")
 public class XXGroupUser extends XXDBBase implements java.io.Serializable {
@@ -42,7 +44,8 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_GROUP_USERS_SEQ", sequenceName = "X_GROUP_USERS_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_GROUP_USERS_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Name
      * <ul>
@@ -51,6 +54,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "GROUP_NAME", nullable = false, length = 1024)
     protected String name;
+
     /**
      * Id of the group
      * <ul>
@@ -58,6 +62,7 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "P_GROUP_ID")
     protected Long   parentGroupId;
+
     /**
      * Id of the user
      * <ul>
@@ -110,17 +115,17 @@ public class XXGroupUser extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXGroupUser other = (XXGroupUser) obj;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        if ((this.parentGroupId == null && other.parentGroupId != null) || (this.parentGroupId != null && !this.parentGroupId.equals(other.parentGroupId))) {
-            return false;
-        }
-        return (this.userId != null || other.userId == null) && (this.userId == null || this.userId.equals(other.userId));
+
+        return Objects.equals(name, other.name) &&
+                Objects.equals(parentGroupId, other.parentGroupId) &&
+                Objects.equals(userId, other.userId);
     }
 
     /**

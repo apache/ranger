@@ -35,6 +35,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_group")
 public class XXGroup extends XXDBBase implements java.io.Serializable {
@@ -44,7 +46,8 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_GROUP_SEQ", sequenceName = "X_GROUP_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_GROUP_SEQ")
     @Column(name = "ID")
-    protected Long    id;
+    protected Long id;
+
     /**
      * Name
      * <ul>
@@ -53,6 +56,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "GROUP_NAME", nullable = false, length = 1024)
     protected String  name;
+
     /**
      * Description
      * <ul>
@@ -60,7 +64,8 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "DESCR", nullable = false, length = 4000)
-    protected String  description;
+    protected String description;
+
     /**
      * Status
      * <ul>
@@ -68,7 +73,8 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "STATUS", nullable = false)
-    protected int     status      = RangerConstants.STATUS_DISABLED;
+    protected int status = RangerConstants.STATUS_DISABLED;
+
     /**
      * IsVisible
      * <ul>
@@ -77,6 +83,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "IS_VISIBLE", nullable = false)
     protected Integer isVisible;
+
     /**
      * Type of group
      * <ul>
@@ -84,16 +91,19 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "GROUP_TYPE", nullable = false)
-    protected int     groupType   = AppConstants.XA_GROUP_UNKNOWN;
+    protected int groupType = AppConstants.XA_GROUP_UNKNOWN;
+
     @Column(name = "GROUP_SRC", nullable = false)
-    protected int     groupSource = RangerCommonEnums.GROUP_INTERNAL;
+    protected int groupSource = RangerCommonEnums.GROUP_INTERNAL;
+
     /**
      * Id of the credential store
      * <ul>
      * </ul>
      */
     @Column(name = "CRED_STORE_ID")
-    protected Long    credStoreId;
+    protected Long credStoreId;
+
     /**
      * Additional store attributes.
      * <ul>
@@ -101,6 +111,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "OTHER_ATTRIBUTES")
     protected String  otherAttributes;
+
     /**
      * Sync Source Attribute.
      * <ul>
@@ -122,10 +133,10 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
     public static String getEnumName(String fieldName) {
         if ("status".equals(fieldName)) {
             return "CommonEnums.ActiveStatus";
-        }
-        if ("groupType".equals(fieldName)) {
+        } else if ("groupType".equals(fieldName)) {
             return "CommonEnums.XAGroupType";
         }
+
         //Later TODO
         //return super.getEnumName(fieldName);
         return null;
@@ -163,23 +174,19 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXGroup other = (XXGroup) obj;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        if ((this.description == null && other.description != null) || (this.description != null && !this.description.equals(other.description))) {
-            return false;
-        }
-        if (this.status != other.status) {
-            return false;
-        }
-        if (this.groupType != other.groupType) {
-            return false;
-        }
-        return (this.credStoreId != null || other.credStoreId == null) && (this.credStoreId == null || this.credStoreId.equals(other.credStoreId));
+
+        return Objects.equals(name, other.name) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(status, other.status) &&
+                Objects.equals(groupType, other.groupType) &&
+                Objects.equals(credStoreId, other.credStoreId);
     }
 
     /**

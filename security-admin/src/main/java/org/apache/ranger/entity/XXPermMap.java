@@ -34,6 +34,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_perm_map")
 public class XXPermMap extends XXDBBase implements java.io.Serializable {
@@ -43,7 +45,8 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_PERM_MAP_SEQ", sequenceName = "X_PERM_MAP_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_PERM_MAP_SEQ")
     @Column(name = "ID")
-    protected Long    id;
+    protected Long id;
+
     /**
      * Group to which the permission belongs to
      * <ul>
@@ -52,27 +55,31 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "PERM_GROUP", length = 1024)
     protected String  permGroup;
+
     /**
      * Id of the resource
      * <ul>
      * </ul>
      */
     @Column(name = "RES_ID")
-    protected Long    resourceId;
+    protected Long resourceId;
+
     /**
      * Id of the group
      * <ul>
      * </ul>
      */
     @Column(name = "GROUP_ID")
-    protected Long    groupId;
+    protected Long groupId;
+
     /**
      * Id of the user
      * <ul>
      * </ul>
      */
     @Column(name = "USER_ID")
-    protected Long    userId;
+    protected Long userId;
+
     /**
      * Permission for user or group
      * <ul>
@@ -80,7 +87,8 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "PERM_FOR", nullable = false)
-    protected int     permFor       = AppConstants.XA_PERM_FOR_UNKNOWN;
+    protected int permFor = AppConstants.XA_PERM_FOR_UNKNOWN;
+
     /**
      * Type of permission
      * <ul>
@@ -88,7 +96,8 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "PERM_TYPE", nullable = false)
-    protected int     permType      = AppConstants.XA_PERM_TYPE_UNKNOWN;
+    protected int permType = AppConstants.XA_PERM_TYPE_UNKNOWN;
+
     /**
      * Is recursive
      * <ul>
@@ -96,14 +105,16 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "IS_RECURSIVE", nullable = false)
-    protected int     isRecursive   = RangerConstants.BOOL_NONE;
+    protected int isRecursive = RangerConstants.BOOL_NONE;
+
     /**
      * Is wild card
      * <ul>
      * </ul>
      */
     @Column(name = "IS_WILD_CARD", nullable = false)
-    protected boolean isWildCard    = true;
+    protected boolean isWildCard = true;
+
     /**
      * Grant is true and revoke is false
      * <ul>
@@ -111,6 +122,7 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "GRANT_REVOKE", nullable = false)
     protected boolean grantOrRevoke = true;
+
     /**
      * IP address to which the group belongs to
      * <ul>
@@ -132,13 +144,12 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
     public static String getEnumName(String fieldName) {
         if ("permFor".equals(fieldName)) {
             return "CommonEnums.XAPermForType";
-        }
-        if ("permType".equals(fieldName)) {
+        } else if ("permType".equals(fieldName)) {
             return "CommonEnums.XAPermType";
-        }
-        if ("isRecursive".equals(fieldName)) {
+        } else if ("isRecursive".equals(fieldName)) {
             return "CommonEnums.BooleanValue";
         }
+
         //Later TODO
         //return super.getEnumName(fieldName);
         return null;
@@ -171,35 +182,23 @@ public class XXPermMap extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXPermMap other = (XXPermMap) obj;
-        if ((this.permGroup == null && other.permGroup != null) || (this.permGroup != null && !this.permGroup.equals(other.permGroup))) {
-            return false;
-        }
-        if ((this.resourceId == null && other.resourceId != null) || (this.resourceId != null && !this.resourceId.equals(other.resourceId))) {
-            return false;
-        }
-        if ((this.groupId == null && other.groupId != null) || (this.groupId != null && !this.groupId.equals(other.groupId))) {
-            return false;
-        }
-        if ((this.userId == null && other.userId != null) || (this.userId != null && !this.userId.equals(other.userId))) {
-            return false;
-        }
-        if (this.permFor != other.permFor) {
-            return false;
-        }
-        if (this.permType != other.permType) {
-            return false;
-        }
-        if (this.isRecursive != other.isRecursive) {
-            return false;
-        }
-        if (this.isWildCard != other.isWildCard) {
-            return false;
-        }
-        return this.grantOrRevoke == other.grantOrRevoke;
+
+        return Objects.equals(permGroup, other.permGroup) &&
+                Objects.equals(resourceId, other.resourceId) &&
+                Objects.equals(groupId, other.groupId) &&
+                Objects.equals(userId, other.userId) &&
+                Objects.equals(permFor, other.permFor) &&
+                Objects.equals(permType, other.permType) &&
+                Objects.equals(isRecursive, other.isRecursive) &&
+                Objects.equals(isWildCard, other.isWildCard) &&
+                Objects.equals(grantOrRevoke, other.grantOrRevoke);
     }
 
     /**

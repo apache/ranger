@@ -34,6 +34,7 @@ import java.util.Objects;
 @Table(name = "x_access_type_def")
 public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXAccessTypeDef
      * <ul>
@@ -43,7 +44,7 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_access_type_def_SEQ", sequenceName = "x_access_type_def_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_access_type_def_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * defId of the XXAccessTypeDef
@@ -148,8 +149,6 @@ public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (getClass() != obj.getClass()) {
-            return false;
         } else if (!super.equals(obj)) {
             return false;
         }

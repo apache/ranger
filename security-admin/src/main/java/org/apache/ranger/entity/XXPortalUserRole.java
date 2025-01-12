@@ -33,6 +33,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_portal_user_role")
 public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
@@ -42,14 +44,16 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_PORTAL_USER_ROLE_SEQ", sequenceName = "X_PORTAL_USER_ROLE_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_PORTAL_USER_ROLE_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Id of the user
      * <ul>
      * </ul>
      */
     @Column(name = "USER_ID", nullable = false)
-    protected Long   userId;
+    protected Long userId;
+
     /**
      * Role of the user
      * <ul>
@@ -58,6 +62,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "USER_ROLE", length = 128)
     protected String userRole;
+
     /**
      * Status
      * <ul>
@@ -65,7 +70,7 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "STATUS", nullable = false)
-    protected int    status = RangerConstants.STATUS_DISABLED;
+    protected int status = RangerConstants.STATUS_DISABLED;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -105,17 +110,17 @@ public class XXPortalUserRole extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXPortalUserRole other = (XXPortalUserRole) obj;
-        if ((this.userId == null && other.userId != null) || (this.userId != null && !this.userId.equals(other.userId))) {
-            return false;
-        }
-        if ((this.userRole == null && other.userRole != null) || (this.userRole != null && !this.userRole.equals(other.userRole))) {
-            return false;
-        }
-        return this.status == other.status;
+
+        return Objects.equals(userId, other.userId) &&
+                Objects.equals(userRole, other.userRole) &&
+                Objects.equals(status, other.status);
     }
 
     /**

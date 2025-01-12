@@ -31,6 +31,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -117,13 +118,7 @@ public class XXServiceResourceElementValue extends XXDBBase implements Serializa
      */
     @Override
     public int hashCode() {
-        final int prime  = 31;
-        int       result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((resElementId == null) ? 0 : resElementId.hashCode());
-        result = prime * result + ((sortOrder == null) ? 0 : sortOrder.hashCode());
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
+        return Objects.hash(super.hashCode(), id, resElementId, sortOrder, value);
     }
 
     /*
@@ -135,40 +130,16 @@ public class XXServiceResourceElementValue extends XXDBBase implements Serializa
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXServiceResourceElementValue other = (XXServiceResourceElementValue) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (resElementId == null) {
-            if (other.resElementId != null) {
-                return false;
-            }
-        } else if (!resElementId.equals(other.resElementId)) {
-            return false;
-        }
-        if (sortOrder == null) {
-            if (other.sortOrder != null) {
-                return false;
-            }
-        } else if (!sortOrder.equals(other.sortOrder)) {
-            return false;
-        }
-        if (value == null) {
-            return other.value == null;
-        } else {
-            return value.equals(other.value);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(resElementId, other.resElementId) &&
+                Objects.equals(sortOrder, other.sortOrder) &&
+                Objects.equals(value, other.value);
     }
 
     /*

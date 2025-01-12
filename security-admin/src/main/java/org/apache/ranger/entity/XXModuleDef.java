@@ -27,6 +27,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_modules_master")
 public class XXModuleDef extends XXDBBase implements java.io.Serializable {
@@ -36,9 +38,11 @@ public class XXModuleDef extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_MODULES_MASTER_SEQ", sequenceName = "X_MODULES_MASTER_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_MODULES_MASTER_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     @Column(name = "MODULE", nullable = false)
     protected String module;
+
     @Column(name = "URL", nullable = false)
     protected String url;
 
@@ -98,33 +102,15 @@ public class XXModuleDef extends XXDBBase implements java.io.Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXModuleDef other = (XXModuleDef) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (module == null) {
-            if (other.module != null) {
-                return false;
-            }
-        } else if (!module.equals(other.module)) {
-            return false;
-        }
-        if (url == null) {
-            return other.url == null;
-        } else {
-            return url.equals(other.url);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(module, other.module) &&
+                Objects.equals(url, other.url);
     }
 
     @Override

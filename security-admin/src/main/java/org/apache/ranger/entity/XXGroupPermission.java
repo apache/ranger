@@ -28,6 +28,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_group_module_perm")
 public class XXGroupPermission extends XXDBBase implements java.io.Serializable {
@@ -122,40 +124,16 @@ public class XXGroupPermission extends XXDBBase implements java.io.Serializable 
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXGroupPermission other = (XXGroupPermission) obj;
-        if (groupId == null) {
-            if (other.groupId != null) {
-                return false;
-            }
-        } else if (!groupId.equals(other.groupId)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (isAllowed == null) {
-            if (other.isAllowed != null) {
-                return false;
-            }
-        } else if (!isAllowed.equals(other.isAllowed)) {
-            return false;
-        }
-        if (moduleId == null) {
-            return other.moduleId == null;
-        } else {
-            return moduleId.equals(other.moduleId);
-        }
+
+        return Objects.equals(groupId, other.groupId) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(isAllowed, other.isAllowed) &&
+                Objects.equals(moduleId, other.moduleId);
     }
 
     @Override

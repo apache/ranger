@@ -39,6 +39,7 @@ import java.util.Objects;
 @Table(name = "x_policy_ref_group")
 public class XXPolicyRefGroup extends XXDBBase implements Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyRefGroup
      * <ul>
@@ -48,7 +49,7 @@ public class XXPolicyRefGroup extends XXDBBase implements Serializable {
     @SequenceGenerator(name = "x_policy_ref_group_SEQ", sequenceName = "x_policy_ref_group_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_group_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * policyId of the XXPolicyRefGroup
@@ -107,9 +108,7 @@ public class XXPolicyRefGroup extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 

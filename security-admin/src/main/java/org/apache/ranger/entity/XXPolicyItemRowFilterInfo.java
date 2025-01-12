@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_rowfilter")
 public class XXPolicyItemRowFilterInfo extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyItemRowFilterInfo
      * <ul>
@@ -41,7 +44,7 @@ public class XXPolicyItemRowFilterInfo extends XXDBBase implements java.io.Seria
     @SequenceGenerator(name = "x_policy_item_rowfilter_SEQ", sequenceName = "x_policy_item_rowfilter_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_rowfilter_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * policyItemId of the XXPolicyItemRowFilterInfo
@@ -90,38 +93,17 @@ public class XXPolicyItemRowFilterInfo extends XXDBBase implements java.io.Seria
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyItemRowFilterInfo other = (XXPolicyItemRowFilterInfo) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (filterExpr == null) {
-            if (other.filterExpr != null) {
-                return false;
-            }
-        } else if (!filterExpr.equals(other.filterExpr)) {
-            return false;
-        }
-        if (policyItemId == null) {
-            return other.policyItemId == null;
-        } else {
-            return policyItemId.equals(other.policyItemId);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(filterExpr, other.filterExpr) &&
+                Objects.equals(policyItemId, other.policyItemId);
     }
 
     /*

@@ -36,6 +36,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Table(name = "x_policy_export_audit")
@@ -46,7 +47,8 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
     @SequenceGenerator(name = "X_POLICY_EXPORT_SEQ", sequenceName = "X_POLICY_EXPORT_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_POLICY_EXPORT_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * XA Agent IP Address
      * <ul>
@@ -55,6 +57,7 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Column(name = "CLIENT_IP", nullable = false, length = 255)
     protected String clientIP;
+
     /**
      * XA Agent Id
      * <ul>
@@ -63,13 +66,15 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Column(name = "AGENT_ID", length = 255)
     protected String agentId;
+
     /**
      * Last update timestamp in request
      * <ul>
      * </ul>
      */
     @Column(name = "REQ_EPOCH", nullable = false)
-    protected Long   requestedEpoch;
+    protected Long requestedEpoch;
+
     /**
      * Date and time of the last policy update
      * <ul>
@@ -77,7 +82,8 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "LAST_UPDATED")
-    protected Date   lastUpdated;
+    protected Date lastUpdated;
+
     /**
      * Name of the Asset
      * <ul>
@@ -86,6 +92,7 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Column(name = "REPOSITORY_NAME", length = 1024)
     protected String repositoryName;
+
     /**
      * JSON of the policies exported
      * <ul>
@@ -94,13 +101,15 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Column(name = "EXPORTED_JSON", length = 30000)
     protected String exportedJson;
+
     /**
      * HTTP Response Code
      * <ul>
      * </ul>
      */
     @Column(name = "HTTP_RET_CODE", nullable = false)
-    protected int    httpRetCode;
+    protected int httpRetCode;
+
     /**
      * Name of the Cluster
      * <ul>
@@ -109,6 +118,7 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Column(name = "CLUSTER_NAME", nullable = false, length = 255)
     protected String clusterName;
+
     /**
      * Name of the ZoneName
      * <ul>
@@ -117,6 +127,7 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Column(name = "ZONE_NAME", nullable = false, length = 255)
     protected String zoneName;
+
     /**
      * Name of the policyVersion
      * <ul>
@@ -164,38 +175,24 @@ public class XXPolicyExportAudit extends XXDBBase implements java.io.Serializabl
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXPolicyExportAudit other = (XXPolicyExportAudit) obj;
-        if ((this.clientIP == null && other.clientIP != null) || (this.clientIP != null && !this.clientIP.equals(other.clientIP))) {
-            return false;
-        }
-        if ((this.agentId == null && other.agentId != null) || (this.agentId != null && !this.agentId.equals(other.agentId))) {
-            return false;
-        }
-        if ((this.requestedEpoch == null && other.requestedEpoch != null) || (this.requestedEpoch != null && !this.requestedEpoch.equals(other.requestedEpoch))) {
-            return false;
-        }
-        if ((this.lastUpdated == null && other.lastUpdated != null) || (this.lastUpdated != null && !this.lastUpdated.equals(other.lastUpdated))) {
-            return false;
-        }
-        if ((this.repositoryName == null && other.repositoryName != null) || (this.repositoryName != null && !this.repositoryName.equals(other.repositoryName))) {
-            return false;
-        }
-        if ((this.exportedJson == null && other.exportedJson != null) || (this.exportedJson != null && !this.exportedJson.equals(other.exportedJson))) {
-            return false;
-        }
-        if (this.httpRetCode != other.httpRetCode) {
-            return false;
-        }
-        if ((this.clusterName == null && other.clusterName != null) || (this.clusterName != null && !this.clusterName.equals(other.clusterName))) {
-            return false;
-        }
-        if ((this.zoneName == null && other.zoneName != null) || (this.zoneName != null && !this.zoneName.equals(other.zoneName))) {
-            return false;
-        }
-        return (this.policyVersion != null || other.policyVersion == null) && (this.policyVersion == null || this.policyVersion.equals(other.policyVersion));
+
+        return Objects.equals(clientIP, other.clientIP) &&
+                Objects.equals(agentId, other.agentId) &&
+                Objects.equals(requestedEpoch, other.requestedEpoch) &&
+                Objects.equals(lastUpdated, other.lastUpdated) &&
+                Objects.equals(repositoryName, other.repositoryName) &&
+                Objects.equals(exportedJson, other.exportedJson) &&
+                Objects.equals(httpRetCode, other.httpRetCode) &&
+                Objects.equals(clusterName, other.clusterName) &&
+                Objects.equals(zoneName, other.zoneName) &&
+                Objects.equals(policyVersion, other.policyVersion);
     }
 
     /**

@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_access_type_def_grants")
 public class XXAccessTypeDefGrants extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXAccessTypeDefGrants
      * <ul>
@@ -41,7 +44,7 @@ public class XXAccessTypeDefGrants extends XXDBBase implements java.io.Serializa
     @SequenceGenerator(name = "x_access_type_def_grants_SEQ", sequenceName = "x_access_type_def_grants_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_access_type_def_grants_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * atdId of the XXAccessTypeDefGrants
@@ -90,38 +93,17 @@ public class XXAccessTypeDefGrants extends XXDBBase implements java.io.Serializa
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXAccessTypeDefGrants other = (XXAccessTypeDefGrants) obj;
-        if (atdId == null) {
-            if (other.atdId != null) {
-                return false;
-            }
-        } else if (!atdId.equals(other.atdId)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (impliedGrant == null) {
-            return other.impliedGrant == null;
-        } else {
-            return impliedGrant.equals(other.impliedGrant);
-        }
+
+        return Objects.equals(atdId, other.atdId) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(impliedGrant, other.impliedGrant);
     }
 
     /*

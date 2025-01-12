@@ -33,6 +33,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_group_groups")
 public class XXGroupGroup extends XXDBBase implements java.io.Serializable {
@@ -42,7 +44,8 @@ public class XXGroupGroup extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_GROUP_GROUPS_SEQ", sequenceName = "X_GROUP_GROUPS_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_GROUP_GROUPS_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Name
      * <ul>
@@ -51,20 +54,22 @@ public class XXGroupGroup extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "GROUP_NAME", nullable = false, length = 1024)
     protected String name;
+
     /**
      * Id of the parent group
      * <ul>
      * </ul>
      */
     @Column(name = "P_GROUP_ID")
-    protected Long   parentGroupId;
+    protected Long parentGroupId;
+
     /**
      * Id of the group
      * <ul>
      * </ul>
      */
     @Column(name = "GROUP_ID")
-    protected Long   groupId;
+    protected Long groupId;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -110,17 +115,17 @@ public class XXGroupGroup extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXGroupGroup other = (XXGroupGroup) obj;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        if ((this.parentGroupId == null && other.parentGroupId != null) || (this.parentGroupId != null && !this.parentGroupId.equals(other.parentGroupId))) {
-            return false;
-        }
-        return (this.groupId != null || other.groupId == null) && (this.groupId == null || this.groupId.equals(other.groupId));
+
+        return Objects.equals(name, other.name) &&
+                Objects.equals(parentGroupId, other.parentGroupId) &&
+                Objects.equals(groupId, other.groupId);
     }
 
     /**

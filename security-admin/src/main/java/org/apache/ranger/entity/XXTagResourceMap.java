@@ -31,6 +31,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -117,13 +118,7 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
      */
     @Override
     public int hashCode() {
-        final int prime  = 31;
-        int       result = 1;
-        result = prime * result + ((guid == null) ? 0 : guid.hashCode());
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((tagId == null) ? 0 : tagId.hashCode());
-        result = prime * result + ((resourceId == null) ? 0 : resourceId.hashCode());
-        return result;
+        return Objects.hash(super.hashCode(), guid, id, tagId, resourceId);
     }
 
     /*
@@ -135,40 +130,16 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXTagResourceMap other = (XXTagResourceMap) obj;
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (tagId == null) {
-            if (other.tagId != null) {
-                return false;
-            }
-        } else if (!tagId.equals(other.tagId)) {
-            return false;
-        }
-        if (resourceId == null) {
-            return other.resourceId == null;
-        } else {
-            return resourceId.equals(other.resourceId);
-        }
+
+        return Objects.equals(guid, other.guid) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(tagId, other.tagId) &&
+                Objects.equals(resourceId, other.resourceId);
     }
 
     /*
@@ -185,7 +156,7 @@ public class XXTagResourceMap extends XXDBBase implements Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("{ ");
-        sb.append(super.toString() + "} ");
+        sb.append(super.toString()).append("} ");
         sb.append("id={").append(id).append("} ");
         sb.append("guid={").append(guid).append("} ");
         sb.append("tagId={").append(tagId).append("} ");

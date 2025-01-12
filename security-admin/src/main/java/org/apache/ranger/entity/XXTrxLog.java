@@ -34,6 +34,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_trx_log")
 public class XXTrxLog extends XXDBBase implements java.io.Serializable {
@@ -43,7 +45,8 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_TRX_LOG_SEQ", sequenceName = "X_TRX_LOG_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_TRX_LOG_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Name of the class to which the object id belongs to
      * <ul>
@@ -51,28 +54,32 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "CLASS_TYPE", nullable = false)
-    protected int    objectClassType = RangerConstants.CLASS_TYPE_NONE;
+    protected int objectClassType = RangerConstants.CLASS_TYPE_NONE;
+
     /**
      * Id of the object to which this notes refers to
      * <ul>
      * </ul>
      */
     @Column(name = "OBJECT_ID")
-    protected Long   objectId;
+    protected Long objectId;
+
     /**
      * Object Id of the parent object
      * <ul>
      * </ul>
      */
     @Column(name = "PARENT_OBJECT_ID")
-    protected Long   parentObjectId;
+    protected Long parentObjectId;
+
     /**
      * Object Class Type of the parent object
      * <ul>
      * </ul>
      */
     @Column(name = "PARENT_OBJECT_CLASS_TYPE", nullable = false)
-    protected int    parentObjectClassType;
+    protected int parentObjectClassType;
+
     /**
      * Name of the attribute that was changed
      * <ul>
@@ -81,6 +88,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "PARENT_OBJECT_NAME", length = 1024)
     protected String parentObjectName;
+
     /**
      * Name of the attribute that was changed
      * <ul>
@@ -89,6 +97,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "OBJECT_NAME", length = 1024)
     protected String objectName;
+
     /**
      * Name of the attribute that was changed
      * <ul>
@@ -97,6 +106,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "ATTR_NAME", length = 255)
     protected String attributeName;
+
     /**
      * Previous value
      * <ul>
@@ -105,6 +115,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "PREV_VAL", length = 1024)
     protected String previousValue;
+
     /**
      * New value
      * <ul>
@@ -113,6 +124,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "NEW_VAL", length = 1024)
     protected String newValue;
+
     /**
      * Transaction id
      * <ul>
@@ -121,6 +133,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "TRX_ID", length = 1024)
     protected String transactionId;
+
     /**
      * Action of the transaction
      * <ul>
@@ -129,6 +142,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "ACTION", length = 255)
     protected String action;
+
     /**
      * Session Id
      * <ul>
@@ -137,6 +151,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "SESS_ID", length = 512)
     protected String sessionId;
+
     /**
      * Request Id
      * <ul>
@@ -144,6 +159,7 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "REQ_ID")
     protected String requestId;
+
     /**
      * Session Type
      * <ul>
@@ -205,50 +221,28 @@ public class XXTrxLog extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXTrxLog other = (XXTrxLog) obj;
-        if (this.objectClassType != other.objectClassType) {
-            return false;
-        }
-        if ((this.objectId == null && other.objectId != null) || (this.objectId != null && !this.objectId.equals(other.objectId))) {
-            return false;
-        }
-        if ((this.parentObjectId == null && other.parentObjectId != null) || (this.parentObjectId != null && !this.parentObjectId.equals(other.parentObjectId))) {
-            return false;
-        }
-        if (this.parentObjectClassType != other.parentObjectClassType) {
-            return false;
-        }
-        if ((this.parentObjectName == null && other.parentObjectName != null) || (this.parentObjectName != null && !this.parentObjectName.equals(other.parentObjectName))) {
-            return false;
-        }
-        if ((this.objectName == null && other.objectName != null) || (this.objectName != null && !this.objectName.equals(other.objectName))) {
-            return false;
-        }
-        if ((this.attributeName == null && other.attributeName != null) || (this.attributeName != null && !this.attributeName.equals(other.attributeName))) {
-            return false;
-        }
-        if ((this.previousValue == null && other.previousValue != null) || (this.previousValue != null && !this.previousValue.equals(other.previousValue))) {
-            return false;
-        }
-        if ((this.newValue == null && other.newValue != null) || (this.newValue != null && !this.newValue.equals(other.newValue))) {
-            return false;
-        }
-        if ((this.transactionId == null && other.transactionId != null) || (this.transactionId != null && !this.transactionId.equals(other.transactionId))) {
-            return false;
-        }
-        if ((this.action == null && other.action != null) || (this.action != null && !this.action.equals(other.action))) {
-            return false;
-        }
-        if ((this.sessionId == null && other.sessionId != null) || (this.sessionId != null && !this.sessionId.equals(other.sessionId))) {
-            return false;
-        }
-        if ((this.requestId == null && other.requestId != null) || (this.requestId != null && !this.requestId.equals(other.requestId))) {
-            return false;
-        }
-        return (this.sessionType != null || other.sessionType == null) && (this.sessionType == null || this.sessionType.equals(other.sessionType));
+
+        return Objects.equals(objectClassType, other.objectClassType) &&
+                Objects.equals(objectId, other.objectId) &&
+                Objects.equals(parentObjectId, other.parentObjectId) &&
+                Objects.equals(parentObjectClassType, other.parentObjectClassType) &&
+                Objects.equals(parentObjectName, other.parentObjectName) &&
+                Objects.equals(objectName, other.objectName) &&
+                Objects.equals(attributeName, other.attributeName) &&
+                Objects.equals(previousValue, other.previousValue) &&
+                Objects.equals(newValue, other.newValue) &&
+                Objects.equals(transactionId, other.transactionId) &&
+                Objects.equals(action, other.action) &&
+                Objects.equals(sessionId, other.sessionId) &&
+                Objects.equals(requestId, other.requestId) &&
+                Objects.equals(sessionType, other.sessionType);
     }
 
     /**

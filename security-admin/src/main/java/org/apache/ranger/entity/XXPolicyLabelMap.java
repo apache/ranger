@@ -29,6 +29,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -89,40 +90,16 @@ public class XXPolicyLabelMap extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyLabelMap other = (XXPolicyLabelMap) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (policyId == null) {
-            if (other.policyId != null) {
-                return false;
-            }
-        } else if (!policyId.equals(other.policyId)) {
-            return false;
-        }
-        if (policyLabelId == null) {
-            return other.policyLabelId == null;
-        } else {
-            return policyLabelId.equals(other.policyLabelId);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(policyLabelId, other.policyLabelId);
     }
 
     @Override

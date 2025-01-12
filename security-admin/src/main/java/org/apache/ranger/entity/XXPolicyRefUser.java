@@ -34,6 +34,7 @@ import java.util.Objects;
 @Table(name = "x_policy_ref_user")
 public class XXPolicyRefUser extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyRefUser
      * <ul>
@@ -43,7 +44,7 @@ public class XXPolicyRefUser extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_policy_ref_user_SEQ", sequenceName = "x_policy_ref_user_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_user_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * policyId of the XXPolicyRefUser
@@ -102,9 +103,7 @@ public class XXPolicyRefUser extends XXDBBase implements java.io.Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 

@@ -229,8 +229,6 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
             return true;
         } else if (!super.equals(obj)) {
             return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
         }
 
         XXGdsDataShare other = (XXGdsDataShare) obj;

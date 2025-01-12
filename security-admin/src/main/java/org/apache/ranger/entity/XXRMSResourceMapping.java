@@ -44,11 +44,14 @@ public class XXRMSResourceMapping implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RMS_RESOURCE_MAPPING_SEQ")
     @Column(name = "id")
     protected Long id;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "change_timestamp")
     protected Date changeTimestamp;
+
     @Column(name = "hl_resource_id")
     protected Long hlResourceId;
+
     @Column(name = "ll_resource_id")
     protected Long llResourceId;
 

@@ -35,6 +35,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_user")
 public class XXUser extends XXDBBase implements java.io.Serializable {
@@ -44,7 +46,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_USER_SEQ", sequenceName = "X_USER_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_USER_SEQ")
     @Column(name = "ID")
-    protected Long    id;
+    protected Long id;
     /**
      * Name
      * <ul>
@@ -60,7 +62,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "DESCR", nullable = false, length = 4000)
-    protected String  description;
+    protected String description;
     /**
      * Status
      * <ul>
@@ -68,7 +70,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "STATUS", nullable = false)
-    protected int     status = RangerConstants.STATUS_DISABLED;
+    protected int status = RangerConstants.STATUS_DISABLED;
     /**
      * Status
      * <ul>
@@ -83,21 +85,21 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "CRED_STORE_ID")
-    protected Long    credStoreId;
+    protected Long credStoreId;
     /**
      * Additional store attributes.
      * <ul>
      * </ul>
      */
     @Column(name = "OTHER_ATTRIBUTES")
-    protected String  otherAttributes;
+    protected String otherAttributes;
     /**
      * Sync Source attribute.
      * <ul>
      * </ul>
      */
     @Column(name = "SYNC_SOURCE")
-    protected String  syncSource;
+    protected String syncSource;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -148,20 +150,18 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXUser other = (XXUser) obj;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        if ((this.description == null && other.description != null) || (this.description != null && !this.description.equals(other.description))) {
-            return false;
-        }
-        if (this.status != other.status) {
-            return false;
-        }
-        return (this.credStoreId != null || other.credStoreId == null) && (this.credStoreId == null || this.credStoreId.equals(other.credStoreId));
+
+        return Objects.equals(name, other.name) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(status, other.status) &&
+                Objects.equals(credStoreId, other.credStoreId);
     }
 
     /**
@@ -254,7 +254,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
      * This method sets the value to the member attribute <b>isVisible</b>.
      * You cannot set null to the attribute.
      *
-     * @param status Value to set member attribute <b>isVisible</b>
+     * @param isVisible Value to set member attribute <b>isVisible</b>
      */
     public void setIsVisible(Integer isVisible) {
         this.isVisible = isVisible;

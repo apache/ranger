@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_resource_def")
 public class XXResourceDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXResourceDef
      * <ul>
@@ -41,7 +44,7 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_resource_def_SEQ", sequenceName = "x_resource_def_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_resource_def_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * defId of the XXResourceDef
@@ -260,144 +263,35 @@ public class XXResourceDef extends XXDBBase implements java.io.Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXResourceDef other = (XXResourceDef) obj;
-        if (defId == null) {
-            if (other.defId != null) {
-                return false;
-            }
-        } else if (!defId.equals(other.defId)) {
-            return false;
-        }
-        if (itemId == null) {
-            if (other.itemId != null) {
-                return false;
-            }
-        } else if (!itemId.equals(other.itemId)) {
-            return false;
-        }
-        if (description == null) {
-            if (other.description != null) {
-                return false;
-            }
-        } else if (!description.equals(other.description)) {
-            return false;
-        }
-        if (excludesSupported != other.excludesSupported) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
 
-        if (!equals(validationRegEx, other.validationRegEx) ||
-                !equals(validationMessage, other.validationMessage) ||
-                !equals(uiHint, other.uiHint) ||
-                !equals(rbKeyValidationMessage, other.rbKeyValidationMessage)) {
-            return false;
-        }
-
-        if (label == null) {
-            if (other.label != null) {
-                return false;
-            }
-        } else if (!label.equals(other.label)) {
-            return false;
-        }
-        if (level == null) {
-            if (other.level != null) {
-                return false;
-            }
-        } else if (!level.equals(other.level)) {
-            return false;
-        }
-        if (lookUpSupported != other.lookUpSupported) {
-            return false;
-        }
-        if (mandatory != other.mandatory) {
-            return false;
-        }
-        if (matcher == null) {
-            if (other.matcher != null) {
-                return false;
-            }
-        } else if (!matcher.equals(other.matcher)) {
-            return false;
-        }
-        if (matcherOptions == null) {
-            if (other.matcherOptions != null) {
-                return false;
-            }
-        } else if (!matcherOptions.equals(other.matcherOptions)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (order == null) {
-            if (other.order != null) {
-                return false;
-            }
-        } else if (!order.equals(other.order)) {
-            return false;
-        }
-        if (parent == null) {
-            if (other.parent != null) {
-                return false;
-            }
-        } else if (!parent.equals(other.parent)) {
-            return false;
-        }
-        if (rbKeyDescription == null) {
-            if (other.rbKeyDescription != null) {
-                return false;
-            }
-        } else if (!rbKeyDescription.equals(other.rbKeyDescription)) {
-            return false;
-        }
-        if (rbKeyLabel == null) {
-            if (other.rbKeyLabel != null) {
-                return false;
-            }
-        } else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-            return false;
-        }
-        if (recursiveSupported != other.recursiveSupported) {
-            return false;
-        }
-        if (type == null) {
-            if (other.type != null) {
-                return false;
-            }
-        } else if (!type.equals(other.type)) {
-            return false;
-        }
-        if (dataMaskOptions == null) {
-            if (other.dataMaskOptions != null) {
-                return false;
-            }
-        } else if (!dataMaskOptions.equals(other.dataMaskOptions)) {
-            return false;
-        }
-        if (rowFilterOptions == null) {
-            return other.rowFilterOptions == null;
-        } else {
-            return rowFilterOptions.equals(other.rowFilterOptions);
-        }
+        return Objects.equals(defId, other.defId) &&
+                Objects.equals(itemId, other.itemId) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(excludesSupported, other.excludesSupported) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(validationRegEx, other.validationRegEx) &&
+                Objects.equals(validationMessage, other.validationMessage) &&
+                Objects.equals(uiHint, other.uiHint) &&
+                Objects.equals(rbKeyValidationMessage, other.rbKeyValidationMessage) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(lookUpSupported, other.lookUpSupported) &&
+                Objects.equals(mandatory, other.mandatory) &&
+                Objects.equals(matcher, other.matcher) &&
+                Objects.equals(matcherOptions, other.matcherOptions) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(parent, other.parent) &&
+                Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(recursiveSupported, other.recursiveSupported) &&
+                Objects.equals(type, other.type) &&
+                Objects.equals(dataMaskOptions, other.dataMaskOptions) &&
+                Objects.equals(rowFilterOptions, other.rowFilterOptions);
     }
 
     /*

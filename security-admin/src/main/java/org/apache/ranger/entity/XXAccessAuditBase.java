@@ -37,6 +37,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import java.util.Date;
+import java.util.Objects;
 
 @MappedSuperclass
 public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable {
@@ -46,7 +47,8 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     @SequenceGenerator(name = "XA_ACCESS_AUDIT_SEQ", sequenceName = "XA_ACCESS_AUDIT_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "XA_ACCESS_AUDIT_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Repository Type
      * <ul>
@@ -54,7 +56,8 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * </ul>
      */
     @Column(name = "AUDIT_TYPE", nullable = false)
-    protected int    auditType    = AppConstants.ASSET_UNKNOWN;
+    protected int auditType = AppConstants.ASSET_UNKNOWN;
+
     /**
      * Access Result
      * <ul>
@@ -62,7 +65,8 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      * </ul>
      */
     @Column(name = "ACCESS_RESULT")
-    protected int    accessResult = RangerConstants.ACCESS_RESULT_DENIED;
+    protected int accessResult = RangerConstants.ACCESS_RESULT_DENIED;
+
     /**
      * Access Type
      * <ul>
@@ -71,6 +75,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "ACCESS_TYPE", length = 255)
     protected String accessType;
+
     /**
      * Acl Enforcer
      * <ul>
@@ -79,6 +84,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "ACL_ENFORCER", length = 255)
     protected String aclEnforcer;
+
     /**
      * Agent Id
      * <ul>
@@ -87,6 +93,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "AGENT_ID", length = 255)
     protected String agentId;
+
     /**
      * Client Ip
      * <ul>
@@ -95,6 +102,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "CLIENT_IP", length = 255)
     protected String clientIP;
+
     /**
      * Client Type
      * <ul>
@@ -103,13 +111,15 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "CLIENT_TYPE", length = 255)
     protected String clientType;
+
     /**
      * Policy Id
      * <ul>
      * </ul>
      */
     @Column(name = "POLICY_ID")
-    protected long   policyId;
+    protected long policyId;
+
     /**
      * Repository Name
      * <ul>
@@ -118,13 +128,15 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "REPO_NAME", length = 255)
     protected String repoName;
+
     /**
      * Repository Type
      * <ul>
      * </ul>
      */
     @Column(name = "REPO_TYPE")
-    protected int    repoType;
+    protected int repoType;
+
     /**
      * Reason of result
      * <ul>
@@ -133,6 +145,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "RESULT_REASON", length = 255)
     protected String resultReason;
+
     /**
      * Session Id
      * <ul>
@@ -141,6 +154,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "SESSION_ID", length = 255)
     protected String sessionId;
+
     /**
      * Event Time
      * <ul>
@@ -148,7 +162,8 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "EVENT_TIME")
-    protected Date   eventTime    = DateUtil.getUTCDate();
+    protected Date eventTime = DateUtil.getUTCDate();
+
     /**
      * Requesting User
      * <ul>
@@ -157,6 +172,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "REQUEST_USER", length = 255)
     protected String requestUser;
+
     /**
      * Action
      * <ul>
@@ -165,6 +181,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "ACTION", length = 2000)
     protected String action;
+
     /**
      * Requesting Data
      * <ul>
@@ -173,6 +190,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "REQUEST_DATA", length = 2000)
     protected String requestData;
+
     /**
      * Resource Path
      * <ul>
@@ -181,6 +199,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "RESOURCE_PATH", length = 2000)
     protected String resourcePath;
+
     /**
      * Resource Type
      * <ul>
@@ -202,9 +221,11 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
         if ("auditType".equals(fieldName)) {
             return "CommonEnums.AssetType";
         }
+
         if ("accessResult".equals(fieldName)) {
             return "CommonEnums.AccessResult";
         }
+
         return null;
     }
 
@@ -235,62 +256,31 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXAccessAuditBase other = (XXAccessAuditBase) obj;
-        if (this.auditType != other.auditType) {
-            return false;
-        }
-        if (this.accessResult != other.accessResult) {
-            return false;
-        }
-        if ((this.accessType == null && other.accessType != null) || (this.accessType != null && !this.accessType.equals(other.accessType))) {
-            return false;
-        }
-        if ((this.aclEnforcer == null && other.aclEnforcer != null) || (this.aclEnforcer != null && !this.aclEnforcer.equals(other.aclEnforcer))) {
-            return false;
-        }
-        if ((this.agentId == null && other.agentId != null) || (this.agentId != null && !this.agentId.equals(other.agentId))) {
-            return false;
-        }
-        if ((this.clientIP == null && other.clientIP != null) || (this.clientIP != null && !this.clientIP.equals(other.clientIP))) {
-            return false;
-        }
-        if ((this.clientType == null && other.clientType != null) || (this.clientType != null && !this.clientType.equals(other.clientType))) {
-            return false;
-        }
-        if (this.policyId != other.policyId) {
-            return false;
-        }
-        if ((this.repoName == null && other.repoName != null) || (this.repoName != null && !this.repoName.equals(other.repoName))) {
-            return false;
-        }
-        if (this.repoType != other.repoType) {
-            return false;
-        }
-        if ((this.resultReason == null && other.resultReason != null) || (this.resultReason != null && !this.resultReason.equals(other.resultReason))) {
-            return false;
-        }
-        if ((this.sessionId == null && other.sessionId != null) || (this.sessionId != null && !this.sessionId.equals(other.sessionId))) {
-            return false;
-        }
-        if ((this.eventTime == null && other.eventTime != null) || (this.eventTime != null && !this.eventTime.equals(other.eventTime))) {
-            return false;
-        }
-        if ((this.requestUser == null && other.requestUser != null) || (this.requestUser != null && !this.requestUser.equals(other.requestUser))) {
-            return false;
-        }
-        if ((this.action == null && other.action != null) || (this.action != null && !this.action.equals(other.action))) {
-            return false;
-        }
-        if ((this.requestData == null && other.requestData != null) || (this.requestData != null && !this.requestData.equals(other.requestData))) {
-            return false;
-        }
-        if ((this.resourcePath == null && other.resourcePath != null) || (this.resourcePath != null && !this.resourcePath.equals(other.resourcePath))) {
-            return false;
-        }
-        return (this.resourceType != null || other.resourceType == null) && (this.resourceType == null || this.resourceType.equals(other.resourceType));
+
+        return Objects.equals(auditType, other.auditType) &&
+                Objects.equals(accessResult, other.accessResult) &&
+                Objects.equals(accessType, other.accessType) &&
+                Objects.equals(aclEnforcer, other.aclEnforcer) &&
+                Objects.equals(agentId, other.agentId) &&
+                Objects.equals(clientIP, other.clientIP) &&
+                Objects.equals(clientType, other.clientType) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(repoName, other.repoName) &&
+                Objects.equals(resultReason, other.resultReason) &&
+                Objects.equals(sessionId, other.sessionId) &&
+                Objects.equals(eventTime, other.eventTime) &&
+                Objects.equals(requestUser, other.requestUser) &&
+                Objects.equals(action, other.action) &&
+                Objects.equals(requestData, other.requestData) &&
+                Objects.equals(resourcePath, other.resourcePath) &&
+                Objects.equals(resourceType, other.resourceType);
     }
 
     /**
@@ -301,6 +291,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
     @Override
     public String toString() {
         String str = "XXAccessAudit=";
+
         str += super.toString();
         str += "id={" + id + "} ";
         str += "auditType={" + auditType + "} ";
@@ -320,6 +311,7 @@ public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable 
         str += "requestData={" + requestData + "} ";
         str += "resourcePath={" + resourcePath + "} ";
         str += "resourceType={" + resourceType + "} ";
+
         return str;
     }
 

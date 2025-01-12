@@ -34,6 +34,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_asset")
 public class XXAsset extends XXDBBase implements java.io.Serializable {
@@ -43,7 +45,8 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_ASSET_SEQ", sequenceName = "X_ASSET_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_ASSET_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Name
      * <ul>
@@ -52,6 +55,7 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "ASSET_NAME", nullable = false, length = 1024)
     protected String name;
+
     /**
      * Description
      * <ul>
@@ -60,6 +64,7 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "DESCR", nullable = false, length = 4000)
     protected String description;
+
     /**
      * Status
      * <ul>
@@ -67,7 +72,8 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "ACT_STATUS", nullable = false)
-    protected int    activeStatus = RangerConstants.STATUS_DISABLED;
+    protected int activeStatus = RangerConstants.STATUS_DISABLED;
+
     /**
      * Type of asset
      * <ul>
@@ -75,7 +81,8 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "ASSET_TYPE", nullable = false)
-    protected int    assetType    = AppConstants.ASSET_UNKNOWN;
+    protected int assetType    = AppConstants.ASSET_UNKNOWN;
+
     /**
      * Config in json format
      * <ul>
@@ -105,9 +112,11 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
         if ("activeStatus".equals(fieldName)) {
             return "CommonEnums.ActiveStatus";
         }
+
         if ("assetType".equals(fieldName)) {
             return "CommonEnums.AssetType";
         }
+
         //Later TODO
         //return super.getEnumName(fieldName);
         return null;
@@ -145,26 +154,20 @@ public class XXAsset extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } if (!super.equals(obj)) {
             return false;
         }
+
         XXAsset other = (XXAsset) obj;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        if ((this.description == null && other.description != null) || (this.description != null && !this.description.equals(other.description))) {
-            return false;
-        }
-        if (this.activeStatus != other.activeStatus) {
-            return false;
-        }
-        if (this.assetType != other.assetType) {
-            return false;
-        }
-        if ((this.config == null && other.config != null) || (this.config != null && !this.config.equals(other.config))) {
-            return false;
-        }
-        return this.supportNative == other.supportNative;
+
+        return Objects.equals(name, other.name) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(activeStatus, other.activeStatus) &&
+                Objects.equals(assetType, other.assetType) &&
+                Objects.equals(config, other.config) &&
+                Objects.equals(supportNative, other.supportNative);
     }
 
     /**

@@ -33,11 +33,12 @@ import java.util.Objects;
 @Table(name = "x_security_zone")
 public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     @Id
     @SequenceGenerator(name = "x_security_zone_SEQ", sequenceName = "x_security_zone_SEQ", initialValue = 1, allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_security_zone_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     @Override
     public Long getId() {
@@ -58,11 +59,7 @@ public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serial
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 

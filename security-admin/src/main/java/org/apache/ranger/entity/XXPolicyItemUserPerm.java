@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_user_perm")
 public class XXPolicyItemUserPerm extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyItemUserPerm
      * <ul>
@@ -41,7 +44,7 @@ public class XXPolicyItemUserPerm extends XXDBBase implements java.io.Serializab
     @SequenceGenerator(name = "x_policy_item_user_perm_SEQ", sequenceName = "x_policy_item_user_perm_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_user_perm_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * policyItemId of the XXPolicyItemUserPerm
@@ -98,45 +101,18 @@ public class XXPolicyItemUserPerm extends XXDBBase implements java.io.Serializab
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyItemUserPerm other = (XXPolicyItemUserPerm) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (order == null) {
-            if (other.order != null) {
-                return false;
-            }
-        } else if (!order.equals(other.order)) {
-            return false;
-        }
-        if (policyItemId == null) {
-            if (other.policyItemId != null) {
-                return false;
-            }
-        } else if (!policyItemId.equals(other.policyItemId)) {
-            return false;
-        }
-        if (userId == null) {
-            return other.userId == null;
-        } else {
-            return userId.equals(other.userId);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(policyItemId, other.policyItemId) &&
+                Objects.equals(userId, other.userId);
     }
 
     /*

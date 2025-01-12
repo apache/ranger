@@ -356,13 +356,12 @@ public abstract class XXServiceBase extends XXDBBase {
 
         if (this == obj) {
             ret = true;
-        } else if (obj == null || getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             ret = false;
         } else {
             XXServiceBase other = (XXServiceBase) obj;
 
-            ret = super.equals(obj) &&
-                    Objects.equals(description, other.description) &&
+            ret = Objects.equals(description, other.description) &&
                     Objects.equals(isEnabled, other.isEnabled) &&
                     Objects.equals(name, other.name) &&
                     Objects.equals(policyUpdateTime, other.policyUpdateTime) &&

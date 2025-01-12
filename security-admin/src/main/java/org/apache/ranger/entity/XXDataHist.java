@@ -32,12 +32,14 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_data_hist")
 public class XXDataHist implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXDataHist
      * <ul>
@@ -47,7 +49,7 @@ public class XXDataHist implements java.io.Serializable {
     @SequenceGenerator(name = "x_data_hist_SEQ", sequenceName = "x_data_hist_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_data_hist_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * Date/Time creation of this user.
@@ -361,87 +363,26 @@ public class XXDataHist implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (obj == null) {
+        } else if (obj == null) {
+            return false;
+        } else if (getClass() != obj.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXDataHist other = (XXDataHist) obj;
-        if (action == null) {
-            if (other.action != null) {
-                return false;
-            }
-        } else if (!action.equals(other.action)) {
-            return false;
-        }
-        if (content == null) {
-            if (other.content != null) {
-                return false;
-            }
-        } else if (!content.equals(other.content)) {
-            return false;
-        }
-        if (createTime == null) {
-            if (other.createTime != null) {
-                return false;
-            }
-        } else if (!createTime.equals(other.createTime)) {
-            return false;
-        }
-        if (fromTime == null) {
-            if (other.fromTime != null) {
-                return false;
-            }
-        } else if (!fromTime.equals(other.fromTime)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (objectName == null) {
-            if (other.objectName != null) {
-                return false;
-            }
-        } else if (!objectName.equals(other.objectName)) {
-            return false;
-        }
-        if (toTime == null) {
-            if (other.toTime != null) {
-                return false;
-            }
-        } else if (!toTime.equals(other.toTime)) {
-            return false;
-        }
-        if (objectClassType == null) {
-            if (other.objectClassType != null) {
-                return false;
-            }
-        } else if (!objectClassType.equals(other.objectClassType)) {
-            return false;
-        }
-        if (updateTime == null) {
-            if (other.updateTime != null) {
-                return false;
-            }
-        } else if (!updateTime.equals(other.updateTime)) {
-            return false;
-        }
-        if (version == null) {
-            return other.version == null;
-        } else {
-            return version.equals(other.version);
-        }
+
+        return Objects.equals(action, other.action) &&
+                Objects.equals(content, other.content) &&
+                Objects.equals(createTime, other.createTime) &&
+                Objects.equals(fromTime, other.fromTime) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(objectName, other.objectName) &&
+                Objects.equals(toTime, other.toTime) &&
+                Objects.equals(objectClassType, other.objectClassType) &&
+                Objects.equals(updateTime, other.updateTime) &&
+                Objects.equals(version, other.version);
     }
 
     /*

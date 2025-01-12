@@ -38,6 +38,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Table(name = "x_portal_user")
@@ -48,7 +49,8 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_PORTAL_USER_SEQ", sequenceName = "X_PORTAL_USER_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_PORTAL_USER_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * First name of the user
      * <ul>
@@ -57,6 +59,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "FIRST_NAME", length = 1022)
     protected String firstName;
+
     /**
      * Last name of the user
      * <ul>
@@ -65,6 +68,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "LAST_NAME", length = 1022)
     protected String lastName;
+
     /**
      * Public screen name for the user
      * <ul>
@@ -73,6 +77,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "PUB_SCR_NAME", length = 2048)
     protected String publicScreenName;
+
     /**
      * Login ID of the user
      * <ul>
@@ -81,6 +86,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "LOGIN_ID", unique = true, length = 767)
     protected String loginId;
+
     /**
      * <ul>
      * <li>The maximum length for this attribute is <b>512</b>.
@@ -88,6 +94,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "PASSWORD", nullable = false, length = 512)
     protected String password;
+
     /**
      * Email address of the user
      * <ul>
@@ -96,6 +103,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "EMAIL", unique = true, length = 512)
     protected String emailAddress;
+
     /**
      * Status of the user
      * <ul>
@@ -103,7 +111,8 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "STATUS", nullable = false)
-    protected int    status              = RangerConstants.ACT_STATUS_DISABLED;
+    protected int status = RangerConstants.ACT_STATUS_DISABLED;
+
     /**
      * Source of the user
      * <ul>
@@ -111,7 +120,8 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "USER_SRC", nullable = false)
-    protected int    userSource          = RangerConstants.USER_APP;
+    protected int userSource = RangerConstants.USER_APP;
+
     /**
      * Note
      * <ul>
@@ -120,6 +130,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "NOTES", length = 4000)
     protected String notes;
+
     /**
      * Additional store attributes.
      * <ul>
@@ -127,6 +138,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "OTHER_ATTRIBUTES")
     protected String otherAttributes;
+
     /**
      * Sync Source Attribute.
      * <ul>
@@ -134,11 +146,13 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "SYNC_SOURCE")
     protected String syncSource;
+
     @Column(name = "OLD_PASSWORDS")
     protected String oldPasswords;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "PASSWORD_UPDATED_TIME")
-    protected Date   passwordUpdatedTime = DateUtil.getUTCDate();
+    protected Date passwordUpdatedTime = DateUtil.getUTCDate();
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -189,35 +203,23 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXPortalUser other = (XXPortalUser) obj;
-        if ((this.firstName == null && other.firstName != null) || (this.firstName != null && !this.firstName.equals(other.firstName))) {
-            return false;
-        }
-        if ((this.lastName == null && other.lastName != null) || (this.lastName != null && !this.lastName.equals(other.lastName))) {
-            return false;
-        }
-        if ((this.publicScreenName == null && other.publicScreenName != null) || (this.publicScreenName != null && !this.publicScreenName.equals(other.publicScreenName))) {
-            return false;
-        }
-        if ((this.loginId == null && other.loginId != null) || (this.loginId != null && !this.loginId.equals(other.loginId))) {
-            return false;
-        }
-        if ((this.password == null && other.password != null) || (this.password != null && !this.password.equals(other.password))) {
-            return false;
-        }
-        if ((this.emailAddress == null && other.emailAddress != null) || (this.emailAddress != null && !this.emailAddress.equals(other.emailAddress))) {
-            return false;
-        }
-        if (this.status != other.status) {
-            return false;
-        }
-        if (this.userSource != other.userSource) {
-            return false;
-        }
-        return (this.notes != null || other.notes == null) && (this.notes == null || this.notes.equals(other.notes));
+
+        return Objects.equals(firstName, other.firstName) &&
+                Objects.equals(lastName, other.lastName) &&
+                Objects.equals(publicScreenName, other.publicScreenName) &&
+                Objects.equals(loginId, other.loginId) &&
+                Objects.equals(password, other.password) &&
+                Objects.equals(emailAddress, other.emailAddress) &&
+                Objects.equals(status, other.status) &&
+                Objects.equals(userSource, other.userSource) &&
+                Objects.equals(notes, other.notes);
     }
 
     /**

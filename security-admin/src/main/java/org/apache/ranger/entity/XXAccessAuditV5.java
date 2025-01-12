@@ -33,13 +33,16 @@ import javax.persistence.Table;
 @Table(name = "xa_access_audit")
 public class XXAccessAuditV5 extends XXAccessAuditBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     @Column(name = "SEQ_NUM")
-    protected            long sequenceNumber;
+    protected long sequenceNumber;
+
     @Column(name = "EVENT_COUNT")
-    protected            long eventCount;
+    protected long eventCount;
+
     //event duration in ms
     @Column(name = "EVENT_DUR_MS")
-    protected            long eventDuration;
+    protected long eventDuration;
 
     @Override
     public int getMyClassType() {
@@ -54,9 +57,11 @@ public class XXAccessAuditV5 extends XXAccessAuditBase implements java.io.Serial
     @Override
     public String toString() {
         String str = super.toString();
+
         str += "sequenceNumber={" + sequenceNumber + "}";
         str += "eventCount={" + eventCount + "}";
         str += "eventDuration={" + eventDuration + "}";
+
         return str;
     }
 

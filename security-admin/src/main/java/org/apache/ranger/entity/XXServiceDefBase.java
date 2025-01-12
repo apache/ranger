@@ -22,6 +22,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @MappedSuperclass
 public abstract class XXServiceDefBase extends XXDBBase implements Serializable {
@@ -322,77 +323,23 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXServiceDefBase other = (XXServiceDefBase) obj;
-        if (description == null) {
-            if (other.description != null) {
-                return false;
-            }
-        } else if (!description.equals(other.description)) {
-            return false;
-        }
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (implClassName == null) {
-            if (other.implClassName != null) {
-                return false;
-            }
-        } else if (!implClassName.equals(other.implClassName)) {
-            return false;
-        }
-        if (label == null) {
-            if (other.label != null) {
-                return false;
-            }
-        } else if (!label.equals(other.label)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (rbKeyDescription == null) {
-            if (other.rbKeyDescription != null) {
-                return false;
-            }
-        } else if (!rbKeyDescription.equals(other.rbKeyDescription)) {
-            return false;
-        }
-        if (rbKeyLabel == null) {
-            if (other.rbKeyLabel != null) {
-                return false;
-            }
-        } else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-            return false;
-        }
-        if (version == null) {
-            if (other.version != null) {
-                return false;
-            }
-        } else if (!version.equals(other.version)) {
-            return false;
-        }
-        if (isEnabled == null) {
-            return other.isEnabled == null;
-        } else {
-            return isEnabled.equals(other.isEnabled);
-        }
+
+        return Objects.equals(description, other.description) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(implClassName, other.implClassName) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(version, other.version) &&
+                Objects.equals(isEnabled, other.isEnabled);
     }
 
     /*

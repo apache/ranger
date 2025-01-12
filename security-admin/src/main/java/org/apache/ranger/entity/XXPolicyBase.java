@@ -21,6 +21,8 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 
+import java.util.Objects;
+
 @MappedSuperclass
 public abstract class XXPolicyBase extends XXDBBase {
     private static final long serialVersionUID = 1L;
@@ -324,101 +326,27 @@ public abstract class XXPolicyBase extends XXDBBase {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        XXPolicyBase other = (XXPolicyBase) obj;
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (description == null) {
-            if (other.description != null) {
-                return false;
-            }
-        } else if (!description.equals(other.description)) {
-            return false;
-        }
-        if (resourceSignature == null) {
-            if (other.resourceSignature != null) {
-                return false;
-            }
-        } else if (!resourceSignature.equals(other.resourceSignature)) {
-            return false;
-        }
-        if (isAuditEnabled != other.isAuditEnabled) {
-            return false;
-        }
-        if (isEnabled != other.isEnabled) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (service == null) {
-            if (other.service != null) {
-                return false;
-            }
-        } else if (!service.equals(other.service)) {
-            return false;
-        }
-        if (version == null) {
-            if (other.version != null) {
-                return false;
-            }
-        } else if (!version.equals(other.version)) {
-            return false;
-        }
-        if (policyType == null) {
-            if (other.policyType != null) {
-                return false;
-            }
-        } else if (!policyType.equals(other.policyType)) {
-            return false;
-        }
-        if (policyPriority == null) {
-            if (other.policyPriority != null) {
-                return false;
-            }
-        } else if (!policyPriority.equals(other.policyPriority)) {
-            return false;
-        }
-        if (options == null) {
-            if (other.options != null) {
-                return false;
-            }
-        } else if (!options.equals(other.options)) {
-            return false;
-        }
-        if (policyText == null) {
-            if (other.policyText != null) {
-                return false;
-            }
-        } else if (!policyText.equals(other.policyText)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
-        if (zoneId == null) {
-            return other.zoneId == null;
-        } else {
-            return zoneId.equals(other.zoneId);
-        }
+        XXPolicyBase other = (XXPolicyBase) obj;
+
+        return Objects.equals(guid, other.guid) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(resourceSignature, other.resourceSignature) &&
+                Objects.equals(isAuditEnabled, other.isAuditEnabled) &&
+                Objects.equals(isEnabled, other.isEnabled) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(service, other.service) &&
+                Objects.equals(version, other.version) &&
+                Objects.equals(policyType, other.policyType) &&
+                Objects.equals(policyPriority, other.policyPriority) &&
+                Objects.equals(options, other.options) &&
+                Objects.equals(policyText, other.policyText) &&
+                Objects.equals(zoneId, other.zoneId);
     }
 
     /*

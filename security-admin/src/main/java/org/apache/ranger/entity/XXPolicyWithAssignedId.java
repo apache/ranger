@@ -23,6 +23,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy")
@@ -55,19 +57,13 @@ public class XXPolicyWithAssignedId extends XXPolicyBase {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyWithAssignedId other = (XXPolicyWithAssignedId) obj;
-        if (id == null) {
-            return other.id == null;
-        } else {
-            return id.equals(other.id);
-        }
+
+        return Objects.equals(id, other.id);
     }
 
     @Override

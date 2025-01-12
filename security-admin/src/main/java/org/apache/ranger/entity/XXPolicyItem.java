@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy_item")
 public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyItem
      * <ul>
@@ -41,7 +44,7 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_policy_item_SEQ", sequenceName = "x_policy_item_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * Global Id for the object
@@ -131,69 +134,22 @@ public class XXPolicyItem extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyItem other = (XXPolicyItem) obj;
-        if (delegateAdmin != other.delegateAdmin) {
-            return false;
-        }
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (order == null) {
-            if (other.order != null) {
-                return false;
-            }
-        } else if (!order.equals(other.order)) {
-            return false;
-        }
-        if (policyId == null) {
-            if (other.policyId != null) {
-                return false;
-            }
-        } else if (!policyId.equals(other.policyId)) {
-            return false;
-        }
-        if (itemType == null) {
-            if (other.itemType != null) {
-                return false;
-            }
-        } else if (!itemType.equals(other.itemType)) {
-            return false;
-        }
-        if (isEnabled == null) {
-            if (other.isEnabled != null) {
-                return false;
-            }
-        } else if (!isEnabled.equals(other.isEnabled)) {
-            return false;
-        }
-        if (comments == null) {
-            return other.comments == null;
-        } else {
-            return comments.equals(other.comments);
-        }
+
+        return Objects.equals(delegateAdmin, other.delegateAdmin) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(itemType, other.itemType) &&
+                Objects.equals(isEnabled, other.isEnabled) &&
+                Objects.equals(comments, other.comments);
     }
 
     /*

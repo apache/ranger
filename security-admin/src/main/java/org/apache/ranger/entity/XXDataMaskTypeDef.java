@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_datamask_type_def")
 public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXDataMaskTypeDef
      * <ul>
@@ -41,7 +44,7 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
     @SequenceGenerator(name = "x_datamask_type_def_SEQ", sequenceName = "x_datamask_type_def_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_datamask_type_def_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * defId of the XXDataMaskTypeDef
@@ -154,94 +157,25 @@ public class XXDataMaskTypeDef extends XXDBBase implements java.io.Serializable 
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXDataMaskTypeDef other = (XXDataMaskTypeDef) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (defId == null) {
-            if (other.defId != null) {
-                return false;
-            }
-        } else if (!defId.equals(other.defId)) {
-            return false;
-        }
-        if (itemId == null) {
-            if (other.itemId != null) {
-                return false;
-            }
-        } else if (!itemId.equals(other.itemId)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (label == null) {
-            if (other.label != null) {
-                return false;
-            }
-        } else if (!label.equals(other.label)) {
-            return false;
-        }
-        if (description == null) {
-            if (other.description != null) {
-                return false;
-            }
-        } else if (!description.equals(other.description)) {
-            return false;
-        }
-        if (transformer == null) {
-            if (other.transformer != null) {
-                return false;
-            }
-        } else if (!transformer.equals(other.transformer)) {
-            return false;
-        }
-        if (dataMaskOptions == null) {
-            if (other.dataMaskOptions != null) {
-                return false;
-            }
-        } else if (!dataMaskOptions.equals(other.dataMaskOptions)) {
-            return false;
-        }
-        if (rbKeyLabel == null) {
-            if (other.rbKeyLabel != null) {
-                return false;
-            }
-        } else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-            return false;
-        }
-        if (rbKeyDescription == null) {
-            if (other.rbKeyDescription != null) {
-                return false;
-            }
-        } else if (!rbKeyDescription.equals(other.rbKeyDescription)) {
-            return false;
-        }
-        if (order == null) {
-            return other.order == null;
-        } else {
-            return order.equals(other.order);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(defId, other.defId) &&
+                Objects.equals(itemId, other.itemId) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(transformer, other.transformer) &&
+                Objects.equals(dataMaskOptions, other.dataMaskOptions) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
+                Objects.equals(order, other.order);
     }
 
     /*

@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy")
 public class XXPolicy extends XXPolicyBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicy
      * <ul>
@@ -41,7 +44,7 @@ public class XXPolicy extends XXPolicyBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_policy_SEQ", sequenceName = "x_policy_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     @Override
     public Long getId() {
@@ -62,19 +65,13 @@ public class XXPolicy extends XXPolicyBase implements java.io.Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicy other = (XXPolicy) obj;
-        if (id == null) {
-            return other.id == null;
-        } else {
-            return id.equals(other.id);
-        }
+
+        return Objects.equals(id, other.id);
     }
 
     @Override

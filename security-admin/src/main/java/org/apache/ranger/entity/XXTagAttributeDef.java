@@ -31,6 +31,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -117,13 +118,7 @@ public class XXTagAttributeDef extends XXDBBase implements Serializable {
      */
     @Override
     public int hashCode() {
-        final int prime  = 31;
-        int       result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((tagDefId == null) ? 0 : tagDefId.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        return result;
+        return Objects.hash(super.hashCode(), id, name, tagDefId, type);
     }
 
     /*
@@ -135,40 +130,16 @@ public class XXTagAttributeDef extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXTagAttributeDef other = (XXTagAttributeDef) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (tagDefId == null) {
-            if (other.tagDefId != null) {
-                return false;
-            }
-        } else if (!tagDefId.equals(other.tagDefId)) {
-            return false;
-        }
-        if (type == null) {
-            return other.type == null;
-        } else {
-            return type.equals(other.type);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(tagDefId, other.tagDefId) &&
+                Objects.equals(type, other.type);
     }
 
     /*
@@ -185,7 +156,7 @@ public class XXTagAttributeDef extends XXDBBase implements Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("{ ");
-        sb.append(super.toString() + "} ");
+        sb.append(super.toString()).append("} ");
         sb.append("id={").append(id).append("} ");
         sb.append("tagDefId={").append(tagDefId).append("} ");
         sb.append("name={").append(name).append("} ");

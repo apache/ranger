@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_service_config_map")
 public class XXServiceConfigMap extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXServiceConfigMap
      * <ul>
@@ -41,7 +44,7 @@ public class XXServiceConfigMap extends XXDBBase implements java.io.Serializable
     @SequenceGenerator(name = "x_service_config_map_SEQ", sequenceName = "x_service_config_map_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_service_config_map_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * service of the XXServiceConfigMap
@@ -98,45 +101,18 @@ public class XXServiceConfigMap extends XXDBBase implements java.io.Serializable
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXServiceConfigMap other = (XXServiceConfigMap) obj;
-        if (configKey == null) {
-            if (other.configKey != null) {
-                return false;
-            }
-        } else if (!configKey.equals(other.configKey)) {
-            return false;
-        }
-        if (configValue == null) {
-            if (other.configValue != null) {
-                return false;
-            }
-        } else if (!configValue.equals(other.configValue)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (serviceId == null) {
-            return other.serviceId == null;
-        } else {
-            return serviceId.equals(other.serviceId);
-        }
+
+        return Objects.equals(configKey, other.configKey) &&
+                Objects.equals(configValue, other.configValue) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(serviceId, other.serviceId);
     }
 
     /*

@@ -115,16 +115,13 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
         XXRoleRefGroup other = (XXRoleRefGroup) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
+        return Objects.equals(id, other.id) &&
                 Objects.equals(roleId, other.roleId) &&
                 Objects.equals(groupId, other.groupId) &&
                 Objects.equals(groupName, other.groupName) &&

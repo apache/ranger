@@ -32,6 +32,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -152,16 +153,7 @@ public class XXTag extends XXDBBase implements Serializable {
      */
     @Override
     public int hashCode() {
-        final int prime  = 31;
-        int       result = 1;
-        result = prime * result + ((version == null) ? 0 : version.hashCode());
-        result = prime * result + ((guid == null) ? 0 : guid.hashCode());
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        result = prime * result + ((owner == null) ? 0 : owner.hashCode());
-        result = prime * result + ((options == null) ? 0 : options.hashCode());
-        result = prime * result + ((tagAttrs == null) ? 0 : tagAttrs.hashCode());
-        return result;
+        return Objects.hash(super.hashCode(), version, guid, id, type, owner, options, tagAttrs);
     }
 
     /*
@@ -173,59 +165,19 @@ public class XXTag extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXTag other = (XXTag) obj;
-        if (version == null) {
-            if (other.version != null) {
-                return false;
-            }
-        } else if (!version.equals(other.version)) {
-            return false;
-        }
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (type == null) {
-            if (other.type != null) {
-                return false;
-            }
-        } else if (!type.equals(other.type)) {
-            return false;
-        }
-        if (owner == null) {
-            if (other.owner != null) {
-                return false;
-            }
-        } else if (!owner.equals(other.owner)) {
-            return false;
-        }
-        if (options == null) {
-            return other.options == null;
-        } else if (!options.equals(other.options)) {
-            if (tagAttrs == null) {
-                return other.tagAttrs == null;
-            } else {
-                return tagAttrs.equals(other.tagAttrs);
-            }
-        }
-        return true;
+
+        return Objects.equals(version, other.version) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(type, other.type) &&
+                Objects.equals(owner, other.owner) &&
+                Objects.equals(options, other.options) &&
+                Objects.equals(tagAttrs, other.tagAttrs);
     }
 
     /*
@@ -242,7 +194,7 @@ public class XXTag extends XXDBBase implements Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("{ ");
-        sb.append(super.toString() + "} ");
+        sb.append(super.toString()).append("} ");
         sb.append("id={").append(id).append("} ");
         sb.append("guid={").append(guid).append("} ");
         sb.append("type={").append(type).append("} ");

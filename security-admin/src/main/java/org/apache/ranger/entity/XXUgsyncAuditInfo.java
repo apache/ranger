@@ -33,6 +33,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -84,9 +85,11 @@ public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable 
         if (object1 == object2) {
             return true;
         }
+
         if ((object1 == null) || (object2 == null)) {
             return false;
         }
+
         return object1.equals(object2);
     }
 
@@ -118,44 +121,24 @@ public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable 
      */
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXUgsyncAuditInfo other = (XXUgsyncAuditInfo) obj;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        if ((this.eventTime == null && other.eventTime != null) || (this.eventTime != null && !this.eventTime.equals(other.eventTime))) {
-            return false;
-        }
-        if ((this.userName == null && other.userName != null) || (this.userName != null && !this.userName.equals(other.userName))) {
-            return false;
-        }
-        if ((this.syncSource == null && other.syncSource != null) || (this.syncSource != null && !this.syncSource.equals(other.syncSource))) {
-            return false;
-        }
-        if ((this.noOfNewUsers == null && other.noOfNewUsers != null) || (this.noOfNewUsers != null && !this.noOfNewUsers.equals(other.noOfNewUsers))) {
-            return false;
-        }
-        if ((this.noOfNewGroups == null && other.noOfNewGroups != null) || (this.noOfNewGroups != null && !this.noOfNewGroups.equals(other.noOfNewGroups))) {
-            return false;
-        }
-        if ((this.noOfModifiedUsers == null && other.noOfModifiedUsers != null) || (this.noOfModifiedUsers != null && !this.noOfModifiedUsers.equals(other.noOfModifiedUsers))) {
-            return false;
-        }
-        if ((this.noOfModifiedGroups == null && other.noOfModifiedGroups != null) || (this.noOfModifiedGroups != null && !this.noOfModifiedGroups.equals(other.noOfModifiedGroups))) {
-            return false;
-        }
-        if ((this.syncSourceInfo == null && other.syncSourceInfo != null) || (this.syncSourceInfo != null && !this.syncSourceInfo.equals(other.syncSourceInfo))) {
-            return false;
-        }
-        return (this.sessionId != null || other.sessionId == null) && (this.sessionId == null || this.sessionId.equals(other.sessionId));
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(eventTime, other.eventTime) &&
+                Objects.equals(userName, other.userName) &&
+                Objects.equals(syncSource, other.syncSource) &&
+                Objects.equals(noOfNewUsers, other.noOfNewUsers) &&
+                Objects.equals(noOfNewGroups, other.noOfNewGroups) &&
+                Objects.equals(noOfModifiedUsers, other.noOfModifiedUsers) &&
+                Objects.equals(noOfModifiedGroups, other.noOfModifiedGroups) &&
+                Objects.equals(syncSourceInfo, other.syncSourceInfo) &&
+                Objects.equals(sessionId, other.sessionId);
     }
 
     /**

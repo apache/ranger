@@ -33,6 +33,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_cred_store")
 public class XXCredentialStore extends XXDBBase implements java.io.Serializable {
@@ -42,7 +44,8 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
     @SequenceGenerator(name = "X_CRED_STORE_SEQ", sequenceName = "X_CRED_STORE_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_CRED_STORE_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Name
      * <ul>
@@ -51,6 +54,7 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
      */
     @Column(name = "STORE_NAME", nullable = false, length = 1024)
     protected String name;
+
     /**
      * Description
      * <ul>
@@ -104,14 +108,16 @@ public class XXCredentialStore extends XXDBBase implements java.io.Serializable 
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXCredentialStore other = (XXCredentialStore) obj;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        return (this.description != null || other.description == null) && (this.description == null || this.description.equals(other.description));
+
+        return Objects.equals(name, other.name) &&
+                Objects.equals(description, other.description);
     }
 
     /**

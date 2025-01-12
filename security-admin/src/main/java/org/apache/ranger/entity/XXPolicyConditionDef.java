@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy_condition_def")
 public class XXPolicyConditionDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyConditionDef
      * <ul>
@@ -41,7 +44,7 @@ public class XXPolicyConditionDef extends XXDBBase implements java.io.Serializab
     @SequenceGenerator(name = "x_policy_condition_def_SEQ", sequenceName = "x_policy_condition_def_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_condition_def_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * defId of the XXPolicyConditionDef
@@ -186,102 +189,29 @@ public class XXPolicyConditionDef extends XXDBBase implements java.io.Serializab
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyConditionDef other = (XXPolicyConditionDef) obj;
-        if (defId == null) {
-            if (other.defId != null) {
-                return false;
-            }
-        } else if (!defId.equals(other.defId)) {
-            return false;
-        }
-        if (itemId == null) {
-            if (other.itemId != null) {
-                return false;
-            }
-        } else if (!itemId.equals(other.itemId)) {
-            return false;
-        }
-        if (description == null) {
-            if (other.description != null) {
-                return false;
-            }
-        } else if (!description.equals(other.description)) {
-            return false;
-        }
-        if (evaluator == null) {
-            if (other.evaluator != null) {
-                return false;
-            }
-        } else if (!evaluator.equals(other.evaluator)) {
-            return false;
-        }
-        if (evaluatorOptions == null) {
-            if (other.evaluatorOptions != null) {
-                return false;
-            }
-        } else if (!evaluatorOptions.equals(other.evaluatorOptions)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
 
-        if (!equals(validationRegEx, other.validationRegEx) ||
-                !equals(validationMessage, other.validationMessage) ||
-                !equals(uiHint, other.uiHint) ||
-                !equals(rbKeyValidationMessage, other.rbKeyValidationMessage)) {
-            return false;
-        }
-
-        if (label == null) {
-            if (other.label != null) {
-                return false;
-            }
-        } else if (!label.equals(other.label)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (order == null) {
-            if (other.order != null) {
-                return false;
-            }
-        } else if (!order.equals(other.order)) {
-            return false;
-        }
-        if (rbKeyDescription == null) {
-            if (other.rbKeyDescription != null) {
-                return false;
-            }
-        } else if (!rbKeyDescription.equals(other.rbKeyDescription)) {
-            return false;
-        }
-        if (rbKeyLabel == null) {
-            return other.rbKeyLabel == null;
-        } else {
-            return rbKeyLabel.equals(other.rbKeyLabel);
-        }
+        return Objects.equals(defId, other.defId) &&
+                Objects.equals(itemId, other.itemId) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(evaluator, other.evaluator) &&
+                Objects.equals(evaluatorOptions, other.evaluatorOptions) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(validationRegEx, other.validationRegEx) &&
+                Objects.equals(validationMessage, other.validationMessage) &&
+                Objects.equals(uiHint, other.uiHint) &&
+                Objects.equals(rbKeyValidationMessage, other.rbKeyValidationMessage);
     }
 
     /*

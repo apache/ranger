@@ -260,8 +260,6 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (getClass() != obj.getClass()) {
-            return false;
         } else if (!super.equals(obj)) {
             return false;
         }

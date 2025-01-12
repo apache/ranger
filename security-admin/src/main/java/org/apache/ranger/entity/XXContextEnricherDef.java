@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_context_enricher_def")
 public class XXContextEnricherDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXContextEnricherDef
      * <ul>
@@ -41,7 +44,7 @@ public class XXContextEnricherDef extends XXDBBase implements java.io.Serializab
     @SequenceGenerator(name = "x_context_enricher_def_SEQ", sequenceName = "x_context_enricher_def_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_context_enricher_def_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * defId of the XXContextEnricherDef
@@ -122,66 +125,21 @@ public class XXContextEnricherDef extends XXDBBase implements java.io.Serializab
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXContextEnricherDef other = (XXContextEnricherDef) obj;
-        if (defId == null) {
-            if (other.defId != null) {
-                return false;
-            }
-        } else if (!defId.equals(other.defId)) {
-            return false;
-        }
-        if (itemId == null) {
-            if (other.itemId != null) {
-                return false;
-            }
-        } else if (!itemId.equals(other.itemId)) {
-            return false;
-        }
-        if (enricher == null) {
-            if (other.enricher != null) {
-                return false;
-            }
-        } else if (!enricher.equals(other.enricher)) {
-            return false;
-        }
-        if (enricherOptions == null) {
-            if (other.enricherOptions != null) {
-                return false;
-            }
-        } else if (!enricherOptions.equals(other.enricherOptions)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (order == null) {
-            return other.order == null;
-        } else {
-            return order.equals(other.order);
-        }
+
+        return Objects.equals(defId, other.defId) &&
+                Objects.equals(itemId, other.itemId) &&
+                Objects.equals(enricher, other.enricher) &&
+                Objects.equals(enricherOptions, other.enricherOptions) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(order, other.order);
     }
 
     /*
@@ -211,7 +169,7 @@ public class XXContextEnricherDef extends XXDBBase implements java.io.Serializab
      * This method sets the value to the member attribute <b> defId</b> . You
      * cannot set null to the attribute.
      *
-     * @param defId Value to set member attribute <b> defId</b>
+     * @param itemId Value to set member attribute <b> defId</b>
      */
     public void setItemId(Long itemId) {
         this.itemId = itemId;

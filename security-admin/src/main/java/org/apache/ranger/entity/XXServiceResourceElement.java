@@ -31,6 +31,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -134,14 +135,7 @@ public class XXServiceResourceElement extends XXDBBase implements Serializable {
      */
     @Override
     public int hashCode() {
-        final int prime  = 31;
-        int       result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((isExcludes == null) ? 0 : isExcludes.hashCode());
-        result = prime * result + ((isRecursive == null) ? 0 : isRecursive.hashCode());
-        result = prime * result + ((resDefId == null) ? 0 : resDefId.hashCode());
-        result = prime * result + ((resourceId == null) ? 0 : resourceId.hashCode());
-        return result;
+        return Objects.hash(super.hashCode(), id, isExcludes, isRecursive, resDefId, resourceId);
     }
 
     /*
@@ -153,47 +147,17 @@ public class XXServiceResourceElement extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXServiceResourceElement other = (XXServiceResourceElement) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (isExcludes == null) {
-            if (other.isExcludes != null) {
-                return false;
-            }
-        } else if (!isExcludes.equals(other.isExcludes)) {
-            return false;
-        }
-        if (isRecursive == null) {
-            if (other.isRecursive != null) {
-                return false;
-            }
-        } else if (!isRecursive.equals(other.isRecursive)) {
-            return false;
-        }
-        if (resDefId == null) {
-            if (other.resDefId != null) {
-                return false;
-            }
-        } else if (!resDefId.equals(other.resDefId)) {
-            return false;
-        }
-        if (resourceId == null) {
-            return other.resourceId == null;
-        } else {
-            return resourceId.equals(other.resourceId);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(isExcludes, other.isExcludes) &&
+                Objects.equals(isRecursive, other.isRecursive) &&
+                Objects.equals(resDefId, other.resDefId) &&
+                Objects.equals(resourceId, other.resourceId);
     }
 
     /*
@@ -210,7 +174,7 @@ public class XXServiceResourceElement extends XXDBBase implements Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("{ ");
-        sb.append(super.toString() + "} ");
+        sb.append(super.toString()).append("} ");
         sb.append("id={").append(id).append("} ");
         sb.append("resDefId={").append(resDefId).append("} ");
         sb.append("resourceId={").append(resourceId).append("} ");

@@ -27,6 +27,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_service_def")
@@ -73,19 +75,13 @@ public class XXServiceDef extends XXServiceDefBase implements java.io.Serializab
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXServiceDef other = (XXServiceDef) obj;
-        if (id == null) {
-            return other.id == null;
-        } else {
-            return id.equals(other.id);
-        }
+
+        return Objects.equals(id, other.id);
     }
 
     @Override

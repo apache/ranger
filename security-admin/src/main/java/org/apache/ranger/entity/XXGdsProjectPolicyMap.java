@@ -97,6 +97,8 @@ public class XXGdsProjectPolicyMap implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
+        } else if (obj == null) {
+            return false;
         } else if (getClass() != obj.getClass()) {
             return false;
         } else if (!super.equals(obj)) {
@@ -116,8 +118,7 @@ public class XXGdsProjectPolicyMap implements Serializable {
     }
 
     public StringBuilder toString(StringBuilder sb) {
-        sb.append("XXGdsProjectPolicyMap={ ")
-                .append(super.toString() + "} ")
+        sb.append("XXGdsProjectPolicyMap={ ").append(super.toString()).append("} ")
                 .append("id={").append(id).append("} ")
                 .append("projectId={").append(projectId).append("} ")
                 .append("policyId={").append(policyId).append("} ")

@@ -98,9 +98,11 @@ public abstract class XXDBBase implements java.io.Serializable {
         if (object1 == object2) {
             return true;
         }
+
         if ((object1 == null) || (object2 == null)) {
             return false;
         }
+
         return object1.equals(object2);
     }
 
@@ -215,17 +217,20 @@ public abstract class XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+
         XXDBBase other = (XXDBBase) obj;
-        if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
-            return false;
-        }
-        if ((this.updateTime == null && other.updateTime != null) || (this.updateTime != null && !this.updateTime.equals(other.updateTime))) {
-            return false;
-        }
-        if ((this.addedByUserId == null && other.addedByUserId != null) || (this.addedByUserId != null && !this.addedByUserId.equals(other.addedByUserId))) {
-            return false;
-        }
-        return (this.updatedByUserId != null || other.updatedByUserId == null) && (this.updatedByUserId == null || this.updatedByUserId.equals(other.updatedByUserId));
+
+        return Objects.equals(createTime, other.createTime) &&
+                Objects.equals(updateTime, other.updateTime) &&
+                Objects.equals(addedByUserId, other.addedByUserId) &&
+                Objects.equals(updatedByUserId, other.updatedByUserId);
     }
 
     /**

@@ -34,6 +34,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_resource")
 public class XXResource extends XXDBBase implements java.io.Serializable {
@@ -43,7 +45,8 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "X_RESOURCE_SEQ", sequenceName = "X_RESOURCE_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RESOURCE_SEQ")
     @Column(name = "ID")
-    protected Long   id;
+    protected Long id;
+
     /**
      * Name
      * <ul>
@@ -52,8 +55,10 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_NAME", length = 4000)
     protected String name;
+
     @Column(name = "POLICY_NAME", length = 500)
     protected String policyName;
+
     /**
      * Description
      * <ul>
@@ -62,6 +67,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "DESCR", length = 4000)
     protected String description;
+
     /**
      * Status
      * <ul>
@@ -69,21 +75,24 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "RES_TYPE", nullable = false)
-    protected int    resourceType   = AppConstants.RESOURCE_PATH;
+    protected int resourceType   = AppConstants.RESOURCE_PATH;
+
     /**
      * Id of the asset
      * <ul>
      * </ul>
      */
     @Column(name = "ASSET_ID", nullable = false)
-    protected Long   assetId;
+    protected Long assetId;
+
     /**
      * Id of the parent
      * <ul>
      * </ul>
      */
     @Column(name = "PARENT_ID")
-    protected Long   parentId;
+    protected Long parentId;
+
     /**
      * Path for the parent
      * <ul>
@@ -92,6 +101,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "PARENT_PATH", length = 4000)
     protected String parentPath;
+
     /**
      * Whether to encrypt this resource
      * <ul>
@@ -99,7 +109,8 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "IS_ENCRYPT", nullable = false)
-    protected int    isEncrypt      = RangerConstants.BOOL_FALSE;
+    protected int isEncrypt = RangerConstants.BOOL_FALSE;
+
     /**
      * Is recursive
      * <ul>
@@ -107,7 +118,8 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "IS_RECURSIVE", nullable = false)
-    protected int    isRecursive    = RangerConstants.BOOL_NONE;
+    protected int isRecursive = RangerConstants.BOOL_NONE;
+
     /**
      * Group to which this resource belongs to
      * <ul>
@@ -116,6 +128,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_GROUP", length = 1024)
     protected String resourceGroup;
+
     /**
      * Databases
      * <ul>
@@ -124,6 +137,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_DBS", length = 10000)
     protected String databases;
+
     /**
      * Tables
      * <ul>
@@ -132,6 +146,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_TABLES", length = 10000)
     protected String tables;
+
     /**
      * Column families
      * <ul>
@@ -140,6 +155,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_COL_FAMS", length = 10000)
     protected String columnFamilies;
+
     /**
      * Columns
      * <ul>
@@ -148,6 +164,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_COLS", length = 10000)
     protected String columns;
+
     /**
      * UDFs
      * <ul>
@@ -156,6 +173,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_UDFS", length = 10000)
     protected String udfs;
+
     /**
      * Resource Status
      * <ul>
@@ -163,7 +181,8 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "RES_STATUS", nullable = false)
-    protected int    resourceStatus = RangerConstants.STATUS_ENABLED;
+    protected int resourceStatus = RangerConstants.STATUS_ENABLED;
+
     /**
      * Table Type
      * <ul>
@@ -171,7 +190,8 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "TABLE_TYPE", nullable = false)
-    protected int    tableType      = AppConstants.POLICY_INCLUSION;
+    protected int tableType = AppConstants.POLICY_INCLUSION;
+
     /**
      * Resource Status
      * <ul>
@@ -179,7 +199,8 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "COL_TYPE", nullable = false)
-    protected int    columnType     = AppConstants.POLICY_INCLUSION;
+    protected int columnType = AppConstants.POLICY_INCLUSION;
+
     /**
      * Topologoies
      * <ul>
@@ -188,6 +209,7 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_TOPOLOGIES", length = 10000)
     protected String topologies;
+
     /**
      * SERVICENAMES
      * <ul>
@@ -212,25 +234,20 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
     public static String getEnumName(String fieldName) {
         if ("resourceType".equals(fieldName)) {
             return "CommonEnums.ResourceType";
-        }
-        if ("isEncrypt".equals(fieldName)) {
+        } else if ("isEncrypt".equals(fieldName)) {
             return "CommonEnums.BooleanValue";
-        }
-        if ("isRecursive".equals(fieldName)) {
+        } else if ("isRecursive".equals(fieldName)) {
             return "CommonEnums.BooleanValue";
-        }
-        if ("resourceStatus".equals(fieldName)) {
+        } else if ("resourceStatus".equals(fieldName)) {
             return "CommonEnums.ActiveStatus";
-        }
-        if ("tableType".equals(fieldName)) {
+        } else if ("tableType".equals(fieldName)) {
             return "CommonEnums.PolicyType";
-        }
-        if ("columnType".equals(fieldName)) {
+        } else if ("columnType".equals(fieldName)) {
             return "CommonEnums.PolicyType";
-        }
-        if ("assetType".equals(fieldName)) {
+        } else if ("assetType".equals(fieldName)) {
             return "CommonEnums.AssetType";
         }
+
         //Later TODO
         //return super.getEnumName(fieldName);
         return null;
@@ -268,66 +285,33 @@ public class XXResource extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
-        XXResource other = (XXResource) obj;
-        if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            return false;
-        }
-        if ((this.description == null && other.description != null) || (this.description != null && !this.description.equals(other.description))) {
-            return false;
-        }
-        if (this.resourceType != other.resourceType) {
-            return false;
-        }
-        if ((this.assetId == null && other.assetId != null) || (this.assetId != null && !this.assetId.equals(other.assetId))) {
-            return false;
-        }
-        if ((this.parentId == null && other.parentId != null) || (this.parentId != null && !this.parentId.equals(other.parentId))) {
-            return false;
-        }
-        if ((this.parentPath == null && other.parentPath != null) || (this.parentPath != null && !this.parentPath.equals(other.parentPath))) {
-            return false;
-        }
-        if (this.isEncrypt != other.isEncrypt) {
-            return false;
-        }
-        if (this.isRecursive != other.isRecursive) {
-            return false;
-        }
-        if ((this.resourceGroup == null && other.resourceGroup != null) || (this.resourceGroup != null && !this.resourceGroup.equals(other.resourceGroup))) {
-            return false;
-        }
-        if ((this.databases == null && other.databases != null) || (this.databases != null && !this.databases.equals(other.databases))) {
-            return false;
-        }
-        if ((this.tables == null && other.tables != null) || (this.tables != null && !this.tables.equals(other.tables))) {
-            return false;
-        }
-        if ((this.columnFamilies == null && other.columnFamilies != null) || (this.columnFamilies != null && !this.columnFamilies.equals(other.columnFamilies))) {
-            return false;
-        }
-        if ((this.columns == null && other.columns != null) || (this.columns != null && !this.columns.equals(other.columns))) {
-            return false;
-        }
-        if ((this.udfs == null && other.udfs != null) || (this.udfs != null && !this.udfs.equals(other.udfs))) {
-            return false;
-        }
-        if (this.resourceStatus != other.resourceStatus) {
-            return false;
-        }
-        if (this.tableType != other.tableType) {
-            return false;
-        }
-        if (this.columnType != other.columnType) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
 
-        if ((this.topologies == null && other.topologies != null) || (this.topologies != null && !this.topologies.equals(other.topologies))) {
-            return false;
-        }
-        return (this.services != null || other.services == null) && (this.services == null || this.services.equals(other.services));
+        XXResource other = (XXResource) obj;
+
+        return Objects.equals(name, other.name) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(resourceType, other.resourceType) &&
+                Objects.equals(assetId, other.assetId) &&
+                Objects.equals(parentId, other.parentId) &&
+                Objects.equals(parentPath, other.parentPath) &&
+                Objects.equals(isEncrypt, other.isEncrypt) &&
+                Objects.equals(isRecursive, other.isRecursive) &&
+                Objects.equals(resourceGroup, other.resourceGroup) &&
+                Objects.equals(databases, other.databases) &&
+                Objects.equals(tables, other.tables) &&
+                Objects.equals(columnFamilies, other.columnFamilies) &&
+                Objects.equals(columns, other.columns) &&
+                Objects.equals(udfs, other.udfs) &&
+                Objects.equals(resourceStatus, other.resourceStatus) &&
+                Objects.equals(tableType, other.tableType) &&
+                Objects.equals(columnType, other.columnType) &&
+                Objects.equals(topologies, other.topologies) &&
+                Objects.equals(services, other.services);
     }
 
     /**

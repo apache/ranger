@@ -27,6 +27,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_enum_element_def")
@@ -41,7 +43,7 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_enum_element_def_SEQ", sequenceName = "x_enum_element_def_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_enum_element_def_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * enumDefId of the XXEnumDefElement
@@ -122,59 +124,20 @@ public class XXEnumElementDef extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXEnumElementDef other = (XXEnumElementDef) obj;
-        if (enumDefId == null) {
-            if (other.enumDefId != null) {
-                return false;
-            }
-        } else if (!enumDefId.equals(other.enumDefId)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (label == null) {
-            if (other.label != null) {
-                return false;
-            }
-        } else if (!label.equals(other.label)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (order == null) {
-            if (other.order != null) {
-                return false;
-            }
-        } else if (!order.equals(other.order)) {
-            return false;
-        }
-        if (rbKeyLabel == null) {
-            return other.rbKeyLabel == null;
-        } else {
-            return rbKeyLabel.equals(other.rbKeyLabel);
-        }
+
+        return Objects.equals(enumDefId, other.enumDefId) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel);
     }
 
     /*

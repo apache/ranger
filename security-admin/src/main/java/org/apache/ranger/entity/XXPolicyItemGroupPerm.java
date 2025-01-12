@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_group_perm")
 public class XXPolicyItemGroupPerm extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyItemGroupPerm
      * <ul>
@@ -41,7 +44,7 @@ public class XXPolicyItemGroupPerm extends XXDBBase implements java.io.Serializa
     @SequenceGenerator(name = "x_policy_item_group_perm_SEQ", sequenceName = "x_policy_item_group_perm_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_group_perm_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * policyItemId of the XXPolicyItemGroupPerm
@@ -98,45 +101,18 @@ public class XXPolicyItemGroupPerm extends XXDBBase implements java.io.Serializa
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyItemGroupPerm other = (XXPolicyItemGroupPerm) obj;
-        if (groupId == null) {
-            if (other.groupId != null) {
-                return false;
-            }
-        } else if (!groupId.equals(other.groupId)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (order == null) {
-            if (other.order != null) {
-                return false;
-            }
-        } else if (!order.equals(other.order)) {
-            return false;
-        }
-        if (policyItemId == null) {
-            return other.policyItemId == null;
-        } else {
-            return policyItemId.equals(other.policyItemId);
-        }
+
+        return Objects.equals(groupId, other.groupId) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(policyItemId, other.policyItemId);
     }
 
     /*

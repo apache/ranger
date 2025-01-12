@@ -35,11 +35,12 @@ import java.util.Objects;
 @Table(name = "x_security_zone_ref_role")
 public class XXSecurityZoneRefRole extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     @Id
     @SequenceGenerator(name = "x_sec_zone_ref_role_SEQ", sequenceName = "x_sec_zone_ref_role_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_role_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * zoneId of the XXSecurityZoneRefRole
@@ -94,16 +95,13 @@ public class XXSecurityZoneRefRole extends XXDBBase implements java.io.Serializa
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
         XXSecurityZoneRefRole other = (XXSecurityZoneRefRole) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
+        return Objects.equals(id, other.id) &&
                 Objects.equals(zoneId, other.zoneId) &&
                 Objects.equals(roleId, other.roleId) &&
                 Objects.equals(roleName, other.roleName);

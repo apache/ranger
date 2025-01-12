@@ -115,16 +115,13 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
         XXRoleRefRole other = (XXRoleRefRole) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
+        return Objects.equals(id, other.id) &&
                 Objects.equals(roleId, other.roleId) &&
                 Objects.equals(subRoleId, other.subRoleId) &&
                 Objects.equals(subRoleName, other.subRoleName) &&

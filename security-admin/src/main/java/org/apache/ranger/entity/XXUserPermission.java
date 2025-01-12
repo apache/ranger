@@ -28,6 +28,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_user_module_perm")
 public class XXUserPermission extends XXDBBase implements java.io.Serializable {
@@ -122,40 +124,16 @@ public class XXUserPermission extends XXDBBase implements java.io.Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXUserPermission other = (XXUserPermission) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (isAllowed == null) {
-            if (other.isAllowed != null) {
-                return false;
-            }
-        } else if (!isAllowed.equals(other.isAllowed)) {
-            return false;
-        }
-        if (moduleId == null) {
-            if (other.moduleId != null) {
-                return false;
-            }
-        } else if (!moduleId.equals(other.moduleId)) {
-            return false;
-        }
-        if (userId == null) {
-            return other.userId == null;
-        } else {
-            return userId.equals(other.userId);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(isAllowed, other.isAllowed) &&
+                Objects.equals(moduleId, other.moduleId) &&
+                Objects.equals(userId, other.userId);
     }
 
     @Override

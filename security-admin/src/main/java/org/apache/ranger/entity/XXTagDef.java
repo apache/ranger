@@ -32,6 +32,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -164,16 +165,7 @@ public class XXTagDef extends XXDBBase implements Serializable {
      */
     @Override
     public int hashCode() {
-        final int prime  = 31;
-        int       result = 1;
-        result = prime * result + ((guid == null) ? 0 : guid.hashCode());
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((isEnabled == null) ? 0 : isEnabled.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((source == null) ? 0 : source.hashCode());
-        result = prime * result + ((version == null) ? 0 : version.hashCode());
-        result = prime * result + ((tagAttrDefs == null) ? 0 : tagAttrDefs.hashCode());
-        return result;
+        return Objects.hash(super.hashCode(), guid, id, isEnabled, name, source, version, tagAttrDefs);
     }
 
     /*
@@ -185,61 +177,19 @@ public class XXTagDef extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXTagDef other = (XXTagDef) obj;
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (isEnabled == null) {
-            if (other.isEnabled != null) {
-                return false;
-            }
-        } else if (!isEnabled.equals(other.isEnabled)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (source == null) {
-            if (other.source != null) {
-                return false;
-            }
-        } else if (!source.equals(other.source)) {
-            return false;
-        }
-        if (version == null) {
-            if (other.version != null) {
-                return false;
-            }
-        } else if (!version.equals(other.version)) {
-            return false;
-        }
-        if (tagAttrDefs == null) {
-            return other.tagAttrDefs == null;
-        } else {
-            return tagAttrDefs.equals(other.tagAttrDefs);
-        }
+
+        return Objects.equals(guid, other.guid) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(isEnabled, other.isEnabled) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(source, other.source) &&
+                Objects.equals(version, other.version) &&
+                Objects.equals(tagAttrDefs, other.tagAttrDefs);
     }
 
     /*
@@ -256,7 +206,7 @@ public class XXTagDef extends XXDBBase implements Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("{ ");
-        sb.append(super.toString() + "} ");
+        sb.append(super.toString()).append("} ");
         sb.append("id={").append(id).append("} ");
         sb.append("guid={").append(guid).append("} ");
         sb.append("version={").append(version).append("} ");

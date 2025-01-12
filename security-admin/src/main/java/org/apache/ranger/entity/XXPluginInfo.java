@@ -33,6 +33,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -78,10 +79,10 @@ public class XXPluginInfo implements java.io.Serializable {
     public static boolean equals(Object object1, Object object2) {
         if (object1 == object2) {
             return true;
-        }
-        if ((object1 == null) || (object2 == null)) {
+        } else if ((object1 == null) || (object2 == null)) {
             return false;
         }
+
         return object1.equals(object2);
     }
 
@@ -97,38 +98,24 @@ public class XXPluginInfo implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
+        } else if (obj == null) {
+            return false;
+        } else if (getClass() != obj.getClass()) {
             return false;
         }
+
         XXPluginInfo other = (XXPluginInfo) obj;
-        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-            return false;
-        }
-        if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
-            return false;
-        }
-        if ((this.updateTime == null && other.updateTime != null) || (this.updateTime != null && !this.updateTime.equals(other.updateTime))) {
-            return false;
-        }
-        if ((this.serviceName == null && other.serviceName != null) || (this.serviceName != null && !this.serviceName.equals(other.serviceName))) {
-            return false;
-        }
-        if ((this.hostName == null && other.hostName != null) || (this.hostName != null && !this.hostName.equals(other.hostName))) {
-            return false;
-        }
-        if ((this.appType == null && other.appType != null) || (this.appType != null && !this.appType.equals(other.appType))) {
-            return false;
-        }
-        if ((this.ipAddress == null && other.ipAddress != null) || (this.ipAddress != null && !this.ipAddress.equals(other.ipAddress))) {
-            return false;
-        }
-        return (this.info != null || other.info == null) && (this.info == null || this.info.equals(other.info));
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(createTime, other.createTime) &&
+                Objects.equals(updateTime, other.updateTime) &&
+                Objects.equals(serviceName, other.serviceName) &&
+                Objects.equals(hostName, other.hostName) &&
+                Objects.equals(appType, other.appType) &&
+                Objects.equals(ipAddress, other.ipAddress) &&
+                Objects.equals(info, other.info);
     }
 
     /**

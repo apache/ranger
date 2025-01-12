@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_enum_def")
 public class XXEnumDef extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXEnumDef
      * <ul>
@@ -41,7 +44,7 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_enum_def_SEQ", sequenceName = "x_enum_def_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_enum_def_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * defId of the XXEnumDef
@@ -106,52 +109,19 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXEnumDef other = (XXEnumDef) obj;
-        if (defId == null) {
-            if (other.defId != null) {
-                return false;
-            }
-        } else if (!defId.equals(other.defId)) {
-            return false;
-        }
-        if (itemId == null) {
-            if (other.itemId != null) {
-                return false;
-            }
-        } else if (!itemId.equals(other.itemId)) {
-            return false;
-        }
-        if (defaultIndex == null) {
-            if (other.defaultIndex != null) {
-                return false;
-            }
-        } else if (!defaultIndex.equals(other.defaultIndex)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (name == null) {
-            return other.name == null;
-        } else {
-            return name.equals(other.name);
-        }
+
+        return Objects.equals(defId, other.defId) &&
+                Objects.equals(itemId, other.itemId) &&
+                Objects.equals(defaultIndex, other.defaultIndex) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(name, other.name);
     }
 
     /*
@@ -198,7 +168,7 @@ public class XXEnumDef extends XXDBBase implements java.io.Serializable {
      * This method sets the value to the member attribute <b> itemId</b> . You
      * cannot set null to the attribute.
      *
-     * @param defId Value to set member attribute <b> itemId</b>
+     * @param itemId Value to set member attribute <b> itemId</b>
      */
     public void setItemId(Long itemId) {
         this.itemId = itemId;

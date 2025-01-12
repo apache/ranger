@@ -58,11 +58,7 @@ public class XXGlobalState extends XXGlobalStateBase implements java.io.Serializ
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 

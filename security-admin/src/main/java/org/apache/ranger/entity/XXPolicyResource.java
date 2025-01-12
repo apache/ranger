@@ -27,11 +27,14 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy_resource")
 public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyResource
      * <ul>
@@ -41,7 +44,7 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
     @SequenceGenerator(name = "x_policy_resource_SEQ", sequenceName = "x_policy_resource_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_resource_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * policyId of the XXPolicyResource
@@ -106,44 +109,19 @@ public class XXPolicyResource extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyResource other = (XXPolicyResource) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (isExcludes != other.isExcludes) {
-            return false;
-        }
-        if (isRecursive != other.isRecursive) {
-            return false;
-        }
-        if (policyId == null) {
-            if (other.policyId != null) {
-                return false;
-            }
-        } else if (!policyId.equals(other.policyId)) {
-            return false;
-        }
-        if (resDefId == null) {
-            return other.resDefId == null;
-        } else {
-            return resDefId.equals(other.resDefId);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(isExcludes, other.isExcludes) &&
+                Objects.equals(isRecursive, other.isRecursive) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(resDefId, other.resDefId);
     }
 
     /*

@@ -29,6 +29,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -81,33 +82,15 @@ public class XXPolicyLabel extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXPolicyLabel other = (XXPolicyLabel) obj;
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (policyLabel == null) {
-            return other.policyLabel == null;
-        } else {
-            return policyLabel.equals(other.policyLabel);
-        }
+
+        return Objects.equals(id, other.id) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(policyLabel, other.policyLabel);
     }
 
     @Override

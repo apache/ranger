@@ -34,11 +34,12 @@ import java.util.Objects;
 @Table(name = "x_security_zone_ref_tag_srvc")
 public class XXSecurityZoneRefTagService extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     @Id
     @SequenceGenerator(name = "x_sec_zone_ref_tag_srvc_SEQ", sequenceName = "x_sec_zone_ref_tag_srvc_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_tag_srvc_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     @Column(name = "zone_id")
     protected Long zoneId;
@@ -68,15 +69,13 @@ public class XXSecurityZoneRefTagService extends XXDBBase implements java.io.Ser
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
         XXSecurityZoneRefTagService other = (XXSecurityZoneRefTagService) obj;
 
-        return super.equals(obj) && Objects.equals(id, other.id) && Objects.equals(zoneId, other.zoneId) && Objects.equals(tagServiceId, other.tagServiceId) && Objects.equals(tagServiceName, other.tagServiceName);
+        return Objects.equals(id, other.id) && Objects.equals(zoneId, other.zoneId) && Objects.equals(tagServiceId, other.tagServiceId) && Objects.equals(tagServiceName, other.tagServiceName);
     }
 
     @Override

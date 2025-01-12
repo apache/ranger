@@ -34,6 +34,7 @@ import java.util.Objects;
 @Table(name = "x_policy_ref_datamask_type")
 public class XXPolicyRefDataMaskType extends XXDBBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyRefDataMaskType
      * <ul>
@@ -43,7 +44,7 @@ public class XXPolicyRefDataMaskType extends XXDBBase implements java.io.Seriali
     @SequenceGenerator(name = "x_policy_ref_datamask_type_SEQ", sequenceName = "x_policy_ref_datamask_type_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_datamask_type_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     /**
      * policyId of the XXPolicyRefDataMaskType
@@ -102,9 +103,7 @@ public class XXPolicyRefDataMaskType extends XXDBBase implements java.io.Seriali
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 

@@ -33,11 +33,12 @@ import java.util.Objects;
 @Table(name = "x_role")
 public class XXRole extends XXRoleBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     @Id
     @SequenceGenerator(name = "x_role_SEQ", sequenceName = "x_role_SEQ", initialValue = 1, allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_role_SEQ")
     @Column(name = "id")
-    protected            Long id;
+    protected Long id;
 
     @Override
     public int hashCode() {
@@ -48,11 +49,7 @@ public class XXRole extends XXRoleBase implements java.io.Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 

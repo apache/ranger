@@ -33,6 +33,8 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Table(name = "x_audit_map")
 public class XXAuditMap extends XXDBBase implements java.io.Serializable {
@@ -43,6 +45,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_AUDIT_MAP_SEQ")
     @Column(name = "ID")
     protected Long id;
+
     /**
      * Id of the resource
      * <ul>
@@ -50,6 +53,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "RES_ID")
     protected Long resourceId;
+
     /**
      * Id of the group
      * <ul>
@@ -57,6 +61,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "GROUP_ID")
     protected Long groupId;
+
     /**
      * Id of the user
      * <ul>
@@ -64,6 +69,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      */
     @Column(name = "USER_ID")
     protected Long userId;
+
     /**
      * Type of audit
      * <ul>
@@ -71,7 +77,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      * </ul>
      */
     @Column(name = "AUDIT_TYPE", nullable = false)
-    protected int  auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
+    protected int auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
 
     /**
      * Default constructor. This will set all the attributes to default value.
@@ -84,6 +90,7 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
         if ("auditType".equals(fieldName)) {
             return "CommonEnums.XAAuditType";
         }
+
         //Later TODO
         //return super.getEnumName(fieldName);
         return null;
@@ -116,20 +123,18 @@ public class XXAuditMap extends XXDBBase implements java.io.Serializable {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
             return false;
         }
+
         XXAuditMap other = (XXAuditMap) obj;
-        if ((this.resourceId == null && other.resourceId != null) || (this.resourceId != null && !this.resourceId.equals(other.resourceId))) {
-            return false;
-        }
-        if ((this.groupId == null && other.groupId != null) || (this.groupId != null && !this.groupId.equals(other.groupId))) {
-            return false;
-        }
-        if ((this.userId == null && other.userId != null) || (this.userId != null && !this.userId.equals(other.userId))) {
-            return false;
-        }
-        return this.auditType == other.auditType;
+
+        return Objects.equals(resourceId, other.resourceId) &&
+                Objects.equals(groupId, other.groupId) &&
+                Objects.equals(userId, other.userId) &&
+                Objects.equals(auditType, other.auditType);
     }
 
     /**

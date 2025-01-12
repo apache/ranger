@@ -48,7 +48,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
     @Id
     @SequenceGenerator(name = "X_SERVICE_VERSION_INFO_SEQ", sequenceName = "X_SERVICE_VERSION_INFO_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_VERSION_INFO_SEQ")
-
     @Column(name = "id")
     protected Long id;
 
@@ -124,8 +123,7 @@ public class XXServiceVersionInfo implements java.io.Serializable {
         } else {
             XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
 
-            ret = super.equals(obj) &&
-                    Objects.equals(id, other.id) &&
+            ret = Objects.equals(id, other.id) &&
                     Objects.equals(version, other.version) &&
                     Objects.equals(serviceId, other.serviceId) &&
                     Objects.equals(policyVersion, other.policyVersion) &&

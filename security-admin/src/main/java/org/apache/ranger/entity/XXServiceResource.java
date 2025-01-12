@@ -32,6 +32,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
@@ -175,17 +176,7 @@ public class XXServiceResource extends XXDBBase implements Serializable {
      */
     @Override
     public int hashCode() {
-        final int prime  = 31;
-        int       result = 1;
-        result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((guid == null) ? 0 : guid.hashCode());
-        result = prime * result + ((version == null) ? 0 : version.hashCode());
-        result = prime * result + ((isEnabled == null) ? 0 : isEnabled.hashCode());
-        result = prime * result + ((resourceSignature == null) ? 0 : resourceSignature.hashCode());
-        result = prime * result + ((serviceId == null) ? 0 : serviceId.hashCode());
-        result = prime * result + ((serviceResourceElements == null) ? 0 : serviceResourceElements.hashCode());
-        result = prime * result + ((tags == null) ? 0 : tags.hashCode());
-        return result;
+        return Objects.hash(super.hashCode(), id, guid, version, isEnabled, resourceSignature, serviceId, serviceResourceElements, tags);
     }
 
     /*
@@ -197,68 +188,20 @@ public class XXServiceResource extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         XXServiceResource other = (XXServiceResource) obj;
-        if (resourceSignature == null) {
-            if (other.resourceSignature != null) {
-                return false;
-            }
-        } else if (!resourceSignature.equals(other.resourceSignature)) {
-            return false;
-        }
-        if (guid == null) {
-            if (other.guid != null) {
-                return false;
-            }
-        } else if (!guid.equals(other.guid)) {
-            return false;
-        }
-        if (id == null) {
-            if (other.id != null) {
-                return false;
-            }
-        } else if (!id.equals(other.id)) {
-            return false;
-        }
-        if (isEnabled == null) {
-            if (other.isEnabled != null) {
-                return false;
-            }
-        } else if (!isEnabled.equals(other.isEnabled)) {
-            return false;
-        }
-        if (serviceId == null) {
-            if (other.serviceId != null) {
-                return false;
-            }
-        } else if (!serviceId.equals(other.serviceId)) {
-            return false;
-        }
-        if (version == null) {
-            if (other.version != null) {
-                return false;
-            }
-        } else if (!version.equals(other.version)) {
-            return false;
-        }
-        if (serviceResourceElements == null) {
-            if (other.serviceResourceElements != null) {
-                return false;
-            }
-        } else if (!serviceResourceElements.equals(other.serviceResourceElements)) {
-            return false;
-        }
-        if (tags == null) {
-            return other.tags == null;
-        } else {
-            return tags.equals(other.tags);
-        }
+
+        return Objects.equals(resourceSignature, other.resourceSignature) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(isEnabled, other.isEnabled) &&
+                Objects.equals(serviceId, other.serviceId) &&
+                Objects.equals(version, other.version) &&
+                Objects.equals(serviceResourceElements, other.serviceResourceElements) &&
+                Objects.equals(tags, other.tags);
     }
 
     /*
