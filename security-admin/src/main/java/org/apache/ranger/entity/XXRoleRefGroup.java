@@ -18,9 +18,6 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,23 +27,22 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The persistent class for the x_role_ref_group database table.
- *
  */
 @Entity
 @Cacheable
-@Table(name="x_role_ref_group")
+@Table(name = "x_role_ref_group")
 public class XXRoleRefGroup extends XXDBBase implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     /**
      * id of the XXRoleRefGroup
      * <ul>
      * </ul>
-     *
      */
     @Id
     @SequenceGenerator(name = "x_role_ref_group_SEQ", sequenceName = "x_role_ref_group_SEQ", allocationSize = 1)
@@ -58,7 +54,6 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
      * roleId of the XXRoleRefGroup
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "role_id")
     protected Long roleId;
@@ -67,7 +62,6 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
      * groupId of the XXRoleRefGroup
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "group_id")
     protected Long groupId;
@@ -76,7 +70,6 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
      * groupName of the XXRoleRefGroup
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "group_name")
     protected String groupName;
@@ -85,21 +78,9 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
      * groupType of the XXRoleRefGroup
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "priv_Type")
     protected Integer groupType;
-
-	/**
-     * This method sets the value to the member attribute <b> id</b> . You
-     * cannot set null to the attribute.
-     *
-     * @param id
-     *            Value to set member attribute <b> id</b>
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     /**
      * Returns the value for the member attribute <b>id</b>
@@ -111,83 +92,14 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
     }
 
     /**
-     * This method sets the value to the member attribute <b> roleId</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param roleId
-     *            Value to set member attribute <b> roleId</b>
-     */
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>roleId</b>
-     *
-     * @return Long - value of member attribute <b>roleId</b> .
-     */
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> groupId</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param groupId
-     *            Value to set member attribute <b> groupId</b>
-     */
-    public void setGroupId(Long groupId) {
-        this.groupId = groupId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>groupId</b>
-     *
-     * @return Long - value of member attribute <b>groupId</b> .
-     */
-    public Long getGroupId() {
-        return this.groupId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> groupName</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param groupName
-     *            Value to set member attribute <b> groupName</b>
-     */
-    public void setGroupName(String groupName) {
-        this.groupName = groupName;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>groupName</b>
-     *
-     */
-    public String getGroupName() {
-        return groupName;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>groupType</b>
-     *
-     * @return groupType - value of member attribute <b>groupType</b> .
-     */
-    public Integer getGroupType() {
-		return groupType;
-	}
-
-    /**
-     * This method sets the value to the member attribute <b> groupType</b> . You
+     * This method sets the value to the member attribute <b> id</b> . You
      * cannot set null to the attribute.
      *
-     * @param groupType
-     *            Value to set member attribute <b> groupType</b>
+     * @param id Value to set member attribute <b> id</b>
      */
-	public void setGroupType(Integer groupType) {
-		this.groupType = groupType;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public int hashCode() {
@@ -203,16 +115,13 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
         XXRoleRefGroup other = (XXRoleRefGroup) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
+        return Objects.equals(id, other.id) &&
                 Objects.equals(roleId, other.roleId) &&
                 Objects.equals(groupId, other.groupId) &&
                 Objects.equals(groupName, other.groupName) &&
@@ -226,7 +135,80 @@ public class XXRoleRefGroup extends XXDBBase implements Serializable {
      */
     @Override
     public String toString() {
-        return "XXRoleRefGroup [" + super.toString() + " id=" + id + ", roleId=" + roleId +", groupId=" + groupId 
-                + ", groupName=" + groupName + ", groupType=" + groupType + "]";
+        return "XXRoleRefGroup [" + super.toString() + " id=" + id + ", roleId=" + roleId + ", groupId=" + groupId + ", groupName=" + groupName + ", groupType=" + groupType + "]";
+    }
+
+    /**
+     * Returns the value for the member attribute <b>roleId</b>
+     *
+     * @return Long - value of member attribute <b>roleId</b> .
+     */
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> roleId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param roleId Value to set member attribute <b> roleId</b>
+     */
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>groupId</b>
+     *
+     * @return Long - value of member attribute <b>groupId</b> .
+     */
+    public Long getGroupId() {
+        return this.groupId;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> groupId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param groupId Value to set member attribute <b> groupId</b>
+     */
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>groupName</b>
+     */
+    public String getGroupName() {
+        return groupName;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> groupName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param groupName Value to set member attribute <b> groupName</b>
+     */
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>groupType</b>
+     *
+     * @return groupType - value of member attribute <b>groupType</b> .
+     */
+    public Integer getGroupType() {
+        return groupType;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> groupType</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param groupType Value to set member attribute <b> groupType</b>
+     */
+    public void setGroupType(Integer groupType) {
+        this.groupType = groupType;
     }
 }

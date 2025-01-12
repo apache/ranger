@@ -18,9 +18,6 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,23 +27,22 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The persistent class for the x_role_ref_user database table.
- *
  */
 @Entity
 @Cacheable
-@Table(name="x_role_ref_user")
+@Table(name = "x_role_ref_user")
 public class XXRoleRefUser extends XXDBBase implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     /**
      * id of the XXRoleRefUser
      * <ul>
      * </ul>
-     *
      */
     @Id
     @SequenceGenerator(name = "x_role_ref_user_SEQ", sequenceName = "x_role_ref_user_SEQ", allocationSize = 1)
@@ -58,7 +54,6 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
      * roleId of the XXRoleRefUser
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "role_id")
     protected Long roleId;
@@ -67,7 +62,6 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
      * userId of the XXRoleRefUser
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "user_id")
     protected Long userId;
@@ -76,7 +70,6 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
      * userName of the XXRoleRefUser
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "user_name")
     protected String userName;
@@ -85,21 +78,9 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
      * userType of the XXRoleRefGroup
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "priv_type")
     protected Integer userType;
-
-    /**
-     * This method sets the value to the member attribute <b> id</b> . You
-     * cannot set null to the attribute.
-     *
-     * @param id
-     *            Value to set member attribute <b> id</b>
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     /**
      * Returns the value for the member attribute <b>id</b>
@@ -111,83 +92,14 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
     }
 
     /**
-     * This method sets the value to the member attribute <b> roleId</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param roleId
-     *            Value to set member attribute <b> roleId</b>
-     */
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>roleId</b>
-     *
-     * @return Long - value of member attribute <b>roleId</b> .
-     */
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> userId</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param userId
-     *            Value to set member attribute <b> userId</b>
-     */
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>userId</b>
-     *
-     * @return Long - value of member attribute <b>userId</b> .
-     */
-    public Long getUserId() {
-        return this.userId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> userName</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param userName
-     *            Value to set member attribute <b> userName</b>
-     */
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>userName</b>
-     *
-     */
-    public String getUserName() {
-        return userName;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>userType</b>
-     *
-     * @return userType - value of member attribute <b>userType</b> .
-     */
-    public Integer getUserType() {
-		return userType;
-	}
-
-    /**
-     * This method sets the value to the member attribute <b> userType</b> . You
+     * This method sets the value to the member attribute <b> id</b> . You
      * cannot set null to the attribute.
      *
-     * @param userType
-     *            Value to set member attribute <b> userType</b>
+     * @param id Value to set member attribute <b> id</b>
      */
-	public void setUserType(Integer userType) {
-		this.userType = userType;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public int hashCode() {
@@ -203,16 +115,13 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
         XXRoleRefUser other = (XXRoleRefUser) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
+        return Objects.equals(id, other.id) &&
                 Objects.equals(roleId, other.roleId) &&
                 Objects.equals(userId, other.userId) &&
                 Objects.equals(userName, other.userName) &&
@@ -226,7 +135,80 @@ public class XXRoleRefUser extends XXDBBase implements Serializable {
      */
     @Override
     public String toString() {
-        return "XXRoleRefUser [" + super.toString() + " id=" + id + ", roleId=" + roleId +", userId=" + userId 
-                + ", userName=" + userName  + ", userType=" + userType + "]";
+        return "XXRoleRefUser [" + super.toString() + " id=" + id + ", roleId=" + roleId + ", userId=" + userId + ", userName=" + userName + ", userType=" + userType + "]";
+    }
+
+    /**
+     * Returns the value for the member attribute <b>roleId</b>
+     *
+     * @return Long - value of member attribute <b>roleId</b> .
+     */
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> roleId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param roleId Value to set member attribute <b> roleId</b>
+     */
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>userId</b>
+     *
+     * @return Long - value of member attribute <b>userId</b> .
+     */
+    public Long getUserId() {
+        return this.userId;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> userId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param userId Value to set member attribute <b> userId</b>
+     */
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>userName</b>
+     */
+    public String getUserName() {
+        return userName;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> userName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param userName Value to set member attribute <b> userName</b>
+     */
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>userType</b>
+     *
+     * @return userType - value of member attribute <b>userType</b> .
+     */
+    public Integer getUserType() {
+        return userType;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> userType</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param userType Value to set member attribute <b> userType</b>
+     */
+    public void setUserType(Integer userType) {
+        this.userType = userType;
     }
 }

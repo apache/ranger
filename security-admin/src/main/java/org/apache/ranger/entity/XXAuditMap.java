@@ -17,12 +17,13 @@
  * under the License.
  */
 
- package org.apache.ranger.entity;
+package org.apache.ranger.entity;
 
 /**
  * Audi map
- *
  */
+
+import org.apache.ranger.common.AppConstants;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -32,198 +33,200 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.apache.ranger.common.AppConstants;
-
+import java.util.Objects;
 
 @Entity
-@Table(name="x_audit_map")
+@Table(name = "x_audit_map")
 public class XXAuditMap extends XXDBBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
+    @Id
+    @SequenceGenerator(name = "X_AUDIT_MAP_SEQ", sequenceName = "X_AUDIT_MAP_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_AUDIT_MAP_SEQ")
+    @Column(name = "ID")
+    protected Long id;
 
-	@Id
-	@SequenceGenerator(name="X_AUDIT_MAP_SEQ",sequenceName="X_AUDIT_MAP_SEQ",allocationSize=1)
-	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_AUDIT_MAP_SEQ")
-	@Column(name="ID")
-	protected Long id;
-	@Override
-	public void setId(Long id) {
-		this.id=id;
-	}
+    /**
+     * Id of the resource
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "RES_ID")
+    protected Long resourceId;
 
-	@Override
-	public Long getId() {
-		return id;
-	}
+    /**
+     * Id of the group
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "GROUP_ID")
+    protected Long groupId;
 
-	/**
-	 * Id of the resource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name="RES_ID"   )
-	protected Long resourceId;
+    /**
+     * Id of the user
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "USER_ID")
+    protected Long userId;
 
+    /**
+     * Type of audit
+     * <ul>
+     * <li>This attribute is of type enum CommonEnums::XAAuditType
+     * </ul>
+     */
+    @Column(name = "AUDIT_TYPE", nullable = false)
+    protected int auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
 
-	/**
-	 * Id of the group
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name="GROUP_ID"   )
-	protected Long groupId;
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public XXAuditMap() {
+        auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
+    }
 
+    public static String getEnumName(String fieldName) {
+        if ("auditType".equals(fieldName)) {
+            return "CommonEnums.XAAuditType";
+        }
 
-	/**
-	 * Id of the user
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name="USER_ID"   )
-	protected Long userId;
+        //Later TODO
+        //return super.getEnumName(fieldName);
+        return null;
+    }
 
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_AUDIT_MAP;
+    }
 
-	/**
-	 * Type of audit
-	 * <ul>
-	 * <li>This attribute is of type enum CommonEnums::XAAuditType
-	 * </ul>
-	 *
-	 */
-	@Column(name="AUDIT_TYPE"  , nullable=false )
-	protected int auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
+    @Override
+    public Long getId() {
+        return id;
+    }
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public XXAuditMap ( ) {
-		auditType = AppConstants.XA_AUDIT_TYPE_UNKNOWN;
-	}
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	@Override
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_XA_AUDIT_MAP;
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>resourceId</b>.
-	 * You cannot set null to the attribute.
-	 * @param resourceId Value to set member attribute <b>resourceId</b>
-	 */
-	public void setResourceId( Long resourceId ) {
-		this.resourceId = resourceId;
-	}
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>resourceId</b>
-	 * @return Long - value of member attribute <b>resourceId</b>.
-	 */
-	public Long getResourceId( ) {
-		return this.resourceId;
-	}
+        XXAuditMap other = (XXAuditMap) obj;
 
+        return Objects.equals(resourceId, other.resourceId) &&
+                Objects.equals(groupId, other.groupId) &&
+                Objects.equals(userId, other.userId) &&
+                Objects.equals(auditType, other.auditType);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>groupId</b>.
-	 * You cannot set null to the attribute.
-	 * @param groupId Value to set member attribute <b>groupId</b>
-	 */
-	public void setGroupId( Long groupId ) {
-		this.groupId = groupId;
-	}
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = "XXAuditMap={";
+        str += super.toString();
+        str += "resourceId={" + resourceId + "} ";
+        str += "groupId={" + groupId + "} ";
+        str += "userId={" + userId + "} ";
+        str += "auditType={" + auditType + "} ";
+        str += "}";
+        return str;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>groupId</b>
-	 * @return Long - value of member attribute <b>groupId</b>.
-	 */
-	public Long getGroupId( ) {
-		return this.groupId;
-	}
+    /**
+     * Returns the value for the member attribute <b>resourceId</b>
+     *
+     * @return Long - value of member attribute <b>resourceId</b>.
+     */
+    public Long getResourceId() {
+        return this.resourceId;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b>resourceId</b>.
+     * You cannot set null to the attribute.
+     *
+     * @param resourceId Value to set member attribute <b>resourceId</b>
+     */
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>userId</b>.
-	 * You cannot set null to the attribute.
-	 * @param userId Value to set member attribute <b>userId</b>
-	 */
-	public void setUserId( Long userId ) {
-		this.userId = userId;
-	}
+    /**
+     * Returns the value for the member attribute <b>groupId</b>
+     *
+     * @return Long - value of member attribute <b>groupId</b>.
+     */
+    public Long getGroupId() {
+        return this.groupId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>userId</b>
-	 * @return Long - value of member attribute <b>userId</b>.
-	 */
-	public Long getUserId( ) {
-		return this.userId;
-	}
+    /**
+     * This method sets the value to the member attribute <b>groupId</b>.
+     * You cannot set null to the attribute.
+     *
+     * @param groupId Value to set member attribute <b>groupId</b>
+     */
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
 
+    /**
+     * Returns the value for the member attribute <b>userId</b>
+     *
+     * @return Long - value of member attribute <b>userId</b>.
+     */
+    public Long getUserId() {
+        return this.userId;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>auditType</b>.
-	 * You cannot set null to the attribute.
-	 * @param auditType Value to set member attribute <b>auditType</b>
-	 */
-	public void setAuditType( int auditType ) {
-		this.auditType = auditType;
-	}
+    /**
+     * This method sets the value to the member attribute <b>userId</b>.
+     * You cannot set null to the attribute.
+     *
+     * @param userId Value to set member attribute <b>userId</b>
+     */
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>auditType</b>
-	 * @return int - value of member attribute <b>auditType</b>.
-	 */
-	public int getAuditType( ) {
-		return this.auditType;
-	}
+    /**
+     * Returns the value for the member attribute <b>auditType</b>
+     *
+     * @return int - value of member attribute <b>auditType</b>.
+     */
+    public int getAuditType() {
+        return this.auditType;
+    }
 
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	@Override
-	public String toString( ) {
-		String str = "XXAuditMap={";
-		str += super.toString();
-		str += "resourceId={" + resourceId + "} ";
-		str += "groupId={" + groupId + "} ";
-		str += "userId={" + userId + "} ";
-		str += "auditType={" + auditType + "} ";
-		str += "}";
-		return str;
-	}
-
-	/**
-	 * Checks for all attributes except referenced db objects
-	 * @return true if all attributes match
-	*/
-	@Override
-	public boolean equals( Object obj) {
-		if ( !super.equals(obj) ) {
-			return false;
-		}
-		XXAuditMap other = (XXAuditMap) obj;
-        	if ((this.resourceId == null && other.resourceId != null) || (this.resourceId != null && !this.resourceId.equals(other.resourceId))) {
-            		return false;
-        	}
-        	if ((this.groupId == null && other.groupId != null) || (this.groupId != null && !this.groupId.equals(other.groupId))) {
-            		return false;
-        	}
-        	if ((this.userId == null && other.userId != null) || (this.userId != null && !this.userId.equals(other.userId))) {
-            		return false;
-        	}
-		if( this.auditType != other.auditType ) return false;
-		return true;
-	}
-	public static String getEnumName(String fieldName ) {
-		if( "auditType".equals(fieldName) ) {
-			return "CommonEnums.XAAuditType";
-		}
-		//Later TODO
-		//return super.getEnumName(fieldName);
-		return null;
-	}
-
+    /**
+     * This method sets the value to the member attribute <b>auditType</b>.
+     * You cannot set null to the attribute.
+     *
+     * @param auditType Value to set member attribute <b>auditType</b>
+     */
+    public void setAuditType(int auditType) {
+        this.auditType = auditType;
+    }
 }

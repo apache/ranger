@@ -18,173 +18,166 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_datamask_type")
-public class XXPolicyRefDataMaskType extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyRefDataMaskType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_ref_datamask_type_SEQ", sequenceName = "x_policy_ref_datamask_type_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_datamask_type_SEQ")
-	@Column(name = "id")
-	protected Long id;
+public class XXPolicyRefDataMaskType extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * policyId of the XXPolicyRefDataMaskType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_id")
-	protected Long policyId;
+    /**
+     * id of the XXPolicyRefDataMaskType
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_ref_datamask_type_SEQ", sequenceName = "x_policy_ref_datamask_type_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_datamask_type_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * DatamaskDefId of the XXPolicyRefDataMaskType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "datamask_def_id")
-	protected Long dataMaskDefId;
+    /**
+     * policyId of the XXPolicyRefDataMaskType
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_id")
+    protected Long policyId;
 
-	/**
-	 * dataMaskTypeName of the XXPolicyRefDataMaskType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "datamask_type_name")
-	protected String dataMaskTypeName;
+    /**
+     * DatamaskDefId of the XXPolicyRefDataMaskType
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "datamask_def_id")
+    protected Long dataMaskDefId;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * dataMaskTypeName of the XXPolicyRefDataMaskType
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "datamask_type_name")
+    protected String dataMaskTypeName;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyId
-	 *            Value to set member attribute <b> policyId</b>
-	 */
-	public void setPolicyId(Long policyId) {
-		this.policyId = policyId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, policyId, dataMaskDefId, dataMaskTypeName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyId</b> .
-	 */
-	public Long getPolicyId() {
-		return this.policyId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * This method sets the value to the member attribute <b> dataMaskDefId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param dataMaskDefId
-	 *            Value to set member attribute <b> dataMaskDefId</b>
-	 */
-	public void setDataMaskDefId(Long dataMaskDefId) {
-		this.dataMaskDefId = dataMaskDefId;
-	}
+        XXPolicyRefDataMaskType other = (XXPolicyRefDataMaskType) obj;
 
-	/**
-	 * Returns the value for the member attribute <b>dataMaskDefId</b>
-	 *
-	 * @return Date - value of member attribute <b>dataMaskDefId</b> .
-	 */
-	public Long getDataMaskDefId() {
-		return dataMaskDefId;
-	}
+        return super.equals(obj) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(dataMaskDefId, other.dataMaskDefId) &&
+                Objects.equals(dataMaskTypeName, other.dataMaskTypeName);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> dataMaskTypeName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param dataMaskTypeName
-	 *            Value to set member attribute <b> dataMaskTypeName</b>
-	 */
-	public void setDataMaskTypeName(String dataMaskTypeName) {
-		this.dataMaskTypeName = dataMaskTypeName;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyRefDataMaskType [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", dataMaskDefId=" + dataMaskDefId + ", dataMaskTypeName=" + dataMaskTypeName + "]";
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>dataMaskTypeName</b>
-	 *
-	 * @return Date - value of member attribute <b>dataMaskTypeName</b> .
-	 */
-	public String getDataMaskTypeName() {
-		return dataMaskTypeName;
-	}
+    /**
+     * Returns the value for the member attribute <b>policyId</b>
+     *
+     * @return Date - value of member attribute <b>policyId</b> .
+     */
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, policyId, dataMaskDefId, dataMaskTypeName);
-	}
+    /**
+     * This method sets the value to the member attribute <b> policyId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyId Value to set member attribute <b> policyId</b>
+     */
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * Returns the value for the member attribute <b>dataMaskDefId</b>
+     *
+     * @return Date - value of member attribute <b>dataMaskDefId</b> .
+     */
+    public Long getDataMaskDefId() {
+        return dataMaskDefId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * This method sets the value to the member attribute <b> dataMaskDefId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param dataMaskDefId Value to set member attribute <b> dataMaskDefId</b>
+     */
+    public void setDataMaskDefId(Long dataMaskDefId) {
+        this.dataMaskDefId = dataMaskDefId;
+    }
 
-		XXPolicyRefDataMaskType other = (XXPolicyRefDataMaskType) obj;
+    /**
+     * Returns the value for the member attribute <b>dataMaskTypeName</b>
+     *
+     * @return Date - value of member attribute <b>dataMaskTypeName</b> .
+     */
+    public String getDataMaskTypeName() {
+        return dataMaskTypeName;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(policyId, other.policyId) &&
-			   Objects.equals(dataMaskDefId, other.dataMaskDefId) &&
-			   Objects.equals(dataMaskTypeName, other.dataMaskTypeName);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyRefDataMaskType [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", dataMaskDefId="
-				+ dataMaskDefId + ", dataMaskTypeName=" + dataMaskTypeName + "]";
-	}
-
-
-
+    /**
+     * This method sets the value to the member attribute <b> dataMaskTypeName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param dataMaskTypeName Value to set member attribute <b> dataMaskTypeName</b>
+     */
+    public void setDataMaskTypeName(String dataMaskTypeName) {
+        this.dataMaskTypeName = dataMaskTypeName;
+    }
 }
