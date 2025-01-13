@@ -148,7 +148,7 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
     private void updateTagVersionAndTagUpdateTime(List<XXServiceVersionInfo> serviceVersionInfos, Long resourceId, Long tagId) {
         if (resourceId != null || tagId != null) {
             if (CollectionUtils.isNotEmpty(serviceVersionInfos)) {
-                final ServiceDBStore.VersionType versionType = ServiceDBStore.VersionType.TAG_VERSION;
+                final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
                 final ServiceTags.TagsChangeType  tagChangeType;
 
                 if (tagId == null) {

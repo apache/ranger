@@ -2008,7 +2008,7 @@ public class TestServiceDBStore {
         vXUserList.setTotalCount(4L);
         Mockito.when(xUserMgr.searchXGroups(Mockito.any(SearchCriteria.class))).thenReturn(vxGroupList);
         Mockito.when(xUserMgr.searchXUsers(Mockito.any(SearchCriteria.class))).thenReturn(vXUserList);
-        serviceDBStore.getMetricByType(ServiceDBStore.MetricType.getMetricTypeByName(type));
+        serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
     }
 
     @Test
@@ -2023,7 +2023,7 @@ public class TestServiceDBStore {
         svcDefList.setTotalCount(10L);
         Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
 
-        serviceDBStore.getMetricByType(ServiceDBStore.MetricType.getMetricTypeByName(type));
+        serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
     }
 
     @Test
@@ -2032,7 +2032,7 @@ public class TestServiceDBStore {
         RangerServiceList svcList = new RangerServiceList();
         svcList.setTotalCount(10L);
         Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
-        serviceDBStore.getMetricByType(ServiceDBStore.MetricType.getMetricTypeByName(type));
+        serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
     }
 
     @Test
@@ -2040,14 +2040,14 @@ public class TestServiceDBStore {
         String            type    = "policies";
         RangerServiceList svcList = new RangerServiceList();
         svcList.setTotalCount(10L);
-        serviceDBStore.getMetricByType(ServiceDBStore.MetricType.getMetricTypeByName(type));
+        serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
     }
 
     @Test
     public void test45getMetricByTypeDatabase() throws Exception {
         String type = "database";
         Mockito.when(bizUtil.getDBVersion()).thenReturn("MYSQL");
-        serviceDBStore.getMetricByType(ServiceDBStore.MetricType.getMetricTypeByName(type));
+        serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
     }
 
     @Test
@@ -2056,7 +2056,7 @@ public class TestServiceDBStore {
         RangerServiceDefList svcDefList = new RangerServiceDefList();
         svcDefList.setTotalCount(10L);
         Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-        serviceDBStore.getMetricByType(ServiceDBStore.MetricType.getMetricTypeByName(type));
+        serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
     }
 
     @Test
@@ -2065,7 +2065,7 @@ public class TestServiceDBStore {
         RangerServiceDefList svcDefList = new RangerServiceDefList();
         svcDefList.setTotalCount(10L);
         Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-        serviceDBStore.getMetricByType(ServiceDBStore.MetricType.getMetricTypeByName(type));
+        serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
     }
 
     @Test

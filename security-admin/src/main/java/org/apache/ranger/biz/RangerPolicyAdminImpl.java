@@ -66,18 +66,19 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private static final Logger LOG                           = LoggerFactory.getLogger(RangerPolicyAdminImpl.class);
     private static final Logger PERF_POLICYENGINE_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policyengine.request");
 
-    private static final Map<String, Object>          wildcardEvalContext = new HashMap<String, Object>() {
+    private static final Map<String, Object> wildcardEvalContext = new HashMap<String, Object>() {
         @Override
         public Object get(Object key) {
             return RangerAbstractResourceMatcher.WILDCARD_ASTERISK;
         }
     };
-    private final        PolicyEngine                 policyEngine;
-    private final        RangerAccessRequestProcessor requestProcessor;
-    private              ServiceDBStore               serviceDBStore;
+
+    private final PolicyEngine                 policyEngine;
+    private final RangerAccessRequestProcessor requestProcessor;
+    private       ServiceDBStore               serviceDBStore;
 
     RangerPolicyAdminImpl(ServicePolicies servicePolicies, RangerPluginContext pluginContext, RangerRoles roles) {
-        this.policyEngine     = new PolicyEngine(servicePolicies, pluginContext, roles, ServiceDBStore.supportsInPlacePolicyUpdates);
+        this.policyEngine     = new PolicyEngine(servicePolicies, pluginContext, roles, ServiceDBStore.SUPPORTS_IN_PLACE_POLICY_UPDATES);
         this.requestProcessor = new RangerDefaultRequestProcessor(policyEngine);
     }
 
@@ -116,25 +117,30 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         }
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
 
             final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForZone(zoneName);
 
             if (matchedRepository != null) {
-                Set<String> roles             = getRolesFromUserAndGroups(user, userGroups);
-                Set<String> requestedAccesses = new HashSet<>(accessTypes);
+                Set<String>             roles             = getRolesFromUserAndGroups(user, userGroups);
+                Set<String>             requestedAccesses = new HashSet<>(accessTypes);
+                RangerAccessRequestImpl request           = new RangerAccessRequestImpl();
 
-                RangerAccessRequestImpl request = new RangerAccessRequestImpl();
                 request.setResource(resource);
 
                 for (RangerPolicyEvaluator evaluator : matchedRepository.getLikelyMatchPolicyEvaluators(request, RangerPolicy.POLICY_TYPE_ACCESS)) {
                     Set<String> allowedAccesses = evaluator.getAllowedAccesses(resource, user, userGroups, roles, requestedAccesses);
+
                     if (CollectionUtils.isNotEmpty(allowedAccesses)) {
                         requestedAccesses.removeAll(allowedAccesses);
+
                         if (CollectionUtils.isEmpty(requestedAccesses)) {
                             LOG.debug("Access granted by policy:[{}]", evaluator.getPolicy());
+
                             ret = true;
                             break;
                         }
@@ -142,6 +148,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                 }
             }
         }
+
         RangerPerfTracer.log(perf);
 
         LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed({}, {}, {}, {}, {}): {}", resource, zoneName, user, userGroups, accessTypes, ret);
@@ -166,8 +173,10 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         List<RangerPolicy> ret = null;
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
 
             RangerPolicyRepository policyRepository = policyEngine.getRepositoryForZone(zoneName);
@@ -197,8 +206,10 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         List<RangerPolicy> ret = null;
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
 
             RangerPolicyRepository policyRepository = policyEngine.getRepositoryForMatchedZone(policy);
@@ -224,12 +235,16 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     @Override
     public List<RangerPolicy> getMatchingPolicies(RangerAccessResource resource) {
         LOG.debug("==> RangerPolicyAdminImpl.getMatchingPolicies({})", resource);
+
         List<RangerPolicy> ret;
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
+
             ret = getMatchingPolicies(resource, RangerPolicyEngine.ANY_ACCESS);
         }
 
@@ -243,32 +258,44 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         long ret;
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
+
             ret = policyEngine.getPolicyVersion();
         }
+
         return ret;
     }
 
     @Override
     public long getRoleVersion() {
         long ret;
+
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
+
             ret = policyEngine.getRoleVersion();
         }
+
         return ret;
     }
 
     @Override
     public void setRoles(RangerRoles roles) {
         try (RangerReadWriteLock.RangerLock writeLock = policyEngine.getWriteLock()) {
-            if (writeLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", writeLock);
+            if (LOG.isDebugEnabled()) {
+                if (writeLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", writeLock);
+                }
             }
+
             policyEngine.setRoles(roles);
         }
     }
@@ -278,35 +305,49 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         String ret;
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
+
             ret = policyEngine.getServiceName();
         }
+
         return ret;
     }
 
     @Override
     public RangerServiceDef getServiceDef() {
         RangerServiceDef ret;
+
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
+
             ret = policyEngine.getServiceDef();
         }
+
         return ret;
     }
 
     @Override
     public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
         Set<String> ret;
+
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
+
             ret = policyEngine.getPluginContext().getAuthContext().getRolesForUserAndGroups(user, groups);
         }
+
         return ret;
     }
 
@@ -314,11 +355,13 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     public Collection<String> getZoneNamesForResource(Map<String, ?> resource) {
         LOG.debug("==> RangerPolicyAdminImpl.getSecurityZonesForResource({})", resource);
 
-        Collection<String> ret = null;
+        Collection<String> ret;
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
 
             ret = policyEngine.getMatchedZonesForResourceAndChildren(resource);
@@ -332,12 +375,16 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     @Override
     public String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
         LOG.debug("==> RangerPolicyAdminImpl.getUniquelyMatchedZoneName({})", grantRevokeRequest);
+
         String ret;
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
+
             ret = policyEngine.getUniquelyMatchedZoneName(grantRevokeRequest.getResource());
         }
 
@@ -363,13 +410,14 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             if (ret) {
                 LOG.debug("Access granted by policy:[{}]", evaluator.getPolicy());
+
                 break;
             }
         }
 
         RangerPerfTracer.log(perf);
 
-        LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowedByUnzonedPolicies({}, {}, {}, {}): ret", resources, user, userGroups, accessType, ret);
+        LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowedByUnzonedPolicies({}, {}, {}, {}): {}", resources, user, userGroups, accessType, ret);
 
         return ret;
     }
@@ -383,16 +431,15 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         // TODO: run through evaluator in tagPolicyRepository as well
         for (RangerPolicyEvaluator evaluator : policyEngine.getPolicyRepository().getPolicyEvaluators()) {
-            RangerPolicy policy = evaluator.getPolicy();
-
-            boolean isAccessAllowed = isAccessAllowedByUnzonedPolicies(policy.getResources(), policy.getAdditionalResources(), user, userGroups, accessType);
+            RangerPolicy policy          = evaluator.getPolicy();
+            boolean      isAccessAllowed = isAccessAllowedByUnzonedPolicies(policy.getResources(), policy.getAdditionalResources(), user, userGroups, accessType);
 
             if (isAccessAllowed) {
                 ret.add(policy);
             }
         }
 
-        LOG.debug("<== RangerPolicyAdminImpl.getAllowedByUnzonedPolicies({}, {}, {}): policyCount={} ", user, userGroups, accessType, ret.size());
+        LOG.debug("<== RangerPolicyAdminImpl.getAllowedByUnzonedPolicies({}, {}, {}): policyCount={}", user, userGroups, accessType, ret.size());
 
         return ret;
     }
@@ -405,7 +452,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, boolean isRead, Map<String, Object> evalContext) {
-        LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed({}, {}, {}, {}, {})", policy.getId(), user, userGroups, roles, isRead, evalContext);
+        LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed({}, {}, {}, {}, {}, {})", policy.getId(), user, userGroups, roles, isRead, evalContext);
 
         boolean          ret  = false;
         RangerPerfTracer perf = null;
@@ -415,8 +462,10 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         }
 
         try (RangerReadWriteLock.RangerLock readLock = policyEngine.getReadLock()) {
-            if (readLock.isLockingEnabled()) {
-                LOG.debug("Acquired lock - {}", readLock);
+            if (LOG.isDebugEnabled()) {
+                if (readLock.isLockingEnabled()) {
+                    LOG.debug("Acquired lock - {}", readLock);
+                }
             }
 
             final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForMatchedZone(policy);
@@ -424,10 +473,12 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             if (matchedRepository != null) {
                 if (isRead) {
                     Set<String> accessTypes = getAllAccessTypes(policy, getServiceDef());
+
                     ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, accessTypes, true, evalContext);
                 } else {
                     // Get old policy from policy-engine
                     RangerPolicy oldPolicy = null;
+
                     if (policy.getId() != null) {
                         try {
                             oldPolicy = serviceDBStore.getPolicy(policy.getId());
@@ -442,19 +493,24 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
                         if (StringUtils.equals(oldResourceSignature, newResourceSignature)) {
                             Set<String> modifiedAccessTypes = getAllModifiedAccessTypes(oldPolicy, policy, getServiceDef());
+
                             ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, modifiedAccessTypes, false, evalContext);
                         } else {
                             Set<String> removedAccessTypes = getAllAccessTypes(oldPolicy, getServiceDef());
                             // Ensure that current policy-engine (without current policy) allows old-policy to be modified
                             final boolean isOldPolicyChangeAllowed = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, oldPolicy, user, userGroups, roles, removedAccessTypes, false, evalContext);
+
                             if (isOldPolicyChangeAllowed) {
                                 Set<String> addedAccessTypes = getAllAccessTypes(policy, getServiceDef());
+
                                 ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, addedAccessTypes, false, evalContext);
                             }
                         }
                     } else {
-                        LOG.warn("Cannot get unmodified policy with id:[{}]. Checking if this", policy.getId());
+                        LOG.warn("Cannot get unmodified policy with id:[{}]. Checking if thi", policy.getId());
+
                         Set<String> addedAccessTypes = getAllAccessTypes(policy, getServiceDef());
+
                         ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, addedAccessTypes, false, evalContext);
                     }
                 }
@@ -463,7 +519,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         RangerPerfTracer.log(perf);
 
-        LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed({}, {}, {}, {}, {}) : {}", policy.getId(), user, userGroups, roles, isRead, evalContext, ret);
+        LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed({}, {}, {}, {}, {}, {}): {}", policy.getId(), user, userGroups, roles, isRead, evalContext, ret);
 
         return ret;
     }
@@ -475,7 +531,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     private boolean isDelegatedAdminAccessAllowedForPolicy(RangerPolicyRepository matchedRepository, RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Set<String> accessTypes, boolean isRead, Map<String, Object> evalContext) {
-        LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowedForPolicy({}, {}, {}, {}, {}, {}, {})", policy.getId(), user, userGroups, roles, accessTypes, isRead, evalContext);
+        LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowedForPolicy({}, {}, {}, {}, accessTypes{}, {}, {})", policy.getId(), user, userGroups, roles, accessTypes, isRead, evalContext);
 
         boolean ret = false;
 
@@ -486,9 +542,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             Set<String> allowedAccesses = getAllowedAccesses(matchedRepository, policy.getResources(), user, userGroups, roles, accessTypes, evalContext);
 
-            if (CollectionUtils.isEmpty(allowedAccesses)) {
-                ret = false;
-            } else {
+            if (CollectionUtils.isNotEmpty(allowedAccesses)) {
                 ret = isRead ? CollectionUtils.containsAny(allowedAccesses, accessTypes) : allowedAccesses.containsAll(accessTypes);
             }
 
@@ -523,7 +577,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             }
         }
 
-        LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowedForPolicy({}, {}, {}, {}, {}, {}, {}) : {}", policy.getId(), user, userGroups, roles, accessTypes, isRead, evalContext, ret);
+        LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowedForPolicy({}, {}, {}, {}, accessTypes{}, {}, {}): {}", policy.getId(), user, userGroups, roles, accessTypes, isRead, evalContext, ret);
 
         return ret;
     }
@@ -596,12 +650,14 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
                             if (useTagPoliciesFromDefaultZone) {
                                 if (StringUtils.isNotEmpty(policyZoneName)) {
-                                    LOG.debug("Tag policy [zone: {}] does not belong to default zone. Not evaluating this policy:[{}]", policyZoneName, evaluator.getPolicy());
+                                    LOG.debug("Tag policy [zone:{}] does not belong to default zone. Not evaluating this policy:[{}]", policyZoneName, evaluator.getPolicy());
+
                                     continue;
                                 }
                             } else {
                                 if (!StringUtils.equals(zoneName, policyZoneName)) {
                                     LOG.debug("Tag policy [zone:{}] does not belong to the zone:[{}] of the accessed resource. Not evaluating this policy:[{}]", policyZoneName, zoneName, evaluator.getPolicy());
+
                                     continue;
                                 }
                             }
@@ -609,7 +665,8 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                             for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
                                 RangerPolicyResourceMatcher matcher = resourceEvaluator.getPolicyResourceMatcher();
 
-                                if (matcher != null && (request.isAccessTypeAny() ? matcher.isMatch(tagResource, RangerPolicyResourceMatcher.MatchScope.ANY, null) : matcher.isMatch(tagResource, null))) {
+                                if (matcher != null &&
+                                        (request.isAccessTypeAny() ? matcher.isMatch(tagResource, RangerPolicyResourceMatcher.MatchScope.ANY, null) : matcher.isMatch(tagResource, null))) {
                                     ret.add(evaluator.getPolicy());
 
                                     break;
@@ -627,7 +684,8 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                     for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
                         RangerPolicyResourceMatcher matcher = resourceEvaluator.getPolicyResourceMatcher();
 
-                        if (matcher != null && (request.isAccessTypeAny() ? matcher.isMatch(request.getResource(), RangerPolicyResourceMatcher.MatchScope.ANY, null) : matcher.isMatch(request.getResource(), null))) {
+                        if (matcher != null &&
+                                (request.isAccessTypeAny() ? matcher.isMatch(request.getResource(), RangerPolicyResourceMatcher.MatchScope.ANY, null) : matcher.isMatch(request.getResource(), null))) {
                             ret.add(evaluator.getPolicy());
 
                             break;
@@ -661,10 +719,12 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                         for (String value : values) {
                             // RANGER-3082 - replace macros in value with ASTERISK
                             String modifiedValue = tokenReplacer.replaceTokens(value, evalContext);
+
                             modifiedValues.add(modifiedValue);
                         }
 
                         RangerPolicyResource modifiedPolicyResource = new RangerPolicyResource(modifiedValues, resourceValues.getIsExcludes(), resourceValues.getIsRecursive());
+
                         ret.put(resourceName, modifiedPolicyResource);
                     } else {
                         ret.put(resourceName, resourceValues);
@@ -689,7 +749,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         Map<String, Collection<String>> expandedAccesses = ServiceDefUtil.getExpandedImpliedGrants(serviceDef);
 
         if (MapUtils.isNotEmpty(expandedAccesses)) {
-            Integer policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
+            int policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
 
             if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
                 for (RangerPolicy.RangerPolicyItem item : policy.getPolicyItems()) {
@@ -697,16 +757,19 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
+
                 for (RangerPolicy.RangerPolicyItem item : policy.getDenyPolicyItems()) {
                     for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
+
                 for (RangerPolicy.RangerPolicyItem item : policy.getAllowExceptions()) {
                     for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
                     }
                 }
+
                 for (RangerPolicy.RangerPolicyItem item : policy.getDenyExceptions()) {
                     for (RangerPolicy.RangerPolicyItemAccess access : item.getAccesses()) {
                         ret.addAll(expandedAccesses.get(access.getType()));
@@ -726,12 +789,15 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                 }
             } else {
                 LOG.error("Unknown policy-type :[{}], returning empty access-type set", policyType);
+
                 isValid = false;
             }
+
             if (isValid && ret.isEmpty()) {
                 ret.add(RangerPolicyEngine.ADMIN_ACCESS);
             }
         }
+
         return ret;
     }
 
@@ -756,6 +822,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         if (ret.isEmpty()) {
             ret.add(RangerPolicyEngine.ADMIN_ACCESS);
         }
+
         return ret;
     }
 
@@ -763,7 +830,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         Map<String, Collection<String>> expandedAccesses = ServiceDefUtil.getExpandedImpliedGrants(serviceDef);
 
         if (MapUtils.isNotEmpty(expandedAccesses)) {
-            Integer policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
+            int policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
 
             if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
                 collectAccessTypes(expandedAccesses, policy.getPolicyItems(), userAccesses, groupAccesses, roleAccesses);
@@ -790,6 +857,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             for (String user : item.getUsers()) {
                 Set<String> oldAccesses = userAccesses.get(user);
+
                 if (oldAccesses != null) {
                     oldAccesses.addAll(accessTypes);
                 } else {
@@ -799,6 +867,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             for (String group : item.getGroups()) {
                 Set<String> oldAccesses = groupAccesses.get(group);
+
                 if (oldAccesses != null) {
                     oldAccesses.addAll(accessTypes);
                 } else {
@@ -808,6 +877,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             for (String role : item.getRoles()) {
                 Set<String> oldAccesses = roleAccesses.get(role);
+
                 if (oldAccesses != null) {
                     oldAccesses.addAll(accessTypes);
                 } else {
@@ -822,17 +892,22 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         for (Map.Entry<String, Set<String>> entry : newAccessesMap.entrySet()) {
             Set<String> oldAccesses = oldAccessesMap.get(entry.getKey());
+
             if (oldAccesses != null) {
                 Collection<String> added = CollectionUtils.subtract(entry.getValue(), oldAccesses);
+
                 ret.addAll(added);
             } else {
                 ret.addAll(entry.getValue());
             }
         }
+
         for (Map.Entry<String, Set<String>> entry : oldAccessesMap.entrySet()) {
             Set<String> newAccesses = newAccessesMap.get(entry.getKey());
+
             if (newAccesses != null) {
                 Collection<String> removed = CollectionUtils.subtract(entry.getValue(), newAccesses);
+
                 ret.addAll(removed);
             } else {
                 ret.addAll(entry.getValue());

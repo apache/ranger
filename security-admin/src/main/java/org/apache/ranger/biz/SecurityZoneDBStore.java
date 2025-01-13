@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 @Component
@@ -96,11 +95,14 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
         RangerSecurityZone createdSecurityZone = securityZoneService.create(securityZone);
+
         if (createdSecurityZone == null) {
             throw restErrorUtil.createRESTException("Cannot create security zone:[" + securityZone + "]");
         }
+
         securityZoneRefUpdater.createNewZoneMappingForRefTable(createdSecurityZone);
         securityZoneService.createTransactionLog(createdSecurityZone, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
+
         return createdSecurityZone;
     }
 
@@ -111,24 +113,32 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
         RangerSecurityZone updatedSecurityZone = securityZoneService.update(securityZone);
+
         if (updatedSecurityZone == null) {
             throw restErrorUtil.createRESTException("Cannot update security zone:[" + securityZone + "]");
         }
+
         securityZoneRefUpdater.createNewZoneMappingForRefTable(updatedSecurityZone);
+
         boolean isRenamed = !StringUtils.equals(securityZone.getName(), (null == oldSecurityZone) ? null : oldSecurityZone.getName());
+
         if (isRenamed) {
             securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
         }
+
         securityZoneService.createTransactionLog(updatedSecurityZone, oldSecurityZone, RangerBaseModelService.OPERATION_UPDATE_CONTEXT);
+
         return securityZone;
     }
 
     @Override
     public void deleteSecurityZoneByName(String zoneName) throws Exception {
         XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
+
         if (xxSecurityZone == null) {
             throw restErrorUtil.createRESTException("security-zone with name: " + zoneName + " does not exist");
         }
+
         RangerSecurityZone securityZone = securityZoneService.read(xxSecurityZone.getId());
 
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
@@ -152,24 +162,25 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     }
 
     @Override
-    public RangerSecurityZone getSecurityZone(Long id) throws Exception {
+    public RangerSecurityZone getSecurityZone(Long id) {
         return securityZoneService.read(id);
     }
 
     @Override
-    public RangerSecurityZone getSecurityZoneByName(String name) throws Exception {
+    public RangerSecurityZone getSecurityZoneByName(String name) {
         XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(name);
+
         if (xxSecurityZone == null) {
             throw restErrorUtil.createRESTException("security-zone with name: " + name + " does not exist");
         }
+
         return securityZoneService.read(xxSecurityZone.getId());
     }
 
     @Override
-    public List<RangerSecurityZone> getSecurityZones(SearchFilter filter) throws Exception {
-        List<RangerSecurityZone> ret = new ArrayList<>();
-
-        List<XXSecurityZone> xxSecurityZones = daoMgr.getXXSecurityZoneDao().getAll();
+    public List<RangerSecurityZone> getSecurityZones(SearchFilter filter) {
+        List<RangerSecurityZone> ret             = new ArrayList<>();
+        List<XXSecurityZone>     xxSecurityZones = daoMgr.getXXSecurityZoneDao().getAll();
 
         for (XXSecurityZone xxSecurityZone : xxSecurityZones) {
             if (!xxSecurityZone.getId().equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
@@ -181,6 +192,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             List<RangerSecurityZone> copy = new ArrayList<>(ret);
 
             predicateUtil.applyFilter(copy, filter);
+
             ret = copy;
         }
 
@@ -192,6 +204,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         Map<String, RangerSecurityZone.RangerSecurityZoneService> ret = null;
 
         SearchFilter filter = new SearchFilter();
+
         filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
 
         try {
@@ -227,13 +240,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
 
         if (!ret.isEmpty() && filterByNamePrefix) {
-            for (ListIterator<RangerSecurityZoneHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
-                RangerSecurityZoneHeaderInfo zoneHeader = iter.next();
-
-                if (!StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix)) {
-                    iter.remove();
-                }
-            }
+            ret.removeIf(zoneHeader -> !StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix));
         }
 
         return ret;
@@ -251,13 +258,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         ret.addAll(tagServices);
 
         if (!ret.isEmpty() && filterByNamePrefix) {
-            for (ListIterator<RangerServiceHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
-                RangerServiceHeaderInfo serviceHeader = iter.next();
-
-                if (!StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix)) {
-                    iter.remove();
-                }
-            }
+            ret.removeIf(serviceHeader -> !StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix));
         }
 
         return ret;
@@ -274,19 +275,13 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId, isTagService);
 
         if (!ret.isEmpty() && filterByNamePrefix) {
-            for (ListIterator<RangerSecurityZoneHeaderInfo> iter = ret.listIterator(); iter.hasNext(); ) {
-                RangerSecurityZoneHeaderInfo zoneHeader = iter.next();
-
-                if (!StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix)) {
-                    iter.remove();
-                }
-            }
+            ret.removeIf(zoneHeader -> !StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix));
         }
 
         return ret;
     }
 
-    public PList<SecurityZoneSummary> getZonesSummary(SearchFilter filter) throws Exception {
+    public PList<SecurityZoneSummary> getZonesSummary(SearchFilter filter) {
         int maxRows    = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
 
@@ -312,9 +307,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             paginatedList = Collections.emptyList();
         }
 
-        PList<SecurityZoneSummary> ret = new PList<>(paginatedList, startIndex, maxRows, summaryList.size(), paginatedList.size(), filter.getSortType(), filter.getSortBy());
-
-        return ret;
+        return new PList<>(paginatedList, startIndex, maxRows, summaryList.size(), paginatedList.size(), filter.getSortType(), filter.getSortBy());
     }
 
     private SecurityZoneSummary toSecurityZoneSummary(RangerSecurityZone securityZone) {

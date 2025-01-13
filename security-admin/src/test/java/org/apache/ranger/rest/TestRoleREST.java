@@ -23,7 +23,7 @@ import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.RoleRefUpdater;
 import org.apache.ranger.biz.ServiceDBStore;
-import org.apache.ranger.biz.ServiceDBStore.JsonFileNameType;
+import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -91,7 +91,7 @@ public class TestRoleREST {
     private static final Long                roleId       = 9L;
     private static final Long                Id           = 7L;
     private static final String              adminLoginID = "admin";
-    private static final JsonFileNameType ROLE         = JsonFileNameType.ROLE;
+    private static final JSON_FILE_NAME_TYPE ROLE         = JSON_FILE_NAME_TYPE.ROLE;
 
     String importRoleTestFilePath = "./src/test/java/org/apache/ranger/rest/importRole/import_role_test_file.json";
     @Mock

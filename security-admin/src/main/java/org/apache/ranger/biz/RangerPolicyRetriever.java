@@ -43,8 +43,6 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
@@ -57,15 +55,15 @@ public class RangerPolicyRetriever {
     static final Logger LOG      = LoggerFactory.getLogger(RangerPolicyRetriever.class);
     static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
 
-    private final RangerDaoManager daoMgr;
-    private final LookupCache      lookupCache = new LookupCache();
-
+    private final RangerDaoManager           daoMgr;
+    private final LookupCache                lookupCache = new LookupCache();
     private final PlatformTransactionManager txManager;
     private final TransactionTemplate        txTemplate;
 
     public RangerPolicyRetriever(RangerDaoManager daoMgr, PlatformTransactionManager txManager) {
         this.daoMgr    = daoMgr;
         this.txManager = txManager;
+
         if (this.txManager != null) {
             this.txTemplate = new TransactionTemplate(this.txManager);
             this.txTemplate.setReadOnly(true);
@@ -138,16 +136,21 @@ public class RangerPolicyRetriever {
         if (xService != null) {
             if (txTemplate == null) {
                 LOG.debug("Transaction Manager is null; Retrieving policies in the existing transaction");
+
                 RetrieverContext ctx = new RetrieverContext(xService);
+
                 ret = ctx.getAllPolicies();
             } else {
                 LOG.debug("Retrieving policies in a new, read-only transaction");
 
                 PolicyLoaderThread t = new PolicyLoaderThread(txTemplate, xService);
+
                 t.setDaemon(true);
                 t.start();
+
                 try {
                     t.join();
+
                     ret = t.getPolicies();
                 } catch (InterruptedException ie) {
                     LOG.error("Failed to retrieve policies in a new, read-only thread.", ie);
@@ -159,7 +162,7 @@ public class RangerPolicyRetriever {
 
         RangerPerfTracer.log(perf);
 
-        LOG.debug("<== RangerPolicyRetriever.getServicePolicies(serviceName={}, serviceId={}): policyCount={}", serviceName, serviceId, (ret == null ? 0 : ret.size()));
+        LOG.debug("<== RangerPolicyRetriever.getServicePolicies(serviceName={}, serviceId={}): policyCount={}", serviceName, serviceId, ret == null ? 0 : ret.size());
 
         return ret;
     }
@@ -218,7 +221,7 @@ public class RangerPolicyRetriever {
 
         RangerPerfTracer.log(perf);
 
-        LOG.debug("<== RangerPolicyRetriever.getPolicy({}): ", policyId, ret);
+        LOG.debug("<== RangerPolicyRetriever.getPolicy({}): {}", policyId, ret);
 
         return ret;
     }
@@ -268,7 +271,7 @@ public class RangerPolicyRetriever {
     private class PolicyLoaderThread extends Thread {
         final TransactionTemplate txTemplate;
         final XXService           xService;
-        List<RangerPolicy> policies;
+        List<RangerPolicy>        policies;
 
         PolicyLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
             this.txTemplate = txTemplate;
@@ -283,17 +286,17 @@ public class RangerPolicyRetriever {
         public void run() {
             try {
                 txTemplate.setReadOnly(true);
-                policies = txTemplate.execute(new TransactionCallback<List<RangerPolicy>>() {
-                    @Override
-                    public List<RangerPolicy> doInTransaction(TransactionStatus status) {
-                        try {
-                            RetrieverContext ctx = new RetrieverContext(xService);
-                            return ctx.getAllPolicies();
-                        } catch (Exception ex) {
-                            LOG.error("RangerPolicyRetriever.getServicePolicies(): Failed to get policies service:[{}] in a new transaction", xService.getName(), ex);
-                            status.setRollbackOnly();
-                            return null;
-                        }
+                policies = txTemplate.execute(status -> {
+                    try {
+                        RetrieverContext ctx = new RetrieverContext(xService);
+
+                        return ctx.getAllPolicies();
+                    } catch (Exception ex) {
+                        LOG.error("RangerPolicyRetriever.getServicePolicies(): Failed to get policies for service:[{}] in a new transaction", xService.getName(), ex);
+
+                        status.setRollbackOnly();
+
+                        return null;
                     }
                 });
             } catch (Throwable ex) {
@@ -303,8 +306,8 @@ public class RangerPolicyRetriever {
     }
 
     class LookupCache {
-        final Map<Long, String>              userScreenNames            = new HashMap<Long, String>();
-        final Map<Long, String>              zoneNames                  = new HashMap<Long, String>();
+        final Map<Long, String>              userScreenNames            = new HashMap<>();
+        final Map<Long, String>              zoneNames                  = new HashMap<>();
         final Map<Long, Map<String, String>> roleMappingsPerPolicy      = new HashMap<>();
         final Map<Long, Map<String, String>> groupMappingsPerPolicy     = new HashMap<>();
         final Map<Long, Map<String, String>> userMappingsPerPolicy      = new HashMap<>();
@@ -312,7 +315,7 @@ public class RangerPolicyRetriever {
         final Map<Long, Map<String, String>> resourceMappingsPerPolicy  = new HashMap<>();
         final Map<Long, Map<String, String>> dataMaskMappingsPerPolicy  = new HashMap<>();
         final Map<Long, Map<String, String>> conditionMappingsPerPolicy = new HashMap<>();
-        final Map<Long, String>              policyLabels               = new HashMap<Long, String>();
+        final Map<Long, String>              policyLabels               = new HashMap<>();
 
         public void setResourceNameMapping(List<PolicyTextNameMap> resourceNameMapping) {
             setNameMapping(resourceMappingsPerPolicy, resourceNameMapping);
@@ -410,13 +413,7 @@ public class RangerPolicyRetriever {
             nameMappingContainer.clear();
 
             for (PolicyTextNameMap nameMapping : nameMappings) {
-                Map<String, String> policyNameMap = nameMappingContainer.get(nameMapping.policyId);
-
-                if (policyNameMap == null) {
-                    policyNameMap = new HashMap<>();
-
-                    nameMappingContainer.put(nameMapping.policyId, policyNameMap);
-                }
+                Map<String, String> policyNameMap = nameMappingContainer.computeIfAbsent(nameMapping.policyId, k -> new HashMap<>());
 
                 policyNameMap.put(nameMapping.oldName, nameMapping.currentName);
             }
@@ -650,14 +647,18 @@ public class RangerPolicyRetriever {
 
         private void getPolicyLabels(RangerPolicy ret) {
             List<String> xPolicyLabels = new ArrayList<>();
+
             if (iterPolicyLabels != null) {
                 while (iterPolicyLabels.hasNext()) {
                     XXPolicyLabelMap xPolicyLabel = iterPolicyLabels.next();
+
                     if (xPolicyLabel.getPolicyId().equals(ret.getId())) {
                         String policyLabel = lookupCache.getPolicyLabelName(xPolicyLabel.getPolicyLabelId());
+
                         if (policyLabel != null) {
                             xPolicyLabels.add(policyLabel);
                         }
+
                         ret.setPolicyLabels(xPolicyLabels);
                     } else {
                         if (iterPolicyLabels.hasPrevious()) {

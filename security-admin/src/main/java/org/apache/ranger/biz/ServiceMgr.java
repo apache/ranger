@@ -124,6 +124,7 @@ public class ServiceMgr {
                 service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
             }
         }
+
         if (!StringUtils.isEmpty(authType) && KERBEROS_TYPE.equalsIgnoreCase(authType.trim()) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)) {
             if (service != null && service.getConfigs() != null) {
                 service.getConfigs().put(HadoopConfigHolder.RANGER_PRINCIPAL, rangerPrincipal);
@@ -134,11 +135,12 @@ public class ServiceMgr {
         }
 
         Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
+
         service.setConfigs(newConfigs);
 
         RangerBaseService svc = getRangerServiceByService(service, svcStore);
 
-        LOG.debug("==> ServiceMgr.lookupResource for Service: ({} Context: {})", svc, context);
+        LOG.debug("==> ServiceMgr.lookupResource for Service: ({}Context: {})", svc, context);
 
         if (svc != null) {
             if (StringUtils.equals(svc.getServiceDef().getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
@@ -146,6 +148,7 @@ public class ServiceMgr {
             } else {
                 LookupCallable callable = new LookupCallable(svc, context);
                 long           time     = getTimeoutValueForLookupInMilliSeconds(svc);
+
                 ret = timedExecutor.timedTask(callable, time, TimeUnit.MILLISECONDS);
             }
         }
@@ -172,6 +175,7 @@ public class ServiceMgr {
                 service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
             }
         }
+
         if (!StringUtils.isEmpty(authType) && KERBEROS_TYPE.equalsIgnoreCase(authType.trim()) && SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, rangerkeytab)) {
             if (service != null && service.getConfigs() != null) {
                 service.getConfigs().put(HadoopConfigHolder.RANGER_PRINCIPAL, rangerPrincipal);
@@ -180,12 +184,17 @@ public class ServiceMgr {
                 service.getConfigs().put(HadoopConfigHolder.RANGER_AUTH_TYPE, authType);
             }
         }
+
         RangerBaseService svc = null;
+
         if (service != null) {
             Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
+
             service.setConfigs(newConfigs);
+
             svc = getRangerServiceByService(service, svcStore);
         }
+
         LOG.debug("==> ServiceMgr.validateConfig for Service: ({})", svc);
 
         // check if service configs contains localhost/127.0.0.1
@@ -193,6 +202,7 @@ public class ServiceMgr {
             for (Map.Entry<String, String> entry : service.getConfigs().entrySet()) {
                 if (entry.getValue() != null && StringUtils.containsIgnoreCase(entry.getValue(), "localhost") || StringUtils.containsIgnoreCase(entry.getValue(), "127.0.0.1")) {
                     URL url = getValidURL(entry.getValue());
+
                     if ((url != null) && (url.getHost().equalsIgnoreCase("localhost") || url.getHost().equals("127.0.0.1"))) {
                         throw new Exception("Invalid value for configuration " + entry.getKey() + ": host " + url.getHost() + " is not allowed");
                     }
@@ -220,7 +230,7 @@ public class ServiceMgr {
 
                 ret = generateResponseForTestConn(respData, msg);
 
-                LOG.error("==> ServiceMgr.validateConfig Error:", e);
+                LOG.error("==> ServiceMgr.validateConfig Error:{}", String.valueOf(e));
             }
         }
 
@@ -353,13 +363,13 @@ public class ServiceMgr {
                         ((RangerServiceTag) ret).setTagStore(tagStore);
                     }
                 } else {
-                    LOG.warn("ServiceMgr.getRangerServiceByService({}): could not find service class {} for the service type {}", service, serviceDef.getImplClass(), serviceType);
+                    LOG.warn("ServiceMgr.getRangerServiceByService({}): could not find service class '{}' for the service type '{}'", service, serviceDef.getImplClass(), serviceType);
                 }
             } else {
-                LOG.warn("ServiceMgr.getRangerServiceByService({}): could not find the service-def for the service type {}", service, serviceType);
+                LOG.warn("ServiceMgr.getRangerServiceByService({}): could not find the service-def for the service type '{}'", service, serviceType);
             }
         } else {
-            LOG.warn("ServiceMgr.getRangerServiceByService({}): could not find the service-type {}", service, serviceType);
+            LOG.warn("ServiceMgr.getRangerServiceByService({}): could not find the service-type '{}'", service, serviceType);
         }
 
         LOG.debug("<== ServiceMgr.getRangerServiceByService({}): {}", service, ret);
@@ -376,36 +386,48 @@ public class ServiceMgr {
     }
 
     long getTimeoutValueInMilliSeconds(final String type, RangerBaseService svc, long defaultValue) {
-        LOG.debug(String.format("==> ServiceMgr.getTimeoutValueInMilliSeconds (%s, %s)", type, svc));
-        String propertyName = type + ".timeout.value.in.ms"; // type == "lookup" || type == "validate-config"
+        LOG.debug("==> ServiceMgr.getTimeoutValueInMilliSeconds ({}, {})", type, svc);
 
-        Long                result = null;
-        Map<String, String> config = svc.getConfigs();
+        String              propertyName = type + ".timeout.value.in.ms"; // type == "lookup" || type == "validate-config"
+        Long                result       = null;
+        Map<String, String> config       = svc.getConfigs();
+
         if (config != null && config.containsKey(propertyName)) {
             result = parseLong(config.get(propertyName));
         }
+
         if (result != null) {
             LOG.debug("Found override in service config!");
         } else {
-            String[] keys = new String[] {"ranger.service." + svc.getServiceName() + "." + propertyName, "ranger.servicetype." + svc.getServiceType() + "." + propertyName, "ranger." + propertyName
+            String[] keys = new String[] {
+                    "ranger.service." + svc.getServiceName() + "." + propertyName,
+                    "ranger.servicetype." + svc.getServiceType() + "." + propertyName,
+                    "ranger." + propertyName
             };
+
             for (String key : keys) {
                 String value = PropertiesUtil.getProperty(key);
+
                 if (value != null) {
                     result = parseLong(value);
+
                     if (result != null) {
                         LOG.debug("Using the value[{}] found in property[{}]", value, key);
+
                         break;
                     }
                 }
             }
         }
+
         if (result == null) {
             LOG.debug("No overrides found in service config of properties file.  Using supplied default of[{}]!", defaultValue);
+
             result = defaultValue;
         }
 
-        LOG.debug(String.format("<== ServiceMgr.getTimeoutValueInMilliSeconds (%s, %s): %s", type, svc, result));
+        LOG.debug("<== ServiceMgr.getTimeoutValueInMilliSeconds ({}, {}): {}", type, svc, result);
+
         return result;
     }
 
@@ -414,6 +436,7 @@ public class ServiceMgr {
             return Long.valueOf(str);
         } catch (NumberFormatException e) {
             LOG.debug("ServiceMgr.parseLong: could not parse [{}] as Long! Returning null", str);
+
             return null;
         }
     }
@@ -427,7 +450,7 @@ public class ServiceMgr {
     }
 
     @SuppressWarnings("unchecked")
-    private Class<? extends RangerBaseService> getClassForServiceType(RangerServiceDef serviceDef) throws Exception {
+    private Class<? extends RangerBaseService> getClassForServiceType(RangerServiceDef serviceDef) {
         LOG.debug("==> ServiceMgr.getClassForServiceType({})", serviceDef);
 
         Class<? extends RangerBaseService> ret = null;
@@ -443,10 +466,13 @@ public class ServiceMgr {
 
                     if (ret == null) {
                         String clsName = serviceDef.getImplClass();
+
                         LOG.debug("ServiceMgr.getClassForServiceType({}): service-class {} not found in cache", serviceType, clsName);
+
                         try {
                             if (StringUtils.isEmpty(clsName)) {
                                 LOG.debug("No service-class configured for service-type:[{}], using RangerDefaultService", serviceType);
+
                                 ret = RangerDefaultService.class;
                             } else {
                                 URL[]          pluginFiles = getPluginFilesForServiceType(serviceType);
@@ -456,14 +482,14 @@ public class ServiceMgr {
                                 ret = (Class<? extends RangerBaseService>) cls;
                             }
                         } catch (Exception excp) {
-                            LOG.warn("ServiceMgr.getClassForServiceType({}): failed to find service-class {}. Resource lookup will not be available. Using RangerDefaultService", serviceType, clsName, excp);
+                            LOG.warn("ServiceMgr.getClassForServiceType({}): failed to find service-class '{}'. Resource lookup will not be available. Using RangerDefaultService", serviceType, clsName, excp);
 
                             ret = RangerDefaultService.class;
                         }
 
                         serviceTypeClassMap.put(serviceType, ret);
 
-                        LOG.debug("ServiceMgr.getClassForServiceType({}): service-class {}} added to cache", serviceType, ret.getCanonicalName());
+                        LOG.debug("ServiceMgr.getClassForServiceType({}): service-class {} added to cache", serviceType, ret.getCanonicalName());
                     } else {
                         LOG.debug("ServiceMgr.getClassForServiceType({}): service-class {} found in cache", serviceType, ret.getCanonicalName());
                     }
@@ -504,20 +530,21 @@ public class ServiceMgr {
                         try {
                             URL jarPath = dirFile.toURI().toURL();
 
-                            LOG.debug("getFilesInDirectory({}): adding {}", dirPath, dirFile.getAbsolutePath());
+                            LOG.debug("getFilesInDirectory('{}'): adding {}", dirPath, dirFile.getAbsolutePath());
 
                             files.add(jarPath);
                         } catch (Exception excp) {
-                            LOG.warn("getFilesInDirectory({}): failed to get URI for file {}", dirPath, dirFile.getAbsolutePath(), excp);
+                            LOG.warn("getFilesInDirectory('{}'): failed to get URI for file {}", dirPath, dirFile.getAbsolutePath(), excp);
                         }
                     }
                 }
             } catch (Exception excp) {
-                LOG.warn("getFilesInDirectory({}): error", dirPath, excp);
+                LOG.warn("getFilesInDirectory('{}'): error", dirPath, excp);
             }
         } else {
-            LOG.debug("getFilesInDirectory({}): could not find directory in CLASSPATH", dirPath);
+            LOG.debug("getFilesInDirectory('{}'): could not find directory in CLASSPATH", dirPath);
         }
+
         LOG.debug("<== ServiceMgr.getFilesInDirectory({})", dirPath);
     }
 
@@ -535,18 +562,23 @@ public class ServiceMgr {
             if (responseData.get("objectId") != null) {
                 objId = Long.parseLong(responseData.get("objectId").toString());
             }
+
             if (responseData.get("connectivityStatus") != null) {
                 connectivityStatus = Boolean.parseBoolean(responseData.get("connectivityStatus").toString());
             }
+
             if (connectivityStatus) {
                 statusCode = VXResponse.STATUS_SUCCESS;
             }
+
             if (responseData.get("message") != null) {
                 message = responseData.get("message").toString();
             }
+
             if (responseData.get("description") != null) {
                 description = responseData.get("description").toString();
             }
+
             if (responseData.get("fieldName") != null) {
                 fieldName = responseData.get("fieldName").toString();
             }
@@ -554,6 +586,7 @@ public class ServiceMgr {
 
         VXMessage       vXMsg     = new VXMessage();
         List<VXMessage> vXMsgList = new ArrayList<>();
+
         vXMsg.setFieldName(fieldName);
         vXMsg.setMessage(message);
         vXMsg.setObjectId(objId);
@@ -562,6 +595,7 @@ public class ServiceMgr {
         vXResponse.setMessageList(vXMsgList);
         vXResponse.setMsgDesc(description);
         vXResponse.setStatusCode(statusCode);
+
         return vXResponse;
     }
 
@@ -609,22 +643,33 @@ public class ServiceMgr {
         @Override
         public T call() throws Exception {
             Date start = null;
-            start = new Date();
-            LOG.debug("==> TimedCallable: {}", this);
+
+            if (LOG.isDebugEnabled()) {
+                start = new Date();
+
+                LOG.debug("==> TimedCallable: {}", this);
+            }
 
             ClassLoader clsLoader = Thread.currentThread().getContextClassLoader();
+
             try {
                 Thread.currentThread().setContextClassLoader(svc.getClass().getClassLoader());
+
                 return actualCall();
             } catch (Exception e) {
-                LOG.error("TimedCallable.call: Error:", e);
+                LOG.error("TimedCallable.call: Error:{}", String.valueOf(e));
+
                 throw e;
             } finally {
                 Thread.currentThread().setContextClassLoader(clsLoader);
-                Date finish        = new Date();
-                long waitTime      = start.getTime() - creation.getTime();
-                long executionTime = finish.getTime() - start.getTime();
-                LOG.debug(String.format("<== TimedCallable: %s: wait time[%d ms], execution time [%d ms]", this, waitTime, executionTime));
+
+                if (LOG.isDebugEnabled()) {
+                    Date finish        = new Date();
+                    long waitTime      = start.getTime() - creation.getTime();
+                    long executionTime = finish.getTime() - start.getTime();
+
+                    LOG.debug("<== TimedCallable: {}: wait time[{} ms], execution time [{} ms]", this, waitTime, executionTime);
+                }
             }
         }
 
@@ -636,6 +681,7 @@ public class ServiceMgr {
 
         public LookupCallable(final RangerBaseService svc, final ResourceLookupContext context) {
             super(svc);
+
             this.context = context;
         }
 
@@ -646,8 +692,7 @@ public class ServiceMgr {
 
         @Override
         public List<String> actualCall() throws Exception {
-            List<String> ret = svc.lookupResource(context);
-            return ret;
+            return svc.lookupResource(context);
         }
     }
 

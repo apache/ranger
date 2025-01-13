@@ -70,22 +70,30 @@ import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_
 @Component
 public class PolicyRefUpdater {
     private static final Logger LOG = LoggerFactory.getLogger(PolicyRefUpdater.class);
+
     @Autowired
-    RangerDaoManager                        daoMgr;
+    RangerDaoManager daoMgr;
+
     @Autowired
-    RangerAuditFields<?>                    rangerAuditFields;
+    RangerAuditFields<?> rangerAuditFields;
+
     @Autowired
-    XUserMgr                                xUserMgr;
+    XUserMgr xUserMgr;
+
     @Autowired
-    RoleDBStore                             roleStore;
+    RoleDBStore roleStore;
+
     @Autowired
-    RangerBizUtil                           rangerBizUtil;
+    RangerBizUtil rangerBizUtil;
+
     @Autowired
-    XGroupService                           xGroupService;
+    XGroupService xGroupService;
+
     @Autowired
     RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
+
     @Autowired
-    RESTErrorUtil                           restErrorUtil;
+    RESTErrorUtil restErrorUtil;
 
     public static List<List<? extends RangerPolicyItem>> getAllPolicyItems(RangerPolicy policy) {
         List<List<? extends RangerPolicyItem>> ret = new ArrayList<>();
@@ -134,6 +142,7 @@ public class PolicyRefUpdater {
         boolean           oldBulkMode    = RangerBizUtil.isBulkMode();
 
         List<RangerPolicy.RangerPolicyItemCondition> rangerPolicyConditions = policy.getConditions();
+
         if (CollectionUtils.isNotEmpty(rangerPolicyConditions)) {
             for (RangerPolicy.RangerPolicyItemCondition condition : rangerPolicyConditions) {
                 conditionTypes.add(condition.getType());
@@ -171,6 +180,7 @@ public class PolicyRefUpdater {
         }
 
         List<XXPolicyRefResource> xPolResources = new ArrayList<>();
+
         for (String resource : resourceNames) {
             XXResourceDef xResDef = daoMgr.getXXResourceDef().findByNameAndPolicyId(resource, policy.getId());
 
@@ -186,32 +196,40 @@ public class PolicyRefUpdater {
 
             xPolResources.add(xPolRes);
         }
+
         daoMgr.getXXPolicyRefResource().batchCreate(xPolResources);
 
         if (createPrincipalsIfAbsent && !rangerBizUtil.checkAdminAccess()) {
-            LOG.warn("policy={} createPrincipalIfAbsent=true, but current user does not have admin privileges!", policy.getName());
+            LOG.warn("policy={}: createPrincipalIfAbsent=true, but current user does not have admin privileges!", policy.getName());
 
             createPrincipalsIfAbsent = false;
         }
 
         List<XXPolicyRefRole> xPolRoles = new ArrayList<>();
+
         for (String role : roleNames) {
             if (StringUtils.isBlank(role)) {
                 continue;
             }
-            PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PrincipalType.ROLE, role, xPolicy);
+
+            PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.ROLE, role, xPolicy);
+
             if (!associator.doAssociate(false)) {
                 if (createPrincipalsIfAbsent) {
                     rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
                 } else {
                     VXResponse gjResponse = new VXResponse();
+
                     gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
                     gjResponse.setMsgDesc("Operation denied. Role name: " + role + " specified in policy does not exist in ranger admin.");
+
                     throw restErrorUtil.generateRESTException(gjResponse);
                 }
             }
         }
+
         RangerBizUtil.setBulkMode(oldBulkMode);
+
         daoMgr.getXXPolicyRefRole().batchCreate(xPolRoles);
 
         for (String group : groupNames) {
@@ -219,14 +237,17 @@ public class PolicyRefUpdater {
                 continue;
             }
 
-            PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PrincipalType.GROUP, group, xPolicy);
+            PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.GROUP, group, xPolicy);
+
             if (!associator.doAssociate(false)) {
                 if (createPrincipalsIfAbsent) {
                     rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
                 } else {
                     VXResponse gjResponse = new VXResponse();
+
                     gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
                     gjResponse.setMsgDesc("Operation denied. Group name: " + group + " specified in policy does not exist in ranger admin.");
+
                     throw restErrorUtil.generateRESTException(gjResponse);
                 }
             }
@@ -236,14 +257,18 @@ public class PolicyRefUpdater {
             if (StringUtils.isBlank(user)) {
                 continue;
             }
-            PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PrincipalType.USER, user, xPolicy);
+
+            PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.USER, user, xPolicy);
+
             if (!associator.doAssociate(false)) {
                 if (createPrincipalsIfAbsent) {
                     rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
                 } else {
                     VXResponse gjResponse = new VXResponse();
+
                     gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
                     gjResponse.setMsgDesc("Operation denied. User name: " + user + " specified in policy does not exist in ranger admin.");
+
                     throw restErrorUtil.generateRESTException(gjResponse);
                 }
             }
@@ -269,9 +294,11 @@ public class PolicyRefUpdater {
 
             xPolAccesses.add(xPolAccess);
         }
+
         daoMgr.getXXPolicyRefAccessType().batchCreate(xPolAccesses);
 
         List<XXPolicyRefCondition> xPolConds = new ArrayList<>();
+
         for (String condition : conditionTypes) {
             XXPolicyConditionDef xPolCondDef = daoMgr.getXXPolicyConditionDef().findByServiceDefIdAndName(xServiceDef.getId(), condition);
 
@@ -291,9 +318,11 @@ public class PolicyRefUpdater {
 
             xPolConds.add(xPolCond);
         }
+
         daoMgr.getXXPolicyRefCondition().batchCreate(xPolConds);
 
         List<XXPolicyRefDataMaskType> xxDataMaskInfos = new ArrayList<>();
+
         for (String dataMaskType : dataMaskTypes) {
             XXDataMaskTypeDef dataMaskDef = daoMgr.getXXDataMaskTypeDef().findByNameAndServiceId(dataMaskType, xPolicy.getService());
 
@@ -309,6 +338,7 @@ public class PolicyRefUpdater {
 
             xxDataMaskInfos.add(xxDataMaskInfo);
         }
+
         daoMgr.getXXPolicyRefDataMaskType().batchCreate(xxDataMaskInfos);
     }
 
@@ -330,16 +360,14 @@ public class PolicyRefUpdater {
         return true;
     }
 
-    public enum PrincipalType {
-        USER, GROUP, ROLE
-    }
+    public enum PRINCIPAL_TYPE { USER, GROUP, ROLE }
 
     private class PolicyPrincipalAssociator implements Runnable {
-        final PrincipalType type;
-        final String        name;
-        final XXPolicy      xPolicy;
+        final PRINCIPAL_TYPE type;
+        final String         name;
+        final XXPolicy       xPolicy;
 
-        public PolicyPrincipalAssociator(PrincipalType type, String name, XXPolicy xPolicy) {
+        public PolicyPrincipalAssociator(PRINCIPAL_TYPE type, String name, XXPolicy xPolicy) {
             this.type    = type;
             this.name    = name;
             this.xPolicy = xPolicy;
@@ -356,18 +384,22 @@ public class PolicyRefUpdater {
 
         boolean doAssociate(boolean isAdmin) {
             LOG.debug("===> PolicyPrincipalAssociator.doAssociate({})", isAdmin);
+
             final boolean ret;
 
             Long id = createOrGetPrincipal(isAdmin);
+
             if (id != null) {
                 // associate with policy
                 createPolicyAssociation(id, name);
+
                 ret = true;
             } else {
                 ret = false;
             }
 
-            LOG.debug("<=== PolicyPrincipalAssociator.doAssociate({}) : ", isAdmin, ret);
+            LOG.debug("<=== PolicyPrincipalAssociator.doAssociate({}) : {}", isAdmin, ret);
+
             return ret;
         }
 
@@ -379,6 +411,7 @@ public class PolicyRefUpdater {
             switch (type) {
                 case USER: {
                     XXUser xUser = daoMgr.getXXUser().findByUserName(name);
+
                     if (xUser != null) {
                         ret = xUser.getId();
                     } else {
@@ -402,6 +435,7 @@ public class PolicyRefUpdater {
                 break;
                 case ROLE: {
                     XXRole xRole = daoMgr.getXXRole().findByRoleName(name);
+
                     if (xRole != null) {
                         ret = xRole.getId();
                     } else {
@@ -415,7 +449,9 @@ public class PolicyRefUpdater {
                 default:
                     break;
             }
+
             LOG.debug("<=== PolicyPrincipalAssociator.createOrGetPrincipal({}) : {}", createIfAbsent, ret);
+
             return ret;
         }
 
@@ -446,10 +482,13 @@ public class PolicyRefUpdater {
                 case GROUP: {
                     // Create group
                     VXGroup vxGroup = new VXGroup();
+
                     vxGroup.setName(name);
                     vxGroup.setDescription(name);
                     vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
+
                     VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(vxGroup);
+
                     if (vXGroup != null) {
                         xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT, xPolicy.getAddedByUserId());
 
@@ -461,6 +500,7 @@ public class PolicyRefUpdater {
                     try {
                         RangerRole rRole       = new RangerRole(name, null, null, null, null);
                         RangerRole createdRole = roleStore.createRole(rRole, false);
+
                         ret = createdRole.getId();
                     } catch (Exception e) {
                         // Ignore
@@ -470,12 +510,15 @@ public class PolicyRefUpdater {
                 default:
                     break;
             }
-            LOG.debug("<=== PolicyPrincipalAssociator.createPrincipal(type={}, name={}) :{} ", type.name(), name, ret);
+
+            LOG.debug("<=== PolicyPrincipalAssociator.createPrincipal(type={}, name={}) : {}", type.name(), name, ret);
+
             return ret;
         }
 
         private void createPolicyAssociation(Long id, String name) {
             LOG.debug("===> PolicyPrincipalAssociator.createPolicyAssociation(policyId={}, type={}, name={}, id={})", xPolicy.getId(), type.name(), name, id);
+
             switch (type) {
                 case USER: {
                     XXPolicyRefUser xPolUser = rangerAuditFields.populateAuditFields(new XXPolicyRefUser(), xPolicy);
@@ -483,6 +526,7 @@ public class PolicyRefUpdater {
                     xPolUser.setPolicyId(xPolicy.getId());
                     xPolUser.setUserId(id);
                     xPolUser.setUserName(name);
+
                     daoMgr.getXXPolicyRefUser().create(xPolUser);
                 }
                 break;
@@ -492,6 +536,7 @@ public class PolicyRefUpdater {
                     xPolGroup.setPolicyId(xPolicy.getId());
                     xPolGroup.setGroupId(id);
                     xPolGroup.setGroupName(name);
+
                     daoMgr.getXXPolicyRefGroup().create(xPolGroup);
                 }
                 break;
@@ -501,12 +546,14 @@ public class PolicyRefUpdater {
                     xPolRole.setPolicyId(xPolicy.getId());
                     xPolRole.setRoleId(id);
                     xPolRole.setRoleName(name);
+
                     daoMgr.getXXPolicyRefRole().create(xPolRole);
                 }
                 break;
                 default:
                     break;
             }
+
             LOG.debug("<=== PolicyPrincipalAssociator.createPolicyAssociation(policyId={}, type={}, name={}, id={})", xPolicy.getId(), type.name(), name, id);
         }
     }

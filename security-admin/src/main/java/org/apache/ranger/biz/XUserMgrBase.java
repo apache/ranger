@@ -81,11 +81,13 @@ public class XUserMgrBase {
 
     public VXGroup createXGroup(VXGroup vXGroup) {
         vXGroup = xGroupService.createResource(vXGroup);
+
         return vXGroup;
     }
 
     public VXGroup updateXGroup(VXGroup vXGroup) {
         vXGroup = xGroupService.updateResource(vXGroup);
+
         return vXGroup;
     }
 
@@ -111,11 +113,13 @@ public class XUserMgrBase {
 
     public VXUser createXUser(VXUser vXUser) {
         vXUser = xUserService.createResource(vXUser);
+
         return vXUser;
     }
 
     public VXUser updateXUser(VXUser vXUser) {
         vXUser = xUserService.updateResource(vXUser);
+
         return vXUser;
     }
 
@@ -141,11 +145,13 @@ public class XUserMgrBase {
 
     public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser) {
         vXGroupUser = xGroupUserService.createResource(vXGroupUser);
+
         return vXGroupUser;
     }
 
     public VXGroupUser updateXGroupUser(VXGroupUser vXGroupUser) {
         vXGroupUser = xGroupUserService.updateResource(vXGroupUser);
+
         return vXGroupUser;
     }
 
@@ -171,11 +177,13 @@ public class XUserMgrBase {
 
     public VXPermMap createXPermMap(VXPermMap vXPermMap) {
         vXPermMap = xPermMapService.createResource(vXPermMap);
+
         return vXPermMap;
     }
 
     public VXPermMap updateXPermMap(VXPermMap vXPermMap) {
         vXPermMap = xPermMapService.updateResource(vXPermMap);
+
         return vXPermMap;
     }
 
@@ -201,11 +209,13 @@ public class XUserMgrBase {
 
     public VXAuditMap createXAuditMap(VXAuditMap vXAuditMap) {
         vXAuditMap = xAuditMapService.createResource(vXAuditMap);
+
         return vXAuditMap;
     }
 
     public VXAuditMap updateXAuditMap(VXAuditMap vXAuditMap) {
         vXAuditMap = xAuditMapService.updateResource(vXAuditMap);
+
         return vXAuditMap;
     }
 

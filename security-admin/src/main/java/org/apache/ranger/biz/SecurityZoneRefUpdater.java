@@ -83,28 +83,24 @@ public class SecurityZoneRefUpdater {
     @Autowired
     RangerPolicyService policyService;
 
-    public void createNewZoneMappingForRefTable(RangerSecurityZone rangerSecurityZone) throws Exception {
+    public void createNewZoneMappingForRefTable(RangerSecurityZone rangerSecurityZone) {
         if (rangerSecurityZone == null) {
             return;
         }
 
         cleanupRefTables(rangerSecurityZone);
 
-        final Long                                   zoneId       = rangerSecurityZone == null ? null : rangerSecurityZone.getId();
+        final Long                                   zoneId       = rangerSecurityZone.getId();
         final Map<String, RangerSecurityZoneService> zoneServices = rangerSecurityZone.getServices();
 
-        final Set<String> users       = new HashSet<>();
-        final Set<String> userGroups  = new HashSet<>();
-        final Set<String> roles       = new HashSet<>();
-        final Set<String> tagServices = new HashSet<>();
+        final Set<String> users       = new HashSet<>(rangerSecurityZone.getAdminUsers());
+        final Set<String> userGroups  = new HashSet<>(rangerSecurityZone.getAdminUserGroups());
+        final Set<String> roles       = new HashSet<>(rangerSecurityZone.getAdminRoles());
+        final Set<String> tagServices = new HashSet<>(rangerSecurityZone.getTagServices());
 
-        users.addAll(rangerSecurityZone.getAdminUsers());
-        userGroups.addAll(rangerSecurityZone.getAdminUserGroups());
-        roles.addAll(rangerSecurityZone.getAdminRoles());
         users.addAll(rangerSecurityZone.getAuditUsers());
         userGroups.addAll(rangerSecurityZone.getAuditUserGroups());
         roles.addAll(rangerSecurityZone.getAuditRoles());
-        tagServices.addAll(rangerSecurityZone.getTagServices());
 
         for (Map.Entry<String, RangerSecurityZoneService> service : zoneServices.entrySet()) {
             String serviceName = service.getKey();
@@ -129,6 +125,7 @@ public class SecurityZoneRefUpdater {
             for (Map<String, List<String>> resourceMap : service.getValue().getResources()) { //add all resourcedefs in pre defined set
                 for (Map.Entry<String, List<String>> resource : resourceMap.entrySet()) {
                     String resourceName = resource.getKey();
+
                     if (StringUtils.isBlank(resourceName)) {
                         continue;
                     }
@@ -138,8 +135,7 @@ public class SecurityZoneRefUpdater {
             }
 
             for (String resourceName : resourceDefNames) {
-                XXResourceDef xResourceDef = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
-
+                XXResourceDef             xResourceDef  = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
                 XXSecurityZoneRefResource xZoneResource = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefResource());
 
                 xZoneResource.setZoneId(zoneId);
@@ -157,6 +153,7 @@ public class SecurityZoneRefUpdater {
                 }
 
                 XXService xService = daoMgr.getXXService().findByName(tagService);
+
                 if (xService == null || xService.getType() != RangerConstants.TAG_SERVICE_TYPE) {
                     throw restErrorUtil.createRESTException("Tag Service named: " + tagService + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
                 }
@@ -283,6 +280,7 @@ public class SecurityZoneRefUpdater {
 
     public void updateResourceSignatureWithZoneName(RangerSecurityZone updatedSecurityZone) {
         List<XXPolicy> policyList = daoMgr.getXXPolicy().findByZoneId(updatedSecurityZone.getId());
+
         LOG.debug("==> SecurityZoneRefUpdater.updateResourceSignatureWithZoneName() Count of policies with zone id : {} are : {}", updatedSecurityZone.getId(), policyList.size());
 
         for (XXPolicy policy : policyList) {

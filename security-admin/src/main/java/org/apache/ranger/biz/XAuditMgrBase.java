@@ -103,11 +103,13 @@ public class XAuditMgrBase {
 
     public VXAccessAudit createXAccessAudit(VXAccessAudit vXAccessAudit) {
         vXAccessAudit = xAccessAuditService.createResource(vXAccessAudit);
+
         return vXAccessAudit;
     }
 
     public VXAccessAudit updateXAccessAudit(VXAccessAudit vXAccessAudit) {
         vXAccessAudit = xAccessAuditService.updateResource(vXAccessAudit);
+
         return vXAccessAudit;
     }
 

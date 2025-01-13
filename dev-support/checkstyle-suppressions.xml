@@ -28,13 +28,18 @@
   <suppress files="BaseDao.java" checks="StaticVariableName"/>
   <suppress files="ContextUtil.java" checks="HideUtilityClassConstructor"/>
   <suppress files="MapUtil.java" checks="HideUtilityClassConstructor"/>
+  <suppress files="PolicyRefUpdater.java" checks="TypeName"/>
   <suppress files="RangerAdminTagEnricher.java" checks="StaticVariableName"/>
   <suppress files="RangerCommonEnums.java" checks="HideUtilityClassConstructor"/>
   <suppress files="RangerConstants.java" checks="TypeName"/>
   <suppress files="RangerRolesUtil.java" checks="TypeName"/>
   <suppress files="SearchField.java" checks="TypeName"/>
+  <suppress files="ServiceDBStore.java" checks="StaticVariableName"/>
+  <suppress files="ServiceDBStore.java" checks="TypeName"/>
   <suppress files="SortField.java" checks="TypeName"/>
   <suppress files="SPOOL_FILE_STATUS.java" checks="TypeName"/>
+  <suppress files="TagDBStore.java" checks="StaticVariableName"/>
+  <suppress files="TagDBStore.java" checks="TypeName"/>
   <suppress files="TimedEventUtil.java" checks="HideUtilityClassConstructor"/>
   <suppress files="PatchAssignSecurityZonePersmissionToAdmin_J10026.java" checks="TypeName"/>
   <suppress files="PatchAtlasForClassificationResource_J10047" checks="TypeName"/>

@@ -22,7 +22,7 @@ package org.apache.ranger.biz;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
-import org.apache.ranger.biz.ServiceDBStore.RemoveRefType;
+import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -110,15 +110,17 @@ import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SE
 
 @Component
 public class GdsDBStore extends AbstractGdsStore {
-    public static final  String       RESOURCE_NAME_DATASET_ID                = "dataset-id";
-    public static final  String       RESOURCE_NAME_PROJECT_ID                = "project-id";
-    public static final  String       NOT_AUTHORIZED_FOR_DATASET_POLICIES     = "User is not authorized to manage policies for this dataset";
-    public static final  String       NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES = "User is not authorized to view policies for this dataset";
-    public static final  String       NOT_AUTHORIZED_FOR_PROJECT_POLICIES     = "User is not authorized to manage policies for this dataset";
-    public static final  String       NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES = "User is not authorized to view policies for this dataset";
-    public static final  String       GDS_POLICY_NAME_TIMESTAMP_SEP           = "@";
     private static final Logger LOG = LoggerFactory.getLogger(GdsDBStore.class);
-    private static final Set<Integer> SHARE_STATUS_AGR                        = new HashSet<>(Arrays.asList(GdsShareStatus.ACTIVE.ordinal(), GdsShareStatus.GRANTED.ordinal(), GdsShareStatus.REQUESTED.ordinal()));
+
+    public static final String RESOURCE_NAME_DATASET_ID = "dataset-id";
+    public static final String RESOURCE_NAME_PROJECT_ID = "project-id";
+    public static final String NOT_AUTHORIZED_FOR_DATASET_POLICIES     = "User is not authorized to manage policies for this dataset";
+    public static final String NOT_AUTHORIZED_TO_VIEW_DATASET_POLICIES = "User is not authorized to view policies for this dataset";
+    public static final String NOT_AUTHORIZED_FOR_PROJECT_POLICIES     = "User is not authorized to manage policies for this dataset";
+    public static final String NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES = "User is not authorized to view policies for this dataset";
+    public static final String GDS_POLICY_NAME_TIMESTAMP_SEP           = "@";
+
+    private static final Set<Integer> SHARE_STATUS_AGR = new HashSet<>(Arrays.asList(GdsShareStatus.ACTIVE.ordinal(), GdsShareStatus.GRANTED.ordinal(), GdsShareStatus.REQUESTED.ordinal()));
 
     @Autowired
     RangerGdsValidator validator;
@@ -171,6 +173,7 @@ public class GdsDBStore extends AbstractGdsStore {
     @PostConstruct
     public void initStore() {
         LOG.debug("==> GdsInMemoryStore.initStore()");
+
         LOG.debug("<== GdsInMemoryStore.initStore()");
     }
 
@@ -773,10 +776,13 @@ public class GdsDBStore extends AbstractGdsStore {
                     final Collection<RangerPolicyResource> resources = sharedResource.getResource().values();
 
                     if (CollectionUtils.isNotEmpty(resources)) {
-                        includeResource = resources.stream().filter(Objects::nonNull).map(RangerPolicyResource::getValues).filter(Objects::nonNull).anyMatch(res -> hasResource(res, resourceContains));
+                        includeResource = resources.stream().filter(Objects::nonNull)
+                                .map(RangerPolicyResource::getValues).filter(Objects::nonNull)
+                                .anyMatch(res -> hasResource(res, resourceContains));
 
                         if (!includeResource && sharedResource.getSubResource() != null && CollectionUtils.isNotEmpty(sharedResource.getSubResource().getValues())) {
-                            includeResource = sharedResource.getSubResource().getValues().stream().filter(Objects::nonNull).anyMatch(value -> value.contains(resourceContains));
+                            includeResource = sharedResource.getSubResource().getValues().stream().filter(Objects::nonNull)
+                                    .anyMatch(value -> value.contains(resourceContains));
                         }
                     }
                 }
@@ -1098,7 +1104,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public List<RangerPolicy> getDatasetPolicies(Long datasetId) throws Exception {
+    public List<RangerPolicy> getDatasetPolicies(Long datasetId) {
         LOG.debug("==> getDatasetPolicies({})", datasetId);
 
         RangerDataset dataset = datasetService.read(datasetId);
@@ -1227,7 +1233,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public List<RangerPolicy> getProjectPolicies(Long projectId) throws Exception {
+    public List<RangerPolicy> getProjectPolicies(Long projectId) {
         LOG.debug("==> getProjectPolicies({})", projectId);
 
         RangerProject project = projectService.read(projectId);
@@ -1351,7 +1357,7 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
-    public ServiceGdsInfo getGdsInfoIfUpdated(String serviceName, Long lastKnownVersion) throws Exception {
+    public ServiceGdsInfo getGdsInfoIfUpdated(String serviceName, Long lastKnownVersion) {
         LOG.debug("==> GdsDBStore.getGdsInfoIfUpdated({}, {})", serviceName, lastKnownVersion);
 
         ServiceGdsInfo latest        = serviceGdsInfoCache.get(serviceName);
@@ -1363,7 +1369,7 @@ public class GdsDBStore extends AbstractGdsStore {
         return ret;
     }
 
-    public PList<DatasetSummary> getDatasetSummary(SearchFilter filter) throws Exception {
+    public PList<DatasetSummary> getDatasetSummary(SearchFilter filter) {
         LOG.debug("==> getDatasetSummary({})", filter);
 
         PList<RangerDataset>  datasets       = getUnscrubbedDatasets(filter);
@@ -1505,7 +1511,7 @@ public class GdsDBStore extends AbstractGdsStore {
         filter.setParam(filterParam, Long.toString(userId));
     }
 
-    private List<DatasetSummary> toDatasetSummary(List<RangerDataset> datasets, GdsPermission gdsPermission) throws Exception {
+    private List<DatasetSummary> toDatasetSummary(List<RangerDataset> datasets, GdsPermission gdsPermission) {
         List<DatasetSummary> ret         = new ArrayList<>();
         String               currentUser = bizUtil.getCurrentUserLoginId();
 
@@ -1544,7 +1550,10 @@ public class GdsDBStore extends AbstractGdsStore {
             List<DataShareInDatasetSummary> dataSharesSummary = getDataSharesSummary(dataShares, filter);
 
             datasetSummary.setDataShares(dataSharesSummary);
-            datasetSummary.setTotalResourceCount(dataSharesSummary.stream().map(DataShareInDatasetSummary::getResourceCount).mapToLong(Long::longValue).sum());
+            datasetSummary.setTotalResourceCount(dataSharesSummary.stream()
+                    .map(DataShareInDatasetSummary::getResourceCount)
+                    .mapToLong(Long::longValue)
+                    .sum());
         }
 
         return ret;
@@ -1602,7 +1611,7 @@ public class GdsDBStore extends AbstractGdsStore {
         return datasetInProjectService.getDatasetsInProjectCount(datasetId);
     }
 
-    private Map<PrincipalType, Integer> getPrincipalCountForDataset(RangerDataset dataset) throws Exception {
+    private Map<PrincipalType, Integer> getPrincipalCountForDataset(RangerDataset dataset) {
         Map<PrincipalType, Integer> ret    = new HashMap<>();
         Set<String>                 users  = Collections.emptySet();
         Set<String>                 groups = Collections.emptySet();
@@ -1935,7 +1944,9 @@ public class GdsDBStore extends AbstractGdsStore {
             boolean dipDeleted = dipDao.remove(dip.getId());
 
             if (!dipDeleted) {
-                throw restErrorUtil.createRESTException("DatasetInProject could not be deleted", MessageEnums.ERROR_DELETE_OBJECT, dip.getId(), "DatasetInProjectId", null, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                throw restErrorUtil.createRESTException("DatasetInProject could not be deleted",
+                        MessageEnums.ERROR_DELETE_OBJECT, dip.getId(), "DatasetInProjectId", null,
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR);
             }
         }
     }
@@ -1948,7 +1959,9 @@ public class GdsDBStore extends AbstractGdsStore {
             boolean dshidDeleted = dshidDao.remove(dshid.getId());
 
             if (!dshidDeleted) {
-                throw restErrorUtil.createRESTException("DataShareInDataset could not be deleted", MessageEnums.ERROR_DELETE_OBJECT, dshid.getId(), "DataShareInDataset", null, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                throw restErrorUtil.createRESTException("DataShareInDataset could not be deleted",
+                        MessageEnums.ERROR_DELETE_OBJECT, dshid.getId(), "DataShareInDataset", null,
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR);
             }
         }
     }
@@ -1961,7 +1974,9 @@ public class GdsDBStore extends AbstractGdsStore {
             boolean dipDeleted = dipDao.remove(dip.getId());
 
             if (!dipDeleted) {
-                throw restErrorUtil.createRESTException("DatasetInProject could not be deleted", MessageEnums.ERROR_DELETE_OBJECT, dip.getId(), "DatasetInProjectId", null, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                throw restErrorUtil.createRESTException("DatasetInProject could not be deleted",
+                        MessageEnums.ERROR_DELETE_OBJECT, dip.getId(), "DatasetInProjectId", null,
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR);
             }
         }
     }
@@ -2070,7 +2085,8 @@ public class GdsDBStore extends AbstractGdsStore {
         return summary;
     }
 
-    private DataShareInDatasetSummary toDshInDsSummary(RangerDataset dataset, RangerDataShare dataShare, RangerDataShareInDataset dshInDs) {
+    private DataShareInDatasetSummary toDshInDsSummary(RangerDataset dataset, RangerDataShare dataShare,
+            RangerDataShareInDataset dshInDs) {
         Map<String, Long>         zoneIds = new HashMap<>();
         DataShareInDatasetSummary summary = new DataShareInDatasetSummary();
 
@@ -2210,7 +2226,7 @@ public class GdsDBStore extends AbstractGdsStore {
     private void updateGdsVersionForService(Long serviceId) {
         updateGdsVersion();
 
-        Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VersionType.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
+        Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
 
         daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
     }
@@ -2229,7 +2245,7 @@ public class GdsDBStore extends AbstractGdsStore {
         List<Long> serviceIds = daoMgr.getXXGdsProject().findServiceIdsForProject(projectId);
 
         for (Long serviceId : serviceIds) {
-            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VersionType.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
+            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
 
             daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
         }
@@ -2241,7 +2257,7 @@ public class GdsDBStore extends AbstractGdsStore {
         List<Long> serviceIds = daoMgr.getXXGdsDataset().findServiceIdsForDataset(datasetId);
 
         for (Long serviceId : serviceIds) {
-            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VersionType.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
+            Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.GDS_VERSION, RangerPolicyDelta.CHANGE_TYPE_GDS_UPDATE);
 
             daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
         }
@@ -2258,11 +2274,11 @@ public class GdsDBStore extends AbstractGdsStore {
     private GdsPermission deletePrincipalFromAcl(RangerGdsObjectACL acl, String principalName, String principalType) {
         final Map<String, GdsPermission> principalAcls;
 
-        if (principalType.equalsIgnoreCase(RemoveRefType.USER.toString())) {
+        if (principalType.equalsIgnoreCase(REMOVE_REF_TYPE.USER.toString())) {
             principalAcls = acl.getUsers();
-        } else if (principalType.equalsIgnoreCase(RemoveRefType.GROUP.toString())) {
+        } else if (principalType.equalsIgnoreCase(REMOVE_REF_TYPE.GROUP.toString())) {
             principalAcls = acl.getGroups();
-        } else if (principalType.equalsIgnoreCase(RemoveRefType.ROLE.toString())) {
+        } else if (principalType.equalsIgnoreCase(REMOVE_REF_TYPE.ROLE.toString())) {
             principalAcls = acl.getRoles();
         } else {
             principalAcls = null;

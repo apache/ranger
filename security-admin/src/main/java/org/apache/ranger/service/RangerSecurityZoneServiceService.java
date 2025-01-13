@@ -288,9 +288,9 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         }
 
         for (XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
-            final RangerDaoManager finaldaoManager        = daoMgr;
-            final Long             finalServiceId         = serviceVersionInfo.getServiceId();
-            final ServiceDBStore.VersionType versionType = ServiceDBStore.VersionType.POLICY_VERSION;
+            final RangerDaoManager            finaldaoManager = daoMgr;
+            final Long                        finalServiceId  = serviceVersionInfo.getServiceId();
+            final ServiceDBStore.VERSION_TYPE versionType     = ServiceDBStore.VERSION_TYPE.POLICY_VERSION;
 
             Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(finaldaoManager, finalServiceId, versionType, null, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null);
 

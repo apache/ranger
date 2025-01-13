@@ -121,11 +121,10 @@ public class RangerPolicyAdminCache {
     private RangerPolicyAdminWrapper addOrUpdatePolicyAdmin(RangerPolicyAdminWrapper policyAdminWrapper, ServicePolicies policies, RangerRoles roles, RangerPolicyEngineOptions options) {
         final RangerPolicyAdminWrapper ret;
 
-        RangerPolicyAdmin policyAdmin          = null;
-        boolean           isPolicyEngineShared = false;
-
-        RangerPolicyAdminImpl oldPolicyAdmin  = policyAdminWrapper == null ? null : (RangerPolicyAdminImpl) policyAdminWrapper.getPolicyAdmin();
-        Boolean               hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
+        RangerPolicyAdmin     policyAdmin          = null;
+        boolean               isPolicyEngineShared = false;
+        RangerPolicyAdminImpl oldPolicyAdmin       = policyAdminWrapper == null ? null : (RangerPolicyAdminImpl) policyAdminWrapper.getPolicyAdmin();
+        Boolean               hasPolicyDeltas      = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
 
         if (hasPolicyDeltas != null) {
             if (hasPolicyDeltas.equals(Boolean.TRUE)) {
@@ -134,6 +133,7 @@ public class RangerPolicyAdminCache {
 
                     try {
                         policyAdminWrapper.getLock().lockInterruptibly();
+
                         isLocked = true;
                     } catch (Exception e) {
                         // Ignore
@@ -142,8 +142,10 @@ public class RangerPolicyAdminCache {
                     if (isLocked) {
                         try {
                             policyAdmin = RangerPolicyAdminImpl.getPolicyAdmin(oldPolicyAdmin, policies);
+
                             if (policyAdmin != null) {
                                 policyAdmin.setRoles(roles);
+
                                 isPolicyEngineShared = true;
                             }
                         } finally {
@@ -157,21 +159,28 @@ public class RangerPolicyAdminCache {
                 if (policies.getPolicies() == null) {
                     policies.setPolicies(new ArrayList<>());
                 }
+
                 policyAdmin = addPolicyAdmin(policies, roles, options);
             }
         } else {
             LOG.warn("Provided policies do not require policy change !! [{}]. Keeping old policy-engine!", policies);
+
             policyAdmin = oldPolicyAdmin;
         }
 
         if (policyAdmin != null) {
-            if (oldPolicyAdmin == null) {
-                LOG.debug("Adding policy-engine to cache with serviceName:[{}] as key", policies.getServiceName());
-            } else {
-                LOG.debug("Replacing policy-engine in cache with serviceName:[{}] as key", policies.getServiceName());
+            if (LOG.isDebugEnabled()) {
+                if (oldPolicyAdmin == null) {
+                    LOG.debug("Adding policy-engine to cache with serviceName:[{}] as key", policies.getServiceName());
+                } else {
+                    LOG.debug("Replacing policy-engine in cache with serviceName:[{}] as key", policies.getServiceName());
+                }
             }
+
             ret = new RangerPolicyAdminWrapper(policyAdmin);
+
             policyAdminCache.put(policies.getServiceName(), ret);
+
             if (oldPolicyAdmin != null && oldPolicyAdmin != policyAdmin) {
                 oldPolicyAdmin.releaseResources(!isPolicyEngineShared);
             }

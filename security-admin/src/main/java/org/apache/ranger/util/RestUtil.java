@@ -42,7 +42,7 @@ public class RestUtil {
     public static final  String TIMEOUT_ACTION          = "timeout";
     public static final  String LOCAL_LOGIN_URL         = "locallogin";
     public static final  String ZONED_EVENT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss z";
-    
+
     private static final String PROXY_RANGER_URL_PATH   = "/ranger";
 
     private RestUtil() {

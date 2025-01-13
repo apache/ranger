@@ -184,8 +184,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
@@ -202,7 +200,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -223,149 +220,191 @@ import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
-    public static final     String                        SERVICE_ADMIN_USERS                     = "service.admin.users";
-    public static final     String                        SERVICE_ADMIN_GROUPS                    = "service.admin.groups";
-    public static final     String                        GDS_SERVICE_NAME                        = "_gds";
-    public static final     String                        CRYPT_ALGO                              = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
-    public static final     String                        ENCRYPT_KEY                             = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
-    public static final     String                        SALT                                    = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
-    public static final     Integer                       ITERATION_COUNT                         = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
-    public static final     String                        RANGER_PLUGIN_AUDIT_FILTERS             = "ranger.plugin.audit.filters";
-    public static final     String                        HIDDEN_PASSWORD_STR                     = "*****";
-    public static final     String                        CONFIG_KEY_PASSWORD                     = "password";
-    public static final     String                        ACCESS_TYPE_DECRYPT_EEK                 = "decrypteek";
-    public static final     String                        ACCESS_TYPE_GENERATE_EEK                = "generateeek";
-    public static final     String                        ACCESS_TYPE_GET_METADATA                = "getmetadata";
     private static final Logger LOG = LoggerFactory.getLogger(ServiceDBStore.class);
-    private static final    String                        POLICY_ALLOW_EXCLUDE                    = "Policy Allow:Exclude";
-    private static final    String                        POLICY_ALLOW_INCLUDE                    = "Policy Allow:Include";
-    private static final    String                        POLICY_DENY_EXCLUDE                     = "Policy Deny:Exclude";
-    private static final    String                        POLICY_DENY_INCLUDE                     = "Policy Deny:Include";
-    private static final    String                        POLICY_TYPE_ACCESS                      = "Access";
-    private static final    String                        POLICY_TYPE_DATAMASK                    = "Masking";
-    private static final    String                        POLICY_TYPE_ROWFILTER                   = "Row Level Filter";
-    private static final    String                        HOSTNAME                                = "Host name";
-    private static final    String                        USER_NAME                               = "Exported by";
-    private static final    String                        RANGER_VERSION                          = "Ranger apache version";
-    private static final    String                        TIMESTAMP                               = "Export time";
-    private static final    String                        EXPORT_COUNT                            = "Exported count";
-    private static final    String                        SERVICE_CHECK_USER                      = "service.check.user";
-    private static final    String                        AMBARI_SERVICE_CHECK_USER               = "ambari.service.check.user";
-    private static final    String                        RANGER_PLUGIN_CONFIG_PREFIX             = "ranger.plugin.";
-    private static final    Comparator<RangerPolicyDelta> POLICY_DELTA_ID_COMPARATOR              = new RangerPolicyDeltaComparator();
-    public static           boolean                       supportsPolicyDeltas;
-    public static           boolean                       supportsInPlacePolicyUpdates;
-    public static           Integer                       retentionPeriodInDays                   = 7;
-    public static           Integer                       tagRetentionPeriodInDays                = 3;
-    public static           boolean                       supportsPurgeLoginRecords;
-    public static           Integer                       loginRecordsRetentionPeriodInDays       = 0;
-    public static           boolean                       supportsPurgeTransactionRecords;
-    public static           Integer                       transactionRecordsRetentionPeriodInDays = 0;
-    public static           boolean                       supportsPurgePolicyExportLogs;
-    public static           Integer                       policyExportLogsRetentionPeriodInDays   = 0;
-    private static          String                        localHostname;
-    private static          boolean                       isRolesDownloadedByService;
-    private static volatile boolean                       legacyServiceDefsInitDone;
+
+    public static final String  SERVICE_ADMIN_USERS         = "service.admin.users";
+    public static final String  SERVICE_ADMIN_GROUPS        = "service.admin.groups";
+    public static final String  GDS_SERVICE_NAME            = "_gds";
+    public static final String  CRYPT_ALGO                  = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
+    public static final String  ENCRYPT_KEY                 = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
+    public static final String  SALT                        = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
+    public static final Integer ITERATION_COUNT             = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
+    public static final String  RANGER_PLUGIN_AUDIT_FILTERS = "ranger.plugin.audit.filters";
+    public static final String  HIDDEN_PASSWORD_STR         = "*****";
+    public static final String  CONFIG_KEY_PASSWORD         = "password";
+    public static final String  ACCESS_TYPE_DECRYPT_EEK     = "decrypteek";
+    public static final String  ACCESS_TYPE_GENERATE_EEK    = "generateeek";
+    public static final String  ACCESS_TYPE_GET_METADATA    = "getmetadata";
+
+    private static final String POLICY_ALLOW_EXCLUDE        = "Policy Allow:Exclude";
+    private static final String POLICY_ALLOW_INCLUDE        = "Policy Allow:Include";
+    private static final String POLICY_DENY_EXCLUDE         = "Policy Deny:Exclude";
+    private static final String POLICY_DENY_INCLUDE         = "Policy Deny:Include";
+    private static final String POLICY_TYPE_ACCESS          = "Access";
+    private static final String POLICY_TYPE_DATAMASK        = "Masking";
+    private static final String POLICY_TYPE_ROWFILTER       = "Row Level Filter";
+    private static final String HOSTNAME                    = "Host name";
+    private static final String USER_NAME                   = "Exported by";
+    private static final String RANGER_VERSION              = "Ranger apache version";
+    private static final String TIMESTAMP                   = "Export time";
+    private static final String EXPORT_COUNT                = "Exported count";
+    private static final String SERVICE_CHECK_USER          = "service.check.user";
+    private static final String AMBARI_SERVICE_CHECK_USER   = "ambari.service.check.user";
+    private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
+    private static final String LINE_SEPARATOR              = "\n";
+    private static final String FILE_HEADER                 = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
+    private static final String COMMA_DELIMITER             = "|";
+
+    private static final Comparator<RangerPolicyDelta> POLICY_DELTA_ID_COMPARATOR = new RangerPolicyDeltaComparator();
+
+    public static boolean SUPPORTS_POLICY_DELTAS;
+    public static boolean SUPPORTS_IN_PLACE_POLICY_UPDATES;
+    public static Integer RETENTION_PERIOD_IN_DAYS     = 7;
+    public static Integer TAG_RETENTION_PERIOD_IN_DAYS = 3;
+    public static boolean SUPPORTS_PURGE_LOGIN_RECORDS;
+    public static Integer LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS;
+    public static boolean SUPPORTS_PURGE_TRANSACTION_RECORDS;
+    public static Integer TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS;
+    public static boolean SUPPORTS_PURGE_POLICY_EXPORT_LOGS;
+    public static Integer POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS;
+
+    private static String  LOCAL_HOSTNAME;
+    private static boolean isRolesDownloadedByService;
+
+    private static volatile boolean legacyServiceDefsInitDone;
+
     @Autowired
-    RangerServiceDefService                     serviceDefService;
+    RangerServiceDefService serviceDefService;
+
     @Autowired
-    RangerDaoManager                            daoMgr;
+    RangerDaoManager daoMgr;
+
     @Autowired
-    RESTErrorUtil                               restErrorUtil;
+    RESTErrorUtil restErrorUtil;
+
     @Autowired
-    RangerServiceService                        svcService;
+    RangerServiceService svcService;
+
     @Autowired
-    StringUtil                                  stringUtil;
+    StringUtil stringUtil;
+
     @Autowired
-    RangerAuditFields<?>                        rangerAuditFields;
+    RangerAuditFields<?> rangerAuditFields;
+
     @Autowired
-    RangerPolicyService                         policyService;
+    RangerPolicyService policyService;
+
     @Autowired
     RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
+
     @Autowired
-    XUserService                                xUserService;
+    XUserService xUserService;
+
     @Autowired
-    XUserMgr                                    xUserMgr;
+    XUserMgr xUserMgr;
+
     @Autowired
-    XGroupService                               xGroupService;
+    XGroupService xGroupService;
+
     @Autowired
-    PolicyRefUpdater                            policyRefUpdater;
+    PolicyRefUpdater policyRefUpdater;
+
     @Autowired
-    RangerDataHistService                       dataHistService;
+    RangerDataHistService dataHistService;
+
     @Autowired
     @Qualifier(value = "transactionManager")
-    PlatformTransactionManager                  txManager;
+    PlatformTransactionManager txManager;
+
     @Autowired
-    RangerBizUtil                               bizUtil;
+    RangerBizUtil bizUtil;
+
     @Autowired
-    RangerPolicyWithAssignedIdService           assignedIdPolicyService;
+    RangerPolicyWithAssignedIdService assignedIdPolicyService;
+
     @Autowired
-    RangerServiceWithAssignedIdService          svcServiceWithAssignedId;
+    RangerServiceWithAssignedIdService svcServiceWithAssignedId;
+
     @Autowired
-    RangerServiceDefWithAssignedIdService       svcDefServiceWithAssignedId;
+    RangerServiceDefWithAssignedIdService svcDefServiceWithAssignedId;
+
     @Autowired
-    RangerFactory                               factory;
+    RangerFactory factory;
+
     @Autowired
-    JSONUtil                                    jsonUtil;
+    JSONUtil jsonUtil;
+
     @Autowired
-    ServiceMgr                                  serviceMgr;
+    ServiceMgr serviceMgr;
+
     @Autowired
-    AssetMgr                                    assetMgr;
+    AssetMgr assetMgr;
+
     @Autowired
-    RangerTransactionSynchronizationAdapter     transactionSynchronizationAdapter;
+    RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+
     @Autowired
-    RangerSecurityZoneServiceService            securityZoneService;
+    RangerSecurityZoneServiceService securityZoneService;
+
     @Autowired
-    TagDBStore                                  tagStore;
+    TagDBStore tagStore;
+
     @Autowired
-    UserMgr                                     userMgr;
+    UserMgr userMgr;
+
     @Autowired
-    SecurityZoneDBStore                         securityZoneStore;
+    SecurityZoneDBStore securityZoneStore;
+
     @Autowired
-    GUIDUtil                                    guidUtil;
-    private Boolean              populateExistingBaseFields = false;
+    GUIDUtil guidUtil;
+
+    private boolean              populateExistingBaseFields;
     private ServicePredicateUtil predicateUtil;
     private RangerAdminConfig    config;
 
     public static void persistVersionChange(ServiceVersionUpdater serviceVersionUpdater) {
         RangerDaoManager daoMgr      = serviceVersionUpdater.daoManager;
         Long             id          = serviceVersionUpdater.serviceId;
-        VersionType      versionType = serviceVersionUpdater.versionType;
+        VERSION_TYPE     versionType = serviceVersionUpdater.versionType;
+        Long             nextVersion = 1L;
+        Date             now         = new Date();
 
         XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
-
-        XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(id);
-        XXService            service                 = daoMgr.getXXService().getById(id);
-
-        Long nextVersion = 1L;
-        Date now         = new Date();
+        XXServiceVersionInfo serviceVersionInfoDbObj  = serviceVersionInfoDao.findByServiceId(id);
+        XXService            service                  = daoMgr.getXXService().getById(id);
 
         if (serviceVersionInfoDbObj != null) {
-            if (versionType == VersionType.POLICY_VERSION) {
+            if (versionType == VERSION_TYPE.POLICY_VERSION) {
                 nextVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
+
                 serviceVersionInfoDbObj.setPolicyVersion(nextVersion);
                 serviceVersionInfoDbObj.setPolicyUpdateTime(now);
-            } else if (versionType == VersionType.TAG_VERSION) {
+            } else if (versionType == VERSION_TYPE.TAG_VERSION) {
                 nextVersion = getNextVersion(serviceVersionInfoDbObj.getTagVersion());
+
                 serviceVersionInfoDbObj.setTagVersion(nextVersion);
                 serviceVersionInfoDbObj.setTagUpdateTime(now);
-            } else if (versionType == VersionType.ROLE_VERSION) {
+            } else if (versionType == VERSION_TYPE.ROLE_VERSION) {
                 // get the LatestRoleVersion from the GlobalTable and update ServiceInfo for a service
                 XXGlobalStateDao xxGlobalStateDao = daoMgr.getXXGlobalState();
+
                 if (xxGlobalStateDao != null) {
                     Long roleVersion = xxGlobalStateDao.getAppDataVersion("RangerRole");
+
                     if (roleVersion != null) {
                         nextVersion = roleVersion;
                     } else {
                         LOG.error("No Global state for 'RoleVersion'. Cannot execute this object:[{}]", serviceVersionUpdater);
                     }
+
                     serviceVersionInfoDbObj.setRoleVersion(nextVersion);
                     serviceVersionInfoDbObj.setRoleUpdateTime(now);
                 } else {
                     LOG.error("No Global state DAO. Cannot execute this object:[{}]", serviceVersionUpdater);
+
                     return;
                 }
-            } else if (versionType == VersionType.GDS_VERSION) {
+            } else if (versionType == VERSION_TYPE.GDS_VERSION) {
                 nextVersion = daoMgr.getXXGlobalState().getAppDataVersion(RANGER_GLOBAL_STATE_NAME_GDS);
 
                 if (nextVersion == null) {
@@ -375,15 +414,18 @@ public class ServiceDBStore extends AbstractServiceStore {
                 serviceVersionInfoDbObj.setGdsVersion(nextVersion);
                 serviceVersionInfoDbObj.setGdsUpdateTime(now);
             } else {
-                LOG.error("Unknown VersionType:{}. Cannot execute this object:[{}]", versionType, serviceVersionUpdater);
+                LOG.error("Unknown VERSION_TYPE:{}. Cannot execute this object:[{}]", versionType, serviceVersionUpdater);
+
                 return;
             }
 
             serviceVersionUpdater.version = nextVersion;
+
             serviceVersionInfoDao.update(serviceVersionInfoDbObj);
         } else {
             if (service != null) {
                 serviceVersionInfoDbObj = new XXServiceVersionInfo();
+
                 serviceVersionInfoDbObj.setServiceId(service.getId());
                 serviceVersionInfoDbObj.setPolicyVersion(nextVersion);
                 serviceVersionInfoDbObj.setPolicyUpdateTime(now);
@@ -395,21 +437,22 @@ public class ServiceDBStore extends AbstractServiceStore {
                 serviceVersionInfoDbObj.setGdsUpdateTime(now);
 
                 serviceVersionUpdater.version = nextVersion;
+
                 serviceVersionInfoDao.create(serviceVersionInfoDbObj);
             }
         }
 
         if (service != null) {
-            if (versionType == VersionType.POLICY_VERSION) {
+            if (versionType == VERSION_TYPE.POLICY_VERSION) {
                 persistChangeLog(service, versionType, serviceVersionInfoDbObj.getPolicyVersion(), serviceVersionUpdater);
-            } else if (versionType == VersionType.TAG_VERSION) {
+            } else if (versionType == VERSION_TYPE.TAG_VERSION) {
                 persistChangeLog(service, versionType, serviceVersionInfoDbObj.getTagVersion(), serviceVersionUpdater);
             }
         }
     }
 
     public static boolean isSupportsPolicyDeltas() {
-        return supportsPolicyDeltas;
+        return SUPPORTS_POLICY_DELTAS;
     }
 
     public static boolean isSupportsRolesDownloadByService() {
@@ -428,6 +471,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         LOG.debug("==> ServiceDBStore.createServiceDef({})", serviceDef);
 
         XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(serviceDef.getName());
+
         if (xServiceDef != null) {
             throw restErrorUtil.createRESTException("service-def with name: " + serviceDef.getName() + " already exists", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }
@@ -439,6 +483,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             RangerServiceDefValidator      validator        = new RangerServiceDefValidator(this);
             List<ValidationFailureDetails> failures         = new ArrayList<>();
             boolean                        isValidResources = validator.isValidResources(serviceDef, failures, RangerValidator.Action.CREATE);
+
             if (!isValidResources) {
                 throw restErrorUtil.createRESTException("service-def with name: " + serviceDef.getName() + " has invalid resources:[" + failures + "]", MessageEnums.INVALID_INPUT_DATA);
             }
@@ -450,25 +495,28 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerEnumDef>            enums                = serviceDef.getEnums();
         RangerDataMaskDef              dataMaskDef          = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef         = serviceDef.getRowFilterDef();
-        List<RangerDataMaskTypeDef>    dataMaskTypes        = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<RangerDataMaskTypeDef>() : dataMaskDef.getMaskTypes();
-        List<RangerAccessTypeDef>      dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : dataMaskDef.getAccessTypes();
-        List<RangerResourceDef>        dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<RangerResourceDef>() : dataMaskDef.getResources();
-        List<RangerAccessTypeDef>      rowFilterAccessTypes = rowFilterDef == null || rowFilterDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : rowFilterDef.getAccessTypes();
-        List<RangerResourceDef>        rowFilterResources   = rowFilterDef == null || rowFilterDef.getResources() == null ? new ArrayList<RangerResourceDef>() : rowFilterDef.getResources();
+        List<RangerDataMaskTypeDef>    dataMaskTypes        = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<>() : dataMaskDef.getMaskTypes();
+        List<RangerAccessTypeDef>      dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<>() : dataMaskDef.getAccessTypes();
+        List<RangerResourceDef>        dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<>() : dataMaskDef.getResources();
+        List<RangerAccessTypeDef>      rowFilterAccessTypes = rowFilterDef == null || rowFilterDef.getAccessTypes() == null ? new ArrayList<>() : rowFilterDef.getAccessTypes();
+        List<RangerResourceDef>        rowFilterResources   = rowFilterDef == null || rowFilterDef.getResources() == null ? new ArrayList<>() : rowFilterDef.getResources();
 
         RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef, false);
+
         defHelper.patchServiceDefWithDefaultValues();
 
         // While creating, value of version should be 1.
-        serviceDef.setVersion(Long.valueOf(1));
+        serviceDef.setVersion(1L);
 
         if (populateExistingBaseFields) {
             svcDefServiceWithAssignedId.setPopulateExistingBaseFields(true);
+
             daoMgr.getXXServiceDef().setIdentityInsert(true);
 
             svcDefServiceWithAssignedId.create(serviceDef);
 
             svcDefServiceWithAssignedId.setPopulateExistingBaseFields(false);
+
             daoMgr.getXXServiceDef().updateSequence();
             daoMgr.getXXServiceDef().setIdentityInsert(false);
         } else {
@@ -476,100 +524,126 @@ public class ServiceDBStore extends AbstractServiceStore {
             serviceDef.setId(null);
             serviceDef.setCreateTime(null);
             serviceDef.setUpdateTime(null);
+
             serviceDef = serviceDefService.create(serviceDef);
         }
-        Long         serviceDefId  = serviceDef.getId();
-        XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 
+        Long                  serviceDefId       = serviceDef.getId();
+        XXServiceDef          createdSvcDef      = daoMgr.getXXServiceDef().getById(serviceDefId);
         XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
-        for (int i = 0; i < configs.size(); i++) {
-            RangerServiceConfigDef config = configs.get(i);
 
-            XXServiceConfigDef xConfig = new XXServiceConfigDef();
+        for (int i = 0; i < configs.size(); i++) {
+            RangerServiceConfigDef config  = configs.get(i);
+            XXServiceConfigDef     xConfig = new XXServiceConfigDef();
+
             xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
             xConfig.setOrder(i);
-            xConfig = xxServiceConfigDao.create(xConfig);
+
+            xxServiceConfigDao.create(xConfig);
         }
 
         XXResourceDefDao xxResDefDao = daoMgr.getXXResourceDef();
+
         for (int i = 0; i < resources.size(); i++) {
-            RangerResourceDef resource = resources.get(i);
+            RangerResourceDef resource  = resources.get(i);
+            XXResourceDef     parent    = xxResDefDao.findByNameAndServiceDefId(resource.getParent(), serviceDefId);
+            Long              parentId  = (parent != null) ? parent.getId() : null;
+            XXResourceDef     xResource = new XXResourceDef();
 
-            XXResourceDef parent   = xxResDefDao.findByNameAndServiceDefId(resource.getParent(), serviceDefId);
-            Long          parentId = (parent != null) ? parent.getId() : null;
-
-            XXResourceDef xResource = new XXResourceDef();
             xResource = serviceDefService.populateRangerResourceDefToXX(resource, xResource, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
             xResource.setOrder(i);
             xResource.setParent(parentId);
-            xResource = xxResDefDao.create(xResource);
+
+            xxResDefDao.create(xResource);
         }
 
         XXAccessTypeDefDao xxATDDao = daoMgr.getXXAccessTypeDef();
-        for (int i = 0; i < accessTypes.size(); i++) {
-            RangerAccessTypeDef accessType = accessTypes.get(i);
 
-            XXAccessTypeDef xAccessType = new XXAccessTypeDef();
+        for (int i = 0; i < accessTypes.size(); i++) {
+            RangerAccessTypeDef accessType  = accessTypes.get(i);
+            XXAccessTypeDef     xAccessType = new XXAccessTypeDef();
+
             xAccessType = serviceDefService.populateRangerAccessTypeDefToXX(accessType, xAccessType, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
             xAccessType.setOrder(i);
+
             xAccessType = xxATDDao.create(xAccessType);
 
             Collection<String>       impliedGrants = accessType.getImpliedGrants();
             XXAccessTypeDefGrantsDao xxATDGrantDao = daoMgr.getXXAccessTypeDefGrants();
+
             for (String impliedGrant : impliedGrants) {
                 XXAccessTypeDefGrants xImpliedGrant = new XXAccessTypeDefGrants();
+
                 xImpliedGrant.setAtdId(xAccessType.getId());
                 xImpliedGrant.setImpliedGrant(impliedGrant);
-                xImpliedGrant = xxATDGrantDao.create(xImpliedGrant);
+
+                xxATDGrantDao.create(xImpliedGrant);
             }
         }
 
         XXPolicyConditionDefDao xxPolCondDao = daoMgr.getXXPolicyConditionDef();
-        for (int i = 0; i < policyConditions.size(); i++) {
-            RangerPolicyConditionDef policyCondition = policyConditions.get(i);
 
-            XXPolicyConditionDef xPolicyCondition = new XXPolicyConditionDef();
+        for (int i = 0; i < policyConditions.size(); i++) {
+            RangerPolicyConditionDef policyCondition  = policyConditions.get(i);
+            XXPolicyConditionDef     xPolicyCondition = new XXPolicyConditionDef();
+
             xPolicyCondition = serviceDefService.populateRangerPolicyConditionDefToXX(policyCondition, xPolicyCondition, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
             xPolicyCondition.setOrder(i);
-            xPolicyCondition = xxPolCondDao.create(xPolicyCondition);
+
+            xxPolCondDao.create(xPolicyCondition);
         }
 
         XXContextEnricherDefDao xxContextEnricherDao = daoMgr.getXXContextEnricherDef();
-        for (int i = 0; i < contextEnrichers.size(); i++) {
-            RangerContextEnricherDef contextEnricher = contextEnrichers.get(i);
 
-            XXContextEnricherDef xContextEnricher = new XXContextEnricherDef();
+        for (int i = 0; i < contextEnrichers.size(); i++) {
+            RangerContextEnricherDef contextEnricher  = contextEnrichers.get(i);
+            XXContextEnricherDef     xContextEnricher = new XXContextEnricherDef();
+
             xContextEnricher = serviceDefService.populateRangerContextEnricherDefToXX(contextEnricher, xContextEnricher, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
             xContextEnricher.setOrder(i);
-            xContextEnricher = xxContextEnricherDao.create(xContextEnricher);
+
+            xxContextEnricherDao.create(xContextEnricher);
         }
 
         XXEnumDefDao xxEnumDefDao = daoMgr.getXXEnumDef();
+
         for (RangerEnumDef vEnum : enums) {
             XXEnumDef xEnum = new XXEnumDef();
+
             xEnum = serviceDefService.populateRangerEnumDefToXX(vEnum, xEnum, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
             xEnum = xxEnumDefDao.create(xEnum);
 
             List<RangerEnumElementDef> elements        = vEnum.getElements();
             XXEnumElementDefDao        xxEnumEleDefDao = daoMgr.getXXEnumElementDef();
-            for (int i = 0; i < elements.size(); i++) {
-                RangerEnumElementDef element = elements.get(i);
 
-                XXEnumElementDef xElement = new XXEnumElementDef();
+            for (int i = 0; i < elements.size(); i++) {
+                RangerEnumElementDef element  = elements.get(i);
+                XXEnumElementDef     xElement = new XXEnumElementDef();
+
                 xElement = serviceDefService.populateRangerEnumElementDefToXX(element, xElement, xEnum, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                 xElement.setOrder(i);
-                xElement = xxEnumEleDefDao.create(xElement);
+
+                xxEnumEleDefDao.create(xElement);
             }
         }
 
         XXDataMaskTypeDefDao xxDataMaskDefDao = daoMgr.getXXDataMaskTypeDef();
-        for (int i = 0; i < dataMaskTypes.size(); i++) {
-            RangerDataMaskTypeDef dataMask = dataMaskTypes.get(i);
 
-            XXDataMaskTypeDef xDataMaskDef = new XXDataMaskTypeDef();
+        for (int i = 0; i < dataMaskTypes.size(); i++) {
+            RangerDataMaskTypeDef dataMask     = dataMaskTypes.get(i);
+            XXDataMaskTypeDef     xDataMaskDef = new XXDataMaskTypeDef();
+
             xDataMaskDef = serviceDefService.populateRangerDataMaskDefToXX(dataMask, xDataMaskDef, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
             xDataMaskDef.setOrder(i);
-            xDataMaskDef = xxDataMaskDefDao.create(xDataMaskDef);
+
+            xxDataMaskDefDao.create(xDataMaskDef);
         }
 
         List<XXAccessTypeDef> xxAccessTypeDefs = xxATDDao.findByServiceDefId(createdSvcDef.getId());
@@ -653,6 +727,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         RangerServiceDef createdServiceDef = serviceDefService.getPopulatedViewObject(createdSvcDef);
+
         dataHistService.createObjectDataHistory(createdServiceDef, RangerDataHistService.ACTION_CREATE);
 
         postCreate(createdServiceDef);
@@ -666,16 +741,15 @@ public class ServiceDBStore extends AbstractServiceStore {
     public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) throws Exception {
         LOG.debug("==> ServiceDBStore.updateServiceDef({})", serviceDef);
 
-        Long serviceDefId = serviceDef.getId();
+        Long         serviceDefId = serviceDef.getId();
+        XXServiceDef existing     = daoMgr.getXXServiceDef().getById(serviceDefId);
 
-        XXServiceDef existing = daoMgr.getXXServiceDef().getById(serviceDefId);
         if (existing == null) {
             throw restErrorUtil.createRESTException("no service-def exists with ID=" + serviceDef.getId(), MessageEnums.DATA_NOT_FOUND);
         }
 
-        String existingName = existing.getName();
-
-        boolean renamed = !StringUtils.equalsIgnoreCase(serviceDef.getName(), existingName);
+        String  existingName = existing.getName();
+        boolean renamed      = !StringUtils.equalsIgnoreCase(serviceDef.getName(), existingName);
 
         if (renamed) {
             XXServiceDef renamedSVCDef = daoMgr.getXXServiceDef().findByName(serviceDef.getName());
@@ -693,8 +767,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<RangerEnumDef>            enums            = serviceDef.getEnums() != null ? serviceDef.getEnums() : new ArrayList<>();
         RangerDataMaskDef              dataMaskDef      = serviceDef.getDataMaskDef();
         RangerRowFilterDef             rowFilterDef     = serviceDef.getRowFilterDef();
+        RangerServiceDefHelper         defHelper        = new RangerServiceDefHelper(serviceDef, false);
 
-        RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef, false);
         defHelper.patchServiceDefWithDefaultValues();
 
         serviceDef.setCreateTime(existing.getCreateTime());
@@ -702,11 +776,13 @@ public class ServiceDBStore extends AbstractServiceStore {
         serviceDef.setVersion(existing.getVersion());
 
         serviceDef = serviceDefService.update(serviceDef);
+
         XXServiceDef createdSvcDef = daoMgr.getXXServiceDef().getById(serviceDefId);
 
         updateChildObjectsOfServiceDef(createdSvcDef, configs, resources, accessTypes, policyConditions, contextEnrichers, enums, dataMaskDef, rowFilterDef);
 
         RangerServiceDef updatedSvcDef = getServiceDef(serviceDefId);
+
         dataHistService.createObjectDataHistory(updatedSvcDef, RangerDataHistService.ACTION_UPDATE);
 
         postUpdate(updatedSvcDef);
@@ -718,8 +794,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     public void deleteServiceDef(Long serviceDefId, Boolean forceDelete) throws Exception {
         LOG.debug("==> ServiceDBStore.deleteServiceDef({}, {})", serviceDefId, forceDelete);
+
         bizUtil.blockAuditorRoleUser();
+
         UserSessionBase session = ContextUtil.getCurrentUserSession();
+
         if (session == null) {
             throw restErrorUtil.createRESTException("UserSession cannot be null, only Admin can update service-def", MessageEnums.OPER_NO_PERMISSION);
         }
@@ -729,11 +808,13 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         RangerServiceDef serviceDef = getServiceDef(serviceDefId);
+
         if (serviceDef == null) {
             throw restErrorUtil.createRESTException("No Service Definiton found for Id: " + serviceDefId, MessageEnums.DATA_NOT_FOUND);
         }
 
         List<XXService> serviceList = daoMgr.getXXService().findByServiceDefId(serviceDefId);
+
         if (!forceDelete) {
             if (CollectionUtils.isNotEmpty(serviceList)) {
                 throw restErrorUtil.createRESTException("Services exists under given service definition, can't delete Service-Def: " + serviceDef.getName(), MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
@@ -748,28 +829,34 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         XXDataMaskTypeDefDao    dataMaskDao  = daoMgr.getXXDataMaskTypeDef();
         List<XXDataMaskTypeDef> dataMaskDefs = dataMaskDao.findByServiceDefId(serviceDefId);
+
         for (XXDataMaskTypeDef dataMaskDef : dataMaskDefs) {
             dataMaskDao.remove(dataMaskDef);
         }
 
         List<XXAccessTypeDef> accTypeDefs = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
+
         for (XXAccessTypeDef accessType : accTypeDefs) {
             deleteXXAccessTypeDef(accessType);
         }
 
         XXContextEnricherDefDao    xContextEnricherDao = daoMgr.getXXContextEnricherDef();
         List<XXContextEnricherDef> contextEnrichers    = xContextEnricherDao.findByServiceDefId(serviceDefId);
+
         for (XXContextEnricherDef context : contextEnrichers) {
             xContextEnricherDao.remove(context);
         }
 
         XXEnumDefDao    enumDefDao  = daoMgr.getXXEnumDef();
         List<XXEnumDef> enumDefList = enumDefDao.findByServiceDefId(serviceDefId);
+
         for (XXEnumDef enumDef : enumDefList) {
             List<XXEnumElementDef> enumEleDefList = daoMgr.getXXEnumElementDef().findByEnumDefId(enumDef.getId());
+
             for (XXEnumElementDef eleDef : enumEleDefList) {
                 daoMgr.getXXEnumElementDef().remove(eleDef);
             }
+
             enumDefDao.remove(enumDef);
         }
 
@@ -778,33 +865,41 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         for (XXPolicyConditionDef policyCond : policyCondList) {
             List<XXPolicyRefCondition> xxPolicyRefConditions = daoMgr.getXXPolicyRefCondition().findByConditionDefId(policyCond.getId());
-            for (XXPolicyRefCondition xXPolicyRefCondition : xxPolicyRefConditions) {
-                daoMgr.getXXPolicyRefCondition().remove(xXPolicyRefCondition);
+
+            for (XXPolicyRefCondition xxPolicyRefCondition : xxPolicyRefConditions) {
+                daoMgr.getXXPolicyRefCondition().remove(xxPolicyRefCondition);
             }
+
             policyCondDao.remove(policyCond);
         }
 
         List<XXResourceDef> resDefList = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
+
         for (XXResourceDef resDef : resDefList) {
             deleteXXResourceDef(resDef);
         }
 
         XXServiceConfigDefDao    configDefDao  = daoMgr.getXXServiceConfigDef();
         List<XXServiceConfigDef> configDefList = configDefDao.findByServiceDefId(serviceDefId);
+
         for (XXServiceConfigDef configDef : configDefList) {
             configDefDao.remove(configDef);
         }
 
         Long version = serviceDef.getVersion();
+
         if (version == null) {
-            version = Long.valueOf(1);
+            version = 1L;
+
             LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
         } else {
-            version = Long.valueOf(version.longValue() + 1);
+            version = version + 1;
         }
+
         serviceDef.setVersion(version);
 
         serviceDefService.delete(serviceDef);
+
         LOG.info("ServiceDefinition has been deleted successfully. Service-Def Name: {}", serviceDef.getName());
 
         dataHistService.createObjectDataHistory(serviceDef, RangerDataHistService.ACTION_DELETE);
@@ -816,9 +911,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     @Override
     public RangerServiceDef getServiceDef(Long id) throws Exception {
-        LOG.debug("==> ServiceDBStore.getServiceDef()", id);
+        LOG.debug("==> ServiceDBStore.getServiceDef({})", id);
 
         RangerServiceDef ret = serviceDefService.read(id);
+
         LOG.debug("<== ServiceDBStore.getServiceDef({}): {}", id, ret);
 
         return ret;
@@ -828,15 +924,14 @@ public class ServiceDBStore extends AbstractServiceStore {
     public RangerServiceDef getServiceDefByName(String name) throws Exception {
         LOG.debug("==> ServiceDBStore.getServiceDefByName({})", name);
 
-        RangerServiceDef ret = null;
-
-        XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(name);
+        RangerServiceDef ret         = null;
+        XXServiceDef     xServiceDef = daoMgr.getXXServiceDef().findByName(name);
 
         if (xServiceDef != null) {
             ret = serviceDefService.getPopulatedViewObject(xServiceDef);
         }
 
-        LOG.debug("== ServiceDBStore.getServiceDefByName({}): {}", name, ret);
+        LOG.debug("== ServiceDBStore.getServiceDefByName({}): ", name);
 
         return ret;
     }
@@ -846,12 +941,11 @@ public class ServiceDBStore extends AbstractServiceStore {
      * @return {@link RangerServiceDef} - service using display name if present in DB, <code>null</code> otherwise.
      */
     @Override
-    public RangerServiceDef getServiceDefByDisplayName(String displayName) throws Exception {
+    public RangerServiceDef getServiceDefByDisplayName(String displayName) {
         LOG.debug("==> ServiceDBStore.getServiceDefByDisplayName({})", displayName);
 
-        RangerServiceDef ret = null;
-
-        XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByDisplayName(displayName);
+        RangerServiceDef ret         = null;
+        XXServiceDef     xServiceDef = daoMgr.getXXServiceDef().findByDisplayName(displayName);
 
         if (xServiceDef != null) {
             ret = serviceDefService.getPopulatedViewObject(xServiceDef);
@@ -888,31 +982,37 @@ public class ServiceDBStore extends AbstractServiceStore {
         boolean             createDefaultPolicy = true;
         Map<String, String> configs             = service.getConfigs();
         Map<String, String> validConfigs        = validateRequiredConfigParams(service, configs);
+
         if (validConfigs == null) {
             LOG.debug("==> ConfigParams cannot be null, ServiceDBStore.createService({})", service);
+
             throw restErrorUtil.createRESTException("ConfigParams cannot be null.", MessageEnums.ERROR_CREATING_OBJECT);
         }
 
         // While creating, value of version should be 1.
-        service.setVersion(Long.valueOf(1));
-        service.setTagVersion(Long.valueOf(1));
+        service.setVersion(1L);
+        service.setTagVersion(1L);
 
         if (populateExistingBaseFields) {
             svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
+
             daoMgr.getXXService().setIdentityInsert(true);
 
             service = svcServiceWithAssignedId.create(service);
 
             daoMgr.getXXService().setIdentityInsert(false);
             daoMgr.getXXService().updateSequence();
+
             svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
+
             createDefaultPolicy = false;
         } else {
             service = svcService.create(service);
         }
-        XXService xCreatedService = daoMgr.getXXService().getById(service.getId());
 
-        XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
+        XXService             xCreatedService = daoMgr.getXXService().getById(service.getId());
+        XXServiceConfigMapDao xConfMapDao     = daoMgr.getXXServiceConfigMap();
+
         for (Entry<String, String> configMap : validConfigs.entrySet()) {
             String configKey   = configMap.getKey();
             String configValue = configMap.getValue();
@@ -920,40 +1020,49 @@ public class ServiceDBStore extends AbstractServiceStore {
             if (StringUtils.equalsIgnoreCase(configKey, "username")) {
                 String userName = stringUtil.getValidUserName(configValue);
                 XXUser xxUser   = daoMgr.getXXUser().findByUserName(userName);
+
                 if (xxUser != null) {
-                    VXUser vXUser = xUserService.populateViewBean(xxUser);
+                    xUserService.populateViewBean(xxUser);
                 } else {
                     UserSessionBase usb = ContextUtil.getCurrentUserSession();
+
                     if (usb != null && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
                         throw restErrorUtil.createRESTException("User does not exist with given username: [" + userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
                     }
+
                     xUserMgr.createServiceConfigUser(userName);
                 }
             }
 
             if (StringUtils.equalsIgnoreCase(configKey, CONFIG_KEY_PASSWORD)) {
-                Joiner joiner = Joiner.on(",").skipNulls();
-                String iv     = PasswordUtils.generateIvIfNeeded(CRYPT_ALGO);
-
-                String cryptConfigString = joiner.join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, iv, configValue);
-                String encryptedPwd      = PasswordUtils.encryptPassword(cryptConfigString);
-
+                Joiner joiner             = Joiner.on(",").skipNulls();
+                String iv                 = PasswordUtils.generateIvIfNeeded(CRYPT_ALGO);
+                String cryptConfigString  = joiner.join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, iv, configValue);
+                String encryptedPwd       = PasswordUtils.encryptPassword(cryptConfigString);
                 String paddedEncryptedPwd = joiner.join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, iv, encryptedPwd);
                 String decryptedPwd       = PasswordUtils.decryptPassword(paddedEncryptedPwd);
+
                 if (StringUtils.equals(decryptedPwd, configValue)) {
                     configValue = paddedEncryptedPwd;
                 }
             }
+
             XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+
             xConfMap = rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
+
             xConfMap.setServiceId(xCreatedService.getId());
             xConfMap.setConfigkey(configKey);
+
             if (StringUtils.equalsIgnoreCase(configKey, "username")) {
                 configValue = stringUtil.getValidUserName(configValue);
             }
+
             xConfMap.setConfigvalue(configValue);
-            xConfMap = xConfMapDao.create(xConfMap);
+
+            xConfMapDao.create(xConfMap);
         }
+
         updateTabPermissions(service.getType(), validConfigs);
 
         RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
@@ -1011,6 +1120,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         Map<String, String> configs      = service.getConfigs();
         Map<String, String> validConfigs = validateRequiredConfigParams(service, configs);
+
         if (validConfigs == null) {
             LOG.debug("==> ConfigParams cannot be null, ServiceDBStore.createService({})", service);
 
@@ -1028,7 +1138,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                 service.setTagService(newTagServiceName);
 
-                LOG.info("ServiceDBStore.updateService(id={}; name={}): tagService is null; using existing tagService {}", service.getId(), service.getName(), newTagServiceName);
+                LOG.info("ServiceDBStore.updateService(id={}; name={}): tagService is null; using existing tagService '{}'", service.getId(), service.getName(), newTagServiceName);
             }
         }
 
@@ -1037,6 +1147,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             if (tmp == null || !EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(tmp.getType())) {
                 LOG.debug("ServiceDBStore.updateService() - {} does not refer to a valid tag service.({})", newTagServiceName, service);
+
                 throw restErrorUtil.createRESTException("Invalid tag service name " + newTagServiceName, MessageEnums.ERROR_CREATING_OBJECT);
             } else {
                 newTagServiceId = tmp.getId();
@@ -1060,12 +1171,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         if (populateExistingBaseFields) {
             svcServiceWithAssignedId.setPopulateExistingBaseFields(true);
+
             service = svcServiceWithAssignedId.update(service);
+
             svcServiceWithAssignedId.setPopulateExistingBaseFields(false);
         } else {
             service.setCreateTime(existing.getCreateTime());
             service.setGuid(existing.getGuid());
             service.setVersion(existing.getVersion());
+
             service = svcService.update(service);
 
             if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
@@ -1074,17 +1188,18 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         XXService xUpdService = daoMgr.getXXService().getById(service.getId());
-
-        String oldPassword = null;
+        String    oldPassword = null;
 
         for (XXServiceConfigMap dbConfigMap : dbConfigMaps) {
             if (StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), CONFIG_KEY_PASSWORD)) {
                 oldPassword = dbConfigMap.getConfigvalue();
             }
+
             daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
         }
 
         XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
+
         for (Entry<String, String> configMap : validConfigs.entrySet()) {
             String configKey   = configMap.getKey();
             String configValue = configMap.getValue();
@@ -1092,13 +1207,16 @@ public class ServiceDBStore extends AbstractServiceStore {
             if (StringUtils.equalsIgnoreCase(configKey, "username")) {
                 String userName = stringUtil.getValidUserName(configValue);
                 XXUser xxUser   = daoMgr.getXXUser().findByUserName(userName);
+
                 if (xxUser != null) {
-                    VXUser vXUser = xUserService.populateViewBean(xxUser);
+                    xUserService.populateViewBean(xxUser);
                 } else {
                     UserSessionBase usb = ContextUtil.getCurrentUserSession();
+
                     if (usb != null && !usb.isUserAdmin()) {
                         throw restErrorUtil.createRESTException("User does not exist with given username: [" + userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
                     }
+
                     xUserMgr.createServiceConfigUser(userName);
                 }
             }
@@ -1107,11 +1225,13 @@ public class ServiceDBStore extends AbstractServiceStore {
                 if (StringUtils.equalsIgnoreCase(configValue, HIDDEN_PASSWORD_STR)) {
                     if (oldPassword != null && oldPassword.contains(",")) {
                         PasswordUtils util = PasswordUtils.build(oldPassword);
+
                         if (!util.getCryptAlgo().equalsIgnoreCase(CRYPT_ALGO)) {
                             String decryptedPwd    = PasswordUtils.decryptPassword(oldPassword);
                             String paddingString   = Joiner.on(",").skipNulls().join(CRYPT_ALGO, new String(util.getEncryptKey()), new String(util.getSalt()), util.getIterationCount(), PasswordUtils.generateIvIfNeeded(CRYPT_ALGO));
                             String encryptedPwd    = PasswordUtils.encryptPassword(paddingString + "," + decryptedPwd);
                             String newDecryptedPwd = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
+
                             if (StringUtils.equals(newDecryptedPwd, decryptedPwd)) {
                                 configValue = paddingString + "," + encryptedPwd;
                             }
@@ -1125,21 +1245,28 @@ public class ServiceDBStore extends AbstractServiceStore {
                     String paddingString = Joiner.on(",").skipNulls().join(CRYPT_ALGO, ENCRYPT_KEY, SALT, ITERATION_COUNT, PasswordUtils.generateIvIfNeeded(CRYPT_ALGO));
                     String encryptedPwd  = PasswordUtils.encryptPassword(paddingString + "," + configValue);
                     String decryptedPwd  = PasswordUtils.decryptPassword(paddingString + "," + encryptedPwd);
+
                     if (StringUtils.equals(decryptedPwd, configValue)) {
                         configValue = paddingString + "," + encryptedPwd;
                     }
                 }
             }
+
             XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+
             xConfMap = rangerAuditFields.populateAuditFields(xConfMap, xUpdService);
+
             xConfMap.setServiceId(service.getId());
             xConfMap.setConfigkey(configKey);
             xConfMap.setConfigvalue(configValue);
+
             xConfMapDao.create(xConfMap);
         }
+
         updateTabPermissions(service.getType(), validConfigs);
 
         RangerService updService = svcService.getPopulatedViewObject(xUpdService);
+
         dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
 
         return updService;
@@ -1159,22 +1286,29 @@ public class ServiceDBStore extends AbstractServiceStore {
         disassociateZonesForService(service); //RANGER-3016
 
         List<Long> policyIds = daoMgr.getXXPolicy().findPolicyIdsByServiceId(service.getId());
+
         if (CollectionUtils.isNotEmpty(policyIds)) {
             long totalDeletedPolicies = 0;
+
             for (Long policyID : policyIds) {
                 RangerPolicy rangerPolicy = getPolicy(policyID);
+
                 deletePolicy(rangerPolicy, service);
+
                 totalDeletedPolicies = totalDeletedPolicies + 1;
+
                 // its a bulk policy delete call flush and clear
                 if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
                     bizUtil.bulkModeOnlyFlushAndClear();
                 }
             }
+
             bizUtil.bulkModeOnlyFlushAndClear();
         }
 
         XXServiceConfigMapDao    configDao = daoMgr.getXXServiceConfigMap();
         List<XXServiceConfigMap> configs   = configDao.findByServiceId(service.getId());
+
         for (XXServiceConfigMap configMap : configs) {
             configDao.remove(configMap);
         }
@@ -1183,12 +1317,15 @@ public class ServiceDBStore extends AbstractServiceStore {
         daoMgr.getXXRMSServiceResource().purge(service.getId());
 
         Long version = service.getVersion();
+
         if (version == null) {
-            version = Long.valueOf(1);
+            version = 1L;
+
             LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
         } else {
-            version = Long.valueOf(version.longValue() + 1);
+            version = version + 1;
         }
+
         service.setVersion(version);
 
         svcService.delete(service);
@@ -1199,18 +1336,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         //During the servie deletion ,we need to clear the RangerServicePoliciesCache,RangerServiceTagsCache for the given serviceName.
         resetPolicyCache(service.getName());
+
         tagStore.resetTagCache(service.getName());
     }
 
     @Override
     public boolean serviceExists(String name) {
-        boolean ret = false;
-
         LOG.debug("==> ServiceDBStore.serviceExists({})", name);
 
-        Long id = daoMgr.getXXService().findIdByName(name);
-
-        ret = id != null;
+        Long    id  = daoMgr.getXXService().findIdByName(name);
+        boolean ret = id != null;
 
         LOG.debug("<== ServiceDBStore.serviceExists({}): ret={}", name, ret);
 
@@ -1222,6 +1357,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         LOG.debug("==> ServiceDBStore.getService()");
 
         UserSessionBase session = ContextUtil.getCurrentUserSession();
+
         if (session == null) {
             throw restErrorUtil.createRESTException("UserSession cannot be null.", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
         }
@@ -1234,6 +1370,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (xService == null) {
             throw restErrorUtil.createRESTException("Data Not Found for given Id", MessageEnums.DATA_NOT_FOUND, id, null, "readResource : No Object found with given id.");
         }
+
         if (!bizUtil.hasAccess(xService, null)) {
             throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, id: " + id, MessageEnums.OPER_NO_PERMISSION);
         }
@@ -1244,6 +1381,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Override
     public RangerService getServiceByName(String name) throws Exception {
         LOG.debug("==> ServiceDBStore.getServiceByName()");
+
         XXService xService = daoMgr.getXXService().findByName(name);
 
         // TODO: As of now we are allowing SYS_ADMIN to read all the
@@ -1253,26 +1391,31 @@ public class ServiceDBStore extends AbstractServiceStore {
             if (xService == null) {
                 return null;
             }
+
             if (!bizUtil.hasAccess(xService, null)) {
                 throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, name: " + name, MessageEnums.OPER_NO_PERMISSION);
             }
         }
+
         return xService == null ? null : svcService.getPopulatedViewObject(xService);
     }
 
     @Override
-    public RangerService getServiceByDisplayName(String displayName) throws Exception {
+    public RangerService getServiceByDisplayName(String displayName) {
         LOG.debug("==> ServiceDBStore.getServiceByName()");
+
         XXService xService = daoMgr.getXXService().findByDisplayName(displayName);
 
         if (ContextUtil.getCurrentUserSession() != null) {
             if (xService == null) {
                 return null;
             }
+
             if (!bizUtil.hasAccess(xService, null)) {
                 throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, name: " + displayName, MessageEnums.OPER_NO_PERMISSION);
             }
         }
+
         return xService == null ? null : svcService.getPopulatedViewObject(xService);
     }
 
@@ -1281,7 +1424,9 @@ public class ServiceDBStore extends AbstractServiceStore {
         LOG.debug("==> ServiceDBStore.getServices()");
 
         RangerServiceList serviceList = svcService.searchRangerServices(filter);
+
         predicateUtil.applyFilter(serviceList.getServices(), filter);
+
         List<RangerService> ret = serviceList.getServices();
 
         LOG.debug("<== ServiceDBStore.getServices()");
@@ -1325,6 +1470,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (!StringUtils.equalsIgnoreCase(existing.getService(), policy.getService())) {
             throw new Exception("policy id=" + policy.getId() + " already exists in service " + existing.getService() + ". It can not be moved to service " + policy.getService());
         }
+
         boolean renamed = !StringUtils.equalsIgnoreCase(policy.getName(), existing.getName());
 
         if (renamed) {
@@ -1334,12 +1480,16 @@ public class ServiceDBStore extends AbstractServiceStore {
                 throw new Exception("another policy already exists with name '" + policy.getName() + "'. ID=" + newNamePolicy.getId());
             }
         }
+
         List<String> policyLabels       = policy.getPolicyLabels();
         Set<String>  uniquePolicyLabels = new TreeSet<>(policyLabels);
+
         policy.setCreateTime(xxExisting.getCreateTime());
+
         if (StringUtils.isEmpty(policy.getGuid())) {
             policy.setGuid(xxExisting.getGuid());
         }
+
         policy.setVersion(xxExisting.getVersion());
 
         policyService.createTransactionLog(policy, existing, RangerPolicyService.OPERATION_UPDATE_CONTEXT);
@@ -1347,20 +1497,26 @@ public class ServiceDBStore extends AbstractServiceStore {
         updatePolicySignature(policy);
 
         policy = policyService.update(policy);
+
         XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
         policyRefUpdater.cleanupRefTables(policy);
+
         deleteExistingPolicyLabel(policy);
 
         policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef, bizUtil.getCreatePrincipalsIfAbsent());
-        createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
-        RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 
-        boolean updateServiceInfoRoleVersion = false;
+        createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
+
+        RangerPolicy updPolicy                    = policyService.getPopulatedViewObject(newUpdPolicy);
+        boolean      updateServiceInfoRoleVersion = false;
+
         if (isSupportsRolesDownloadByService()) {
             updateServiceInfoRoleVersion = isRoleDownloadRequired(updPolicy, service);
         }
+
         handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy, updateServiceInfoRoleVersion);
+
         dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
 
         return updPolicy;
@@ -1369,29 +1525,42 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Override
     public void deletePolicy(RangerPolicy policy, RangerService service) throws Exception {
         LOG.debug("==> ServiceDBStore.deletePolicy()");
+
         if (policy != null) {
             if (service == null) {
                 service = getServiceByName(policy.getService());
             }
+
             if (service != null) {
                 String policyName = policy.getName();
+
                 LOG.debug("Deleting Policy, policyName: {}", policyName);
+
                 Long version = policy.getVersion();
+
                 if (version == null) {
-                    version = Long.valueOf(1);
+                    version = 1L;
+
                     LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
                 } else {
-                    version = Long.valueOf(version.longValue() + 1);
+                    version = version + 1;
                 }
+
                 policy.setVersion(version);
+
                 policyRefUpdater.cleanupRefTables(policy);
+
                 deleteExistingPolicyLabel(policy);
+
                 policyService.delete(policy);
+
                 createTransactionLog(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
                 handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
+
                 dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_DELETE);
             }
         }
+
         LOG.debug("<== ServiceDBStore.deletePolicy()");
     }
 
@@ -1412,10 +1581,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         Long version = policy.getVersion();
         if (version == null) {
-            version = Long.valueOf(1);
+            version = 1L;
+
             LOG.info("Found Version Value: `null`, so setting value of version to 1, While updating object, version should not be null.");
         } else {
-            version = Long.valueOf(version.longValue() + 1);
+            version = version + 1;
         }
 
         policy.setVersion(version);
@@ -1423,7 +1593,9 @@ public class ServiceDBStore extends AbstractServiceStore {
         createTransactionLog(policy, RangerPolicyService.OPERATION_IMPORT_DELETE_CONTEXT, RangerPolicyService.OPERATION_DELETE_CONTEXT);
 
         policyRefUpdater.cleanupRefTables(policy);
+
         deleteExistingPolicyLabel(policy);
+
         policyService.delete(policy);
 
         handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE, policy, false);
@@ -1434,7 +1606,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     @Override
-    public boolean policyExists(Long id) throws Exception {
+    public boolean policyExists(Long id) {
         return daoMgr.getXXPolicy().getCountById(id) > 0;
     }
 
@@ -1446,20 +1618,22 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Override
     public List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception {
         LOG.debug("==> ServiceDBStore.getPolicies()");
-        Boolean fetchTagPolicies     = Boolean.valueOf(filter.getParam(SearchFilter.FETCH_TAG_POLICIES));
-        Boolean fetchAllZonePolicies = Boolean.valueOf(filter.getParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES));
+
+        boolean fetchTagPolicies     = Boolean.parseBoolean(filter.getParam(SearchFilter.FETCH_TAG_POLICIES));
+        boolean fetchAllZonePolicies = Boolean.parseBoolean(filter.getParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES));
         String  zoneName             = filter.getParam(SearchFilter.ZONE_NAME);
 
-        List<RangerPolicy> ret              = new ArrayList<RangerPolicy>();
+        List<RangerPolicy> ret              = new ArrayList<>();
         RangerPolicyList   policyList       = searchRangerPolicies(filter);
         List<RangerPolicy> resourcePolicies = policyList.getPolicies();
-        List<RangerPolicy> tagPolicies      = new ArrayList<>();
+        List<RangerPolicy> tagPolicies;
 
         if (fetchTagPolicies) {
             tagPolicies = searchRangerTagPoliciesOnBasisOfServiceName(resourcePolicies);
-            Iterator<RangerPolicy> itr = tagPolicies.iterator();
-            while (itr.hasNext()) {
+
+            for (Iterator<RangerPolicy> itr = tagPolicies.iterator(); itr.hasNext(); ) {
                 RangerPolicy pol = itr.next();
+
                 if (!fetchAllZonePolicies) {
                     if (StringUtils.isNotEmpty(zoneName)) {
                         if (!zoneName.equals(pol.getZoneName())) {
@@ -1472,31 +1646,42 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                 }
             }
+        } else {
+            tagPolicies = new ArrayList<>();
         }
+
         LOG.debug("<== ServiceDBStore.getPolicies()");
+
         ret.addAll(resourcePolicies);
         ret.addAll(tagPolicies);
+
         return ret;
     }
 
     @Override
     public Long getPolicyId(final Long serviceId, final String policyName, final Long zoneId) {
         LOG.debug("==> ServiceDBStore.getPolicyId()");
+
         Long     ret      = null;
         XXPolicy xxPolicy = daoMgr.getXXPolicy().findByNameAndServiceIdAndZoneId(policyName, serviceId, zoneId);
+
         if (xxPolicy != null) {
             ret = xxPolicy.getId();
         }
+
         LOG.debug("<== ServiceDBStore.getPolicyId()");
+
         return ret;
     }
 
     @Override
     public List<RangerPolicy> getPoliciesByResourceSignature(String serviceName, String policySignature, Boolean isPolicyEnabled) throws Exception {
         List<XXPolicy>     xxPolicies = daoMgr.getXXPolicy().findByResourceSignatureByPolicyStatus(serviceName, policySignature, isPolicyEnabled);
-        List<RangerPolicy> policies   = new ArrayList<RangerPolicy>(xxPolicies.size());
+        List<RangerPolicy> policies   = new ArrayList<>(xxPolicies.size());
+
         for (XXPolicy xxPolicy : xxPolicies) {
             RangerPolicy policy = policyService.getPopulatedViewObject(xxPolicy);
+
             policies.add(policy);
         }
 
@@ -1506,6 +1691,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Override
     public List<RangerPolicy> getServicePolicies(Long serviceId, SearchFilter filter) throws Exception {
         LOG.debug("==> ServiceDBStore.getServicePolicies({})", serviceId);
+
         String    zoneName      = filter.getParam(SearchFilter.FETCH_ZONE_NAME);
         String    denyCondition = filter.getParam(SearchFilter.FETCH_DENY_CONDITION);
         XXService service       = daoMgr.getXXService().getById(serviceId);
@@ -1515,12 +1701,15 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         List<RangerPolicy> ret = getServicePolicies(service, filter);
+
         if (!"true".equalsIgnoreCase(filter.getParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES))) {
             if (StringUtils.isBlank(zoneName) && StringUtils.isBlank(denyCondition)) {
                 ret = noZoneFilter(ret);
             }
         }
-        LOG.debug("<== ServiceDBStore.getServicePolicies({}) : policy-count={}", serviceId, (ret == null ? 0 : ret.size()));
+
+        LOG.debug("<== ServiceDBStore.getServicePolicies({}) : policy-count={}", serviceId, ret == null ? 0 : ret.size());
+
         return ret;
     }
 
@@ -1528,19 +1717,20 @@ public class ServiceDBStore extends AbstractServiceStore {
     public List<RangerPolicy> getServicePolicies(String serviceName, SearchFilter filter) throws Exception {
         LOG.debug("==> ServiceDBStore.getServicePolicies({})", serviceName);
 
-        List<RangerPolicy> ret      = null;
-        String             zoneName = filter.getParam("zoneName");
-        XXService          service  = daoMgr.getXXService().findByName(serviceName);
+        String    zoneName = filter.getParam("zoneName");
+        XXService service  = daoMgr.getXXService().findByName(serviceName);
 
         if (service == null) {
             throw new Exception("service does not exist - name='" + serviceName);
         }
 
-        ret = getServicePolicies(service, filter);
+        List<RangerPolicy> ret = getServicePolicies(service, filter);
+
         if (StringUtils.isBlank(zoneName)) {
             ret = noZoneFilter(ret);
         }
-        LOG.debug("<== ServiceDBStore.getServicePolicies({}): count={}", serviceName, ((ret == null) ? 0 : ret.size()));
+
+        LOG.debug("<== ServiceDBStore.getServicePolicies({}): count={}", service, ((ret == null) ? 0 : ret.size()));
 
         return ret;
     }
@@ -1549,9 +1739,8 @@ public class ServiceDBStore extends AbstractServiceStore {
     public ServicePolicies getServicePoliciesIfUpdated(String serviceName, Long lastKnownVersion, boolean needsBackwardCompatibility) throws Exception {
         LOG.debug("==> ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {})", serviceName, lastKnownVersion, needsBackwardCompatibility);
 
-        ServicePolicies ret = null;
-
-        XXService serviceDbObj = daoMgr.getXXService().findByName(serviceName);
+        ServicePolicies ret          = null;
+        XXService       serviceDbObj = daoMgr.getXXService().findByName(serviceName);
 
         if (serviceDbObj == null) {
             throw new Exception("service does not exist. name=" + serviceName);
@@ -1567,7 +1756,9 @@ public class ServiceDBStore extends AbstractServiceStore {
             ret = RangerServicePoliciesCache.getInstance().getServicePolicies(serviceName, serviceDbObj.getId(), lastKnownVersion, needsBackwardCompatibility, this);
         }
 
-        RangerServicePoliciesCache.getInstance().dump();
+        if (LOG.isDebugEnabled()) {
+            RangerServicePoliciesCache.getInstance().dump();
+        }
 
         if (ret != null && lastKnownVersion != null && lastKnownVersion.equals(ret.getPolicyVersion())) {
             // ServicePolicies are not changed
@@ -1576,8 +1767,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         if (ret != null) {
             LOG.debug("Checking if resource-service:[{}] is disabled", ret.getServiceName());
+
             if (!serviceDbObj.getIsenabled()) {
                 ret = ServicePolicies.copyHeader(ret);
+
                 ret.setTagPolicies(null);
             } else {
                 String  tagServiceName     = ret.getTagPolicies() != null ? ret.getTagPolicies().getServiceName() : null;
@@ -1586,9 +1779,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 if (!isTagServiceActive) {
                     ServicePolicies copy = ServicePolicies.copyHeader(ret);
 
-                    if (!isTagServiceActive) {
-                        copy.setTagPolicies(null);
-                    }
+                    copy.setTagPolicies(null);
 
                     List<RangerPolicy>      copyPolicies     = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
                     List<RangerPolicyDelta> copyPolicyDeltas = ret.getPolicyDeltas() != null ? new ArrayList<>(ret.getPolicyDeltas()) : null;
@@ -1602,8 +1793,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones          = securityZoneStore.getSecurityZonesForService(serviceName);
             ServicePolicies                                           updatedServicePolicies = ret;
+
             if (MapUtils.isNotEmpty(securityZones)) {
                 updatedServicePolicies = getUpdatedServicePoliciesForZones(ret, securityZones);
+
                 patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
             }
 
@@ -1620,7 +1813,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
-        LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {}): count={}", serviceName, lastKnownVersion, needsBackwardCompatibility, ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+        LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {}): count={}", serviceName, lastKnownVersion, needsBackwardCompatibility, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size());
 
         return ret;
     }
@@ -1628,17 +1821,20 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Override
     public ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception {
         boolean getOnlyDeltas = false;
-        LOG.debug("Support for incremental policy updates enabled using ranger.admin {}  configuration parameter :[{}]", RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA, supportsPolicyDeltas);
-        return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, supportsPolicyDeltas, Long.MAX_VALUE);
+
+        LOG.debug("Support for incremental policy updates enabled using \"ranger.admin{}\" configuation parameter :[{}]", RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA, SUPPORTS_POLICY_DELTAS);
+
+        return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS, Long.MAX_VALUE);
     }
 
     @Override
     public ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion, Long cachedPolicyVersion) throws Exception {
         ServicePolicies ret = null;
 
-        if (supportsPolicyDeltas) {
-            LOG.debug("Support for incremental policy updates enabled using ranger.admin {} configuration parameter :[{}]", RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA, supportsPolicyDeltas);
-            ret = getServicePolicies(serviceName, lastKnownVersion, true, supportsPolicyDeltas, cachedPolicyVersion);
+        if (SUPPORTS_POLICY_DELTAS) {
+            LOG.debug("Support for incremental policy updates enabled using \"ranger.admin{}\" configuation parameter :[{}]", RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA, SUPPORTS_POLICY_DELTAS);
+
+            ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS, cachedPolicyVersion);
         }
 
         return ret;
@@ -1647,6 +1843,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     @Override
     public ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion) throws Exception {
         boolean getOnlyDeltas = false;
+
         return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, false, Long.MAX_VALUE);
     }
 
@@ -1655,14 +1852,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         if (xDataHist == null) {
             String errMsg = "No policy history found for given policy ID: " + policyId + " and event time: " + eventTime;
+
             LOG.error(errMsg);
+
             throw restErrorUtil.createRESTException(errMsg, MessageEnums.DATA_NOT_FOUND);
         }
 
-        String       content = xDataHist.getContent();
-        RangerPolicy policy  = jsonUtil.writeJsonToJavaObject(content, RangerPolicy.class);
+        String content = xDataHist.getContent();
 
-        return policy;
+        return jsonUtil.writeJsonToJavaObject(content, RangerPolicy.class);
     }
 
     @Override
@@ -1676,27 +1874,31 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     @Override
-    public RangerSecurityZone getSecurityZone(Long id) throws Exception {
+    public RangerSecurityZone getSecurityZone(Long id) {
         return securityZoneService.read(id);
     }
 
     @Override
-    public RangerSecurityZone getSecurityZone(String name) throws Exception {
+    public RangerSecurityZone getSecurityZone(String name) {
         XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(name);
+
         if (xxSecurityZone != null) {
             return getSecurityZone(xxSecurityZone.getId());
         }
+
         return null;
     }
 
     @Override
     public long getPoliciesCount(final String serviceName) {
         final long ret;
+
         if (StringUtils.isNotBlank(serviceName)) {
             ret = daoMgr.getXXPolicy().getPoliciesCount(serviceName);
         } else {
             ret = 0L;
         }
+
         return ret;
     }
 
@@ -1704,6 +1906,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     public Map<String, String> getServiceConfigForPlugin(Long serviceId) {
         Map<String, String>      configs             = new HashMap<>();
         List<XXServiceConfigMap> xxServiceConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(serviceId);
+
         if (CollectionUtils.isNotEmpty(xxServiceConfigMaps)) {
             for (XXServiceConfigMap svcConfMap : xxServiceConfigMaps) {
                 if (StringUtils.startsWith(svcConfMap.getConfigkey(), RANGER_PLUGIN_CONFIG_PREFIX)) {
@@ -1711,6 +1914,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
+
         return configs;
     }
 
@@ -1718,25 +1922,33 @@ public class ServiceDBStore extends AbstractServiceStore {
     public List<RangerPolicy> getPoliciesWithMetaAttributes(List<RangerPolicy> policiesList) {
         if (CollectionUtils.isNotEmpty(policiesList)) {
             List<RangerPolicy> policies = new ArrayList<>();
+
             for (RangerPolicy policy : policiesList) {
                 RangerPolicy policyCopy = (RangerPolicy) SerializationUtils.clone(policy);
+
                 policies.add(policyCopy);
             }
 
             List<Object[]> policytimeMetaDataList = daoMgr.getXXPolicy().getMetaAttributesForPolicies(policies.stream().map(RangerPolicy::getId).collect(Collectors.toList()));
+
             if (CollectionUtils.isNotEmpty(policytimeMetaDataList)) {
-                Map<Long, List<Date>> policyMap = policytimeMetaDataList.stream().filter(row -> row != null && row.length == 3 && row[0] != null && row[1] != null && row[2] != null).collect(Collectors.toMap(row -> (Long) row[0], row -> Arrays.asList((Date) row[1], (Date) row[2])));
+                Map<Long, List<Date>> policyMap = policytimeMetaDataList.stream()
+                        .filter(row -> row != null && row.length == 3 && row[0] != null && row[1] != null && row[2] != null)
+                        .collect(Collectors.toMap(row -> (Long) row[0], row -> Arrays.asList((Date) row[1], (Date) row[2])));
 
                 for (RangerPolicy policy : policies) {
                     List<Date> timeMetaData = policyMap.get(policy.getId());
+
                     if (timeMetaData != null && timeMetaData.size() == 2) {
                         policy.setCreateTime(timeMetaData.get(0));
                         policy.setUpdateTime(timeMetaData.get(1));
                     }
                 }
             }
+
             return policies;
         }
+
         return policiesList;
     }
 
@@ -1755,67 +1967,65 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (!legacyServiceDefsInitDone) {
             synchronized (ServiceDBStore.class) {
                 if (!legacyServiceDefsInitDone) {
-                    supportsPolicyDeltas     = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA, RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA_DEFAULT);
-                    retentionPeriodInDays    = config.getInt("ranger.admin.delta.retention.time.in.days", 7);
-                    tagRetentionPeriodInDays = config.getInt("ranger.admin.tag.delta.retention.time.in.days", 3);
+                    SUPPORTS_POLICY_DELTAS       = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA, RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA_DEFAULT);
+                    RETENTION_PERIOD_IN_DAYS     = config.getInt("ranger.admin.delta.retention.time.in.days", 7);
+                    TAG_RETENTION_PERIOD_IN_DAYS = config.getInt("ranger.admin.tag.delta.retention.time.in.days", 3);
 
-                    supportsPurgeLoginRecords               = config.getBoolean("ranger.admin.init.purge.login_records", false);
-                    supportsPurgeTransactionRecords         = config.getBoolean("ranger.admin.init.purge.transaction_records", false);
-                    supportsPurgePolicyExportLogs           = config.getBoolean("ranger.admin.init.purge.policy_export_logs", false);
-                    loginRecordsRetentionPeriodInDays       = config.getInt("ranger.admin.init.purge.login_records.retention.days", 0);
-                    transactionRecordsRetentionPeriodInDays = config.getInt("ranger.admin.init.purge.transaction_records.retention.days", 0);
-                    policyExportLogsRetentionPeriodInDays   = config.getInt("ranger.admin.init.purge.policy_export_logs.retention.days", 0);
+                    SUPPORTS_PURGE_LOGIN_RECORDS                 = config.getBoolean("ranger.admin.init.purge.login_records", false);
+                    SUPPORTS_PURGE_TRANSACTION_RECORDS           = config.getBoolean("ranger.admin.init.purge.transaction_records", false);
+                    SUPPORTS_PURGE_POLICY_EXPORT_LOGS            = config.getBoolean("ranger.admin.init.purge.policy_export_logs", false);
+                    LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS       = config.getInt("ranger.admin.init.purge.login_records.retention.days", 0);
+                    TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS = config.getInt("ranger.admin.init.purge.transaction_records.retention.days", 0);
+                    POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS  = config.getInt("ranger.admin.init.purge.policy_export_logs.retention.days", 0);
 
-                    isRolesDownloadedByService   = config.getBoolean("ranger.support.for.service.specific.role.download", false);
-                    supportsInPlacePolicyUpdates = supportsPolicyDeltas && config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES, RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES_DEFAULT);
+                    isRolesDownloadedByService       = config.getBoolean("ranger.support.for.service.specific.role.download", false);
+                    SUPPORTS_IN_PLACE_POLICY_UPDATES = SUPPORTS_POLICY_DELTAS && config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES, RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES_DEFAULT);
 
-                    LOG.info("SUPPORTS_POLICY_DELTAS={}", supportsPolicyDeltas);
-                    LOG.info("RETENTION_PERIOD_IN_DAYS={}", policyExportLogsRetentionPeriodInDays);
-                    LOG.info("TAG_RETENTION_PERIOD_IN_DAYS={}", tagRetentionPeriodInDays);
-                    LOG.info("SUPPORTS_PURGE_LOGIN_RECORDS={}", supportsPurgeLoginRecords);
-                    LOG.info("LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS={}", loginRecordsRetentionPeriodInDays);
-                    LOG.info("SUPPORTS_PURGE_TRANSACTION_RECORDS={}", supportsPurgeTransactionRecords);
-                    LOG.info("TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS={}", transactionRecordsRetentionPeriodInDays);
-                    LOG.info("SUPPORTS_PURGE_POLICY_EXPORT_LOGS={}", supportsPurgePolicyExportLogs);
-                    LOG.info("POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS={}", policyExportLogsRetentionPeriodInDays);
+                    LOG.info("SUPPORTS_POLICY_DELTAS={}", SUPPORTS_POLICY_DELTAS);
+                    LOG.info("RETENTION_PERIOD_IN_DAYS={}", RETENTION_PERIOD_IN_DAYS);
+                    LOG.info("TAG_RETENTION_PERIOD_IN_DAYS={}", TAG_RETENTION_PERIOD_IN_DAYS);
+                    LOG.info("SUPPORTS_PURGE_LOGIN_RECORDS={}", SUPPORTS_PURGE_LOGIN_RECORDS);
+                    LOG.info("LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS={}", LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS);
+                    LOG.info("SUPPORTS_PURGE_TRANSACTION_RECORDS={}", SUPPORTS_PURGE_TRANSACTION_RECORDS);
+                    LOG.info("TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS={}", TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS);
+                    LOG.info("SUPPORTS_PURGE_POLICY_EXPORT_LOGS={}", SUPPORTS_PURGE_POLICY_EXPORT_LOGS);
+                    LOG.info("POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS={}", POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS);
                     LOG.info("isRolesDownloadedByService={}", isRolesDownloadedByService);
-                    LOG.info("SUPPORTS_IN_PLACE_POLICY_UPDATES={}", supportsInPlacePolicyUpdates);
+                    LOG.info("SUPPORTS_IN_PLACE_POLICY_UPDATES={}", SUPPORTS_IN_PLACE_POLICY_UPDATES);
 
-                    TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+                    TransactionTemplate  txTemplate = new TransactionTemplate(txManager);
+                    final ServiceDBStore dbStore    = this;
 
-                    final ServiceDBStore dbStore = this;
                     predicateUtil = new ServicePredicateUtil(dbStore);
 
                     try {
-                        txTemplate.execute(new TransactionCallback<Object>() {
-                            @Override
-                            public Object doInTransaction(TransactionStatus status) {
-                                EmbeddedServiceDefsUtil.instance().init(dbStore);
-                                getServiceUpgraded();
-                                createGenericUsers();
-                                resetPolicyUpdateLog(retentionPeriodInDays, RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START);
-                                resetTagUpdateLog(tagRetentionPeriodInDays, ServiceTags.TagsChangeType.RANGER_ADMIN_START);
+                        txTemplate.execute(status -> {
+                            EmbeddedServiceDefsUtil.instance().init(dbStore);
+                            getServiceUpgraded();
+                            createGenericUsers();
+                            resetPolicyUpdateLog(RETENTION_PERIOD_IN_DAYS, RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START);
+                            resetTagUpdateLog(TAG_RETENTION_PERIOD_IN_DAYS, ServiceTags.TagsChangeType.RANGER_ADMIN_START);
 
-                                List<RangerPurgeResult> purgeResults = new ArrayList<>();
+                            List<RangerPurgeResult> purgeResults = new ArrayList<>();
 
-                                if (supportsPurgeLoginRecords) {
-                                    removeAuthSessions(loginRecordsRetentionPeriodInDays, purgeResults);
-                                }
-
-                                if (supportsPurgeTransactionRecords) {
-                                    removeTransactionLogs(transactionRecordsRetentionPeriodInDays, purgeResults);
-                                }
-
-                                if (supportsPurgePolicyExportLogs) {
-                                    removePolicyExportLogs(policyExportLogsRetentionPeriodInDays, purgeResults);
-                                }
-
-                                initRMSDaos();
-                                return null;
+                            if (SUPPORTS_PURGE_LOGIN_RECORDS) {
+                                removeAuthSessions(LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS, purgeResults);
                             }
+
+                            if (SUPPORTS_PURGE_TRANSACTION_RECORDS) {
+                                removeTransactionLogs(TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS, purgeResults);
+                            }
+
+                            if (SUPPORTS_PURGE_POLICY_EXPORT_LOGS) {
+                                removePolicyExportLogs(POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS, purgeResults);
+                            }
+
+                            initRMSDaos();
+
+                            return null;
                         });
                     } catch (Throwable ex) {
-                        LOG.error("ServiceDBStore.initStore(): Failed to update DB: ", ex);
+                        LOG.error("ServiceDBStore.initStore(): Failed to update DB: {}", String.valueOf(ex));
                     }
 
                     legacyServiceDefsInitDone = true;
@@ -1834,21 +2044,27 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         List<XXPolicyRefAccessType> policyRefAccessTypeList = daoMgr.getXXPolicyRefAccessType().findByAccessTypeDefId(xAccess.getId());
+
         for (XXPolicyRefAccessType xxPolicyRefAccessType : policyRefAccessTypeList) {
             daoMgr.getXXPolicyRefAccessType().remove(xxPolicyRefAccessType);
         }
+
         daoMgr.getXXAccessTypeDef().remove(xAccess);
     }
 
     public void deleteXXResourceDef(XXResourceDef xRes) {
         List<XXResourceDef> xChildObjs = daoMgr.getXXResourceDef().findByParentResId(xRes.getId());
+
         for (XXResourceDef childRes : xChildObjs) {
             deleteXXResourceDef(childRes);
         }
+
         List<XXPolicyRefResource> xxPolicyRefResources = daoMgr.getXXPolicyRefResource().findByResourceDefID(xRes.getId());
+
         for (XXPolicyRefResource xPolRefRes : xxPolicyRefResources) {
             daoMgr.getXXPolicyRefResource().remove(xPolRefRes);
         }
+
         daoMgr.getXXResourceDef().remove(xRes);
     }
 
@@ -1863,28 +2079,32 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         LOG.debug("==> ServiceDBStore.getPaginatedServiceDefs({})", filter);
 
-        return new PList<RangerServiceDef>(svcDefList.getServiceDefs(), svcDefList.getStartIndex(), svcDefList.getPageSize(), svcDefList.getTotalCount(), svcDefList.getResultSize(), svcDefList.getSortType(), svcDefList.getSortBy());
+        return new PList<>(svcDefList.getServiceDefs(), svcDefList.getStartIndex(), svcDefList.getPageSize(), svcDefList.getTotalCount(), svcDefList.getResultSize(), svcDefList.getSortType(), svcDefList.getSortBy());
     }
 
     public PList<RangerService> getPaginatedServices(SearchFilter filter) throws Exception {
         LOG.debug("==> ServiceDBStore.getPaginatedServices()");
 
         RangerServiceList serviceList = svcService.searchRangerServices(filter);
+
         if (StringUtils.isEmpty(filter.getParam("serviceNamePartial"))) {
             predicateUtil.applyFilter(serviceList.getServices(), filter);
         }
+
         LOG.debug("<== ServiceDBStore.getPaginatedServices()");
 
-        return new PList<RangerService>(serviceList.getServices(), serviceList.getStartIndex(), serviceList.getPageSize(), serviceList.getTotalCount(), serviceList.getResultSize(), serviceList.getSortType(), serviceList.getSortBy());
+        return new PList<>(serviceList.getServices(), serviceList.getStartIndex(), serviceList.getPageSize(), serviceList.getTotalCount(), serviceList.getResultSize(), serviceList.getSortType(), serviceList.getSortBy());
     }
 
-    public PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
-        LOG.debug("==> ServiceDBStore.getPaginatedPolicies({})", filter);
+    public PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) {
+        LOG.debug("==> ServiceDBStore.getPaginatedPolicies(+ {})", filter);
 
         RangerPolicyList policyList = searchRangerPolicies(filter);
 
         LOG.debug("before filter: count={}", policyList.getListSize());
+
         predicateUtil.applyFilter(policyList.getPolicies(), filter);
+
         LOG.debug("after filter: count={}", policyList.getListSize());
 
         LOG.debug("<== ServiceDBStore.getPaginatedPolicies({}): count={}", filter, policyList.getListSize());
@@ -1904,10 +2124,11 @@ public class ServiceDBStore extends AbstractServiceStore {
         PList<RangerPolicy> ret = getPaginatedServicePolicies(service.getName(), filter);
 
         LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies({})", serviceId);
+
         return ret;
     }
 
-    public PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) throws Exception {
+    public PList<RangerPolicy> getPaginatedServicePolicies(String serviceName, SearchFilter filter) {
         LOG.debug("==> ServiceDBStore.getPaginatedServicePolicies({})", serviceName);
 
         if (filter == null) {
@@ -1918,7 +2139,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         PList<RangerPolicy> ret = getPaginatedPolicies(filter);
 
-        LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies({}): count={}", serviceName, ((ret == null) ? 0 : ret.getListSize()));
+        LOG.debug("<== ServiceDBStore.getPaginatedServicePolicies({}): count={}", serviceName, (ret == null) ? 0 : ret.getListSize());
 
         return ret;
     }
@@ -1932,18 +2153,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     // when a service-def is updated, the updated service-def should be made available to plugins
     //   this is achieved by incrementing policyVersion of all services of this service-def
-    protected void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) throws Exception {
+    protected void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) {
         if (serviceDef == null) {
             return;
         }
 
-        final RangerDaoManager daoManager = daoMgr;
-
-        boolean isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
-
-        XXServiceDao serviceDao = daoMgr.getXXService();
-
-        List<XXService> services = serviceDao.findByServiceDefId(serviceDef.getId());
+        final RangerDaoManager daoManager      = daoMgr;
+        boolean                isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+        XXServiceDao           serviceDao      = daoMgr.getXXService();
+        List<XXService>        services        = serviceDao.findByServiceDefId(serviceDef.getId());
 
         if (CollectionUtils.isNotEmpty(services)) {
             for (XXService service : services) {
@@ -1952,19 +2170,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                     if (CollectionUtils.isNotEmpty(referringServices)) {
                         for (XXService referringService : referringServices) {
-                            final Long        referringServiceId    = referringService.getId();
-                            final VersionType tagServiceVersionType = VersionType.POLICY_VERSION;
+                            final Long         referringServiceId    = referringService.getId();
+                            final VERSION_TYPE tagServiceVersionType = VERSION_TYPE.POLICY_VERSION;
 
                             Runnable tagServiceVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, tagServiceVersionType, RangerPolicyDelta.CHANGE_TYPE_SERVICE_DEF_CHANGE);
+
                             transactionSynchronizationAdapter.executeOnTransactionCommit(tagServiceVersionUpdater);
                         }
                     }
                 }
 
-                final Long        serviceId   = service.getId();
-                final VersionType versionType = VersionType.POLICY_VERSION;
+                final Long         serviceId   = service.getId();
+                final VERSION_TYPE versionType = VERSION_TYPE.POLICY_VERSION;
 
                 Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType, RangerPolicyDelta.CHANGE_TYPE_SERVICE_DEF_CHANGE);
+
                 transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
             }
         }
@@ -1976,12 +2196,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     public RangerService getServiceByNameForDP(String name) throws Exception {
         LOG.debug("==> ServiceDBStore.getServiceByNameForDP()");
+
         XXService xService = daoMgr.getXXService().findByName(name);
+
         if (ContextUtil.getCurrentUserSession() != null) {
             if (xService == null) {
                 return null;
             }
         }
+
         return xService == null ? null : svcService.getPopulatedViewObject(xService);
     }
 
@@ -2000,14 +2223,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         Long   zoneId   = RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
         String zoneName = policy.getZoneName();
+
         if (StringUtils.isNotEmpty(zoneName)) {
             RangerSecurityZone zone = getSecurityZone(zoneName);
+
             if (zone == null) {
                 throw new Exception("zone does not exist - name=" + zoneName);
             } else {
                 zoneId = zone.getId();
             }
         }
+
         XXPolicy existing = daoMgr.getXXPolicy().findByNameAndServiceIdAndZoneId(policy.getName(), service.getId(), zoneId);
 
         if (existing != null) {
@@ -2016,32 +2242,41 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         List<String> policyLabels       = policy.getPolicyLabels();
         Set<String>  uniquePolicyLabels = new TreeSet<>(policyLabels);
-        policy.setVersion(Long.valueOf(1));
+
+        policy.setVersion(1L);
+
         updatePolicySignature(policy);
 
         if (populateExistingBaseFields) {
             assignedIdPolicyService.setPopulateExistingBaseFields(true);
+
             daoMgr.getXXPolicy().setIdentityInsert(true);
 
             policy = assignedIdPolicyService.create(policy, true);
 
             daoMgr.getXXPolicy().setIdentityInsert(false);
             daoMgr.getXXPolicy().updateSequence();
+
             assignedIdPolicyService.setPopulateExistingBaseFields(false);
         } else {
             policy = policyService.create(policy, true);
         }
 
         XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
-        policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, createPrincipalsIfAbsent);
-        createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
-        RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
-        boolean updateServiceInfoRoleVersion = false;
+        policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, createPrincipalsIfAbsent);
+
+        createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
+
+        RangerPolicy createdPolicy                = policyService.getPopulatedViewObject(xCreatedPolicy);
+        boolean      updateServiceInfoRoleVersion = false;
+
         if (isSupportsRolesDownloadByService()) {
             updateServiceInfoRoleVersion = isRoleDownloadRequired(createdPolicy, service);
         }
+
         handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy, updateServiceInfoRoleVersion);
+
         dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
         createTransactionLog(createdPolicy, RangerPolicyService.OPERATION_IMPORT_CREATE_CONTEXT, RangerPolicyService.OPERATION_CREATE_CONTEXT);
@@ -2064,34 +2299,45 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     public RangerPolicy getPolicy(String guid, String serviceName, String zoneName) throws Exception {
         RangerPolicy ret = null;
+
         if (StringUtils.isNotBlank(guid)) {
             XXPolicy xPolicy = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+
             if (xPolicy != null) {
                 ret = policyService.getPopulatedViewObject(xPolicy);
             }
         }
+
         return ret;
     }
 
     public void getPoliciesInExcel(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
         LOG.debug("==> ServiceDBStore.getPoliciesInExcel()");
+
         String timeStamp     = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String excelFileName = "Ranger_Policies_" + timeStamp + ".xls";
+
         writeExcel(policies, excelFileName, response);
     }
 
     public void getPoliciesInCSV(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
         LOG.debug("==> ServiceDBStore.getPoliciesInCSV()");
+
         ServletOutputStream out         = null;
-        String              csvFileName = null;
+        String              csvfilename = null;
+
         try {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            csvFileName = "Ranger_Policies_" + timeStamp + ".csv";
+
+            csvfilename = "Ranger_Policies_" + timeStamp + ".csv";
             out         = response.getOutputStream();
-            StringBuilder sb = writeCSV(policies, csvFileName, response);
+
+            StringBuilder sb = writeCSV(policies, csvfilename, response);
+
             IOUtils.write(sb.toString(), out, "UTF-8");
         } catch (Exception e) {
-            LOG.error("Error while generating report file {}", csvFileName, e);
+            LOG.error("Error while generating report file {}", csvfilename, e);
+
             e.printStackTrace();
         } finally {
             try {
@@ -2100,14 +2346,17 @@ public class ServiceDBStore extends AbstractServiceStore {
                     out.close();
                 }
             } catch (Exception ex) {
+                // ignored
             }
         }
     }
 
-    public <T> void getObjectInJson(List<T> objList, HttpServletResponse response, JsonFileNameType type) throws Exception {
+    public <T> void getObjectInJson(List<T> objList, HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws Exception {
         LOG.debug("==> ServiceDBStore.getObjectInJson()");
+
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String jsonFileName;
+
         switch (type) {
             case POLICY:
                 jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
@@ -2118,11 +2367,13 @@ public class ServiceDBStore extends AbstractServiceStore {
             default:
                 throw restErrorUtil.createRESTException("Invalid type " + type);
         }
+
         writeJson(objList, jsonFileName, response, type);
     }
 
     public List<RangerPolicy> noZoneFilter(List<RangerPolicy> servicePolicies) {
         List<RangerPolicy> noZonePolicies = new ArrayList<>();
+
         if (CollectionUtils.isNotEmpty(servicePolicies)) {
             for (RangerPolicy policy : servicePolicies) {
                 if (StringUtils.isBlank(policy.getZoneName())) {
@@ -2130,6 +2381,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
+
         return noZonePolicies;
     }
 
@@ -2168,22 +2420,30 @@ public class ServiceDBStore extends AbstractServiceStore {
     public void deleteZonePolicies(Collection<String> serviceNames, Long zoneId) throws Exception {
         if (CollectionUtils.isNotEmpty(serviceNames)) {
             XXPolicyDao policyDao = daoMgr.getXXPolicy();
+
             for (String serviceName : serviceNames) {
                 RangerService service   = getServiceByName(serviceName);
                 List<Long>    policyIds = policyDao.findPolicyIdsByServiceNameAndZoneId(serviceName, zoneId);
+
                 if (CollectionUtils.isNotEmpty(policyIds)) {
                     List<RangerPolicy> rangerPolicyList = new ArrayList<>();
+
                     for (Long id : policyIds) {
                         rangerPolicyList.add(getPolicy(id));
                     }
+
                     long totalDeletedPolicies = 0;
+
                     for (RangerPolicy rangerPolicy : rangerPolicyList) {
                         deletePolicy(rangerPolicy, service);
+
                         totalDeletedPolicies = totalDeletedPolicies + 1;
+
                         if (totalDeletedPolicies % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
                             bizUtil.bulkModeOnlyFlushAndClear();
                         }
                     }
+
                     bizUtil.bulkModeOnlyFlushAndClear();
                 }
             }
@@ -2194,6 +2454,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         List<Integer> versionList = daoMgr.getXXDataHist().getVersionListOfObject(policyId, AppConstants.CLASS_TYPE_RANGER_POLICY);
 
         VXString vXString = new VXString();
+
         vXString.setValue(StringUtils.join(versionList, ","));
 
         return vXString;
@@ -2206,10 +2467,9 @@ public class ServiceDBStore extends AbstractServiceStore {
             throw restErrorUtil.createRESTException("No Policy found for given version.", MessageEnums.DATA_NOT_FOUND);
         }
 
-        String       content = xDataHist.getContent();
-        RangerPolicy policy  = jsonUtil.writeJsonToJavaObject(content, RangerPolicy.class);
+        String content = xDataHist.getContent();
 
-        return policy;
+        return jsonUtil.writeJsonToJavaObject(content, RangerPolicy.class);
     }
 
     public Map<String, Object> getMetaDataInfo() {
@@ -2218,7 +2478,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         String              userId       = usb != null ? usb.getLoginId() : null;
         DateFormat          formatter    = new SimpleDateFormat("MMM dd, yyyy h:mm:ss a");
 
-        metaDataInfo.put(HOSTNAME, localHostname);
+        metaDataInfo.put(HOSTNAME, LOCAL_HOSTNAME);
         metaDataInfo.put(USER_NAME, userId);
         metaDataInfo.put(TIMESTAMP, formatter.format(MiscUtil.getUTCDateForLocalDate(new Date())));
         metaDataInfo.put(RANGER_VERSION, RangerVersionInfo.getVersion());
@@ -2228,16 +2488,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     public Map<String, String> getMapFromInputStream(InputStream mapStream) throws IOException {
         LOG.debug("==> ServiceDBStore.getMapFromInputStream()");
+
         Map<String, String> inputMap       = new LinkedHashMap<>();
         String              inputMapString = IOUtils.toString(mapStream);
+
         if (StringUtils.isNotEmpty(inputMapString)) {
             inputMap = jsonUtil.jsonToMap(inputMapString);
         }
+
         if (!CollectionUtils.sizeIsEmpty(inputMap)) {
             LOG.debug("<== ServiceDBStore.getMapFromInputStream()");
+
             return inputMap;
         } else {
             LOG.error("Provided zone/service input map is empty!!");
+
             throw restErrorUtil.createRESTException("Provided zone/service map is empty!!");
         }
     }
@@ -2247,14 +2512,18 @@ public class ServiceDBStore extends AbstractServiceStore {
             policiesMap.put(policy.getName().trim() + " " + policy.getService().trim() + " " + policy.getResources().toString().trim() + " " + policy.getZoneName(), policy);
         } else if (StringUtils.isEmpty(policy.getName().trim()) && StringUtils.isNotEmpty(policy.getService().trim())) {
             LOG.error("Policy Name is not provided for service : {}", policy.getService().trim());
+
             throw restErrorUtil.createRESTException("Policy Name is not provided for service : " + policy.getService().trim());
         } else if (StringUtils.isNotEmpty(policy.getName().trim()) && StringUtils.isEmpty(policy.getService().trim())) {
             LOG.error("Service Name is not provided for policy : {}", policy.getName().trim());
+
             throw restErrorUtil.createRESTException("Service Name is not provided for policy : " + policy.getName().trim());
         } else {
             LOG.error("Service Name or Policy Name is not provided!!");
+
             throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
         }
+
         return policiesMap;
     }
 
@@ -2262,26 +2531,33 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (!CollectionUtils.sizeIsEmpty(zoneMappingMap)) {
             policy.setZoneName(destinationZoneName); // set destination zone name in policy.
         }
+
         if (!CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
             if (!StringUtils.isEmpty(policy.getService().trim())) {
                 if (sourceServices.contains(policy.getService().trim())) {
                     int index = sourceServices.indexOf(policy.getService().trim());
+
                     policy.setService(destinationServices.get(index));
+
                     policiesMap = setPolicyMapKeyValue(policiesMap, policy);
                 }
             } else {
                 LOG.error("Service Name or Policy Name is not provided!!");
+
                 throw restErrorUtil.createRESTException("Service Name or Policy Name is not provided!!");
             }
         } else if (CollectionUtils.sizeIsEmpty(servicesMappingMap)) {
             policiesMap = setPolicyMapKeyValue(policiesMap, policy);
         }
+
         return policiesMap;
     }
 
     public void getServiceUpgraded() {
         LOG.info("==> ServiceDBStore.getServiceUpgraded()");
+
         updateServiceWithCustomProperty();
+
         LOG.info("<== ServiceDBStore.getServiceUpgraded()");
     }
 
@@ -2291,9 +2567,11 @@ public class ServiceDBStore extends AbstractServiceStore {
         daoMgr.getXXPolicyChangeLog().deleteOlderThan(retentionInDays);
 
         List<Long> allServiceIds = daoMgr.getXXService().getAllServiceIds();
+
         if (CollectionUtils.isNotEmpty(allServiceIds)) {
             for (Long serviceId : allServiceIds) {
-                ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VersionType.POLICY_VERSION, null, policyChangeType, null);
+                ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VERSION_TYPE.POLICY_VERSION, null, policyChangeType, null);
+
                 persistVersionChange(updater);
             }
         }
@@ -2307,9 +2585,11 @@ public class ServiceDBStore extends AbstractServiceStore {
         daoMgr.getXXTagChangeLog().deleteOlderThan(retentionInDays);
 
         List<Long> allServiceIds = daoMgr.getXXService().getAllServiceIds();
+
         if (CollectionUtils.isNotEmpty(allServiceIds)) {
             for (Long serviceId : allServiceIds) {
-                ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VersionType.TAG_VERSION, tagChangeType, null, null);
+                ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VERSION_TYPE.TAG_VERSION, tagChangeType, null, null);
+
                 persistVersionChange(updater);
             }
         }
@@ -2373,14 +2653,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     public List<String> getPolicyLabels(SearchFilter searchFilter) {
         LOG.debug("==> ServiceDBStore.getPolicyLabels()");
-        VXPolicyLabelList vxPolicyLabelList = new VXPolicyLabelList();
-        @SuppressWarnings("unchecked")
-        List<XXPolicyLabel> xPolList = policyLabelsService.searchResources(searchFilter, policyLabelsService.searchFields, policyLabelsService.sortFields, vxPolicyLabelList);
-        List<String> result = new ArrayList<>();
+
+        VXPolicyLabelList   vxPolicyLabelList = new VXPolicyLabelList();
+        List<XXPolicyLabel> xPolList          = policyLabelsService.searchResources(searchFilter, policyLabelsService.searchFields, policyLabelsService.sortFields, vxPolicyLabelList);
+        List<String>        result            = new ArrayList<>();
+
         for (XXPolicyLabel xPolicyLabel : xPolList) {
             result.add(xPolicyLabel.getPolicyLabel());
         }
+
         LOG.debug("<== ServiceDBStore.getPolicyLabels()");
+
         return result;
     }
 
@@ -2394,9 +2677,11 @@ public class ServiceDBStore extends AbstractServiceStore {
      */
     public Map<String, Long> getPolicyCountByTypeAndServiceType(Integer policyType) {
         int type = 0;
+
         if ((!Objects.isNull(policyType)) && policyType >= 0) {
             type = policyType;
         }
+
         return daoMgr.getXXServiceDef().getPolicyCountByType(type);
     }
 
@@ -2408,11 +2693,14 @@ public class ServiceDBStore extends AbstractServiceStore {
         return daoMgr.getXXServiceDef().getServiceCount();
     }
 
-    public String getMetricByType(final MetricType metricType) throws Exception {
+    public String getMetricByType(final METRIC_TYPE metricType) throws Exception {
         LOG.debug("==> ServiceDBStore.getMetricByType({})", metricType);
+
         String ret = null;
+
         try {
             SearchCriteria searchCriteria = new SearchCriteria();
+
             searchCriteria.setStartIndex(0);
             searchCriteria.setMaxRows(100);
             searchCriteria.setGetCount(true);
@@ -2422,7 +2710,9 @@ public class ServiceDBStore extends AbstractServiceStore {
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType({}): Error calculating Metric : {}", metricType, e.getMessage());
         }
+
         LOG.debug("== ServiceDBStore.getMetricByType({}): {}", metricType, ret);
+
         return ret;
     }
 
@@ -2463,32 +2753,39 @@ public class ServiceDBStore extends AbstractServiceStore {
         return ret;
     }
 
-    public void updateServiceAuditConfig(String searchUsrGrpRoleName, RemoveRefType removeRefType) {
+    public void updateServiceAuditConfig(String searchUsrGrpRoleName, REMOVE_REF_TYPE removeRefType) {
         LOG.debug("===> ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : {} removeRefType : {})", searchUsrGrpRoleName, removeRefType);
+
         List<XXServiceConfigMap> configMapToBeModified = getAuditFiltersServiceConfigByName(searchUsrGrpRoleName);
+
         if (CollectionUtils.isNotEmpty(configMapToBeModified)) {
             for (XXServiceConfigMap xConfigMap : configMapToBeModified) {
                 String jsonStr = xConfigMap.getConfigvalue() != null ? xConfigMap.getConfigvalue() : null;
+
                 if (StringUtils.isNotBlank(jsonStr)) {
                     List<AuditFilter> auditFilters  = JsonUtils.jsonToAuditFilterList(jsonStr);
                     int               filterCount   = auditFilters != null ? auditFilters.size() : 0;
-                    RangerService     rangerService = null;
+
                     if (filterCount > 0) {
                         String userName  = null;
                         String groupName = null;
                         String roleName  = null;
-                        if (removeRefType == RemoveRefType.USER) {
+
+                        if (removeRefType == REMOVE_REF_TYPE.USER) {
                             userName = searchUsrGrpRoleName;
-                        } else if (removeRefType == RemoveRefType.GROUP) {
+                        } else if (removeRefType == REMOVE_REF_TYPE.GROUP) {
                             groupName = searchUsrGrpRoleName;
-                        } else if (removeRefType == RemoveRefType.ROLE) {
+                        } else if (removeRefType == REMOVE_REF_TYPE.ROLE) {
                             roleName = searchUsrGrpRoleName;
                         }
+
                         removeUserGroupRoleReferences(auditFilters, userName, groupName, roleName);
-                        String    updatedJsonStr = JsonUtils.listToJson(auditFilters);
-                        XXService xService       = daoMgr.getXXService().getById(xConfigMap.getServiceId());
-                        rangerService = svcService.getPopulatedViewObject(xService);
-                        Map<String, String> configs = rangerService.getConfigs();
+
+                        String              updatedJsonStr = JsonUtils.listToJson(auditFilters);
+                        XXService           xService       = daoMgr.getXXService().getById(xConfigMap.getServiceId());
+                        RangerService       rangerService  = svcService.getPopulatedViewObject(xService);
+                        Map<String, String> configs        = rangerService.getConfigs();
+
                         if (configs.containsKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
                             updatedJsonStr = StringUtils.isBlank(updatedJsonStr) ? "" : updatedJsonStr.replaceAll("\"", "'");
 
@@ -2496,9 +2793,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                             try {
                                 LOG.info("==>ServiceDBStore.updateServiceAuditConfig updating audit-filter of service : {} as part of delete request for : {}", rangerService.getName(), searchUsrGrpRoleName);
+
                                 updateService(rangerService, null);
                             } catch (Throwable excp) {
                                 LOG.error("updateService({}) failed", rangerService, excp);
+
                                 throw restErrorUtil.createRESTException(excp.getMessage());
                             }
                         }
@@ -2508,13 +2807,15 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         } else {
-            LOG.info("ServiceDBStore.updateServiceAuditConfig no service audit filter Config map found for : {}", searchUsrGrpRoleName);
+            LOG.debug("ServiceDBStore.updateServiceAuditConfig no service audit filter Config map found for : {}", searchUsrGrpRoleName);
         }
+
         LOG.debug("<=== ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : {} removeRefType : {})", searchUsrGrpRoleName, removeRefType);
     }
 
     void createTransactionLog(RangerPolicy policy, int operationImportContext, int operationContext) {
         StackTraceElement[] trace = Thread.currentThread().getStackTrace();
+
         if (trace.length > 3 && (StringUtils.contains(trace[4].getMethodName(), "import") || StringUtils.contains(trace[5].getMethodName(), "import"))) {
             policyService.createTransactionLog(policy, null, operationImportContext);
         } else {
@@ -2523,10 +2824,9 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     List<RangerPolicy> applyResourceFilter(RangerServiceDef serviceDef, List<RangerPolicy> policies, Map<String, String> filterResources, SearchFilter filter, RangerPolicyResourceMatcher.MatchScope scope) {
-        LOG.debug("==> ServiceDBStore.applyResourceFilter(policies-size={}, filterResources={}, scope={})", policies.size(), filterResources, scope);
+        LOG.debug("==> ServiceDBStore.applyResourceFilter(policies-size={}, filterResources={}, {})", policies.size(), filterResources, scope);
 
-        List<RangerPolicy> ret = new ArrayList<>();
-
+        List<RangerPolicy>                ret      = new ArrayList<>();
         List<RangerPolicyResourceMatcher> matchers = getMatchers(serviceDef, filterResources, filter);
 
         if (CollectionUtils.isNotEmpty(matchers)) {
@@ -2536,6 +2836,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                     if (matcher.isMatch(policy, scope, null)) {
                         LOG.debug("matched policy:[{}]", policy);
+
                         ret.add(policy);
                         break;
                     }
@@ -2543,7 +2844,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
-        LOG.debug("<== ServiceDBStore.applyResourceFilter(policies-size={}, filterResources={}, scope={})", ret.size(), filterResources, scope);
+        LOG.debug("<== ServiceDBStore.applyResourceFilter(policies-size={}, filterResources={}, {})", ret.size(), filterResources, scope);
 
         return ret;
     }
@@ -2551,13 +2852,10 @@ public class ServiceDBStore extends AbstractServiceStore {
     List<RangerPolicyResourceMatcher> getMatchers(RangerServiceDef serviceDef, Map<String, String> filterResources, SearchFilter filter) {
         LOG.debug("==> ServiceDBStore.getMatchers(filterResources={})", filterResources);
 
-        List<RangerPolicyResourceMatcher> ret = new ArrayList<>();
-
-        RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-
-        String policyTypeStr = filter.getParam(SearchFilter.POLICY_TYPE);
-
-        int[] policyTypes = RangerPolicy.POLICY_TYPES;
+        List<RangerPolicyResourceMatcher> ret              = new ArrayList<>();
+        RangerServiceDefHelper            serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+        String                            policyTypeStr    = filter.getParam(SearchFilter.POLICY_TYPE);
+        int[]                             policyTypes      = RangerPolicy.POLICY_TYPES;
 
         if (StringUtils.isNotBlank(policyTypeStr)) {
             policyTypes    = new int[1];
@@ -2581,6 +2879,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
 
                 RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
+
                 matcher.setServiceDef(serviceDef);
                 matcher.setPolicyResources(policyResources, policyType);
                 matcher.init();
@@ -2591,7 +2890,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
-        LOG.debug("<== ServiceDBStore.getMatchers(filterResources={}, count={})", filterResources, ret.size());
+        LOG.debug("<== ServiceDBStore.getMatchers(filterResources={}, , count={})", filterResources, ret.size());
 
         return ret;
     }
@@ -2601,22 +2900,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         // if lastKnownVersion != -1L : try and get deltas. Get delta for serviceName first. Find id of the delta
         // returned first in the list. and then find all ids greater than that for corresponding tag service.
-        LOG.debug("==> ServiceDBStore.getServicePoliciesWithDeltas(serviceType={}, serviceId={}, tagServiceId={}, lastKnownVersion={})", serviceDef.getName(), service.getId(), (tagService != null ? tagService.getId() : null), lastKnownVersion);
+        LOG.debug("==> ServiceDBStore.getServicePoliciesWithDeltas(serviceType={}, serviceId={}, tagServiceId={}, lastKnownVersion={})", serviceDef.getName(), service.getId(), tagService != null ? tagService.getId() : null, lastKnownVersion);
+
         if (lastKnownVersion != -1L) {
-            List<RangerPolicyDelta> resourcePolicyDeltas;
             List<RangerPolicyDelta> tagPolicyDeltas           = null;
-            List<RangerPolicyDelta> gdsPolicyDeltas           = null;
             Long                    retrievedPolicyVersion    = null;
             Long                    retrievedTagPolicyVersion = null;
-            Long                    retrievedGdsPolicyVersion = null;
+            String                  componentServiceType      = serviceDef.getName();
 
-            String componentServiceType = serviceDef.getName();
+            List<RangerPolicyDelta> resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(lastKnownVersion, maxNeededVersion, service.getId());
 
-            boolean isValid;
-
-            resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(lastKnownVersion, maxNeededVersion, service.getId());
             if (CollectionUtils.isNotEmpty(resourcePolicyDeltas)) {
-                isValid = RangerPolicyDeltaUtil.isValidDeltas(resourcePolicyDeltas, componentServiceType);
+                boolean isValid = RangerPolicyDeltaUtil.isValidDeltas(resourcePolicyDeltas, componentServiceType);
 
                 if (isValid) {
                     retrievedPolicyVersion = resourcePolicyDeltas.get(resourcePolicyDeltas.size() - 1).getPoliciesVersion();
@@ -2626,6 +2921,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                 if (isValid && tagService != null) {
                     Long id = resourcePolicyDeltas.get(0).getId();
+
                     tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, maxNeededVersion, tagService.getId());
 
                     if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {
@@ -2653,6 +2949,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                     if (compressedDeltas != null) {
                         ret = new ServicePolicies();
+
                         ret.setServiceId(service.getId());
                         ret.setServiceName(service.getName());
                         ret.setServiceDef(serviceDef);
@@ -2662,11 +2959,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                         if (tagServiceDef != null && tagService != null) {
                             ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
+
                             tagPolicies.setServiceDef(tagServiceDef);
                             tagPolicies.setServiceId(tagService.getId());
                             tagPolicies.setServiceName(tagService.getName());
                             tagPolicies.setPolicies(null);
                             tagPolicies.setPolicyVersion(retrievedTagPolicyVersion);
+
                             ret.setTagPolicies(tagPolicies);
                         }
                     } else {
@@ -2674,11 +2973,12 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                 }
             } else {
-                LOG.warn("No policy-deltas found for serviceId={}, tagServiceId={}, lastKnownVersion={})", service.getId(), (tagService != null ? tagService.getId() : null), lastKnownVersion);
+                LOG.warn("No policy-deltas found for serviceId={}, tagServiceId={}, lastKnownVersion={})", service.getId(), tagService != null ? tagService.getId() : null, lastKnownVersion);
             }
         }
 
-        LOG.debug("<== ServiceDBStore.getServicePoliciesWithDeltas(serviceType={}, serviceId={}, tagServiceId={}, lastKnownVersion={}) : deltasSize={}", serviceDef.getName(), service.getId(), (tagService != null ? tagService.getId() : null), lastKnownVersion, (ret != null && CollectionUtils.isNotEmpty(ret.getPolicyDeltas()) ? ret.getPolicyDeltas().size() : 0));
+        LOG.debug("<== ServiceDBStore.getServicePoliciesWithDeltas(serviceType={}, serviceId={}, tagServiceId={}, lastKnownVersion={}) : deltasSize={}", serviceDef.getName(), service.getId(), tagService != null ? tagService.getId() : null, lastKnownVersion, ret != null && CollectionUtils.isNotEmpty(ret.getPolicyDeltas()) ? ret.getPolicyDeltas().size() : 0);
+
         return ret;
     }
 
@@ -2694,8 +2994,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     List<RangerPolicy> populateDefaultPolicies(RangerService service) throws Exception {
         List<RangerPolicy> ret = null;
-
-        RangerBaseService svc = serviceMgr.getRangerServiceByService(service, this);
+        RangerBaseService  svc = serviceMgr.getRangerServiceByService(service, this);
 
         if (svc != null) {
             List<String> serviceCheckUsers = getServiceCheckUsers(service);
@@ -2706,12 +3005,15 @@ public class ServiceDBStore extends AbstractServiceStore {
                 for (String userName : serviceCheckUsers) {
                     if (!StringUtils.isEmpty(userName)) {
                         XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+
                         if (xxUser != null) {
-                            VXUser vXUser = xUserService.populateViewBean(xxUser);
+                            xUserService.populateViewBean(xxUser);
                         } else {
                             xUserMgr.createServiceConfigUser(userName);
+
                             LOG.info("Creating Ambari Service Check User : {}", userName);
                         }
+
                         users.add(userName);
                     }
                 }
@@ -2739,12 +3041,18 @@ public class ServiceDBStore extends AbstractServiceStore {
                         }
                     }
 
-                    boolean isPolicyItemValid = validatePolicyItems(defaultPolicy.getPolicyItems()) && validatePolicyItems(defaultPolicy.getDenyPolicyItems()) && validatePolicyItems(defaultPolicy.getAllowExceptions()) && validatePolicyItems(defaultPolicy.getDenyExceptions()) && validatePolicyItems(defaultPolicy.getDataMaskPolicyItems()) && validatePolicyItems(defaultPolicy.getRowFilterPolicyItems());
+                    boolean isPolicyItemValid = validatePolicyItems(defaultPolicy.getPolicyItems())
+                            && validatePolicyItems(defaultPolicy.getDenyPolicyItems())
+                            && validatePolicyItems(defaultPolicy.getAllowExceptions())
+                            && validatePolicyItems(defaultPolicy.getDenyExceptions())
+                            && validatePolicyItems(defaultPolicy.getDataMaskPolicyItems())
+                            && validatePolicyItems(defaultPolicy.getRowFilterPolicyItems());
 
                     if (isPolicyItemValid) {
                         if (ret == null) {
                             ret = new ArrayList<>();
                         }
+
                         ret.add(defaultPolicy);
                     } else {
                         LOG.warn("Default policy won't be created,since policyItems not valid-either users/groups not present or access not present in policy.");
@@ -2752,6 +3060,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
+
         return ret;
     }
 
@@ -2764,56 +3073,74 @@ public class ServiceDBStore extends AbstractServiceStore {
                 defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
                 defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
             }
+
             for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getAllowExceptions()) {
                 defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
                 defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
             }
+
             for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getDenyPolicyItems()) {
                 defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
                 defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
             }
+
             for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getDenyExceptions()) {
                 defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
                 defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
             }
+
             for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getDataMaskPolicyItems()) {
                 defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
                 defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
             }
+
             for (RangerPolicyItem defaultPolicyItem : defaultPolicy.getRowFilterPolicyItems()) {
                 defaultPolicyUsers.addAll(defaultPolicyItem.getUsers());
                 defaultPolicyGroups.addAll(defaultPolicyItem.getGroups());
             }
         }
+
         for (String policyUser : defaultPolicyUsers) {
             LOG.debug("Checking policyUser:[{}] for existence", policyUser);
+
             if (StringUtils.isNotBlank(policyUser) && !StringUtils.equals(policyUser, RangerPolicyEngine.USER_CURRENT) && !StringUtils.equals(policyUser, RangerPolicyEngine.RESOURCE_OWNER)) {
                 String userName = stringUtil.getValidUserName(policyUser);
                 XXUser xxUser   = daoMgr.getXXUser().findByUserName(userName);
+
                 if (xxUser == null) {
                     UserSessionBase usb = ContextUtil.getCurrentUserSession();
+
                     if (usb != null && !usb.isKeyAdmin() && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
                         throw restErrorUtil.createRESTException("User does not exist with given username: [" + policyUser + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
                     }
+
                     xUserMgr.createServiceConfigUser(userName);
                 }
             }
         }
+
         for (String policyGroup : defaultPolicyGroups) {
             LOG.debug("Checking policyGroup:[{}] for existence", policyGroup);
+
             if (StringUtils.isNotBlank(policyGroup)) {
                 XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(policyGroup);
+
                 if (xxGroup == null) {
                     UserSessionBase usb = ContextUtil.getCurrentUserSession();
+
                     if (usb != null && !usb.isKeyAdmin() && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
                         throw restErrorUtil.createRESTException("Group does not exist with given groupname: [" + policyGroup + "] please use existing group", MessageEnums.OPER_NO_PERMISSION);
                     }
+
                     VXGroup vXGroup = new VXGroup();
+
                     vXGroup.setName(policyGroup);
                     vXGroup.setDescription(policyGroup);
                     vXGroup.setGroupSource(RangerCommonEnums.GROUP_INTERNAL);
                     vXGroup.setIsVisible(RangerCommonEnums.IS_VISIBLE);
+
                     VXGroup createdVXGrp = xGroupService.createResource(vXGroup);
+
                     xGroupService.createTransactionLog(createdVXGrp, null, OPERATION_CREATE_CONTEXT);
                 }
             }
@@ -2821,9 +3148,8 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     List<String> getServiceCheckUsers(RangerService createdService) {
-        List<String> ret       = new ArrayList<>();
-        String       userNames = "";
-
+        List<String>        ret           = new ArrayList<>();
+        String              userNames     = "";
         Map<String, String> serviceConfig = createdService.getConfigs();
 
         if (serviceConfig.containsKey(SERVICE_CHECK_USER)) {
@@ -2834,31 +3160,38 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         if (!StringUtils.isEmpty(userNames)) {
             String[] userList = userNames.split(",");
+
             for (String userName : userList) {
                 if (!StringUtils.isEmpty(userName)) {
                     ret.add(userName.trim());
                 }
             }
         }
+
         return ret;
     }
 
     void updatePolicySignature(RangerPolicy policy) {
         String guid = policy.getGuid();
+
         if (StringUtils.isEmpty(guid)) {
             guid = guidUtil.genGUID();
+
             policy.setGuid(guid);
         }
+
         RangerPolicyResourceSignature policySignature = factory.createPolicyResourceSignature(policy);
         String                        signature       = policySignature.getSignature();
+
         policy.setResourceSignature(signature);
-        String message = String.format("Setting signature on policy id=%d, name=%s to [%s]", policy.getId(), policy.getName(), signature);
-        LOG.debug(message);
+
+        LOG.debug("Setting signature on policy id={}, name={} to [{}]", policy.getId(), policy.getName(), signature);
     }
 
     boolean hasServiceConfigForPluginChanged(List<XXServiceConfigMap> dbConfigMaps, Map<String, String> validConfigs) {
         boolean             ret     = false;
         Map<String, String> configs = new HashMap<>();
+
         if (CollectionUtils.isNotEmpty(dbConfigMaps)) {
             for (XXServiceConfigMap dbConfigMap : dbConfigMaps) {
                 if (StringUtils.startsWith(dbConfigMap.getConfigkey(), RANGER_PLUGIN_CONFIG_PREFIX)) {
@@ -2866,6 +3199,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
+
         if (MapUtils.isNotEmpty(validConfigs)) {
             for (String key : validConfigs.keySet()) {
                 if (StringUtils.startsWith(key, RANGER_PLUGIN_CONFIG_PREFIX)) {
@@ -2877,258 +3211,339 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
-        if (configs.size() > 0) {
+
+        if (!configs.isEmpty()) {
             return true;
         }
 
         return ret;
     }
 
-    private void updateChildObjectsOfServiceDef(XXServiceDef createdSvcDef, List<RangerServiceConfigDef> configs, List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes, List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers, List<RangerEnumDef> enums, RangerDataMaskDef dataMaskDef, RangerRowFilterDef rowFilterDef) {
-        Long serviceDefId = createdSvcDef.getId();
-
+    private void updateChildObjectsOfServiceDef(XXServiceDef createdSvcDef, List<RangerServiceConfigDef> configs,
+            List<RangerResourceDef> resources, List<RangerAccessTypeDef> accessTypes,
+            List<RangerPolicyConditionDef> policyConditions, List<RangerContextEnricherDef> contextEnrichers,
+            List<RangerEnumDef> enums, RangerDataMaskDef dataMaskDef, RangerRowFilterDef rowFilterDef) {
+        Long                       serviceDefId       = createdSvcDef.getId();
         List<XXServiceConfigDef>   xxConfigs          = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
         List<XXResourceDef>        xxResources        = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
         List<XXAccessTypeDef>      xxAccessTypes      = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
         List<XXPolicyConditionDef> xxPolicyConditions = daoMgr.getXXPolicyConditionDef().findByServiceDefId(serviceDefId);
         List<XXContextEnricherDef> xxContextEnrichers = daoMgr.getXXContextEnricherDef().findByServiceDefId(serviceDefId);
         List<XXEnumDef>            xxEnums            = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
+        XXServiceConfigDefDao      xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
 
-        XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
         for (int i = 0; i < configs.size(); i++) {
             RangerServiceConfigDef config = configs.get(i);
             boolean                found  = false;
+
             for (XXServiceConfigDef xConfig : xxConfigs) {
                 if (config.getItemId() != null && config.getItemId().equals(xConfig.getItemId())) {
                     found   = true;
                     xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                     xConfig.setOrder(i);
+
                     xConfig = xxServiceConfigDao.update(xConfig);
                     config  = serviceDefService.populateXXToRangerServiceConfigDef(xConfig);
                     break;
                 }
             }
+
             if (!found) {
                 XXServiceConfigDef xConfig = new XXServiceConfigDef();
+
                 xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                 xConfig.setOrder(i);
+
                 xConfig = xxServiceConfigDao.create(xConfig);
-                config  = serviceDefService.populateXXToRangerServiceConfigDef(xConfig);
+
+                serviceDefService.populateXXToRangerServiceConfigDef(xConfig);
             }
         }
+
         for (XXServiceConfigDef xConfig : xxConfigs) {
             boolean found = false;
+
             for (RangerServiceConfigDef config : configs) {
                 if (xConfig.getItemId() != null && xConfig.getItemId().equals(config.getItemId())) {
                     found = true;
                     break;
                 }
             }
+
             if (!found) {
                 xxServiceConfigDao.remove(xConfig);
             }
         }
 
         XXResourceDefDao xxResDefDao = daoMgr.getXXResourceDef();
+
         for (RangerResourceDef resource : resources) {
             boolean found = false;
+
             for (XXResourceDef xRes : xxResources) {
                 if (resource.getItemId() != null && resource.getItemId().equals(xRes.getItemId())) {
                     found = true;
                     xRes  = serviceDefService.populateRangerResourceDefToXX(resource, xRes, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                     xxResDefDao.update(xRes);
+
                     resource = serviceDefService.populateXXToRangerResourceDef(xRes);
                     break;
                 }
             }
-            if (!found) {
-                XXResourceDef parent   = xxResDefDao.findByNameAndServiceDefId(resource.getParent(), serviceDefId);
-                Long          parentId = (parent != null) ? parent.getId() : null;
 
+            if (!found) {
+                XXResourceDef parent    = xxResDefDao.findByNameAndServiceDefId(resource.getParent(), serviceDefId);
+                Long          parentId  = (parent != null) ? parent.getId() : null;
                 XXResourceDef xResource = new XXResourceDef();
+
                 xResource = serviceDefService.populateRangerResourceDefToXX(resource, xResource, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                 xResource.setParent(parentId);
-                xResource = xxResDefDao.create(xResource);
+
+                xxResDefDao.create(xResource);
             }
         }
+
         for (XXResourceDef xRes : xxResources) {
             boolean found = false;
+
             for (RangerResourceDef resource : resources) {
                 if (xRes.getItemId() != null && xRes.getItemId().equals(resource.getItemId())) {
                     found = true;
                     break;
                 }
             }
+
             if (!found) {
                 List<XXPolicyRefResource> xxPolicyRefResource = daoMgr.getXXPolicyRefResource().findByResourceDefID(xRes.getId());
+
                 if (!stringUtil.isEmpty(xxPolicyRefResource)) {
                     throw restErrorUtil.createRESTException("Policy/Policies are referring to this resource: " + xRes.getName() + ". Please remove such references from policy before updating service-def.", MessageEnums.DATA_NOT_UPDATABLE);
                 }
+
                 deleteXXResourceDef(xRes);
             }
         }
 
         XXAccessTypeDefDao xxATDDao = daoMgr.getXXAccessTypeDef();
+
         for (int i = 0; i < accessTypes.size(); i++) {
             RangerAccessTypeDef access = accessTypes.get(i);
             boolean             found  = false;
+
             for (XXAccessTypeDef xAccess : xxAccessTypes) {
                 if (access.getItemId() != null && access.getItemId().equals(xAccess.getItemId())) {
                     found   = true;
                     xAccess = serviceDefService.populateRangerAccessTypeDefToXX(access, xAccess, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                     xAccess.setOrder(i);
+
                     xAccess = xxATDDao.update(xAccess);
 
                     Collection<String>       impliedGrants   = access.getImpliedGrants();
                     XXAccessTypeDefGrantsDao xxATDGrantDao   = daoMgr.getXXAccessTypeDefGrants();
                     List<String>             xxImpliedGrants = xxATDGrantDao.findImpliedGrantsByATDId(xAccess.getId());
+
                     for (String impliedGrant : impliedGrants) {
                         boolean foundGrant = false;
+
                         for (String xImpliedGrant : xxImpliedGrants) {
                             if (StringUtils.equalsIgnoreCase(impliedGrant, xImpliedGrant)) {
                                 foundGrant = true;
                                 break;
                             }
                         }
+
                         if (!foundGrant) {
                             XXAccessTypeDefGrants xImpliedGrant = new XXAccessTypeDefGrants();
+
                             xImpliedGrant.setAtdId(xAccess.getId());
                             xImpliedGrant.setImpliedGrant(impliedGrant);
-                            xImpliedGrant = xxATDGrantDao.create(xImpliedGrant);
+
+                            xxATDGrantDao.create(xImpliedGrant);
                         }
                     }
+
                     for (String xImpliedGrant : xxImpliedGrants) {
                         boolean foundGrant = false;
+
                         for (String impliedGrant : impliedGrants) {
                             if (StringUtils.equalsIgnoreCase(xImpliedGrant, impliedGrant)) {
                                 foundGrant = true;
                                 break;
                             }
                         }
+
                         if (!foundGrant) {
                             XXAccessTypeDefGrants xATDGrant = xxATDGrantDao.findByNameAndATDId(xAccess.getId(), xImpliedGrant);
+
                             xxATDGrantDao.remove(xATDGrant);
                         }
                     }
+
                     access = serviceDefService.populateXXToRangerAccessTypeDef(xAccess);
                     break;
                 }
             }
+
             if (!found) {
                 XXAccessTypeDef xAccessType = new XXAccessTypeDef();
+
                 xAccessType = serviceDefService.populateRangerAccessTypeDefToXX(access, xAccessType, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                 xAccessType.setOrder(i);
+
                 xAccessType = xxATDDao.create(xAccessType);
 
                 Collection<String>       impliedGrants = access.getImpliedGrants();
                 XXAccessTypeDefGrantsDao xxATDGrantDao = daoMgr.getXXAccessTypeDefGrants();
+
                 for (String impliedGrant : impliedGrants) {
                     XXAccessTypeDefGrants xImpliedGrant = new XXAccessTypeDefGrants();
+
                     xImpliedGrant.setAtdId(xAccessType.getId());
                     xImpliedGrant.setImpliedGrant(impliedGrant);
-                    xImpliedGrant = xxATDGrantDao.create(xImpliedGrant);
+
+                    xxATDGrantDao.create(xImpliedGrant);
                 }
-                access = serviceDefService.populateXXToRangerAccessTypeDef(xAccessType);
+
+                serviceDefService.populateXXToRangerAccessTypeDef(xAccessType);
             }
         }
 
         for (XXAccessTypeDef xAccess : xxAccessTypes) {
             boolean found = false;
+
             for (RangerAccessTypeDef access : accessTypes) {
                 if (xAccess.getItemId() != null && xAccess.getItemId().equals(access.getItemId())) {
                     found = true;
                     break;
                 }
             }
+
             if (!found) {
                 List<XXPolicyRefAccessType> policyRefAccessTypeList = daoMgr.getXXPolicyRefAccessType().findByAccessTypeDefId(xAccess.getId());
+
                 if (!stringUtil.isEmpty(policyRefAccessTypeList)) {
                     throw restErrorUtil.createRESTException("Policy/Policies are referring to this access-type: " + xAccess.getName() + ". Please remove such references from policy before updating service-def.", MessageEnums.DATA_NOT_UPDATABLE);
                 }
+
                 deleteXXAccessTypeDef(xAccess);
             }
         }
 
         XXPolicyConditionDefDao xxPolCondDao = daoMgr.getXXPolicyConditionDef();
+
         for (int i = 0; i < policyConditions.size(); i++) {
             RangerPolicyConditionDef condition = policyConditions.get(i);
             boolean                  found     = false;
+
             for (XXPolicyConditionDef xCondition : xxPolicyConditions) {
                 if (condition.getItemId() != null && condition.getItemId().equals(xCondition.getItemId())) {
                     found      = true;
                     xCondition = serviceDefService.populateRangerPolicyConditionDefToXX(condition, xCondition, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                     xCondition.setOrder(i);
+
                     xCondition = xxPolCondDao.update(xCondition);
                     condition  = serviceDefService.populateXXToRangerPolicyConditionDef(xCondition);
                     break;
                 }
             }
+
             if (!found) {
                 XXPolicyConditionDef xCondition = new XXPolicyConditionDef();
+
                 xCondition = serviceDefService.populateRangerPolicyConditionDefToXX(condition, xCondition, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                 xCondition.setOrder(i);
+
                 xCondition = xxPolCondDao.create(xCondition);
-                condition  = serviceDefService.populateXXToRangerPolicyConditionDef(xCondition);
+
+                serviceDefService.populateXXToRangerPolicyConditionDef(xCondition);
             }
         }
+
         for (XXPolicyConditionDef xCondition : xxPolicyConditions) {
             boolean found = false;
+
             for (RangerPolicyConditionDef condition : policyConditions) {
                 if (xCondition.getItemId() != null && xCondition.getItemId().equals(condition.getItemId())) {
                     found = true;
                     break;
                 }
             }
+
             if (!found) {
                 List<XXPolicyRefCondition> xxPolicyRefConditions = daoMgr.getXXPolicyRefCondition().findByConditionDefId(xCondition.getId());
+
                 if (!stringUtil.isEmpty(xxPolicyRefConditions)) {
                     throw restErrorUtil.createRESTException("Policy/Policies are referring to this policy-condition: " + xCondition.getName() + ". Please remove such references from policy before updating service-def.", MessageEnums.DATA_NOT_UPDATABLE);
                 }
+
                 for (XXPolicyRefCondition xxPolicyRefCondition : xxPolicyRefConditions) {
                     daoMgr.getXXPolicyRefCondition().remove(xxPolicyRefCondition);
                 }
+
                 xxPolCondDao.remove(xCondition);
             }
         }
 
         XXContextEnricherDefDao xxContextEnricherDao = daoMgr.getXXContextEnricherDef();
+
         for (int i = 0; i < contextEnrichers.size(); i++) {
             RangerContextEnricherDef context = contextEnrichers.get(i);
             boolean                  found   = false;
+
             for (XXContextEnricherDef xContext : xxContextEnrichers) {
                 if (context.getItemId() != null && context.getItemId().equals(xContext.getItemId())) {
                     found    = true;
                     xContext = serviceDefService.populateRangerContextEnricherDefToXX(context, xContext, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                     xContext.setOrder(i);
+
                     xContext = xxContextEnricherDao.update(xContext);
                     context  = serviceDefService.populateXXToRangerContextEnricherDef(xContext);
                     break;
                 }
             }
+
             if (!found) {
                 XXContextEnricherDef xContext = new XXContextEnricherDef();
+
                 xContext = serviceDefService.populateRangerContextEnricherDefToXX(context, xContext, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                 xContext.setOrder(i);
+
                 xContext = xxContextEnricherDao.create(xContext);
-                context  = serviceDefService.populateXXToRangerContextEnricherDef(xContext);
+
+                serviceDefService.populateXXToRangerContextEnricherDef(xContext);
             }
         }
+
         for (XXContextEnricherDef xContext : xxContextEnrichers) {
             boolean found = false;
+
             for (RangerContextEnricherDef context : contextEnrichers) {
                 if (xContext.getItemId() != null && xContext.getItemId().equals(context.getItemId())) {
                     found = true;
                     break;
                 }
             }
+
             if (!found) {
                 daoMgr.getXXContextEnricherDef().remove(xContext);
             }
         }
 
         XXEnumDefDao xxEnumDefDao = daoMgr.getXXEnumDef();
+
         for (RangerEnumDef enumDef : enums) {
             boolean found = false;
+
             for (XXEnumDef xEnumDef : xxEnums) {
                 if (enumDef.getItemId() != null && enumDef.getItemId().equals(xEnumDef.getItemId())) {
                     found    = true;
@@ -3142,75 +3557,98 @@ public class ServiceDBStore extends AbstractServiceStore {
                     for (int i = 0; i < enumEleDefs.size(); i++) {
                         RangerEnumElementDef eleDef   = enumEleDefs.get(i);
                         boolean              foundEle = false;
+
                         for (XXEnumElementDef xEleDef : xxEnumEleDefs) {
                             if (eleDef.getItemId() != null && eleDef.getItemId().equals(xEleDef.getItemId())) {
                                 foundEle = true;
                                 xEleDef  = serviceDefService.populateRangerEnumElementDefToXX(eleDef, xEleDef, xEnumDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                                 xEleDef.setOrder(i);
-                                xEleDef = xEnumEleDao.update(xEleDef);
+
+                                xEnumEleDao.update(xEleDef);
                                 break;
                             }
                         }
+
                         if (!foundEle) {
                             XXEnumElementDef xElement = new XXEnumElementDef();
+
                             xElement = serviceDefService.populateRangerEnumElementDefToXX(eleDef, xElement, xEnumDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                             xElement.setOrder(i);
-                            xElement = xEnumEleDao.create(xElement);
+
+                            xEnumEleDao.create(xElement);
                         }
                     }
+
                     for (XXEnumElementDef xxEleDef : xxEnumEleDefs) {
                         boolean foundEle = false;
+
                         for (RangerEnumElementDef enumEle : enumEleDefs) {
                             if (xxEleDef.getItemId() != null && xxEleDef.getItemId().equals(enumEle.getItemId())) {
                                 foundEle = true;
                                 break;
                             }
                         }
+
                         if (!foundEle) {
                             xEnumEleDao.remove(xxEleDef);
                         }
                     }
+
                     enumDef = serviceDefService.populateXXToRangerEnumDef(xEnumDef);
                     break;
                 }
             }
+
             if (!found) {
                 XXEnumDef xEnum = new XXEnumDef();
+
                 xEnum = serviceDefService.populateRangerEnumDefToXX(enumDef, xEnum, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                 xEnum = xxEnumDefDao.create(xEnum);
 
                 List<RangerEnumElementDef> elements        = enumDef.getElements();
                 XXEnumElementDefDao        xxEnumEleDefDao = daoMgr.getXXEnumElementDef();
+
                 for (RangerEnumElementDef element : elements) {
                     XXEnumElementDef xElement = new XXEnumElementDef();
+
                     xElement = serviceDefService.populateRangerEnumElementDefToXX(element, xElement, xEnum, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
-                    xElement = xxEnumEleDefDao.create(xElement);
+
+                    xxEnumEleDefDao.create(xElement);
                 }
-                enumDef = serviceDefService.populateXXToRangerEnumDef(xEnum);
+
+                serviceDefService.populateXXToRangerEnumDef(xEnum);
             }
         }
+
         for (XXEnumDef xEnumDef : xxEnums) {
             boolean found = false;
+
             for (RangerEnumDef enumDef : enums) {
                 if (xEnumDef.getItemId() != null && xEnumDef.getItemId().equals(enumDef.getItemId())) {
                     found = true;
                     break;
                 }
             }
+
             if (!found) {
                 List<XXEnumElementDef> enumEleDefList = daoMgr.getXXEnumElementDef().findByEnumDefId(xEnumDef.getId());
+
                 for (XXEnumElementDef eleDef : enumEleDefList) {
                     daoMgr.getXXEnumElementDef().remove(eleDef);
                 }
+
                 xxEnumDefDao.remove(xEnumDef);
             }
         }
 
-        List<RangerDataMaskTypeDef> dataMasks            = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<RangerDataMaskTypeDef>() : dataMaskDef.getMaskTypes();
-        List<RangerAccessTypeDef>   dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : dataMaskDef.getAccessTypes();
-        List<RangerResourceDef>     dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<RangerResourceDef>() : dataMaskDef.getResources();
-        List<RangerAccessTypeDef>   rowFilterAccessTypes = rowFilterDef == null || rowFilterDef.getAccessTypes() == null ? new ArrayList<RangerAccessTypeDef>() : rowFilterDef.getAccessTypes();
-        List<RangerResourceDef>     rowFilterResources   = rowFilterDef == null || rowFilterDef.getResources() == null ? new ArrayList<RangerResourceDef>() : rowFilterDef.getResources();
+        List<RangerDataMaskTypeDef> dataMasks            = dataMaskDef == null || dataMaskDef.getMaskTypes() == null ? new ArrayList<>() : dataMaskDef.getMaskTypes();
+        List<RangerAccessTypeDef>   dataMaskAccessTypes  = dataMaskDef == null || dataMaskDef.getAccessTypes() == null ? new ArrayList<>() : dataMaskDef.getAccessTypes();
+        List<RangerResourceDef>     dataMaskResources    = dataMaskDef == null || dataMaskDef.getResources() == null ? new ArrayList<>() : dataMaskDef.getResources();
+        List<RangerAccessTypeDef>   rowFilterAccessTypes = rowFilterDef == null || rowFilterDef.getAccessTypes() == null ? new ArrayList<>() : rowFilterDef.getAccessTypes();
+        List<RangerResourceDef>     rowFilterResources   = rowFilterDef == null || rowFilterDef.getResources() == null ? new ArrayList<>() : rowFilterDef.getResources();
         XXDataMaskTypeDefDao        dataMaskTypeDao      = daoMgr.getXXDataMaskTypeDef();
         List<XXDataMaskTypeDef>     xxDataMaskTypes      = dataMaskTypeDao.findByServiceDefId(serviceDefId);
         List<XXAccessTypeDef>       xxAccessTypeDefs     = xxATDDao.findByServiceDefId(serviceDefId);
@@ -3220,13 +3658,16 @@ public class ServiceDBStore extends AbstractServiceStore {
         for (int i = 0; i < dataMasks.size(); i++) {
             RangerDataMaskTypeDef dataMask = dataMasks.get(i);
             boolean               found    = false;
+
             for (XXDataMaskTypeDef xxDataMask : xxDataMaskTypes) {
                 if (xxDataMask.getItemId() != null && xxDataMask.getItemId().equals(dataMask.getItemId())) {
                     LOG.debug("Updating existing dataMask with itemId={}", dataMask.getItemId());
 
                     found      = true;
                     xxDataMask = serviceDefService.populateRangerDataMaskDefToXX(dataMask, xxDataMask, createdSvcDef, RangerServiceDefService.OPERATION_UPDATE_CONTEXT);
+
                     xxDataMask.setOrder(i);
+
                     xxDataMask = dataMaskTypeDao.update(xxDataMask);
                     dataMask   = serviceDefService.populateXXToRangerDataMaskTypeDef(xxDataMask);
                     break;
@@ -3237,21 +3678,26 @@ public class ServiceDBStore extends AbstractServiceStore {
                 LOG.debug("Creating dataMask with itemId={}", dataMask.getItemId());
 
                 XXDataMaskTypeDef xxDataMask = new XXDataMaskTypeDef();
+
                 xxDataMask = serviceDefService.populateRangerDataMaskDefToXX(dataMask, xxDataMask, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
                 xxDataMask.setOrder(i);
-                xxDataMask = dataMaskTypeDao.create(xxDataMask);
+
+                dataMaskTypeDao.create(xxDataMask);
             }
         }
 
         // remove dataMasks
         for (XXDataMaskTypeDef xxDataMask : xxDataMaskTypes) {
             boolean found = false;
+
             for (RangerDataMaskTypeDef dataMask : dataMasks) {
                 if (xxDataMask.getItemId() != null && xxDataMask.getItemId().equals(dataMask.getItemId())) {
                     found = true;
                     break;
                 }
             }
+
             if (!found) {
                 LOG.debug("Deleting dataMask with itemId={}", xxDataMask.getItemId());
 
@@ -3292,6 +3738,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             if (!StringUtils.equals(dataMaskOptions, xxAccessTypeDef.getDataMaskOptions()) || !StringUtils.equals(rowFilterOptions, xxAccessTypeDef.getRowFilterOptions())) {
                 xxAccessTypeDef.setDataMaskOptions(dataMaskOptions);
                 xxAccessTypeDef.setRowFilterOptions(rowFilterOptions);
+
                 xxATDDao.update(xxAccessTypeDef);
             }
         }
@@ -3329,6 +3776,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             if (!StringUtils.equals(dataMaskOptions, xxResourceDef.getDataMaskOptions()) || !StringUtils.equals(rowFilterOptions, xxResourceDef.getRowFilterOptions())) {
                 xxResourceDef.setDataMaskOptions(dataMaskOptions);
                 xxResourceDef.setRowFilterOptions(rowFilterOptions);
+
                 xxResDefDao.update(xxResourceDef);
             }
         }
@@ -3337,6 +3785,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private void updateTabPermissions(String svcType, Map<String, String> svcConfig) {
         if (StringUtils.equalsIgnoreCase(svcType, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
             String svcAdminUsers = svcConfig.get(SERVICE_ADMIN_USERS);
+
             if (StringUtils.isNotEmpty(svcAdminUsers)) {
                 for (String user : svcAdminUsers.split(",")) {
                     validateUserAndProvideTabTagBasedPolicyPermission(user.trim());
@@ -3347,14 +3796,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private void validateUserAndProvideTabTagBasedPolicyPermission(String username) {
         XXPortalUser xxPortalUser = daoMgr.getXXPortalUser().findByLoginId(username);
+
         if (xxPortalUser == null) {
             throw restErrorUtil.createRESTException("Username : " + username + " does not exist. Please provide valid user as service admin for tag service .", MessageEnums.ERROR_CREATING_OBJECT);
         } else {
             VXPortalUser vXPortalUser = userMgr.mapXXPortalUserToVXPortalUserForDefaultAccount(xxPortalUser);
+
             if (CollectionUtils.isNotEmpty(vXPortalUser.getUserRoleList()) && vXPortalUser.getUserRoleList().size() == 1) {
                 for (String userRole : vXPortalUser.getUserRoleList()) {
                     if (userRole.equals(RangerConstants.ROLE_USER)) {
                         HashMap<String, Long> moduleNameId = xUserMgr.getAllModuleNameAndIdMap();
+
                         xUserMgr.createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), true);
                     }
                 }
@@ -3388,6 +3840,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 if (CollectionUtils.isEmpty(policyItem.getAccesses()) || policyItem.getAccesses().contains(null)) {
                     return false;
                 }
+
                 for (RangerPolicyItemAccess itemAccesses : policyItem.getAccesses()) {
                     if (itemAccesses.getType() == null || itemAccesses.getIsAllowed() == null) {
                         return false;
@@ -3442,8 +3895,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             throw new Exception("service does not exist");
         }
 
-        List<RangerPolicy> ret = null;
-
+        List<RangerPolicy>       ret;
         ServicePolicies          servicePolicies = RangerServicePoliciesCache.getInstance().getServicePolicies(service.getName(), service.getId(), -1L, true, this);
         final List<RangerPolicy> policies        = servicePolicies != null ? servicePolicies.getPolicies() : null;
 
@@ -3455,14 +3907,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             if (MapUtils.isNotEmpty(filterResources) && resourceMatchScope != null) {
                 useLegacyResourceSearch = false;
+
                 for (Map.Entry<String, String> entry : filterResources.entrySet()) {
                     searchFilter.removeParam(SearchFilter.RESOURCE_PREFIX + entry.getKey());
                 }
             }
 
-            LOG.debug("Using {} way of filtering service-policies", (useLegacyResourceSearch ? " old " : " new "));
+            LOG.debug("Using{}way of filtering service-policies", useLegacyResourceSearch ? " old " : " new ");
 
             ret = new ArrayList<>(policies);
+
             predicateUtil.applyFilter(ret, searchFilter);
 
             if (!useLegacyResourceSearch && CollectionUtils.isNotEmpty(ret)) {
@@ -3488,10 +3942,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                     case ANCESTOR: {
                         Map<String, String> updatedFilterResources = RangerServiceDefHelper.getFilterResourcesForAncestorPolicyFiltering(serviceDef, filterResources);
+
                         if (MapUtils.isNotEmpty(updatedFilterResources)) {
-                            for (Map.Entry<String, String> entry : updatedFilterResources.entrySet()) {
-                                filterResources.put(entry.getKey(), entry.getValue());
-                            }
+                            filterResources.putAll(updatedFilterResources);
+
                             scope = RangerPolicyResourceMatcher.MatchScope.SELF_OR_ANCESTOR;
                         }
                         break;
@@ -3506,19 +3960,18 @@ public class ServiceDBStore extends AbstractServiceStore {
             ret = policies;
         }
 
-        LOG.debug("<== ServiceDBStore.getServicePolicies(): count={}", ((ret == null) ? 0 : ret.size()));
+        LOG.debug("<== ServiceDBStore.getServicePolicies(): count={}", (ret == null) ? 0 : ret.size());
 
         return ret;
     }
 
-    private List<RangerPolicy> getServicePoliciesFromDb(XXService service) throws Exception {
+    private List<RangerPolicy> getServicePoliciesFromDb(XXService service) {
         LOG.debug("==> ServiceDBStore.getServicePoliciesFromDb({})", service.getName());
 
         RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr, txManager);
+        List<RangerPolicy>    ret             = policyRetriever.getServicePolicies(service);
 
-        List<RangerPolicy> ret = policyRetriever.getServicePolicies(service);
-
-        LOG.debug("<== ServiceDBStore.getServicePoliciesFromDb({}): count={}", service.getName(), ((ret == null) ? 0 : ret.size()));
+        LOG.debug("<== ServiceDBStore.getServicePoliciesFromDb({}): count={}", service.getName(), (ret == null) ? 0 : ret.size());
 
         return ret;
     }
@@ -3526,9 +3979,8 @@ public class ServiceDBStore extends AbstractServiceStore {
     private ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion, boolean getOnlyDeltas, boolean isDeltaEnabled, Long maxNeededVersion) throws Exception {
         LOG.debug("==> ServiceDBStore.getServicePolicies({}, {})", serviceName, lastKnownVersion);
 
-        ServicePolicies ret = null;
-
-        XXService serviceDbObj = daoMgr.getXXService().findByName(serviceName);
+        ServicePolicies ret          = null;
+        XXService       serviceDbObj = daoMgr.getXXService().findByName(serviceName);
 
         if (serviceDbObj == null) {
             throw new Exception("service does not exist. name=" + serviceName);
@@ -3545,10 +3997,9 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (serviceDef == null) {
             throw new Exception("service-def does not exist. id=" + serviceDbObj.getType());
         }
-        String serviceType = serviceDef.getName();
 
-        String auditMode = getAuditMode(serviceType, serviceName);
-
+        String               serviceType                = serviceDef.getName();
+        String               auditMode                  = getAuditMode(serviceType, serviceName);
         XXService            tagServiceDbObj            = null;
         RangerServiceDef     tagServiceDef              = null;
         XXServiceVersionInfo tagServiceVersionInfoDbObj = null;
@@ -3580,6 +4031,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (ret != null) {
             ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
             ret.setAuditMode(auditMode);
+
             if (ret.getTagPolicies() != null) {
                 ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
                 ret.getTagPolicies().setAuditMode(auditMode);
@@ -3613,24 +4065,19 @@ public class ServiceDBStore extends AbstractServiceStore {
             ret.setTagPolicies(tagPolicies);
         }
 
-        LOG.debug("<== ServiceDBStore.getServicePolicies({}, {}): count={}, delta-count={}", serviceName, lastKnownVersion, ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()), ((ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size()));
+        LOG.debug("<== ServiceDBStore.getServicePolicies({}, {}): count={}, delta-count={}", serviceName, lastKnownVersion, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size(), (ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size());
 
         return ret;
     }
 
     private static List<RangerPolicyDelta> compressDeltas(List<RangerPolicyDelta> deltas) {
-        List<RangerPolicyDelta> ret = new ArrayList<>();
-
+        List<RangerPolicyDelta>                  ret            = new ArrayList<>();
         final Map<Long, List<RangerPolicyDelta>> policyDeltaMap = new HashMap<>();
 
         for (RangerPolicyDelta delta : deltas) {
             Long                    policyId        = delta.getPolicyId();
-            List<RangerPolicyDelta> oldPolicyDeltas = policyDeltaMap.get(policyId);
+            List<RangerPolicyDelta> oldPolicyDeltas = policyDeltaMap.computeIfAbsent(policyId, k -> new ArrayList<>());
 
-            if (oldPolicyDeltas == null) {
-                oldPolicyDeltas = new ArrayList<>();
-                policyDeltaMap.put(policyId, oldPolicyDeltas);
-            }
             oldPolicyDeltas.add(delta);
         }
 
@@ -3651,20 +4098,24 @@ public class ServiceDBStore extends AbstractServiceStore {
                     case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE:
                         while (index < policyDeltas.size()) {
                             RangerPolicyDelta policyDelta = policyDeltas.get(index);
+
                             switch (policyDelta.getChangeType()) {
                                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE:
-                                    LOG.error("Multiple policy creates!! :{}", policyDelta);
+                                    LOG.error("Multiple policy creates!! [{}]", policyDelta);
+
                                     policyDeltasForPolicy = null;
                                     break;
                                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE:
                                     for (int i = index + 1; i < policyDeltas.size(); i++) {
                                         RangerPolicyDelta next = policyDeltas.get(i);
+
                                         if (next.getChangeType() == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
                                             index = i;
                                         } else {
                                             break;
                                         }
                                     }
+
                                     policyDeltasForPolicy.clear();
                                     policyDeltas.get(index).setChangeType(RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE);
                                     policyDeltasForPolicy.add(policyDeltas.get(index));
@@ -3677,6 +4128,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                                         index++;
                                     } else {
                                         LOG.error("CHANGE_TYPE_POLICY_DELETE should be the last policyDelta, found:[{}]", policyDeltas.get(index + 1));
+
                                         policyDeltasForPolicy = null;
                                     }
                                     break;
@@ -3695,17 +4147,20 @@ public class ServiceDBStore extends AbstractServiceStore {
                             switch (policyDelta.getChangeType()) {
                                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE:
                                     LOG.error("Should not get here! policy is created after it is updated!! policy-delta:[{}]", policyDelta);
+
                                     policyDeltasForPolicy = null;
                                     break;
                                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE:
                                     for (int i = index + 1; i < policyDeltas.size(); i++) {
                                         RangerPolicyDelta next = policyDeltas.get(i);
+
                                         if (next.getChangeType() == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
                                             index = i;
                                         } else {
                                             break;
                                         }
                                     }
+
                                     policyDeltasForPolicy.clear();
                                     policyDeltasForPolicy.add(policyDeltas.get(index));
                                     index++;
@@ -3718,12 +4173,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                                         index++;
                                     } else {
                                         LOG.error("CHANGE_TYPE_POLICY_DELETE should be the last policyDelta, found:[{}]", policyDeltas.get(index + 1));
+
                                         policyDeltasForPolicy = null;
                                     }
                                     break;
                                 default:
                                     break;
                             }
+
                             if (policyDeltasForPolicy == null) {
                                 break;
                             }
@@ -3731,17 +4188,21 @@ public class ServiceDBStore extends AbstractServiceStore {
                         break;
                     case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE:
                         LOG.error("CHANGE_TYPE_POLICY_DELETE should be the last policyDelta, found:[{}]", policyDeltas.get(index));
+
                         policyDeltasForPolicy = null;
                         break;
                     default:
                         LOG.error("Should not get here for valid policy-delta:[{}]", first);
                         break;
                 }
+
                 if (policyDeltasForPolicy != null) {
                     LOG.debug("Processed deltas for policy:[{}], compressed-deltas:[{}]", entry.getKey(), policyDeltasForPolicy);
+
                     ret.addAll(policyDeltasForPolicy);
                 } else {
                     LOG.error("Error processing deltas for policy:[{}], Cannot compress deltas", entry.getKey());
+
                     ret = null;
                     break;
                 }
@@ -3757,11 +4218,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private Map<String, String> validateRequiredConfigParams(RangerService service, Map<String, String> configs) {
         LOG.debug("==> ServiceDBStore.validateRequiredConfigParams()");
+
         if (configs == null) {
             return null;
         }
 
         List<XXServiceConfigDef> svcConfDefList = daoMgr.getXXServiceConfigDef().findByServiceDefName(service.getType());
+
         for (XXServiceConfigDef svcConfDef : svcConfDefList) {
             String confField = configs.get(svcConfDef.getName());
 
@@ -3773,32 +4236,36 @@ public class ServiceDBStore extends AbstractServiceStore {
                 if (svcConfDef.getDefaultvalue() != null && !configs.containsKey(RANGER_PLUGIN_AUDIT_FILTERS)) {
                     configs.put(RANGER_PLUGIN_AUDIT_FILTERS, svcConfDef.getDefaultvalue());
                 }
+
                 if (!stringUtil.isEmpty(configs.get(RANGER_PLUGIN_AUDIT_FILTERS)) && JsonUtils.jsonToAuditFilterList(configs.get(RANGER_PLUGIN_AUDIT_FILTERS)) == null) {
                     throw restErrorUtil.createRESTException("Invalid value for " + svcConfDef.getName());
                 }
             }
         }
+
         Map<String, String> validConfigs = new HashMap<>();
+
         for (Entry<String, String> config : configs.entrySet()) {
             if (!stringUtil.isEmpty(config.getValue())) {
                 validConfigs.put(config.getKey(), config.getValue());
             }
         }
+
         return validConfigs;
     }
 
-    private void handlePolicyUpdate(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) throws Exception {
+    private void handlePolicyUpdate(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) {
         updatePolicyVersion(service, policyDeltaType, policy, updateServiceInfoRoleVersion);
     }
 
-    private void updatePolicyVersion(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) throws Exception {
+    private void updatePolicyVersion(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) {
         if (service == null || service.getId() == null) {
             return;
         }
 
-        XXServiceDao serviceDao = daoMgr.getXXService();
-
+        XXServiceDao    serviceDao   = daoMgr.getXXService();
         final XXService serviceDbObj = serviceDao.getById(service.getId());
+
         if (serviceDbObj == null) {
             LOG.warn("updatePolicyVersion(serviceId={}): service not found", service.getId());
 
@@ -3816,23 +4283,27 @@ public class ServiceDBStore extends AbstractServiceStore {
             List<Long> referringServiceIds = serviceDao.findIdsByTagServiceId(serviceId);
 
             for (Long referringServiceId : referringServiceIds) {
-                Runnable policyVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VersionType.POLICY_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+                Runnable policyVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VERSION_TYPE.POLICY_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+
                 transactionSynchronizationAdapter.executeOnTransactionCommit(policyVersionUpdater);
 
                 if (updateServiceInfoRoleVersion) {
-                    Runnable roleVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VersionType.ROLE_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+                    Runnable roleVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VERSION_TYPE.ROLE_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+
                     transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
                 }
             }
         }
 
-        final VersionType versionType = VersionType.POLICY_VERSION;
+        final VERSION_TYPE versionType = VERSION_TYPE.POLICY_VERSION;
 
         Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+
         transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
 
         if (updateServiceInfoRoleVersion) {
-            Runnable roleVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, VersionType.ROLE_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+            Runnable roleVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, VERSION_TYPE.ROLE_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+
             transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
         }
     }
@@ -3844,12 +4315,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         if (policy != null) {
             Set<String> roleNames = getAllPolicyItemRoleNames(policy);
+
             if (CollectionUtils.isNotEmpty(roleNames)) {
                 Long serviceId = service.getId();
+
                 checkAndFilterRoleNames(roleNames, service);
+
                 if (CollectionUtils.isNotEmpty(roleNames)) {
                     for (String roleName : roleNames) {
                         long roleRefPolicyCount = daoMgr.getXXPolicy().findRoleRefPolicyCount(roleName, serviceId);
+
                         if (roleRefPolicyCount == 0) {
                             ret = true;
                             break;
@@ -3867,14 +4342,17 @@ public class ServiceDBStore extends AbstractServiceStore {
         Set<String>  rolesToRemove = new HashSet<>();
         Long         serviceId     = service.getId();
         List<String> rolesFromDb   = daoMgr.getXXRole().findRoleNamesByServiceId(serviceId);
+
         if (CollectionUtils.isNotEmpty(rolesFromDb)) {
             rolesToRemove.addAll(rolesFromDb);
         }
 
         String    tagService   = service.getTagService();
         XXService serviceDbObj = daoMgr.getXXService().findByName(tagService);
+
         if (serviceDbObj != null) {
             List<String> rolesFromServiceTag = daoMgr.getXXRole().findRoleNamesByServiceId(serviceDbObj.getId());
+
             if (CollectionUtils.isNotEmpty(rolesFromServiceTag)) {
                 rolesToRemove.addAll(rolesFromServiceTag);
             }
@@ -3884,34 +4362,39 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     private Set<String> getAllPolicyItemRoleNames(RangerPolicy policy) {
-        Set<String> ret = new HashSet<>();
-
+        Set<String>                                   ret         = new HashSet<>();
         List<? extends RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
+
         if (CollectionUtils.isNotEmpty(policyItems)) {
             collectRolesFromPolicyItems(policyItems, ret);
         }
 
         policyItems = policy.getDenyPolicyItems();
+
         if (CollectionUtils.isNotEmpty(policyItems)) {
             collectRolesFromPolicyItems(policyItems, ret);
         }
 
         policyItems = policy.getAllowExceptions();
+
         if (CollectionUtils.isNotEmpty(policyItems)) {
             collectRolesFromPolicyItems(policyItems, ret);
         }
 
         policyItems = policy.getDenyExceptions();
+
         if (CollectionUtils.isNotEmpty(policyItems)) {
             collectRolesFromPolicyItems(policyItems, ret);
         }
 
         policyItems = policy.getDataMaskPolicyItems();
+
         if (CollectionUtils.isNotEmpty(policyItems)) {
             collectRolesFromPolicyItems(policyItems, ret);
         }
 
         policyItems = policy.getRowFilterPolicyItems();
+
         if (CollectionUtils.isNotEmpty(policyItems)) {
             collectRolesFromPolicyItems(policyItems, ret);
         }
@@ -3922,6 +4405,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private void collectRolesFromPolicyItems(List<? extends RangerPolicyItem> rangerPolicyItems, Set<String> roleNames) {
         for (RangerPolicyItem rangerPolicyItem : rangerPolicyItems) {
             List<String> rangerPolicyItemRoles = rangerPolicyItem.getRoles();
+
             if (CollectionUtils.isNotEmpty(rangerPolicyItemRoles)) {
                 roleNames.addAll(rangerPolicyItemRoles);
             }
@@ -3929,28 +4413,28 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     private void persistChangeLog(ServiceVersionUpdater serviceVersionUpdater) {
-        XXServiceVersionInfoDao serviceVersionInfoDao = serviceVersionUpdater.daoManager.getXXServiceVersionInfo();
+        XXServiceVersionInfoDao serviceVersionInfoDao   = serviceVersionUpdater.daoManager.getXXServiceVersionInfo();
+        XXServiceVersionInfo    serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(serviceVersionUpdater.serviceId);
+        XXService               service                 = serviceVersionUpdater.daoManager.getXXService().getById(serviceVersionUpdater.serviceId);
 
-        XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(serviceVersionUpdater.serviceId);
-        XXService            service                 = serviceVersionUpdater.daoManager.getXXService().getById(serviceVersionUpdater.serviceId);
+        if (service != null) {
+            Long version = serviceVersionUpdater.versionType == VERSION_TYPE.TAG_VERSION ? serviceVersionInfoDbObj.getTagVersion() : serviceVersionInfoDbObj.getPolicyVersion();
 
-        if (service != null && serviceVersionInfoDao != null) {
-            Long version = serviceVersionUpdater.versionType == VersionType.TAG_VERSION ? serviceVersionInfoDbObj.getTagVersion() : serviceVersionInfoDbObj.getPolicyVersion();
             persistChangeLog(service, serviceVersionUpdater.versionType, version, serviceVersionUpdater);
         }
     }
 
-    private static void persistChangeLog(XXService service, VersionType versionType, Long version, ServiceVersionUpdater serviceVersionUpdater) {
+    private static void persistChangeLog(XXService service, VERSION_TYPE versionType, Long version, ServiceVersionUpdater serviceVersionUpdater) {
         Date now = new Date();
 
-        if (versionType == VersionType.TAG_VERSION) {
+        if (versionType == VERSION_TYPE.TAG_VERSION) {
             ServiceTags.TagsChangeType tagChangeType = serviceVersionUpdater.tagChangeType;
+
             if (tagChangeType == ServiceTags.TagsChangeType.RANGER_ADMIN_START || TagDBStore.isSupportsTagDeltas()) {
                 // Build and save TagChangeLog
-                XXTagChangeLog tagChangeLog = new XXTagChangeLog();
-
-                Long serviceResourceId = serviceVersionUpdater.resourceId;
-                Long tagId             = serviceVersionUpdater.tagId;
+                XXTagChangeLog tagChangeLog      = new XXTagChangeLog();
+                Long           serviceResourceId = serviceVersionUpdater.resourceId;
+                Long           tagId             = serviceVersionUpdater.tagId;
 
                 tagChangeLog.setCreateTime(now);
                 tagChangeLog.setServiceId(service.getId());
@@ -3975,6 +4459,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 policyChangeLog.setZoneName(serviceVersionUpdater.zoneName);
 
                 RangerPolicy policy = serviceVersionUpdater.policy;
+
                 if (policy != null) {
                     policyChangeLog.setServiceType(policy.getServiceType());
                     policyChangeLog.setPolicyType(policy.getPolicyType());
@@ -3994,9 +4479,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         List<XXPolicyLabelMap> xxPolicyLabelMaps = daoMgr.getXXPolicyLabelMap().findByPolicyId(policy.getId());
         XXPolicyLabelMapDao    policyLabelMapDao = daoMgr.getXXPolicyLabelMap();
+
         for (XXPolicyLabelMap xxPolicyLabelMap : xxPolicyLabelMaps) {
             policyLabelMapDao.remove(xxPolicyLabelMap);
         }
+
         return true;
     }
 
@@ -4036,12 +4523,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private void writeExcel(List<RangerPolicy> policies, String excelFileName, HttpServletResponse response) throws IOException {
         OutputStream outStream = null;
+
         try (Workbook workbook = new HSSFWorkbook()) {
             Sheet sheet = workbook.createSheet();
+
             createHeaderRow(sheet);
+
             int rowCount = 0;
+
             if (!CollectionUtils.isEmpty(policies)) {
                 Map<String, String> svcNameToSvcType = new HashMap<>();
+
                 for (RangerPolicy policy : policies) {
                     List<RangerPolicyItem>          policyItems          = policy.getPolicyItems();
                     List<RangerRowFilterPolicyItem> rowFilterPolicyItems = policy.getRowFilterPolicyItems();
@@ -4049,12 +4541,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                     List<RangerPolicyItem>          allowExceptions      = policy.getAllowExceptions();
                     List<RangerPolicyItem>          denyExceptions       = policy.getDenyExceptions();
                     List<RangerPolicyItem>          denyPolicyItems      = policy.getDenyPolicyItems();
+                    String                          serviceType          = policy.getServiceType();
 
-                    String serviceType = policy.getServiceType();
                     if (StringUtils.isBlank(serviceType)) {
                         serviceType = svcNameToSvcType.get(policy.getService());
+
                         if (StringUtils.isBlank(serviceType)) {
                             serviceType = daoMgr.getXXServiceDef().findServiceDefTypeByServiceName(policy.getService());
+
                             if (StringUtils.isNotBlank(serviceType)) {
                                 svcNameToSvcType.put(policy.getService(), serviceType);
                             }
@@ -4064,58 +4558,75 @@ public class ServiceDBStore extends AbstractServiceStore {
                     if (CollectionUtils.isNotEmpty(policyItems)) {
                         for (RangerPolicyItem policyItem : policyItems) {
                             Row row = sheet.createRow(++rowCount);
+
                             writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
                         }
                     } else if (CollectionUtils.isNotEmpty(dataMaskPolicyItems)) {
                         for (RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
                             Row row = sheet.createRow(++rowCount);
+
                             writeBookForPolicyItems(svcNameToSvcType, policy, null, dataMaskPolicyItem, null, row, null);
                         }
                     } else if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
                         for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
                             Row row = sheet.createRow(++rowCount);
+
                             writeBookForPolicyItems(svcNameToSvcType, policy, null, null, rowFilterPolicyItem, row, null);
                         }
                     } else if (serviceType.equalsIgnoreCase(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                         if (CollectionUtils.isEmpty(policyItems)) {
                             Row              row        = sheet.createRow(++rowCount);
                             RangerPolicyItem policyItem = new RangerPolicyItem();
+
                             writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
                         }
                     } else if (CollectionUtils.isEmpty(policyItems)) {
                         Row              row        = sheet.createRow(++rowCount);
                         RangerPolicyItem policyItem = new RangerPolicyItem();
+
                         writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
                     }
+
                     if (CollectionUtils.isNotEmpty(allowExceptions)) {
                         for (RangerPolicyItem policyItem : allowExceptions) {
                             Row row = sheet.createRow(++rowCount);
+
                             writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_EXCLUDE);
                         }
                     }
+
                     if (CollectionUtils.isNotEmpty(denyExceptions)) {
                         for (RangerPolicyItem policyItem : denyExceptions) {
                             Row row = sheet.createRow(++rowCount);
+
                             writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_DENY_EXCLUDE);
                         }
                     }
+
                     if (CollectionUtils.isNotEmpty(denyPolicyItems)) {
                         for (RangerPolicyItem policyItem : denyPolicyItems) {
                             Row row = sheet.createRow(++rowCount);
+
                             writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_DENY_INCLUDE);
                         }
                     }
                 }
             }
+
             ByteArrayOutputStream outByteStream = new ByteArrayOutputStream();
+
             workbook.write(outByteStream);
+
             byte[] outArray = outByteStream.toByteArray();
+
             response.setContentType("application/ms-excel");
             response.setContentLength(outArray.length);
             response.setHeader("Expires:", "0");
             response.setHeader("Content-Disposition", "attachment; filename=" + excelFileName);
             response.setStatus(HttpServletResponse.SC_OK);
+
             outStream = response.getOutputStream();
+
             outStream.write(outArray);
             outStream.flush();
         } catch (IOException ex) {
@@ -4132,13 +4643,14 @@ public class ServiceDBStore extends AbstractServiceStore {
     private StringBuilder writeCSV(List<RangerPolicy> policies, String cSVFileName, HttpServletResponse response) {
         response.setContentType("text/csv");
 
-        final String  lineSeparator = "\n";
-        final String  fileHeader    = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|" + "isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
-        StringBuilder csvBuffer     = new StringBuilder();
-        csvBuffer.append(fileHeader);
-        csvBuffer.append(lineSeparator);
+        StringBuilder csvBuffer = new StringBuilder();
+
+        csvBuffer.append(FILE_HEADER);
+        csvBuffer.append(LINE_SEPARATOR);
+
         if (!CollectionUtils.isEmpty(policies)) {
             Map<String, String> svcNameToSvcType = new HashMap<>();
+
             for (RangerPolicy policy : policies) {
                 List<RangerPolicyItem>          policyItems          = policy.getPolicyItems();
                 List<RangerRowFilterPolicyItem> rowFilterPolicyItems = policy.getRowFilterPolicyItems();
@@ -4146,12 +4658,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                 List<RangerPolicyItem>          allowExceptions      = policy.getAllowExceptions();
                 List<RangerPolicyItem>          denyExceptions       = policy.getDenyExceptions();
                 List<RangerPolicyItem>          denyPolicyItems      = policy.getDenyPolicyItems();
+                String                          serviceType          = policy.getServiceType();
 
-                String serviceType = policy.getServiceType();
                 if (StringUtils.isBlank(serviceType)) {
                     serviceType = svcNameToSvcType.get(policy.getService());
+
                     if (StringUtils.isBlank(serviceType)) {
                         serviceType = daoMgr.getXXServiceDef().findServiceDefTypeByServiceName(policy.getService());
+
                         if (StringUtils.isNotBlank(serviceType)) {
                             svcNameToSvcType.put(policy.getService(), serviceType);
                         }
@@ -4179,16 +4693,19 @@ public class ServiceDBStore extends AbstractServiceStore {
                     RangerPolicyItem policyItem = new RangerPolicyItem();
                     writeCSVForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, csvBuffer, POLICY_ALLOW_INCLUDE);
                 }
+
                 if (CollectionUtils.isNotEmpty(allowExceptions)) {
                     for (RangerPolicyItem policyItem : allowExceptions) {
                         writeCSVForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, csvBuffer, POLICY_ALLOW_EXCLUDE);
                     }
                 }
+
                 if (CollectionUtils.isNotEmpty(denyExceptions)) {
                     for (RangerPolicyItem policyItem : denyExceptions) {
                         writeCSVForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, csvBuffer, POLICY_DENY_EXCLUDE);
                     }
                 }
+
                 if (CollectionUtils.isNotEmpty(denyPolicyItems)) {
                     for (RangerPolicyItem policyItem : denyPolicyItems) {
                         writeCSVForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, csvBuffer, POLICY_DENY_INCLUDE);
@@ -4196,75 +4713,69 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
+
         response.setHeader("Content-Disposition", "attachment; filename=" + cSVFileName);
         response.setStatus(HttpServletResponse.SC_OK);
+
         return csvBuffer;
     }
 
     private void writeCSVForPolicyItems(Map<String, String> svcNameToSvcType, RangerPolicy policy, RangerPolicyItem policyItem, RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, StringBuilder csvBuffer, String policyConditionType) {
         LOG.debug("policyConditionType:[{}]", policyConditionType);
-        final String                    commaDelimiter           = "|";
-        final String                    lineSeparator            = "\n";
-        List<String>                    roles                    = new ArrayList<>();
-        List<String>                    groups                   = new ArrayList<>();
-        List<String>                    users                    = new ArrayList<>();
-        String                          roleNames                = "";
-        String                          groupNames               = "";
-        String                          userNames                = "";
-        String                          policyLabelName          = "";
-        String                          accessType               = "";
-        String                          policyStatus             = "";
-        String                          policyType               = "";
-        Boolean                         delegateAdmin            = false;
-        String                          isRecursive              = "";
-        String                          isExcludes               = "";
-        String                          serviceName              = "";
-        String                          description              = "";
-        Boolean                         isAuditEnabled           = true;
-        String                          isExcludesValue          = "";
-        String                          maskingInfo              = "";
-        List<RangerPolicyItemAccess>    accesses                 = new ArrayList<RangerPolicyItemAccess>();
-        List<RangerPolicyItemCondition> conditionsList           = new ArrayList<>();
-        String                          conditionKeyValue        = "";
-        String                          resValue                 = "";
-        String                          resourceKeyVal           = "";
-        String                          isRecursiveValue         = "";
-        String                          resKey                   = "";
-        String                          serviceType              = "";
-        String                          filterExpr               = "";
-        String                          policyName               = "";
-        List<String>                    policyLabels             = new ArrayList<>();
-        String                          policyConditionTypeValue = "";
-        serviceName    = policy.getService();
-        description    = policy.getDescription();
-        isAuditEnabled = policy.getIsAuditEnabled();
-        policyLabels   = policy.getPolicyLabels();
-        StringBuffer                               sb            = new StringBuffer();
-        StringBuffer                               sbIsRecursive = new StringBuffer();
-        StringBuffer                               sbIsExcludes  = new StringBuffer();
-        Map<String, RangerPolicyResource>          resources     = policy.getResources();
-        RangerPolicy.RangerPolicyItemDataMaskInfo  dataMaskInfo  = new RangerPolicy.RangerPolicyItemDataMaskInfo();
-        RangerPolicy.RangerPolicyItemRowFilterInfo filterInfo    = new RangerPolicy.RangerPolicyItemRowFilterInfo();
-        policyName = policy.getName();
+
+        List<String>                      roles                    = new ArrayList<>();
+        List<String>                      groups                   = new ArrayList<>();
+        List<String>                      users                    = new ArrayList<>();
+        String                            roleNames                = "";
+        String                            groupNames               = "";
+        String                            userNames                = "";
+        String                            policyLabelName          = "";
+        String                            accessType               = "";
+        String                            policyType               = "";
+        Boolean                           delegateAdmin            = false;
+        String                            isExcludesValue          = "";
+        String                            maskingInfo              = "";
+        List<RangerPolicyItemAccess>      accesses                 = new ArrayList<>();
+        List<RangerPolicyItemCondition>   conditionsList           = new ArrayList<>();
+        String                            conditionKeyValue        = "";
+        String                            resourceKeyVal           = "";
+        String                            isRecursiveValue         = "";
+        String                            serviceType              = "";
+        String                            filterExpr               = "";
+        String                            policyConditionTypeValue = "";
+        String                            serviceName              = policy.getService();
+        String                            description              = policy.getDescription();
+        Boolean                           isAuditEnabled           = policy.getIsAuditEnabled();
+        List<String>                      policyLabels             = policy.getPolicyLabels();
+        StringBuilder                     sb                       = new StringBuilder();
+        StringBuilder                     sbIsRecursive            = new StringBuilder();
+        StringBuilder                     sbIsExcludes             = new StringBuilder();
+        Map<String, RangerPolicyResource> resources                = policy.getResources();
+        String                            policyName               = policy.getName();
+
         policyName = policyName.replace("|", "");
+
         if (resources != null) {
             for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
-                resKey = resource.getKey();
+                String               resKey         = resource.getKey();
                 RangerPolicyResource policyResource = resource.getValue();
                 List<String>         resvalueList   = policyResource.getValues();
-                isExcludes    = policyResource.getIsExcludes().toString();
-                isRecursive   = policyResource.getIsRecursive().toString();
-                resValue      = resvalueList.toString();
-                sb            = sb.append(resourceKeyVal).append(" ").append(resKey).append("=").append(resValue);
-                sbIsExcludes  = sbIsExcludes.append(resourceKeyVal).append(" ").append(resKey).append("=[").append(isExcludes).append("]");
-                sbIsRecursive = sbIsRecursive.append(resourceKeyVal).append(" ").append(resKey).append("=[").append(isRecursive).append("]");
+                String                isExcludes    = policyResource.getIsExcludes().toString();
+                String                isRecursive   = policyResource.getIsRecursive().toString();
+                String                resValue      = resvalueList.toString();
+
+                sb.append(resourceKeyVal).append(" ").append(resKey).append("=").append(resValue);
+                sbIsExcludes.append(resourceKeyVal).append(" ").append(resKey).append("=[").append(isExcludes).append("]");
+                sbIsRecursive.append(resourceKeyVal).append(" ").append(resKey).append("=[").append(isRecursive).append("]");
             }
+
             isExcludesValue  = sbIsExcludes.toString();
             isExcludesValue  = isExcludesValue.substring(1);
             isRecursiveValue = sbIsRecursive.toString();
             isRecursiveValue = isRecursiveValue.substring(1);
             resourceKeyVal   = sb.toString();
             resourceKeyVal   = resourceKeyVal.substring(1);
+
             if (policyItem != null && dataMaskPolicyItem == null && rowFilterPolicyItem == null) {
                 roles          = policyItem.getRoles();
                 groups         = policyItem.getGroups();
@@ -4279,11 +4790,15 @@ public class ServiceDBStore extends AbstractServiceStore {
                 accesses       = dataMaskPolicyItem.getAccesses();
                 delegateAdmin  = dataMaskPolicyItem.getDelegateAdmin();
                 conditionsList = dataMaskPolicyItem.getConditions();
-                dataMaskInfo   = dataMaskPolicyItem.getDataMaskInfo();
+
+                RangerPolicy.RangerPolicyItemDataMaskInfo dataMaskInfo = dataMaskPolicyItem.getDataMaskInfo();
+
                 String dataMaskType  = dataMaskInfo.getDataMaskType();
                 String conditionExpr = dataMaskInfo.getConditionExpr();
                 String valueExpr     = dataMaskInfo.getValueExpr();
+
                 maskingInfo = "dataMasktype=[" + dataMaskType + "]";
+
                 if (conditionExpr != null && !conditionExpr.isEmpty() && valueExpr != null && !valueExpr.isEmpty()) {
                     maskingInfo = maskingInfo + "; conditionExpr=[" + conditionExpr + "]";
                 }
@@ -4294,19 +4809,24 @@ public class ServiceDBStore extends AbstractServiceStore {
                 accesses       = rowFilterPolicyItem.getAccesses();
                 delegateAdmin  = rowFilterPolicyItem.getDelegateAdmin();
                 conditionsList = rowFilterPolicyItem.getConditions();
-                filterInfo     = rowFilterPolicyItem.getRowFilterInfo();
-                filterExpr     = filterInfo.getFilterExpr();
+
+                RangerPolicy.RangerPolicyItemRowFilterInfo filterInfo = rowFilterPolicyItem.getRowFilterInfo();
+
+                filterExpr = filterInfo.getFilterExpr();
             }
+
             if (CollectionUtils.isNotEmpty(accesses)) {
                 for (RangerPolicyItemAccess access : accesses) {
                     if (access != null) {
                         accessType = accessType + access.getType().replace("#", "").replace("|", "") + "#";
                     }
                 }
-                if (accessType.length() > 0) {
+
+                if (!accessType.isEmpty()) {
                     accessType = accessType.substring(0, accessType.lastIndexOf("#"));
                 }
             }
+
             if (CollectionUtils.isNotEmpty(roles)) {
                 for (String role : roles) {
                     if (StringUtils.isNotBlank(role)) {
@@ -4315,10 +4835,12 @@ public class ServiceDBStore extends AbstractServiceStore {
                         roleNames = roleNames + role + "#";
                     }
                 }
-                if (roleNames.length() > 0) {
+
+                if (!roleNames.isEmpty()) {
                     roleNames = roleNames.substring(0, roleNames.lastIndexOf("#"));
                 }
             }
+
             if (CollectionUtils.isNotEmpty(groups)) {
                 for (String group : groups) {
                     if (StringUtils.isNotBlank(group)) {
@@ -4327,10 +4849,12 @@ public class ServiceDBStore extends AbstractServiceStore {
                         groupNames = groupNames + group + "#";
                     }
                 }
-                if (groupNames.length() > 0) {
+
+                if (!groupNames.isEmpty()) {
                     groupNames = groupNames.substring(0, groupNames.lastIndexOf("#"));
                 }
             }
+
             if (CollectionUtils.isNotEmpty(users)) {
                 for (String user : users) {
                     if (StringUtils.isNotBlank(user)) {
@@ -4339,40 +4863,51 @@ public class ServiceDBStore extends AbstractServiceStore {
                         userNames = userNames + user + "#";
                     }
                 }
-                if (userNames.length() > 0) {
+
+                if (!userNames.isEmpty()) {
                     userNames = userNames.substring(0, userNames.lastIndexOf("#"));
                 }
             }
-            String conditionValue = "";
+
             for (RangerPolicyItemCondition conditions : conditionsList) {
-                String       conditionType = conditions.getType();
-                List<String> conditionList = conditions.getValues();
-                conditionValue    = conditionList.toString();
+                String       conditionType  = conditions.getType();
+                List<String> conditionList  = conditions.getValues();
+                String       conditionValue = conditionList.toString();
+
                 conditionKeyValue = conditionType + "=" + conditionValue;
             }
 
             serviceType = policy.getServiceType();
+
             if (StringUtils.isBlank(serviceType)) {
                 serviceType = svcNameToSvcType.get(policy.getService());
+
                 if (serviceType == null) {
                     serviceType = "";
                 }
             }
         }
+
         if (policyConditionType != null) {
             policyConditionTypeValue = policyConditionType;
         }
+
         if (policyConditionType == null && serviceType.equalsIgnoreCase("tag")) {
             policyConditionTypeValue = POLICY_ALLOW_INCLUDE;
         } else if (policyConditionType == null) {
             policyConditionTypeValue = "";
         }
+
+        String policyStatus;
+
         if (policy.getIsEnabled()) {
             policyStatus = "Enabled";
         } else {
             policyStatus = "Disabled";
         }
+
         int policyTypeInt = policy.getPolicyType();
+
         switch (policyTypeInt) {
             case RangerPolicy.POLICY_TYPE_ACCESS:
                 policyType = POLICY_TYPE_ACCESS;
@@ -4384,6 +4919,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 policyType = POLICY_TYPE_ROWFILTER;
                 break;
         }
+
         if (CollectionUtils.isNotEmpty(policyLabels)) {
             for (String policyLabel : policyLabels) {
                 if (StringUtils.isNotBlank(policyLabel)) {
@@ -4392,84 +4928,95 @@ public class ServiceDBStore extends AbstractServiceStore {
                     policyLabelName = policyLabelName + policyLabel + "#";
                 }
             }
-            if (policyLabelName.length() > 0) {
+
+            if (!policyLabelName.isEmpty()) {
                 policyLabelName = policyLabelName.substring(0, policyLabelName.lastIndexOf("#"));
             }
         }
 
         csvBuffer.append(policy.getId());
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(policyName);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(resourceKeyVal);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(roleNames);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(groupNames);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(userNames);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(accessType.trim());
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(serviceType);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(policyStatus);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(policyType);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(delegateAdmin.toString().toUpperCase());
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(isRecursiveValue);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(isExcludesValue);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(serviceName);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(description);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(isAuditEnabled.toString().toUpperCase());
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(conditionKeyValue.trim());
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(policyConditionTypeValue);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(maskingInfo);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(filterExpr);
-        csvBuffer.append(commaDelimiter);
+        csvBuffer.append(COMMA_DELIMITER);
         csvBuffer.append(policyLabelName);
-        csvBuffer.append(commaDelimiter);
-        csvBuffer.append(lineSeparator);
+        csvBuffer.append(COMMA_DELIMITER);
+        csvBuffer.append(LINE_SEPARATOR);
     }
 
-    private <T> void writeJson(List<T> objList, String jsonFileName, HttpServletResponse response, JsonFileNameType type) throws IOException {
+    private <T> void writeJson(List<T> objList, String jsonFileName, HttpServletResponse response, JSON_FILE_NAME_TYPE type) {
         response.setContentType("text/json");
         response.setHeader("Content-Disposition", "attachment; filename=" + jsonFileName);
-        ServletOutputStream out = null;
 
-        String json = null;
+        ServletOutputStream out = null;
+        String              json;
 
         switch (type) {
             case POLICY:
                 RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+
                 rangerExportPolicyList.setGenericPolicies(objList);
                 rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
+
                 json = JsonUtils.objectToJson(rangerExportPolicyList);
                 break;
             case ROLE:
                 RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
+
                 rangerExportRoleList.setGenericRoleList(objList);
+
                 Map<String, Object> metaDataInfo = getMetaDataInfo();
+
                 metaDataInfo.put(EXPORT_COUNT, rangerExportRoleList.getListSize());
+
                 rangerExportRoleList.setMetaDataInfo(metaDataInfo);
+
                 json = JsonUtils.objectToJson(rangerExportRoleList);
                 break;
             default:
                 throw restErrorUtil.createRESTException("Invalid type " + type);
         }
+
         try {
             out = response.getOutputStream();
+
             response.setStatus(HttpServletResponse.SC_OK);
+
             IOUtils.write(json, out, "UTF-8");
         } catch (Exception e) {
             LOG.error("Error while exporting json file {}", jsonFileName, e);
@@ -4480,12 +5027,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                     out.close();
                 }
             } catch (Exception ex) {
+                // ignored
             }
         }
     }
 
     private void writeBookForPolicyItems(Map<String, String> svcNameToSvcType, RangerPolicy policy, RangerPolicyItem policyItem, RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, Row row, String policyConditionType) {
         LOG.debug("policyConditionType:[{}]", policyConditionType);
+
         List<String> groups                   = new ArrayList<>();
         List<String> users                    = new ArrayList<>();
         List<String> roles                    = new ArrayList<>();
@@ -4495,55 +5044,65 @@ public class ServiceDBStore extends AbstractServiceStore {
         String       userNames                = "";
         String       policyLabelNames         = "";
         String       accessType               = "";
-        String       policyStatus             = "";
+        String       policyStatus;
         String       policyType               = "";
         Boolean      delegateAdmin            = false;
-        String       isRecursive              = "";
-        String       isExcludes               = "";
-        String       serviceName              = "";
+        String       isRecursive;
+        String       isExcludes;
+        String       serviceName;
+        String       description;
+        Boolean      isAuditEnabled           = policy.getIsAuditEnabled();
+        String       isExcludesValue          = "";
+        Cell         cell                     = row.createCell(0);
 
-        String  description    = "";
-        Boolean isAuditEnabled = true;
-        isAuditEnabled = policy.getIsAuditEnabled();
-        String isExcludesValue = "";
-        Cell   cell            = row.createCell(0);
         cell.setCellValue(policy.getId());
+
         List<RangerPolicyItemAccess>               accesses          = new ArrayList<>();
         List<RangerPolicyItemCondition>            conditionsList    = new ArrayList<>();
         String                                     conditionKeyValue = "";
-        List<String>                               policyLabels      = new ArrayList<>();
-        String                                     resValue          = "";
+        List<String>                               policyLabels;
+        String                                     resValue;
         String                                     resourceKeyVal    = "";
         String                                     isRecursiveValue  = "";
-        String                                     resKey            = "";
-        StringBuffer                               sb                = new StringBuffer();
-        StringBuffer                               sbIsRecursive     = new StringBuffer();
-        StringBuffer                               sbIsExcludes      = new StringBuffer();
-        Map<String, RangerPolicyResource>          resources         = policy.getResources();
-        RangerPolicy.RangerPolicyItemDataMaskInfo  dataMaskInfo      = new RangerPolicy.RangerPolicyItemDataMaskInfo();
-        RangerPolicy.RangerPolicyItemRowFilterInfo filterInfo        = new RangerPolicy.RangerPolicyItemRowFilterInfo();
+        String                                     resKey;
+        StringBuilder                              sb            = new StringBuilder();
+        StringBuilder                              sbIsRecursive = new StringBuilder();
+        StringBuilder                              sbIsExcludes  = new StringBuilder();
+        Map<String, RangerPolicyResource>          resources     = policy.getResources();
+        RangerPolicy.RangerPolicyItemDataMaskInfo  dataMaskInfo;
+        RangerPolicy.RangerPolicyItemRowFilterInfo filterInfo;
+
         cell = row.createCell(1);
+
         cell.setCellValue(policy.getName());
+
         cell = row.createCell(2);
+
         if (resources != null) {
             for (Entry<String, RangerPolicyResource> resource : resources.entrySet()) {
                 resKey = resource.getKey();
+
                 RangerPolicyResource policyResource = resource.getValue();
                 List<String>         resvalueList   = policyResource.getValues();
+
                 isExcludes    = policyResource.getIsExcludes().toString();
                 isRecursive   = policyResource.getIsRecursive().toString();
                 resValue      = resvalueList.toString();
-                sb            = sb.append(resourceKeyVal).append("; ").append(resKey).append("=").append(resValue);
-                sbIsExcludes  = sbIsExcludes.append(resourceKeyVal).append("; ").append(resKey).append("=[").append(isExcludes).append("]");
-                sbIsRecursive = sbIsRecursive.append(resourceKeyVal).append("; ").append(resKey).append("=[").append(isRecursive).append("]");
+
+                sb.append(resourceKeyVal).append("; ").append(resKey).append("=").append(resValue);
+                sbIsExcludes.append(resourceKeyVal).append("; ").append(resKey).append("=[").append(isExcludes).append("]");
+                sbIsRecursive.append(resourceKeyVal).append("; ").append(resKey).append("=[").append(isRecursive).append("]");
             }
+
             isExcludesValue  = sbIsExcludes.toString();
             isExcludesValue  = isExcludesValue.substring(1);
             isRecursiveValue = sbIsRecursive.toString();
             isRecursiveValue = isRecursiveValue.substring(1);
             resourceKeyVal   = sb.toString();
             resourceKeyVal   = resourceKeyVal.substring(1);
+
             cell.setCellValue(resourceKeyVal);
+
             if (policyItem != null && dataMaskPolicyItem == null && rowFilterPolicyItem == null) {
                 roles          = policyItem.getRoles();
                 groups         = policyItem.getGroups();
@@ -4559,13 +5118,16 @@ public class ServiceDBStore extends AbstractServiceStore {
                 delegateAdmin  = dataMaskPolicyItem.getDelegateAdmin();
                 conditionsList = dataMaskPolicyItem.getConditions();
                 dataMaskInfo   = dataMaskPolicyItem.getDataMaskInfo();
+
                 String dataMaskType  = dataMaskInfo.getDataMaskType();
                 String conditionExpr = dataMaskInfo.getConditionExpr();
                 String valueExpr     = dataMaskInfo.getValueExpr();
                 String maskingInfo   = "dataMasktype=[" + dataMaskType + "]";
+
                 if (conditionExpr != null && !conditionExpr.isEmpty() && valueExpr != null && !valueExpr.isEmpty()) {
                     maskingInfo = maskingInfo + "; conditionExpr=[" + conditionExpr + "]";
                 }
+
                 cell = row.createCell(18);
                 cell.setCellValue(maskingInfo);
             } else if (rowFilterPolicyItem != null && policyItem == null && dataMaskPolicyItem == null) {
@@ -4576,45 +5138,62 @@ public class ServiceDBStore extends AbstractServiceStore {
                 delegateAdmin  = rowFilterPolicyItem.getDelegateAdmin();
                 conditionsList = rowFilterPolicyItem.getConditions();
                 filterInfo     = rowFilterPolicyItem.getRowFilterInfo();
+
                 String filterExpr = filterInfo.getFilterExpr();
+
                 cell = row.createCell(19);
+
                 cell.setCellValue(filterExpr);
             }
+
             if (CollectionUtils.isNotEmpty(accesses)) {
                 for (RangerPolicyItemAccess access : accesses) {
                     accessType = accessType + access.getType();
                     accessType = accessType + " ,";
                 }
+
                 accessType = accessType.substring(0, accessType.lastIndexOf(","));
             }
             if (CollectionUtils.isNotEmpty(roles)) {
                 roleNames = roleNames + roles;
+
                 StringTokenizer roleToken = new StringTokenizer(roleNames, "[]");
+
                 while (roleToken.hasMoreTokens()) {
                     roleNames = roleToken.nextToken();
                 }
             }
+
             if (CollectionUtils.isNotEmpty(groups)) {
                 groupNames = groupNames + groups;
+
                 StringTokenizer groupToken = new StringTokenizer(groupNames, "[]");
+
                 while (groupToken.hasMoreTokens()) {
                     groupNames = groupToken.nextToken();
                 }
             }
+
             if (CollectionUtils.isNotEmpty(users)) {
                 userNames = userNames + users;
+
                 StringTokenizer userToken = new StringTokenizer(userNames, "[]");
+
                 while (userToken.hasMoreTokens()) {
                     userNames = userToken.nextToken();
                 }
             }
+
             String conditionValue = "";
+
             for (RangerPolicyItemCondition conditions : conditionsList) {
                 String       conditionType = conditions.getType();
                 List<String> conditionList = conditions.getValues();
+
                 conditionValue    = conditionList.toString();
                 conditionKeyValue = conditionType + "=" + conditionValue;
             }
+
             cell = row.createCell(3);
             cell.setCellValue(roleNames);
             cell = row.createCell(4);
@@ -4626,8 +5205,10 @@ public class ServiceDBStore extends AbstractServiceStore {
             cell = row.createCell(7);
 
             String serviceType = policy.getServiceType();
+
             if (StringUtils.isBlank(serviceType)) {
                 serviceType = svcNameToSvcType.get(policy.getService());
+
                 if (serviceType == null) {
                     serviceType = "";
                 }
@@ -4636,6 +5217,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             if (policyConditionType != null) {
                 policyConditionTypeValue = policyConditionType;
             }
+
             if (policyConditionType == null && serviceType.equalsIgnoreCase("tag")) {
                 policyConditionTypeValue = POLICY_ALLOW_INCLUDE;
             } else if (policyConditionType == null) {
@@ -4643,24 +5225,34 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
 
             cell.setCellValue(serviceType);
+
             cell = row.createCell(8);
         }
+
         if (policy.getIsEnabled()) {
             policyStatus = "Enabled";
         } else {
             policyStatus = "Disabled";
         }
+
         policyLabels = policy.getPolicyLabels();
+
         if (CollectionUtils.isNotEmpty(policyLabels)) {
             policyLabelNames = policyLabelNames + policyLabels;
+
             StringTokenizer policyLabelToken = new StringTokenizer(policyLabelNames, "[]");
+
             while (policyLabelToken.hasMoreTokens()) {
                 policyLabelNames = policyLabelToken.nextToken();
             }
         }
+
         cell.setCellValue(policyStatus);
+
         cell = row.createCell(9);
+
         int policyTypeInt = policy.getPolicyType();
+
         switch (policyTypeInt) {
             case RangerPolicy.POLICY_TYPE_ACCESS:
                 policyType = POLICY_TYPE_ACCESS;
@@ -4674,6 +5266,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 policyType = POLICY_TYPE_ROWFILTER;
                 break;
         }
+
         cell.setCellValue(policyType);
         cell = row.createCell(10);
         cell.setCellValue(delegateAdmin.toString().toUpperCase());
@@ -4700,6 +5293,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private void createHeaderRow(Sheet sheet) {
         CellStyle cellStyle = sheet.getWorkbook().createCellStyle();
         Font      font      = sheet.getWorkbook().createFont();
+
         font.setBold(true);
         font.setFontHeightInPoints((short) 12);
         cellStyle.setFont(font);
@@ -4798,23 +5392,18 @@ public class ServiceDBStore extends AbstractServiceStore {
         Set<Long>               processedServices      = new HashSet<>();
         Set<Long>               processedSvcIdsForRole = new HashSet<>();
         Set<Long>               processedPolicies      = new HashSet<>();
-        Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
-            public int compare(RangerPolicy c1, RangerPolicy c2) {
-                return (c1.getId()).compareTo(c2.getId());
-            }
-        };
-
-        List<XXPolicy> xPolList    = null;
-        Long           serviceId   = null;
-        String         serviceName = searchFilter.getParam(ServiceREST.PARAM_SERVICE_NAME);
+        List<XXPolicy>          xPolList               = null;
+        String                   serviceName           = searchFilter.getParam(ServiceREST.PARAM_SERVICE_NAME);
 
         if (StringUtils.isNotBlank(serviceName)) {
-            serviceId = getRangerServiceByName(serviceName.trim());
+            Long serviceId = getRangerServiceByName(serviceName.trim());
+
             if (serviceId != null) {
                 loadRangerPolicies(serviceId, processedServices, policyMap, searchFilter);
             }
         } else {
             xPolList = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
             if (!CollectionUtils.isEmpty(xPolList)) {
                 for (XXPolicy xXPolicy : xPolList) {
                     if (!processedServices.contains(xXPolicy.getService())) {
@@ -4825,18 +5414,23 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         String userName = searchFilter.getParam("user");
+
         if (!StringUtils.isEmpty(userName)) {
             searchFilter.setParam("user", RangerPolicyEngine.USER_CURRENT);
+
             List<XXPolicy> xPolListForMacroUser        = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
             Set<Long>      processedSvcIdsForMacroUser = new HashSet<>();
+
             if (!CollectionUtils.isEmpty(xPolListForMacroUser)) {
                 for (XXPolicy xXPolicy : xPolListForMacroUser) {
                     if (!processedPolicies.contains(xXPolicy.getId())) {
                         if (!processedSvcIdsForMacroUser.contains(xXPolicy.getService())) {
                             loadRangerPolicies(xXPolicy.getService(), processedSvcIdsForMacroUser, policyMap, searchFilter);
                         }
+
                         if (policyMap.get(xXPolicy.getId()) != null) {
                             policyList.add(policyMap.get(xXPolicy.getId()));
+
                             processedPolicies.add(xXPolicy.getId());
                         }
                     }
@@ -4844,24 +5438,32 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
 
             searchFilter.removeParam("user");
+
             Set<String> groupNames = daoMgr.getXXGroupUser().findGroupNamesByUserName(userName);
+
             groupNames.add(RangerConstants.GROUP_PUBLIC);
+
             Set<Long>      processedSvcIdsForGroup = new HashSet<>();
             Set<String>    processedGroupsName     = new HashSet<>();
-            List<XXPolicy> xPolList2;
+
             for (String groupName : groupNames) {
                 searchFilter.setParam("group", groupName);
-                xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
+                List<XXPolicy> xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
                 if (!CollectionUtils.isEmpty(xPolList2)) {
                     for (XXPolicy xPol2 : xPolList2) {
                         if (xPol2 != null) {
                             if (!processedPolicies.contains(xPol2.getId())) {
                                 if (!processedSvcIdsForGroup.contains(xPol2.getService()) || !processedGroupsName.contains(groupName)) {
                                     loadRangerPolicies(xPol2.getService(), processedSvcIdsForGroup, policyMap, searchFilter);
+
                                     processedGroupsName.add(groupName);
                                 }
+
                                 if (policyMap.containsKey(xPol2.getId())) {
                                     policyList.add(policyMap.get(xPol2.getId()));
+
                                     processedPolicies.add(xPol2.getId());
                                 }
                             }
@@ -4872,29 +5474,38 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             // fetch policies maintained for the roles belonging to the user
             searchFilter.removeParam("group");
+
             XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+
             if (xxUser != null) {
                 Set<Long>    allContainedRoles = new HashSet<>();
                 List<XXRole> xxRoles           = daoMgr.getXXRole().findByUserId(xxUser.getId());
+
                 for (XXRole xxRole : xxRoles) {
                     getContainingRoles(xxRole.getId(), allContainedRoles);
                 }
-                Set<String>    roleNames         = getRoleNames(allContainedRoles);
-                Set<String>    processedRoleName = new HashSet<>();
-                List<XXPolicy> xPolList3;
+
+                Set<String> roleNames         = getRoleNames(allContainedRoles);
+                Set<String> processedRoleName = new HashSet<>();
+
                 for (String roleName : roleNames) {
                     searchFilter.setParam("role", roleName);
-                    xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
+                    List<XXPolicy> xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
                     if (!CollectionUtils.isEmpty(xPolList3)) {
                         for (XXPolicy xPol3 : xPolList3) {
                             if (xPol3 != null) {
                                 if (!processedPolicies.contains(xPol3.getId())) {
                                     if (!processedSvcIdsForRole.contains(xPol3.getService()) || !processedRoleName.contains(roleName)) {
                                         loadRangerPolicies(xPol3.getService(), processedSvcIdsForRole, policyMap, searchFilter);
+
                                         processedRoleName.add(roleName);
                                     }
+
                                     if (policyMap.containsKey(xPol3.getId())) {
                                         policyList.add(policyMap.get(xPol3.getId()));
+
                                         processedPolicies.add(xPol3.getId());
                                     }
                                 }
@@ -4907,27 +5518,36 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         // fetch policies maintained for the roles and groups belonging to the group
         String groupName = searchFilter.getParam("group");
+
         if (StringUtils.isBlank(groupName)) {
             groupName = RangerConstants.GROUP_PUBLIC;
         }
+
         Set<String> groupNames = daoMgr.getXXGroupGroup().findGroupNamesByGroupName(groupName);
+
         groupNames.add(groupName);
-        Set<Long>      processedSvcIdsForGroup = new HashSet<>();
-        Set<String>    processedGroupsName     = new HashSet<>();
-        List<XXPolicy> xPolList2;
+
+        Set<Long>   processedSvcIdsForGroup = new HashSet<>();
+        Set<String> processedGroupsName     = new HashSet<>();
+
         for (String grpName : groupNames) {
             searchFilter.setParam("group", grpName);
-            xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
+            List<XXPolicy> xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
             if (!CollectionUtils.isEmpty(xPolList2)) {
                 for (XXPolicy xPol2 : xPolList2) {
                     if (xPol2 != null) {
                         if (!processedPolicies.contains(xPol2.getId())) {
                             if (!processedSvcIdsForGroup.contains(xPol2.getService()) || !processedGroupsName.contains(groupName)) {
                                 loadRangerPolicies(xPol2.getService(), processedSvcIdsForGroup, policyMap, searchFilter);
+
                                 processedGroupsName.add(groupName);
                             }
+
                             if (policyMap.containsKey(xPol2.getId())) {
                                 policyList.add(policyMap.get(xPol2.getId()));
+
                                 processedPolicies.add(xPol2.getId());
                             }
                         }
@@ -4937,29 +5557,38 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         searchFilter.removeParam("group");
+
         XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(groupName);
+
         if (xxGroup != null) {
             Set<Long>    allContainedRoles = new HashSet<>();
             List<XXRole> xxRoles           = daoMgr.getXXRole().findByGroupId(xxGroup.getId());
+
             for (XXRole xxRole : xxRoles) {
                 getContainingRoles(xxRole.getId(), allContainedRoles);
             }
+
             Set<String>    roleNames         = getRoleNames(allContainedRoles);
             Set<String>    processedRoleName = new HashSet<>();
-            List<XXPolicy> xPolList3;
+
             for (String roleName : roleNames) {
                 searchFilter.setParam("role", roleName);
-                xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
+                List<XXPolicy> xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+
                 if (!CollectionUtils.isEmpty(xPolList3)) {
                     for (XXPolicy xPol3 : xPolList3) {
                         if (xPol3 != null) {
                             if (!processedPolicies.contains(xPol3.getId())) {
                                 if (!processedSvcIdsForRole.contains(xPol3.getService()) || !processedRoleName.contains(roleName)) {
                                     loadRangerPolicies(xPol3.getService(), processedSvcIdsForRole, policyMap, searchFilter);
+
                                     processedRoleName.add(roleName);
                                 }
+
                                 if (policyMap.containsKey(xPol3.getId())) {
                                     policyList.add(policyMap.get(xPol3.getId()));
+
                                     processedPolicies.add(xPol3.getId());
                                 }
                             }
@@ -4975,6 +5604,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     for (Entry<Long, RangerPolicy> entry : policyMap.entrySet()) {
                         if (!processedPolicies.contains(entry.getKey())) {
                             policyList.add(entry.getValue());
+
                             processedPolicies.add(entry.getKey());
                         }
                     }
@@ -4986,8 +5616,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                             if (!processedServices.contains(xPol.getService())) {
                                 loadRangerPolicies(xPol.getService(), processedServices, policyMap, searchFilter);
                             }
+
                             if (policyMap.containsKey(xPol.getId())) {
                                 policyList.add(policyMap.get(xPol.getId()));
+
                                 processedPolicies.add(xPol.getId());
                             }
                         }
@@ -4999,46 +5631,58 @@ public class ServiceDBStore extends AbstractServiceStore {
                 for (Entry<Long, RangerPolicy> entry : policyMap.entrySet()) {
                     if (!processedPolicies.contains(entry.getKey())) {
                         policyList.add(entry.getValue());
+
                         processedPolicies.add(entry.getKey());
                     }
                 }
             }
         }
 
+        Comparator<RangerPolicy> comparator = Comparator.comparing(RangerBaseModelObject::getId);
+
         if (CollectionUtils.isNotEmpty(policyList)) {
-            Collections.sort(policyList, comparator);
+            policyList.sort(comparator);
         }
+
         retList.setPolicies(policyList);
+
         return retList;
     }
 
     private boolean isSearchQuerybyResource(SearchFilter searchFilter) {
         boolean             ret                   = false;
         Map<String, String> filterResourcesPrefix = searchFilter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
+
         if (MapUtils.isNotEmpty(filterResourcesPrefix)) {
             ret = true;
         }
+
         if (!ret) {
             Map<String, String> filterResourcesPolResource = searchFilter.getParamsWithPrefix(SearchFilter.POL_RESOURCE, true);
+
             if (MapUtils.isNotEmpty(filterResourcesPolResource)) {
                 ret = true;
             }
         }
+
         return ret;
     }
 
     private Long getRangerServiceByName(String name) {
         XXService    xxService    = null;
         XXServiceDao xxServiceDao = daoMgr.getXXService();
+
         if (xxServiceDao != null) {
             xxService = xxServiceDao.findByName(name);
         }
+
         return xxService == null ? null : xxService.getId();
     }
 
     private void loadRangerPolicies(Long serviceId, Set<Long> processedServices, Map<Long, RangerPolicy> policyMap, SearchFilter searchFilter) {
         try {
             List<RangerPolicy> tempPolicyList = getServicePolicies(serviceId, searchFilter);
+
             if (!CollectionUtils.isEmpty(tempPolicyList)) {
                 for (RangerPolicy rangerPolicy : tempPolicyList) {
                     if (!policyMap.containsKey(rangerPolicy.getId())) {
@@ -5046,35 +5690,50 @@ public class ServiceDBStore extends AbstractServiceStore {
                     }
                 }
             }
+
             processedServices.add(serviceId);
         } catch (Exception e) {
+            // ignore
         }
     }
 
     private void updateServiceWithCustomProperty() {
         LOG.info("Adding custom properties to services");
+
         SearchFilter filter = new SearchFilter();
+
         try {
             List<RangerService> lstRangerService = getServices(filter);
+
             for (RangerService rangerService : lstRangerService) {
                 String serviceUser = PropertiesUtil.getProperty("ranger.plugins." + rangerService.getType() + ".serviceuser");
+
                 if (!StringUtils.isEmpty(serviceUser)) {
                     boolean chkServiceUpdate = false;
+
                     LOG.debug("customproperty = {} for service = {}", rangerService.getConfigs().get(ServiceREST.Allowed_User_List_For_Download), rangerService.getName());
+
                     if (!rangerService.getConfigs().containsKey(ServiceREST.Allowed_User_List_For_Download)) {
                         rangerService.getConfigs().put(ServiceREST.Allowed_User_List_For_Download, serviceUser);
+
                         chkServiceUpdate = true;
                     }
+
                     if ((!rangerService.getConfigs().containsKey(ServiceREST.Allowed_User_List_For_Grant_Revoke)) && ("hbase".equalsIgnoreCase(rangerService.getType()) || "hive".equalsIgnoreCase(rangerService.getType()))) {
                         rangerService.getConfigs().put(ServiceREST.Allowed_User_List_For_Grant_Revoke, serviceUser);
+
                         chkServiceUpdate = true;
                     }
+
                     if (!rangerService.getConfigs().containsKey(TagREST.Allowed_User_List_For_Tag_Download)) {
                         rangerService.getConfigs().put(TagREST.Allowed_User_List_For_Tag_Download, serviceUser);
+
                         chkServiceUpdate = true;
                     }
+
                     if (chkServiceUpdate) {
                         updateService(rangerService, null);
+
                         LOG.debug("Updated service {} with custom properties in secure environment", rangerService.getName());
                     }
                 }
@@ -5086,17 +5745,23 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private String getAuditMode(String serviceTypeName, String serviceName) {
         String ret = config.get("ranger.audit.global.mode");
+
         if (StringUtils.isNotBlank(ret)) {
             return ret;
         }
+
         ret = config.get("ranger.audit.servicedef." + serviceTypeName + ".mode");
+
         if (StringUtils.isNotBlank(ret)) {
             return ret;
         }
+
         ret = config.get("ranger.audit.service." + serviceName + ".mode");
+
         if (StringUtils.isNotBlank(ret)) {
             return ret;
         }
+
         return RangerPolicyEngine.AUDIT_DEFAULT;
     }
 
@@ -5105,10 +5770,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 
         genericUser.setName(RangerPolicyEngine.USER_CURRENT);
         genericUser.setDescription(RangerPolicyEngine.USER_CURRENT);
+
         xUserService.createXUserWithOutLogin(genericUser);
 
         genericUser.setName(RangerPolicyEngine.RESOURCE_OWNER);
         genericUser.setDescription(RangerPolicyEngine.RESOURCE_OWNER);
+
         xUserService.createXUserWithOutLogin(genericUser);
     }
 
@@ -5127,22 +5794,33 @@ public class ServiceDBStore extends AbstractServiceStore {
             VXGroupList       vxGroupList        = xUserMgr.searchXGroups(searchCriteria);
             long              groupCount         = vxGroupList.getTotalCount();
             ArrayList<String> userAdminRoleCount = new ArrayList<>();
+
             userAdminRoleCount.add(RangerConstants.ROLE_SYS_ADMIN);
+
             long              userSysAdminCount         = getUserCountBasedOnUserRole(userAdminRoleCount);
             ArrayList<String> userAdminAuditorRoleCount = new ArrayList<>();
+
             userAdminAuditorRoleCount.add(RangerConstants.ROLE_ADMIN_AUDITOR);
+
             long              userSysAdminAuditorCount = getUserCountBasedOnUserRole(userAdminAuditorRoleCount);
             ArrayList<String> userRoleListKeyRoleAdmin = new ArrayList<>();
+
             userRoleListKeyRoleAdmin.add(RangerConstants.ROLE_KEY_ADMIN);
+
             long              userKeyAdminCount               = getUserCountBasedOnUserRole(userRoleListKeyRoleAdmin);
             ArrayList<String> userRoleListKeyadminAduitorRole = new ArrayList<>();
+
             userRoleListKeyadminAduitorRole.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
+
             long              userKeyadminAuditorCount = getUserCountBasedOnUserRole(userRoleListKeyadminAduitorRole);
             ArrayList<String> userRoleListUser         = new ArrayList<>();
+
             userRoleListUser.add(RangerConstants.ROLE_USER);
+
             long                   userRoleCount        = getUserCountBasedOnUserRole(userRoleListUser);
             long                   userTotalCount       = userSysAdminCount + userKeyAdminCount + userRoleCount + userKeyadminAuditorCount + userSysAdminAuditorCount;
             VXMetricUserGroupCount metricUserGroupCount = new VXMetricUserGroupCount();
+
             metricUserGroupCount.setUserCountOfUserRole(userRoleCount);
             metricUserGroupCount.setUserCountOfKeyAdminRole(userKeyAdminCount);
             metricUserGroupCount.setUserCountOfSysAdminRole(userSysAdminCount);
@@ -5150,8 +5828,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
             metricUserGroupCount.setUserTotalCount(userTotalCount);
             metricUserGroupCount.setGroupCount(groupCount);
-            final String jsonUserGroupCount = JsonUtils.objectToJson(metricUserGroupCount);
-            ret = jsonUserGroupCount;
+
+            ret = JsonUtils.objectToJson(metricUserGroupCount);
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(usergroup): Error calculating Metric for usergroup : {}", e.getMessage());
         }
@@ -5161,6 +5839,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private String getMetricOfTypeAudits(final SearchCriteria searchCriteria) {
         String ret = null;
+
         try {
             int        clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
             String     defaultDateFormat        = "MM/dd/yyyy";
@@ -5169,19 +5848,24 @@ public class ServiceDBStore extends AbstractServiceStore {
             VXMetricAuditDetailsCount auditObj             = new VXMetricAuditDetailsCount();
             DateUtil                  dateUtilTwoDays      = new DateUtil();
             Date                      startDateUtilTwoDays = dateUtilTwoDays.getDateFromNow(-2);
-            Date                      dStart2              = restErrorUtil.parseDate(formatter.format(startDateUtilTwoDays), "Invalid value for startDate", MessageEnums.INVALID_INPUT_DATA, null, "startDate", defaultDateFormat);
 
+            Date dStart2        = restErrorUtil.parseDate(formatter.format(startDateUtilTwoDays), "Invalid value for startDate", MessageEnums.INVALID_INPUT_DATA, null, "startDate", defaultDateFormat);
             Date endDateTwoDays = MiscUtil.getUTCDate();
             Date dEnd2          = restErrorUtil.parseDate(formatter.format(endDateTwoDays), "Invalid value for endDate", MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
+
             dEnd2 = dateUtilTwoDays.getDateFromGivenDate(dEnd2, 0, 23, 59, 59);
             dEnd2 = dateUtilTwoDays.addTimeOffset(dEnd2, clientTimeOffsetInMinute);
+
             VXMetricServiceCount deniedCountObj = getAuditsCount(0, dStart2, dEnd2);
+
             auditObj.setDenialEventsCountTwoDays(deniedCountObj);
 
             VXMetricServiceCount allowedCountObj = getAuditsCount(1, dStart2, dEnd2);
+
             auditObj.setAccessEventsCountTwoDays(allowedCountObj);
 
             long totalAuditsCountTwoDays = deniedCountObj.getTotalCount() + allowedCountObj.getTotalCount();
+
             auditObj.setSolrIndexCountTwoDays(totalAuditsCountTwoDays);
 
             DateUtil dateUtilWeek      = new DateUtil();
@@ -5191,19 +5875,23 @@ public class ServiceDBStore extends AbstractServiceStore {
             Date     endDateWeek  = MiscUtil.getUTCDate();
             DateUtil dateUtilweek = new DateUtil();
             Date     dEnd7        = restErrorUtil.parseDate(formatter.format(endDateWeek), "Invalid value for endDate", MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
+
             dEnd7 = dateUtilweek.getDateFromGivenDate(dEnd7, 0, 23, 59, 59);
             dEnd7 = dateUtilweek.addTimeOffset(dEnd7, clientTimeOffsetInMinute);
+
             VXMetricServiceCount deniedCountObjWeek = getAuditsCount(0, dStart7, dEnd7);
+
             auditObj.setDenialEventsCountWeek(deniedCountObjWeek);
 
             VXMetricServiceCount allowedCountObjWeek = getAuditsCount(1, dStart7, dEnd7);
+
             auditObj.setAccessEventsCountWeek(allowedCountObjWeek);
 
             long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();
+
             auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
 
-            final String jsonAudit = JsonUtils.objectToJson(auditObj);
-            ret = jsonAudit;
+            ret = JsonUtils.objectToJson(auditObj);
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(audits): Error calculating Metric for audits : {}", e.getMessage());
         }
@@ -5213,53 +5901,68 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private String getMetricOfTypeServices(final SearchCriteria searchCriteria) {
         String ret = null;
+
         try {
             SearchFilter serviceFilter = new SearchFilter();
+
             serviceFilter.setMaxRows(200);
             serviceFilter.setStartIndex(0);
             serviceFilter.setGetCount(true);
             serviceFilter.setSortBy("serviceId");
             serviceFilter.setSortType("asc");
+
             VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
             PList<RangerService> paginatedSvcs        = getPaginatedServices(serviceFilter);
             long                 totalServiceCount    = paginatedSvcs.getTotalCount();
             List<RangerService>  rangerServiceList    = paginatedSvcs.getList();
             Map<String, Long>    services             = new HashMap<>();
-            for (Object rangerService : rangerServiceList) {
-                RangerService rangerServiceObj = (RangerService) rangerService;
-                String        serviceName      = rangerServiceObj.getType();
+
+            for (RangerService rangerService : rangerServiceList) {
+                String serviceName = rangerService.getType();
+
                 if (!(services.containsKey(serviceName))) {
                     serviceFilter.setParam("serviceType", serviceName);
+
                     PList<RangerService> paginatedSvcscount = getPaginatedServices(serviceFilter);
+
                     services.put(serviceName, paginatedSvcscount.getTotalCount());
                 }
             }
+
             vXMetricServiceCount.setServiceBasedCountList(services);
             vXMetricServiceCount.setTotalCount(totalServiceCount);
-            final String jsonServices = JsonUtils.objectToJson(vXMetricServiceCount);
-            ret = jsonServices;
+
+            ret = JsonUtils.objectToJson(vXMetricServiceCount);
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(services): Error calculating Metric for services : {}", e.getMessage());
         }
+
         return ret;
     }
 
     private String getMetricOfTypePolicies(final SearchCriteria searchCriteria) {
         String ret = null;
+
         try {
             SearchFilter policyFilter = new SearchFilter();
+
             policyFilter.setMaxRows(200);
             policyFilter.setStartIndex(0);
             policyFilter.setGetCount(true);
             policyFilter.setSortBy("serviceId");
             policyFilter.setSortType("asc");
+
             VXMetricPolicyWithServiceNameCount vXMetricPolicyWithServiceNameCount = new VXMetricPolicyWithServiceNameCount();
             PList<RangerPolicy>                paginatedSvcsList                  = getPaginatedPolicies(policyFilter);
+
             vXMetricPolicyWithServiceNameCount.setTotalCount(paginatedSvcsList.getTotalCount());
+
             Map<String, VXMetricServiceNameCount> servicesWithPolicy = new HashMap<>();
+
             for (int k = 2; k >= 0; k--) {
                 String                   policyType               = String.valueOf(k);
                 VXMetricServiceNameCount vXMetricServiceNameCount = getVXMetricServiceCount(policyType);
+
                 if (k == 2) {
                     servicesWithPolicy.put("rowFilteringPolicies", vXMetricServiceNameCount);
                 } else if (k == 1) {
@@ -5268,13 +5971,17 @@ public class ServiceDBStore extends AbstractServiceStore {
                     servicesWithPolicy.put("resourceAccessPolicies", vXMetricServiceNameCount);
                 }
             }
+
             Map<String, Map<String, Long>> tagMap                     = new HashMap<>();
             Map<String, Long>              serviceNameWithPolicyCount = new HashMap<>();
             boolean                        tagFlag                    = false;
+
             if (!tagFlag) {
                 policyFilter.setParam("serviceType", "tag");
+
                 PList<RangerPolicy> policiestype = getPaginatedPolicies(policyFilter);
                 List<RangerPolicy>  policies     = policiestype.getList();
+
                 for (RangerPolicy rangerPolicy : policies) {
                     if (serviceNameWithPolicyCount.containsKey(rangerPolicy.getService())) {
                         Long tagServicePolicyCount = serviceNameWithPolicyCount.get(rangerPolicy.getService()) + 1L;
@@ -5283,25 +5990,31 @@ public class ServiceDBStore extends AbstractServiceStore {
                         serviceNameWithPolicyCount.put(rangerPolicy.getService(), 1L);
                     }
                 }
+
                 tagMap.put("tag", serviceNameWithPolicyCount);
+
                 long                     tagCount                 = policiestype.getTotalCount();
                 VXMetricServiceNameCount vXMetricServiceNameCount = new VXMetricServiceNameCount();
+
                 vXMetricServiceNameCount.setServiceBasedCountList(tagMap);
                 vXMetricServiceNameCount.setTotalCount(tagCount);
+
                 servicesWithPolicy.put("tagAccessPolicies", vXMetricServiceNameCount);
-                tagFlag = true;
             }
+
             vXMetricPolicyWithServiceNameCount.setPolicyCountList(servicesWithPolicy);
-            final String jsonPolicies = JsonUtils.objectToJson(vXMetricPolicyWithServiceNameCount);
-            ret = jsonPolicies;
+
+            ret = JsonUtils.objectToJson(vXMetricPolicyWithServiceNameCount);
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(policies): Error calculating Metric for policies : {}", e.getMessage());
         }
+
         return ret;
     }
 
     private String getMetricOfTypeDatabase(final SearchCriteria searchCriteria) {
         String ret = null;
+
         try {
             int    dbFlavor      = RangerBizUtil.getDBFlavor();
             String dbFlavourType = RangerBizUtil.getDBFlavorType(dbFlavor);
@@ -5311,65 +6024,82 @@ public class ServiceDBStore extends AbstractServiceStore {
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(database): Error calculating Metric for database : {}", e.getMessage());
         }
+
         return ret;
     }
 
     private String getMetricOfTypeContextEnrichers(final SearchCriteria searchCriteria) {
         String ret = null;
+
         try {
             SearchFilter filter = new SearchFilter();
+
             filter.setStartIndex(0);
+
             VXMetricContextEnricher serviceWithContextEnrichers = new VXMetricContextEnricher();
             PList<RangerServiceDef> paginatedSvcDefs            = getPaginatedServiceDefs(filter);
             List<RangerServiceDef>  repoTypeList                = paginatedSvcDefs.getList();
+
             if (repoTypeList != null) {
                 for (RangerServiceDef repoType : repoTypeList) {
-                    RangerServiceDef               rangerServiceDefObj = repoType;
-                    String                         name                = rangerServiceDefObj.getName();
-                    List<RangerContextEnricherDef> contextEnrichers    = rangerServiceDefObj.getContextEnrichers();
+                    String                         name                = repoType.getName();
+                    List<RangerContextEnricherDef> contextEnrichers    = repoType.getContextEnrichers();
+
                     if (contextEnrichers != null && !contextEnrichers.isEmpty()) {
                         serviceWithContextEnrichers.setServiceName(name);
                         serviceWithContextEnrichers.setTotalCount(contextEnrichers.size());
                     }
                 }
             }
-            final String jsonContextEnrichers = JsonUtils.objectToJson(serviceWithContextEnrichers);
-            ret = jsonContextEnrichers;
+
+            ret = JsonUtils.objectToJson(serviceWithContextEnrichers);
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(contextenrichers): Error calculating Metric for contextenrichers : {}", e.getMessage());
         }
+
         return ret;
     }
 
     private String getMetricOfTypeDenyConditions(final SearchCriteria searchCriteria) {
         String ret = null;
+
         try {
             SearchFilter policyFilter1 = new SearchFilter();
+
             policyFilter1.setMaxRows(200);
             policyFilter1.setStartIndex(0);
             policyFilter1.setGetCount(true);
             policyFilter1.setSortBy("serviceId");
             policyFilter1.setSortType("asc");
             policyFilter1.setParam("denyCondition", "true");
+
             int                     denyCount           = 0;
             Map<String, Integer>    denyconditionsonMap = new HashMap<>();
             PList<RangerServiceDef> paginatedSvcDefs    = getPaginatedServiceDefs(policyFilter1);
+
             if (paginatedSvcDefs != null) {
                 List<RangerServiceDef> rangerServiceDefs = paginatedSvcDefs.getList();
+
                 if (rangerServiceDefs != null && !rangerServiceDefs.isEmpty()) {
                     for (RangerServiceDef rangerServiceDef : rangerServiceDefs) {
                         if (rangerServiceDef != null) {
                             String serviceDef = rangerServiceDef.getName();
+
                             if (!StringUtils.isEmpty(serviceDef)) {
                                 policyFilter1.setParam("serviceType", serviceDef);
+
                                 PList<RangerPolicy> policiesList = getPaginatedPolicies(policyFilter1);
+
                                 if (policiesList != null && policiesList.getListSize() > 0) {
                                     int policyListCount = policiesList.getListSize();
+
                                     if (policyListCount > 0 && policiesList.getList() != null) {
                                         List<RangerPolicy> policies = policiesList.getList();
+
                                         for (RangerPolicy policy : policies) {
                                             if (policy != null) {
                                                 List<RangerPolicyItem> policyItem = policy.getDenyPolicyItems();
+
                                                 if (policyItem != null && !policyItem.isEmpty()) {
                                                     if (denyconditionsonMap.get(serviceDef) != null) {
                                                         denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItem.size();
@@ -5377,7 +6107,9 @@ public class ServiceDBStore extends AbstractServiceStore {
                                                         denyCount = denyCount + policyItem.size();
                                                     }
                                                 }
+
                                                 List<RangerPolicyItem> policyItemExclude = policy.getDenyExceptions();
+
                                                 if (policyItemExclude != null && !policyItemExclude.isEmpty()) {
                                                     if (denyconditionsonMap.get(serviceDef) != null) {
                                                         denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItemExclude.size();
@@ -5389,44 +6121,53 @@ public class ServiceDBStore extends AbstractServiceStore {
                                         }
                                     }
                                 }
+
                                 policyFilter1.removeParam("serviceType");
                             }
+
                             denyconditionsonMap.put(serviceDef, denyCount);
+
                             denyCount = 0;
                         }
                     }
                 }
             }
-            String jsonContextDenyCondtionOn = JsonUtils.objectToJson(denyconditionsonMap);
-            ret = jsonContextDenyCondtionOn;
+
+            ret = JsonUtils.objectToJson(denyconditionsonMap);
         } catch (Exception e) {
             LOG.error("ServiceDBStore.getMetricByType(denyconditions): Error calculating Metric for denyconditions : {}", e.getMessage());
         }
+
         return ret;
     }
 
     private VXMetricServiceNameCount getVXMetricServiceCount(String policyType) throws Exception {
         SearchFilter policyFilter1 = new SearchFilter();
+
         policyFilter1.setMaxRows(200);
         policyFilter1.setStartIndex(0);
         policyFilter1.setGetCount(true);
         policyFilter1.setSortBy("serviceId");
         policyFilter1.setSortType("asc");
         policyFilter1.setParam("policyType", policyType);
+
         PList<RangerPolicy>            policies              = getPaginatedPolicies(policyFilter1);
         PList<RangerService>           paginatedSvcsSevice   = getPaginatedServices(policyFilter1);
         List<RangerService>            rangerServiceList     = paginatedSvcsSevice.getList();
         Map<String, Map<String, Long>> servicesforPolicyType = new HashMap<>();
 
         long tagCount = 0;
-        for (Object rangerService : rangerServiceList) {
-            RangerService rangerServiceObj = (RangerService) rangerService;
-            String        servicetype      = rangerServiceObj.getType();
-            String        serviceName      = rangerServiceObj.getName();
+
+        for (RangerService rangerService : rangerServiceList) {
+            String servicetype = rangerService.getType();
+            String serviceName = rangerService.getName();
+
             policyFilter1.setParam("serviceName", serviceName);
+
             Map<String, Long>   servicesNamewithPolicyCount = new HashMap<>();
             PList<RangerPolicy> policiestype                = getPaginatedPolicies(policyFilter1);
             long                count                       = policiestype.getTotalCount();
+
             if (count != 0) {
                 if (!"tag".equalsIgnoreCase(servicetype)) {
                     if (!(servicesforPolicyType.containsKey(servicetype))) {
@@ -5434,6 +6175,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                         servicesforPolicyType.put(servicetype, servicesNamewithPolicyCount);
                     } else if (servicesforPolicyType.containsKey(servicetype)) {
                         Map<String, Long> previousPolicyCount = servicesforPolicyType.get(servicetype);
+
                         if (!previousPolicyCount.containsKey(serviceName)) {
                             previousPolicyCount.put(serviceName, count);
                             servicesforPolicyType.put(servicetype, previousPolicyCount);
@@ -5444,42 +6186,54 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
+
         VXMetricServiceNameCount vXMetricServiceNameCount = new VXMetricServiceNameCount();
+
         vXMetricServiceNameCount.setServiceBasedCountList(servicesforPolicyType);
-        long totalCountOfPolicyType = 0;
-        totalCountOfPolicyType = policies.getTotalCount() - tagCount;
+
+        long totalCountOfPolicyType = policies.getTotalCount() - tagCount;
+
         vXMetricServiceNameCount.setTotalCount(totalCountOfPolicyType);
+
         return vXMetricServiceNameCount;
     }
 
     private VXMetricServiceCount getAuditsCount(int accessResult, Date startDate, Date endDate) throws Exception {
         long         totalCountOfAudits = 0;
         SearchFilter filter             = new SearchFilter();
+
         filter.setStartIndex(0);
+
         Map<String, Long>          servicesRepoType     = new HashMap<>();
         VXMetricServiceCount       vXMetricServiceCount = new VXMetricServiceCount();
         PList<RangerServiceDef>    paginatedSvcDefs     = getPaginatedServiceDefs(filter);
         Iterable<RangerServiceDef> repoTypeGet          = paginatedSvcDefs.getList();
-        for (Object repo : repoTypeGet) {
-            RangerServiceDef rangerServiceDefObj    = (RangerServiceDef) repo;
-            long             id                     = rangerServiceDefObj.getId();
-            String           serviceRepoName        = rangerServiceDefObj.getName();
+
+        for (RangerServiceDef repoType : repoTypeGet) {
+            long             id                     = repoType.getId();
+            String           serviceRepoName        = repoType.getName();
             SearchCriteria   searchCriteriaWithType = new SearchCriteria();
+
             searchCriteriaWithType.getParamList().put("repoType", id);
             searchCriteriaWithType.getParamList().put("accessResult", accessResult);
             searchCriteriaWithType.addParam("startDate", startDate);
             searchCriteriaWithType.addParam("endDate", endDate);
             searchCriteriaWithType.setMaxRows(0);
             searchCriteriaWithType.setGetCount(true);
+
             VXAccessAuditList vXAccessAuditListwithType = assetMgr.getAccessLogs(searchCriteriaWithType);
-            long              toltalCountOfRepo         = vXAccessAuditListwithType.getTotalCount();
-            if (toltalCountOfRepo != 0) {
-                servicesRepoType.put(serviceRepoName, toltalCountOfRepo);
-                totalCountOfAudits += toltalCountOfRepo;
+            long              totalCountOfRepo          = vXAccessAuditListwithType.getTotalCount();
+
+            if (totalCountOfRepo != 0) {
+                servicesRepoType.put(serviceRepoName, totalCountOfRepo);
+
+                totalCountOfAudits += totalCountOfRepo;
             }
         }
+
         vXMetricServiceCount.setServiceBasedCountList(servicesRepoType);
         vXMetricServiceCount.setTotalCount(totalCountOfAudits);
+
         return vXMetricServiceCount;
     }
 
@@ -5490,6 +6244,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         searchCriteria.setGetCount(true);
         searchCriteria.setSortType("asc");
         searchCriteria.addParam("userRoleList", userRoleList);
+
         return xUserMgr.searchXUsers(searchCriteria).getTotalCount();
     }
 
@@ -5502,6 +6257,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private void disassociateZonesForService(RangerService service) throws Exception {
         String       serviceName   = service.getName();
         List<String> zonesNameList = daoMgr.getXXSecurityZoneDao().findZonesByServiceName(serviceName);
+
         if (CollectionUtils.isNotEmpty(zonesNameList)) {
             for (String zoneName : zonesNameList) {
                 RangerSecurityZone                     securityZone = securityZoneStore.getSecurityZoneByName(zoneName);
@@ -5510,6 +6266,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                 if (zoneServices != null && !zoneServices.isEmpty()) {
                     zoneServices.remove(serviceName);
                     securityZone.setServices(zoneServices);
+
                     securityZoneStore.updateSecurityZoneById(securityZone);
                 }
             }
@@ -5548,6 +6305,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     securityZoneInfo.setPolicies(zonePolicies);
                     securityZoneInfo.setResources(entry.getValue().getResources());
                     securityZoneInfo.setContainsAssociatedTagService(false);
+
                     securityZonesInfo.put(entry.getKey(), securityZoneInfo);
                 }
 
@@ -5568,6 +6326,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     securityZoneInfo.setPolicyDeltas(zonePolicyDeltas);
                     securityZoneInfo.setResources(entry.getValue().getResources());
                     securityZoneInfo.setContainsAssociatedTagService(false);
+
                     securityZonesInfo.put(entry.getKey(), securityZoneInfo);
                 }
 
@@ -5586,12 +6345,12 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (servicePolicies != null && MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
             // Get list of zones that associated tag-service (if any) is associated with
             List<String> zonesInAssociatedTagService = new ArrayList<>();
-
-            String tagServiceName = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceName() : null;
+            String       tagServiceName              = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceName() : null;
 
             if (StringUtils.isNotEmpty(tagServiceName)) {
                 try {
                     RangerService tagService = getServiceByName(tagServiceName);
+
                     if (tagService != null && tagService.getIsEnabled()) {
                         zonesInAssociatedTagService = daoMgr.getXXSecurityZoneDao().findZonesByTagServiceName(tagServiceName);
                     }
@@ -5641,9 +6400,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         boolean         containsDisabledTagPolicies      = false;
 
         if (servicePolicies != null) {
-            List<RangerPolicy> policies = null;
+            List<RangerPolicy> policies = servicePolicies.getPolicies();
 
-            policies = servicePolicies.getPolicies();
             if (CollectionUtils.isNotEmpty(policies)) {
                 for (RangerPolicy policy : policies) {
                     if (!policy.getIsEnabled()) {
@@ -5655,6 +6413,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             if (servicePolicies.getTagPolicies() != null) {
                 policies = servicePolicies.getTagPolicies().getPolicies();
+
                 if (CollectionUtils.isNotEmpty(policies)) {
                     for (RangerPolicy policy : policies) {
                         if (!policy.getIsEnabled()) {
@@ -5681,11 +6440,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                 if (containsDisabledResourcePolicies) {
                     List<RangerPolicy> filteredPolicies = new ArrayList<>();
+
                     for (RangerPolicy policy : servicePolicies.getPolicies()) {
                         if (policy.getIsEnabled()) {
                             filteredPolicies.add(policy);
                         }
                     }
+
                     ret.setPolicies(filteredPolicies);
                 }
 
@@ -5699,11 +6460,13 @@ public class ServiceDBStore extends AbstractServiceStore {
                     tagPolicies.setPolicyUpdateTime(servicePolicies.getTagPolicies().getPolicyUpdateTime());
 
                     List<RangerPolicy> filteredPolicies = new ArrayList<>();
+
                     for (RangerPolicy policy : servicePolicies.getTagPolicies().getPolicies()) {
                         if (policy.getIsEnabled()) {
                             filteredPolicies.add(policy);
                         }
                     }
+
                     tagPolicies.setPolicies(filteredPolicies);
 
                     ret.setTagPolicies(tagPolicies);
@@ -5716,12 +6479,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private List<XXServiceConfigMap> getAuditFiltersServiceConfigByName(String searchUsrGrpRoleName) {
         LOG.debug("===> ServiceDBStore.getAuditFiltersServiceConfigByName( searchUsrGrpRoleName : {})", searchUsrGrpRoleName);
+
         List<XXServiceConfigMap> configMapToBeModified = null;
 
         if (StringUtils.isNotBlank(searchUsrGrpRoleName)) {
             configMapToBeModified = new ArrayList<>();
+
             XXServiceConfigMapDao    configDao = daoMgr.getXXServiceConfigMap();
             List<XXServiceConfigMap> configs   = configDao.findByConfigKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS);
+
             for (XXServiceConfigMap configMap : configs) {
                 if (StringUtils.contains(configMap.getConfigvalue(), searchUsrGrpRoleName)) {
                     configMapToBeModified.add(configMap);
@@ -5729,44 +6495,59 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
-        LOG.debug("<=== ServiceDBStore.getAuditFiltersServiceConfigByName(searchUsrGrpRoleName : {}) configMapToBeModified : {}", searchUsrGrpRoleName, configMapToBeModified);
+        LOG.debug("<=== ServiceDBStore.getAuditFiltersServiceConfigByName( searchUsrGrpRoleName : {}) configMapToBeModified : {}", searchUsrGrpRoleName, configMapToBeModified);
+
         return configMapToBeModified;
     }
 
     private void removeUserGroupRoleReferences(List<AuditFilter> auditFilters, String user, String group, String role) {
         List<AuditFilter> itemsToRemove = null;
-        LOG.debug("===> ServiceDBStore.removeUserGroupRoleReferences(user : {}, group : {}, role : {}, auditFilters : {})", user, group, role, auditFilters);
+
+        LOG.debug("===> ServiceDBStore.removeUserGroupRoleReferences( user : {} group : {} role : {} auditFilters : {})", user, group, role, auditFilters);
+
         for (AuditFilter auditFilter : auditFilters) {
             boolean isAuditFilterModified = false;
+
             if (StringUtils.isNotEmpty(user) && CollectionUtils.isNotEmpty(auditFilter.getUsers())) {
                 auditFilter.getUsers().remove(user);
+
                 isAuditFilterModified = true;
             }
+
             if (StringUtils.isNotEmpty(group) && CollectionUtils.isNotEmpty(auditFilter.getGroups())) {
                 auditFilter.getGroups().remove(group);
+
                 isAuditFilterModified = true;
             }
+
             if (StringUtils.isNotEmpty(role) && CollectionUtils.isNotEmpty(auditFilter.getRoles())) {
                 auditFilter.getRoles().remove(role);
+
                 isAuditFilterModified = true;
             }
+
             if (isAuditFilterModified && CollectionUtils.isEmpty(auditFilter.getUsers()) && CollectionUtils.isEmpty(auditFilter.getGroups()) && CollectionUtils.isEmpty(auditFilter.getRoles())) {
                 if (itemsToRemove == null) {
                     itemsToRemove = new ArrayList<>();
                 }
+
                 itemsToRemove.add(auditFilter);
             }
         }
+
         if (CollectionUtils.isNotEmpty(itemsToRemove)) {
             auditFilters.removeAll(itemsToRemove);
         }
-        LOG.debug("<=== ServiceDBStore.removeUserGroupRoleReferences(user : {}, group : {}, role : {}, auditFilters : {})", user, group, role, auditFilters);
+
+        LOG.debug("<=== ServiceDBStore.removeUserGroupRoleReferences( user : {} group : {} role : {} auditFilters : {})", user, group, role, auditFilters);
     }
 
     private void getContainingRoles(Long roleId, Set<Long> allRoles) {
         if (!allRoles.contains(roleId)) {
             allRoles.add(roleId);
+
             Set<Long> roles = daoMgr.getXXRoleRefRole().getContainingRoles(roleId);
+
             for (Long role : roles) {
                 getContainingRoles(role, allRoles);
             }
@@ -5775,17 +6556,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private Set<String> getRoleNames(Set<Long> roles) {
         Set<String> roleNames = new HashSet<>();
+
         if (CollectionUtils.isNotEmpty(roles)) {
             List<XXRole> xxRoles = daoMgr.getXXRole().getAll();
+
             for (Long role : roles) {
                 for (XXRole xxRole : xxRoles) {
-                    if (xxRole.getId() == role) {
+                    if (Objects.equals(xxRole.getId(), role)) {
                         roleNames.add(xxRole.getName());
                         break;
                     }
                 }
             }
         }
+
         return roleNames;
     }
 
@@ -5803,15 +6587,11 @@ public class ServiceDBStore extends AbstractServiceStore {
         return ret;
     }
 
-    public enum JsonFileNameType {
-        POLICY, ROLE
-    }
+    public enum JSON_FILE_NAME_TYPE { POLICY, ROLE }
 
-    public enum VersionType {
-        POLICY_VERSION, TAG_VERSION, ROLE_VERSION, GDS_VERSION
-    }
+    public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, ROLE_VERSION, GDS_VERSION }
 
-    public enum MetricType {
+    public enum METRIC_TYPE {
         USER_GROUP {
             @Override
             public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
@@ -5855,31 +6635,31 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         };
 
-        public static MetricType getMetricTypeByName(final String metricTypeName) {
-            MetricType ret = null;
+        public static METRIC_TYPE getMetricTypeByName(final String metricTypeName) {
+            METRIC_TYPE ret = null;
 
             if (metricTypeName != null) {
                 switch (metricTypeName) {
                     case "usergroup":
-                        ret = MetricType.USER_GROUP;
+                        ret = METRIC_TYPE.USER_GROUP;
                         break;
                     case "audits":
-                        ret = MetricType.AUDITS;
+                        ret = METRIC_TYPE.AUDITS;
                         break;
                     case "services":
-                        ret = MetricType.SERVICES;
+                        ret = METRIC_TYPE.SERVICES;
                         break;
                     case "policies":
-                        ret = MetricType.POLICIES;
+                        ret = METRIC_TYPE.POLICIES;
                         break;
                     case "database":
-                        ret = MetricType.DATABASE;
+                        ret = METRIC_TYPE.DATABASE;
                         break;
                     case "contextenrichers":
-                        ret = MetricType.CONTEXT_ENRICHERS;
+                        ret = METRIC_TYPE.CONTEXT_ENRICHERS;
                         break;
                     case "denyconditions":
-                        ret = MetricType.DENY_CONDITIONS;
+                        ret = METRIC_TYPE.DENY_CONDITIONS;
                         break;
                 }
             }
@@ -5890,9 +6670,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         abstract String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria);
     }
 
-    public enum RemoveRefType {
-        USER, GROUP, ROLE
-    }
+    public enum REMOVE_REF_TYPE { USER, GROUP, ROLE }
 
     private static class RangerPolicyDeltaComparator implements Comparator<RangerPolicyDelta>, java.io.Serializable {
         @Override
@@ -5904,20 +6682,21 @@ public class ServiceDBStore extends AbstractServiceStore {
     public static class ServiceVersionUpdater implements Runnable {
         final Long                       serviceId;
         final RangerDaoManager           daoManager;
-        final VersionType                versionType;
+        final VERSION_TYPE               versionType;
         final String                     zoneName;
         final Integer                    policyDeltaChange;
         final RangerPolicy               policy;
         final ServiceTags.TagsChangeType tagChangeType;
         final Long                       resourceId;
         final Long                       tagId;
+
         long version = -1;
 
-        public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VersionType versionType, Integer policyDeltaType) {
+        public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VERSION_TYPE versionType, Integer policyDeltaType) {
             this(daoManager, serviceId, versionType, null, policyDeltaType, null);
         }
 
-        public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VersionType versionType, String zoneName, Integer policyDeltaType, RangerPolicy policy) {
+        public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VERSION_TYPE versionType, String zoneName, Integer policyDeltaType, RangerPolicy policy) {
             this.serviceId         = serviceId;
             this.daoManager        = daoManager;
             this.versionType       = versionType;
@@ -5929,7 +6708,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             this.tagId             = null;
         }
 
-        public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VersionType versionType, ServiceTags.TagsChangeType tagChangeType, Long resourceId, Long tagId) {
+        public ServiceVersionUpdater(RangerDaoManager daoManager, Long serviceId, VERSION_TYPE versionType, ServiceTags.TagsChangeType tagChangeType, Long resourceId, Long tagId) {
             this.serviceId         = serviceId;
             this.daoManager        = daoManager;
             this.versionType       = versionType;
@@ -5986,7 +6765,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                 if (xxPolicyLabel == null) {
                     xxPolicyLabel = new XXPolicyLabel();
+
                     xxPolicyLabel.setPolicyLabel(policyLabel);
+
                     xxPolicyLabel = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabel);
                     xxPolicyLabel = daoMgr.getXXPolicyLabels().create(xxPolicyLabel);
                 }
@@ -5994,20 +6775,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             if (xxPolicyLabel != null) {
                 XXPolicyLabelMap xxPolicyLabelMap = new XXPolicyLabelMap();
+
                 xxPolicyLabelMap.setPolicyId(xPolicy.getId());
                 xxPolicyLabelMap.setPolicyLabelId(xxPolicyLabel.getId());
+
                 xxPolicyLabelMap = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
+
                 daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
             }
+
             LOG.debug("<== AssociatePolicyLabel.getOrCreateLabel(policyId={}, label={})", xPolicy.getId(), policyLabel);
         }
     }
 
     static {
         try {
-            localHostname = java.net.InetAddress.getLocalHost().getCanonicalHostName();
+            LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
         } catch (UnknownHostException e) {
-            localHostname = "unknown";
+            LOCAL_HOSTNAME = "unknown";
         }
     }
 }

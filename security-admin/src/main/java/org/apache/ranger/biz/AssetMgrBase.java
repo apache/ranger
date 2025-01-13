@@ -51,11 +51,13 @@ public class AssetMgrBase {
 
     public VXCredentialStore createXCredentialStore(VXCredentialStore vXCredentialStore) {
         vXCredentialStore = xCredentialStoreService.createResource(vXCredentialStore);
+
         return vXCredentialStore;
     }
 
     public VXCredentialStore updateXCredentialStore(VXCredentialStore vXCredentialStore) {
         vXCredentialStore = xCredentialStoreService.updateResource(vXCredentialStore);
+
         return vXCredentialStore;
     }
 
@@ -81,11 +83,13 @@ public class AssetMgrBase {
 
     public VXPolicyExportAudit createXPolicyExportAudit(VXPolicyExportAudit vXPolicyExportAudit) {
         vXPolicyExportAudit = xPolicyExportAuditService.createResource(vXPolicyExportAudit);
+
         return vXPolicyExportAudit;
     }
 
     public VXPolicyExportAudit updateXPolicyExportAudit(VXPolicyExportAudit vXPolicyExportAudit) {
         vXPolicyExportAudit = xPolicyExportAuditService.updateResource(vXPolicyExportAudit);
+
         return vXPolicyExportAudit;
     }
 

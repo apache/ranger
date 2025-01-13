@@ -52,55 +52,68 @@ public class XAuditMgr extends XAuditMgrBase {
 
     public VXTrxLog getXTrxLog(Long id) {
         checkAllAdminsAccess();
+
         return super.getXTrxLog(id);
     }
 
     public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
         checkAdminAccess();
+
         rangerBizUtil.blockAuditorRoleUser();
+
         return super.createXTrxLog(vXTrxLog);
     }
 
     public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
         checkAdminAccess();
+
         rangerBizUtil.blockAuditorRoleUser();
+
         return super.updateXTrxLog(vXTrxLog);
     }
 
     public void deleteXTrxLog(Long id, boolean force) {
         checkAdminAccess();
+
         rangerBizUtil.blockAuditorRoleUser();
+
         super.deleteXTrxLog(id, force);
     }
 
     public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
         checkAllAdminsAccess();
+
         return super.searchXTrxLogs(searchCriteria);
     }
 
     public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
         checkAllAdminsAccess();
+
         return super.getXTrxLogSearchCount(searchCriteria);
     }
 
     public VXAccessAudit createXAccessAudit(VXAccessAudit vXAccessAudit) {
         checkAdminAccess();
+
         return super.createXAccessAudit(vXAccessAudit);
     }
 
     public VXAccessAudit updateXAccessAudit(VXAccessAudit vXAccessAudit) {
         checkAdminAccess();
+
         return super.updateXAccessAudit(vXAccessAudit);
     }
 
     public void deleteXAccessAudit(Long id, boolean force) {
         checkAdminAccess();
+
         super.deleteXAccessAudit(id, force);
     }
 
     @Override
     public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
         String auditDBType = rangerBizUtil.getAuditDBType();
+
         if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
@@ -115,6 +128,7 @@ public class XAuditMgr extends XAuditMgrBase {
     @Override
     public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
         String auditDBType = rangerBizUtil.getAuditDBType();
+
         if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
             return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
@@ -128,14 +142,17 @@ public class XAuditMgr extends XAuditMgrBase {
 
     public void checkAdminAccess() {
         UserSessionBase session = ContextUtil.getCurrentUserSession();
+
         if (session != null) {
             if (!session.isUserAdmin()) {
                 throw restErrorUtil.create403RESTException("Operation" + " denied. LoggedInUser=" + session.getXXPortalUser().getId() + " ,isn't permitted to perform the action.");
             }
         } else {
             VXResponse vXResponse = new VXResponse();
+
             vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
             vXResponse.setMsgDesc("Bad Credentials");
+
             throw restErrorUtil.generateRESTException(vXResponse);
         }
     }

@@ -41,11 +41,13 @@ public class UserMgrBase {
 
     public VXPortalUser createXPortalUser(VXPortalUser vXPortalUser) {
         vXPortalUser = xPortalUserService.createResource(vXPortalUser);
+
         return vXPortalUser;
     }
 
     public VXPortalUser updateXPortalUser(VXPortalUser vXPortalUser) {
         vXPortalUser = xPortalUserService.updateResource(vXPortalUser);
+
         return vXPortalUser;
     }
 
