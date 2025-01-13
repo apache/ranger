@@ -335,8 +335,6 @@
             <artifactId>hadoop-auth</artifactId>
             <version>${hadoop.version}</version>
             <scope>compile</scope>
-<!--            <scope>system</scope>-->
-<!--            <systemPath>${shaded.dir}/hadoop-auth-3.3.6-jakarta.jar</systemPath>-->
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -554,8 +552,6 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
-<!--            <scope>system</scope>-->
-<!--            <systemPath>${shaded.dir}/hadoop-common-3.3.6-jakarta.jar</systemPath>-->
             <exclusions>
                 <exclusion>
                     <groupId>commons-httpclient</groupId>
@@ -735,12 +731,6 @@
             <artifactId>guice</artifactId>
             <version>3.0</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>javax.annotation</groupId>-->
-<!--            <artifactId>jsr250-api</artifactId>-->
-<!--            <scope>provided</scope>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>com.webcohesion.enunciate</groupId>
             <artifactId>enunciate-core-annotations</artifactId>

@@ -140,6 +140,7 @@
         <httpcomponents.httpmime.version>4.5.13</httpcomponents.httpmime.version>
         <io.opentelemetry.version>1.40.0</io.opentelemetry.version>
         <io.opentelemetry-semconv.version>1.26.0-alpha</io.opentelemetry-semconv.version>
+        <jakarta.activation.version>2.1.3</jakarta.activation.version>
         <jakarta.persistence.version>3.2.0</jakarta.persistence.version>
         <jakarta.servlet.version>6.1.0</jakarta.servlet.version>
         <jakarta-inject.version>2.0.1</jakarta-inject.version>
@@ -155,6 +156,7 @@
         <jersey-media.version>3.0.16</jersey-media.version>
         <jersey-spring.version>3.0.16</jersey-spring.version>
         <glassfish.jaxb.version>3.0.2</glassfish.jaxb.version>
+        <hk2.version>3.0.6</hk2.version>
 
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jettison.version>1.5.4</jettison.version>
@@ -1002,11 +1004,6 @@
                 <artifactId>jsr250-api</artifactId>
                 <version>${jsr250.version}</version>
             </dependency>
-<!--            <dependency>-->
-<!--                <groupId>javax.xml.bind</groupId>-->
-<!--                <artifactId>jaxb-api</artifactId>-->
-<!--                <version>${jaxb.api.version}</version>-->
-<!--            </dependency>-->
             <dependency>
                 <groupId>org.glassfish.jaxb</groupId>
                 <artifactId>jaxb-runtime</artifactId>
