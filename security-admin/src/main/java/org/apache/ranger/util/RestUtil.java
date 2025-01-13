@@ -36,11 +36,13 @@ import java.util.Enumeration;
 
 @Component
 public class RestUtil {
+    private static final Logger LOG                     = LoggerFactory.getLogger(RestUtil.class);
+
     public static final  String timeOffsetCookieName    = "clientTimeOffset";
     public static final  String TIMEOUT_ACTION          = "timeout";
     public static final  String LOCAL_LOGIN_URL         = "locallogin";
     public static final  String ZONED_EVENT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss z";
-    private static final Logger LOG                     = LoggerFactory.getLogger(RestUtil.class);
+    
     private static final String PROXY_RANGER_URL_PATH   = "/ranger";
 
     private RestUtil() {
