@@ -29,12 +29,14 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class RangerAdminCache<K, V> extends RangerCache<K, V> {
+    private static final Logger      LOG                                          = LoggerFactory.getLogger(RangerDBValueLoader.class);
+
     public static final  int         DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT     = 1;
     public static final  RefreshMode DEFAULT_ADMIN_CACHE_REFRESH_MODE             = RefreshMode.ON_ACCESS;
     public static final  long        DEFAULT_ADMIN_CACHE_VALUE_VALIDITY_PERIOD_MS = 0;          // every access should look to refresh
     public static final  long        DEFAULT_ADMIN_CACHE_VALUE_INIT_TIMEOUT_MS    = -1L;        // infinite timeout
     public static final  long        DEFAULT_ADMIN_CACHE_VALUE_REFRESH_TIMEOUT_MS = 10 * 1000L; // 10 seconds
-    private static final Logger      LOG                                          = LoggerFactory.getLogger(RangerDBValueLoader.class);
+
     private static final String      PROP_PREFIX                                  = "ranger.admin.cache.";
     private static final String      PROP_LOADER_THREAD_POOL_SIZE                 = ".loader.threadpool.size";
     private static final String      PROP_VALUE_INIT_TIMEOUT_MS                   = ".value.init.timeout.ms";
