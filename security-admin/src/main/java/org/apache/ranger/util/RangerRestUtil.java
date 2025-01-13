@@ -59,23 +59,12 @@ public class RangerRestUtil {
     public void validateVUserProfileForUpdate(XXPortalUser gjUser, VXPortalUser userProfile) {
         List<VXMessage> messageList = new ArrayList<VXMessage>();
 
-        // Email Update is allowed.
-        // if (userProfile.getEmailAddress() != null
-        // && !userProfile.getEmailAddress().equalsIgnoreCase(
-        // gjUser.getEmailAddress())) {
-        // throw restErrorUtil.createRESTException(
-        // "Email address can't be updated",
-        // MessageEnums.DATA_NOT_UPDATABLE, null, "emailAddress",
-        // userProfile.getEmailAddress());
-        // }
-
         // Login Id can't be changed
         if (userProfile.getLoginId() != null && !gjUser.getLoginId().equalsIgnoreCase(userProfile.getLoginId())) {
             throw restErrorUtil.createRESTException("Username can't be updated", MessageEnums.DATA_NOT_UPDATABLE, null, "loginId", userProfile.getLoginId());
         }
-        // }
-        userProfile.setFirstName(restErrorUtil.validateStringForUpdate(userProfile.getFirstName(), gjUser.getFirstName(), StringUtil.VALIDATION_NAME, "Invalid first name", MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
 
+        userProfile.setFirstName(restErrorUtil.validateStringForUpdate(userProfile.getFirstName(), gjUser.getFirstName(), StringUtil.VALIDATION_NAME, "Invalid first name", MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
         userProfile.setFirstName(restErrorUtil.validateStringForUpdate(userProfile.getFirstName(), gjUser.getFirstName(), StringUtil.VALIDATION_NAME, "Invalid first name", MessageEnums.INVALID_INPUT_DATA, null, "firstName"));
 
         // firstName
