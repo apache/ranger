@@ -326,25 +326,22 @@ public class ElasticSearchAuditDestination extends AuditDestination {
 
             RestClientBuilder restClientBuilder = getRestClientBuilder(hosts, protocol, user, password, port);
 
-            try (RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder)) {
-                LOG.debug("Initialized client");
+            RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder);
+            boolean exists = false;
 
-                boolean exists = false;
-
-                try {
-                    exists = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
-                } catch (Exception e) {
-                    LOG.warn("Error validating index {}", this.index);
-                }
-
-                if (exists) {
-                    LOG.debug("Index exists");
-                } else {
-                    LOG.info("Index does not exist");
-                }
-
-                return restHighLevelClient;
+            try {
+                exists = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
+            } catch (Exception e) {
+                LOG.warn("Error validating index {}", this.index);
             }
+
+            if (exists) {
+                LOG.debug("Index exists");
+            } else {
+                LOG.info("Index does not exist");
+            }
+
+            return restHighLevelClient;
         } catch (Throwable t) {
             lastLoggedAt.updateAndGet(lastLoggedAt -> {
                 long now     = System.currentTimeMillis();
