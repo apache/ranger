@@ -25,10 +25,6 @@
     <artifactId>ranger-util</artifactId>
     <name>Ranger Util</name>
     <description>Common Utilities of Ranger</description>
-    <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

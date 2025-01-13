@@ -46,9 +46,9 @@
         <aws-java-sdk.version>1.12.765</aws-java-sdk.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <cglib.version>2.2.0-b23</cglib.version>
-        <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
-        <checkstyle.skip>true</checkstyle.skip>
+        <checkstyle.skip>false</checkstyle.skip>
         <checkstyle.version>8.29</checkstyle.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
         <com.microsoft.azure.adal4j.version>1.6.4</com.microsoft.azure.adal4j.version>
