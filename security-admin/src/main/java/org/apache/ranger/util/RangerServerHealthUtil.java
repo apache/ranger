@@ -60,7 +60,7 @@ public class RangerServerHealthUtil {
          "audit-Elasticsearch": { "status": "UP", "details": { "provider": "Elastic Search", "providerHealthCheckEndpoint": "http://localhost:9200/_cluster/health?pretty" } }
        }
      }
-	*/
+    */
 
     public RangerServerHealth getRangerServerHealth(String dbVersion) {
         Map<String, Object> components = new HashMap<>();
@@ -81,8 +81,8 @@ public class RangerServerHealthUtil {
 
     private Map<String, Object> getDbStatus(String dbVersion) {
         Map<String, Object> ret      = new LinkedHashMap<>();
-        Map<String, Object> details  = new LinkedHashMap<>();
         int                 dbFlavor = RangerBizUtil.getDBFlavor();
+        Map<String, Object> details  = new LinkedHashMap<>();
 
         details.put(DB_FLAVOR, RangerBizUtil.getDBFlavorType(dbFlavor));
         details.put(DB_VERSION, dbVersion);

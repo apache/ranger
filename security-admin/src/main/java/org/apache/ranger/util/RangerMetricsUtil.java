@@ -39,26 +39,19 @@ import java.util.Map;
  */
 @Component
 public class RangerMetricsUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
-
+    private static final Logger                LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
     private static final OperatingSystemMXBean OS;
     private static final MemoryMXBean          MEM_BEAN;
-
-    static {
-        OS       = ManagementFactory.getOperatingSystemMXBean();
-        MEM_BEAN = ManagementFactory.getMemoryMXBean();
-    }
 
     public Map<String, Object> getValues() {
         LOG.debug("==> RangerMetricsUtil.getValues()");
 
         Map<String, Object> values = new LinkedHashMap<>();
-
         values.put("os.spec", StringUtils.join(Arrays.asList(addSystemInfo()), ", "));
         values.put("os.vcpus", String.valueOf(OS.getAvailableProcessors()));
         values.put("memory", addMemoryDetails());
 
-        LOG.debug("<== RangerMetricsUtil.getValues() {}", values);
+        LOG.debug("<== RangerMetricsUtil.getValues():{}", values);
 
         return values;
     }
@@ -70,14 +63,13 @@ public class RangerMetricsUtil {
         LOG.debug("==> RangerMetricsUtil.getPoolDivision()");
 
         Map<String, Object> poolDivisionValues = new LinkedHashMap<>();
-
         for (MemoryPoolMXBean mpBean : ManagementFactory.getMemoryPoolMXBeans()) {
             if (mpBean.getType() == MemoryType.HEAP) {
                 poolDivisionValues.put(mpBean.getName(), mpBean.getUsage());
             }
         }
 
-        LOG.debug("<== RangerMetricsUtil.getPoolDivision() {}", poolDivisionValues);
+        LOG.debug("<== RangerMetricsUtil.getPoolDivision(){}", poolDivisionValues);
 
         return poolDivisionValues;
     }
@@ -91,7 +83,6 @@ public class RangerMetricsUtil {
         Map<String, Object> memory       = new LinkedHashMap<>();
         MemoryUsage         memHeapUsage = MEM_BEAN.getHeapMemoryUsage();
         MemoryUsage         nonHeapUsage = MEM_BEAN.getNonHeapMemoryUsage();
-
         memory.put("heapInit", String.valueOf(memHeapUsage.getInit()));
         memory.put("heapMax", String.valueOf(memHeapUsage.getMax()));
         memory.put("heapCommitted", String.valueOf(memHeapUsage.getCommitted()));
@@ -102,7 +93,7 @@ public class RangerMetricsUtil {
         memory.put("nonHeapUsed", String.valueOf(nonHeapUsage.getUsed()));
         memory.put("memory_pool_usages", getPoolDivision());
 
-        LOG.debug("<== RangerMetricsUtil.addMemoryDetails() {}", memory);
+        LOG.debug("<== RangerMetricsUtil.addMemoryDetails(){}", memory);
 
         return memory;
     }
@@ -114,9 +105,13 @@ public class RangerMetricsUtil {
         LOG.debug("==> RangerMetricsUtil.addSystemInfo()");
 
         String[] osInfo = {OS.getName(), OS.getArch(), OS.getVersion()};
-
-        LOG.debug("<== RangerMetricsUtil.addSystemInfo() {}", osInfo);
+        LOG.debug("<== RangerMetricsUtil.addSystemInfo(){}", osInfo);
 
         return osInfo;
+    }
+
+    static {
+        OS       = ManagementFactory.getOperatingSystemMXBean();
+        MEM_BEAN = ManagementFactory.getMemoryMXBean();
     }
 }

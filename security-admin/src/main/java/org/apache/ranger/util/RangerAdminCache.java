@@ -29,18 +29,16 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class RangerAdminCache<K, V> extends RangerCache<K, V> {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerDBValueLoader.class);
-
-    public static final int         DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT     = 1;
-    public static final RefreshMode DEFAULT_ADMIN_CACHE_REFRESH_MODE             = RefreshMode.ON_ACCESS;
-    public static final long        DEFAULT_ADMIN_CACHE_VALUE_VALIDITY_PERIOD_MS = 0;          // every access should look to refresh
-    public static final long        DEFAULT_ADMIN_CACHE_VALUE_INIT_TIMEOUT_MS    = -1L;        // infinite timeout
-    public static final long        DEFAULT_ADMIN_CACHE_VALUE_REFRESH_TIMEOUT_MS = 10 * 1000L; // 10 seconds
-
-    private static final String PROP_PREFIX                   = "ranger.admin.cache.";
-    private static final String PROP_LOADER_THREAD_POOL_SIZE  = ".loader.threadpool.size";
-    private static final String PROP_VALUE_INIT_TIMEOUT_MS    = ".value.init.timeout.ms";
-    private static final String PROP_VALUE_REFRESH_TIMEOUT_MS = ".value.refresh.timeout.ms";
+    public static final  int         DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT     = 1;
+    public static final  RefreshMode DEFAULT_ADMIN_CACHE_REFRESH_MODE             = RefreshMode.ON_ACCESS;
+    public static final  long        DEFAULT_ADMIN_CACHE_VALUE_VALIDITY_PERIOD_MS = 0;          // every access should look to refresh
+    public static final  long        DEFAULT_ADMIN_CACHE_VALUE_INIT_TIMEOUT_MS    = -1L;        // infinite timeout
+    public static final  long        DEFAULT_ADMIN_CACHE_VALUE_REFRESH_TIMEOUT_MS = 10 * 1000L; // 10 seconds
+    private static final Logger      LOG                                          = LoggerFactory.getLogger(RangerDBValueLoader.class);
+    private static final String      PROP_PREFIX                                  = "ranger.admin.cache.";
+    private static final String      PROP_LOADER_THREAD_POOL_SIZE                 = ".loader.threadpool.size";
+    private static final String      PROP_VALUE_INIT_TIMEOUT_MS                   = ".value.init.timeout.ms";
+    private static final String      PROP_VALUE_REFRESH_TIMEOUT_MS                = ".value.refresh.timeout.ms";
 
     protected RangerAdminCache(String name, RangerDBValueLoader<K, V> loader) {
         this(name, loader, getLoaderThreadPoolSize(name), DEFAULT_ADMIN_CACHE_REFRESH_MODE, DEFAULT_ADMIN_CACHE_VALUE_VALIDITY_PERIOD_MS, getValueInitLoadTimeout(name), getValueRefreshLoadTimeout(name));
@@ -53,6 +51,18 @@ public class RangerAdminCache<K, V> extends RangerCache<K, V> {
     @Override
     public V get(K key) {
         return super.get(key, RangerContextHolder.getSecurityContext());
+    }
+
+    private static int getLoaderThreadPoolSize(String cacheName) {
+        return RangerAdminConfig.getInstance().getInt(PROP_PREFIX + cacheName + PROP_LOADER_THREAD_POOL_SIZE, DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT);
+    }
+
+    private static long getValueInitLoadTimeout(String cacheName) {
+        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_INIT_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_INIT_TIMEOUT_MS);
+    }
+
+    private static long getValueRefreshLoadTimeout(String cacheName) {
+        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_REFRESH_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_REFRESH_TIMEOUT_MS);
     }
 
     public abstract static class RangerDBValueLoader<K, V> extends ValueLoader<K, V> {
@@ -100,17 +110,5 @@ public class RangerAdminCache<K, V> extends RangerCache<K, V> {
         }
 
         protected abstract RefreshableValue<V> dbLoad(K key, RefreshableValue<V> currentValue) throws Exception;
-    }
-
-    private static int getLoaderThreadPoolSize(String cacheName) {
-        return RangerAdminConfig.getInstance().getInt(PROP_PREFIX + cacheName + PROP_LOADER_THREAD_POOL_SIZE, DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT);
-    }
-
-    private static long getValueInitLoadTimeout(String cacheName) {
-        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_INIT_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_INIT_TIMEOUT_MS);
-    }
-
-    private static long getValueRefreshLoadTimeout(String cacheName) {
-        return RangerAdminConfig.getInstance().getLong(PROP_PREFIX + cacheName + PROP_VALUE_REFRESH_TIMEOUT_MS, DEFAULT_ADMIN_CACHE_VALUE_REFRESH_TIMEOUT_MS);
     }
 }

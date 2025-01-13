@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.ranger.util;
 
 import org.apache.commons.lang.StringUtils;
@@ -37,166 +36,144 @@ import java.util.Enumeration;
 
 @Component
 public class RestUtil {
-	private static final Logger LOG = LoggerFactory.getLogger(RestUtil.class);
+    public static final  String timeOffsetCookieName    = "clientTimeOffset";
+    public static final  String TIMEOUT_ACTION          = "timeout";
+    public static final  String LOCAL_LOGIN_URL         = "locallogin";
+    public static final  String ZONED_EVENT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss z";
+    private static final Logger LOG                     = LoggerFactory.getLogger(RestUtil.class);
+    private static final String PROXY_RANGER_URL_PATH   = "/ranger";
 
-	private static final String PROXY_RANGER_URL_PATH = "/ranger";
+    private RestUtil() {
+        //To block instantiation
+    }
 
-	public static final String timeOffsetCookieName    = "clientTimeOffset";
-	public static final String TIMEOUT_ACTION          = "timeout";
-	public static final String LOCAL_LOGIN_URL         = "locallogin";
-	public static final String ZONED_EVENT_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss z";
+    public static Integer getTimeOffset(HttpServletRequest request) {
+        Integer cookieVal = 0;
+        try {
+            Cookie[] cookies    = request.getCookies();
+            String   timeOffset = null;
 
-	public static Integer getTimeOffset(HttpServletRequest request) {
-		Integer cookieVal = 0;
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    try {
+                        if (timeOffsetCookieName.equals(cookie.getName())) {
+                            timeOffset = cookie.getValue();
+                            if (timeOffset != null) {
+                                cookieVal = Integer.parseInt(timeOffset);
+                            }
+                            break;
+                        }
+                    } catch (Exception ex) {
+                        cookieVal = 0;
+                    }
+                }
+            }
+        } catch (Exception ex) {
+        }
+        return cookieVal;
+    }
 
-		try {
-			Cookie[] cookies    = request.getCookies();
-			String   timeOffset = null;
-			
-			if (cookies != null) {
-				for (Cookie cookie : cookies) {
-					try {
-						if (timeOffsetCookieName.equals(cookie.getName())) {
-							timeOffset = cookie.getValue();
+    public static int getClientTimeOffset() {
+        int clientTimeOffsetInMinute = 0;
+        try {
+            clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getRequestContext().getClientTimeOffsetInMinute();
+        } catch (Exception ex) {
+        }
+        if (clientTimeOffsetInMinute == 0) {
+            try {
+                clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getUserSession().getClientTimeOffsetInMinute();
+            } catch (Exception ex) {
+            }
+        }
+        return clientTimeOffsetInMinute;
+    }
 
-							if (timeOffset != null) {
-								cookieVal = Integer.parseInt(timeOffset);
-							}
-							break;
-						}
-					} catch (Exception ex) {
-						cookieVal = 0;
-					}
-				}
-			}
-		} catch (Exception ex) {
-			// ignored
-		}
+    public static String constructForwardableURL(HttpServletRequest httpRequest) {
+        String         xForwardedProto   = "";
+        String         xForwardedHost    = "";
+        String         xForwardedContext = "";
+        Enumeration<?> names             = httpRequest.getHeaderNames();
+        while (names.hasMoreElements()) {
+            String         name   = (String) names.nextElement();
+            Enumeration<?> values = httpRequest.getHeaders(name);
+            String         value  = "";
+            if (values != null) {
+                while (values.hasMoreElements()) {
+                    value = (String) values.nextElement();
+                }
+            }
+            if (StringUtils.trimToNull(name) != null && StringUtils.trimToNull(value) != null) {
+                if (name.equalsIgnoreCase("x-forwarded-proto")) {
+                    xForwardedProto = value;
+                } else if (name.equalsIgnoreCase("x-forwarded-host")) {
+                    xForwardedHost = value;
+                } else if (name.equalsIgnoreCase("x-forwarded-context")) {
+                    xForwardedContext = value;
+                }
+            }
+        }
+        if (xForwardedHost.contains(",")) {
+            LOG.debug("xForwardedHost value is {} it contains multiple hosts, selecting the first host.", xForwardedHost);
+            xForwardedHost = xForwardedHost.split(",")[0].trim();
+        }
+        String xForwardedURL = "";
+        if (StringUtils.trimToNull(xForwardedProto) != null) {
+            //if header contains x-forwarded-host and x-forwarded-context
+            if (StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
+                xForwardedURL = xForwardedProto + "://" + xForwardedHost + xForwardedContext + PROXY_RANGER_URL_PATH + httpRequest.getRequestURI();
+            } else if (StringUtils.trimToNull(xForwardedHost) != null) {
+                //if header contains x-forwarded-host and does not contains x-forwarded-context
+                xForwardedURL = xForwardedProto + "://" + xForwardedHost + httpRequest.getRequestURI();
+            } else {
+                //if header does not contains x-forwarded-host and x-forwarded-context
+                //preserve the x-forwarded-proto value coming from the request.
+                String requestURL = httpRequest.getRequestURL().toString();
+                if (StringUtils.trimToNull(requestURL) != null && requestURL.startsWith("http:")) {
+                    requestURL = requestURL.replaceFirst("http", xForwardedProto);
+                }
+                xForwardedURL = requestURL;
+            }
+        }
+        return xForwardedURL;
+    }
 
-		return cookieVal;
-	}
-	
-	public static int getClientTimeOffset() {
-		int clientTimeOffsetInMinute = 0;
+    public static String constructRedirectURL(HttpServletRequest request, String redirectUrl, String xForwardedURL, String originalUrlQueryParam) {
+        String delimiter = "?";
+        if (redirectUrl.contains("?")) {
+            delimiter = "&";
+        }
+        String loginURL = redirectUrl + delimiter + originalUrlQueryParam + "=";
+        if (StringUtils.trimToNull(xForwardedURL) != null) {
+            loginURL += xForwardedURL + getOriginalQueryString(request);
+        } else {
+            loginURL += request.getRequestURL().append(getOriginalQueryString(request));
+        }
+        return loginURL;
+    }
 
-		try {
-			clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getRequestContext().getClientTimeOffsetInMinute();
-		} catch (Exception ex) {
-			// ignored
-		}
+    public static String convertToTimeZone(Date date, String timeZone) {
+        try {
+            Instant utcInstant = date.toInstant();
 
-		if (clientTimeOffsetInMinute == 0) {
-			try {
-				clientTimeOffsetInMinute = RangerContextHolder.getSecurityContext().getUserSession().getClientTimeOffsetInMinute();
-			} catch (Exception ex) {
-				// ignored
-			}
-		}
+            // Get the ZoneId from the request parameter
+            ZoneId zoneId = ZoneId.of(timeZone);
+            // Convert the UTC date to the specified timezone
+            ZonedDateTime zonedDateTime = utcInstant.atZone(zoneId);
 
-		return clientTimeOffsetInMinute;
-	}
+            return zonedDateTime.format(DateTimeFormatter.ofPattern(ZONED_EVENT_TIME_FORMAT));
+        } catch (Exception e) {
+            LOG.info("Exception occurred while converting to timeZone", e);
+            return null;
+        }
+    }
 
-	public static String constructForwardableURL(HttpServletRequest httpRequest) {
-		String         xForwardedProto   = "";
-		String         xForwardedHost    = "";
-		String         xForwardedContext = "";
-		Enumeration<?> names             = httpRequest.getHeaderNames();
-
-		while (names.hasMoreElements()) {
-			String         name   = (String) names.nextElement();
-			Enumeration<?> values = httpRequest.getHeaders(name);
-			String         value  = "";
-
-			if (values != null) {
-				while (values.hasMoreElements()) {
-					value = (String) values.nextElement();
-				}
-			}
-
-			if (StringUtils.trimToNull(name) != null && StringUtils.trimToNull(value) != null) {
-				if (name.equalsIgnoreCase("x-forwarded-proto")) {
-					xForwardedProto = value;
-				} else if (name.equalsIgnoreCase("x-forwarded-host")) {
-					xForwardedHost = value;
-				} else if (name.equalsIgnoreCase("x-forwarded-context")) {
-					xForwardedContext = value;
-				}
-			}
-		}
-
-		if (xForwardedHost.contains(",")) {
-			LOG.debug("xForwardedHost value is {}, it contains multiple hosts, selecting the first host.", xForwardedHost);
-
-			xForwardedHost = xForwardedHost.split(",")[0].trim();
-		}
-
-		String xForwardedURL = "";
-
-		if (StringUtils.trimToNull(xForwardedProto) != null) {
-			//if header contains x-forwarded-host and x-forwarded-context
-			if (StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
-				xForwardedURL = xForwardedProto + "://" + xForwardedHost + xForwardedContext + PROXY_RANGER_URL_PATH + httpRequest.getRequestURI();
-			} else if (StringUtils.trimToNull(xForwardedHost) != null) {
-				//if header contains x-forwarded-host and does not contains x-forwarded-context
-				xForwardedURL = xForwardedProto + "://" + xForwardedHost + httpRequest.getRequestURI();
-			} else {
-				//if header does not contains x-forwarded-host and x-forwarded-context
-				//preserve the x-forwarded-proto value coming from the request.
-				String requestURL = httpRequest.getRequestURL().toString();
-
-				if (StringUtils.trimToNull(requestURL) != null && requestURL.startsWith("http:")) {
-					requestURL = requestURL.replaceFirst("http", xForwardedProto);
-				}
-
-				xForwardedURL = requestURL;
-			}
-		}
-
-		return xForwardedURL;
-	}
-
-	public static String constructRedirectURL(HttpServletRequest request, String redirectUrl, String xForwardedURL, String originalUrlQueryParam) {
-		String delimiter = "?";
-
-		if (redirectUrl.contains("?")) {
-			delimiter = "&";
-		}
-
-		String loginURL = redirectUrl + delimiter + originalUrlQueryParam + "=";
-
-		if (StringUtils.trimToNull(xForwardedURL) != null) {
-			loginURL += xForwardedURL + getOriginalQueryString(request);
-		} else {
-			loginURL += request.getRequestURL().append(getOriginalQueryString(request));
-		}
-
-		return loginURL;
-	}
-
-	public static String convertToTimeZone(Date date, String timeZone) {
-		try {
-			Instant       utcInstant    = date.toInstant();
-			// Get the ZoneId from the request parameter
-			ZoneId        zoneId        = ZoneId.of(timeZone);
-			// Convert the UTC date to the specified timezone
-			ZonedDateTime zonedDateTime = utcInstant.atZone(zoneId);
-
-			return zonedDateTime.format(DateTimeFormatter.ofPattern(ZONED_EVENT_TIME_FORMAT));
-		} catch (Exception e) {
-			LOG.info("Exception occurred while converting to timeZone", e);
-			return null;
-		}
-	}
-
-	private static String getOriginalQueryString(HttpServletRequest request) {
-		String originalQueryString = request.getQueryString();
-
-		LOG.debug("originalQueryString = {} ", originalQueryString);
-
-		if (originalQueryString == null || originalQueryString.contains("action")) {
-			return "";
-		} else {
-			return "?" + originalQueryString;
-		}
-	}
+    private static String getOriginalQueryString(HttpServletRequest request) {
+        String originalQueryString = request.getQueryString();
+        LOG.debug("originalQueryString = {}", originalQueryString);
+        if (originalQueryString == null || originalQueryString.contains("action")) {
+            return "";
+        } else {
+            return "?" + originalQueryString;
+        }
+    }
 }
