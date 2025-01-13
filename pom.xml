@@ -127,7 +127,7 @@
         <javax.annotation-api>1.3.2</javax.annotation-api>
         <javax.el.version>3.0.1-b12</javax.el.version>
         <javax.persistence.version>2.1.0</javax.persistence.version>
-        <javax.servlet.version>3.1.0</javax.servlet.version>
+        <javax.servlet.version>4.0.0</javax.servlet.version>
         <javax.validation>2.0.1.Final</javax.validation>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jaxb.api.version>2.3.1</jaxb.api.version>
@@ -213,7 +213,7 @@
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <testng.version>7.5.1</testng.version>
-        <tomcat.embed.version>8.5.94</tomcat.embed.version>
+        <tomcat.embed.version>9.0.98</tomcat.embed.version>
 
         <!-- trino plugin deps -->
         <trino.airlift.version>0.192</trino.airlift.version>

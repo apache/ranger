@@ -51,6 +51,10 @@
                     <artifactId>jackson-dataformat-cbor</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>software.amazon.ion</groupId>
                     <artifactId>ion-java</artifactId>
                 </exclusion>
@@ -264,6 +268,11 @@
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>
             <version>${io.reactivex.rxjava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.version}</version>
         </dependency>
         <dependency>
             <groupId>jline</groupId>
