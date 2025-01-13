@@ -20,6 +20,7 @@
 package org.apache.ranger.ha;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +45,9 @@ public class ActiveInstanceElectorService implements HARangerService, LeaderLatc
 	private CuratorFactory curatorFactory;
 	private LeaderLatch leaderLatch;
 	private String serverId;
+
+	private static Long transitionCount   = 0L;
+	private static Long lastTranstionTime = 0L;
 
 	/**
 	 * Create a new instance of {@link ActiveInstanceElectorService}
@@ -139,9 +143,11 @@ public class ActiveInstanceElectorService implements HARangerService, LeaderLatc
 			}
 			activeInstanceState.update(serverId);
 			serviceState.setActive();
+			transitionCount++;
+			setLastTranstionTime(Instant.now().toEpochMilli());
 		} catch (Exception e) {
 			LOG.error("Got exception while activating", e);
-			notLeader();
+			serviceState.setPassive();
 			rejoinElection();
 		}
 	}
@@ -182,6 +188,20 @@ public class ActiveInstanceElectorService implements HARangerService, LeaderLatc
 		}
 
 		serviceState.setPassive();
+		transitionCount++;
+		setLastTranstionTime(Instant.now().toEpochMilli());
+	}
+
+	public static Long getTransitionCount() {
+		return transitionCount;
+	}
+
+	public static Long getLastTranstionTime() {
+		return lastTranstionTime;
+	}
+
+	public static void setLastTranstionTime(Long lastTranstionTime) {
+		ActiveInstanceElectorService.lastTranstionTime = lastTranstionTime;
 	}
 
 }

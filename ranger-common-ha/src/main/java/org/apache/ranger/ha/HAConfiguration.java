@@ -53,8 +53,8 @@ public class HAConfiguration {
 	private static final int DEFAULT_ZOOKEEPER_SESSION_TIMEOUT_MILLIS = 20000;
 	private static final String HA_ZOOKEEPER_ACL 					= RANGER_SERVER_HA_PREFIX + ZOOKEEPER_PREFIX + "acl";
 	private static final String HA_ZOOKEEPER_AUTH 					= RANGER_SERVER_HA_PREFIX + ZOOKEEPER_PREFIX + "auth";
-	public static final String RANGER_HA_SERVICE_HTTPS_PORT 		= RANGER_SERVER_HA_PREFIX + "https.port";
-	public static final String RANGER_HA_SERVICE_HTTP_PORT 			= RANGER_SERVER_HA_PREFIX + "http.port";
+	public static final String RANGER_HA_SERVICE_HTTPS_PORT 		= ".service.https.port";
+	public static final String RANGER_HA_SERVICE_HTTP_PORT 			= ".service.http.port";
 	public static final String RANGER_SERVICE_SSL_ENABLED 			= RANGER_SERVER_HA_PREFIX + "ssl.enabled";
 
 	/**

@@ -48,16 +48,14 @@ public class RangerServiceServerIdSelector {
 		// ids are already trimmed by this method
 		String[] ids              = HAConfiguration.getStringsConfig(configuration,HAConfiguration.RANGER_SERVER_HA_IDS, null);
 		String   matchingServerId = null;
-		String   appPortStr       = null;
-		int      appPort          = 1; // keeping this as default > 0 for tagSync
 		boolean  isSecure         = HAConfiguration.getBooleanConfig(configuration, HAConfiguration.RANGER_SERVICE_SSL_ENABLED, false);
 
-		appPortStr = isSecure ? HAConfiguration.getStringConfig(configuration, HAConfiguration.RANGER_HA_SERVICE_HTTPS_PORT, null) :
-			HAConfiguration.getStringConfig(configuration, HAConfiguration.RANGER_HA_SERVICE_HTTP_PORT, null);
+		int appPort = isSecure ? HAConfiguration.getIntConfig(configuration, HAConfiguration.RANGER_HA_SERVICE_HTTPS_PORT, -1) : HAConfiguration.getIntConfig(configuration, HAConfiguration.RANGER_HA_SERVICE_HTTP_PORT, -1);
 
-		if (StringUtils.isNotBlank(appPortStr)) {
-			appPort = Integer.parseInt(appPortStr);
+		if (appPort < 1) {
+			LOG.warn("Service HTTP/HTTPS port is not configured correctly. Please configure properties {}{} and {}{}", HAConfiguration.getPrefix(configuration), HAConfiguration.RANGER_HA_SERVICE_HTTPS_PORT, HAConfiguration.getPrefix(configuration), HAConfiguration.RANGER_HA_SERVICE_HTTP_PORT);
 		}
+
 		for (String id : ids) {
 			String hostPort = HAConfiguration.getStringConfig(configuration, HAConfiguration.RANGER_SERVER_HA_ADDRESS_PREFIX + id, null);
 			LOG.info("==> RangerServiceServerIdSelector.selectServerId() id["+id + "] hostPort["+hostPort+"]");
@@ -70,7 +68,7 @@ public class RangerServiceServerIdSelector {
 					LOG.error("Exception while trying to get socket address for {}"+ hostPort, e);
 					continue;
 				}
-				//LOG.info("==> RangerServiceServerIdSelector.selectServerId() socketAddress.isUnresolved["+socketAddress.isUnresolved() + "] socketAddress.getPort["+socketAddress.getPort()+"] isLocalAddress["+NetUtils.isLocalAddress(socketAddress.getAddress())+"]");
+
 				if (!socketAddress.isUnresolved() && NetUtils.isLocalAddress(socketAddress.getAddress())
 						&& appPort == socketAddress.getPort()) {
 					LOG.info("Found matched server id {} with host port: {}",id , hostPort);
