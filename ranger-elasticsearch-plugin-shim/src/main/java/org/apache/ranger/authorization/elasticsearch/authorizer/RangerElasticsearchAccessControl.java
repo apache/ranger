@@ -20,16 +20,15 @@ package org.apache.ranger.authorization.elasticsearch.authorizer;
 import java.util.List;
 
 public interface RangerElasticsearchAccessControl {
-
-	/**
-	 * Check permission for user do action on the elasticsearch index.
-	 *
-	 * @param user The user do the request.
-	 * @param groups The groups of the user.
-	 * @param index The elasticsearch index.
-	 * @param action The operation type.
-	 * @param clientIPAddress The clent IP address.
-	 * @return Check permission result.
-	 */
-	boolean checkPermission(String user, List<String> groups, String index, String action, String clientIPAddress);
+    /**
+     * Check permission for user do action on the elasticsearch index.
+     *
+     * @param user The user do the request.
+     * @param groups The groups of the user.
+     * @param index The elasticsearch index.
+     * @param action The operation type.
+     * @param clientIPAddress The clent IP address.
+     * @return Check permission result.
+     */
+    boolean checkPermission(String user, List<String> groups, String index, String action, String clientIPAddress);
 }

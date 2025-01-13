@@ -133,7 +133,8 @@ function AddUserView() {
 
   return loader ? (
     <Loader />
-  ) : userInfo.userSource == UserTypes.USER_EXTERNAL.value ? (
+  ) : userInfo.userSource == UserTypes.USER_EXTERNAL.value ||
+    userInfo.userSource == UserTypes.USER_FEDERATED.value ? (
     <>
       <div className="header-wraper">
         <h3 className="wrap-header bold">User Detail</h3>

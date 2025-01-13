@@ -19,16 +19,10 @@
 
 package org.apache.ranger.ldapusersync.process;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.security.KeyStore;
-import java.security.SecureRandom;
+import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -37,82 +31,81 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.security.KeyStore;
+import java.security.SecureRandom;
 
-public class CustomSSLSocketFactory extends SSLSocketFactory{
-	private static final Logger LOG = LoggerFactory.getLogger(CustomSSLSocketFactory.class);
-	private SSLSocketFactory sockFactory;
-	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
+public class CustomSSLSocketFactory extends SSLSocketFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(CustomSSLSocketFactory.class);
+
+    private SSLSocketFactory sockFactory;
 
     public CustomSSLSocketFactory() {
-    	SSLContext sslContext = null;
-    	String keyStoreFile =  config.getSSLKeyStorePath();
-    	String keyStoreFilepwd = config.getSSLKeyStorePathPassword();
-    	String trustStoreFile = config.getSSLTrustStorePath();
-    	String trustStoreFilepwd = config.getSSLTrustStorePathPassword();
-    	String keyStoreType = config.getSSLKeyStoreType();
-    	String trustStoreType = config.getSSLTrustStoreType();
-    	try {
+        SSLContext          sslContext;
+        UserGroupSyncConfig config            = UserGroupSyncConfig.getInstance();
+        String              keyStoreFile      = config.getSSLKeyStorePath();
+        String              keyStoreFilepwd   = config.getSSLKeyStorePathPassword();
+        String              trustStoreFile    = config.getSSLTrustStorePath();
+        String              trustStoreFilepwd = config.getSSLTrustStorePathPassword();
+        String              keyStoreType      = config.getSSLKeyStoreType();
+        String              trustStoreType    = config.getSSLTrustStoreType();
 
-			KeyManager[] kmList = null;
-			TrustManager[] tmList = null;
+        try {
+            KeyManager[]   kmList = null;
+            TrustManager[] tmList = null;
 
-			if (keyStoreFile != null && keyStoreFilepwd != null) {
+            if (keyStoreFile != null && keyStoreFilepwd != null) {
+                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
 
-				KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-				InputStream in = null;
-				try {
-					in = getFileInputStream(keyStoreFile);
-					if (in == null) {
-						LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
-						return;
-					}
-					keyStore.load(in, keyStoreFilepwd.toCharArray());
-					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
-					kmList = keyManagerFactory.getKeyManagers();
-				}
-				finally {
-					if (in != null) {
-						in.close();
-					}
-				}
-				
-			}
+                try (InputStream in = getFileInputStream(keyStoreFile)) {
+                    if (in == null) {
+                        LOG.error("Unable to obtain keystore from file [{}]", keyStoreFile);
+                        return;
+                    }
 
-			if (trustStoreFile != null && trustStoreFilepwd != null) {
+                    keyStore.load(in, keyStoreFilepwd.toCharArray());
 
-				KeyStore trustStore = KeyStore.getInstance(trustStoreType);
-				InputStream in = null;
-				try {
-					in = getFileInputStream(trustStoreFile);
-					if (in == null) {
-						LOG.error("Unable to obtain keystore from file [" + trustStoreFile + "]");
-						return;
-					}
-					trustStore.load(in, trustStoreFilepwd.toCharArray());
-					TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-					trustManagerFactory.init(trustStore);
-					tmList = trustManagerFactory.getTrustManagers();
-				}
-				finally {
-					if (in != null) {
-						in.close();
-					}
-				}
-			}
+                    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
-			sslContext = SSLContext.getInstance("TLSv1.2");
+                    keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
 
-			sslContext.init(kmList, tmList, new SecureRandom());
-			sockFactory = sslContext.getSocketFactory();
-			}
-			catch(Throwable t) {
-				throw new RuntimeException("Unable to create SSLConext for communication to policy manager", t);
-			}
+                    kmList = keyManagerFactory.getKeyManagers();
+                }
+            }
+
+            if (trustStoreFile != null && trustStoreFilepwd != null) {
+                KeyStore trustStore = KeyStore.getInstance(trustStoreType);
+
+                try (InputStream in = getFileInputStream(trustStoreFile)) {
+                    if (in == null) {
+                        LOG.error("Unable to obtain truststore from file [{}]", trustStoreFile);
+                        return;
+                    }
+
+                    trustStore.load(in, trustStoreFilepwd.toCharArray());
+
+                    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+
+                    trustManagerFactory.init(trustStore);
+
+                    tmList = trustManagerFactory.getTrustManagers();
+                }
+            }
+
+            sslContext = SSLContext.getInstance("TLSv1.2");
+
+            sslContext.init(kmList, tmList, new SecureRandom());
+
+            sockFactory = sslContext.getSocketFactory();
+        } catch (Throwable t) {
+            throw new RuntimeException("Unable to create SSLConext for communication to policy manager", t);
+        }
     }
 
     public static SSLSocketFactory getDefault() {
@@ -135,12 +128,12 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
     }
 
     @Override
-    public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port) throws IOException {
         return sockFactory.createSocket(host, port);
     }
 
     @Override
-    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException, UnknownHostException {
+    public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
         return sockFactory.createSocket(host, port, localHost, localPort);
     }
 
@@ -155,32 +148,28 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
     }
 
     private InputStream getFileInputStream(String path) throws FileNotFoundException {
+        InputStream ret;
 
-		InputStream ret = null;
+        File f = new File(path);
 
-		File f = new File(path);
+        if (f.exists()) {
+            ret = new FileInputStream(f);
+        } else {
+            ret = PolicyMgrUserGroupBuilder.class.getResourceAsStream(path);
 
-		if (f.exists()) {
-			ret = new FileInputStream(f);
-		} else {
-			ret = PolicyMgrUserGroupBuilder.class.getResourceAsStream(path);
-			
-			if (ret == null) {
-				if (! path.startsWith("/")) {
-					ret = getClass().getResourceAsStream("/" + path);
-				}
-			}
-			
-			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
-				if (ret == null) {
-					if (! path.startsWith("/")) {
-						ret = ClassLoader.getSystemResourceAsStream("/" + path);
-					}
-				}
-			}
-		}
+            if (ret == null && !path.startsWith("/")) {
+                ret = getClass().getResourceAsStream("/" + path);
+            }
 
-		return ret;
-	}
+            if (ret == null) {
+                ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
+
+                if (ret == null && !path.startsWith("/")) {
+                    ret = ClassLoader.getSystemResourceAsStream("/" + path);
+                }
+            }
+        }
+
+        return ret;
+    }
 }

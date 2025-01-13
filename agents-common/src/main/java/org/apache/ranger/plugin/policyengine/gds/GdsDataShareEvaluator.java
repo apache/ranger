@@ -21,67 +21,44 @@ package org.apache.ranger.plugin.policyengine.gds;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
-import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyevaluator.RangerCustomConditionEvaluator;
-import org.apache.ranger.plugin.util.RangerResourceEvaluatorsRetriever;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.DataShareInfo;
-import org.apache.ranger.plugin.util.ServiceGdsInfo.SharedResourceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class GdsDataShareEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDataShareEvaluator.class);
 
     public static final GdsDataShareEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsDataShareEvalOrderComparator();
 
-    private final DataShareInfo                                               dsh;
-    private final String                                                      name;
-    private final String                                                      zoneName;
-    private final RangerConditionEvaluator                                    conditionEvaluator;
-    private final List<GdsSharedResourceEvaluator>                            evaluators;
-    private final Map<String, RangerResourceTrie<GdsSharedResourceEvaluator>> resourceTries;
-    private final List<GdsDshidEvaluator>                                     dsidEvaluators = new ArrayList<>();
+    private final DataShareInfo                   dsh;
+    private final String                          name;
+    private final String                          zoneName;
+    private final RangerConditionEvaluator        conditionEvaluator;
+    private final Set<GdsSharedResourceEvaluator> evaluators      = new TreeSet<>(GdsSharedResourceEvaluator.EVAL_ORDER_COMPARATOR); // keep sorted
+    private final List<GdsDshidEvaluator>         dshidEvaluators = new ArrayList<>();
 
-    public GdsDataShareEvaluator(DataShareInfo dsh, List<SharedResourceInfo> resources, RangerServiceDefHelper serviceDefHelper) {
-        LOG.debug("==> GdsDataShareEvaluator({}, {})", dsh, resources);
+    public GdsDataShareEvaluator(DataShareInfo dsh, RangerServiceDefHelper serviceDefHelper) {
+        LOG.debug("==> GdsDataShareEvaluator({})", dsh);
 
         this.dsh                = dsh;
         this.name               = StringUtils.isBlank(dsh.getName()) ? StringUtils.EMPTY : dsh.getName();
         this.zoneName           = StringUtils.isBlank(dsh.getZoneName()) ? StringUtils.EMPTY : dsh.getZoneName();
         this.conditionEvaluator = RangerCustomConditionEvaluator.getInstance().getExpressionEvaluator(dsh.getConditionExpr(), serviceDefHelper.getServiceDef());
 
-        if (resources != null) {
-            Set<String> resourceKeys = new HashSet<>();
-
-            evaluators    = new ArrayList<>(resources.size());
-            resourceTries = new HashMap<>();
-
-            for (SharedResourceInfo resource : resources) {
-                GdsSharedResourceEvaluator evaluator = new GdsSharedResourceEvaluator(resource, dsh.getDefaultAccessTypes(), serviceDefHelper);
-
-                evaluators.add(evaluator);
-
-                resourceKeys.addAll(evaluator.getResourceKeys());
-            }
-
-            for (String resourceKey : resourceKeys) {
-                RangerResourceDef                              resourceDef  = serviceDefHelper.getResourceDef(resourceKey);
-                RangerResourceTrie<GdsSharedResourceEvaluator> resourceTrie = new RangerResourceTrie<>(resourceDef, evaluators);
-
-                resourceTries.put(resourceKey, resourceTrie);
-            }
-        } else {
-            evaluators    = Collections.emptyList();
-            resourceTries = Collections.emptyMap();
-        }
-
-        LOG.debug("<== GdsDataShareEvaluator({}, {})", dsh, resources);
+        LOG.debug("<== GdsDataShareEvaluator({})", dsh);
     }
 
     public Long getId() {
@@ -96,81 +73,49 @@ public class GdsDataShareEvaluator {
         return zoneName;
     }
 
-    public List<GdsSharedResourceEvaluator> getSharedResourceEvaluators() { return evaluators; }
+    public Set<String> getDefaultAccessTypes() {
+        return dsh.getDefaultAccessTypes();
+    }
 
-    public boolean isInDataset(long datasetId) {
-        boolean ret = false;
+    public Set<GdsSharedResourceEvaluator> getResourceEvaluators() {
+        return evaluators;
+    }
 
-        for (GdsDshidEvaluator dsidEvaluator : dsidEvaluators) {
-            if (dsidEvaluator.getDatasetId().equals(datasetId)) {
-                ret = true;
+    public List<GdsDshidEvaluator> getDshidEvaluators() {
+        return dshidEvaluators;
+    }
 
-                break;
-            }
+    public List<GdsSharedResourceEvaluator> getResourceEvaluators(RangerAccessRequest request) {
+        final List<GdsSharedResourceEvaluator> ret;
+        final boolean                          isAllowed = conditionEvaluator == null || conditionEvaluator.isMatched(request);
+
+        if (isAllowed) {
+            ret = evaluators.stream().filter(e -> e.isAllowed(request)).collect(Collectors.toList());
+        } else {
+            ret = Collections.emptyList();
         }
 
         return ret;
     }
 
-    public boolean isInProject(long projectId) {
-        boolean ret = false;
-
-        for (GdsDshidEvaluator dsidEvaluator : dsidEvaluators) {
-            if (dsidEvaluator.getDatasetEvaluator().isInProject(projectId)) {
-                ret = true;
-
-                break;
-            }
-        }
-
-        return ret;
+    public boolean isInDataset(Long datasetId) {
+        return dshidEvaluators.stream().anyMatch(e -> e.getDatasetId().equals(datasetId) && e.isActive());
     }
 
-    public void evaluate(RangerAccessRequest request, GdsAccessResult result, Set<Long> datasetIds) {
-        LOG.debug("==> GdsDataShareEvaluator.evaluate({}, {})", request, result);
+    public boolean isInProject(Long projectId) {
+        return dshidEvaluators.stream().anyMatch(e -> e.getDatasetEvaluator().isInProject(projectId) && e.isActive());
+    }
 
-        Collection<GdsSharedResourceEvaluator> evaluators = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
+    public void collectDatasets(RangerAccessRequest request, Map<GdsDatasetEvaluator, Set<GdsDataShareEvaluator>> datasetsToEval) {
+        LOG.debug("==> GdsDataShareEvaluator.collectDatasets({}, {})", request, datasetsToEval);
 
-        if (evaluators == null) {
-            evaluators = Collections.emptyList();
-        } else if (evaluators.size() > 1) {
-            List<GdsSharedResourceEvaluator> list = new ArrayList<>(evaluators);
+        boolean isAllowed = conditionEvaluator == null || conditionEvaluator.isMatched(request);
 
-            list.sort(GdsSharedResourceEvaluator.EVAL_ORDER_COMPARATOR);
-
-            evaluators = list;
+        if (isAllowed) {
+            dshidEvaluators.stream().filter(dshid -> dshid.isAllowed(request) && dshid.getDatasetEvaluator().isActive()).forEach(dshid -> datasetsToEval.computeIfAbsent(dshid.getDatasetEvaluator(), s -> new TreeSet<>(GdsDataShareEvaluator.EVAL_ORDER_COMPARATOR)).add(this));
         }
 
-        LOG.debug("GdsDataShareEvaluator.evaluate({}): found {} evaluators", request, evaluators.size());
-
-        if (!evaluators.isEmpty()) {
-            boolean isAllowed = conditionEvaluator == null || conditionEvaluator.isMatched(request);
-
-            if (isAllowed) {
-                // find if any of the shared resources allow the request
-                for (GdsSharedResourceEvaluator evaluator : evaluators) {
-                    isAllowed = evaluator.isAllowed(request);
-
-                    if (isAllowed) {
-                        break;
-                    }
-                }
-
-                if (isAllowed) { // now find dsidEvaluators that allow the request and collect their datasetIds
-                    for (GdsDshidEvaluator dsidEvaluator : dsidEvaluators) {
-                        if (!datasetIds.contains(dsidEvaluator.getDatasetId())) {
-                            if (dsidEvaluator.isAllowed(request)) {
-                                datasetIds.add(dsidEvaluator.getDatasetId());
-                            }
-                        }
-                    }
-                }
-            } else {
-                LOG.debug("GdsDataShareEvaluator.evaluate({}): conditions {} didn't match. Skipped", request, dsh.getConditionExpr());
-            }
-        }
-
-        LOG.debug("<== GdsDataShareEvaluator.evaluate({}, {})", request, result);
+        LOG.debug("<== GdsDataShareEvaluator.collectDatasets({}, {})", request, datasetsToEval);
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls) {
@@ -182,35 +127,19 @@ public class GdsDataShareEvaluator {
             boolean isConditional = conditionEvaluator != null;
 
             for (GdsSharedResourceEvaluator evaluator : evaluators) {
-                evaluator.getResourceACLs(request, acls, isConditional, dsidEvaluators);
+                evaluator.getResourceACLs(request, acls, isConditional, dshidEvaluators);
             }
         }
 
         LOG.debug("<== GdsDataShareEvaluator.getResourceACLs({}, {})", request, acls);
     }
 
-    void addDshidEvaluator(GdsDshidEvaluator dhidEvaluator) {
-        dsidEvaluators.add(dhidEvaluator);
+    void addResourceEvaluator(GdsSharedResourceEvaluator evaluator) {
+        evaluators.add(evaluator);
     }
 
-    private List<GdsSharedResourceEvaluator> getResourceEvaluators(RangerAccessRequest request) {
-        final List<GdsSharedResourceEvaluator> ret;
-
-        Collection<GdsSharedResourceEvaluator> evaluators = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTries, request.getResource().getAsMap(), request.getResourceElementMatchingScopes());
-
-        if (evaluators == null) {
-            ret = Collections.emptyList();
-        } else if (evaluators.size() > 1) {
-            ret = new ArrayList<>(evaluators);
-
-            ret.sort(GdsSharedResourceEvaluator.EVAL_ORDER_COMPARATOR);
-        } else {
-            ret = Collections.singletonList(evaluators.iterator().next());
-        }
-
-        LOG.debug("GdsDataShareEvaluator.getResourceEvaluators({}): found {} evaluators", request, ret.size());
-
-        return ret;
+    void addDshidEvaluator(GdsDshidEvaluator dhidEvaluator) {
+        dshidEvaluators.add(dhidEvaluator);
     }
 
     public static class GdsDataShareEvalOrderComparator implements Comparator<GdsDataShareEvaluator> {

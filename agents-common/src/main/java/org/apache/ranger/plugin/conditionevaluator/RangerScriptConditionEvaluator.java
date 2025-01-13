@@ -29,118 +29,105 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
+
 import java.util.List;
 import java.util.Map;
 
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_OPTION_ENABLE_JSON_CTX;
 
-
 public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvaluator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
 
-	private ScriptEngine scriptEngine;
-	private Boolean      enableJsonCtx = null;
+    private ScriptEngine scriptEngine;
+    private Boolean      enableJsonCtx;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerScriptConditionEvaluator.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerScriptConditionEvaluator.init({})", condition);
 
-		super.init();
+        super.init();
 
-		String              engineName  = "JavaScript";
-		Map<String, String> evalOptions = conditionDef. getEvaluatorOptions();
+        String              engineName  = "JavaScript";
+        Map<String, String> evalOptions = conditionDef.getEvaluatorOptions();
 
-		if (MapUtils.isNotEmpty(evalOptions)) {
-			engineName = evalOptions.get("engineName");
+        if (MapUtils.isNotEmpty(evalOptions)) {
+            engineName = evalOptions.get("engineName");
 
-			String strEnableJsonCtx = evalOptions.get(SCRIPT_OPTION_ENABLE_JSON_CTX);
+            String strEnableJsonCtx = evalOptions.get(SCRIPT_OPTION_ENABLE_JSON_CTX);
 
-			if (StringUtils.isNotEmpty(strEnableJsonCtx)) {
-				enableJsonCtx = Boolean.parseBoolean(strEnableJsonCtx);
-			}
-		}
+            if (StringUtils.isNotEmpty(strEnableJsonCtx)) {
+                enableJsonCtx = Boolean.parseBoolean(strEnableJsonCtx);
+            }
+        }
 
-		if (StringUtils.isBlank(engineName)) {
-			engineName = "JavaScript";
-		}
+        if (StringUtils.isBlank(engineName)) {
+            engineName = "JavaScript";
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerScriptConditionEvaluator.init() - engineName=" + engineName);
-		}
+        LOG.debug("RangerScriptConditionEvaluator.init() - engineName={}", engineName);
 
-		scriptEngine = ScriptEngineUtil.createScriptEngine(serviceDef.getName());
+        scriptEngine = ScriptEngineUtil.createScriptEngine(serviceDef.getName());
 
-		if (scriptEngine == null) {
-			String conditionType = condition != null ? condition.getType() : null;
+        if (scriptEngine == null) {
+            String conditionType = condition != null ? condition.getType() : null;
 
-			LOG.error("failed to initialize condition '" + conditionType + "': script engine '" + engineName + "' was not created");
-		} else {
-			LOG.info("ScriptEngine for engineName=[" + engineName + "] is successfully created");
-		}
+            LOG.error("failed to initialize condition '{}': script engine '{}' was not created", conditionType, engineName);
+        } else {
+            LOG.info("ScriptEngine for engineName=[{}] is successfully created", engineName);
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptConditionEvaluator.init(" + condition + ")");
-		}
-	}
+        LOG.debug("<== RangerScriptConditionEvaluator.init({})", condition);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerScriptConditionEvaluator.isMatched()");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerScriptConditionEvaluator.isMatched()");
 
-		boolean result = true;
+        boolean result = true;
 
-		if (scriptEngine != null) {
-			String script = getScript();
+        if (scriptEngine != null) {
+            String script = getScript();
 
-			if (StringUtils.isNotBlank(script)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
-				}
+            if (StringUtils.isNotBlank(script)) {
+                LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={{}}", script);
 
-				if (enableJsonCtx == null) { // if not specified in evaluatorOptions, set it on first call to isMatched()
-					enableJsonCtx = RangerRequestScriptEvaluator.needsJsonCtxEnabled(script);
-				}
+                if (enableJsonCtx == null) { // if not specified in evaluatorOptions, set it on first call to isMatched()
+                    enableJsonCtx = RangerRequestScriptEvaluator.needsJsonCtxEnabled(script);
+                }
 
-				RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, enableJsonCtx);
+                RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, enableJsonCtx);
 
-				evaluator.evaluateConditionScript(script);
+                evaluator.evaluateConditionScript(script);
 
-				result = evaluator.getResult();
-			} else {
-				String conditionType = condition != null ? condition.getType() : null;
+                result = evaluator.getResult();
+            } else {
+                String conditionType = condition != null ? condition.getType() : null;
 
-				LOG.error("failed to evaluate condition '" + conditionType + "': script is empty");
-			}
-		} else {
-			String conditionType = condition != null ? condition.getType() : null;
+                LOG.error("failed to evaluate condition '{}': script is empty", conditionType);
+            }
+        } else {
+            String conditionType = condition != null ? condition.getType() : null;
 
-			LOG.error("failed to evaluate condition '" + conditionType + "': script engine not found");
-		}
+            LOG.error("failed to evaluate condition '{}': script engine not found", conditionType);
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerScriptConditionEvaluator.isMatched(), result=" + result);
-		}
+        LOG.debug("<== RangerScriptConditionEvaluator.isMatched(), result={}", result);
 
-		return result;
+        return result;
+    }
 
-	}
+    protected String getScript() {
+        String       ret    = null;
+        List<String> values = condition.getValues();
 
-	protected String getScript() {
-		String       ret    = null;
-		List<String> values = condition.getValues();
+        if (CollectionUtils.isNotEmpty(values)) {
+            String value = values.get(0);
 
-		if (CollectionUtils.isNotEmpty(values)) {
-			String value = values.get(0);
+            if (StringUtils.isNotBlank(value)) {
+                ret = value.trim();
+            }
+        }
 
-			if (StringUtils.isNotBlank(value)) {
-				ret = value.trim();
-			}
-		}
-
-		return ret;
-	}
+        return ret;
+    }
 }

@@ -18,66 +18,70 @@
 
 package org.apache.ranger.common;
 
+import org.apache.hadoop.classification.InterfaceStability;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.apache.hadoop.classification.InterfaceStability;
 /**
  * RangerVersionAnnotation.
- *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PACKAGE)
 @InterfaceStability.Unstable
 public @interface RangerVersionAnnotation {
+    /**
+     * Get the Ranger version
+     *
+     * @return the version string "0.6.3-dev"
+     */
+    String version();
 
-  /**
-   * Get the Ranger version
-   * @return the version string "0.6.3-dev"
-   */
-  String version();
+    /**
+     * Get the Ranger short version containing major/minor/change version numbers
+     *
+     * @return the short version string "0.6.3"
+     */
+    String shortVersion();
 
-  /**
-   * Get the Ranger short version containing major/minor/change version numbers
-   * @return the short version string "0.6.3"
-   */
-  String shortVersion();
+    /**
+     * Get the username that compiled Ranger.
+     */
+    String user();
 
-  /**
-   * Get the username that compiled Ranger.
-   */
-  String user();
+    /**
+     * Get the date when Ranger was compiled.
+     *
+     * @return the date in unix 'date' format
+     */
+    String date();
 
-  /**
-   * Get the date when Ranger was compiled.
-   * @return the date in unix 'date' format
-   */
-  String date();
+    /**
+     * Get the url for the subversion repository.
+     */
+    String url();
 
-  /**
-   * Get the url for the subversion repository.
-   */
-  String url();
+    /**
+     * Get the subversion revision.
+     *
+     * @return the revision number as a string (eg. "451451")
+     */
+    String revision();
 
-  /**
-   * Get the subversion revision.
-   * @return the revision number as a string (eg. "451451")
-   */
-  String revision();
+    /**
+     * Get the branch from which this was compiled.
+     *
+     * @return The branch name, e.g. "trunk" or "branches/branch-0.20"
+     */
+    String branch();
 
-  /**
-   * Get the branch from which this was compiled.
-   * @return The branch name, e.g. "trunk" or "branches/branch-0.20"
-   */
-  String branch();
-
-  /**
-   * Get a checksum of the source files from which
-   * Ranger was compiled.
-   * @return a string that uniquely identifies the source
-   **/
-  String srcChecksum();
-
+    /**
+     * Get a checksum of the source files from which
+     * Ranger was compiled.
+     *
+     * @return a string that uniquely identifies the source
+     **/
+    String srcChecksum();
 }

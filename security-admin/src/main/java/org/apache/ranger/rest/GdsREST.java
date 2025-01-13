@@ -20,26 +20,44 @@
 package org.apache.ranger.rest;
 
 import org.apache.commons.collections4.CollectionUtils;
+import java.util.function.Predicate;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.GdsDBStore;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.ServiceUtil;
+import org.apache.ranger.plugin.model.RangerGds;
+import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
+import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
+import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
+import org.apache.ranger.plugin.model.RangerGrant;
+
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
-import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
-import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicyHeader;
+import org.apache.ranger.plugin.model.RangerPrincipal;
+import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.security.context.RangerAPIList;
@@ -63,7 +81,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Path("gds")
 @Component
@@ -72,6 +98,20 @@ import java.util.List;
 public class GdsREST {
     private static final Logger LOG      = LoggerFactory.getLogger(GdsREST.class);
     private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.GdsREST");
+
+    private final RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+    private final int SHARED_RESOURCES_MAX_BATCH_SIZE = config.getInt("ranger.admin.rest.gds.shared.resources.max.batch.size", 100);
+
+    private static final String PRINCIPAL_TYPE_USER = RangerPrincipal.PrincipalType.USER.name().toLowerCase();
+
+    private static final String PRINCIPAL_TYPE_GROUP = RangerPrincipal.PrincipalType.GROUP.name().toLowerCase();
+
+    private static final String PRINCIPAL_TYPE_ROLE = RangerPrincipal.PrincipalType.ROLE.name().toLowerCase();
+
+    private static final String DEFAULT_PRINCIPAL_TYPE = PRINCIPAL_TYPE_USER;
+
+    public static final String GDS_POLICY_EXPR_CONDITION = "expression";
 
     @Autowired
     GdsDBStore gdsStore;
@@ -107,6 +147,9 @@ public class GdsREST {
     ServiceUtil serviceUtil;
 
     @Autowired
+    ServiceDBStore serviceDBStore;
+
+    @Autowired
     AssetMgr assetMgr;
 
 
@@ -138,6 +181,44 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.createDataset({}): {}", dataset, ret);
+
+        return ret;
+    }
+
+    @POST
+    @Path("/dataset/{id}/resources/{serviceName}")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ADD_SHARED_RESOURCES + "\")")
+    public List<RangerSharedResource> addDatasetResources(@PathParam("id") Long datasetId,
+                                                          @PathParam("serviceName") String serviceName,
+                                                          @QueryParam("zoneName") @DefaultValue("") String zoneName,
+                                                          List<RangerSharedResource> resources) {
+        LOG.debug("==> GdsREST.addDatasetResources(datasetId={} serviceName={} zoneNam={} resources={})", datasetId, serviceName, zoneName, resources);
+
+        List<RangerSharedResource> ret  = new ArrayList<>();
+        RangerPerfTracer           perf = null;
+
+        try {
+            Long serviceId   = validateAndGetServiceId(serviceName);
+            Long zoneId      = validateAndGetZoneId(zoneName);
+            Long dataShareId = getOrCreateDataShare(datasetId, serviceId, zoneId, serviceName);
+            // Add resources to DataShare
+            for (RangerSharedResource resource : resources) {
+                resource.setDataShareId(dataShareId);
+                RangerSharedResource rangerSharedResource = addSharedResource(resource);
+                ret.add(rangerSharedResource);
+            }
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("GdsREST.addDatasetResources(datasetId={} serviceName={} zoneName={} resources={}) failed!", datasetId, serviceName, zoneName, resources, excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.addDatasetResources(RangerSharedResources={})", ret);
 
         return ret;
     }
@@ -302,6 +383,9 @@ public class GdsREST {
             }
 
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+
+            searchUtil.extractStringList(request, filter, SearchFilter.DATASET_LABEL, "Dataset Label List", "datasetLabels", null, null);
+            searchUtil.extractStringList(request, filter, SearchFilter.DATASET_KEYWORD, "Dataset Keyword List", "datasetKeywords", null, null);
 
             ret = gdsStore.searchDatasets(filter);
         } catch(WebApplicationException excp) {
@@ -1045,7 +1129,9 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.addSharedResource(" + resource + ")");
             }
 
-            ret = gdsStore.addSharedResource(resource);
+            List<RangerSharedResource> sharedResources = gdsStore.addSharedResources(Arrays.asList(resource));
+
+            ret = CollectionUtils.isNotEmpty(sharedResources) ? sharedResources.get(0) : null;
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -1057,6 +1143,42 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.addSharedResource({}): {}", resource, ret);
+
+        return ret;
+    }
+
+    @POST
+    @Path("/resources")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ADD_SHARED_RESOURCES + "\")")
+    public List<RangerSharedResource> addSharedResources(List<RangerSharedResource> resources) {
+        LOG.debug("==> GdsREST.addSharedResources({})", resources);
+
+        List<RangerSharedResource> ret;
+        RangerPerfTracer           perf = null;
+
+        try {
+            if (resources.size() > SHARED_RESOURCES_MAX_BATCH_SIZE) {
+                throw new Exception("addSharedResources batch size exceeded the configured limit: Maximum allowed is " + SHARED_RESOURCES_MAX_BATCH_SIZE);
+            }
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.addSharedResources(" + resources + ")");
+            }
+
+            ret = gdsStore.addSharedResources(resources);
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("addSharedResources({}) failed", resources, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.addSharedResources({}): {}", resources, ret);
 
         return ret;
     }
@@ -1109,7 +1231,7 @@ public class GdsREST {
                 perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.removeSharedResource(" + resourceId + ")");
             }
 
-            gdsStore.removeSharedResource(resourceId);
+            gdsStore.removeSharedResources(Arrays.asList(resourceId));
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -1121,6 +1243,37 @@ public class GdsREST {
         }
 
         LOG.debug("<== GdsREST.removeSharedResource({})", resourceId);
+    }
+
+    @DELETE
+    @Path("/resources")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.REMOVE_SHARED_RESOURCES + "\")")
+    public void removeSharedResources(List<Long> resourceIds) {
+        LOG.debug("==> GdsREST.removeSharedResources({})", resourceIds);
+
+        RangerPerfTracer perf = null;
+
+        try {
+            if (resourceIds.size() > SHARED_RESOURCES_MAX_BATCH_SIZE) {
+                throw new Exception("removeSharedResources batch size exceeded the configured limit: Maximum allowed is " + SHARED_RESOURCES_MAX_BATCH_SIZE);
+            }
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.removeSharedResources(" + resourceIds + ")");
+            }
+
+            gdsStore.removeSharedResources(resourceIds);
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("removeSharedResources({}) failed", resourceIds, excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.removeSharedResources({})", resourceIds);
     }
 
     @GET
@@ -1637,5 +1790,438 @@ public class GdsREST {
         LOG.debug("<== GdsREST.getSecureServiceGdsInfoIfUpdated(serviceName={}, lastKnownVersion={}, lastActivationTime={}, pluginId={}, clusterName={}, pluginCapabilities{}): ret={}", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, pluginCapabilities, ret);
 
         return ret;
+    }
+
+    private Long getOrCreateDataShare(Long datasetId, Long serviceId, Long zoneId, String serviceName) throws Exception {
+        LOG.debug("==> GdsREST.getOrCreateDataShare(dataSetId={} serviceId={} zoneId={} seviceName={})", datasetId);
+
+        Long ret;
+        RangerDataShare rangerDataShare;
+        RangerDataset   rangerDataset = gdsStore.getDataset(datasetId);
+        String          dataShareName = "__dataset_" + datasetId + "__service_" + serviceId + "__zone_" + zoneId;
+
+        SearchFilter filter = new SearchFilter();
+        filter.setParam(SearchFilter.DATA_SHARE_NAME, dataShareName);
+        PList<RangerDataShare> dataSharePList = gdsStore.searchDataShares(filter);
+        List<RangerDataShare> dataShareList = dataSharePList.getList();
+
+        if (CollectionUtils.isNotEmpty(dataShareList)) {
+            List<RangerDataShare> rangerDataShares = dataSharePList.getList();
+            rangerDataShare = rangerDataShares.get(0);
+            ret = rangerDataShare.getId();
+        } else {
+            //Create a DataShare
+            RangerDataShare dataShare = new RangerDataShare();
+            dataShare.setName(dataShareName);
+            dataShare.setDescription(dataShareName);
+            dataShare.setTermsOfUse(rangerDataset.getTermsOfUse());
+            dataShare.setService(serviceName);
+            Set<String> accessTypes = new HashSet<>(CollectionUtils.EMPTY_COLLECTION);
+            dataShare.setDefaultAccessTypes(accessTypes);
+            rangerDataShare = gdsStore.createDataShare(dataShare);
+
+            //Add DataShare to DataSet
+            List<RangerDataShareInDataset> rangerDataShareInDatasets = new ArrayList<>();
+            RangerDataShareInDataset rangerDataShareInDataset = new RangerDataShareInDataset();
+            rangerDataShareInDataset.setDataShareId(rangerDataShare.getId());
+            rangerDataShareInDataset.setDatasetId(rangerDataset.getId());
+            rangerDataShareInDataset.setStatus(RangerGds.GdsShareStatus.REQUESTED);
+            rangerDataShareInDatasets.add(rangerDataShareInDataset);
+            addDataSharesInDataset(rangerDataset.getId(), rangerDataShareInDatasets);
+            ret = rangerDataShare.getId();
+        }
+
+        LOG.debug("<== GdsREST.getOrCreateDataShare(RangerDataShare={})", ret);
+
+        return ret;
+    }
+
+    private Long validateAndGetServiceId(String serviceName){
+        Long ret;
+        if (serviceName == null || serviceName.isEmpty()) {
+            LOG.error("ServiceName not provided");
+            throw restErrorUtil.createRESTException("ServiceName not provided.",
+                    MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        RangerService service;
+
+        try {
+            service = serviceDBStore.getServiceByName(serviceName);
+            ret = service.getId();
+        } catch (Exception e) {
+            LOG.error("Requested Service not found. serviceName=" + serviceName);
+            throw restErrorUtil.createRESTException("Service:" + serviceName + " not found",
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        if(service == null){
+            LOG.error("Requested Service not found. serviceName=" + serviceName);
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
+                    false);
+        }
+
+        if(!service.getIsEnabled()){
+            LOG.error("Requested Service is disabled. serviceName=" + serviceName);
+            throw restErrorUtil.createRESTException("Unauthorized access.",
+                    MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+        }
+
+        return ret;
+    }
+
+    private Long validateAndGetZoneId(String zoneName){
+        Long ret = RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID;
+
+        if (zoneName == null || zoneName.isEmpty()) {
+            return ret;
+        }
+
+        RangerSecurityZone rangerSecurityZone = null;
+
+        try {
+            rangerSecurityZone = serviceDBStore.getSecurityZone(zoneName);
+            ret = rangerSecurityZone.getId();
+        } catch (Exception e) {
+            LOG.error("Requested Zone not found. ZoneName=" + zoneName);
+            throw restErrorUtil.createRESTException("Zone:" + zoneName + " not found",
+                    MessageEnums.DATA_NOT_FOUND);
+        }
+
+        if(rangerSecurityZone == null){
+            LOG.error("Requested Zone not found. ZoneName=" + zoneName);
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(zoneName),
+                    false);
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path("/dataset/{id}/grants")
+    @Produces({"application/json"})
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATASET_GRANTS + "\")")
+    public List<RangerGrant> getDataSetGrants(@PathParam("id") Long id, @Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getDataSetGrants(dataSetId: {})", id);
+
+        RangerPerfTracer  perf = null;
+        List<RangerGrant> ret  = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDataSetGrants( DataSetId: " + id + ")");
+            }
+
+            List<RangerPolicy> policies = gdsStore.getDatasetPolicies(id);
+
+            if (CollectionUtils.isNotEmpty(policies)) {
+                List<RangerPolicyItem> filteredPolicyItems = filterPolicyItemsByRequest(policies.get(0), request);
+
+                if (CollectionUtils.isNotEmpty(filteredPolicyItems)) {
+                    ret = transformPolicyItemsToGrants(filteredPolicyItems);
+                }  else {
+                    LOG.debug("getDataSetGrants(): no grants available in dataset(id={}), policy(id={}) for query {}", id, policies.get(0).getId(), request.getQueryString());
+                }
+            } else {
+                LOG.debug("getDataSetGrants(): no policy found for dataset(id={})", id);
+            }
+
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getDataSetGrants (dataSetId: {}) failed!..error: {}", id, excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.getDataSetGrants(dataSetId: {}): ret= {}", id, ret);
+
+        return ret != null ? ret : Collections.emptyList();
+    }
+
+    @PUT
+    @Path("/dataset/{id}/grant")
+    @Consumes({"application/json"})
+    @Produces({"application/json"})
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_DATASET_GRANTS + "\")")
+    public RangerPolicyHeader updateDataSetGrants(@PathParam("id") Long id, List<RangerGrant> rangerGrants) {
+        LOG.debug("==> GdsREST.updateDataSetGrants(dataSetId: {}, rangerGrants: {})", id, rangerGrants);
+
+        RangerPerfTracer   perf = null;
+        RangerPolicyHeader ret  = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.updateDataSetGrants( DataSetId: " + id +  "rangerGrants: " + rangerGrants + ")");
+            }
+
+            List<RangerPolicy> policies = gdsStore.getDatasetPolicies(id);
+            RangerPolicy policy = CollectionUtils.isNotEmpty(policies) ? policies.get(0) : gdsStore.addDatasetPolicy(id, new RangerPolicy());
+            RangerPolicy policyWithModifiedGrants = updatePolicyWithModifiedGrants(policy, rangerGrants);
+
+            if (policyWithModifiedGrants != null) {
+                RangerPolicy updatedPolicy = gdsStore.updateDatasetPolicy(id, policyWithModifiedGrants);
+                ret = rangerPolicyHeaderOf(updatedPolicy);
+            } else {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_MODIFIED, "No action performed: The grant may already exist or may not be found for deletion.", false);
+            }
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("updateDataSetGrants (dataSetId: {}, rangerGrants: {}) failed!..error: {}", id, rangerGrants, excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.updateDataSetGrants(dataSetId: {}, rangerGrants: {}): ret= {}", id, rangerGrants, ret);
+
+        return ret;
+    }
+
+    @VisibleForTesting
+    List<RangerPolicyItem> filterPolicyItemsByRequest(RangerPolicy rangerPolicy, HttpServletRequest request) {
+        LOG.debug("==> GdsREST.filterPolicyItemsByRequest(rangerPolicy: {})", rangerPolicy);
+
+        if (rangerPolicy == null || CollectionUtils.isEmpty(rangerPolicy.getPolicyItems())) {
+            return Collections.emptyList();
+        }
+
+        List<RangerPolicyItem> policyItems = rangerPolicy.getPolicyItems();
+        String[] filteringPrincipals  = searchUtil.getParamMultiValues(request, "principal");
+        String[] filteringAccessTypes = searchUtil.getParamMultiValues(request, "accessType");
+
+        Predicate<RangerPolicyItem> byPrincipalPredicate = filterByPrincipalsPredicate(filteringPrincipals);
+        Predicate<RangerPolicyItem> byAccessTypePredicate = filterByAccessTypesPredicate(filteringAccessTypes);
+
+        List<RangerPolicyItem> filteredPolicyItems = policyItems.stream()
+                .filter(byPrincipalPredicate.and(byAccessTypePredicate))
+                .collect(Collectors.toList());
+
+        LOG.debug("<== GdsREST.filterPolicyItemsByRequest(rangerPolicy: {}): filteredPolicyItems= {}", rangerPolicy, filteredPolicyItems);
+
+        return filteredPolicyItems;
+    }
+
+     @VisibleForTesting
+     List<RangerGrant> transformPolicyItemsToGrants(List<RangerPolicyItem> policyItems) {
+        LOG.debug("==> GdsREST.transformPolicyItemsToGrants(policyItems: {})", policyItems);
+        if (CollectionUtils.isEmpty(policyItems)) {
+            return null;
+        }
+
+        List<RangerGrant>   ret         = new ArrayList<>();
+
+        for (RangerPolicyItem policyItem : policyItems) {
+            List<String> policyItemUsers  = policyItem.getUsers();
+            List<String> policyItemGroups = policyItem.getGroups();
+            List<String> policyItemRoles  = policyItem.getRoles();
+
+            List<RangerPolicyItemAccess>    policyItemAccesses   = policyItem.getAccesses();
+            List<RangerPolicyItemCondition> policyItemConditions = policyItem.getConditions();
+
+            List<String> policyItemAccessTypes     = policyItemAccesses.stream().map(x -> x.getType()).collect(Collectors.toList());
+            List<String> policyItemConditionValues = policyItemConditions.stream().flatMap(x -> x.getValues().stream()).collect(Collectors.toList());
+
+            if (CollectionUtils.isNotEmpty(policyItemUsers)) {
+                policyItemUsers.stream().forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, x), policyItemAccessTypes, policyItemConditionValues)));
+            }
+
+            if (CollectionUtils.isNotEmpty(policyItemGroups)) {
+                policyItemGroups.stream().forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, x), policyItemAccessTypes, policyItemConditionValues)));
+            }
+
+            if (CollectionUtils.isNotEmpty(policyItemRoles)) {
+                policyItemRoles.stream().forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.ROLE, x), policyItemAccessTypes, policyItemConditionValues)));
+            }
+        }
+
+        LOG.debug("<== GdsREST.transformPolicyItemsToGrants(policyItems: {}): ret= {}", policyItems, ret);
+
+        return ret;
+    }
+
+    private RangerPolicyHeader rangerPolicyHeaderOf(RangerPolicy rangerPolicy) {
+        LOG.debug("==> GdsREST.rangerPolicyHeaderOf(rangerPolicy: {})", rangerPolicy);
+
+        RangerPolicyHeader ret = null;
+        if (rangerPolicy != null) {
+            ret = new RangerPolicyHeader(rangerPolicy);
+        }
+
+        LOG.debug("<== GdsREST.rangerPolicyHeaderOf(rangerPolicy: {}): ret= {}", rangerPolicy, ret);
+        return ret;
+    }
+
+     @VisibleForTesting
+     RangerPolicy updatePolicyWithModifiedGrants(RangerPolicy policy, List<RangerGrant> rangerGrants) {
+        LOG.debug("==> GdsREST.updatePolicyWithModifiedGrants(policy: {}, rangerGrants: {})", policy, rangerGrants);
+        try {
+            List<RangerPolicyItem> policyItems = policy.getPolicyItems();
+            List<RangerPolicyItem> policyItemsToUpdate = policyItems.stream().map(this::copyOf).collect(Collectors.toList());
+
+            Set<RangerPrincipal> principalsToUpdate = rangerGrants.stream().map(RangerGrant::getPrincipal).collect(Collectors.toSet());
+
+            for (RangerPrincipal principal : principalsToUpdate) {
+                List<RangerPolicyItem> policyItemsToRemove = new ArrayList<>();
+                policyItemsToUpdate.stream()
+                        .filter(matchesPrincipalPredicate(principal))
+                        .forEach(policyItem -> {
+                            removeMatchingPrincipalFromPolicyItem(policyItem, principal);
+                            if (isPolicyItemEmpty(policyItem)) {
+                                policyItemsToRemove.add(policyItem);
+                            }
+
+                        });
+                policyItemsToUpdate.removeAll(policyItemsToRemove);
+            }
+
+            for (RangerGrant grant : rangerGrants) {
+                if (hasAccessTypes(grant)) {
+                    policyItemsToUpdate.add(transformGrantToPolicyItem(grant));
+                }
+            }
+
+            if (CollectionUtils.isEqualCollection(policyItems, policyItemsToUpdate)) {
+                // Skip DataSet update if no policy changes detected, avoiding unnecessary updates.
+                policy = null;
+            } else {
+                policy.setPolicyItems(policyItemsToUpdate);
+            }
+        } catch (Exception e) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, e.getMessage(), true);
+        }
+        LOG.debug("<== GdsREST.updatePolicyWithModifiedGrants(updatedPolicy: {})", policy);
+        return policy;
+    }
+
+    private boolean isPolicyItemEmpty(RangerPolicyItem policyItem) {
+        return CollectionUtils.isEmpty(policyItem.getUsers()) &&
+                CollectionUtils.isEmpty(policyItem.getGroups()) &&
+                CollectionUtils.isEmpty(policyItem.getRoles());
+    }
+
+    private void removeMatchingPrincipalFromPolicyItem(RangerPolicyItem policyItem, RangerPrincipal principal) {
+        String principalName = principal.getName();
+        PrincipalType principalType = principal.getType();
+
+        if (principalType == PrincipalType.USER && policyItem.getUsers() != null) {
+            policyItem.getUsers().remove(principalName);
+        } else if (principalType == PrincipalType.GROUP && policyItem.getGroups() != null) {
+            policyItem.getGroups().remove(principalName);
+        } else if (principalType == PrincipalType.ROLE && policyItem.getRoles() != null) {
+            policyItem.getRoles().remove(principalName);
+        }
+    }
+
+    private RangerPolicyItem transformGrantToPolicyItem(RangerGrant grant) {
+        LOG.debug("==> GdsREST.transformGrantToPolicyItem(grant: {})", grant);
+
+        if (grant == null) {
+            return null;
+        }
+
+        RangerPolicyItem policyItem = new RangerPolicyItem();
+
+        List<String> permissions = grant.getAccessTypes();
+        if (CollectionUtils.isNotEmpty(permissions)) {
+            policyItem.setAccesses(permissions.stream()
+                    .map(accessType -> new RangerPolicyItemAccess(accessType, true))
+                    .collect(Collectors.toList()));
+        }
+
+        List<String> conditions = grant.getConditions();
+        if (CollectionUtils.isNotEmpty(conditions)) {
+            policyItem.setConditions(conditions.stream()
+                    .map(condition -> new RangerPolicyItemCondition(GDS_POLICY_EXPR_CONDITION, Collections.singletonList(condition)))
+                    .collect(Collectors.toList()));
+        }
+
+        switch (grant.getPrincipal().getType()) {
+            case USER:
+                policyItem.setUsers(Collections.singletonList(grant.getPrincipal().getName()));
+                break;
+            case GROUP:
+                policyItem.setGroups(Collections.singletonList(grant.getPrincipal().getName()));
+                break;
+            case ROLE:
+                policyItem.setRoles(Collections.singletonList(grant.getPrincipal().getName()));
+                break;
+        }
+
+        LOG.debug("<== GdsREST.transformGrantToPolicyItem(grant: {}): policyItem= {}", grant, policyItem);
+
+        return policyItem;
+    }
+
+    private Predicate<RangerPolicyItem> matchesPrincipalPredicate(RangerPrincipal principal) {
+        String principalName = principal.getName();
+        PrincipalType principalType = principal.getType();
+
+        return policyItem -> {
+            switch (principalType) {
+                case USER:
+                    return policyItem.getUsers().contains(principalName);
+                case GROUP:
+                    return policyItem.getGroups().contains(principalName);
+                case ROLE:
+                    return policyItem.getRoles().contains(principalName);
+            }
+            return false;
+        };
+    }
+
+    private boolean hasAccessTypes(RangerGrant grant) {
+        return grant.getAccessTypes() != null && !grant.getAccessTypes().isEmpty();
+    }
+
+    private Predicate<RangerPolicyItem> filterByPrincipalsPredicate(String[] filteringPrincipals) {
+        if (ArrayUtils.isEmpty(filteringPrincipals)) {
+            return policyItem -> true; // No filtering by principal if no principals specified
+        }
+
+        Map<String, Set<String>> principalCriteriaMap = new HashMap<>();
+        for (String principal : filteringPrincipals) {
+            String[] parts = principal.split(":");
+            String principalType = parts.length > 1 ? parts[0] : DEFAULT_PRINCIPAL_TYPE;
+            String principalName = parts.length > 1 ? parts[1] : parts[0];
+
+            principalCriteriaMap
+                    .computeIfAbsent(principalType.toLowerCase(), k -> new HashSet<>())
+                    .add(principalName);
+        }
+
+        return policyItem -> {
+            Set<String> users = principalCriteriaMap.getOrDefault(PRINCIPAL_TYPE_USER, Collections.emptySet());
+            Set<String> groups = principalCriteriaMap.getOrDefault(PRINCIPAL_TYPE_GROUP, Collections.emptySet());
+            Set<String> roles = principalCriteriaMap.getOrDefault(PRINCIPAL_TYPE_ROLE, Collections.emptySet());
+
+            return (policyItem.getUsers() != null && policyItem.getUsers().stream().anyMatch(users::contains)) ||
+                    (policyItem.getGroups() != null && policyItem.getGroups().stream().anyMatch(groups::contains)) ||
+                    (policyItem.getRoles() != null && policyItem.getRoles().stream().anyMatch(roles::contains));
+        };
+    }
+
+    private Predicate<RangerPolicyItem> filterByAccessTypesPredicate(String[] filteringAccessTypes) {
+        if (ArrayUtils.isEmpty(filteringAccessTypes)) {
+            return policyItem -> true; // No filtering by access type if no access types specified
+        }
+
+        Set<String> accessTypeSet = new HashSet<>(Arrays.asList(filteringAccessTypes));
+        return policyItem -> policyItem.getAccesses().stream()
+                .anyMatch(access -> accessTypeSet.contains(access.getType()));
+    }
+
+    private RangerPolicyItem copyOf(RangerPolicyItem policyItem) {
+        RangerPolicyItem copy = new RangerPolicyItem();
+        copy.setAccesses(new ArrayList<>(policyItem.getAccesses()));
+        copy.setUsers(new ArrayList<>(policyItem.getUsers()));
+        copy.setGroups(new ArrayList<>(policyItem.getGroups()));
+        copy.setRoles(new ArrayList<>(policyItem.getRoles()));
+        copy.setConditions(new ArrayList<>(policyItem.getConditions()));
+        copy.setDelegateAdmin(new Boolean(policyItem.getDelegateAdmin()));
+
+        return copy;
     }
 }

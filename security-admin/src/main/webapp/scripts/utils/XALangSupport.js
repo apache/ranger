@@ -81,63 +81,6 @@ define(['require','modules/Vent','globalize','modules/globalize/message/en'],fun
     localization.getDaysOfWeek = function(label){
 		return Globalize.culture().calendars.standard.days.namesAbbr;
     }
-
-    localization.chooseCulture = function(culture){
-		var dfd = $.Deferred();
-		dfd.done(function(validationMessages){
-			require([ 'validationEngine'],function(){
-				setCulture(culture);
-				validationMessages.setupMessages();
-				vent.trigger('Layouts:rerender');
-			});
-		});
-        switch(culture){
-            case "pt-BR" : 
-                 require(['gblMessages/message/pt-BR'], function() {
-					 require([ 'validationEngineEn' ],function(validationMessages){
-						 dfd.resolve(validationMessages);
-						 console.log('Language Changed to pt-BR');
-					 });
-					 $.fn.datepicker.dates['pt-BR'] = {
-								days: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"],
-								daysShort: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"],
-								daysMin: ["Do", "Se", "Te", "Qu", "Qu", "Se", "Sa", "Do"],
-								months: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
-								monthsShort: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
-								today: "Hoje",
-								clear: "Limpar"
-					};
-					bootbox.setLocale('pt-BR'); 
-                });
-                break;
-			case "es" : 
-                 require(['gblMessages/message/es'], function() {
-					 require([ 'validationEngineEn' ],function(validationMessages){
-						 dfd.resolve(validationMessages);
-						 console.log('Language Changed to es');
-					 });
-					 $.fn.datepicker.dates['es'] = {
-								days: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"],
-								daysShort: ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-								daysMin: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"],
-								months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-								monthsShort: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-								today: "Hoy"
-					};
-					bootbox.setLocale('es'); 
-                });
-                break;
-            default : 
-                 require(['gblMessages/message/en'], function() {
-					 require([ 'validationEngineEn' ],function(validationMessages){
-						 dfd.resolve(validationMessages);
-						 console.log('Language Changed to en');
-					 });
-					 bootbox.setLocale('en');
-                });
-                break;
-        }
-    }
     
     localization.formatDate = function(val,format){
     	if(!val) return "";

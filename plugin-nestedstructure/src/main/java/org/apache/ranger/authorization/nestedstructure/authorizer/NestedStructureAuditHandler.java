@@ -30,10 +30,9 @@ import java.util.Collection;
 import java.util.List;
 
 public class NestedStructureAuditHandler extends RangerDefaultAuditHandler {
-    public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
-
-    List<AuthzAuditEvent> auditEvents  = null;
-    boolean               deniedExists = false;
+    public static final String ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
+    List<AuthzAuditEvent> auditEvents;
+    boolean               deniedExists;
 
     public NestedStructureAuditHandler(Configuration config) {
         super(config);

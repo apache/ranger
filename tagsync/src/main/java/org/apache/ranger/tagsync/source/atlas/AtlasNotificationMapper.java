@@ -38,14 +38,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AtlasNotificationMapper {
-    private static final    int                 REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
+public final class AtlasNotificationMapper {
+    private static final Logger            LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
 
-    private static final    Logger              LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
-    private static          Map<String, Long>   unhandledEventTypes = new HashMap<>();
+    private AtlasNotificationMapper() {}
+
+    private static final int REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
+
+    private static final Map<String, Long> unhandledEventTypes = new HashMap<>();
 
     public static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
-
         boolean skipLogging = entityNotification.getIsEntityCreateOp() && entityNotification.getIsEmptyClassifications();
 
         if (!skipLogging) {
@@ -54,7 +56,7 @@ public class AtlasNotificationMapper {
             String entityTypeName = entityNotification.getEntityTypeName();
 
             if (entityTypeName != null) {
-                Long timeInMillis = unhandledEventTypes.get(entityTypeName);
+                Long timeInMillis        = unhandledEventTypes.get(entityTypeName);
                 long currentTimeInMillis = System.currentTimeMillis();
                 if (timeInMillis == null ||
                         (currentTimeInMillis - timeInMillis) >= REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS) {
@@ -67,11 +69,11 @@ public class AtlasNotificationMapper {
 
             if (loggingNeeded) {
                 if (!entityNotification.getIsEntityTypeHandled()) {
-                    LOG.warn("Tag-sync is not enabled to handle notifications for Entity-type:[" + entityNotification.getEntityTypeName() + "]");
+                    LOG.warn("Tag-sync is not enabled to handle notifications for Entity-type:[{}]", entityNotification.getEntityTypeName());
                 }
-                LOG.warn("Dropped process entity notification for Atlas-Entity [" + entityNotification.getRangerAtlasEntity() + "]");
-            }
 
+                LOG.debug("Dropped process entity notification for Atlas-Entity [{}]", entityNotification.getRangerAtlasEntity());
+            }
         }
     }
 
@@ -97,17 +99,13 @@ public class AtlasNotificationMapper {
                 case ENTITY_CREATE:
                     ret = entityNotification.getIsEntityActive() && !entityNotification.getIsEmptyClassifications();
                     if (!ret) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("ENTITY_CREATE notification is ignored, as there are no traits associated with the entity. Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
-                        }
+                        LOG.debug("ENTITY_CREATE notification is ignored, as there are no traits associated with the entity. Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
                     }
                     break;
                 case ENTITY_UPDATE:
                     ret = entityNotification.getIsEntityActive() && !entityNotification.getIsEmptyClassifications();
                     if (!ret) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("ENTITY_UPDATE notification is ignored, as there are no traits associated with the entity.");
-                        }
+                        LOG.debug("ENTITY_UPDATE notification is ignored, as there are no traits associated with the entity.");
                     }
                     break;
                 case ENTITY_DELETE:
@@ -120,24 +118,21 @@ public class AtlasNotificationMapper {
                     break;
                 }
                 default:
-                    LOG.error(opType + ": unknown notification received - not handled");
+                    LOG.error("{}: unknown notification received - not handled", opType);
                     break;
             }
             if (ret) {
                 ret = entityNotification.getIsEntityTypeHandled();
             }
             if (!ret) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Notification : [" + entityNotification + "] will NOT be processed.");
-                }
+                LOG.debug("Notification : [{}] will NOT be processed.", entityNotification);
             }
         }
 
         return ret;
     }
 
-    static private Map<String, ServiceTags> buildServiceTags(List<RangerAtlasEntityWithTags> entitiesWithTags) {
-
+    private static Map<String, ServiceTags> buildServiceTags(List<RangerAtlasEntityWithTags> entitiesWithTags) {
         Map<String, ServiceTags> ret = new HashMap<>();
 
         for (RangerAtlasEntityWithTags element : entitiesWithTags) {
@@ -145,16 +140,14 @@ public class AtlasNotificationMapper {
             if (entity != null) {
                 buildServiceTags(element, ret);
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Ignoring entity because its State is not ACTIVE: " + element);
-                }
+                LOG.debug("Ignoring entity because its State is not ACTIVE: {}", element);
             }
         }
 
         // Remove duplicate tag definitions
-        if(CollectionUtils.isNotEmpty(ret.values())) {
+        if (CollectionUtils.isNotEmpty(ret.values())) {
             for (ServiceTags serviceTag : ret.values()) {
-                if(MapUtils.isNotEmpty(serviceTag.getTagDefinitions())) {
+                if (MapUtils.isNotEmpty(serviceTag.getTagDefinitions())) {
                     Map<String, RangerTagDef> uniqueTagDefs = new HashMap<>();
 
                     for (RangerTagDef tagDef : serviceTag.getTagDefinitions().values()) {
@@ -163,20 +156,20 @@ public class AtlasNotificationMapper {
                         if (existingTagDef == null) {
                             uniqueTagDefs.put(tagDef.getName(), tagDef);
                         } else {
-                            if(CollectionUtils.isNotEmpty(tagDef.getAttributeDefs())) {
-                                for(RangerTagAttributeDef tagAttrDef : tagDef.getAttributeDefs()) {
+                            if (CollectionUtils.isNotEmpty(tagDef.getAttributeDefs())) {
+                                for (RangerTagAttributeDef tagAttrDef : tagDef.getAttributeDefs()) {
                                     boolean attrDefExists = false;
 
-                                    if(CollectionUtils.isNotEmpty(existingTagDef.getAttributeDefs())) {
-                                        for(RangerTagAttributeDef existingTagAttrDef : existingTagDef.getAttributeDefs()) {
-                                            if(StringUtils.equalsIgnoreCase(existingTagAttrDef.getName(), tagAttrDef.getName())) {
+                                    if (CollectionUtils.isNotEmpty(existingTagDef.getAttributeDefs())) {
+                                        for (RangerTagAttributeDef existingTagAttrDef : existingTagDef.getAttributeDefs()) {
+                                            if (StringUtils.equalsIgnoreCase(existingTagAttrDef.getName(), tagAttrDef.getName())) {
                                                 attrDefExists = true;
                                                 break;
                                             }
                                         }
                                     }
 
-                                    if(! attrDefExists) {
+                                    if (!attrDefExists) {
                                         existingTagDef.getAttributeDefs().add(tagAttrDef);
                                     }
                                 }
@@ -185,7 +178,7 @@ public class AtlasNotificationMapper {
                     }
 
                     serviceTag.getTagDefinitions().clear();
-                    for(RangerTagDef tagDef : uniqueTagDefs.values()) {
+                    for (RangerTagDef tagDef : uniqueTagDefs.values()) {
                         serviceTag.getTagDefinitions().put(tagDef.getId(), tagDef);
                     }
                 }
@@ -201,15 +194,14 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private ServiceTags buildServiceTags(RangerAtlasEntityWithTags entityWithTags, Map<String, ServiceTags> serviceTagsMap) {
-        ServiceTags             ret             = null;
-        RangerAtlasEntity       entity          = entityWithTags.getEntity();
-        RangerServiceResource  serviceResource  = AtlasResourceMapperUtil.getRangerServiceResource(entity);
+    private static ServiceTags buildServiceTags(RangerAtlasEntityWithTags entityWithTags, Map<String, ServiceTags> serviceTagsMap) {
+        ServiceTags           ret             = null;
+        RangerAtlasEntity     entity          = entityWithTags.getEntity();
+        RangerServiceResource serviceResource = AtlasResourceMapperUtil.getRangerServiceResource(entity);
 
         if (serviceResource != null) {
-
-            List<RangerTag>    tags = getTags(entityWithTags);
-            List<RangerTagDef> tagDefs = getTagDefs(entityWithTags);
+            List<RangerTag>    tags        = getTags(entityWithTags);
+            List<RangerTagDef> tagDefs     = getTagDefs(entityWithTags);
             String             serviceName = serviceResource.getServiceName();
 
             ret = createOrGetServiceTags(serviceTagsMap, serviceName);
@@ -227,9 +219,7 @@ public class AtlasNotificationMapper {
                     tagIds.add(tag.getId());
                 }
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Entity " + entityWithTags + " does not have any tags associated with it");
-                }
+                LOG.debug("Entity {} does not have any tags associated with it", entityWithTags);
             }
 
             ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
@@ -241,13 +231,13 @@ public class AtlasNotificationMapper {
                 }
             }
         } else {
-            LOG.error("Failed to build serviceResource for entity:" + entity.getGuid());
+            LOG.error("Failed to build serviceResource for entity:{}", entity.getGuid());
         }
 
         return ret;
     }
 
-    static private ServiceTags createOrGetServiceTags(Map<String, ServiceTags> serviceTagsMap, String serviceName) {
+    private static ServiceTags createOrGetServiceTags(Map<String, ServiceTags> serviceTagsMap, String serviceName) {
         ServiceTags ret = serviceTagsMap == null ? null : serviceTagsMap.get(serviceName);
 
         if (ret == null) {
@@ -264,7 +254,7 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private List<RangerTag> getTags(RangerAtlasEntityWithTags entityWithTags) {
+    private static List<RangerTag> getTags(RangerAtlasEntityWithTags entityWithTags) {
         List<RangerTag> ret = new ArrayList<>();
 
         if (entityWithTags != null && CollectionUtils.isNotEmpty(entityWithTags.getTags())) {
@@ -285,15 +275,13 @@ public class AtlasNotificationMapper {
         return ret;
     }
 
-    static private List<RangerTagDef> getTagDefs(RangerAtlasEntityWithTags entityWithTags) {
+    private static List<RangerTagDef> getTagDefs(RangerAtlasEntityWithTags entityWithTags) {
         List<RangerTagDef> ret = new ArrayList<>();
 
         if (entityWithTags != null && CollectionUtils.isNotEmpty(entityWithTags.getTags())) {
-
             Map<String, String> tagNames = new HashMap<>();
 
             for (EntityNotificationWrapper.RangerAtlasClassification tag : entityWithTags.getTags()) {
-
                 if (!tagNames.containsKey(tag.getName())) {
                     tagNames.put(tag.getName(), tag.getName());
 

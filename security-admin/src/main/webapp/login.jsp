@@ -82,7 +82,7 @@
                     <span id="errorBox" class="help-inline" style="color:white;display:none;"><span class="errorMsg"></span>
                         <i class="fa fa-exclamation-triangle" style="color:#ae2817;"></i>
                     </span>
-                    <span id="errorBoxUnsynced" class="help-inline" style="color:white;display:none;">User is not available in HDP Admin Tool. Please contact your Administrator.
+                    <span id="errorBoxUnsynced" class="help-inline" style="color:white;display:none;">User is not available in Ranger Admin Tool. Please contact your Administrator.
                         <i class="fa fa-exclamation-triangle" style="color:#ae2817;"></i>
                     </span>
                     <button type="submit" class="btn btn-primary btn-block" id="signIn" tabindex="4" >

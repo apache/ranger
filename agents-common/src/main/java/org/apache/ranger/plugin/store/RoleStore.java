@@ -19,38 +19,36 @@
 
 package org.apache.ranger.plugin.store;
 
-import java.util.List;
-
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
 
+import java.util.List;
+
 public interface RoleStore {
+    void init() throws Exception;
 
-    void             init() throws Exception;
+    RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
 
-    RangerRole       createRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
+    RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
 
-    RangerRole       updateRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
+    void deleteRole(String roleName) throws Exception;
 
-    void             deleteRole(String roleName) throws Exception;
+    void deleteRole(Long roleId) throws Exception;
 
-    void             deleteRole(Long roleId) throws Exception;
+    RangerRole getRole(Long id) throws Exception;
 
-    RangerRole       getRole(Long id) throws Exception;
-
-    RangerRole       getRole(String name) throws Exception;
+    RangerRole getRole(String name) throws Exception;
 
     List<RangerRole> getRoles(SearchFilter filter) throws Exception;
 
-    List<String>     getRoleNames(SearchFilter filter) throws Exception;
+    List<String> getRoleNames(SearchFilter filter) throws Exception;
 
     RangerRoles getRoles(String serviceName, Long lastKnownRoleVersion) throws Exception;
 
     Long getRoleVersion(String serviceName);
 
-    boolean roleExists(Long id) throws  Exception;
+    boolean roleExists(Long id) throws Exception;
 
     boolean roleExists(String name) throws Exception;
 }
-

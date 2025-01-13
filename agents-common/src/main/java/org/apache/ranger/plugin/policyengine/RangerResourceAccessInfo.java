@@ -23,12 +23,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class RangerResourceAccessInfo {
-    final private RangerAccessRequest request;
-    final private Set<String>         allowedUsers;
-    final private Set<String>         allowedGroups;
-    final private Set<String>         deniedUsers;
-    final private Set<String>         deniedGroups;
-
+    private final RangerAccessRequest request;
+    private final Set<String>         allowedUsers;
+    private final Set<String>         allowedGroups;
+    private final Set<String>         deniedUsers;
+    private final Set<String>         deniedGroups;
 
     public RangerResourceAccessInfo(RangerAccessRequest request) {
         this.request       = request;
@@ -40,10 +39,10 @@ public class RangerResourceAccessInfo {
 
     public RangerResourceAccessInfo(RangerResourceAccessInfo other) {
         this.request       = other.request;
-        this.allowedUsers  = other.allowedUsers == null ? new HashSet<String>() : new HashSet<String>(other.allowedUsers);
-        this.allowedGroups = other.allowedGroups == null ? new HashSet<String>() : new HashSet<String>(other.allowedGroups);
-        this.deniedUsers   = other.deniedUsers == null ? new HashSet<String>() : new HashSet<String>(other.deniedUsers);
-        this.deniedGroups  = other.deniedGroups == null ? new HashSet<String>() : new HashSet<String>(other.deniedGroups);
+        this.allowedUsers  = other.allowedUsers == null ? new HashSet<>() : new HashSet<>(other.allowedUsers);
+        this.allowedGroups = other.allowedGroups == null ? new HashSet<>() : new HashSet<>(other.allowedGroups);
+        this.deniedUsers   = other.deniedUsers == null ? new HashSet<>() : new HashSet<>(other.deniedUsers);
+        this.deniedGroups  = other.deniedGroups == null ? new HashSet<>() : new HashSet<>(other.deniedGroups);
     }
 
     public RangerAccessRequest getRequest() {
@@ -67,7 +66,7 @@ public class RangerResourceAccessInfo {
     }
 
     @Override
-    public String toString( ) {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         toString(sb);
@@ -79,31 +78,31 @@ public class RangerResourceAccessInfo {
         sb.append("RangerResourceAccessInfo={");
 
         sb.append("request={");
-        if(request != null) {
+        if (request != null) {
             sb.append(request);
         }
         sb.append("} ");
 
         sb.append("allowedUsers={");
-        for(String user : allowedUsers) {
+        for (String user : allowedUsers) {
             sb.append(user).append(" ");
         }
         sb.append("} ");
 
         sb.append("allowedGroups={");
-        for(String group : allowedGroups) {
+        for (String group : allowedGroups) {
             sb.append(group).append(" ");
         }
         sb.append("} ");
 
         sb.append("deniedUsers={");
-        for(String user : deniedUsers) {
+        for (String user : deniedUsers) {
             sb.append(user).append(" ");
         }
         sb.append("} ");
 
         sb.append("deniedGroups={");
-        for(String group : deniedGroups) {
+        for (String group : deniedGroups) {
             sb.append(group).append(" ");
         }
         sb.append("} ");
@@ -112,5 +111,4 @@ public class RangerResourceAccessInfo {
 
         return sb;
     }
-
 }

@@ -21,31 +21,36 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class RangerResourceEvaluatorsRetriever {
     private static final Logger LOG = LoggerFactory.getLogger(RangerResourceEvaluatorsRetriever.class);
 
-    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource) {
+    private RangerResourceEvaluatorsRetriever() {
+        // to block instantiation
+    }
+
+    public static <T extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource) {
         return getEvaluators(resourceTrie, resource, null);
     }
 
-    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyResourceEvaluatorsRetriever.getEvaluators(" + resource + ")");
-        }
+    public static <T extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes) {
+        return getEvaluators(resourceTrie, resource, scopes, null);
+    }
+
+    public static <T extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes, Predicate predicate) {
+        LOG.debug("==> RangerPolicyResourceEvaluatorsRetriever.getEvaluators({})", resource);
+
         Set<T> ret = null;
 
         if (scopes == null) {
@@ -53,110 +58,75 @@ public class RangerResourceEvaluatorsRetriever {
         }
 
         if (MapUtils.isNotEmpty(resourceTrie) && MapUtils.isNotEmpty(resource)) {
-            Set<String> resourceKeys = resource.keySet();
+            Set<String> resourceKeys         = resource.keySet();
+            String      resourceWithMinEvals = null;
 
-            List<Evaluators<T>> sortedEvaluators = new ArrayList<>(resourceKeys.size());
+            if (resourceKeys.size() > 1) {
+                int minEvalCount = 0; // initial value doesn't matter, as the count for the first resource will be assigned later, in line #70
 
-            for (String resourceDefName : resourceKeys) {
-                RangerResourceTrie<T> trie = resourceTrie.get(resourceDefName);
+                for (String resourceDefName : resourceKeys) {
+                    RangerResourceTrie<T> trie = resourceTrie.get(resourceDefName);
 
-                if (trie == null) {
-                    continue;
+                    if (trie == null) {
+                        continue;
+                    }
+
+                    Object resourceValues = resource.get(resourceDefName);
+
+                    int evalCount = trie.getEvaluatorsCountForResource(resourceValues, scopes.get(resourceDefName), predicate);
+
+                    if (resourceWithMinEvals == null || (evalCount < minEvalCount)) {
+                        resourceWithMinEvals = resourceDefName;
+                        minEvalCount         = evalCount;
+                    }
                 }
 
-                Object resourceValues = resource.get(resourceDefName);
-
-                Set<T> inheritedMatchers   = trie.getInheritedEvaluators();
-                Set<T> matchersForResource = trie.getEvaluatorsForResource(resourceValues, scopes.get(resourceDefName));
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("ResourceDefName:[" + resourceDefName + "], values:[" + resourceValues + "], resource-matchers:[" + matchersForResource + "], inherited-matchers:[" + inheritedMatchers + "]");
+                if (minEvalCount == 0) {
+                    resourceWithMinEvals = null;
+                    ret                  = Collections.emptySet();
                 }
-                if (CollectionUtils.isEmpty(inheritedMatchers) && CollectionUtils.isEmpty(matchersForResource)) {
-                    sortedEvaluators.clear();
-                    break;
+            } else if (resourceKeys.size() == 1) { // skip getEvaluatorsCountForResource() when there is only one resource
+                String                resourceKey = resourceKeys.iterator().next();
+                RangerResourceTrie<T> trie        = resourceTrie.get(resourceKey);
+
+                if (trie != null) {
+                    resourceWithMinEvals = resourceKey;
                 }
-                sortedEvaluators.add(new Evaluators<>(inheritedMatchers, matchersForResource));
             }
 
-            if (CollectionUtils.isNotEmpty(sortedEvaluators)) {
-                Collections.sort(sortedEvaluators);
+            if (resourceWithMinEvals != null) {
+                RangerResourceTrie<T> trie = resourceTrie.get(resourceWithMinEvals);
 
-                ret = sortedEvaluators.remove(0).getMatchers();
+                ret = trie.getEvaluatorsForResource(resource.get(resourceWithMinEvals), scopes.get(resourceWithMinEvals), predicate);
 
-                for (Evaluators<T> evaluators : sortedEvaluators) {
-                    if (CollectionUtils.isEmpty(evaluators.inheritedMatchers)) {
-                        ret.retainAll(evaluators.resourceMatchers);
-                    } else if (CollectionUtils.isEmpty(evaluators.resourceMatchers)) {
-                        ret.retainAll(evaluators.inheritedMatchers);
-                    } else {
-                        Set<T> smaller = evaluators.getSmaller();
-                        Set<T> bigger  = evaluators.getBigger();
-
-                        Set<T> tmp = new HashSet<>(ret.size());
-
-                        if (ret.size() < smaller.size()) {
-                            ret.stream().filter(smaller::contains).forEach(tmp::add);
-                            ret.stream().filter(bigger::contains).forEach(tmp::add);
-                        } else {
-                            smaller.stream().filter(ret::contains).forEach(tmp::add);
-                            if (ret.size() < bigger.size()) {
-                                ret.stream().filter(bigger::contains).forEach(tmp::add);
-                            } else {
-                                bigger.stream().filter(ret::contains).forEach(tmp::add);
-                            }
-                        }
-                        ret = tmp;
+                for (String resourceDefName : resourceKeys) {
+                    if (resourceWithMinEvals.equals(resourceDefName)) {
+                        continue;
                     }
-                    if (ret.isEmpty()) {
+
+                    trie = resourceTrie.get(resourceDefName);
+
+                    if (trie == null) {
+                        continue;
+                    }
+
+                    Set<T> evaluators = trie.getEvaluatorsForResource(resource.get(resourceDefName), scopes.get(resourceDefName), ret, predicate);
+
+                    if (CollectionUtils.isEmpty(evaluators)) {
+                        ret = Collections.emptySet();
+
                         break;
+                    } else {
+                        if (evaluators.size() < ret.size()) {
+                            ret = evaluators;
+                        }
                     }
                 }
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerResourceEvaluatorsRetriever.getEvaluators(" + resource + ") : evaluator:[" + ret + "]");
-        }
+        LOG.debug("<== RangerResourceEvaluatorsRetriever.getEvaluators({}) : evaluator:[{}]", resource, ret);
+
         return ret;
-    }
-
-    static class Evaluators<T> implements Comparable<Evaluators<T>> {
-        private final Set<T> inheritedMatchers;
-        private final Set<T> resourceMatchers;
-        private final Set<T> smaller;
-        private final Set<T> bigger;
-        private final int    size;
-
-        Evaluators(Set<T> inherited, Set<T> matched) {
-            inheritedMatchers = inherited == null ? Collections.emptySet() : inherited;
-            resourceMatchers  = matched   == null ? Collections.emptySet() : matched;
-            size              = inheritedMatchers.size() + resourceMatchers.size();
-            smaller           = inheritedMatchers.size() < resourceMatchers.size() ? inheritedMatchers : resourceMatchers;
-            bigger            = smaller == inheritedMatchers ? resourceMatchers : inheritedMatchers;
-        }
-
-        // Should be called at most once
-        Set<T> getMatchers() {
-            Set<T> ret = new HashSet<>(size);
-
-            ret.addAll(inheritedMatchers);
-            ret.addAll(resourceMatchers);
-
-            return ret;
-        }
-
-        Set<T> getSmaller() {
-            return smaller;
-        }
-
-        Set<T> getBigger() {
-            return bigger;
-        }
-
-        @Override
-        public int compareTo(Evaluators<T> other) {
-            return Integer.compare(size, other.size);
-        }
     }
 }

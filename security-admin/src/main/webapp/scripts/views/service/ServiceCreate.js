@@ -31,7 +31,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
 	var localization	= require('utils/XALangSupport');
-	var bootbox 		= require('bootbox');
+	var bootprompt 		= require('bootprompt');
 
 	var ServiceForm		= require('views/service/ServiceForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
@@ -249,25 +249,29 @@ define(function(require){
                             		   		}];
                             	   }
                                    var msgHtml = '<b>Connection Failed.</b></br>'+msResponse.msgDesc;
-                                    bootbox.dialog({
+                                    bootprompt.dialog({
                                         message : msgHtml,
                                         buttons: popupBtnOpts
                                     });
 								} else {
-										bootbox.alert("Connection Failed.");
+										bootprompt.alert("Connection Failed.");
 								}
 							} else {
-								bootbox.alert("Connection Failed.");
+								bootprompt.alert("Connection Failed.");
 							}
 						} else {
-							bootbox.alert("Connected Successfully.");
+							bootprompt.alert("Connected Successfully.");
 						}
 					},
 					error: function (msResponse, options) {
-                                                if(msResponse.status === 419){
-                                                        XAUtil.defaultErrorHandler(options , msResponse);
-                                                }
-						bootbox.alert("Connection Failed.");
+						if(msResponse.status === 419){
+							XAUtil.defaultErrorHandler(options , msResponse);
+						}
+						if(msResponse && msResponse.responseJSON && msResponse.responseJSON.msgDesc) {
+							bootprompt.alert(msResponse.responseJSON.msgDesc)
+						} else {
+							bootprompt.alert("Connection Failed.");
+						}
 					}
 				});
 		},

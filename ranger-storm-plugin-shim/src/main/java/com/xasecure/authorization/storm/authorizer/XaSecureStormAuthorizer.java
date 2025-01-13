@@ -24,9 +24,9 @@ import org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer;
 /**
  * This class exists only to provide for seamless upgrade/downgrade capabilities.  Class name is in storm conf which must allow for seamles upgrade and downgrade.
  * Thus when class names were changed XaSecure* -> Ranger* this shell class serves to allow for seamles upgrade as well as downgrade.
- *
+ * <p>
  * This class is final because if one needs to customize coprocessor it is expected that RangerStormAuthorizer would be modified/extended as that is
  * the "real" authorizer!  This class, hence, should NEVER be more than an EMPTY shell!
  */
-final public class XaSecureStormAuthorizer extends RangerStormAuthorizer {
+public final class XaSecureStormAuthorizer extends RangerStormAuthorizer {
 }

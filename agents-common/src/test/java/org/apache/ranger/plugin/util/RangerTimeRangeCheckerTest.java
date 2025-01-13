@@ -26,12 +26,17 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 public class RangerTimeRangeCheckerTest {
-    private static final String[] TIME_ZONES = { null, "GMT", "PDT" };
+    private static final String[] TIME_ZONES = {null, "GMT", "PDT"};
 
     @Test
     public void testAfterDate() {
         String baseTime = "2023/06/05";
-        int    year     = 2023, month = 6, day = 5, hour = 0, min = 0, sec = 0;
+        int    year     = 2023;
+        int    month    = 6;
+        int    day      = 5;
+        int    hour     = 0;
+        int    min      = 0;
+        int    sec      = 0;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(baseTime, null, timeZone);
@@ -54,7 +59,12 @@ public class RangerTimeRangeCheckerTest {
     @Test
     public void testAfterDateHHMM() {
         String baseTime = "2023/06/05 5:5";
-        int    year     = 2023, month = 6, day = 5, hour = 5, min = 5, sec = 0;
+        int    year     = 2023;
+        int    month    = 6;
+        int    day      = 5;
+        int    hour     = 5;
+        int    min      = 5;
+        int    sec      = 0;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(baseTime, null, timeZone);
@@ -77,7 +87,12 @@ public class RangerTimeRangeCheckerTest {
     @Test
     public void testAfterDateHHMMss() {
         String baseTime = "2023/06/05 5:5:5";
-        int    year     = 2023, month = 6, day = 5, hour = 5, min = 5, sec = 5;
+        int    year     = 2023;
+        int    month    = 6;
+        int    day      = 5;
+        int    hour     = 5;
+        int    min      = 5;
+        int    sec      = 5;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(baseTime, null, timeZone);
@@ -100,7 +115,12 @@ public class RangerTimeRangeCheckerTest {
     @Test
     public void testBeforeDate() {
         String baseTime = "2023/07/05";
-        int    year     = 2023, month = 7, day = 5, hour = 0, min = 0, sec = 0;
+        int    year     = 2023;
+        int    month    = 7;
+        int    day      = 5;
+        int    hour     = 0;
+        int    min      = 0;
+        int    sec      = 0;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(null, baseTime, timeZone);
@@ -123,7 +143,12 @@ public class RangerTimeRangeCheckerTest {
     @Test
     public void testBeforeDateHHMM() {
         String baseTime = "2023/07/05 5:5";
-        int    year     = 2023, month = 7, day = 5, hour = 5, min = 5, sec = 0;
+        int    year     = 2023;
+        int    month    = 7;
+        int    day      = 5;
+        int    hour     = 5;
+        int    min      = 5;
+        int    sec      = 0;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(null, baseTime, timeZone);
@@ -146,7 +171,12 @@ public class RangerTimeRangeCheckerTest {
     @Test
     public void testBeforeDateHHMMss() {
         String baseTime = "2023/07/05 5:5:5";
-        int    year     = 2023, month = 7, day = 5, hour = 5, min = 5, sec = 5;
+        int    year     = 2023;
+        int    month    = 7;
+        int    day      = 5;
+        int    hour     = 5;
+        int    min      = 5;
+        int    sec      = 5;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(null, baseTime, timeZone);
@@ -170,8 +200,18 @@ public class RangerTimeRangeCheckerTest {
     public void testBetweenDate() {
         String fromTime = "2023/06/05";
         String toTIme   = "2023/07/05";
-        int    fromYear = 2023, fromMonth = 6, fromDay = 5, fromHour = 0, fromMin = 0, fromSec = 0;
-        int    toYear   = 2023, toMonth   = 7, toDay   = 5, toHour   = 0, toMin   = 0, toSec   = 0;
+        int    fromYear = 2023;
+        int    fromMonth = 6;
+        int    fromDay = 5;
+        int    fromHour = 0;
+        int    fromMin = 0;
+        int    fromSec = 0;
+        int    toYear   = 2023;
+        int    toMonth = 7;
+        int    toDay = 5;
+        int    toHour = 0;
+        int    toMin = 0;
+        int    toSec = 0;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(fromTime, toTIme, timeZone);
@@ -205,10 +245,20 @@ public class RangerTimeRangeCheckerTest {
 
     @Test
     public void testBetweenDateHHMM() {
-        String fromTime = "2023/06/05 5:5";
-        String toTIme   = "2023/07/05 5:5";
-        int    fromYear = 2023, fromMonth = 6, fromDay = 5, fromHour = 5, fromMin = 5, fromSec = 0;
-        int    toYear   = 2023, toMonth   = 7, toDay   = 5, toHour   = 5, toMin   = 5, toSec   = 0;
+        String fromTime  = "2023/06/05 5:5";
+        String toTIme    = "2023/07/05 5:5";
+        int    fromYear  = 2023;
+        int    fromMonth = 6;
+        int    fromDay   = 5;
+        int    fromHour  = 5;
+        int    fromMin   = 5;
+        int    fromSec   = 0;
+        int    toYear    = 2023;
+        int    toMonth   = 7;
+        int    toDay     = 5;
+        int    toHour    = 5;
+        int    toMin     = 5;
+        int    toSec     = 0;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(fromTime, toTIme, timeZone);
@@ -242,10 +292,20 @@ public class RangerTimeRangeCheckerTest {
 
     @Test
     public void testBetweenDateHHMMss() {
-        String fromTime = "2023/06/05 5:5:5";
-        String toTIme   = "2023/07/05 5:5:5";
-        int    fromYear = 2023, fromMonth = 6, fromDay = 5, fromHour = 5, fromMin = 5, fromSec = 5;
-        int    toYear   = 2023, toMonth   = 7, toDay   = 5, toHour   = 5, toMin   = 5, toSec   = 5;
+        String fromTime  = "2023/06/05 5:5:5";
+        String toTIme    = "2023/07/05 5:5:5";
+        int    fromYear  = 2023;
+        int    fromMonth = 6;
+        int    fromDay   = 5;
+        int    fromHour  = 5;
+        int    fromMin   = 5;
+        int    fromSec   = 5;
+        int    toYear    = 2023;
+        int    toMonth   = 7;
+        int    toDay     = 5;
+        int    toHour    = 5;
+        int    toMin     = 5;
+        int    toSec     = 5;
 
         for (String timeZone : TIME_ZONES) {
             RangerTimeRangeChecker checker = new RangerTimeRangeChecker(fromTime, toTIme, timeZone);

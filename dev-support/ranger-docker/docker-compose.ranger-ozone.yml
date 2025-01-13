@@ -1,0 +1,71 @@
+services:
+  datanode:
+    image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
+    container_name: ozone-datanode
+    volumes:
+      - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+    networks:
+      - ranger
+    ports:
+      - 9864
+    command: ["/opt/hadoop/bin/ozone","datanode"]
+    env_file:
+      - ./config/ozone/docker-config
+    environment:
+      OZONE_OPTS:
+  om:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-ozone
+      args:
+        - OZONE_RUNNER_IMAGE=${OZONE_RUNNER_IMAGE}
+        - OZONE_RUNNER_VERSION=${OZONE_RUNNER_VERSION}
+        - OZONE_HOME=/opt/hadoop
+        - OZONE_PLUGIN_VERSION=${OZONE_PLUGIN_VERSION}
+    image: ranger-ozone:latest
+    container_name: ozone-om
+    hostname: om
+    volumes:
+      - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+      - ./dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin:/opt/hadoop/ranger-ozone-plugin
+    networks:
+      - ranger
+    ports:
+      - 9874:9874
+      - 9862:9862
+    depends_on:
+      ranger:
+        condition: service_started
+      ranger-solr:
+        condition: service_started
+    environment:
+      ENSURE_OM_INITIALIZED: /data/metadata/om/current/VERSION
+      OZONE_OPTS: -Dcom.sun.net.ssl.checkRevocation=false
+      OZONE_HOME: /opt/hadoop
+      OZONE_PLUGIN_VERSION: ${OZONE_PLUGIN_VERSION}
+      OZONE_VERSION: ${OZONE_VERSION}
+    env_file:
+      - ./config/ozone/docker-config
+    command: bash -c "/opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && /opt/hadoop/bin/ozone om"
+  scm:
+    image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
+    container_name: ozone-scm
+    hostname: scm
+    volumes:
+      - ./downloads/ozone-${OZONE_VERSION}:/opt/hadoop
+    networks:
+      - ranger
+    ports:
+      - 9876:9876
+      - 9860:9860
+    env_file:
+      - ./config/ozone/docker-config
+    environment:
+      ENSURE_SCM_INITIALIZED: /data/metadata/scm/current/VERSION
+      OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"
+      OZONE_OPTS:
+    command: ["/opt/hadoop/bin/ozone","scm"]
+
+networks:
+  ranger:
+    name: rangernw

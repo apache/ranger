@@ -3660,6 +3660,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
               </Badge>
             </div>
             <div className="fw-bolder">Policy Name: {objectName}</div>
+            <div className="fw-bolder">Service Name: {parentObjectName}</div>
             <div className="fw-bolder">
               Deleted Date: {currentTimeZone(createDate)}
             </div>

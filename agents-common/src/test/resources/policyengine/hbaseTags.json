@@ -1,0 +1,74 @@
+{
+    "op":"add_or_update",
+    "tagModel":"resource_private",
+    "serviceName": "hbase_tag",
+    "tagDefinitions": {
+      "1": {
+        "name": "COLUMN_TAG",
+        "id": 1,
+        "guid": "tagdefinition-column-guid"
+      },
+      "2": {
+        "name": "COLUMN_FAMILY_TAG",
+        "id": 2,
+        "guid": "tagdefinition-column-family-guid"
+      },
+      "3": {
+        "name": "TABLE_TAG",
+        "id": 3,
+        "guid": "tagdefinition-table-guid"
+      }
+    },
+    "tags": {
+      "1": {
+        "type": "COLUMN_TAG",
+        "id": 1,
+        "guid": "tag-column-guid"
+      },
+      "2": {
+        "type": "COLUMN_FAMILY_TAG",
+        "id": 2,
+        "guid": "tag-column-family-guid"
+      },
+      "3": {
+        "type": "TABLE_TAG",
+        "id": 3,
+        "guid": "tag-table-guid"
+      }
+    },
+    "serviceResources": [
+      {
+        "serviceName": "hbasedev",
+        "resourceElements": {
+          "table": { "values": [ "finance" ] },
+          "column-family": { "values": [ "professional" ] },
+          "column": { "values": [ "ssn" ] }
+        },
+        "id": 1,
+        "guid": "finance.professional.ssn-guid"
+     },
+      {
+        "serviceName": "hbasedev",
+        "resourceElements": {
+          "table": { "values": [ "finance" ] },
+          "column-family": { "values": [ "personal" ] }
+        },
+        "id": 2,
+        "guid": "finance.personal-guid"
+     },
+      {
+        "serviceName": "hbasedev",
+        "resourceElements": {
+          "table": { "values": [ "finance" ] }
+        },
+        "id": 3,
+        "guid": "finance-guid"
+     }
+    ],
+    "resourceToTagIds": {
+      "1": [ 1 ],
+      "2": [ 2 ],
+      "3": [ 3 ]
+    }
+}
+

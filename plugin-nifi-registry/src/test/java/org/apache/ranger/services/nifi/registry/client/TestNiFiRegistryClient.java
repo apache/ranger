@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -39,12 +40,11 @@ import java.util.List;
 import static org.mockito.Mockito.when;
 
 public class TestNiFiRegistryClient {
-
     private NiFiRegistryClient registryClient;
 
     @Before
     public void setup() throws IOException {
-        final URL responseFile = TestNiFiRegistryClient.class.getResource("/resources-response.json");
+        final URL    responseFile      = TestNiFiRegistryClient.class.getResource("/resources-response.json");
         final String resourcesResponse = Resources.toString(responseFile, StandardCharsets.UTF_8);
         registryClient = new MockNiFiRegistryClient(resourcesResponse, 200);
     }
@@ -135,18 +135,16 @@ public class TestNiFiRegistryClient {
         Assert.assertEquals(NiFiRegistryClient.FAILURE_MSG, ret.get("message"));
     }
 
-
     /**
      * Extend NiFiRegistryClient to return mock responses.
      */
     private static final class MockNiFiRegistryClient extends NiFiRegistryClient {
-
-        private int statusCode;
+        private int    statusCode;
         private String responseEntity;
 
         private MockNiFiRegistryClient(String responseEntity, int statusCode) {
             super("http://localhost:18080/nifi-registry-api/policiesresources", null);
-            this.statusCode = statusCode;
+            this.statusCode     = statusCode;
             this.responseEntity = responseEntity;
         }
 
@@ -159,9 +157,7 @@ public class TestNiFiRegistryClient {
         protected ClientResponse getResponse(WebResource resource, String accept) {
             ClientResponse response = Mockito.mock(ClientResponse.class);
             when(response.getStatus()).thenReturn(statusCode);
-            when(response.getEntityInputStream()).thenReturn(new ByteArrayInputStream(
-                    responseEntity.getBytes(StandardCharsets.UTF_8)
-            ));
+            when(response.getEntityInputStream()).thenReturn(new ByteArrayInputStream(responseEntity.getBytes(StandardCharsets.UTF_8)));
             return response;
         }
     }

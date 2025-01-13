@@ -22,15 +22,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RangerAtlasEntity {
-
-    private final String typeName;
-    private final String guid;
+    private final String              typeName;
+    private final String              guid;
     private final Map<String, Object> attributes;
 
     public RangerAtlasEntity(String typeName, String guid, Map<String, Object> attributes) {
-        this.typeName = typeName;
-        this.guid = guid;
-        this.attributes = attributes == null ? new HashMap<String, Object>() : attributes;
+        this.typeName   = typeName;
+        this.guid       = guid;
+        this.attributes = attributes == null ? new HashMap<>() : attributes;
     }
 
     public String getTypeName() {
@@ -41,7 +40,9 @@ public class RangerAtlasEntity {
         return guid;
     }
 
-    public Map<String, Object> getAttributes() { return attributes; }
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
 
     @Override
     public String toString() {

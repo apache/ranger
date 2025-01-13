@@ -863,24 +863,30 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public RangerSharedResource addSharedResource(RangerSharedResource resource) {
-        LOG.debug("==> addSharedResource({})", resource);
+    public List<RangerSharedResource> addSharedResources(List<RangerSharedResource> resources) {
+        LOG.debug("==> addSharedResources({})", resources);
 
-        resource.setName(StringUtils.trim(resource.getName()));
+        List<RangerSharedResource> ret = new ArrayList<>();
 
-        validator.validateCreate(resource);
+        for (RangerSharedResource resource : resources) {
+            resource.setName(StringUtils.trim(resource.getName()));
 
-        if (StringUtils.isBlank(resource.getGuid())) {
-            resource.setGuid(guidUtil.genGUID());
+            validator.validateCreate(resource);
+
+            if (StringUtils.isBlank(resource.getGuid())) {
+                resource.setGuid(guidUtil.genGUID());
+            }
+
+            RangerSharedResource sharedResource = sharedResourceService.create(resource);
+
+            ret.add(sharedResource);
+
+            sharedResourceService.onObjectChange(sharedResource, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
+
+            updateGdsVersionForDataShare(sharedResource.getDataShareId());
         }
 
-        RangerSharedResource ret = sharedResourceService.create(resource);
-
-        sharedResourceService.onObjectChange(ret, null, RangerServiceService.OPERATION_CREATE_CONTEXT);
-
-        updateGdsVersionForDataShare(ret.getDataShareId());
-
-        LOG.debug("<== addSharedResource({}): ret={}", resource, ret);
+        LOG.debug("<== addSharedResources({}): ret={}", resources, ret);
 
         return ret;
     }
@@ -915,29 +921,30 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     @Override
-    public void removeSharedResource(Long sharedResourceId) {
-        LOG.debug("==> removeSharedResource({})", sharedResourceId);
-
+    public void removeSharedResources(List<Long> sharedResourceIds) {
+        LOG.debug("==> removeSharedResources({})", sharedResourceIds);
 
         RangerSharedResource existing = null;
 
-        try {
-            existing = sharedResourceService.read(sharedResourceId);
-        } catch (Exception excp) {
-            // ignore
+        for (Long sharedResourceId : sharedResourceIds) {
+            try {
+                existing = sharedResourceService.read(sharedResourceId);
+            } catch (Exception excp) {
+                // ignore
+            }
+
+            validator.validateDelete(sharedResourceId, existing);
+
+            if (existing != null) {
+                sharedResourceService.delete(existing);
+
+                sharedResourceService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
+
+                updateGdsVersionForDataShare(existing.getDataShareId());
+            }
         }
 
-        validator.validateDelete(sharedResourceId, existing);
-
-        if (existing != null) {
-            sharedResourceService.delete(existing);
-
-            sharedResourceService.onObjectChange(null, existing, RangerServiceService.OPERATION_DELETE_CONTEXT);
-
-            updateGdsVersionForDataShare(existing.getDataShareId());
-        }
-
-        LOG.debug("<== removeSharedResource({})", sharedResourceId);
+        LOG.debug("<== removeSharedResources({})", sharedResourceIds);
     }
 
     @Override
@@ -1497,6 +1504,9 @@ public class GdsDBStore extends AbstractGdsStore {
             datasetSummary.setGuid(dataset.getGuid());
             datasetSummary.setVersion(dataset.getVersion());
             datasetSummary.setPermissionForCaller(permissionForCaller);
+            datasetSummary.setValiditySchedule(dataset.getValiditySchedule());
+            datasetSummary.setLabels(dataset.getLabels());
+            datasetSummary.setKeywords(dataset.getKeywords());
 
             ret.add(datasetSummary);
 
@@ -1816,6 +1826,7 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private void prepareDatasetPolicy(RangerDataset dataset, RangerPolicy policy) {
+        validator.validateCreateOrUpdate(policy);
         policy.setName("DATASET: " + dataset.getName() + GDS_POLICY_NAME_TIMESTAMP_SEP + System.currentTimeMillis());
         policy.setDescription("Policy for dataset: " + dataset.getName());
         policy.setServiceType(EMBEDDED_SERVICEDEF_GDS_NAME);

@@ -35,6 +35,9 @@ RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --direct
     mkdir -p /var/log/ranger/tagsync && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     mkdir -p /etc/ranger && \
+    mkdir /etc/init.d || true && \
+    mkdir /etc/rc2.d  || true && \
+    mkdir /etc/rc3.d  || true && \
     touch /etc/init.d/ranger-tagsync && \
     ln -s /etc/init.d/ranger-tagsync /etc/rc2.d/S99ranger-tagsync && \
     ln -s /etc/init.d/ranger-tagsync /etc/rc2.d/K00ranger-tagsync && \

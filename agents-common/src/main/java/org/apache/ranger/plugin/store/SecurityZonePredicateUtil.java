@@ -39,35 +39,32 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
         addPredicateForMatchingZoneId(filter.getParam(SearchFilter.ZONE_ID), predicates);
         addPredicateForMatchingZoneName(filter.getParam(SearchFilter.ZONE_NAME), predicates);
         addPredicateForNonMatchingZoneName(filter.getParam(SearchFilter.NOT_ZONE_NAME), predicates);
-		addPredicateForMatchingZoneNamePartial(filter.getParam(SearchFilter.ZONE_NAME_PARTIAL), predicates);
-		addPredicateForCreatedBy(filter.getParam(SearchFilter.CREATED_BY), predicates);
+        addPredicateForMatchingZoneNamePartial(filter.getParam(SearchFilter.ZONE_NAME_PARTIAL), predicates);
+        addPredicateForCreatedBy(filter.getParam(SearchFilter.CREATED_BY), predicates);
     }
 
     private Predicate addPredicateForServiceName(final String serviceName, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(serviceName)) {
+        if (StringUtils.isEmpty(serviceName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
-
-                boolean ret = false;
-
-                if(object instanceof RangerSecurityZone) {
-                    RangerSecurityZone securityZone = (RangerSecurityZone) object;
-
-                    ret = securityZone.getServices().get(serviceName) != null;
-                }
-
-                return ret;
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
             }
+
+            boolean ret1 = false;
+
+            if (object instanceof RangerSecurityZone) {
+                RangerSecurityZone securityZone = (RangerSecurityZone) object;
+
+                ret1 = securityZone.getServices().get(serviceName) != null;
+            }
+
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -79,28 +76,25 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
-
-                boolean ret = false;
-
-                if(object instanceof RangerSecurityZone) {
-                    RangerSecurityZone securityZone = (RangerSecurityZone) object;
-
-                    if (StringUtils.equals(zoneId, securityZone.getId().toString())) {
-                        ret = true;
-                    }
-                }
-
-                return ret;
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
             }
+
+            boolean ret1 = false;
+
+            if (object instanceof RangerSecurityZone) {
+                RangerSecurityZone securityZone = (RangerSecurityZone) object;
+
+                if (StringUtils.equals(zoneId, securityZone.getId().toString())) {
+                    ret1 = true;
+                }
+            }
+
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -112,28 +106,25 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
-
-                boolean ret = false;
-
-                if(object instanceof RangerSecurityZone) {
-                    RangerSecurityZone securityZone = (RangerSecurityZone) object;
-
-                    if (StringUtils.equals(zoneName, securityZone.getName())) {
-                        ret = true;
-                    }
-                }
-
-                return ret;
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
             }
+
+            boolean ret1 = false;
+
+            if (object instanceof RangerSecurityZone) {
+                RangerSecurityZone securityZone = (RangerSecurityZone) object;
+
+                if (StringUtils.equals(zoneName, securityZone.getName())) {
+                    ret1 = true;
+                }
+            }
+
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -145,98 +136,88 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
-
-                boolean ret = false;
-
-                if(object instanceof RangerSecurityZone) {
-                    RangerSecurityZone securityZone = (RangerSecurityZone) object;
-
-                    if (!StringUtils.equals(zoneName, securityZone.getName())) {
-                        ret = true;
-                    }
-                }
-
-                return ret;
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
             }
+
+            boolean ret1 = false;
+
+            if (object instanceof RangerSecurityZone) {
+                RangerSecurityZone securityZone = (RangerSecurityZone) object;
+
+                if (!StringUtils.equals(zoneName, securityZone.getName())) {
+                    ret1 = true;
+                }
+            }
+
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
         return ret;
     }
 
-	private Predicate addPredicateForMatchingZoneNamePartial(final String zoneName, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(zoneName)) {
-			return null;
-		}
+    private Predicate addPredicateForMatchingZoneNamePartial(final String zoneName, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(zoneName)) {
+            return null;
+        }
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-				if (object == null) {
-					return false;
-				}
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-				boolean ret = false;
+            boolean ret1 = false;
 
-				if (object instanceof RangerSecurityZone) {
-					RangerSecurityZone securityZone = (RangerSecurityZone) object;
+            if (object instanceof RangerSecurityZone) {
+                RangerSecurityZone securityZone = (RangerSecurityZone) object;
 
-					if (StringUtils.containsIgnoreCase(securityZone.getName(), zoneName)) {
-						ret = true;
-					}
-				}
+                if (StringUtils.containsIgnoreCase(securityZone.getName(), zoneName)) {
+                    ret1 = true;
+                }
+            }
 
-				return ret;
-			}
-		};
+            return ret1;
+        };
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private Predicate addPredicateForCreatedBy(final String createdBy, List<Predicate> predicates) {
-		if (StringUtils.isEmpty(createdBy)) {
-			return null;
-		}
+    private Predicate addPredicateForCreatedBy(final String createdBy, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(createdBy)) {
+            return null;
+        }
 
-		Predicate ret = new Predicate() {
-			@Override
-			public boolean evaluate(Object object) {
-				if (object == null) {
-					return false;
-				}
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-				boolean ret = false;
+            boolean ret1 = false;
 
-				if (object instanceof RangerSecurityZone) {
-					RangerSecurityZone securityZone = (RangerSecurityZone) object;
+            if (object instanceof RangerSecurityZone) {
+                RangerSecurityZone securityZone = (RangerSecurityZone) object;
 
-					if (StringUtils.equals(securityZone.getCreatedBy(), createdBy)) {
-						ret = true;
-					}
-				}
+                if (StringUtils.equals(securityZone.getCreatedBy(), createdBy)) {
+                    ret1 = true;
+                }
+            }
 
-				return ret;
-			}
-		};
+            return ret1;
+        };
 
-		if (predicates != null) {
-			predicates.add(ret);
-		}
+        if (predicates != null) {
+            predicates.add(ret);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 }
-

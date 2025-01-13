@@ -46,12 +46,12 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
     chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
 
-ENV HADOOP_HOME        /opt/hadoop
-ENV HADOOP_CONF_DIR    /opt/hadoop/etc/hadoop
-ENV HADOOP_HDFS_HOME   /opt/hadoop
-ENV HADOOP_MAPRED_HOME /opt/hadoop
-ENV HADOOP_COMMON_HOME /opt/hadoop
-ENV YARN_HOME          /opt/hadoop
-ENV PATH               /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin
+ENV HADOOP_HOME=/opt/hadoop
+ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+ENV HADOOP_HDFS_HOME=/opt/hadoop
+ENV HADOOP_MAPRED_HOME=/opt/hadoop
+ENV HADOOP_COMMON_HOME=/opt/hadoop
+ENV YARN_HOME=/opt/hadoop
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hadoop.sh" ]

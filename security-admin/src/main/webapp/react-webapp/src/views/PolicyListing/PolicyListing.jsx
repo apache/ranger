@@ -18,6 +18,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
+import { omit, has } from "lodash";
 import {
   Link,
   useParams,
@@ -112,6 +113,70 @@ function PolicyListing(props) {
   let navigate = useNavigate();
   let { serviceId, policyType } = useParams();
 
+  const [showModal, setShowModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleFileSelection = (event) => {
+    const file = event.target.files[0];
+    setSelectedFile(file); // Store selected file
+    setStatusMessage("");
+  };
+
+  const importNewPolicy = () => {
+    setShowModal(true); // Show the modal when button is clicked
+  };
+
+  const handleCloseModal = () => {
+    setSelectedFile(null); // Reset the selected file
+    setStatusMessage("");
+    setShowModal(false);
+  };
+
+  const handleUpload = () => {
+    if (!selectedFile) {
+      setStatusMessage("No file selected !");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+
+        if (has("service")) {
+          json["service"] = serviceData.name;
+        }
+
+        // Make API call with the processed JSON
+        setLoading(true); // Show loading spinner
+        await fetchApi({
+          url: "plugins/policies",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json" // Set Content-Type header
+          },
+          data: JSON.stringify(json) // Serialize the JSON
+        });
+
+        setLoading(false); // Hide loading spinner
+        setStatusMessage("");
+        setShowModal(false);
+        setUpdateTable(moment.now());
+        toast.success("Successfully imported policy json file !");
+      } catch (error) {
+        setLoading(false);
+        setStatusMessage(
+          `Error parsing or processing JSON file: ${error.message}`
+        );
+        console.log(error);
+      }
+    };
+
+    reader.readAsText(selectedFile);
+  };
+
   useEffect(() => {
     let searchFilterParam = {};
     let searchParam = {};
@@ -154,6 +219,7 @@ function PolicyListing(props) {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
+
   useEffect(() => {
     if (localStorage.getItem("newDataAdded") == "true") {
       scrollToNewData(policyListingData);
@@ -169,6 +235,65 @@ function PolicyListing(props) {
 
   const getTableSortType = (sortArr = []) => {
     return sortArr.map(({ desc }) => (desc ? "desc" : "asc")).join(",");
+  };
+
+  const downloadPolicy = async (id) => {
+    try {
+      const response = await fetchApi({
+        url: `plugins/policies/${id}`
+      });
+
+      if (response.status !== 200) {
+        toast.error("Error downloading the policy !");
+        return;
+      }
+
+      let data = response.data || null;
+
+      data = JSON.parse(JSON.stringify(data));
+
+      const fieldsToRemove = [
+        "createdBy",
+        "createTime",
+        "guid",
+        "id",
+        "resourceSignature",
+        "updatedBy",
+        "updateTime",
+        "version"
+      ];
+
+      data = omit(data, fieldsToRemove);
+
+      // Create a blob with the JSON data
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json"
+      });
+      const url = URL.createObjectURL(blob);
+
+      // Create a link element and set its href to the blob URL
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        data["serviceType"] +
+          "_" +
+          data["service"] +
+          "_" +
+          data["name"] +
+          "-" +
+          "policy_" +
+          id +
+          ".json" || "policy-data.json"; // Set the default filename for the download
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error("Error downloading the policy !");
+      console.error("Error fetching data: ", error);
+    }
   };
 
   const fetchPolicyInfo = useCallback(
@@ -559,6 +684,18 @@ function PolicyListing(props) {
               </Button>
               {(isSystemAdmin() || isKeyAdmin() || isUser()) && (
                 <>
+                  <Button
+                    className="me-2"
+                    variant="outline-dark"
+                    size="sm"
+                    title="Download"
+                    onClick={() => downloadPolicy(original.id)}
+                    data-name="downloadPolicy"
+                    data-id={original.id}
+                    data-cy={original.id}
+                  >
+                    <i className="fa-fw fa fa-download fa-fw fa fa-large"></i>
+                  </Button>
                   <Link
                     className="btn btn-outline-dark btn-sm me-2"
                     title="Edit"
@@ -584,7 +721,8 @@ function PolicyListing(props) {
             </div>
           );
         },
-        disableSortBy: true
+        disableSortBy: true,
+        minWidth: 190
       }
     ],
     []
@@ -752,7 +890,7 @@ function PolicyListing(props) {
           <BlockUi isUiBlock={blockUI} />
           <div className="policy-listing">
             <Row className="mb-3">
-              <Col sm={10}>
+              <Col sm={9}>
                 <div className="filter-icon-wrap">
                   <StructuredFilter
                     key="policy-listing-search-filter"
@@ -774,18 +912,31 @@ function PolicyListing(props) {
                   />
                 </div>
               </Col>
-              <Col sm={2}>
+              <Col sm={3}>
                 <div className="float-end mb-1">
                   {(isSystemAdmin() || isKeyAdmin() || isUser()) && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={addPolicy}
-                      data-js="addNewPolicy"
-                      data-cy="addNewPolicy"
-                    >
-                      Add New Policy
-                    </Button>
+                    <div>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="ms-1"
+                        onClick={addPolicy}
+                        data-js="addNewPolicy"
+                        data-cy="addNewPolicy"
+                      >
+                        Add New Policy
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        className="ms-1"
+                        onClick={importNewPolicy}
+                        data-js="importNewPolicy"
+                        data-cy="importNewPolicy"
+                      >
+                        Import New Policy
+                      </Button>
+                    </div>
                   )}
                 </div>
               </Col>
@@ -804,6 +955,36 @@ function PolicyListing(props) {
               columnSort={true}
             />
           </div>
+
+          {/* Modal for file upload */}
+          {showModal && (
+            <Modal show={showModal} onHide={handleCloseModal}>
+              <Modal.Header closeButton>
+                <Modal.Title>Upload JSON Policy</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <input
+                  type="file"
+                  accept="application/json"
+                  onChange={handleFileSelection}
+                />
+                {loading && <p>Uploading...</p>}
+                {!loading && statusMessage && <p>{statusMessage}</p>}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleCloseModal}
+                >
+                  Close
+                </Button>
+                <Button size="sm" variant="primary" onClick={handleUpload}>
+                  Upload
+                </Button>
+              </Modal.Footer>
+            </Modal>
+          )}
 
           <Modal show={deletePolicyModal.showPopup} onHide={toggleClose}>
             <Modal.Header closeButton>

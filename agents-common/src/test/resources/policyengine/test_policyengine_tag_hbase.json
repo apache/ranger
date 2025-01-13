@@ -1,0 +1,179 @@
+{
+  "serviceName":"hbasedev",
+
+  "serviceDef":{
+    "name":"hbase",
+    "id":2,
+    "resources":[
+      {"name":"table","level":1,"parent":"","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HBase Table","description":"HBase Table"},
+      {"name":"column-family","level":2,"parent":"table","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HBase Column-Family","description":"HBase Column-Family"},
+      {"name":"column","level":3,"parent":"column-family","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HBase Column","description":"HBase Column"}
+    ],
+    "accessTypes":[
+      {"name":"read","label":"Read"},
+      {"name":"write","label":"Write"},
+      {"name":"create","label":"Create"},
+      {"name":"admin","label":"Admin","impliedGrants":["read","write","create"]}
+    ]
+  },
+
+  "policies":[
+    {"id":1,"name":"table=finance; column-family=*, column=*: audit-all-access","isEnabled":true,"isAuditEnabled":true,
+     "resources":{"table":{"values":["finance"]},"column-family":{"values":["*"]},"column":{"values":["*"]}}
+    }
+    ,
+    {"id":2,"name":"table=finance; column-family=personal; column=*","isEnabled":true,"isAuditEnabled":true,
+     "resources":{"table":{"values":["finance"]},"column-family":{"values":["personal"]},"column": {"values": ["*"]}},
+     "denyPolicyItems":[
+       {"accesses":[{"type":"read","isAllowed":true}],"users":["hrt_12"],"groups":[],"delegateAdmin":false}
+     ]
+    }
+  ],
+  "tagPolicyInfo": {
+
+    "serviceName":"tagdev",
+    "serviceDef": {
+      "name": "tag",
+      "id": 100,
+      "resources": [
+        {
+          "itemId": 1,
+          "name": "tag",
+          "type": "string",
+          "level": 1,
+          "parent": "",
+          "mandatory": true,
+          "lookupSupported": true,
+          "recursiveSupported": false,
+          "excludesSupported": false,
+          "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions": {
+            "wildCard": true,
+            "ignoreCase": false
+          },
+          "validationRegEx": "",
+          "validationMessage": "",
+          "uiHint": "",
+          "label": "TAG",
+          "description": "TAG"
+        }
+      ],
+      "accessTypes": [
+        {
+          "itemId": 1,
+          "name": "hbase:read",
+          "label": "hbase:read"
+        },
+        {
+          "itemId": 2,
+          "name": "hbase:write",
+          "label": "hbase:write"
+        },
+        {
+          "itemId": 3,
+          "name": "hbase:create",
+          "label": "hbase:create"
+        }
+      ,
+        {
+          "itemId": 4,
+          "name": "hbase:admin",
+          "label": "hbase:admin",
+          "impliedGrants":
+          [
+            "hbase:read",
+            "hbase:write",
+            "hbase:create"
+          ]
+        },
+        {
+          "itemId": 5,
+          "name": "hbase:all",
+          "label": "hbase:all",
+          "impliedGrants":
+          [
+            "hbase:read",
+            "hbase:write",
+            "hbase:create",
+            "hbase:admin"
+          ]
+        }
+      ],
+      "contextEnrichers": [
+        {
+          "itemId": 1,
+          "name" : "TagEnricher",
+          "enricher" : "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
+          "enricherOptions" : {"tagRetrieverClassName":"org.apache.ranger.plugin.contextenricher.RangerFileBasedTagRetriever", "tagRefresherPollingInterval":60000, "serviceTagsFileName":"/policyengine/hbaseTags.json"}
+        }
+      ],
+      "policyConditions": [
+        {
+          "itemId":1,
+          "name":"expression",
+          "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+          "evaluatorOptions" : {"engineName":"JavaScript", "ui.isMultiline":"true"},
+          "label":"Enter boolean expression",
+          "description": "Boolean expression"
+        },
+        {
+          "itemId":2,
+          "name":"enforce-expiry",
+          "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
+          "evaluatorOptions" : { "scriptTemplate":"ctx.isAccessedAfter('expiry_date');" },
+          "label":"Deny access after expiry_date?",
+          "description": "Deny access after expiry_date? (yes/no)"
+        }
+      ]
+    },
+    "tagPolicies":[
+      {"id":100,"name":"COLUMN_POLICY","isEnabled":true,"isAuditEnabled":true,
+        "resources":{"tag":{"values":["COLUMN_TAG"],"isRecursive":false}},
+        "policyItems":[
+          {
+            "accesses":[{"type":"hbase:read","isAllowed":true}],"users":["hrt_12"],"groups":[],"delegateAdmin":false
+          }
+        ]
+      }
+    ]
+  },
+
+  "tests":[
+    {"name":"DENY 'scan finance.professional;' for hrt_12",
+      "request":{
+        "resource":{"elements":{"table":"finance", "column-family":"professional"}},
+        "accessType":"read","user":"hrt_12","userGroups":[],"requestData":"scan finance.professional; for hrt_12"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    },
+    {"name":"ALLOW 'scan finance.professional; with resourceMatchingScope=SELF_OR_DESCENDANTS' for hrt_12",
+      "request":{
+        "resource":{"elements":{"table":"finance", "column-family":"professional"}}, "resourceMatchingScope": "SELF_OR_DESCENDANTS",
+        "accessType":"read","user":"hrt_12","userGroups":[],"requestData":"scan finance.professional; with resourceMatchingScope=SELF_OR_DESCENDANTS for hrt_12"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":100}
+    },
+    {"name":"ALLOW 'scan finance.professional.ssn;' for hrt_12",
+      "request":{
+        "resource":{"elements":{"table":"finance", "column-family":"professional", "column":"ssn"}},
+        "accessType":"read","user":"hrt_12","userGroups":[],"requestData":"scan finance.professional.ssn; for hrt_12"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":100}
+    },
+    {"name":"DENY 'scan finance.personal;' for hrt_12",
+     "request":{
+      "resource":{"elements":{"table":"finance", "column-family":"personal"}},
+      "accessType":"read","user":"hrt_12","userGroups":[],"requestData":"scan finance.personal; for hrt_12"
+     },
+     "result":{"isAudited":true,"isAllowed":false,"policyId":2}
+    },
+    {"name":"DENY 'scan finance.personal;' with resourceMatchingScope=SELF_OR_DESCENDANTS for hrt_12",
+      "request":{
+        "resource":{"elements":{"table":"finance", "column-family":"personal"}}, "resourceMatchingScope": "SELF_OR_DESCENDANTS",
+        "accessType":"read","user":"hrt_12","userGroups":[],"requestData":"scan finance.personal; for hrt_12 with with resourceMatchingScope=SELF_OR_DESCENDANTS"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":2}
+    }
+  ]
+}
+

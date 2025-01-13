@@ -19,7 +19,6 @@
 
 package org.apache.ranger.authorization.hadoop;
 
-
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributes;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
@@ -27,104 +26,85 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerHdfsAuthorizer extends INodeAttributeProvider {
-	private static final Logger LOG  = LoggerFactory.getLogger(RangerHdfsAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerHdfsAuthorizer.class);
 
-	private static final String   RANGER_PLUGIN_TYPE                      = "hdfs";
-	private static final String   RANGER_HDFS_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer";
+    private static final String RANGER_PLUGIN_TYPE                    = "hdfs";
+    private static final String RANGER_HDFS_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer";
 
-	private INodeAttributeProvider 	rangerHdfsAuthorizerImpl = null;
-	private RangerPluginClassLoader rangerPluginClassLoader  = null;
+    private INodeAttributeProvider  rangerHdfsAuthorizerImpl;
+    private RangerPluginClassLoader rangerPluginClassLoader;
 
-	public RangerHdfsAuthorizer() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHdfsAuthorizer.RangerHdfsAuthorizer()");
-		}
+    public RangerHdfsAuthorizer() {
+        LOG.debug("==> RangerHdfsAuthorizer.RangerHdfsAuthorizer()");
 
-		this.init();
+        this.init();
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHdfsAuthorizer.RangerHdfsAuthorizer()");
-		}
-	}
+        LOG.debug("<== RangerHdfsAuthorizer.RangerHdfsAuthorizer()");
+    }
 
-	public void init(){
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHdfsAuthorizer.init()");
-		}
+    public void init() {
+        LOG.debug("==> RangerHdfsAuthorizer.init()");
 
-		try {
-			
-			rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
-			
-			@SuppressWarnings("unchecked")
-			Class<INodeAttributeProvider> cls = (Class<INodeAttributeProvider>) Class.forName(RANGER_HDFS_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+        try {
+            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-			activatePluginClassLoader();
+            @SuppressWarnings("unchecked")
+            Class<INodeAttributeProvider> cls = (Class<INodeAttributeProvider>) Class.forName(RANGER_HDFS_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
 
-			rangerHdfsAuthorizerImpl = cls.newInstance();
-		} catch (Exception e) {
-			// check what need to be done
-			LOG.error("Error Enabling RangerHdfsPlugin", e);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+            activatePluginClassLoader();
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHdfsAuthorizer.init()");
-		}
-	}
+            rangerHdfsAuthorizerImpl = cls.newInstance();
+        } catch (Exception e) {
+            LOG.error("Error Enabling RangerHdfsPlugin", e);
+        } finally {
+            deactivatePluginClassLoader();
+        }
 
-	@Override
-	public void start() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHdfsAuthorizer.start()");
-		}
+        LOG.debug("<== RangerHdfsAuthorizer.init()");
+    }
 
-		rangerHdfsAuthorizerImpl.start();
+    @Override
+    public void start() {
+        LOG.debug("==> RangerHdfsAuthorizer.start()");
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHdfsAuthorizer.start()");
-		}
-	}
+        rangerHdfsAuthorizerImpl.start();
 
-	@Override
-	public void stop() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHdfsAuthorizer.stop()");
-		}
+        LOG.debug("<== RangerHdfsAuthorizer.start()");
+    }
 
-		rangerHdfsAuthorizerImpl.stop();
+    @Override
+    public void stop() {
+        LOG.debug("==> RangerHdfsAuthorizer.stop()");
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHdfsAuthorizer.stop()");
-		}
-	}
+        rangerHdfsAuthorizerImpl.stop();
 
-	@Override
-	public INodeAttributes getAttributes(String fullPath, INodeAttributes inode) {
-		return rangerHdfsAuthorizerImpl.getAttributes(fullPath,inode); // return default attributes
-	}
+        LOG.debug("<== RangerHdfsAuthorizer.stop()");
+    }
 
-	@Override
-	public INodeAttributes getAttributes(String[] pathElements, INodeAttributes inode) {
-		return rangerHdfsAuthorizerImpl.getAttributes(pathElements,inode);
-	}
+    @Override
+    public INodeAttributes getAttributes(String fullPath, INodeAttributes inode) {
+        return rangerHdfsAuthorizerImpl.getAttributes(fullPath, inode); // return default attributes
+    }
 
-	@Override
-	public AccessControlEnforcer getExternalAccessControlEnforcer(AccessControlEnforcer defaultEnforcer) {
-		return rangerHdfsAuthorizerImpl.getExternalAccessControlEnforcer(defaultEnforcer);
-	}
+    @Override
+    public INodeAttributes getAttributes(String[] pathElements, INodeAttributes inode) {
+        return rangerHdfsAuthorizerImpl.getAttributes(pathElements, inode);
+    }
 
-	private void activatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.activate();
-		}
-	}
+    @Override
+    public AccessControlEnforcer getExternalAccessControlEnforcer(AccessControlEnforcer defaultEnforcer) {
+        return rangerHdfsAuthorizerImpl.getExternalAccessControlEnforcer(defaultEnforcer);
+    }
 
-	private void deactivatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.deactivate();
-		}
-	}
+    private void activatePluginClassLoader() {
+        if (rangerPluginClassLoader != null) {
+            rangerPluginClassLoader.activate();
+        }
+    }
+
+    private void deactivatePluginClassLoader() {
+        if (rangerPluginClassLoader != null) {
+            rangerPluginClassLoader.deactivate();
+        }
+    }
 }
-

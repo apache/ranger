@@ -160,12 +160,6 @@ public class RangerAPIList {
 	public static final String SEARCH_X_GROUP_USERS = "XUserREST.searchXGroupUsers";
 	public static final String GET_X_GROUP_USERS_BY_GROUP_NAME = "XUserREST.getXGroupUsersByGroupName";
 	public static final String COUNT_X_GROUP_USERS = "XUserREST.countXGroupUsers";
-	public static final String GET_X_GROUP_GROUP = "XUserREST.getXGroupGroup";
-	public static final String CREATE_X_GROUP_GROUP = "XUserREST.createXGroupGroup";
-	public static final String UPDATE_X_GROUP_GROUP = "XUserREST.updateXGroupGroup";
-	public static final String DELETE_X_GROUP_GROUP = "XUserREST.deleteXGroupGroup";
-	public static final String SEARCH_X_GROUP_GROUPS = "XUserREST.searchXGroupGroups";
-	public static final String COUNT_X_GROUP_GROUPS = "XUserREST.countXGroupGroups";
 	public static final String GET_X_PERM_MAP = "XUserREST.getXPermMap";
 	public static final String CREATE_X_PERM_MAP = "XUserREST.createXPermMap";
 	public static final String UPDATE_X_PERM_MAP = "XUserREST.updateXPermMap";
@@ -241,8 +235,10 @@ public class RangerAPIList {
 	public static final String GET_DATA_SHARE_SUMMARY = "GdsREST.getDataShareSummary";
 
 	public static final String ADD_SHARED_RESOURCE     = "GdsREST.addSharedResource";
+	public static final String ADD_SHARED_RESOURCES     = "GdsREST.addSharedResources";
 	public static final String UPDATE_SHARED_RESOURCE  = "GdsREST.updateSharedResource";
 	public static final String REMOVE_SHARED_RESOURCE  = "GdsREST.removeSharedResource";
+	public static final String REMOVE_SHARED_RESOURCES  = "GdsREST.removeSharedResources";
 	public static final String GET_SHARED_RESOURCE     = "GdsREST.getSharedResource";
 	public static final String SEARCH_SHARED_RESOURCES = "GdsREST.searchSharedResources";
 
@@ -258,4 +254,11 @@ public class RangerAPIList {
 	public static final String REMOVE_DATASET_IN_PROJECT = "GdsREST.removeDatasetInProject";
 	public static final String GET_DATASET_IN_PROJECT    = "GdsREST.getDatasetInProject";
 	public static final String SEARCH_DATASET_IN_PROJECT = "GdsREST.searchDatasetInProject";
+	public static final String GET_DATASET_GRANTS        = "GdsREST.getDataSetGrants";
+	public static final String UPDATE_DATASET_GRANTS     = "GdsREST.updateDataSetGrants";
+
+	/**
+	 * List of APIs for PublicAPIsv2
+	 */
+	public static final String GET_SERVICE_HEADERS = "PublicAPIsv2.getServiceHeaders";
 }

@@ -1,0 +1,84 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+ARG UBI_VERSION
+FROM registry.access.redhat.com/ubi9/ubi-minimal:${UBI_VERSION}
+
+USER root
+ARG RANGER_BASE_UBI_JAVA_VERSION
+ENV OS_NAME=RHEL
+
+RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+    install -y java-${RANGER_BASE_UBI_JAVA_VERSION}-openjdk-devel \
+    && microdnf clean all \
+    && rpm -q java-${RANGER_BASE_UBI_JAVA_VERSION}-openjdk-devel
+
+ENV JAVA_HOME="/usr/lib/jvm/java-${RANGER_BASE_UBI_JAVA_VERSION}" \
+    JAVA_VENDOR="openjdk" \
+    JAVA_VERSION="${RANGER_BASE_UBI_JAVA_VERSION}" \
+    JBOSS_CONTAINER_OPENJDK_JDK_MODULE="/opt/jboss/container/openjdk/jdk"
+
+# Install tzdata, Python, python-requests
+RUN microdnf install -y python3 python3-pip bc iputils hostname
+RUN microdnf install -y tar
+RUN microdnf install -y gzip
+RUN microdnf install -y procps
+RUN microdnf install -y vim
+
+# for command useradd, groupadd
+RUN microdnf install -y shadow-utils
+
+# for command su
+RUN microdnf install -y util-linux-user
+RUN microdnf install -y sudo
+
+# for command service
+RUN microdnf install -y initscripts
+RUN microdnf install -y openssh-clients
+RUN microdnf install -y openssh-server
+RUN microdnf install -y wget
+RUN pip3 install apache-ranger
+
+# Set environment variables
+ENV RANGER_HOME=/opt/ranger
+ENV RANGER_DIST=/home/ranger/dist
+ENV RANGER_SCRIPTS=/home/ranger/scripts
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+RUN sudo sed -i 's/^HOME_MODE.*/HOME_MODE 0755/' /etc/login.defs
+
+# setup groups, users, directories
+RUN groupadd ranger \
+    && groupadd knox \
+    && groupadd hadoop \
+    && useradd -g ranger -ms /bin/bash ranger \
+    && useradd -g ranger -ms /bin/bash rangeradmin \
+    && useradd -g ranger -ms /bin/bash rangerusersync \
+    && useradd -g ranger -ms /bin/bash rangertagsync \
+    && useradd -g ranger -ms /bin/bash rangerkms \
+    && useradd -g knox -ms /bin/bash knox \
+    && useradd -g hadoop -ms /bin/bash hdfs \
+    && useradd -g hadoop -ms /bin/bash yarn \
+    && useradd -g hadoop -ms /bin/bash hive \
+    && useradd -g hadoop -ms /bin/bash hbase \
+    && useradd -g hadoop -ms /bin/bash kafka \
+    && mkdir -p /home/ranger/dist \
+    && mkdir -p /home/ranger/scripts \
+    && chown -R ranger:ranger /home/ranger \
+    && mkdir -p /opt/ranger \
+    && chown -R ranger:ranger /opt/ranger
+
+ENTRYPOINT [ "/bin/bash" ]

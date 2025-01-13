@@ -159,10 +159,11 @@
             <email>bpatel@apache.org</email>
             <timezone>Asia/Kolkata</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
-                Freestone Infotech
+                Visa Inc
             </organization>
         </developer>
         <developer>
@@ -176,6 +177,18 @@
             </roles>
             <organization>
 		Privacera
+            </organization>
+        </developer>
+        <developer>
+            <id>brijesh</id>
+            <name>Brijesh Bhalala</name>
+            <email>brijesh@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
             </organization>
         </developer>
         <developer>
@@ -347,13 +360,37 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Privacera
+                Cloudera
+            </organization>
+        </developer>
+        <developer>
+            <id>maheshbandal</id>
+            <name>Mahesh Bandal</name>
+            <email>maheshbandal@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
             </organization>
         </developer>
 	    <developer>
             <id>mehul</id>
             <name>Mehul Parikh</name>
             <email>mehul@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+	</developer>
+        <developer>
+            <id>mugdha</id>
+            <name>Mugdha Varadkar</name>
+            <email>mugdha@apache.org</email>
             <timezone>Asia/Kolkata</timezone>
             <roles>
                 <role>Committer</role>
@@ -643,6 +680,10 @@
             <organization></organization>
         </contributor>
         <contributor>
+            <name>Guru Thejus Arveti</name>
+            <organization></organization>
+        </contributor>
+        <contributor>
             <name>Haihui Xu</name>
             <organization></organization>
         </contributor>
@@ -741,10 +782,6 @@
         <contributor>
             <name>Mateen Mansoori</name>
             <organization></organization>
-        </contributor>
-        <contributor>
-            <name>Mugdha Varadkar</name>
-            <organization>Freestone Infotech</organization>
         </contributor>
         <contributor>
             <name>Naoki Takezoe</name>

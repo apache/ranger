@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +39,36 @@ import java.util.Map;
 import java.util.Set;
 
 public class TestStringUtil {
+    public static Map<String, String> mapFromStrings(String...args) {
+        Map<String, String> ret = new HashMap<>();
+
+        if (args != null) {
+            for (int i = 0; i < args.length; i += 2) {
+                String key = args[i];
+                String val = (args.length > (i + 1)) ? args[i + 1] : null;
+
+                ret.put(key, val);
+            }
+        }
+
+        return ret;
+    }
+
+    public static HashMap<String, List<String>> mapFromStringStringList(Object...args) {
+        HashMap<String, List<String>> ret = new HashMap<>();
+
+        if (args != null) {
+            for (int i = 0; i < args.length; i += 2) {
+                String       key = (String) args[i];
+                List<String> val = (args.length > (i + 1)) ? ((List<String>) args[i + 1]) : null;
+
+                ret.put(key, val);
+            }
+        }
+
+        return ret;
+    }
+
     @Test
     public void testDedupString() {
         Map<String, String> strTbl = new HashMap<>();
@@ -67,13 +98,13 @@ public class TestStringUtil {
         l1 = new ArrayList<>();
         Assert.assertSame("empty list - dedupStringsList() should return the same list", l1, StringUtil.dedupStringsList(l1, strTbl));
 
-        l1 = new ArrayList<String>() {{ add(getString("*")); }};
+        l1 = new ArrayList<>(Collections.singletonList("*"));
         Assert.assertNotSame("non-empty list - dedupStringsList() should return a new list", l1, StringUtil.dedupStringsList(l1, strTbl));
 
-        l1 = new ArrayList<String>() {{ add(getString("*")); add(getString("db1")); }};
+        l1 = new ArrayList<>(Arrays.asList(getString("*"), getString("db1")));
         Assert.assertNotSame("non-empty list - dedupStringsList() should return a new list", l1, StringUtil.dedupStringsList(l1, strTbl));
 
-        List<String> l2 = new ArrayList<String>() {{ add(getString("*")); add(getString("db1")); }};
+        List<String> l2 = new ArrayList<>(Arrays.asList(getString("*"), getString("db1")));
 
         for (int i = 0; i < l1.size(); i++) {
             Assert.assertNotSame("Before dedupStringsList(): l1[" + i + "] == l2[" + i + "]", l1.get(i), l2.get(i));
@@ -100,13 +131,13 @@ public class TestStringUtil {
         s1 = new HashSet<>();
         Assert.assertSame("empty set - dedupStringsSet() should return the same set", s1, StringUtil.dedupStringsSet(s1, strTbl));
 
-        s1 = new HashSet<String>() {{ add(getString("*")); }};
+        s1 = new HashSet<>(Collections.singletonList(getString("*")));
         Assert.assertNotSame("non-empty set - dedupStringsSet() should return a new set", s1, StringUtil.dedupStringsSet(s1, strTbl));
 
-        s1 = new HashSet<String>() {{ add(getString("*")); add(getString("db1")); }};
+        s1 = new HashSet<>(Arrays.asList(getString("*"), getString("db1")));
         Assert.assertNotSame("non-empty set - dedupStringsSet() should return a new set", s1, StringUtil.dedupStringsSet(s1, strTbl));
 
-        Set<String> s2 = new HashSet<String>() {{ add(getString("*")); add(getString("db1")); }};
+        Set<String> s2 = new HashSet<>(Arrays.asList(getString("*"), getString("db1")));
 
         for (String elem : s1) {
             Assert.assertFalse("Before dedupStringsSet(): s1[" + elem + "] == s2[" + elem + "]", containsInstance(s2, elem));
@@ -133,10 +164,12 @@ public class TestStringUtil {
         m1 = new HashMap<>();
         Assert.assertSame("empty map - dedupStringsMap() should return the same map", m1, StringUtil.dedupStringsMap(m1, strTbl));
 
-        m1 = new HashMap<String, String>() {{ put(getString("database"), getString("*")); }};
+        m1 = new HashMap<>();
+        m1.put(getString("database"), getString("*"));
         Assert.assertNotSame("non-empty map - dedupStringsMap() should return a new map", m1, StringUtil.dedupStringsMap(m1, strTbl));
 
-        Map<String, String> m2 = new HashMap<String, String>() {{ put(getString("database"), getString("*")); }};
+        Map<String, String> m2 = new HashMap<>();
+        m2.put(getString("database"), getString("*"));
 
         for (Map.Entry<String, String> entry : m1.entrySet()) {
             String key = entry.getKey();
@@ -169,10 +202,14 @@ public class TestStringUtil {
         m1 = new HashMap<>();
         Assert.assertSame("empty map - dedupStringsMapOfPolicyResource() should return the same map", m1, StringUtil.dedupStringsMapOfPolicyResource(m1, strTbl));
 
-        m1 = new HashMap<String, RangerPolicyResource>() {{ put(getString("database"), new RangerPolicyResource(getString("db1"))); put(getString("table"), new RangerPolicyResource(getString("*"))); }};
+        m1 = new HashMap<>();
+        m1.put(getString("database"), new RangerPolicyResource(getString("db1")));
+        m1.put(getString("table"), new RangerPolicyResource(getString("*")));
         Assert.assertNotSame("non-empty map - dedupStringsMapOfPolicyResource() should return a new map", m1, StringUtil.dedupStringsMapOfPolicyResource(m1, strTbl));
 
-        Map<String, RangerPolicyResource> m2 = new HashMap<String, RangerPolicyResource>() {{ put(getString("database"), new RangerPolicyResource(getString("db1"))); put(getString("table"), new RangerPolicyResource(getString("*"))); }};
+        Map<String, RangerPolicyResource> m2 = new HashMap<>();
+        m2.put(getString("database"), new RangerPolicyResource(getString("db1")));
+        m2.put(getString("table"), new RangerPolicyResource(getString("*")));
 
         for (Map.Entry<String, RangerPolicyResource> entry : m1.entrySet()) {
             String               key    = entry.getKey();
@@ -204,7 +241,7 @@ public class TestStringUtil {
 
     @Test
     public void testJsonCompression() throws IOException {
-        int[] sizeFactors = new int[] { 1, 10, 50, 100, 250, 300, 400, 500 };
+        int[] sizeFactors = new int[] {1, 10, 50, 100, 250, 300, 400, 500};
 
         for (int sizeFactor : sizeFactors) {
             RangerSecurityZone zone         = generateLargeSecurityZone(sizeFactor);
@@ -212,7 +249,7 @@ public class TestStringUtil {
             String             compressed   = StringUtil.compressString(json);
             String             deCompressed = StringUtil.decompressString(compressed);
 
-            System.out.println(String.format("%d: resourceCount=%d: len(json)=%,d, len(compressed)=%,d, savings=(%,d == %.03f%%)", sizeFactor, getResourceCount(zone), json.length(), compressed.length(), (json.length() - compressed.length()), ((json.length() - compressed.length()) / (float) json.length()) * 100));
+            System.out.printf("%d: resourceCount=%d: len(json)=%,d, len(compressed)=%,d, savings=(%,d == %.03f%%)%n", sizeFactor, getResourceCount(zone), json.length(), compressed.length(), (json.length() - compressed.length()), ((json.length() - compressed.length()) / (float) json.length()) * 100);
 
             Assert.assertTrue(compressed.length() < deCompressed.length());
 

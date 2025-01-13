@@ -33,7 +33,7 @@ public class GdsDshidEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDshidEvaluator.class);
 
     private final DataShareInDatasetInfo          dshid;
-    private final GdsDatasetEvaluator             datasetEvaluator;;
+    private final GdsDatasetEvaluator             datasetEvaluator;
     private final RangerValidityScheduleEvaluator scheduleEvaluator;
 
     public GdsDshidEvaluator(DataShareInDatasetInfo dshid, GdsDatasetEvaluator datasetEvaluator) {
@@ -59,6 +59,16 @@ public class GdsDshidEvaluator {
         return datasetEvaluator;
     }
 
+    public boolean isActive() {
+        boolean ret = dshid.getStatus() == RangerGds.GdsShareStatus.ACTIVE;
+
+        if (ret && scheduleEvaluator != null) {
+            ret = scheduleEvaluator.isApplicable(System.currentTimeMillis());
+        }
+
+        return ret;
+    }
+
     public boolean isAllowed(RangerAccessRequest request) {
         boolean ret = isActive();
 
@@ -77,16 +87,5 @@ public class GdsDshidEvaluator {
         datasetEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
 
         LOG.debug("<== GdsDshidEvaluator.getResourceACLs({}, {})", request, acls);
-    }
-
-
-    private boolean isActive() {
-        boolean ret = dshid.getStatus() == RangerGds.GdsShareStatus.ACTIVE;
-
-        if (ret && scheduleEvaluator != null) {
-            ret = scheduleEvaluator.isApplicable(System.currentTimeMillis());
-        }
-
-        return ret;
     }
 }

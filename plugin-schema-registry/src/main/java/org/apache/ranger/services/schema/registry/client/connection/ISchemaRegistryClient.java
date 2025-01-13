@@ -21,8 +21,10 @@ import java.util.List;
 
 public interface ISchemaRegistryClient {
     List<String> getSchemaGroups();
+
     List<String> getSchemaNames(List<String> schemaGroup);
+
     List<String> getSchemaBranches(String schemaMetadataName);
+
     void checkConnection() throws Exception;
 }
-

@@ -124,8 +124,8 @@ public class RangerKrbFilter implements Filter {
   private String cookieDomain;
   private String cookiePath;
   private String cookieName;
-  private boolean isKerberosEnabled = false;
-  private boolean supportKerberosAuthForBrowserLogin = false;
+  private boolean isKerberosEnabled;
+  private boolean supportKerberosAuthForBrowserLogin;
 
   /**
    * <p>Initializes the authentication filter and signer secret provider.</p>

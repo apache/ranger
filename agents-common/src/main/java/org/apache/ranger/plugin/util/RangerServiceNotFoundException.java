@@ -22,15 +22,19 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.lang.StringUtils;
 
 public class RangerServiceNotFoundException extends Exception {
-    static private final String formatString = "\"RANGER_ERROR_SERVICE_NOT_FOUND: ServiceName=%s\"";
+    private static final String formatString = "\"RANGER_ERROR_SERVICE_NOT_FOUND: ServiceName=%s\"";
+
     public RangerServiceNotFoundException(String serviceName) {
         super(serviceName);
     }
-    public static final String buildExceptionMsg(String serviceName) {
+
+    public static String buildExceptionMsg(String serviceName) {
         return String.format(formatString, serviceName);
     }
-    public static final void throwExceptionIfServiceNotFound(String serviceName, String exceptionMsg) throws RangerServiceNotFoundException {
+
+    public static void throwExceptionIfServiceNotFound(String serviceName, String exceptionMsg) throws RangerServiceNotFoundException {
         String expectedExceptionMsg = buildExceptionMsg(serviceName);
+
         if (StringUtils.startsWith(exceptionMsg, expectedExceptionMsg)) {
             throw new RangerServiceNotFoundException(serviceName);
         }

@@ -23,9 +23,9 @@
 	'utils/XALangSupport',
 	'models/VAppState',
 	'utils/XAUtils',
-	'bootbox'
+	'bootprompt'
 ],
-function(Backbone, Marionette, localization, MAppState, XAUtil, bootbox){
+function(Backbone, Marionette, localization, MAppState, XAUtil, bootprompt){
     'use strict';
 
 	return Backbone.Marionette.AppRouter.extend({
@@ -97,22 +97,29 @@ function(Backbone, Marionette, localization, MAppState, XAUtil, bootbox){
 				callbackArgs = arguments;
 				var formStatus = $('.form-horizontal').find('.dirtyField').length > 0 ? true : false
 				if (window._preventNavigation && formStatus) {
-					bootbox.dialog(window._preventNavigationMsg, [{
-						"label": "Stay on this page!",
-						"class": "btn-success btn-sm",
-						"callback": function() {
-							router.navigate(MAppState.get('previousFragment'), {
-								trigger: false
-							});
+					bootprompt.dialog(
+					{
+						message: window._preventNavigationMsg,
+						buttons: {
+							noclose: {
+								"label" : localization.tt('btn.stayOnPage'),
+								"className" : "btn-success btn-sm",
+								"callback": function() {
+									router.navigate(MAppState.get('previousFragment'), {
+										trigger: false
+									});
+								}
+							},
+							cancel: {
+								"label" : localization.tt('btn.leavePage'),
+								"className" : "btn-danger btn-sm",
+								"callback": function() {
+									XAUtil.allowNavigation();
+									proceedWithCallback();
+								}
+							}
 						}
-					}, {
-						"label": "Leave this page",
-						"class": "btn-danger btn-sm",
-						"callback": function() {
-							XAUtil.allowNavigation();
-							proceedWithCallback();
-						}
-					}]);
+					});
 
 				} else {
 					proceedWithCallback();

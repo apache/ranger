@@ -19,15 +19,21 @@ FROM ranger-base:latest
 ARG RANGER_BUILD_JAVA_VERSION
 ARG TARGETARCH
 
+ENV JAVA_HOME=/usr/lib/jvm/java-1.${RANGER_BUILD_JAVA_VERSION}.0-openjdk-${TARGETARCH}
+
 # Install necessary packages to build Ranger
-RUN apt-get update && apt-get -y install git maven build-essential
+RUN if [ "${OS_NAME}" = "UBUNTU" ]; then\
+    apt-get update && apt-get -y install git maven build-essential;\
+    update-java-alternatives --set "$JAVA_HOME";\
+    fi
+
+RUN if [ "${OS_NAME}" = "RHEL" ]; then\
+    microdnf install -y git maven gcc;\
+    fi
 
 # Set environment variables
-ENV JAVA_HOME  /usr/lib/jvm/java-${RANGER_BUILD_JAVA_VERSION}-openjdk-${TARGETARCH}
-ENV MAVEN_HOME /usr/share/maven
-ENV PATH       /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/apache-maven/bin
-
-RUN update-java-alternatives --set /usr/lib/jvm/java-1.${RANGER_BUILD_JAVA_VERSION}.0-openjdk-${TARGETARCH}
+ENV MAVEN_HOME=/usr/share/maven
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/apache-maven/bin
 
 # setup ranger group, and users
 RUN mkdir -p /home/ranger/git && \

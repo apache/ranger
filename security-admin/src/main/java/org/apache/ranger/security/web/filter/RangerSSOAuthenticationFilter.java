@@ -246,7 +246,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			}
 		} else if(ssoEnabled && ((HttpServletRequest) servletRequest).getRequestURI().contains(RestUtil.LOCAL_LOGIN_URL) && isWebUserAgent(userAgent) && isAuthenticated()){
 				//If already there's an active session with sso and user want's to switch to local login(i.e without sso) then it won't be navigated to local login
-				// In this scenario the user as to use separate browser
+				// In this scenario the user has to use separate browser
 				String url = ((HttpServletRequest) servletRequest).getRequestURI().replace(RestUtil.LOCAL_LOGIN_URL+"/", "");
 				url = url.replace(RestUtil.LOCAL_LOGIN_URL, "");
 				LOG.warn("There is an active session and if you want local login to ranger, try this on a separate browser");
@@ -262,20 +262,6 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			}
 			((HttpServletRequest) servletRequest).getSession().invalidate();
 
-			((HttpServletResponse)servletResponse).sendRedirect(url);
-		} else if (!ssoEnabled && !((HttpServletRequest) servletRequest).getRequestURI().contains(RestUtil.LOCAL_LOGIN_URL) && !isAuthenticated() &&
-				( isWebUserAgent(userAgent) || isBrowserAgent(userAgent)) && !isKerberosAuthEnabled()) {
-			// if sso is not enabled and request has is from browser and user is not authenticated and browser kerberos auth is not enabled
-			// then need to redirect user to the login page.
-			String url = ((HttpServletRequest) servletRequest).getRequestURI() ;
-			if (!url.contains("login.jsp")) {
-				url = url + "login.jsp";
-			}
-			// invalidating session
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Request does not have any authentication, redirecting to login page.");
-			}
-			((HttpServletRequest) servletRequest).getSession().invalidate();
 			((HttpServletResponse)servletResponse).sendRedirect(url);
 		}
 		//if sso is not enable or the request is not from browser then proceed further with next filter
@@ -622,7 +608,4 @@ public class RangerSSOAuthenticationFilter implements Filter {
         return isWeb;
     }
 
-	protected boolean isKerberosAuthEnabled() {
-		return PropertiesUtil.getBooleanProperty("ranger.allow.kerberos.auth.login.browser", false);
-	}
 }
