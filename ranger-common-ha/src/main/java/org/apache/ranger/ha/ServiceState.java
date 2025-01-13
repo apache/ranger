@@ -19,95 +19,104 @@
 
 package org.apache.ranger.ha;
 
-
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * A class that maintains the state of this instance.
- *
+ * <p>
  * The states are maintained at a granular level, including in-transition
  * states. The transitions are directed by {@link ActiveInstanceElectorService}.
  */
 public class ServiceState {
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceState.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(ServiceState.class);
-	public enum ServiceStateValue {
-		ACTIVE, PASSIVE, BECOMING_ACTIVE, BECOMING_PASSIVE, MIGRATING
-	}
+    private static volatile ServiceState instance;
 
-	private Configuration configuration;
-	private volatile ServiceStateValue state;
-	private static volatile ServiceState instance;
+    private          Configuration     configuration;
+    private volatile ServiceStateValue state;
 
-	private ServiceState() throws Exception {}
+    private ServiceState() throws Exception {}
 
-	private ServiceState(Configuration configuration) {
-		this.configuration = configuration;
-		state = !HAConfiguration.isHAEnabled(configuration) ? ServiceStateValue.ACTIVE : ServiceStateValue.PASSIVE;
-	}
+    private ServiceState(Configuration configuration) {
+        this.configuration = configuration;
+        this.state         = !HAConfiguration.isHAEnabled(configuration) ? ServiceStateValue.ACTIVE : ServiceStateValue.PASSIVE;
+    }
 
-	public static ServiceState getInstance(Configuration configuration) {
-		if(instance == null){
-	        synchronized (CuratorFactory.class) {
-	            if(instance == null){
-	                try {
-						instance = new ServiceState(configuration);
-					} catch (Exception e) {
-						LOG.info("HA is not enabled so not initialising curator ServiceState",e.getMessage());
-					}
-	            }
-	        }
-	    }
-	    return instance;
-	}
+    public static ServiceState getInstance(Configuration configuration) {
+        ServiceState me = instance;
 
-	public ServiceStateValue getState() {
-		return state;
-	}
+        if (me == null) {
+            synchronized (CuratorFactory.class) {
+                me = instance;
 
-	public void becomingActive() {
-		LOG.warn("Instance becoming active from {}", state);
-		setState(ServiceStateValue.BECOMING_ACTIVE);
-	}
+                if (me == null) {
+                    try {
+                        me       = new ServiceState(configuration);
+                        instance = me;
+                    } catch (Exception e) {
+                        LOG.info("HA is not enabled so not initialising curator ServiceState {}", e.getMessage());
+                    }
+                }
+            }
+        }
 
-	private void setState(ServiceStateValue newState) {
-		Preconditions.checkState(HAConfiguration.isHAEnabled(configuration),
-				"Cannot change state as requested, as HA is not enabled for this instance.");
-		state = newState;
-	}
+        return me;
+    }
 
-	public void setActive() {
-		LOG.warn("Instance is active from {}", state);
-		setState(ServiceStateValue.ACTIVE);
-	}
+    public ServiceStateValue getState() {
+        return state;
+    }
 
-	public void becomingPassive() {
-		LOG.warn("Instance becoming passive from {}" + state);
-		setState(ServiceStateValue.BECOMING_PASSIVE);
-	}
+    private void setState(ServiceStateValue newState) {
+        Preconditions.checkState(HAConfiguration.isHAEnabled(configuration), "Cannot change state as requested, as HA is not enabled for this instance.");
 
-	public void setPassive() {
-		LOG.warn("Instance is passive from {}", state);
-		setState(ServiceStateValue.PASSIVE);
-	}
+        state = newState;
+    }
 
-	public boolean isInstanceInTransition() {
-		ServiceStateValue state = getState();
-		return state == ServiceStateValue.BECOMING_ACTIVE || state == ServiceStateValue.BECOMING_PASSIVE;
-	}
+    public void becomingActive() {
+        LOG.warn("Instance becoming active from {}", state);
 
-	public void setMigration() {
-		LOG.warn("Instance in {}" + state);
-		setState(ServiceStateValue.MIGRATING);
-	}
+        setState(ServiceStateValue.BECOMING_ACTIVE);
+    }
 
-	public boolean isInstanceInMigration() {
-		return getState() == ServiceStateValue.MIGRATING;
-	}
+    public void setActive() {
+        LOG.warn("Instance is active from {}", state);
 
+        setState(ServiceStateValue.ACTIVE);
+    }
+
+    public void becomingPassive() {
+        LOG.warn("Instance becoming passive from {}", state);
+
+        setState(ServiceStateValue.BECOMING_PASSIVE);
+    }
+
+    public void setPassive() {
+        LOG.warn("Instance is passive from {}", state);
+
+        setState(ServiceStateValue.PASSIVE);
+    }
+
+    public boolean isInstanceInTransition() {
+        ServiceStateValue state = getState();
+
+        return state == ServiceStateValue.BECOMING_ACTIVE || state == ServiceStateValue.BECOMING_PASSIVE;
+    }
+
+    public void setMigration() {
+        LOG.warn("Instance in {}", state);
+
+        setState(ServiceStateValue.MIGRATING);
+    }
+
+    public boolean isInstanceInMigration() {
+        return getState() == ServiceStateValue.MIGRATING;
+    }
+
+    public enum ServiceStateValue {
+        ACTIVE, PASSIVE, BECOMING_ACTIVE, BECOMING_PASSIVE, MIGRATING
+    }
 }

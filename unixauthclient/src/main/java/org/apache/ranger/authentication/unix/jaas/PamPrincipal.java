@@ -25,62 +25,52 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.Set;
 
-
 public class PamPrincipal implements Principal {
-    private String _userName;
-    private String _gecos;
-    private String _homeDir;
-    private String _shell;
-    private int _uid;
-    private int _gid;
-    private Set<String> _groups;
+    private final String userName;
+    private final String gecos;
+    private final String homeDir;
+    private final String shell;
+    private final Set<String> groups;
+    private final int uid;
+    private final int gid;
 
-    public PamPrincipal(UnixUser user)
-    {
+    public PamPrincipal(UnixUser user) {
         super();
-        _userName = user.getUserName();
-        _gecos = user.getGecos();
-        _homeDir = user.getDir();
-        _shell = user.getShell();
-        _uid = user.getUID();
-        _gid = user.getGID();
-        _groups = Collections.unmodifiableSet(user.getGroups());
+        userName = user.getUserName();
+        gecos    = user.getGecos();
+        homeDir  = user.getDir();
+        shell    = user.getShell();
+        uid      = user.getUID();
+        gid      = user.getGID();
+        groups   = Collections.unmodifiableSet(user.getGroups());
     }
 
     @Override
-    public String getName()
-    {
-        return _userName;
+    public String getName() {
+        return userName;
     }
 
-    public String getGecos()
-    {
-        return _gecos;
+    public String getGecos() {
+        return gecos;
     }
 
-    public String getHomeDir()
-    {
-        return _homeDir;
+    public String getHomeDir() {
+        return homeDir;
     }
 
-    public String getShell()
-    {
-        return _shell;
+    public String getShell() {
+        return shell;
     }
 
-    public int getUid()
-    {
-        return _uid;
+    public int getUid() {
+        return uid;
     }
 
-    public int getGid()
-    {
-        return _gid;
+    public int getGid() {
+        return gid;
     }
 
-    public Set<String> getGroups()
-    {
-        return _groups;
+    public Set<String> getGroups() {
+        return groups;
     }
-
 }

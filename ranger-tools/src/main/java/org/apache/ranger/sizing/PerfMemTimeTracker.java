@@ -27,13 +27,13 @@ public class PerfMemTimeTracker {
     public static final String STR_INTENT    = "  ";
     public static final String STR_FIELD_SEP = "|";
 
-    private final String tag;
-    private final long   startTime;
-    private       long   endTime;
-    private       long   gcTime;
-    private final long   startMemory;
-    private       long   endMemory;
-    private       List<PerfMemTimeTracker> children = null;
+    private final String                   tag;
+    private final long                     startTime;
+    private final long                     startMemory;
+    private       long                     endTime;
+    private       long                     gcTime;
+    private       long                     endMemory;
+    private       List<PerfMemTimeTracker> children;
 
     public PerfMemTimeTracker(String tag) {
         this.tag       = tag;
@@ -57,7 +57,7 @@ public class PerfMemTimeTracker {
         rt.gc();
 
         this.endTime   = System.currentTimeMillis();
-        this.gcTime    += (endTime - gcStartTime);
+        this.gcTime   += (endTime - gcStartTime);
         this.endMemory = rt.totalMemory() - rt.freeMemory();
     }
 

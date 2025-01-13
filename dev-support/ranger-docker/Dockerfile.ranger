@@ -22,9 +22,10 @@ ARG RANGER_DB_TYPE
 ARG TARGETARCH
 ARG RANGER_ADMIN_JAVA_VERSION
 
-RUN if [ "${OS_NAME}" == "UBUNTU" ]; then\
-    ENV JAVA_HOME      /usr/lib/jvm/java-${RANGER_ADMIN_JAVA_VERSION}-openjdk-${TARGETARCH}\
-    update-java-alternatives --set /usr/lib/jvm/java-1.${RANGER_ADMIN_JAVA_VERSION}.0-openjdk-${TARGETARCH};\
+ENV JAVA_HOME=/usr/lib/jvm/java-1.${RANGER_ADMIN_JAVA_VERSION}.0-openjdk-${TARGETARCH}
+
+RUN if [ "${OS_NAME}" = "UBUNTU" ]; then\
+    update-java-alternatives --set "$JAVA_HOME";\
     fi
 
 COPY ./dist/version                               /home/ranger/dist/
@@ -52,6 +53,10 @@ COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
 COPY ./downloads/log4jdbc-1.2.jar                 /home/ranger/dist/
 RUN     mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector.jar \
      && mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
+
+FROM ranger AS ranger_oracle
+COPY ./downloads/ojdbc8.jar         /home/ranger/dist/
+RUN mv /home/ranger/dist/ojdbc8.jar /usr/share/java/oracle.jar
 
 FROM ranger_${RANGER_DB_TYPE}
 

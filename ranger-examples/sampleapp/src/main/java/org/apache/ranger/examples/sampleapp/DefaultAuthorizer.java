@@ -23,11 +23,9 @@ import java.util.Set;
 
 public class DefaultAuthorizer implements IAuthorizer {
     public DefaultAuthorizer() {
-
     }
 
     public void init() {
-
     }
 
     public boolean authorize(String fileName, String accessType, String user, Set<String> userGroups) {

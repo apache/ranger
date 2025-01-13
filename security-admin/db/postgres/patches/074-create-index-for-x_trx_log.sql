@@ -18,11 +18,15 @@ CREATE OR REPLACE FUNCTION create_index_for_x_trx_log()
 RETURNS void AS $$
 DECLARE
 	v_attnum1 integer := 0;
+	v_table_exists integer := 0;
 BEGIN
-	select attnum into v_attnum1 from pg_attribute where attrelid in(select oid from pg_class where relname='x_trx_log') and attname in('trx_id');
-	IF v_attnum1 > 0 THEN
-		IF not exists (select * from pg_index where indrelid in(select oid from pg_class where relname='x_trx_log') and indkey[0]=v_attnum1) THEN
-			CREATE INDEX x_trx_log_IDX_trx_id ON x_trx_log(trx_id);
+	SELECT COUNT(*) INTO v_table_exists FROM pg_class WHERE relname = 'x_trx_log';
+	IF v_table_exists > 0 THEN
+		select attnum into v_attnum1 from pg_attribute where attrelid in(select oid from pg_class where relname='x_trx_log') and attname in('trx_id');
+		IF v_attnum1 > 0 THEN
+			IF not exists (select * from pg_index where indrelid in(select oid from pg_class where relname='x_trx_log') and indkey[0]=v_attnum1) THEN
+				CREATE INDEX x_trx_log_IDX_trx_id ON x_trx_log(trx_id);
+			END IF;
 		END IF;
 	END IF;
 END;

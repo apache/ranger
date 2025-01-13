@@ -1697,20 +1697,23 @@ CREATE TABLE `x_rms_mapping_provider` (
 );
 
 CREATE TABLE `x_gds_dataset` (
-    `id`              BIGINT(20)   NOT NULL AUTO_INCREMENT
-  , `guid`            VARCHAR(64)  NOT NULL
-  , `create_time`     TIMESTAMP    NULL     DEFAULT NULL
-  , `update_time`     TIMESTAMP    NULL     DEFAULT NULL
-  , `added_by_id`     BIGINT(20)   NULL     DEFAULT NULL
-  , `upd_by_id`       BIGINT(20)   NULL     DEFAULT NULL
-  , `version`         BIGINT(20)   NOT NULL DEFAULT 1
-  , `is_enabled`      TINYINT(1)   NOT NULL DEFAULT '1'
-  , `name`            VARCHAR(512) NOT NULL
-  , `description`     TEXT         NULL     DEFAULT NULL
-  , `acl`             TEXT         NULL     DEFAULT NULL
-  , `terms_of_use`    TEXT         NULL     DEFAULT NULL
-  , `options`         TEXT         NULL     DEFAULT NULL
-  , `additional_info` TEXT         NULL     DEFAULT NULL
+    `id`                BIGINT(20)   NOT NULL AUTO_INCREMENT
+  , `guid`              VARCHAR(64)  NOT NULL
+  , `create_time`       TIMESTAMP    NULL     DEFAULT NULL
+  , `update_time`       TIMESTAMP    NULL     DEFAULT NULL
+  , `added_by_id`       BIGINT(20)   NULL     DEFAULT NULL
+  , `upd_by_id`         BIGINT(20)   NULL     DEFAULT NULL
+  , `version`           BIGINT(20)   NOT NULL DEFAULT 1
+  , `is_enabled`        TINYINT(1)   NOT NULL DEFAULT '1'
+  , `name`              VARCHAR(512) NOT NULL
+  , `description`       TEXT         NULL     DEFAULT NULL
+  , `acl`               TEXT         NULL     DEFAULT NULL
+  , `terms_of_use`      TEXT         NULL     DEFAULT NULL
+  , `options`           TEXT         NULL     DEFAULT NULL
+  , `additional_info`   TEXT         NULL     DEFAULT NULL
+  , `validity_schedule` TEXT         NULL     DEFAULT NULL
+  , `labels`            TEXT         NULL     DEFAULT NULL
+  , `keywords`          TEXT         NULL     DEFAULT NULL
   , PRIMARY KEY(`id`)
   , UNIQUE KEY `x_gds_dataset_UK_name`(`name`)
   , CONSTRAINT `x_gds_dataset_FK_added_by_id` FOREIGN KEY(`added_by_id`) REFERENCES `x_portal_user`(`id`)
@@ -2042,6 +2045,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('072',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('073',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('074',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');

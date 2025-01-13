@@ -19,15 +19,11 @@
 
 package org.apache.ranger.services.sqoop.client;
 
-import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.security.auth.Subject;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
@@ -45,329 +41,289 @@ import org.apache.ranger.services.sqoop.client.json.model.SqoopLinksResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import javax.security.auth.Subject;
+
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SqoopClient extends BaseClient {
+    private static final Logger LOG = LoggerFactory.getLogger(SqoopClient.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(SqoopClient.class);
+    private static final String EXPECTED_MIME_TYPE           = "application/json";
+    private static final String SQOOP_CONNECTOR_API_ENDPOINT = "/sqoop/v1/connector/all";
+    private static final String SQOOP_LINK_API_ENDPOINT      = "/sqoop/v1/link/all";
+    private static final String SQOOP_JOB_API_ENDPOINT       = "/sqoop/v1/job/all";
+    private static final String ERROR_MESSAGE                = " You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
 
-	private static final String EXPECTED_MIME_TYPE = "application/json";
+    private final String sqoopUrl;
+    private final String userName;
 
-	private static final String SQOOP_CONNECTOR_API_ENDPOINT = "/sqoop/v1/connector/all";
+    public SqoopClient(String serviceName, Map<String, String> configs) {
+        super(serviceName, configs, "sqoop-client");
+        this.sqoopUrl = configs.get("sqoop.url");
+        this.userName = configs.get("username");
 
-	private static final String SQOOP_LINK_API_ENDPOINT = "/sqoop/v1/link/all";
+        if (StringUtils.isEmpty(this.sqoopUrl)) {
+            LOG.error("No value found for configuration 'sqoop.url'. Sqoop resource lookup will fail.");
+        }
 
-	private static final String SQOOP_JOB_API_ENDPOINT = "/sqoop/v1/job/all";
+        if (StringUtils.isEmpty(this.userName)) {
+            LOG.error("No value found for configuration 'username'. Sqoop resource lookup will fail.");
+        }
 
-	private static final String ERROR_MESSAGE = " You can still save the repository and start creating "
-			+ "policies, but you would not be able to use autocomplete for "
-			+ "resource names. Check ranger_admin.log for more info.";
+        LOG.debug("Sqoop Client is build with url [{}], user: [{}].", this.sqoopUrl, this.userName);
+    }
 
-	private String sqoopUrl;
-	private String userName;
+    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) {
+        SqoopClient  sqoopClient = getSqoopClient(serviceName, configs);
+        List<String> strList     = sqoopClient.getConnectorList(null, null);
 
-	public SqoopClient(String serviceName, Map<String, String> configs) {
+        boolean connectivityStatus = false;
+        if (CollectionUtils.isNotEmpty(strList)) {
+            LOG.debug("ConnectionTest list size {} sqoop connectors.", strList.size());
 
-		super(serviceName, configs, "sqoop-client");
-		this.sqoopUrl = configs.get("sqoop.url");
-		this.userName = configs.get("username");
+            connectivityStatus = true;
+        }
 
-		if (StringUtils.isEmpty(this.sqoopUrl)) {
-			LOG.error("No value found for configuration 'sqoop.url'. Sqoop resource lookup will fail.");
-		}
-		if (StringUtils.isEmpty(this.userName)) {
-			LOG.error("No value found for configuration 'username'. Sqoop resource lookup will fail.");
-		}
+        Map<String, Object> responseData = new HashMap<>();
+        if (connectivityStatus) {
+            String successMsg = "ConnectionTest Successful.";
+            BaseClient.generateResponseDataMap(true, successMsg, successMsg, null, null, responseData);
+        } else {
+            String failureMsg = "Unable to retrieve any sqoop connectors using given parameters.";
+            BaseClient.generateResponseDataMap(false, failureMsg, failureMsg + ERROR_MESSAGE, null, null, responseData);
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Sqoop Client is build with url [" + this.sqoopUrl + "], user: [" + this.userName + "].");
-		}
-	}
+        return responseData;
+    }
 
-	public List<String> getConnectorList(final String connectorMatching, final List<String> existingConnectors) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get sqoop connector list for connectorMatching: " + connectorMatching + ", existingConnectors: "
-					+ existingConnectors);
-		}
-		Subject subj = getLoginSubject();
-		if (subj == null) {
-			return Collections.emptyList();
-		}
+    public static SqoopClient getSqoopClient(String serviceName, Map<String, String> configs) {
+        SqoopClient sqoopClient;
 
-		List<String> ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+        LOG.debug("Getting SqoopClient for datasource: {}", serviceName);
 
-			@Override
-			public List<String> run() {
+        if (MapUtils.isEmpty(configs)) {
+            String msgDesc = "Could not connect sqoop as Connection ConfigMap is empty.";
+            LOG.error(msgDesc);
 
-				ClientResponse response = getClientResponse(sqoopUrl, SQOOP_CONNECTOR_API_ENDPOINT, userName);
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
+            throw hdpException;
+        } else {
+            sqoopClient = new SqoopClient(serviceName, configs);
+        }
+        return sqoopClient;
+    }
 
-				SqoopConnectorsResponse sqoopConnectorsResponse = getSqoopResourceResponse(response,
-						SqoopConnectorsResponse.class);
-				if (sqoopConnectorsResponse == null || CollectionUtils.isEmpty(sqoopConnectorsResponse.getConnectors())) {
-					return Collections.emptyList();
-				}
-				List<String> connectorResponses = new ArrayList<>();
-				for (SqoopConnectorResponse sqoopConnectorResponse : sqoopConnectorsResponse.getConnectors()) {
-					connectorResponses.add(sqoopConnectorResponse.getName());
-				}
+    public List<String> getConnectorList(final String connectorMatching, final List<String> existingConnectors) {
+        LOG.debug("Get sqoop connector list for connectorMatching: {}, existingConnectors: {}", connectorMatching, existingConnectors);
 
-				List<String> connectors = null;
-				if (CollectionUtils.isNotEmpty(connectorResponses)) {
-					connectors = filterResourceFromResponse(connectorMatching, existingConnectors, connectorResponses);
-				}
-				return connectors;
-			}
-		});
+        Subject subj = getLoginSubject();
+        if (subj == null) {
+            return Collections.emptyList();
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get sqoop connector list result: " + ret);
-		}
-		return ret;
-	}
+        List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
+            ClientResponse response = getClientResponse(sqoopUrl, SQOOP_CONNECTOR_API_ENDPOINT, userName);
 
-	public List<String> getLinkList(final String linkMatching, final List<String> existingLinks) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get sqoop link list for linkMatching: " + linkMatching + ", existingLinks: " + existingLinks);
-		}
-		Subject subj = getLoginSubject();
-		if (subj == null) {
-			return Collections.emptyList();
-		}
+            SqoopConnectorsResponse sqoopConnectorsResponse = getSqoopResourceResponse(response, SqoopConnectorsResponse.class);
+            if (sqoopConnectorsResponse == null || CollectionUtils.isEmpty(sqoopConnectorsResponse.getConnectors())) {
+                return Collections.emptyList();
+            }
 
-		List<String> ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+            List<String> connectorResponses = new ArrayList<>();
+            for (SqoopConnectorResponse sqoopConnectorResponse : sqoopConnectorsResponse.getConnectors()) {
+                connectorResponses.add(sqoopConnectorResponse.getName());
+            }
 
-			@Override
-			public List<String> run() {
+            List<String> connectors = null;
+            if (CollectionUtils.isNotEmpty(connectorResponses)) {
+                connectors = filterResourceFromResponse(connectorMatching, existingConnectors, connectorResponses);
+            }
+            return connectors;
+        });
 
-				ClientResponse response = getClientResponse(sqoopUrl, SQOOP_LINK_API_ENDPOINT, userName);
+        LOG.debug("Get sqoop connector list result: {}", ret);
 
-				SqoopLinksResponse sqoopLinksResponse = getSqoopResourceResponse(response, SqoopLinksResponse.class);
-				if (sqoopLinksResponse == null || CollectionUtils.isEmpty(sqoopLinksResponse.getLinks())) {
-					return Collections.emptyList();
-				}
-				List<String> linkResponses = new ArrayList<>();
-				for (SqoopLinkResponse sqoopLinkResponse : sqoopLinksResponse.getLinks()) {
-					linkResponses.add(sqoopLinkResponse.getName());
-				}
+        return ret;
+    }
 
-				List<String> links = null;
-				if (CollectionUtils.isNotEmpty(linkResponses)) {
-					links = filterResourceFromResponse(linkMatching, existingLinks, linkResponses);
-				}
-				return links;
-			}
-		});
+    public List<String> getLinkList(final String linkMatching, final List<String> existingLinks) {
+        LOG.debug("Get sqoop link list for linkMatching: {}, existingLinks: {}", linkMatching, existingLinks);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get sqoop link list result: " + ret);
-		}
-		return ret;
-	}
+        Subject subj = getLoginSubject();
+        if (subj == null) {
+            return Collections.emptyList();
+        }
 
-	public List<String> getJobList(final String jobMatching, final List<String> existingJobs) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get sqoop job list for jobMatching: " + jobMatching + ", existingJobs: " + existingJobs);
-		}
-		Subject subj = getLoginSubject();
-		if (subj == null) {
-			return Collections.emptyList();
-		}
+        List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
+            ClientResponse response = getClientResponse(sqoopUrl, SQOOP_LINK_API_ENDPOINT, userName);
+            SqoopLinksResponse sqoopLinksResponse = getSqoopResourceResponse(response, SqoopLinksResponse.class);
+            if (sqoopLinksResponse == null || CollectionUtils.isEmpty(sqoopLinksResponse.getLinks())) {
+                return Collections.emptyList();
+            }
+            List<String> linkResponses = new ArrayList<>();
+            for (SqoopLinkResponse sqoopLinkResponse : sqoopLinksResponse.getLinks()) {
+                linkResponses.add(sqoopLinkResponse.getName());
+            }
 
-		List<String> ret = Subject.doAs(subj, new PrivilegedAction<List<String>>() {
+            List<String> links = null;
+            if (CollectionUtils.isNotEmpty(linkResponses)) {
+                links = filterResourceFromResponse(linkMatching, existingLinks, linkResponses);
+            }
+            return links;
+        });
 
-			@Override
-			public List<String> run() {
+        LOG.debug("Get sqoop link list result: {}", ret);
+        return ret;
+    }
 
-				ClientResponse response = getClientResponse(sqoopUrl, SQOOP_JOB_API_ENDPOINT, userName);
+    public List<String> getJobList(final String jobMatching, final List<String> existingJobs) {
+        LOG.debug("Get sqoop job list for jobMatching: {}, existingJobs: {}", jobMatching, existingJobs);
 
-				SqoopJobsResponse sqoopJobsResponse = getSqoopResourceResponse(response, SqoopJobsResponse.class);
-				if (sqoopJobsResponse == null || CollectionUtils.isEmpty(sqoopJobsResponse.getJobs())) {
-					return Collections.emptyList();
-				}
-				List<String> jobResponses = new ArrayList<>();
-				for (SqoopJobResponse sqoopJobResponse : sqoopJobsResponse.getJobs()) {
-					jobResponses.add(sqoopJobResponse.getName());
-				}
+        Subject subj = getLoginSubject();
+        if (subj == null) {
+            return Collections.emptyList();
+        }
 
-				List<String> jobs = null;
-				if (CollectionUtils.isNotEmpty(jobResponses)) {
-					jobs = filterResourceFromResponse(jobMatching, existingJobs, jobResponses);
-				}
-				return jobs;
-			}
-		});
+        List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
+            ClientResponse response = getClientResponse(sqoopUrl, SQOOP_JOB_API_ENDPOINT, userName);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Get sqoop job list result: " + ret);
-		}
-		return ret;
-	}
+            SqoopJobsResponse sqoopJobsResponse = getSqoopResourceResponse(response, SqoopJobsResponse.class);
+            if (sqoopJobsResponse == null || CollectionUtils.isEmpty(sqoopJobsResponse.getJobs())) {
+                return Collections.emptyList();
+            }
+            List<String> jobResponses = new ArrayList<>();
+            for (SqoopJobResponse sqoopJobResponse : sqoopJobsResponse.getJobs()) {
+                jobResponses.add(sqoopJobResponse.getName());
+            }
 
-	private static ClientResponse getClientResponse(String sqoopUrl, String sqoopApi, String userName) {
-		ClientResponse response = null;
-		String[] sqoopUrls = sqoopUrl.trim().split("[,;]");
-		if (ArrayUtils.isEmpty(sqoopUrls)) {
-			return null;
-		}
+            List<String> jobs = null;
+            if (CollectionUtils.isNotEmpty(jobResponses)) {
+                jobs = filterResourceFromResponse(jobMatching, existingJobs, jobResponses);
+            }
+            return jobs;
+        });
 
-		Client client = Client.create();
+        LOG.debug("Get sqoop job list result: {}", ret);
 
-		for (String currentUrl : sqoopUrls) {
-			if (StringUtils.isBlank(currentUrl)) {
-				continue;
-			}
+        return ret;
+    }
 
-			String url = currentUrl.trim() + sqoopApi + "?" + PseudoAuthenticator.USER_NAME + "=" + userName;
-			try {
-				response = getClientResponse(url, client);
+    private static ClientResponse getClientResponse(String sqoopUrl, String sqoopApi, String userName) {
+        ClientResponse response  = null;
+        String[]       sqoopUrls = sqoopUrl.trim().split("[,;]");
+        if (ArrayUtils.isEmpty(sqoopUrls)) {
+            return null;
+        }
 
-				if (response != null) {
-					if (response.getStatus() == HttpStatus.SC_OK) {
-						break;
-					} else {
-						response.close();
-					}
-				}
-			} catch (Throwable t) {
-				String msgDesc = "Exception while getting sqoop response, sqoopUrl: " + url;
-				LOG.error(msgDesc, t);
-			}
-		}
-		client.destroy();
+        Client client = Client.create();
 
-		return response;
-	}
+        for (String currentUrl : sqoopUrls) {
+            if (StringUtils.isBlank(currentUrl)) {
+                continue;
+            }
 
-	private static ClientResponse getClientResponse(String url, Client client) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("getClientResponse():calling " + url);
-		}
+            String url = currentUrl.trim() + sqoopApi + "?" + PseudoAuthenticator.USER_NAME + "=" + userName;
+            try {
+                response = getClientResponse(url, client);
 
-		WebResource webResource = client.resource(url);
+                if (response != null) {
+                    if (response.getStatus() == HttpStatus.SC_OK) {
+                        break;
+                    } else {
+                        response.close();
+                    }
+                }
+            } catch (Throwable t) {
+                String msgDesc = "Exception while getting sqoop response, sqoopUrl: " + url;
+                LOG.error(msgDesc, t);
+            }
+        }
+        client.destroy();
 
-		ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+        return response;
+    }
 
-		if (response != null) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("getClientResponse():response.getStatus()= " + response.getStatus());
-			}
-			if (response.getStatus() != HttpStatus.SC_OK) {
-				LOG.warn("getClientResponse():response.getStatus()= " + response.getStatus() + " for URL " + url
-						+ ", failed to get sqoop resource list.");
-				String jsonString = response.getEntity(String.class);
-				LOG.warn(jsonString);
-			}
-		}
-		return response;
-	}
+    private static ClientResponse getClientResponse(String url, Client client) {
+        LOG.debug("getClientResponse():calling {}", url);
 
-	private <T> T getSqoopResourceResponse(ClientResponse response, Class<T> classOfT) {
-		T resource = null;
-		try {
+        WebResource webResource = client.resource(url);
+
+        ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+
+        if (response != null) {
+            LOG.debug("getClientResponse():response.getStatus()= {}", response.getStatus());
+
+            if (response.getStatus() != HttpStatus.SC_OK) {
+                LOG.warn("getClientResponse():response.getStatus()= {} for URL {}, failed to get sqoop resource list.", response.getStatus(), url);
+
+                String jsonString = response.getEntity(String.class);
+
+                LOG.warn(jsonString);
+            }
+        }
+
+        return response;
+    }
+
+    private <T> T getSqoopResourceResponse(ClientResponse response, Class<T> classOfT) {
+        T resource;
+        try {
             if (response != null) {
                 if (response.getStatus() == HttpStatus.SC_OK) {
                     String jsonString = response.getEntity(String.class);
-                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                    Gson   gson       = new GsonBuilder().setPrettyPrinting().create();
 
                     resource = gson.fromJson(jsonString, classOfT);
                 } else {
-                    String msgDesc = "Unable to get a valid response for " + "expected mime type : ["
-                            + EXPECTED_MIME_TYPE + "], sqoopUrl: " + sqoopUrl + " - got http response code "
-                            + response.getStatus();
+                    String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + EXPECTED_MIME_TYPE + "], sqoopUrl: " + sqoopUrl + " - got http response code " + response.getStatus();
                     LOG.error(msgDesc);
                     HadoopException hdpException = new HadoopException(msgDesc);
                     hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
                     throw hdpException;
                 }
-
             } else {
-                String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + EXPECTED_MIME_TYPE
-                        + "], sqoopUrl: " + sqoopUrl + " - got null response.";
+                String msgDesc = "Unable to get a valid response for " + "expected mime type : [" + EXPECTED_MIME_TYPE + "], sqoopUrl: " + sqoopUrl + " - got null response.";
                 LOG.error(msgDesc);
                 HadoopException hdpException = new HadoopException(msgDesc);
                 hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
                 throw hdpException;
             }
-		} catch (HadoopException he) {
-			throw he;
-		} catch (Throwable t) {
-			String msgDesc = "Exception while getting sqoop resource response, sqoopUrl: " + sqoopUrl;
-			HadoopException hdpException = new HadoopException(msgDesc, t);
+        } catch (HadoopException he) {
+            throw he;
+        } catch (Throwable t) {
+            String          msgDesc      = "Exception while getting sqoop resource response, sqoopUrl: " + sqoopUrl;
+            HadoopException hdpException = new HadoopException(msgDesc, t);
 
-			LOG.error(msgDesc, t);
+            LOG.error(msgDesc, t);
 
-			hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + ERROR_MESSAGE, null, null);
-			throw hdpException;
+            hdpException.generateResponseDataMap(false, BaseClient.getMessage(t), msgDesc + ERROR_MESSAGE, null, null);
+            throw hdpException;
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+        return resource;
+    }
 
-		} finally {
-			if (response != null) {
-				response.close();
-			}
-		}
-		return resource;
-	}
+    private static List<String> filterResourceFromResponse(String resourceMatching, List<String> existingResources, List<String> resourceResponses) {
+        List<String> resources = new ArrayList<>();
+        for (String resourceResponse : resourceResponses) {
+            if (CollectionUtils.isNotEmpty(existingResources) && existingResources.contains(resourceResponse)) {
+                continue;
+            }
+            if (StringUtils.isEmpty(resourceMatching) || resourceMatching.startsWith("*") || resourceResponse.toLowerCase().startsWith(resourceMatching.toLowerCase())) {
+                LOG.debug("filterResourceFromResponse(): Adding sqoop resource {}", resourceResponse);
 
-	private static List<String> filterResourceFromResponse(String resourceMatching, List<String> existingResources,
-			List<String> resourceResponses) {
-		List<String> resources = new ArrayList<String>();
-		for (String resourceResponse : resourceResponses) {
-			if (CollectionUtils.isNotEmpty(existingResources) && existingResources.contains(resourceResponse)) {
-				continue;
-			}
-			if (StringUtils.isEmpty(resourceMatching) || resourceMatching.startsWith("*")
-					|| resourceResponse.toLowerCase().startsWith(resourceMatching.toLowerCase())) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("filterResourceFromResponse(): Adding sqoop resource " + resourceResponse);
-				}
-				resources.add(resourceResponse);
-			}
-		}
-		return resources;
-	}
-
-	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) {
-		SqoopClient sqoopClient = getSqoopClient(serviceName, configs);
-		List<String> strList = sqoopClient.getConnectorList(null, null);
-
-		boolean connectivityStatus = false;
-		if (CollectionUtils.isNotEmpty(strList)) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("ConnectionTest list size " + strList.size() + " sqoop connectors.");
-			}
-			connectivityStatus = true;
-		}
-
-		Map<String, Object> responseData = new HashMap<String, Object>();
-		if (connectivityStatus) {
-			String successMsg = "ConnectionTest Successful.";
-			BaseClient.generateResponseDataMap(connectivityStatus, successMsg, successMsg, null, null, responseData);
-		} else {
-			String failureMsg = "Unable to retrieve any sqoop connectors using given parameters.";
-			BaseClient.generateResponseDataMap(connectivityStatus, failureMsg, failureMsg + ERROR_MESSAGE, null, null,
-					responseData);
-		}
-
-		return responseData;
-	}
-
-	public static SqoopClient getSqoopClient(String serviceName, Map<String, String> configs) {
-		SqoopClient sqoopClient = null;
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Getting SqoopClient for datasource: " + serviceName);
-		}
-		if (MapUtils.isEmpty(configs)) {
-			String msgDesc = "Could not connect sqoop as Connection ConfigMap is empty.";
-			LOG.error(msgDesc);
-			HadoopException hdpException = new HadoopException(msgDesc);
-			hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MESSAGE, null, null);
-			throw hdpException;
-		} else {
-			sqoopClient = new SqoopClient(serviceName, configs);
-		}
-		return sqoopClient;
-	}
+                resources.add(resourceResponse);
+            }
+        }
+        return resources;
+    }
 }

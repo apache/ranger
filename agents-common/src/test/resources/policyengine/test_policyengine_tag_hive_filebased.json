@@ -225,13 +225,37 @@
   },
 
   "tests":[
-    {"name":"DENY 'select from employee.personal;' for user1 using EXPIRES_ON tag",
+    {"name":"ALLOW 'select from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal"}}, "resourceMatchingScope": "SELF_OR_DESCENDANTS",
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select from employee.personal;' for user1"
 
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    },
+    {"name":"DENY 'select from employee.personal;' for user1 using EXPIRES_ON tag with isDescendantDenyIgnored=false",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal"}}, "resourceMatchingScope": "SELF_OR_DESCENDANTS", "isDescendantDenyIgnored": false,
+        "accessType":"select","user":"user1","userGroups":[],"requestData":"select from employee.personal;' for user1 with isDescendantDenyIgnored=false"
+
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":5}
+    },
+    {"name":"ALLOW 'use employee;' for user1 using EXPIRES_ON tag",
+      "request":{
+        "resource":{"elements":{"database":"employee"}},
+        "accessType":"","user":"user1","userGroups":[],"requestData":"use employee;' for user1 using EXPIRES_ON tag"
+
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    },
+    {"name":"DENY 'use employee;' for user1 using EXPIRES_ON tag with isDescendantDenyIgnored=false",
+      "request":{
+        "resource":{"elements":{"database":"employee"}}, "isDescendantDenyIgnored": false,
+        "accessType":"","user":"user1","userGroups":[],"requestData":"use employee;' for user1 using EXPIRES_ON tag with isDescendantDenyIgnored=false"
+
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":5}
     },
     {"name":"ALLOW 'select ssn from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{

@@ -29,12 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
     private static final Logger LOG = LoggerFactory.getLogger(RangerURLResourceMatcher.class);
@@ -45,11 +43,83 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
     boolean policyIsRecursive;
     char    pathSeparatorChar = DEFAULT_PATH_SEPARATOR_CHAR;
 
+    static boolean isRecursiveWildCardMatch(String pathToCheck, String wildcardPath, char pathSeparatorChar, IOCase caseSensitivity) {
+        boolean ret = false;
+        String  url = StringUtils.trim(pathToCheck);
+
+        if (!StringUtils.isEmpty(url) && isPathURLType(url)) {
+            String scheme = getScheme(url);
+
+            if (StringUtils.isEmpty(scheme)) {
+                return ret;
+            }
+
+            String   path         = getPathWithOutScheme(url);
+            String[] pathElements = StringUtils.split(path, pathSeparatorChar);
+
+            if (!ArrayUtils.isEmpty(pathElements)) {
+                StringBuilder sb = new StringBuilder(scheme);
+
+                if (pathToCheck.charAt(0) == pathSeparatorChar) {
+                    sb.append(pathSeparatorChar); // preserve the initial pathSeparatorChar
+                }
+
+                for (String p : pathElements) {
+                    sb.append(p);
+
+                    ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
+
+                    if (ret) {
+                        break;
+                    }
+
+                    sb.append(pathSeparatorChar);
+                }
+
+                if (!ret) {
+                    boolean isEndsWithPathSeparator = url.endsWith(Character.toString(pathSeparatorChar));
+                    if (!isEndsWithPathSeparator) {
+                        sb.deleteCharAt(sb.length() - 1);
+                    }
+                    ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
+                }
+
+                sb = null;
+            } else { // pathToCheck consists of only pathSeparatorChar
+                ret = FilenameUtils.wildcardMatch(pathToCheck, wildcardPath, caseSensitivity);
+            }
+        }
+
+        return ret;
+    }
+
+    static boolean isPathURLType(String url) {
+        boolean ret = false;
+
+        if (url != null) {
+            Pattern p1 = Pattern.compile(":/{2}");
+            Matcher m1 = p1.matcher(url);
+
+            Pattern p2 = Pattern.compile(":/{3,}");
+            Matcher m2 = p2.matcher(url);
+
+            ret = (m1.find() && !(m2.find()));
+        }
+
+        return ret;
+    }
+
+    static String getScheme(String url) {
+        return StringUtils.substring(url, 0, (StringUtils.indexOf(url, ":") + 3));
+    }
+
+    static String getPathWithOutScheme(String url) {
+        return StringUtils.substring(url, (StringUtils.indexOf(url, ":") + 2));
+    }
+
     @Override
     public void init() {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerURLResourceMatcher.init()");
-        }
+        LOG.debug("==> RangerURLResourceMatcher.init()");
 
         Map<String, String> options = resourceDef == null ? null : resourceDef.getMatcherOptions();
 
@@ -58,16 +128,13 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
 
         super.init();
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerURLResourceMatcher.init()");
-        }
+        LOG.debug("<== RangerURLResourceMatcher.init()");
     }
 
     @Override
-
-    protected ResourceMatcherWrapper buildResourceMatchers() {
+  protected ResourceMatcherWrapper buildResourceMatchers() {
         List<ResourceMatcher> resourceMatchers = new ArrayList<>();
-        boolean needsDynamicEval = false;
+        boolean               needsDynamicEval = false;
 
         for (String policyValue : policyValues) {
             if (optWildCard && policyIsRecursive) {
@@ -90,7 +157,7 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
             }
         }
 
-        Collections.sort(resourceMatchers, new ResourceMatcher.PriorityComparator());
+        resourceMatchers.sort(new ResourceMatcher.PriorityComparator());
 
         return CollectionUtils.isNotEmpty(resourceMatchers) ?
                 new ResourceMatcherWrapper(needsDynamicEval, resourceMatchers) : null;
@@ -98,7 +165,7 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
 
     @Override
     ResourceMatcher getMatcher(String policyValue) {
-        if(! policyIsRecursive) {
+        if (!policyIsRecursive) {
             return super.getMatcher(policyValue);
         }
 
@@ -142,60 +209,6 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
         return ret;
     }
 
-    static boolean isRecursiveWildCardMatch(String pathToCheck, String wildcardPath, char pathSeparatorChar, IOCase caseSensitivity) {
-
-        boolean ret = false;
-
-        String url = StringUtils.trim(pathToCheck);
-
-        if (!StringUtils.isEmpty(url) &&  isPathURLType(url)) {
-                String scheme = getScheme(url);
-                if (StringUtils.isEmpty(scheme)) {
-                    return ret;
-                }
-
-                String path = getPathWithOutScheme(url);
-
-                String[] pathElements = StringUtils.split(path, pathSeparatorChar);
-
-                if (!ArrayUtils.isEmpty(pathElements)) {
-                    StringBuilder sb = new StringBuilder();
-
-                    sb.append(scheme);
-
-                    if (pathToCheck.charAt(0) == pathSeparatorChar) {
-                        sb.append(pathSeparatorChar); // preserve the initial pathSeparatorChar
-                    }
-
-                    for (String p : pathElements) {
-                        sb.append(p);
-
-                        ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
-
-                        if (ret) {
-                            break;
-                        }
-
-                        sb.append(pathSeparatorChar);
-                    }
-
-                    if (!ret) {
-                        boolean isEndsWithPathSeparator = url.endsWith(Character.toString(pathSeparatorChar));
-                        if (!isEndsWithPathSeparator) {
-                            sb.deleteCharAt(sb.length()-1);
-                        }
-                        ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
-                    }
-
-                    sb = null;
-                } else { // pathToCheck consists of only pathSeparatorChar
-                    ret = FilenameUtils.wildcardMatch(pathToCheck, wildcardPath, caseSensitivity);
-                }
-            }
-
-        return ret;
-    }
-
     public StringBuilder toString(StringBuilder sb) {
         sb.append("RangerURLResourceMatcher={");
 
@@ -208,164 +221,154 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
         return sb;
     }
 
-    static boolean isPathURLType(String url) {
-        boolean ret = false;
+    static final class CaseSensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
+        private final char levelSeparatorChar;
 
-        if (url != null) {
-            Pattern p1 = Pattern.compile(":/{2}");
-            Matcher m1 = p1.matcher(url);
-
-            Pattern p2 = Pattern.compile(":/{3,}");
-            Matcher m2 = p2.matcher(url);
-
-            ret = (m1.find() && !(m2.find()));
+        CaseSensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
+            super(value, options);
+            this.levelSeparatorChar = levelSeparatorChar;
         }
 
-        return ret;
-    }
-
-
-    static String getScheme(String url){
-        return StringUtils.substring(url,0,(StringUtils.indexOf(url,":") + 3));
-    }
-
-    static String getPathWithOutScheme(String url) {
-        return StringUtils.substring(url,(StringUtils.indexOf(url,":") + 2));
-    }
-}
-
-final class CaseSensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
-    private final char levelSeparatorChar;
-    CaseSensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options);
-        this.levelSeparatorChar = levelSeparatorChar;
-    }
-
-    @Override
-    boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
-        return RangerURLResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.SENSITIVE);
-    }
-
-    @Override
-    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
-        return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.SENSITIVE);
-    }
-
-    int getPriority() { return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
-}
-
-final class CaseInsensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
-    private final char levelSeparatorChar;
-    CaseInsensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options);
-        this.levelSeparatorChar = levelSeparatorChar;
-    }
-
-    @Override
-    boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
-        return RangerURLResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.INSENSITIVE);
-    }
-
-    @Override
-    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
-        return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.INSENSITIVE);
-    }
-
-    int getPriority() { return 8 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
-
-}
-
-abstract class RecursiveMatcher extends AbstractStringResourceMatcher {
-    final char levelSeparatorChar;
-    String valueWithoutSeparator;
-    String valueWithSeparator;
-
-    RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options);
-        this.levelSeparatorChar = levelSeparatorChar;
-    }
-
-    String getStringToCompare(String policyValue) {
-        if (StringUtils.isEmpty(policyValue)) {
-            return policyValue;
+        @Override
+        boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+            return RangerURLResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.SENSITIVE);
         }
-        return (policyValue.lastIndexOf(levelSeparatorChar) == policyValue.length() - 1) ?
-                policyValue.substring(0, policyValue.length() - 1) : policyValue;
+
+        @Override
+        public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+            return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.SENSITIVE);
+        }
+
+        int getPriority() {
+            return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);
+        }
     }
-}
 
-final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
-    CaseSensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, levelSeparatorChar);
+    static final class CaseInsensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
+        private final char levelSeparatorChar;
+
+        CaseInsensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
+            super(value, options);
+            this.levelSeparatorChar = levelSeparatorChar;
+        }
+
+        @Override
+        boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+            return RangerURLResourceMatcher.isRecursiveWildCardMatch(resourceValue, getExpandedValue(evalContext), levelSeparatorChar, IOCase.INSENSITIVE);
+        }
+
+        @Override
+        public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+            return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.INSENSITIVE);
+        }
+
+        int getPriority() {
+            return 8 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);
+        }
     }
 
-    @Override
-    boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+    abstract static class RecursiveMatcher extends AbstractStringResourceMatcher {
+        final char levelSeparatorChar;
+        String valueWithoutSeparator;
+        String valueWithSeparator;
 
-        final String noSeparator;
-        if (getNeedsDynamicEval()) {
-            String expandedPolicyValue = getExpandedValue(evalContext);
-            noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
-        } else {
-            if (valueWithoutSeparator == null && value != null) {
-                valueWithoutSeparator = getStringToCompare(value);
-                valueWithSeparator = valueWithoutSeparator + Character.toString(levelSeparatorChar);
+        RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
+            super(value, options);
+            this.levelSeparatorChar = levelSeparatorChar;
+        }
+
+        String getStringToCompare(String policyValue) {
+            if (StringUtils.isEmpty(policyValue)) {
+                return policyValue;
             }
-            noSeparator = valueWithoutSeparator;
+            return (policyValue.lastIndexOf(levelSeparatorChar) == policyValue.length() - 1) ?
+                    policyValue.substring(0, policyValue.length() - 1) : policyValue;
+        }
+    }
+
+    static final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
+        CaseSensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
+            super(value, options, levelSeparatorChar);
         }
 
-        boolean ret = StringUtils.equals(resourceValue, noSeparator);
+        @Override
+        boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+            final String noSeparator;
 
-        if (!ret && noSeparator != null) {
-            final String withSeparator = getNeedsDynamicEval() ? noSeparator + Character.toString(levelSeparatorChar) : valueWithSeparator;
-            ret = StringUtils.startsWith(resourceValue, withSeparator);
-        }
+            if (getNeedsDynamicEval()) {
+                String expandedPolicyValue = getExpandedValue(evalContext);
 
-        return ret;
-    }
+                noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
+            } else {
+                if (valueWithoutSeparator == null && value != null) {
+                    valueWithoutSeparator = getStringToCompare(value);
+                    valueWithSeparator    = valueWithoutSeparator + levelSeparatorChar;
+                }
 
-    @Override
-    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
-        return StringUtils.startsWith(getExpandedValue(evalContext), resourceValue);
-    }
-
-    int getPriority() { return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
-}
-
-final class CaseInsensitiveURLRecursiveMatcher extends RecursiveMatcher {
-    CaseInsensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, levelSeparatorChar);
-    }
-
-    @Override
-    boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
-
-        final String noSeparator;
-        if (getNeedsDynamicEval()) {
-            String expandedPolicyValue = getExpandedValue(evalContext);
-            noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
-        } else {
-            if (valueWithoutSeparator == null && value != null) {
-                valueWithoutSeparator = getStringToCompare(value);
-                valueWithSeparator = valueWithoutSeparator + Character.toString(levelSeparatorChar);
+                noSeparator = valueWithoutSeparator;
             }
-            noSeparator = valueWithoutSeparator;
+
+            boolean ret = StringUtils.equals(resourceValue, noSeparator);
+
+            if (!ret && noSeparator != null) {
+                final String withSeparator = getNeedsDynamicEval() ? noSeparator + levelSeparatorChar : valueWithSeparator;
+
+                ret = StringUtils.startsWith(resourceValue, withSeparator);
+            }
+
+            return ret;
         }
 
-        boolean ret = StringUtils.equalsIgnoreCase(resourceValue, noSeparator);
-
-        if (!ret && noSeparator != null) {
-            final String withSeparator = getNeedsDynamicEval() ? noSeparator + Character.toString(levelSeparatorChar) : valueWithSeparator;
-            ret = StringUtils.startsWithIgnoreCase(resourceValue, withSeparator);
+        @Override
+        public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+            return StringUtils.startsWith(getExpandedValue(evalContext), resourceValue);
         }
 
-        return ret;
+        int getPriority() {
+            return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);
+        }
     }
 
-    @Override
-    public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
-        return StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
-    }
+    static final class CaseInsensitiveURLRecursiveMatcher extends RecursiveMatcher {
+        CaseInsensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
+            super(value, options, levelSeparatorChar);
+        }
 
-    int getPriority() { return 8 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
+        @Override
+        boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+            final String noSeparator;
+
+            if (getNeedsDynamicEval()) {
+                String expandedPolicyValue = getExpandedValue(evalContext);
+
+                noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
+            } else {
+                if (valueWithoutSeparator == null && value != null) {
+                    valueWithoutSeparator = getStringToCompare(value);
+                    valueWithSeparator    = valueWithoutSeparator + levelSeparatorChar;
+                }
+
+                noSeparator = valueWithoutSeparator;
+            }
+
+            boolean ret = StringUtils.equalsIgnoreCase(resourceValue, noSeparator);
+
+            if (!ret && noSeparator != null) {
+                final String withSeparator = getNeedsDynamicEval() ? noSeparator + levelSeparatorChar : valueWithSeparator;
+
+                ret = StringUtils.startsWithIgnoreCase(resourceValue, withSeparator);
+            }
+
+            return ret;
+        }
+
+        @Override
+        public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+            return StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+        }
+
+        int getPriority() {
+            return 8 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);
+        }
+    }
 }

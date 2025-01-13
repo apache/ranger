@@ -19,6 +19,12 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -28,368 +34,380 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RangerAccessRequestImpl implements RangerAccessRequest {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestImpl.class);
 
-	private RangerAccessResource resource;
-	private String               accessType;
-	private String               user;
-	private Set<String>          userGroups;
-	private Set<String>          userRoles;
-	private Date                 accessTime;
-	private String               clientIPAddress;
-	private List<String>         forwardedAddresses;
-	private String               remoteIPAddress;
-	private String               clientType;
-	private String               action;
-	private String               requestData;
-	private String               sessionId;
-	private Map<String, Object>  context;
-	private String				 clusterName;
-	private String				 clusterType;
+    private RangerAccessResource resource;
+    private String               accessType;
+    private String               user;
+    private Set<String>          userGroups;
+    private Set<String>          userRoles;
+    private Date                 accessTime;
+    private String               clientIPAddress;
+    private List<String>         forwardedAddresses;
+    private String               remoteIPAddress;
+    private String               clientType;
+    private String               action;
+    private String               requestData;
+    private String               sessionId;
+    private Map<String, Object>  context;
+    private String               clusterName;
+    private String               clusterType;
+    private Boolean              isDescendantDenyIgnored = true;
 
-	private boolean isAccessTypeAny;
-	private boolean isAccessTypeDelegatedAdmin;
-	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
-	private Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes = Collections.emptyMap();
+    private boolean                                   isAccessTypeAny;
+    private boolean                                   isAccessTypeDelegatedAdmin;
+    private ResourceMatchingScope                     resourceMatchingScope         = ResourceMatchingScope.SELF;
+    private Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes = Collections.emptyMap();
 
-	public RangerAccessRequestImpl() {
-		this(null, null, null, null, null);
-	}
+    public RangerAccessRequestImpl() {
+        this(null, null, null, null, null);
+    }
 
-	public RangerAccessRequestImpl(RangerAccessResource resource, String accessType, String user, Set<String> userGroups, Set<String> userRoles) {
-		setResource(resource);
-		setAccessType(accessType);
-		setUser(user);
-		setUserGroups(userGroups);
-		setUserRoles(userRoles);
-		setForwardedAddresses(null);
+    public RangerAccessRequestImpl(RangerAccessResource resource, String accessType, String user, Set<String> userGroups, Set<String> userRoles) {
+        setResource(resource);
+        setAccessType(accessType);
+        setUser(user);
+        setUserGroups(userGroups);
+        setUserRoles(userRoles);
+        setForwardedAddresses(null);
 
-		// set remaining fields to default value
-		setAccessTime(null);
-		setRemoteIPAddress(null);
-		setClientType(null);
-		setAction(null);
-		setRequestData(null);
-		setSessionId(null);
-		setContext(null);
-		setClusterName(null);
-	}
+        // set remaining fields to default value
+        setAccessTime(null);
+        setRemoteIPAddress(null);
+        setClientType(null);
+        setAction(null);
+        setRequestData(null);
+        setSessionId(null);
+        setContext(null);
+        setClusterName(null);
+        setIgnoreDescendantDeny(null);
+    }
 
-	public RangerAccessRequestImpl(RangerAccessRequest request) {
-		setResource(request.getResource());
-		setAccessType(request.getAccessType());
-		setUser(request.getUser());
-		setUserGroups(request.getUserGroups());
-		setUserRoles(request.getUserRoles());
-		setForwardedAddresses(request.getForwardedAddresses());
-		setAccessTime(request.getAccessTime());
-		setRemoteIPAddress(request.getRemoteIPAddress());
-		setClientType(request.getClientType());
-		setAction(request.getAction());
-		setRequestData(request.getRequestData());
-		setSessionId(request.getSessionId());
-		setContext(request.getContext());
-		setClusterName(request.getClusterName());
-		setResourceMatchingScope(request.getResourceMatchingScope());
-		setResourceElementMatchingScopes(request.getResourceElementMatchingScopes());
-		setClientIPAddress(request.getClientIPAddress());
-		setClusterType(request.getClusterType());
-	}
+    public RangerAccessRequestImpl(RangerAccessRequest request) {
+        setResource(request.getResource());
+        setAccessType(request.getAccessType());
+        setUser(request.getUser());
+        setUserGroups(request.getUserGroups());
+        setUserRoles(request.getUserRoles());
+        setForwardedAddresses(request.getForwardedAddresses());
+        setAccessTime(request.getAccessTime());
+        setRemoteIPAddress(request.getRemoteIPAddress());
+        setClientType(request.getClientType());
+        setAction(request.getAction());
+        setRequestData(request.getRequestData());
+        setSessionId(request.getSessionId());
+        setContext(request.getContext());
+        setClusterName(request.getClusterName());
+        setResourceMatchingScope(request.getResourceMatchingScope());
+        setResourceElementMatchingScopes(request.getResourceElementMatchingScopes());
+        setClientIPAddress(request.getClientIPAddress());
+        setClusterType(request.getClusterType());
+        setIgnoreDescendantDeny(request.ignoreDescendantDeny());
+    }
 
-	@Override
-	public RangerAccessResource getResource() {
-		return resource;
-	}
+    @Override
+    public RangerAccessResource getResource() {
+        return resource;
+    }
 
-	@Override
-	public String getAccessType() {
-		return accessType;
-	}
+    @Override
+    public String getAccessType() {
+        return accessType;
+    }
 
-	@Override
-	public String getUser() {
-		return user;
-	}
+    @Override
+    public boolean isAccessTypeAny() {
+        return isAccessTypeAny;
+    }
 
-	@Override
-	public Set<String> getUserGroups() {
-		return userGroups;
-	}
+    @Override
+    public boolean ignoreDescendantDeny() {
+        return isDescendantDenyIgnored == null || isDescendantDenyIgnored;
+    }
 
-	@Override
-	public Set<String> getUserRoles() {
-		return userRoles;
-	}
+    @Override
+    public boolean isAccessTypeDelegatedAdmin() {
+        return isAccessTypeDelegatedAdmin;
+    }
 
-	@Override
-	public Date getAccessTime() {
-		return accessTime;
-	}
+    @Override
+    public String getUser() {
+        return user;
+    }
 
-	@Override
-	public String getClientIPAddress() { return clientIPAddress;}
+    @Override
+    public Set<String> getUserGroups() {
+        return userGroups;
+    }
 
-	@Override
-	public String getRemoteIPAddress() {
-		return remoteIPAddress;
-	}
+    @Override
+    public Set<String> getUserRoles() {
+        return userRoles;
+    }
 
-	@Override
-	public List<String> getForwardedAddresses() { return forwardedAddresses; }
+    @Override
+    public Date getAccessTime() {
+        return accessTime;
+    }
 
-	@Override
-	public String getClientType() {
-		return clientType;
-	}
+    @Override
+    public String getClientIPAddress() {
+        return clientIPAddress;
+    }
 
-	@Override
-	public String getAction() {
-		return action;
-	}
+    @Override
+    public String getRemoteIPAddress() {
+        return remoteIPAddress;
+    }
 
-	@Override
-	public String getRequestData() {
-		return requestData;
-	}
+    @Override
+    public List<String> getForwardedAddresses() {
+        return forwardedAddresses;
+    }
 
-	@Override
-	public String getSessionId() {
-		return sessionId;
-	}
+    @Override
+    public String getClientType() {
+        return clientType;
+    }
 
-	@Override
-	public Map<String, Object> getContext() {
-		return context;
-	}
+    @Override
+    public String getAction() {
+        return action;
+    }
 
-	@Override
-	public ResourceMatchingScope getResourceMatchingScope() {
-		return resourceMatchingScope;
-	}
+    @Override
+    public String getRequestData() {
+        return requestData;
+    }
 
-	@Override
-	public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return this.resourceElementMatchingScopes; }
+    @Override
+    public String getSessionId() {
+        return sessionId;
+    }
 
-	@Override
-	public boolean isAccessTypeAny() {
-		return isAccessTypeAny;
-	}
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
 
-	@Override
-	public boolean isAccessTypeDelegatedAdmin() {
-		return isAccessTypeDelegatedAdmin;
-	}
+    public String getClusterName() {
+        return clusterName;
+    }
 
-	public void setResource(RangerAccessResource resource) {
-		this.resource = resource;
-		if (context != null) {
-			RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
-		}
-	}
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
 
-	public void setAccessType(String accessType) {
-		if (StringUtils.isEmpty(accessType)) {
-			accessType = RangerPolicyEngine.ANY_ACCESS;
-		}
+    public String getClusterType() {
+        return clusterType;
+    }
 
-		this.accessType            = accessType;
-		isAccessTypeAny            = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
-		isAccessTypeDelegatedAdmin = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
-	}
+    @Override
+    public Map<String, Object> getContext() {
+        return context;
+    }
 
-	public void setUser(String user) {
-		this.user = user;
-	}
+    public void setContext(Map<String, Object> context) {
+        if (context == null) {
+            this.context = new HashMap<>();
+        } else {
+            this.context = context;
+        }
 
-	public void setUserGroups(Set<String> userGroups) {
-		this.userGroups = (userGroups == null) ? new HashSet<String>() : userGroups;
-	}
+        RangerAccessRequest current = RangerAccessRequestUtil.getRequestFromContext(this.context);
 
-	public void setUserRoles(Set<String> userRoles) {
-		this.userRoles = (userRoles == null) ? new HashSet<String>() : userRoles;
-	}
+        if (current == null) {
+            RangerAccessRequestUtil.setRequestInContext(this);
+        }
+    }
 
-	public void setAccessTime(Date accessTime) {
-		this.accessTime = accessTime;
-	}
+    @Override
+    public RangerAccessRequest getReadOnlyCopy() {
+        return new RangerAccessRequestReadOnly(this);
+    }
 
-	public void setClientIPAddress(String ipAddress) {
-		this.clientIPAddress = ipAddress;
-	}
+    @Override
+    public ResourceMatchingScope getResourceMatchingScope() {
+        return resourceMatchingScope;
+    }
 
-	public void setForwardedAddresses(List<String> forwardedAddresses) {
-		this.forwardedAddresses = (forwardedAddresses == null) ? new ArrayList<String>() : forwardedAddresses;
-	}
+    @Override
+    public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
+        return this.resourceElementMatchingScopes;
+    }
 
-	public void setRemoteIPAddress(String remoteIPAddress) {
-		this.remoteIPAddress = remoteIPAddress;
-	}
+    public void setResourceElementMatchingScopes(Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes) {
+        this.resourceElementMatchingScopes = resourceElementMatchingScopes == null ? Collections.emptyMap() : resourceElementMatchingScopes;
+    }
 
-	public void setClientType(String clientType) {
-		this.clientType = clientType;
-	}
+    public void setResourceMatchingScope(ResourceMatchingScope scope) {
+        this.resourceMatchingScope = scope;
 
-	public void setAction(String action) {
-		this.action = action;
-	}
+        if (context != null) {
+            RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
+        }
+    }
 
-	public void setRequestData(String requestData) {
-		this.requestData = requestData;
-	}
+    public void setClusterType(String clusterType) {
+        this.clusterType = clusterType;
+    }
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
-	
-	public String getClusterName() {
-		return clusterName;
-	}
+    public void setRequestData(String requestData) {
+        this.requestData = requestData;
+    }
 
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
+    public void setAction(String action) {
+        this.action = action;
+    }
 
-	public String getClusterType() {
-		return clusterType;
-	}
+    public void setClientType(String clientType) {
+        this.clientType = clientType;
+    }
 
-	public void setClusterType(String clusterType) {
-		this.clusterType = clusterType;
-	}
+    public void setForwardedAddresses(List<String> forwardedAddresses) {
+        this.forwardedAddresses = (forwardedAddresses == null) ? new ArrayList<>() : forwardedAddresses;
+    }
 
-	public void setResourceMatchingScope(ResourceMatchingScope scope) {
-		this.resourceMatchingScope = scope;
-		if (context != null) {
-			RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
-		}
-	}
+    public void setRemoteIPAddress(String remoteIPAddress) {
+        this.remoteIPAddress = remoteIPAddress;
+    }
 
-	public void setResourceElementMatchingScopes(Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes) {
-		this.resourceElementMatchingScopes = resourceElementMatchingScopes == null ? Collections.emptyMap() : resourceElementMatchingScopes;
-	}
+    public void setClientIPAddress(String ipAddress) {
+        this.clientIPAddress = ipAddress;
+    }
 
-	public void setContext(Map<String, Object> context) {
-		if (context == null) {
-			this.context = new HashMap<>();
-		} else {
-			this.context = context;
-		}
+    public void setAccessTime(Date accessTime) {
+        this.accessTime = accessTime;
+    }
 
-		RangerAccessRequest current = RangerAccessRequestUtil.getRequestFromContext(this.context);
+    public void setUserRoles(Set<String> userRoles) {
+        this.userRoles = (userRoles == null) ? new HashSet<>() : userRoles;
+    }
 
-		if (current == null) {
-			RangerAccessRequestUtil.setRequestInContext(this);
-		}
-	}
+    public void setUserGroups(Set<String> userGroups) {
+        this.userGroups = (userGroups == null) ? new HashSet<>() : userGroups;
+    }
 
-	public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[]trustedProxyAddresses) {
-		String ip = getRemoteIPAddress();
-		if (ip == null) {
-			ip = getClientIPAddress();
-		}
+    public void setUser(String user) {
+        this.user = user;
+    }
 
-		String newIp = ip;
+    public void setAccessType(String accessType) {
+        if (StringUtils.isEmpty(accessType)) {
+            accessType = RangerPolicyEngine.ANY_ACCESS;
+        }
 
-		if (useForwardedIPAddress) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Using X-Forward-For...");
-			}
-			if (CollectionUtils.isNotEmpty(getForwardedAddresses())) {
-				if (trustedProxyAddresses != null && trustedProxyAddresses.length > 0) {
-					if (StringUtils.isNotEmpty(ip)) {
-						for (String trustedProxyAddress : trustedProxyAddresses) {
-							if (StringUtils.equals(ip, trustedProxyAddress)) {
-								newIp = getForwardedAddresses().get(0);
-								break;
-							}
-						}
-					}
-				} else {
-					newIp = getForwardedAddresses().get(0);
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No X-Forwarded-For addresses in the access-request");
-				}
-			}
-		}
+        this.accessType            = accessType;
+        isAccessTypeAny            = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);
+        isAccessTypeDelegatedAdmin = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Old Remote/Client IP Address=" + ip + ", new IP Address=" + newIp);
-		}
-		setClientIPAddress(newIp);
-	}
+    public void setResource(RangerAccessResource resource) {
+        this.resource = resource;
+        if (context != null) {
+            RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
+        }
+    }
 
-	@Override
-	public String toString( ) {
-		StringBuilder sb = new StringBuilder();
+    public void setIgnoreDescendantDeny(Boolean isDescendantDenyIgnored) {
+        this.isDescendantDenyIgnored = isDescendantDenyIgnored == null || isDescendantDenyIgnored;
+    }
 
-		toString(sb);
+    public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[] trustedProxyAddresses) {
+        String ip = getRemoteIPAddress();
 
-		return sb.toString();
-	}
+        if (ip == null) {
+            ip = getClientIPAddress();
+        }
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("RangerAccessRequestImpl={");
+        String newIp = ip;
 
-		sb.append("resource={").append(resource).append("} ");
-		sb.append("accessType={").append(accessType).append("} ");
-		sb.append("user={").append(user).append("} ");
+        if (useForwardedIPAddress) {
+            LOG.debug("Using X-Forward-For...");
 
-		sb.append("userGroups={");
-		if(userGroups != null) {
-			for(String userGroup : userGroups) {
-				sb.append(userGroup).append(" ");
-			}
-		}
-		sb.append("} ");
+            if (CollectionUtils.isNotEmpty(getForwardedAddresses())) {
+                if (trustedProxyAddresses != null && trustedProxyAddresses.length > 0) {
+                    if (StringUtils.isNotEmpty(ip)) {
+                        for (String trustedProxyAddress : trustedProxyAddresses) {
+                            if (StringUtils.equals(ip, trustedProxyAddress)) {
+                                newIp = getForwardedAddresses().get(0);
 
-		sb.append("userRoles={");
-		if(userRoles != null) {
-			for(String role : userRoles) {
-				sb.append(role).append(" ");
-			}
-		}
-		sb.append("} ");
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    newIp = getForwardedAddresses().get(0);
+                }
+            } else {
+                LOG.debug("No X-Forwarded-For addresses in the access-request");
+            }
+        }
 
-		sb.append("accessTime={").append(accessTime).append("} ");
-		sb.append("clientIPAddress={").append(getClientIPAddress()).append("} ");
-		sb.append("forwardedAddresses={").append(StringUtils.join(forwardedAddresses, " ")).append("} ");
-		sb.append("remoteIPAddress={").append(remoteIPAddress).append("} ");
-		sb.append("clientType={").append(clientType).append("} ");
-		sb.append("action={").append(action).append("} ");
-		sb.append("requestData={").append(requestData).append("} ");
-		sb.append("sessionId={").append(sessionId).append("} ");
-		sb.append("resourceMatchingScope={").append(resourceMatchingScope).append("} ");
-		sb.append("resourceElementMatchingScopes={").append(resourceElementMatchingScopes).append("} ");
-		sb.append("clusterName={").append(clusterName).append("} ");
-		sb.append("clusterType={").append(clusterType).append("} ");
+        LOG.debug("Old Remote/Client IP Address={}, new IP Address={}", ip, newIp);
 
-		sb.append("context={");
-		if(context != null) {
-			for(Map.Entry<String, Object> e : context.entrySet()) {
-				Object val = e.getValue();
+        setClientIPAddress(newIp);
+    }
 
-				if (!(val instanceof RangerAccessRequest)) { // to avoid recursive calls
-					sb.append(e.getKey()).append("={").append(val).append("} ");
-				}
-			}
-		}
-		sb.append("} ");
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-		sb.append("}");
+        toString(sb);
 
-		return sb;
-	}
-	@Override
-	public RangerAccessRequest getReadOnlyCopy() {
-		return new RangerAccessRequestReadOnly(this);
-	}
+        return sb.toString();
+    }
+
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerAccessRequestImpl={");
+
+        sb.append("resource={").append(resource).append("} ");
+        sb.append("accessType={").append(accessType).append("} ");
+        sb.append("user={").append(user).append("} ");
+
+        sb.append("userGroups={");
+        if (userGroups != null) {
+            for (String userGroup : userGroups) {
+                sb.append(userGroup).append(" ");
+            }
+        }
+        sb.append("} ");
+
+        sb.append("userRoles={");
+        if (userRoles != null) {
+            for (String role : userRoles) {
+                sb.append(role).append(" ");
+            }
+        }
+        sb.append("} ");
+
+        sb.append("accessTime={").append(accessTime).append("} ");
+        sb.append("clientIPAddress={").append(getClientIPAddress()).append("} ");
+        sb.append("forwardedAddresses={").append(StringUtils.join(forwardedAddresses, " ")).append("} ");
+        sb.append("remoteIPAddress={").append(remoteIPAddress).append("} ");
+        sb.append("clientType={").append(clientType).append("} ");
+        sb.append("action={").append(action).append("} ");
+        sb.append("requestData={").append(requestData).append("} ");
+        sb.append("sessionId={").append(sessionId).append("} ");
+        sb.append("resourceMatchingScope={").append(resourceMatchingScope).append("} ");
+        sb.append("resourceElementMatchingScopes={").append(resourceElementMatchingScopes).append("} ");
+        sb.append("clusterName={").append(clusterName).append("} ");
+        sb.append("clusterType={").append(clusterType).append("} ");
+
+        sb.append("context={");
+        if (context != null) {
+            for (Map.Entry<String, Object> e : context.entrySet()) {
+                Object val = e.getValue();
+
+                if (!(val instanceof RangerAccessRequest)) { // to avoid recursive calls
+                    sb.append(e.getKey()).append("={").append(val).append("} ");
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("}");
+
+        return sb;
+    }
 }

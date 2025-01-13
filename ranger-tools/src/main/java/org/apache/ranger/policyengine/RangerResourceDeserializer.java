@@ -19,32 +19,30 @@
 
 package org.apache.ranger.policyengine;
 
-import java.lang.reflect.Type;
-
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
-import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+
+import java.lang.reflect.Type;
 
 /**
  * {@link JsonDeserializer} to assist {@link Gson} with selecting proper type
  * when encountering RangerAccessResource interface in the source json.
  */
 public class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
+    private final GsonBuilder gsonBuilder;
 
-	private GsonBuilder gsonBuilder;
+    public RangerResourceDeserializer(final GsonBuilder builder) {
+        this.gsonBuilder = builder;
+    }
 
-	public RangerResourceDeserializer(final GsonBuilder builder) {
-		this.gsonBuilder = builder;
-	}
-
-	@Override
-	public RangerAccessResource deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
-		return gsonBuilder.create().fromJson(jsonObj, RangerAccessResourceImpl.class);
-	}
+    @Override
+    public RangerAccessResource deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
+        return gsonBuilder.create().fromJson(jsonObj, RangerAccessResourceImpl.class);
+    }
 }

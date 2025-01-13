@@ -38,7 +38,7 @@ public class RangerAPIMapping {
 	public static final String TAB_KEY_MANAGER = "Key Manager";
 	public static final String TAB_TAG_BASED_POLICIES = "Tag Based Policies";
 	public static final String TAB_REPORTS = "Reports";
-
+	public static final String TAB_GDS = "Governed Data Sharing";
 	private static HashMap<String, Set<String>> rangerAPIMappingWithUI = null;
 	private static Set<String> tabList = new HashSet<String>();
 	private static Map<String, Set<String>> mapApiToTabs = null;
@@ -62,6 +62,7 @@ public class RangerAPIMapping {
 		mapKeyManagerWithAPIs();
 		mapTagBasedPoliciesWithAPIs();
 		mapReportsWithAPIs();
+		mapGDSWithAPIs();
 
 		if (CollectionUtils.isEmpty(tabList)) {
 			populateAvailableUITabs();
@@ -78,6 +79,7 @@ public class RangerAPIMapping {
 		tabList.add(TAB_KEY_MANAGER);
 		tabList.add(TAB_PERMISSIONS);
 		tabList.add(TAB_USERS_GROUPS);
+		tabList.add(TAB_GDS);
 	}
 
 	private void mapReportsWithAPIs() {
@@ -97,13 +99,13 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithReports.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithReports.add(RangerAPIList.LOOKUP_RESOURCE);
 
 		apiAssociatedWithReports.add(RangerAPIList.GET_USER_PROFILE_FOR_USER);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithReports.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -111,7 +113,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_PERM_MAP);
@@ -119,7 +120,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_USER_BY_USER_NAME);
 		apiAssociatedWithReports.add(RangerAPIList.GET_X_USER_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithReports.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -162,6 +162,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.LOOKUP_RESOURCE);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.UPDATE_SERVICE);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.UPDATE_SERVICE_DEF);
@@ -171,7 +172,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -183,7 +183,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.GET_X_PERM_MAP);
@@ -194,7 +193,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.MODIFY_USER_VISIBILITY);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithTagBasedPolicy.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -246,6 +244,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithKeyManager.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithKeyManager.add(RangerAPIList.LOOKUP_RESOURCE);
 		apiAssociatedWithKeyManager.add(RangerAPIList.UPDATE_SERVICE);
 		apiAssociatedWithKeyManager.add(RangerAPIList.UPDATE_SERVICE_DEF);
@@ -307,7 +306,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -319,7 +317,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.GET_X_PERM_MAP);
@@ -330,7 +327,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.MODIFY_USER_VISIBILITY);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithUserAndGroups.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -379,13 +375,13 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithAudit.add(RangerAPIList.LOOKUP_RESOURCE);
 
 		apiAssociatedWithAudit.add(RangerAPIList.GET_USER_PROFILE_FOR_USER);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithAudit.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -393,7 +389,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_PERM_MAP);
@@ -401,7 +396,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_USER_BY_USER_NAME);
 		apiAssociatedWithAudit.add(RangerAPIList.GET_X_USER_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithAudit.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -459,6 +453,7 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICE_DEF_BY_NAME);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICE_DEFS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICES);
+		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_SERVICE_HEADERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.LOOKUP_RESOURCE);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.UPDATE_SERVICE);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.UPDATE_SERVICE_DEF);
@@ -468,7 +463,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_USERS);
 
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_AUDIT_MAPS);
-		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_GROUP_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_GROUP_USERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.COUNT_X_PERM_MAPS);
@@ -480,7 +474,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_AUDIT_MAP);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_BY_GROUP_NAME);
-		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_GROUP);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_USER);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_GROUP_USERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.GET_X_PERM_MAP);
@@ -491,7 +484,6 @@ public class RangerAPIMapping {
 		apiAssociatedWithRBPolicies.add(RangerAPIList.MODIFY_USER_ACTIVE_STATUS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.MODIFY_USER_VISIBILITY);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_AUDIT_MAPS);
-		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_GROUP_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_GROUPS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_GROUP_USERS);
 		apiAssociatedWithRBPolicies.add(RangerAPIList.SEARCH_X_PERM_MAPS);
@@ -516,6 +508,70 @@ public class RangerAPIMapping {
 			mapApiToTabs.get(api).add(TAB_RESOURCE_BASED_POLICIES);
 		}
 	}
+
+	private void mapGDSWithAPIs() {
+		Set<String> apiAssociatedWithGDS = new HashSet<String>();
+
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET_SUMMARY);
+		apiAssociatedWithGDS.add(RangerAPIList.CREATE_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.DELETE_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASETS);
+		apiAssociatedWithGDS.add(RangerAPIList.LIST_DATASET_NAMES);
+		apiAssociatedWithGDS.add(RangerAPIList.DATASET_POLICY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.CREATE_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.DELETE_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_PROJECTS);
+		apiAssociatedWithGDS.add(RangerAPIList.LIST_PROJECT_NAMES);
+		apiAssociatedWithGDS.add(RangerAPIList.PROJECT_POLICY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.CREATE_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.DELETE_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATA_SHARE);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATA_SHARES);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATA_SHARE_SUMMARY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_SHARED_RESOURCES);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_SHARED_RESOURCES);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_SHARED_RESOURCE);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_SHARED_RESOURCES);
+
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASHARE_IN_DATASET);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASHARE_IN_DATASET_SUMMARY);
+
+		apiAssociatedWithGDS.add(RangerAPIList.ADD_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.REMOVE_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET_IN_PROJECT);
+		apiAssociatedWithGDS.add(RangerAPIList.SEARCH_DATASET_IN_PROJECT);
+
+		apiAssociatedWithGDS.add(RangerAPIList.GET_DATASET_GRANTS);
+		apiAssociatedWithGDS.add(RangerAPIList.UPDATE_DATASET_GRANTS);
+		apiAssociatedWithGDS.add(RangerAPIList.GET_SERVICE_HEADERS);
+
+		rangerAPIMappingWithUI.put(TAB_GDS, apiAssociatedWithGDS);
+
+		for (String api : apiAssociatedWithGDS) {
+			if (mapApiToTabs.get(api) == null) {
+				mapApiToTabs.put(api, new HashSet<String>());
+			}
+			mapApiToTabs.get(api).add(TAB_GDS);
+		}
+	}
+
+
 
 	// * Utility methods starts from here, to retrieve API-UItab mapping information *
 

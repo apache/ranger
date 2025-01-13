@@ -30,6 +30,7 @@ import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerGdsVList.RangerDatasetList;
 import org.apache.ranger.view.VXMessage;
@@ -69,6 +70,8 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         searchFields.add(new SearchField(SearchFilter.PROJECT_NAME,            "proj.name",         SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL,    "XXGdsDatasetInProject dip, XXGdsProject proj", "obj.id = dip.datasetId and dip.projectId = proj.id"));
         searchFields.add(new SearchField(SearchFilter.PROJECT_NAME_PARTIAL,    "proj.name",         SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL, "XXGdsDatasetInProject dip, XXGdsProject proj", "obj.id = dip.datasetId and dip.projectId = proj.id"));
         searchFields.add(new SearchField(SearchFilter.CREATED_BY,              "obj.addedByUserId", SearchField.DATA_TYPE.INTEGER,  SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.DATASET_LABEL,           "obj.labels",        SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField(SearchFilter.DATASET_KEYWORD,         "obj.keywords",      SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME,  "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME,  "obj.updateTime"));
@@ -176,6 +179,9 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         xObj.setTermsOfUse(vObj.getTermsOfUse());
         xObj.setOptions(JsonUtils.mapToJson(vObj.getOptions()));
         xObj.setAdditionalInfo(JsonUtils.mapToJson(vObj.getAdditionalInfo()));
+        xObj.setValiditySchedule(JsonUtils.objectToJson(vObj.getValiditySchedule()));
+        xObj.setLabels(JsonUtils.listToJson(vObj.getLabels()));
+        xObj.setKeywords(JsonUtils.listToJson(vObj.getKeywords()));
 
         return xObj;
     }
@@ -191,6 +197,9 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         vObj.setTermsOfUse(xObj.getTermsOfUse());
         vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));
         vObj.setAdditionalInfo(JsonUtils.jsonToMapStringString(xObj.getAdditionalInfo()));
+        vObj.setValiditySchedule(JsonUtils.jsonToObject(xObj.getValiditySchedule(), RangerValiditySchedule.class));
+        vObj.setLabels(JsonUtils.jsonToListString(xObj.getLabels()));
+        vObj.setKeywords(JsonUtils.jsonToListString(xObj.getKeywords()));
 
         return vObj;
     }

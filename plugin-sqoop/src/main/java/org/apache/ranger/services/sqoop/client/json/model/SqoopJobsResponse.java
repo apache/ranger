@@ -20,18 +20,18 @@ package org.apache.ranger.services.sqoop.client.json.model;
 import java.util.List;
 
 public class SqoopJobsResponse {
-	private List<SqoopJobResponse> jobs;
+    private List<SqoopJobResponse> jobs;
 
-	public List<SqoopJobResponse> getJobs() {
-		return jobs;
-	}
+    public List<SqoopJobResponse> getJobs() {
+        return jobs;
+    }
 
-	public void setJobs(List<SqoopJobResponse> jobs) {
-		this.jobs = jobs;
-	}
+    public void setJobs(List<SqoopJobResponse> jobs) {
+        this.jobs = jobs;
+    }
 
-	@Override
-	public String toString() {
-		return "SqoopJobsResponse [jobs=" + jobs + "]";
-	}
+    @Override
+    public String toString() {
+        return "SqoopJobsResponse [jobs=" + jobs + "]";
+    }
 }

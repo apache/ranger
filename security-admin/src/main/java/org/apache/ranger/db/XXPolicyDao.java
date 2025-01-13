@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
@@ -450,6 +451,17 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 
 		return ret;
+	}
+
+	public List<Object[]> getMetaAttributesForPolicies(List<Long> policyIds) {
+		if (policyIds == null || policyIds.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		Query query = getEntityManager().createNamedQuery("XXPolicy.getMetaAttributesForPolicies", tClass);
+		query.setParameter("policyIds", policyIds);
+
+		return query.getResultList();
 	}
 
 	public List<XXPolicy> getProjectPolicies(Long projectId) {

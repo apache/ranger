@@ -18,34 +18,33 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class RangerAuthorizationCoprocessorTest {
+    @Test
+    public void test_canBeNewed() {
+        RangerAuthorizationCoprocessor coprocessor = new RangerAuthorizationCoprocessor();
+        assertNotNull(coprocessor);
+    }
 
-	@Test
-	public void test_canBeNewed() {
-		RangerAuthorizationCoprocessor _coprocessor = new RangerAuthorizationCoprocessor();
-		assertNotNull(_coprocessor);
-	}
-	
-	@Test
-	public void test_getColumnFamilies_happypath() {
-		
-	}
+    @Test
+    public void test_getColumnFamilies_happypath() {
+    }
 
-	@Test
-	public void test_getColumnFamilies_firewalling() {
-		// passing null collection should return back an empty map
-		RangerAuthorizationCoprocessor _coprocessor = new RangerAuthorizationCoprocessor();
-		Map<String, Set<String>> result = _coprocessor.getColumnFamilies(null);
-		assertNotNull(result);
-		assertTrue(result.isEmpty());
-		// same for passing in an empty collection
-//		result = _coprocessor.getColumnFamilies(new HashMap<byte[], ? extends Collection<?>>());
-	}
+    @Test
+    public void test_getColumnFamilies_firewalling() {
+        // passing null collection should return back an empty map
+        RangerAuthorizationCoprocessor coprocessor = new RangerAuthorizationCoprocessor();
+        Map<String, Set<String>>       result       = coprocessor.getColumnFamilies(null);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        // same for passing in an empty collection
+        // result = coprocessor.getColumnFamilies(new HashMap<byte[], ? extends Collection<?>>());
+    }
 }

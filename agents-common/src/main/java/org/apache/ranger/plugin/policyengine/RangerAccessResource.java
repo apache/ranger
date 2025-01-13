@@ -19,33 +19,32 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.ranger.plugin.model.RangerServiceDef;
+
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.ranger.plugin.model.RangerServiceDef;
-
-
 public interface RangerAccessResource {
-	String RESOURCE_SEP = "/";
-	String RESOURCE_NAME_VAL_SEP = "=";
+    String RESOURCE_SEP          = "/";
+    String RESOURCE_NAME_VAL_SEP = "=";
 
-	String getOwnerUser();
+    String getOwnerUser();
 
-	boolean exists(String name);
+    boolean exists(String name);
 
-	Object getValue(String name);
+    Object getValue(String name);
 
-	RangerServiceDef getServiceDef();
+    RangerServiceDef getServiceDef();
 
-	Set<String> getKeys();
+    Set<String> getKeys();
 
-	String getLeafName();
+    String getLeafName();
 
-	String getAsString();
+    String getAsString();
 
-	String getCacheKey();
+    String getCacheKey();
 
-	Map<String, Object> getAsMap();
+    Map<String, Object> getAsMap();
 
-	RangerAccessResource getReadOnlyCopy();
+    RangerAccessResource getReadOnlyCopy();
 }

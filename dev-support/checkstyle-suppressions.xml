@@ -22,4 +22,9 @@
 <suppressions>
   <suppress files="[\\/]generated-sources[\\/]" checks="[a-zA-Z0-9]*"/>
   <suppress files="[\\/]surefire-reports[\\/]" checks="[a-zA-Z0-9]*"/>
+  <suppress files="AuditFileCacheProviderSpool.java" checks="TypeName"/>
+  <suppress files="AuthzAuditEvent.java" checks="StaticVariableName"/>
+  <suppress files="buildks.java" checks="TypeName"/>
+  <suppress files="RangerRolesUtil.java" checks="TypeName"/>
+  <suppress files="SPOOL_FILE_STATUS.java" checks="TypeName"/>
 </suppressions>

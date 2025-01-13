@@ -19,39 +19,40 @@
 
 package org.apache.ranger.services.solr.client;
 
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 
+import java.util.Map;
+
 public class ServiceSolrConnectionMgr {
+    private static final String SOLR_ZOOKEEPER_QUORUM = "solr.zookeeper.quorum";
+    private static final String SOLR_URL              = "solr.url";
 
-	private static final String SOLR_ZOOKEEPER_QUORUM = "solr.zookeeper.quorum";
-	private static final String SOLR_URL = "solr.url";
+    private ServiceSolrConnectionMgr(){
+        // to block instantiation
+    }
 
-	static public ServiceSolrClient getSolrClient(String serviceName,
-			Map<String, String> configs) throws Exception {
-		String solr_url = configs.get(SOLR_URL);
-		String zk_url = configs.get(SOLR_ZOOKEEPER_QUORUM);
-		if (solr_url != null || zk_url != null) {
-			final boolean isSolrCloud = StringUtils.isNotEmpty(zk_url);
-			final String url = isSolrCloud ? zk_url : solr_url;
-			ServiceSolrClient serviceSolrClient = new ServiceSolrClient(serviceName, configs, url, isSolrCloud);
-			return serviceSolrClient;
-		}
-		throw new Exception("Required properties are not set for "
-				+ serviceName + ". URL or Zookeeper information not provided.");
-	}
+    public static ServiceSolrClient getSolrClient(String serviceName, Map<String, String> configs) throws Exception {
+        String solrUrl = configs.get(SOLR_URL);
+        String zkUrl   = configs.get(SOLR_ZOOKEEPER_QUORUM);
 
-	/**
-	 * @param serviceName
-	 * @param configs
-	 * @return
-	 */
-	public static Map<String, Object> connectionTest(String serviceName,
-			Map<String, String> configs) throws Exception {
-		ServiceSolrClient serviceSolrClient = getSolrClient(serviceName,
-				configs);
-		return serviceSolrClient.connectionTest();
-	}
+        if (solrUrl != null || zkUrl != null) {
+            final boolean     isSolrCloud       = StringUtils.isNotEmpty(zkUrl);
+            final String      url               = isSolrCloud ? zkUrl : solrUrl;
 
+            return new ServiceSolrClient(serviceName, configs, url, isSolrCloud);
+        }
+
+        throw new Exception("Required properties are not set for " + serviceName + ". URL or Zookeeper information not provided.");
+    }
+
+    /**
+     * @param serviceName
+     * @param configs
+     * @return
+     */
+    public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
+        ServiceSolrClient serviceSolrClient = getSolrClient(serviceName, configs);
+
+        return serviceSolrClient.connectionTest();
+    }
 }

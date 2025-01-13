@@ -24,13 +24,15 @@ import java.sql.Statement;
 import java.util.Properties;
 
 public final class DerbyTestUtils {
+    private DerbyTestUtils(){
+    }
 
     public static void startDerby() throws Exception {
         // Start Apache Derby
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
 
         Properties props = new Properties();
-        Connection conn = DriverManager.getConnection("jdbc:derby:memory:derbyDB;create=true", props);
+        Connection conn  = DriverManager.getConnection("jdbc:derby:memory:derbyDB;create=true", props);
 
         Statement statement = conn.createStatement();
         statement.execute("CREATE SCHEMA KMSADMIN");
@@ -40,17 +42,17 @@ public final class DerbyTestUtils {
         // Create masterkey table
         statement.execute("CREATE SEQUENCE RANGER_MASTERKEY_SEQ START WITH 1 INCREMENT BY 1");
         String tableCreationString = "CREATE TABLE ranger_masterkey (id VARCHAR(20) NOT NULL PRIMARY KEY, create_time DATE,"
-            + "update_time DATE, added_by_id VARCHAR(20), upd_by_id VARCHAR(20),"
-            + "cipher VARCHAR(255), bitlength VARCHAR(11), masterkey VARCHAR(2048))";
+                + "update_time DATE, added_by_id VARCHAR(20), upd_by_id VARCHAR(20),"
+                + "cipher VARCHAR(255), bitlength VARCHAR(11), masterkey VARCHAR(2048))";
         statement.execute(tableCreationString);
 
         // Create keys table
         statement.execute("CREATE SEQUENCE RANGER_KEYSTORE_SEQ START WITH 1 INCREMENT BY 1");
         statement.execute("CREATE TABLE ranger_keystore(id VARCHAR(20) NOT NULL PRIMARY KEY, create_time DATE,"
-            + "update_time DATE, added_by_id VARCHAR(20), upd_by_id VARCHAR(20),"
-            + "kms_alias VARCHAR(255) NOT NULL, kms_createdDate VARCHAR(20), kms_cipher VARCHAR(255),"
-            + "kms_bitLength VARCHAR(20), kms_description VARCHAR(512), kms_version VARCHAR(20),"
-            + "kms_attributes VARCHAR(1024), kms_encoded VARCHAR(2048))");
+                + "update_time DATE, added_by_id VARCHAR(20), upd_by_id VARCHAR(20),"
+                + "kms_alias VARCHAR(255) NOT NULL, kms_createdDate VARCHAR(20), kms_cipher VARCHAR(255),"
+                + "kms_bitLength VARCHAR(20), kms_description VARCHAR(512), kms_version VARCHAR(20),"
+                + "kms_attributes VARCHAR(1024), kms_encoded VARCHAR(2048))");
 
         conn.close();
     }
@@ -62,5 +64,4 @@ public final class DerbyTestUtils {
             // expected
         }
     }
-
 }

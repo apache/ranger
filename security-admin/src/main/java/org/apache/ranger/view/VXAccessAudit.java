@@ -157,6 +157,9 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	// Event ID
 	protected String eventId;
 
+	//Zoned Event Time
+	protected String zonedEventTime;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -635,6 +638,23 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	}
 
 	/**
+	 * Returns the value for the member attribute <b>zonedEventTime</b>
+	 * @return Date - value of member attribute <b>zonedEventTime</b>.
+	 */
+	public String getZonedEventTime( ) {
+		return this.zonedEventTime;
+	}
+
+	/**
+	 * This method sets the value to the member attribute <b>zonedEventTime</b>.
+	 * You cannot set null to the attribute.
+	 * @param zonedEventTime Value to set member attribute <b>zonedEventTime</b>
+	 */
+	public void setZonedEventTime( String zonedEventTime ) {
+		this.zonedEventTime = zonedEventTime;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -673,6 +693,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "zoneName={" + zoneName + "}";
 		str += "agentHost={" + agentHost + "}";
 		str += "eventId={" + eventId + "}";
+		str += "zonedEventTime={" + zonedEventTime + "} ";
 		str += "}";
 		return str;
 	}
