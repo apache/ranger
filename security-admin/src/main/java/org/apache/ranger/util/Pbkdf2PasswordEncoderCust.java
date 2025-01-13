@@ -36,15 +36,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
-    private static final int DEFAULT_HASH_WIDTH = 256;
-    private static final int DEFAULT_ITERATIONS = 185000;
-
-    private final BytesKeyGenerator saltGenerator;
-    private       String            algorithm;
-    private final byte[]            secret;
-    private final int               hashWidth;
-    private final int               iterations;
-    private       boolean           encodeHashAsBase64;
+    private static final int               DEFAULT_HASH_WIDTH = 256;
+    private static final int               DEFAULT_ITERATIONS = 185000;
+    private final        BytesKeyGenerator saltGenerator;
+    private final        byte[]            secret;
+    private final        int               hashWidth;
+    private final        int               iterations;
+    private              String            algorithm;
+    private              boolean           encodeHashAsBase64;
 
     public Pbkdf2PasswordEncoderCust(CharSequence secret) {
         this(secret, DEFAULT_ITERATIONS, DEFAULT_HASH_WIDTH);
@@ -78,8 +77,14 @@ public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
     public String encode(CharSequence rawPassword) {
         byte[] salt    = this.saltGenerator.generateKey();
         byte[] encoded = this.encode(rawPassword, salt);
-
         return this.encode(encoded);
+    }
+
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        byte[] digested = this.decode(encodedPassword);
+        byte[] salt     = EncodingUtils.subArray(digested, 0, this.saltGenerator.getKeyLength());
+        return matches(digested, this.encode(rawPassword, salt));
     }
 
     public void setEncodeHashAsBase64(boolean encodeHashAsBase64) {
@@ -88,14 +93,6 @@ public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
 
     private String encode(byte[] bytes) {
         return this.encodeHashAsBase64 ? Utf8.decode(Base64.encode(bytes)) : String.valueOf(Hex.encode(bytes));
-    }
-
-    @Override
-    public boolean matches(CharSequence rawPassword, String encodedPassword) {
-        byte[] digested = this.decode(encodedPassword);
-        byte[] salt     = EncodingUtils.subArray(digested, 0, this.saltGenerator.getKeyLength());
-
-        return matches(digested, this.encode(rawPassword, salt));
     }
 
     private static boolean matches(byte[] expected, byte[] actual) {
@@ -108,10 +105,9 @@ public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
 
     private byte[] encode(CharSequence rawPassword, byte[] salt) {
         try {
-            PBEKeySpec       spec = new PBEKeySpec(rawPassword.toString().toCharArray(), EncodingUtils.concatenate(new byte[][] {salt, this.secret}), this.iterations, this.hashWidth);
+            PBEKeySpec       spec = new PBEKeySpec(rawPassword.toString().toCharArray(), EncodingUtils.concatenate(salt, this.secret), this.iterations, this.hashWidth);
             SecretKeyFactory skf  = SecretKeyFactory.getInstance(this.algorithm);
-
-            return EncodingUtils.concatenate(new byte[][] {salt, skf.generateSecret(spec).getEncoded()});
+            return EncodingUtils.concatenate(salt, skf.generateSecret(spec).getEncoded());
         } catch (GeneralSecurityException var5) {
             throw new IllegalStateException("Could not create hash", var5);
         }

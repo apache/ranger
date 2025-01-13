@@ -175,7 +175,6 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
             if (CollectionUtils.isNotEmpty(allAffectedServiceIds)) {
                 for (final Long serviceId : allAffectedServiceIds) {
                     Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
-
                     daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
 
                     XXService serviceDbObj = serviceDao.getById(serviceId);
@@ -198,7 +197,6 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
             for (XXService referringService : referringServices) {
                 final Long referringServiceId = referringService.getId();
                 Runnable   roleVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, referringServiceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
-
                 daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(roleVersionUpdater);
             }
         }
