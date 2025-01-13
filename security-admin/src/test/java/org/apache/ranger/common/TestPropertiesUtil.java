@@ -23,110 +23,106 @@ import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class TestPropertiesUtil {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    @Autowired
+    PropertiesUtil propertiesUtil;
 
-	@Autowired
-	PropertiesUtil propertiesUtil;
+    @Test
+    public void testGetPropertyNull() {
+        String key          = null;
+        String defaultValue = "test";
+        String value        = PropertiesUtil.getProperty(key, defaultValue);
+        Assert.assertNull(value);
+    }
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+    @Test
+    public void testGetProperty() {
+        String key          = "1";
+        String defaultValue = "test";
+        String value        = PropertiesUtil.getProperty(key, defaultValue);
+        Assert.assertNotNull(value);
+    }
 
-	@Test
-	public void testGetPropertyNull() {
-		String key=null;
-		String defaultValue="test";
-		String value= PropertiesUtil.getProperty(key, defaultValue);
-		Assert.assertNull(value);
-	}
-	
-	@Test
-	public void testGetProperty() {
-		String key="1";
-		String defaultValue="test";
-		String value= PropertiesUtil.getProperty(key, defaultValue);
-		Assert.assertNotNull(value);
-	}	
-	
-	@Test
-	public void testgetPropertyNullValue(){
-		String key=null;
-		String value = PropertiesUtil.getProperty(key);
-		Assert.assertNull(value);
-	}
-	
-	@Test
-	public void testGetIntPropertyNull1(){
-		String key=null;
-		Integer value = PropertiesUtil.getIntProperty(key);
-		Assert.assertNull(value);
-	}
-	
-	@Test
-	public void testGetIntPropertyl1(){
-		String key="1";
-		Integer value= PropertiesUtil.getIntProperty(key);
-		Assert.assertNull(value);
-	}	
-	
-	@Test
-	public void testGetIntPropertyNull(){
-		String key=null;
-		int defaultValue=0;
-		Integer value = PropertiesUtil.getIntProperty(key, defaultValue);
-		Assert.assertNotNull(value);
-		Assert.assertEquals(value.intValue(), defaultValue);
-	}
-	
-	@Test
-	public void testGetIntPropertyl(){
-		String key="1";
-		int defaultValue=1;
-		Integer value= PropertiesUtil.getIntProperty(key, defaultValue);
-		Assert.assertEquals(value, Integer.valueOf(defaultValue));
-	}
+    @Test
+    public void testgetPropertyNullValue() {
+        String key   = null;
+        String value = PropertiesUtil.getProperty(key);
+        Assert.assertNull(value);
+    }
 
-	@Test
-	public void testGetLongProperty(){
-		String key="longKey";
-		long defaultValue=23L;
-		Long value = PropertiesUtil.getLongProperty(key, defaultValue);
-		Assert.assertNotNull(value);
-		Assert.assertEquals(value.intValue(), defaultValue);
-	}
+    @Test
+    public void testGetIntPropertyNull1() {
+        String  key   = null;
+        Integer value = PropertiesUtil.getIntProperty(key);
+        Assert.assertNull(value);
+    }
 
-	@Test
-	public void testGetBooleanPropertyNull() {
-		String key = null;
-		boolean defaultValue = true;
-		boolean returnAvlue = PropertiesUtil.getBooleanProperty(key , defaultValue);
-		Assert.assertTrue(returnAvlue);
-	}
-	
-	@Test
-	public void testGetBooleanProperty() {
-		String key = "1";
-		boolean defaultValue = true;
-		boolean returnAvlue = PropertiesUtil.getBooleanProperty(key , defaultValue);
-		Assert.assertTrue(returnAvlue);
-	}
-	
-	@Test
-        public void testGetPropertyStringListForNull(){
-		String key = null;
-		PropertiesUtil.getPropertyStringList(key);
-		Assert.assertNull(key);
-	}
-	
-        @Test
-        public void testGetPropertyStringList(){
-                String key = "ranger.users.roles.list";
+    @Test
+    public void testGetIntPropertyl1() {
+        String  key   = "1";
+        Integer value = PropertiesUtil.getIntProperty(key);
+        Assert.assertNull(value);
+    }
 
-                PropertiesUtil.getPropertiesMap().put("ranger.users.roles.list", "read,write,access");
-                String[] actualroles = PropertiesUtil.getPropertyStringList(key);
+    @Test
+    public void testGetIntPropertyNull() {
+        String  key          = null;
+        int     defaultValue = 0;
+        Integer value        = PropertiesUtil.getIntProperty(key, defaultValue);
+        Assert.assertNotNull(value);
+        Assert.assertEquals(value.intValue(), defaultValue);
+    }
 
-                Assert.assertEquals("read", actualroles[0]);
-                Assert.assertEquals("write", actualroles[1]);
-                Assert.assertEquals("access", actualroles[2]);
+    @Test
+    public void testGetIntPropertyl() {
+        String  key          = "1";
+        int     defaultValue = 1;
+        Integer value        = PropertiesUtil.getIntProperty(key, defaultValue);
+        Assert.assertEquals(value, Integer.valueOf(defaultValue));
+    }
 
-        }
+    @Test
+    public void testGetLongProperty() {
+        String key          = "longKey";
+        long   defaultValue = 23L;
+        Long   value        = PropertiesUtil.getLongProperty(key, defaultValue);
+        Assert.assertNotNull(value);
+        Assert.assertEquals(defaultValue, value.intValue());
+    }
 
+    @Test
+    public void testGetBooleanPropertyNull() {
+        String  key          = null;
+        boolean defaultValue = true;
+        boolean returnValue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
+        Assert.assertTrue(returnValue);
+    }
+
+    @Test
+    public void testGetBooleanProperty() {
+        String  key          = "1";
+        boolean defaultValue = true;
+        boolean returnValue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
+        Assert.assertTrue(returnValue);
+    }
+
+    @Test
+    public void testGetPropertyStringListForNull() {
+        String key = null;
+        PropertiesUtil.getPropertyStringList(key);
+        Assert.assertNull(key);
+    }
+
+    @Test
+    public void testGetPropertyStringList() {
+        String key = "ranger.users.roles.list";
+
+        PropertiesUtil.getPropertiesMap().put("ranger.users.roles.list", "read,write,access");
+        String[] actualRoles = PropertiesUtil.getPropertyStringList(key);
+
+        Assert.assertEquals("read", actualRoles[0]);
+        Assert.assertEquals("write", actualRoles[1]);
+        Assert.assertEquals("access", actualRoles[2]);
+    }
 }

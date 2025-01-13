@@ -17,8 +17,6 @@
 
 package org.apache.ranger.patch;
 
-import java.util.List;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -37,151 +35,141 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 extends BaseLoader {
-	private static final Logger logger = LoggerFactory
-			.getLogger(PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.class);
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	ServiceDBStore svcDBStore;
+    @Autowired
+    ServiceDBStore svcDBStore;
 
-	@Autowired
-	RangerServiceDefService serviceDefService;
+    @Autowired
+    RangerServiceDefService serviceDefService;
 
-	@Autowired
-	StringUtil stringUtil;
+    @Autowired
+    StringUtil stringUtil;
 
-	public static void main(String[] args) {
-		try {
-			PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 loader = (PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049) CLIUtil
-					.getBean(PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.class);
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting!!!");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+    public static void main(String[] args) {
+        try {
+            PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 loader = (PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049) CLIUtil.getBean(PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.class);
+            loader.init();
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
+            logger.info("Load complete. Exiting!!!");
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
+            System.exit(1);
+        }
+    }
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.execLoad()");
-		try {
-			updateAllServiceDef();
-		} catch (Exception e) {
-			logger.error("Error in PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.execLoad()", e);
-		}
-		logger.info("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.execLoad()");
-	}
+    @Override
+    public void printStats() {
+        logger.info("adding default audit-filters to all service-defs");
+    }
 
-	@Override
-	public void printStats() {
-		logger.info("adding default audit-filters to all service-defs");
-	}
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.execLoad()");
+        try {
+            updateAllServiceDef();
+        } catch (Exception e) {
+            logger.error("Error in PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.execLoad()", e);
+        }
+        logger.info("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.execLoad()");
+    }
 
-	private void updateAllServiceDef() throws Exception {
-		if(logger.isDebugEnabled()) {
-			logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.updateAllServiceDef()");
-		}
-		List<XXServiceDef> allXXServiceDefs;
-		allXXServiceDefs = daoMgr.getXXServiceDef().getAll();
+    private void updateAllServiceDef() {
+        logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.updateAllServiceDef()");
+        List<XXServiceDef> allXXServiceDefs;
+        allXXServiceDefs = daoMgr.getXXServiceDef().getAll();
 
-		if (CollectionUtils.isNotEmpty(allXXServiceDefs)) {
-			logger.info("Found " + allXXServiceDefs.size() + " services-defs");
-			for (XXServiceDef xxServiceDef : allXXServiceDefs) {
+        if (CollectionUtils.isNotEmpty(allXXServiceDefs)) {
+            logger.info("Found {} services-defs", allXXServiceDefs.size());
+            for (XXServiceDef xxServiceDef : allXXServiceDefs) {
+                String serviceDefName = xxServiceDef.getName();
 
-				String serviceDefName = xxServiceDef.getName();
+                try {
+                    RangerServiceConfigDef defualtAuditFiltersSvcConfDef = getDefaultAuditFiltersByServiceDef(serviceDefName);
 
-				try {
-					RangerServiceConfigDef defualtAuditFiltersSvcConfDef = getDefaultAuditFiltersByServiceDef(serviceDefName);
+                    if (defualtAuditFiltersSvcConfDef == null) {
+                        logger.info("No default audit-filter available for service-def {} Skipped", serviceDefName);
+                        continue;
+                    }
 
-					if (defualtAuditFiltersSvcConfDef == null) {
-						logger.info("No default audit-filter available for service-def " + serviceDefName + ". Skipped");
-						continue;
-					}
+                    RangerServiceDef serviceDef = svcDBStore.getServiceDefByName(serviceDefName);
 
-					RangerServiceDef serviceDef = svcDBStore.getServiceDefByName(serviceDefName);
+                    if (serviceDef != null) {
+                        List<RangerServiceConfigDef> svcConfDefList           = serviceDef.getConfigs();
+                        boolean                      defaultAuditFiltresFound = false;
+                        for (RangerServiceConfigDef svcConfDef : svcConfDefList) {
+                            if (StringUtils.equals(svcConfDef.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
+                                defaultAuditFiltresFound = true;
+                                break;
+                            }
+                        }
+                        if (!defaultAuditFiltresFound) {
+                            logger.info("adding default audit-filter for service-def:[{}]", serviceDefName);
+                            int sortOrder = serviceDef.getConfigs().size() - 1;
+                            addDefaultAuditFilterConfig(defualtAuditFiltersSvcConfDef, xxServiceDef, sortOrder);
+                            logger.info("Completed adding default audit-filter for service-def:[{}]", serviceDefName);
+                        } else {
+                            logger.info("default audit-filter already available for service-def [{}] skipped", serviceDefName);
+                        }
+                    } else {
+                        logger.info("No service-def:[{}] found", serviceDefName);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error while adding default audit-filter service-def:[{}]", serviceDefName, e);
+                }
+            }
+        } else {
+            logger.info("No service-def found");
+        }
+        logger.debug("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.updateAllServiceDef()");
+    }
 
-					if (serviceDef != null) {
-						List<RangerServiceConfigDef> svcConfDefList = serviceDef.getConfigs();
-						boolean defaultAuditFiltresFound = false;
-						for (RangerServiceConfigDef svcConfDef : svcConfDefList) {
-							if (StringUtils.equals(svcConfDef.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
-								defaultAuditFiltresFound = true;
-								break;
-							}
-						}
-						if (!defaultAuditFiltresFound) {
-							logger.info("adding default audit-filter for service-def:[" + serviceDefName + "]");
-							int sortOrder = serviceDef.getConfigs().size() - 1;
-							addDefaultAuditFilterConfig(defualtAuditFiltersSvcConfDef, xxServiceDef, sortOrder);
-							logger.info("Completed adding default audit-filter for service-def:[" + serviceDefName + "]");
-						}else {
-							logger.info("default audit-filter already available for service-def " + serviceDefName + ". Skipped");
-						}
+    private RangerServiceConfigDef getDefaultAuditFiltersByServiceDef(String serviceDefName) throws Exception {
+        logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.getDefaultAuditFiltersByServiceDef() for serviceDefName:[{}]", serviceDefName);
 
-					}else {
-						logger.info("No service-def:[" + serviceDefName + "] found");
-					}
-					
-				} catch (Exception e) {
-					logger.error("Error while adding default audit-filter service-def:[" + serviceDefName + "]", e);
-				}
-			}
-		}else {
-			logger.info("No service-def found");
-		}
-		if(logger.isDebugEnabled()) {
-			logger.debug("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.updateAllServiceDef()");
-		}
-	}
+        RangerServiceConfigDef       ret                     = null;
+        RangerServiceDef             embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDefName);
+        List<RangerServiceConfigDef> svcConfDefList          = embeddedAtlasServiceDef.getConfigs();
 
-	private RangerServiceConfigDef getDefaultAuditFiltersByServiceDef(String serviceDefName) throws Exception {
-		if(logger.isDebugEnabled()) {
-			logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.getDefaultAuditFiltersByServiceDef() for serviceDefName:["+serviceDefName+ "]");
-		}
-		RangerServiceConfigDef ret = null;
-		RangerServiceDef embeddedAtlasServiceDef = null;
-		embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDefName);
+        for (RangerServiceConfigDef svcConfDef : svcConfDefList) {
+            if (StringUtils.equals(svcConfDef.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
+                ret = svcConfDef;
+                break;
+            }
+        }
 
-		List<RangerServiceConfigDef> svcConfDefList = embeddedAtlasServiceDef.getConfigs();
-		for (RangerServiceConfigDef svcConfDef : svcConfDefList) {
-			if (StringUtils.equals(svcConfDef.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
-				ret = svcConfDef;
-				break;
-			}
-		}
+        logger.debug("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.getDefaultAuditFiltersByServiceDef() for serviceDefName:[{}] ret : {}", serviceDefName, ret);
 
-		if(logger.isDebugEnabled()) {
-			logger.debug("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.getDefaultAuditFiltersByServiceDef() for serviceDefName:["+serviceDefName+"] ret : "+ret);
-		}
-		return ret;
-	}
+        return ret;
+    }
 
-	private void addDefaultAuditFilterConfig(RangerServiceConfigDef config, XXServiceDef createdSvcDef, int sortOrder) {
-		if(logger.isDebugEnabled()) {
-			logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.addDefaultAuditFilterConfig() for config:["+config+"] sortOrder: "+sortOrder );
-		}
-		XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
-		XXServiceConfigDef xConfig = new XXServiceConfigDef();
-		xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef,
-				RangerServiceDefService.OPERATION_CREATE_CONTEXT);
-		xConfig.setOrder(sortOrder);
-		xConfig = xxServiceConfigDao.create(xConfig);
-		if(logger.isDebugEnabled()) {
-			logger.debug("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.addDefaultAuditFilterConfig() for config:["+config+"] sortOrder: "+sortOrder);
-		}
-	}
+    private void addDefaultAuditFilterConfig(RangerServiceConfigDef config, XXServiceDef createdSvcDef, int sortOrder) {
+        logger.debug("==> PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.addDefaultAuditFilterConfig() for config:[{}] sortOrder: {}", config, sortOrder);
+
+        XXServiceConfigDefDao xxServiceConfigDao = daoMgr.getXXServiceConfigDef();
+        XXServiceConfigDef    xConfig            = new XXServiceConfigDef();
+
+        xConfig = serviceDefService.populateRangerServiceConfigDefToXX(config, xConfig, createdSvcDef, RangerServiceDefService.OPERATION_CREATE_CONTEXT);
+
+        xConfig.setOrder(sortOrder);
+
+        xxServiceConfigDao.create(xConfig);
+
+        logger.debug("<== PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.addDefaultAuditFilterConfig() for config:[{}] sortOrder: {}", config, sortOrder);
+    }
 }

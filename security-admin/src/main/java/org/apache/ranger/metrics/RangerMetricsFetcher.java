@@ -19,10 +19,6 @@
 
 package org.apache.ranger.metrics;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RangerConstants;
@@ -33,6 +29,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.Objects.requireNonNull;
 
 @Service
 @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -51,72 +52,99 @@ public class RangerMetricsFetcher {
     public Long getGroupCount() {
         return groupService.getAllGroupCount();
     }
-    public Map<String, Long> getUserMetrics() {
 
-        Map<String, Long> ret = new HashMap<>();
-        long total = 0l;
+    public Map<String, Long> getUserMetrics() {
+        Map<String, Long> ret   = new HashMap<>();
+        long              total = 0L;
+
         for (Map.Entry<String, Long> entry : xUserMgr.getUserCountByRole().entrySet()) {
             String role = entry.getKey();
             switch (role) {
-                case RangerConstants.ROLE_SYS_ADMIN:         ret.put("SysAdmin", entry.getValue());        break;
-                case RangerConstants.ROLE_ADMIN_AUDITOR:     ret.put("AdminAuditor", entry.getValue());    break;
-                case RangerConstants.ROLE_KEY_ADMIN:         ret.put("KeyAdmin", entry.getValue());        break;
-                case RangerConstants.ROLE_KEY_ADMIN_AUDITOR: ret.put("KeyAdminAuditor", entry.getValue()); break;
-                case RangerConstants.ROLE_USER:              ret.put("User", entry.getValue());            break;
-                default: LOG.warn("===>> RangerMetricsFetcher.getUserMetrics(): invalid role [{}] type.", role);break;
+                case RangerConstants.ROLE_SYS_ADMIN:
+                    ret.put("SysAdmin", entry.getValue());
+                    break;
+                case RangerConstants.ROLE_ADMIN_AUDITOR:
+                    ret.put("AdminAuditor", entry.getValue());
+                    break;
+                case RangerConstants.ROLE_KEY_ADMIN:
+                    ret.put("KeyAdmin", entry.getValue());
+                    break;
+                case RangerConstants.ROLE_KEY_ADMIN_AUDITOR:
+                    ret.put("KeyAdminAuditor", entry.getValue());
+                    break;
+                case RangerConstants.ROLE_USER:
+                    ret.put("User", entry.getValue());
+                    break;
+                default:
+                    LOG.warn("===>> RangerMetricsFetcher.getUserMetrics(): invalid role [{}] type.", role);
+                    break;
             }
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
     }
 
     public Map<String, Long> getRangerServiceMetrics() {
-        Map<String, Long> ret = new HashMap<>();
-        long total = 0l;
+        Map<String, Long> ret   = new HashMap<>();
+        long              total = 0L;
+
         for (Map.Entry<String, Long> entry : svcStore.getServiceCountByType().entrySet()) {
             ret.put(entry.getKey(), entry.getValue());
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
     }
 
     public Map<String, Long> getPolicyMetrics(Integer policyType) {
-        Objects.requireNonNull(policyType, "Policy type must not be null to get policy metrics.");
+        requireNonNull(policyType, "Policy type must not be null to get policy metrics.");
 
-        Map<String, Long> ret = new HashMap<>();
-        long total = 0l;
+        Map<String, Long> ret   = new HashMap<>();
+        long              total = 0L;
+
         for (Map.Entry<String, Long> entry : svcStore.getPolicyCountByTypeAndServiceType(policyType).entrySet()) {
             ret.put(entry.getKey(), entry.getValue());
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
     }
 
     public Map<String, Long> getDenyConditionsMetrics() {
-        Map<String, Long> ret = new HashMap<>();
-        long total = 0l;
+        Map<String, Long> ret   = new HashMap<>();
+        long              total = 0L;
+
         for (Map.Entry<String, Long> entry : svcStore.getPolicyCountByDenyConditionsAndServiceDef().entrySet()) {
             ret.put(entry.getKey(), entry.getValue());
-            total += entry.getValue().longValue();
+
+            total += entry.getValue();
         }
+
         ret.put("Total", total);
 
         return ret;
     }
 
     public Map<String, Long> getContextEnrichersMetrics() {
-        Map<String, Long> ret = new HashMap<>();
-        long total = 0l;
+        Map<String, Long> ret   = new HashMap<>();
+        long              total = 0L;
+
         for (String serviceDef : svcStore.findAllServiceDefNamesHavingContextEnrichers()) {
-            ret.put(serviceDef, 1l);
+            ret.put(serviceDef, 1L);
+
             total++;
         }
+
         ret.put("Total", total);
 
         return ret;

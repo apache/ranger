@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,219 +21,217 @@ package org.apache.ranger.entity;
 
 import org.apache.ranger.common.AppConstants;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
 import java.util.Date;
+import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_ugsync_audit_info")
 public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name = "X_UGSYNC_AUDIT_INFO_SEQ", sequenceName = "X_UGSYNC_AUDIT_INFO_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_UGSYNC_AUDIT_INFO_SEQ")
-	@Column(name = "id")
-	protected Long id;
+    @Id
+    @SequenceGenerator(name = "X_UGSYNC_AUDIT_INFO_SEQ", sequenceName = "X_UGSYNC_AUDIT_INFO_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_UGSYNC_AUDIT_INFO_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="event_time"   )
-	protected Date eventTime;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "event_time")
+    protected Date eventTime;
 
-	@Column(name = "user_name")
-	protected String userName;
+    @Column(name = "user_name")
+    protected String userName;
 
-	@Column(name = "sync_source")
-	protected String syncSource;
+    @Column(name = "sync_source")
+    protected String syncSource;
 
-	@Column(name = "no_of_new_users")
-	protected Long noOfNewUsers;
+    @Column(name = "no_of_new_users")
+    protected Long noOfNewUsers;
 
-	@Column(name = "no_of_new_groups")
-	protected Long noOfNewGroups;
+    @Column(name = "no_of_new_groups")
+    protected Long noOfNewGroups;
 
-	@Column(name = "no_of_modified_users")
-	protected Long noOfModifiedUsers;
+    @Column(name = "no_of_modified_users")
+    protected Long noOfModifiedUsers;
 
-	@Column(name = "no_of_modified_groups")
-	protected Long noOfModifiedGroups;
+    @Column(name = "no_of_modified_groups")
+    protected Long noOfModifiedGroups;
 
-	@Column(name = "sync_source_info")
-	protected String syncSourceInfo;
+    @Column(name = "sync_source_info")
+    protected String syncSourceInfo;
 
-	@Column(name="session_id")
-	protected String sessionId;
+    @Column(name = "session_id")
+    protected String sessionId;
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public XXUgsyncAuditInfo() {
-	}
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public XXUgsyncAuditInfo() {
+    }
 
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_UGYNC_AUDIT_INFO;
-	}
+    public static boolean equals(Object object1, Object object2) {
+        if (object1 == object2) {
+            return true;
+        }
 
-	public String getMyDisplayValue() {
-		return null;
-	}
+        if ((object1 == null) || (object2 == null)) {
+            return false;
+        }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+        return object1.equals(object2);
+    }
 
-	public Long getId() {
-		return this.id;
-	}
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_UGYNC_AUDIT_INFO;
+    }
 
-	public Date getEventTime() {
-		return eventTime;
-	}
+    public String getMyDisplayValue() {
+        return null;
+    }
 
-	public void setEventTime(Date eventTime) {
-		this.eventTime = eventTime;
-	}
+    public Long getId() {
+        return this.id;
+    }
 
-	public String getUserName() {
-		return userName;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	public String getSyncSource() {
-		return syncSource;
-	}
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	public void setSyncSource(String syncSource) {
-		this.syncSource = syncSource;
-	}
+        XXUgsyncAuditInfo other = (XXUgsyncAuditInfo) obj;
 
+        return Objects.equals(id, other.id) &&
+                Objects.equals(eventTime, other.eventTime) &&
+                Objects.equals(userName, other.userName) &&
+                Objects.equals(syncSource, other.syncSource) &&
+                Objects.equals(noOfNewUsers, other.noOfNewUsers) &&
+                Objects.equals(noOfNewGroups, other.noOfNewGroups) &&
+                Objects.equals(noOfModifiedUsers, other.noOfModifiedUsers) &&
+                Objects.equals(noOfModifiedGroups, other.noOfModifiedGroups) &&
+                Objects.equals(syncSourceInfo, other.syncSourceInfo) &&
+                Objects.equals(sessionId, other.sessionId);
+    }
 
-	public Long getNoOfNewUsers() {
-		return noOfNewUsers;
-	}
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = "XXUgsyncAuditInfo={";
+        str += "id={" + id + "} ";
+        str += "eventTime={" + eventTime + "} ";
+        str += "userName={" + userName + "} ";
+        str += "syncSource={" + syncSource + "} ";
+        str += "noOfNewUsers={" + noOfNewUsers + "} ";
+        str += "noOfNewGroups={" + noOfNewGroups + "} ";
+        str += "noOfModifiedUsers={" + noOfModifiedUsers + "} ";
+        str += "noOfModifiedGroups={" + noOfModifiedGroups + "} ";
+        str += "syncSourceInfo={" + syncSourceInfo + "} ";
+        str += "sessionId={" + sessionId + "} ";
+        str += "}";
+        return str;
+    }
 
-	public void setNoOfNewUsers(Long noOfUsers) {
-		this.noOfNewUsers = noOfUsers;
-	}
+    public Date getEventTime() {
+        return eventTime;
+    }
 
-	public Long getNoOfModifiedUsers() {
-		return noOfModifiedUsers;
-	}
+    public void setEventTime(Date eventTime) {
+        this.eventTime = eventTime;
+    }
 
-	public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
-		this.noOfModifiedUsers = noOfModifiedUsers;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public Long getNoOfNewGroups() {
-		return noOfNewGroups;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	public void setNoOfNewGroups(Long noOfNewGroups) {
-		this.noOfNewGroups = noOfNewGroups;
-	}
+    public String getSyncSource() {
+        return syncSource;
+    }
 
-	public Long getNoOfModifiedGroups() {
-		return noOfModifiedGroups;
-	}
+    public void setSyncSource(String syncSource) {
+        this.syncSource = syncSource;
+    }
 
-	public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
-		this.noOfModifiedGroups = noOfModifiedGroups;
-	}
+    public Long getNoOfNewUsers() {
+        return noOfNewUsers;
+    }
 
-	public String getSyncSourceInfo() {
-		return syncSourceInfo;
-	}
+    public void setNoOfNewUsers(Long noOfUsers) {
+        this.noOfNewUsers = noOfUsers;
+    }
 
-	public void setSyncSourceInfo(String syncSourceInfo) {
-		this.syncSourceInfo = syncSourceInfo;
-	}
+    public Long getNoOfModifiedUsers() {
+        return noOfModifiedUsers;
+    }
 
-	public String getSessionId() {
-		return sessionId;
-	}
+    public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
+        this.noOfModifiedUsers = noOfModifiedUsers;
+    }
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
+    public Long getNoOfNewGroups() {
+        return noOfNewGroups;
+    }
 
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	@Override
-	public String toString( ) {
-		String str = "XXUgsyncAuditInfo={";
-		str += "id={" + id + "} ";
-		str += "eventTime={" + eventTime + "} ";
-		str += "userName={" + userName + "} ";
-		str += "syncSource={" + syncSource + "} ";
-		str += "noOfNewUsers={" + noOfNewUsers + "} ";
-		str += "noOfNewGroups={" + noOfNewGroups + "} ";
-		str += "noOfModifiedUsers={" + noOfModifiedUsers + "} ";
-		str += "noOfModifiedGroups={" + noOfModifiedGroups + "} ";
-		str += "syncSourceInfo={" + syncSourceInfo + "} ";
-		str += "sessionId={" + sessionId + "} ";
-		str += "}";
-		return str;
-	}
+    public void setNoOfNewGroups(Long noOfNewGroups) {
+        this.noOfNewGroups = noOfNewGroups;
+    }
 
-	/**
-	 * Checks for all attributes except referenced db objects
-	 * @return true if all attributes match
-	*/
-	@Override
-	public boolean equals( Object obj) {
-		if (obj == null)
-			return false;
-		if (this == obj)
-			return true;
-		if (getClass() != obj.getClass())
-			return false;
-		XXUgsyncAuditInfo other = (XXUgsyncAuditInfo) obj;
-		if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
-			return false;
-		}
-		if ((this.eventTime == null && other.eventTime != null) || (this.eventTime != null && !this.eventTime.equals(other.eventTime))) {
-			return false;
-		}
-		if ((this.userName == null && other.userName != null) || (this.userName != null && !this.userName.equals(other.userName))) {
-			return false;
-		}
-		if ((this.syncSource == null && other.syncSource != null) || (this.syncSource != null && !this.syncSource.equals(other.syncSource))) {
-			return false;
-		}
-		if ((this.noOfNewUsers == null && other.noOfNewUsers != null) || (this.noOfNewUsers != null && !this.noOfNewUsers.equals(other.noOfNewUsers))) {
-			return false;
-		}
-		if ((this.noOfNewGroups == null && other.noOfNewGroups != null) || (this.noOfNewGroups != null && !this.noOfNewGroups.equals(other.noOfNewGroups))) {
-			return false;
-		}
-		if ((this.noOfModifiedUsers == null && other.noOfModifiedUsers != null) || (this.noOfModifiedUsers != null && !this.noOfModifiedUsers.equals(other.noOfModifiedUsers))) {
-			return false;
-		}
-		if ((this.noOfModifiedGroups == null && other.noOfModifiedGroups != null) || (this.noOfModifiedGroups != null && !this.noOfModifiedGroups.equals(other.noOfModifiedGroups))) {
-			return false;
-		}
-		if ((this.syncSourceInfo == null && other.syncSourceInfo != null) || (this.syncSourceInfo != null && !this.syncSourceInfo.equals(other.syncSourceInfo))) {
-			return false;
-		}
-		if ((this.sessionId == null && other.sessionId != null) || (this.sessionId != null && !this.sessionId.equals(other.sessionId))) {
-			return false;
-		}
-		return true;
-	}
+    public Long getNoOfModifiedGroups() {
+        return noOfModifiedGroups;
+    }
 
-	public static boolean equals(Object object1, Object object2) {
-		if (object1 == object2) {
-			return true;
-		}
-		if ((object1 == null) || (object2 == null)) {
-			return false;
-		}
-		return object1.equals(object2);
-	}
+    public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
+        this.noOfModifiedGroups = noOfModifiedGroups;
+    }
 
+    public String getSyncSourceInfo() {
+        return syncSourceInfo;
+    }
+
+    public void setSyncSourceInfo(String syncSourceInfo) {
+        this.syncSourceInfo = syncSourceInfo;
+    }
+
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
 }

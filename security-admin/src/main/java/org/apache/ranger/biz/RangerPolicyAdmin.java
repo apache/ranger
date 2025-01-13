@@ -19,11 +19,6 @@
 
 package org.apache.ranger.biz;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -32,8 +27,12 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerRoles;
 
-public interface RangerPolicyAdmin {
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+public interface RangerPolicyAdmin {
     boolean isDelegatedAdminAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, Set<String> accessTypes);
 
     boolean isDelegatedAdminAccessAllowedForRead(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext);
@@ -69,5 +68,4 @@ public interface RangerPolicyAdmin {
     List<RangerPolicy> getAllowedUnzonedPolicies(String user, Set<String> userGroups, String accessType);
 
     void setServiceStore(ServiceStore svcStore);
-
 }

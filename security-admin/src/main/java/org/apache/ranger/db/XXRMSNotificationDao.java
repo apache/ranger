@@ -17,11 +17,6 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRMSNotification;
@@ -29,95 +24,110 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
+ *
  */
 @Service
 public class XXRMSNotificationDao extends BaseDao<XXRMSNotification> {
+    private static final Logger LOG = LoggerFactory.getLogger(XXRMSNotificationDao.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(XXRMSNotificationDao.class);
+    public XXRMSNotificationDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXRMSNotificationDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
-	
-	public List<XXRMSNotification> getResource() {
-		List<XXRMSNotification> allResource = getAll();
-		return allResource;
-	}
+    public List<XXRMSNotification> getResource() {
+        return getAll();
+    }
 
-	public Long getMaxIdOfNotifications(long llServiceId, long hlServiceId) {
-		Long lastNotificationId = 0L;
-		try {
-			lastNotificationId = getEntityManager()
-					.createNamedQuery("XXRMSNotification.getMaxIdOfNotifications", Long.class)
-					.setParameter("llServiceId", llServiceId)
-					.setParameter("hlServiceId", hlServiceId)
-					.getSingleResult();
+    public Long getMaxIdOfNotifications(long llServiceId, long hlServiceId) {
+        Long lastNotificationId = 0L;
 
-		} catch (NoResultException e) {
-			LOG.debug(e.getMessage());
-		} finally{
-			if (lastNotificationId == null){
-				lastNotificationId = 0L;
-			}
-		}
-		return lastNotificationId;
-	}
+        try {
+            lastNotificationId = getEntityManager()
+                    .createNamedQuery("XXRMSNotification.getMaxIdOfNotifications", Long.class)
+                    .setParameter("llServiceId", llServiceId)
+                    .setParameter("hlServiceId", hlServiceId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            LOG.debug(e.getMessage());
+        } finally {
+            if (lastNotificationId == null) {
+                lastNotificationId = 0L;
+            }
+        }
 
-	public List<XXRMSNotification> getAllAfterNotificationId(long llServiceId, long hlServiceId, long notificationId) {
-		List<XXRMSNotification> notifications = new ArrayList<>();
-		try {
-			notifications = getEntityManager()
-					.createNamedQuery("XXRMSNotification.getAllAfterNotificationId", XXRMSNotification.class)
-					.setParameter("llServiceId", llServiceId)
-					.setParameter("hlServiceId", hlServiceId)
-					.setParameter("notificationId", notificationId)
-					.getResultList();
-		} catch (NoResultException e) {
-			LOG.debug("There are no relevant notifications after notification_id:[" + notificationId + "]");
-		}
-		return notifications;
-	}
+        return lastNotificationId;
+    }
 
-	public Long findLatestInvalidNotificationId(long llServiceId, long hlServiceId, long lastKnownVersion) {
-		Long latestInvalidNotificationId = -1L;
+    public List<XXRMSNotification> getAllAfterNotificationId(long llServiceId, long hlServiceId, long notificationId) {
+        List<XXRMSNotification> notifications;
 
-		List<XXRMSNotification> notifications = getNotificationWithTypeAfterNotificationId(llServiceId, hlServiceId, "invalid", lastKnownVersion);
+        try {
+            notifications = getEntityManager()
+                    .createNamedQuery("XXRMSNotification.getAllAfterNotificationId", XXRMSNotification.class)
+                    .setParameter("llServiceId", llServiceId)
+                    .setParameter("hlServiceId", hlServiceId)
+                    .setParameter("notificationId", notificationId)
+                    .getResultList();
+        } catch (NoResultException e) {
+            LOG.debug("There are no relevant notifications after notification_id:[{}]", notificationId);
 
-		if (CollectionUtils.isNotEmpty(notifications)) {
-			latestInvalidNotificationId = notifications.get(notifications.size()-1).getNotificationId();
-		}
+            notifications = new ArrayList<>();
+        }
 
-		return latestInvalidNotificationId;
-	}
+        return notifications;
+    }
 
-	public List<XXRMSNotification> getNotificationWithTypeAfterNotificationId(long llServiceId, long hlServiceId, String changeType, long notificationId) {
-		List<XXRMSNotification> notifications = new ArrayList<>();
-		try {
-			notifications = getEntityManager()
-					.createNamedQuery("XXRMSNotification.getNotificationWithTypeAfterNotificationId", XXRMSNotification.class)
-					.setParameter("llServiceId", llServiceId)
-					.setParameter("hlServiceId", hlServiceId)
-					.setParameter("changeType", changeType)
-					.setParameter("notificationId", notificationId)
-					.getResultList();
-		} catch (NoResultException e) {
+    public Long findLatestInvalidNotificationId(long llServiceId, long hlServiceId, long lastKnownVersion) {
+        List<XXRMSNotification> notifications = getNotificationWithTypeAfterNotificationId(llServiceId, hlServiceId, "invalid", lastKnownVersion);
 
-		}
-		return notifications;
-	}
+        Long latestInvalidNotificationId;
 
-	public List<XXRMSNotification> getDeletedNotificationsByHlResourceId(long hlResourceId, long lastKnownVersion) {
-		List<XXRMSNotification> notifications = new ArrayList<>();
-		try {
-			notifications = getEntityManager()
-					.createNamedQuery("XXRMSNotification.getDeletedNotificationsByHlResourceId", XXRMSNotification.class)
-					.setParameter("hlResourceId", hlResourceId)
-					.setParameter("lastKnownVersion", lastKnownVersion)
-					.getResultList();
-		} catch (NoResultException e) {
+        if (CollectionUtils.isNotEmpty(notifications)) {
+            latestInvalidNotificationId = notifications.get(notifications.size() - 1).getNotificationId();
+        } else {
+            latestInvalidNotificationId = -1L;
+        }
 
-		}
-		return notifications;
-	}
+        return latestInvalidNotificationId;
+    }
+
+    public List<XXRMSNotification> getNotificationWithTypeAfterNotificationId(long llServiceId, long hlServiceId, String changeType, long notificationId) {
+        List<XXRMSNotification> notifications;
+
+        try {
+            notifications = getEntityManager()
+                    .createNamedQuery("XXRMSNotification.getNotificationWithTypeAfterNotificationId", XXRMSNotification.class)
+                    .setParameter("llServiceId", llServiceId)
+                    .setParameter("hlServiceId", hlServiceId)
+                    .setParameter("changeType", changeType)
+                    .setParameter("notificationId", notificationId)
+                    .getResultList();
+        } catch (NoResultException e) {
+            notifications = new ArrayList<>();
+        }
+
+        return notifications;
+    }
+
+    public List<XXRMSNotification> getDeletedNotificationsByHlResourceId(long hlResourceId, long lastKnownVersion) {
+        List<XXRMSNotification> notifications;
+
+        try {
+            notifications = getEntityManager()
+                    .createNamedQuery("XXRMSNotification.getDeletedNotificationsByHlResourceId", XXRMSNotification.class)
+                    .setParameter("hlResourceId", hlResourceId)
+                    .setParameter("lastKnownVersion", lastKnownVersion)
+                    .getResultList();
+        } catch (NoResultException e) {
+            notifications = new ArrayList<>();
+        }
+
+        return notifications;
+    }
 }

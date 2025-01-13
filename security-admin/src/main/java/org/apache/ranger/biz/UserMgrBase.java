@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.biz;
+package org.apache.ranger.biz;
 
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -27,44 +27,43 @@ import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 import org.springframework.beans.factory.annotation.Autowired;
+
 public class UserMgrBase {
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
+    @Autowired
+    XPortalUserService xPortalUserService;
 
-	@Autowired
-	XPortalUserService xPortalUserService;
-	public VXPortalUser getXPortalUser(Long id){
-		return (VXPortalUser)xPortalUserService.readResource(id);
-	}
+    public VXPortalUser getXPortalUser(Long id) {
+        return xPortalUserService.readResource(id);
+    }
 
-	public VXPortalUser createXPortalUser(VXPortalUser vXPortalUser){
-		vXPortalUser =  (VXPortalUser)xPortalUserService.createResource(vXPortalUser);
-		return vXPortalUser;
-	}
+    public VXPortalUser createXPortalUser(VXPortalUser vXPortalUser) {
+        vXPortalUser = xPortalUserService.createResource(vXPortalUser);
 
-	public VXPortalUser updateXPortalUser(VXPortalUser vXPortalUser) {
-		vXPortalUser =  (VXPortalUser)xPortalUserService.updateResource(vXPortalUser);
-		return vXPortalUser;
-	}
+        return vXPortalUser;
+    }
 
-	public void deleteXPortalUser(Long id, boolean force) {
-		 if (force) {
-			 xPortalUserService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public VXPortalUser updateXPortalUser(VXPortalUser vXPortalUser) {
+        vXPortalUser = xPortalUserService.updateResource(vXPortalUser);
 
-	public VXPortalUserList searchXPortalUsers(SearchCriteria searchCriteria) {
-		return xPortalUserService.searchXPortalUsers(searchCriteria);
-	}
+        return vXPortalUser;
+    }
 
-	public VXLong getXPortalUserSearchCount(SearchCriteria searchCriteria) {
-		return xPortalUserService.getSearchCount(searchCriteria,
-				xPortalUserService.searchFields);
-	}
+    public void deleteXPortalUser(Long id, boolean force) {
+        if (force) {
+            xPortalUserService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
+    public VXPortalUserList searchXPortalUsers(SearchCriteria searchCriteria) {
+        return xPortalUserService.searchXPortalUsers(searchCriteria);
+    }
+
+    public VXLong getXPortalUserSearchCount(SearchCriteria searchCriteria) {
+        return xPortalUserService.getSearchCount(searchCriteria, xPortalUserService.searchFields);
+    }
 }

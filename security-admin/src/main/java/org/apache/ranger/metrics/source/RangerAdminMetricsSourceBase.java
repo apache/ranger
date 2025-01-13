@@ -17,17 +17,17 @@
  * under the License.
  */
 
-package  org.apache.ranger.metrics.source;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+package org.apache.ranger.metrics.source;
 
 import org.apache.hadoop.metrics2.MetricsCollector;
 import org.apache.hadoop.metrics2.MetricsRecordBuilder;
 import org.apache.ranger.metrics.RangerMetricsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public abstract class RangerAdminMetricsSourceBase extends RangerMetricsSource {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAdminMetricsSourceBase.class);
@@ -44,10 +44,9 @@ public abstract class RangerAdminMetricsSourceBase extends RangerMetricsSource {
 
     @Override
     protected void update(MetricsCollector collector, boolean all) {
-        MetricsRecordBuilder builder = collector.addRecord(this.record)
-        .setContext(this.context);
+        MetricsRecordBuilder builder = collector.addRecord(this.record).setContext(this.context);
 
-        for (String key: metricsMap.keySet() ) {
+        for (String key : metricsMap.keySet()) {
             builder.addGauge(new RangerMetricsInfo(key, ""), metricsMap.get(key));
         }
     }

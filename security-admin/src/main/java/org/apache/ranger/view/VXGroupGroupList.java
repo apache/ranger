@@ -17,35 +17,35 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXGroupGroup
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXGroupGroupList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXGroupGroup> vXGroupGroups = new ArrayList<VXGroupGroup>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXGroupGroup> vXGroupGroups = new ArrayList<>();
 
     public VXGroupGroupList() {
-	super();
+        super();
     }
 
     public VXGroupGroupList(List<VXGroupGroup> objList) {
-	super(objList);
-	this.vXGroupGroups = objList;
+        super(objList);
+        this.vXGroupGroups = objList;
     }
 
     /**
@@ -53,7 +53,7 @@ public class VXGroupGroupList extends VList {
      */
     @JsonProperty("vXGroupGroups")
     public List<VXGroupGroup> getVXGroupGroups() {
-	return vXGroupGroups;
+        return vXGroupGroups;
     }
 
     /**
@@ -62,20 +62,19 @@ public class VXGroupGroupList extends VList {
      */
     @JsonProperty("vXGroupGroups")
     public void setVXGroupGroups(List<VXGroupGroup> vXGroupGroups) {
-	this.vXGroupGroups = vXGroupGroups;
+        this.vXGroupGroups = vXGroupGroups;
     }
 
     @Override
     public int getListSize() {
-	if (vXGroupGroups != null) {
-	    return vXGroupGroups.size();
-	}
-	return 0;
+        if (vXGroupGroups != null) {
+            return vXGroupGroups.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXGroupGroup> getList() {
-	return vXGroupGroups;
+        return vXGroupGroups;
     }
-
 }

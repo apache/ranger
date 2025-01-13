@@ -19,11 +19,6 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -31,63 +26,74 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceResource;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
+    public XXServiceResourceDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXServiceResourceDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXServiceResource findByGuid(String guid) {
+        if (StringUtil.isEmpty(guid)) {
+            return null;
+        }
 
-	public XXServiceResource findByGuid(String guid) {
-		if (StringUtil.isEmpty(guid)) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findByGuid", tClass)
-					.setParameter("guid", guid).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXServiceResource.findByGuid", tClass)
+                    .setParameter("guid", guid).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	public List<XXServiceResource> findByServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<XXServiceResource>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findByServiceId", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXServiceResource>();
-		}
-	}
+    public List<XXServiceResource> findByServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
 
-	public XXServiceResource findByServiceAndResourceSignature(Long serviceId, String resourceSignature) {
-		if (StringUtils.isBlank(resourceSignature)) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findByServiceAndResourceSignature", tClass)
-					.setParameter("serviceId", serviceId).setParameter("resourceSignature", resourceSignature)
-					.getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXServiceResource.findByServiceId", tClass)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<XXServiceResource> findTaggedResourcesInServiceId(Long serviceId) {
-	    List<XXServiceResource> ret = new ArrayList<>();
-		if (serviceId != null) {
+    public XXServiceResource findByServiceAndResourceSignature(Long serviceId, String resourceSignature) {
+        if (StringUtils.isBlank(resourceSignature)) {
+            return null;
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXServiceResource.findByServiceAndResourceSignature", tClass)
+                    .setParameter("serviceId", serviceId).setParameter("resourceSignature", resourceSignature)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<XXServiceResource> findTaggedResourcesInServiceId(Long serviceId) {
+        List<XXServiceResource> ret = new ArrayList<>();
+
+        if (serviceId != null) {
             List<Object[]> rows = null;
+
             try {
                 rows = getEntityManager().createNamedQuery("XXServiceResource.findTaggedResourcesInServiceId", Object[].class)
                         .setParameter("serviceId", serviceId).getResultList();
             } catch (NoResultException e) {
                 // Nothing
             }
+
             if (CollectionUtils.isNotEmpty(rows)) {
                 for (Object[] row : rows) {
                     XXServiceResource xxServiceResource = new XXServiceResource();
+
                     xxServiceResource.setId((Long) row[0]);
                     xxServiceResource.setGuid((String) row[1]);
                     xxServiceResource.setVersion((Long) row[2]);
@@ -101,42 +107,46 @@ public class XXServiceResourceDao extends BaseDao<XXServiceResource> {
                 }
             }
         }
+
         return ret;
-	}
+    }
 
-	public long countTaggedResourcesInServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return -1;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.countTaggedResourcesInServiceId", Long.class)
-					.setParameter("serviceId", serviceId).getSingleResult();
-		} catch (NoResultException e) {
-			return -1;
-		}
-	}
+    public long countTaggedResourcesInServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return -1;
+        }
 
-	public List<XXServiceResource> findForServicePlugin(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<XXServiceResource>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findForServicePlugin", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXServiceResource>();
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXServiceResource.countTaggedResourcesInServiceId", Long.class)
+                    .setParameter("serviceId", serviceId).getSingleResult();
+        } catch (NoResultException e) {
+            return -1;
+        }
+    }
 
-	public List<String> findServiceResourceGuidsInServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<String>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceResource.findServiceResourceGuidsInServiceId", String.class)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<String>();
-		}
-	}
+    public List<XXServiceResource> findForServicePlugin(Long serviceId) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXServiceResource.findForServicePlugin", tClass)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public List<String> findServiceResourceGuidsInServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXServiceResource.findServiceResourceGuidsInServiceId", String.class)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 }

@@ -1,5 +1,5 @@
 /*
-  * Licensed to the Apache Software Foundation (ASF) under one
+ * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -18,14 +18,9 @@
  */
 package org.apache.ranger.patch.cliutil;
 
-import static org.junit.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RangerConstants;
-
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXModuleDefDao;
 import org.apache.ranger.db.XXPortalUserDao;
@@ -42,6 +37,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.fail;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRoleBasedUserSearchUtil {
@@ -55,65 +55,62 @@ public class TestRoleBasedUserSearchUtil {
     UserMgr userMgr;
 
     @Mock
-    XUserMgr xUserMgr;
+    XUserMgr        xUserMgr;
     @Mock
     XXPortalUserDao xXPortalUserDao;
-
 
     @InjectMocks
     RoleBasedUserSearchUtil roleBasedUserSearchUtil = new RoleBasedUserSearchUtil();
 
-
     public TestRoleBasedUserSearchUtil() {
-
     }
+
     @Test
-    public void TestGetUsersBasedOnRole() {
-       try {
-           XXPortalUser xXPortalUser = new XXPortalUser();
-           xXPortalUser.setLoginId("testUser");
-           xXPortalUser.setId(1L);
-           xXPortalUser.setFirstName("testUser");
-           xXPortalUser.setPublicScreenName("testUser");
-           xXPortalUser.setPassword("testUserPassword");
-           List<XXPortalUser> listXXPortalUser = new ArrayList<XXPortalUser>();
-           listXXPortalUser.add(xXPortalUser);
-           List<String> userRoleList = new ArrayList<String>();
-           userRoleList.add("ROLE_SYS_ADMIN");
+    public void testGetUsersBasedOnRole() {
+        try {
+            XXPortalUser xXPortalUser = new XXPortalUser();
+            xXPortalUser.setLoginId("testUser");
+            xXPortalUser.setId(1L);
+            xXPortalUser.setFirstName("testUser");
+            xXPortalUser.setPublicScreenName("testUser");
+            xXPortalUser.setPassword("testUserPassword");
+            List<XXPortalUser> listXXPortalUser = new ArrayList<>();
+            listXXPortalUser.add(xXPortalUser);
+            List<String> userRoleList = new ArrayList<>();
+            userRoleList.add("ROLE_SYS_ADMIN");
 
-           Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xXPortalUserDao);
-           Mockito.when(xXPortalUserDao.findByRole(RangerConstants.ROLE_SYS_ADMIN)).thenReturn(listXXPortalUser);
+            Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xXPortalUserDao);
+            Mockito.when(xXPortalUserDao.findByRole(RangerConstants.ROLE_SYS_ADMIN)).thenReturn(listXXPortalUser);
 
-           roleBasedUserSearchUtil.getUsersBasedOnRole(userRoleList);
+            roleBasedUserSearchUtil.getUsersBasedOnRole(userRoleList);
 
-
-           Mockito.verify(xXPortalUserDao).findByRole(RangerConstants.ROLE_SYS_ADMIN);
-
-       } catch(Exception e) {
-           fail("test failed due to: " + e.getMessage());
-       }
+            Mockito.verify(xXPortalUserDao).findByRole(RangerConstants.ROLE_SYS_ADMIN);
+        } catch (Exception e) {
+            fail("test failed due to: " + e.getMessage());
+        }
     }
+
     @Test
-    public void TestValidateUserAndFetchUserList() {
-        List<String> permissionList = new ArrayList<String>();
+    public void testValidateUserAndFetchUserList() {
+        List<String> permissionList = new ArrayList<>();
         permissionList.add(RangerConstants.MODULE_USER_GROUPS);
-        String currentEncryptedPassword = "testpassword";
-        XXPortalUser xxPortalUser = new XXPortalUser();
+        String       currentEncryptedPassword = "testpassword";
+        XXPortalUser xxPortalUser             = new XXPortalUser();
         xxPortalUser.setId(1L);
         xxPortalUser.setLoginId("testUser");
         xxPortalUser.setPassword("testpassword");
         xxPortalUser.setFirstName("testUser");
         VXUser vxUser = new VXUser();
         vxUser.setId(1L);
-        VXUserList vXUserList = new VXUserList();
-        List<VXUser> vXUsers = new ArrayList<VXUser>();
+        VXUserList   vXUserList = new VXUserList();
+        List<VXUser> vXUsers    = new ArrayList<>();
         vXUsers.add(vxUser);
-        vXUserList.setVXUsers(vXUsers );
+        vXUserList.setVXUsers(vXUsers);
 
-        List<String> userRoleList = new ArrayList<String>();
+        List<String> userRoleList = new ArrayList<>();
         userRoleList.add("ROLE_SYS_ADMIN");
-        List<XXPortalUser> listXXPortalUser = new ArrayList<XXPortalUser>();
-                listXXPortalUser.add(xxPortalUser);
+        List<XXPortalUser> listXXPortalUser = new ArrayList<>();
+        listXXPortalUser.add(xxPortalUser);
         vxUser.setUserRoleList(userRoleList);
         XXModuleDefDao xXModuleDefDao = Mockito.mock(XXModuleDefDao.class);
 
@@ -122,7 +119,7 @@ public class TestRoleBasedUserSearchUtil {
         Mockito.when(xUserService.getXUserByUserName(xxPortalUser.getLoginId())).thenReturn(vxUser);
         Mockito.when(daoMgr.getXXModuleDef()).thenReturn(xXModuleDefDao);
         Mockito.when(xXModuleDefDao.findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong())).thenReturn(permissionList);
-        Mockito.when(userMgr.encrypt(Mockito.anyString(),Mockito.anyString())).thenReturn(currentEncryptedPassword);
+        Mockito.when(userMgr.encrypt(Mockito.anyString(), Mockito.anyString())).thenReturn(currentEncryptedPassword);
         Mockito.when(xXPortalUserDao.findByRole(Mockito.anyString())).thenReturn(listXXPortalUser);
 
         roleBasedUserSearchUtil.validateUserAndFetchUserList();
@@ -131,9 +128,7 @@ public class TestRoleBasedUserSearchUtil {
         Mockito.verify(xUserService).getXUserByUserName(xxPortalUser.getLoginId());
 
         Mockito.verify(xXModuleDefDao).findAccessibleModulesByUserId(Mockito.anyLong(), Mockito.anyLong());
-        Mockito.verify(userMgr).encrypt(Mockito.anyString(),Mockito.anyString());
+        Mockito.verify(userMgr).encrypt(Mockito.anyString(), Mockito.anyString());
         Mockito.verify(xXPortalUserDao, Mockito.atLeast(2)).findByRole(Mockito.anyString());
-
     }
-
 }

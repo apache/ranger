@@ -19,9 +19,6 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,174 +28,163 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The persistent class for the x_policy_ref_group database table.
- * 
  */
 @Entity
 @Cacheable
-@Table(name="x_policy_ref_group")
+@Table(name = "x_policy_ref_group")
 public class XXPolicyRefGroup extends XXDBBase implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyRefGroup
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_ref_group_SEQ", sequenceName = "x_policy_ref_group_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_group_SEQ")
-	@Column(name = "id")
-	protected Long id;
+    /**
+     * id of the XXPolicyRefGroup
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_ref_group_SEQ", sequenceName = "x_policy_ref_group_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_group_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * policyId of the XXPolicyRefGroup
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_id")
-	protected Long policyId;
+    /**
+     * policyId of the XXPolicyRefGroup
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_id")
+    protected Long policyId;
 
-	/**
-	 * groupId of the XXPolicyRefGroup
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "group_id")
-	protected Long groupId;
+    /**
+     * groupId of the XXPolicyRefGroup
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "group_id")
+    protected Long groupId;
 
-	/**
-	 * groupName of the XXPolicyRefGroup
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "group_name")
-	protected String groupName;
+    /**
+     * groupName of the XXPolicyRefGroup
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "group_name")
+    protected String groupName;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyId
-	 *            Value to set member attribute <b> policyId</b>
-	 */
-	public void setPolicyId(Long policyId) {
-		this.policyId = policyId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, policyId, groupId, groupName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyId</b> .
-	 */
-	public Long getPolicyId() {
-		return this.policyId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * This method sets the value to the member attribute <b> groupId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param groupId
-	 *            Value to set member attribute <b> groupId</b>
-	 */
-	public void setGroupId(Long groupId) {
-		this.groupId = groupId;
-	}
+        XXPolicyRefGroup other = (XXPolicyRefGroup) obj;
 
-	/**
-	 * Returns the value for the member attribute <b>groupId</b>
-	 *
-	 * @return Date - value of member attribute <b>groupId</b> .
-	 */
-	public Long getGroupId() {
-		return groupId;
-	}
+        return super.equals(obj) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(groupId, other.groupId) &&
+                Objects.equals(groupName, other.groupName);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> groupName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param groupName
-	 *            Value to set member attribute <b> groupName</b>
-	 */
-	public void setGroupName(String groupName) {
-		this.groupName = groupName;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyRefGroup [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", groupId=" + groupId + ", groupName=" + groupName + "]";
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>groupName</b>
-	 *
-	 * @return Date - value of member attribute <b>groupName</b> .
-	 */
-	public String getGroupName() {
-		return groupName;
-	}
+    /**
+     * Returns the value for the member attribute <b>policyId</b>
+     *
+     * @return Date - value of member attribute <b>policyId</b> .
+     */
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, policyId, groupId, groupName);
-	}
+    /**
+     * This method sets the value to the member attribute <b> policyId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyId Value to set member attribute <b> policyId</b>
+     */
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * Returns the value for the member attribute <b>groupId</b>
+     *
+     * @return Date - value of member attribute <b>groupId</b> .
+     */
+    public Long getGroupId() {
+        return groupId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * This method sets the value to the member attribute <b> groupId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param groupId Value to set member attribute <b> groupId</b>
+     */
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
 
-		XXPolicyRefGroup other = (XXPolicyRefGroup) obj;
+    /**
+     * Returns the value for the member attribute <b>groupName</b>
+     *
+     * @return Date - value of member attribute <b>groupName</b> .
+     */
+    public String getGroupName() {
+        return groupName;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(policyId, other.policyId) &&
-			   Objects.equals(groupId, other.groupId) &&
-			   Objects.equals(groupName, other.groupName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyRefGroup [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", groupId=" + groupId
-				+ ", groupName=" + groupName + "]";
-	}
-
+    /**
+     * This method sets the value to the member attribute <b> groupName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param groupName Value to set member attribute <b> groupName</b>
+     */
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
 }

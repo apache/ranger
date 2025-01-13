@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.biz;
+package org.apache.ranger.biz;
 
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -39,233 +39,227 @@ import org.apache.ranger.view.VXGroupUser;
 import org.apache.ranger.view.VXGroupUserList;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXModuleDefList;
+import org.apache.ranger.view.VXModulePermissionList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXUser;
-import org.apache.ranger.view.VXModulePermissionList;
 import org.apache.ranger.view.VXUserList;
 import org.apache.ranger.view.VXUserPermissionList;
 import org.springframework.beans.factory.annotation.Autowired;
+
 public class XUserMgrBase {
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
+    @Autowired
+    XGroupService xGroupService;
 
-	@Autowired
-	XGroupService xGroupService;
+    @Autowired
+    XUserService xUserService;
 
-	@Autowired
-	XUserService xUserService;
+    @Autowired
+    XGroupUserService xGroupUserService;
 
-	@Autowired
-	XGroupUserService xGroupUserService;
+    @Autowired
+    XPermMapService xPermMapService;
 
-	@Autowired
-	XPermMapService xPermMapService;
+    @Autowired
+    XModuleDefService xModuleDefService;
 
-	@ Autowired
-	XModuleDefService xModuleDefService;
+    @Autowired
+    XUserPermissionService xUserPermissionService;
 
-	@ Autowired
-	XUserPermissionService xUserPermissionService;
+    @Autowired
+    XGroupPermissionService xGroupPermissionService;
 
-	@ Autowired
-	XGroupPermissionService xGroupPermissionService;
+    @Autowired
+    XAuditMapService xAuditMapService;
 
-	@Autowired
-	XAuditMapService xAuditMapService;
-	public VXGroup getXGroup(Long id){
-		return (VXGroup)xGroupService.readResource(id);
-	}
+    public VXGroup getXGroup(Long id) {
+        return xGroupService.readResource(id);
+    }
 
-	public VXGroup createXGroup(VXGroup vXGroup){
-		vXGroup =  (VXGroup)xGroupService.createResource(vXGroup);
-		return vXGroup;
-	}
+    public VXGroup createXGroup(VXGroup vXGroup) {
+        vXGroup = xGroupService.createResource(vXGroup);
 
-	public VXGroup updateXGroup(VXGroup vXGroup) {
-		vXGroup =  (VXGroup)xGroupService.updateResource(vXGroup);
-		return vXGroup;
-	}
+        return vXGroup;
+    }
 
-	public void deleteXGroup(Long id, boolean force) {
-		 if (force) {
-			 xGroupService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public VXGroup updateXGroup(VXGroup vXGroup) {
+        vXGroup = xGroupService.updateResource(vXGroup);
 
-	public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
-		return xGroupService.searchXGroups(searchCriteria);
-	}
+        return vXGroup;
+    }
 
-	public VXLong getXGroupSearchCount(SearchCriteria searchCriteria) {
-		return xGroupService.getSearchCount(searchCriteria,
-				xGroupService.searchFields);
-	}
+    public void deleteXGroup(Long id, boolean force) {
+        if (force) {
+            xGroupService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
-	public VXUser getXUser(Long id){
-		return (VXUser)xUserService.readResource(id);
-	}
+    public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
+        return xGroupService.searchXGroups(searchCriteria);
+    }
 
-	public VXUser createXUser(VXUser vXUser){
-		vXUser =  (VXUser)xUserService.createResource(vXUser);
-		return vXUser;
-	}
+    public VXLong getXGroupSearchCount(SearchCriteria searchCriteria) {
+        return xGroupService.getSearchCount(searchCriteria, xGroupService.searchFields);
+    }
 
-	public VXUser updateXUser(VXUser vXUser) {
-		vXUser =  (VXUser)xUserService.updateResource(vXUser);
-		return vXUser;
-	}
+    public VXUser getXUser(Long id) {
+        return xUserService.readResource(id);
+    }
 
-	public void deleteXUser(Long id, boolean force) {
-		 if (force) {
-			 xUserService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public VXUser createXUser(VXUser vXUser) {
+        vXUser = xUserService.createResource(vXUser);
 
-	public VXUserList searchXUsers(SearchCriteria searchCriteria) {
-		return xUserService.searchXUsers(searchCriteria);
-	}
+        return vXUser;
+    }
 
-	public VXLong getXUserSearchCount(SearchCriteria searchCriteria) {
-		return xUserService.getSearchCount(searchCriteria,
-				xUserService.searchFields);
-	}
+    public VXUser updateXUser(VXUser vXUser) {
+        vXUser = xUserService.updateResource(vXUser);
 
-	public VXGroupUser getXGroupUser(Long id){
-		return (VXGroupUser)xGroupUserService.readResource(id);
-	}
+        return vXUser;
+    }
 
-	public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser){
-		vXGroupUser =  (VXGroupUser)xGroupUserService.createResource(vXGroupUser);
-		return vXGroupUser;
-	}
+    public void deleteXUser(Long id, boolean force) {
+        if (force) {
+            xUserService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
-	public VXGroupUser updateXGroupUser(VXGroupUser vXGroupUser) {
-		vXGroupUser =  (VXGroupUser)xGroupUserService.updateResource(vXGroupUser);
-		return vXGroupUser;
-	}
+    public VXUserList searchXUsers(SearchCriteria searchCriteria) {
+        return xUserService.searchXUsers(searchCriteria);
+    }
 
-	public void deleteXGroupUser(Long id, boolean force) {
-		 if (force) {
-			 xGroupUserService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public VXLong getXUserSearchCount(SearchCriteria searchCriteria) {
+        return xUserService.getSearchCount(searchCriteria, xUserService.searchFields);
+    }
 
-	public VXGroupUserList searchXGroupUsers(SearchCriteria searchCriteria) {
-		return xGroupUserService.searchXGroupUsers(searchCriteria);
-	}
+    public VXGroupUser getXGroupUser(Long id) {
+        return xGroupUserService.readResource(id);
+    }
 
-	public VXLong getXGroupUserSearchCount(SearchCriteria searchCriteria) {
-		return xGroupUserService.getSearchCount(searchCriteria,
-				xGroupUserService.searchFields);
-	}
+    public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser) {
+        vXGroupUser = xGroupUserService.createResource(vXGroupUser);
 
-	public VXPermMap getXPermMap(Long id){
-		return (VXPermMap)xPermMapService.readResource(id);
-	}
+        return vXGroupUser;
+    }
 
-	public VXPermMap createXPermMap(VXPermMap vXPermMap){
-		vXPermMap =  (VXPermMap)xPermMapService.createResource(vXPermMap);
-		return vXPermMap;
-	}
+    public VXGroupUser updateXGroupUser(VXGroupUser vXGroupUser) {
+        vXGroupUser = xGroupUserService.updateResource(vXGroupUser);
 
-	public VXPermMap updateXPermMap(VXPermMap vXPermMap) {
-		vXPermMap =  (VXPermMap)xPermMapService.updateResource(vXPermMap);
-		return vXPermMap;
-	}
+        return vXGroupUser;
+    }
 
-	public void deleteXPermMap(Long id, boolean force) {
-		 if (force) {
-			 xPermMapService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public void deleteXGroupUser(Long id, boolean force) {
+        if (force) {
+            xGroupUserService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
-	public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
-		return xPermMapService.searchXPermMaps(searchCriteria);
-	}
+    public VXGroupUserList searchXGroupUsers(SearchCriteria searchCriteria) {
+        return xGroupUserService.searchXGroupUsers(searchCriteria);
+    }
 
-	public VXLong getXPermMapSearchCount(SearchCriteria searchCriteria) {
-		return xPermMapService.getSearchCount(searchCriteria,
-				xPermMapService.searchFields);
-	}
+    public VXLong getXGroupUserSearchCount(SearchCriteria searchCriteria) {
+        return xGroupUserService.getSearchCount(searchCriteria, xGroupUserService.searchFields);
+    }
 
-	public VXAuditMap getXAuditMap(Long id){
-		return (VXAuditMap)xAuditMapService.readResource(id);
-	}
+    public VXPermMap getXPermMap(Long id) {
+        return xPermMapService.readResource(id);
+    }
 
-	public VXAuditMap createXAuditMap(VXAuditMap vXAuditMap){
-		vXAuditMap =  (VXAuditMap)xAuditMapService.createResource(vXAuditMap);
-		return vXAuditMap;
-	}
+    public VXPermMap createXPermMap(VXPermMap vXPermMap) {
+        vXPermMap = xPermMapService.createResource(vXPermMap);
 
-	public VXAuditMap updateXAuditMap(VXAuditMap vXAuditMap) {
-		vXAuditMap =  (VXAuditMap)xAuditMapService.updateResource(vXAuditMap);
-		return vXAuditMap;
-	}
+        return vXPermMap;
+    }
 
-	public void deleteXAuditMap(Long id, boolean force) {
-		 if (force) {
-			 xAuditMapService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public VXPermMap updateXPermMap(VXPermMap vXPermMap) {
+        vXPermMap = xPermMapService.updateResource(vXPermMap);
 
-	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
-		return xAuditMapService.searchXAuditMaps(searchCriteria);
-	}
+        return vXPermMap;
+    }
 
-	public VXLong getXAuditMapSearchCount(SearchCriteria searchCriteria) {
-		return xAuditMapService.getSearchCount(searchCriteria,
-				xAuditMapService.searchFields);
-	}
+    public void deleteXPermMap(Long id, boolean force) {
+        if (force) {
+            xPermMapService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
-	public VXModuleDefList searchXModuleDef(SearchCriteria searchCriteria) {
-		return xModuleDefService.searchModuleDef(searchCriteria);
-	}
-	public VXModulePermissionList searchXModuleDefList(SearchCriteria searchCriteria) {
-		return xModuleDefService.searchModuleDefList(searchCriteria);
-	}
+    public VXPermMapList searchXPermMaps(SearchCriteria searchCriteria) {
+        return xPermMapService.searchXPermMaps(searchCriteria);
+    }
 
-	public VXUserPermissionList searchXUserPermission(SearchCriteria searchCriteria) {
-		return xUserPermissionService.searchXUserPermission(searchCriteria);
-	}
+    public VXLong getXPermMapSearchCount(SearchCriteria searchCriteria) {
+        return xPermMapService.getSearchCount(searchCriteria, xPermMapService.searchFields);
+    }
 
-	public VXGroupPermissionList searchXGroupPermission(SearchCriteria searchCriteria) {
-		return xGroupPermissionService.searchXGroupPermission(searchCriteria);
-	}
+    public VXAuditMap getXAuditMap(Long id) {
+        return xAuditMapService.readResource(id);
+    }
 
-	public VXLong getXModuleDefSearchCount(SearchCriteria searchCriteria) {
-		return xModuleDefService.getSearchCount(searchCriteria,
-				xModuleDefService.searchFields);
-	}
+    public VXAuditMap createXAuditMap(VXAuditMap vXAuditMap) {
+        vXAuditMap = xAuditMapService.createResource(vXAuditMap);
 
-	public VXLong getXUserPermissionSearchCount(SearchCriteria searchCriteria) {
-		return xUserPermissionService.getSearchCount(searchCriteria,
-				xUserPermissionService.searchFields);
-	}
+        return vXAuditMap;
+    }
 
-	public VXLong getXGroupPermissionSearchCount(SearchCriteria searchCriteria){
-		return xGroupPermissionService.getSearchCount(searchCriteria,
-				xGroupPermissionService.searchFields);
-	}
+    public VXAuditMap updateXAuditMap(VXAuditMap vXAuditMap) {
+        vXAuditMap = xAuditMapService.updateResource(vXAuditMap);
+
+        return vXAuditMap;
+    }
+
+    public void deleteXAuditMap(Long id, boolean force) {
+        if (force) {
+            xAuditMapService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
+
+    public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
+        return xAuditMapService.searchXAuditMaps(searchCriteria);
+    }
+
+    public VXLong getXAuditMapSearchCount(SearchCriteria searchCriteria) {
+        return xAuditMapService.getSearchCount(searchCriteria, xAuditMapService.searchFields);
+    }
+
+    public VXModuleDefList searchXModuleDef(SearchCriteria searchCriteria) {
+        return xModuleDefService.searchModuleDef(searchCriteria);
+    }
+
+    public VXModulePermissionList searchXModuleDefList(SearchCriteria searchCriteria) {
+        return xModuleDefService.searchModuleDefList(searchCriteria);
+    }
+
+    public VXUserPermissionList searchXUserPermission(SearchCriteria searchCriteria) {
+        return xUserPermissionService.searchXUserPermission(searchCriteria);
+    }
+
+    public VXGroupPermissionList searchXGroupPermission(SearchCriteria searchCriteria) {
+        return xGroupPermissionService.searchXGroupPermission(searchCriteria);
+    }
+
+    public VXLong getXModuleDefSearchCount(SearchCriteria searchCriteria) {
+        return xModuleDefService.getSearchCount(searchCriteria, xModuleDefService.searchFields);
+    }
+
+    public VXLong getXUserPermissionSearchCount(SearchCriteria searchCriteria) {
+        return xUserPermissionService.getSearchCount(searchCriteria, xUserPermissionService.searchFields);
+    }
+
+    public VXLong getXGroupPermissionSearchCount(SearchCriteria searchCriteria) {
+        return xGroupPermissionService.getSearchCount(searchCriteria, xGroupPermissionService.searchFields);
+    }
 }

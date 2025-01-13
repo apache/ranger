@@ -17,78 +17,85 @@
  * under the License.
  */
 
- package org.apache.ranger.entity;
+package org.apache.ranger.entity;
 
 /**
  * Logging table for all DB create and update queries
- *
  */
 
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.RangerConstants;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
 import java.util.Date;
 
-
 @Entity
-@Table(name="x_trx_log_v2")
+@Table(name = "x_trx_log_v2")
 public class XXTrxLogV2 implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @SequenceGenerator(name="X_TRX_LOG_V2_SEQ", sequenceName="X_TRX_LOG_V2_SEQ", allocationSize=1)
-    @GeneratedValue(strategy=GenerationType.AUTO, generator="X_TRX_LOG_V2_SEQ")
-    @Column(name="ID")
+    @SequenceGenerator(name = "X_TRX_LOG_V2_SEQ", sequenceName = "X_TRX_LOG_V2_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_TRX_LOG_V2_SEQ")
+    @Column(name = "ID")
     protected Long id;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="CREATE_TIME")
+    @Column(name = "CREATE_TIME")
     protected Date createTime = DateUtil.getUTCDate();
 
-    @Column(name="ADDED_BY_ID")
+    @Column(name = "ADDED_BY_ID")
     protected Long addedByUserId;
 
-    @Column(name="CLASS_TYPE", nullable=false )
-    protected int  objectClassType = RangerConstants.CLASS_TYPE_NONE;
+    @Column(name = "CLASS_TYPE", nullable = false)
+    protected int objectClassType = RangerConstants.CLASS_TYPE_NONE;
 
-    @Column(name="OBJECT_ID")
+    @Column(name = "OBJECT_ID")
     protected Long objectId;
 
-    @Column(name="OBJECT_NAME")
+    @Column(name = "OBJECT_NAME")
     protected String objectName;
 
-    @Column(name="PARENT_OBJECT_CLASS_TYPE", nullable=false )
+    @Column(name = "PARENT_OBJECT_CLASS_TYPE", nullable = false)
     protected int parentObjectClassType;
 
-    @Column(name="PARENT_OBJECT_ID")
+    @Column(name = "PARENT_OBJECT_ID")
     protected Long parentObjectId;
 
-    @Column(name="PARENT_OBJECT_NAME", length=1024)
+    @Column(name = "PARENT_OBJECT_NAME", length = 1024)
     protected String parentObjectName;
 
-    @Column(name="ACTION", length=255)
+    @Column(name = "ACTION", length = 255)
     protected String action;
 
-    @Column(name="CHANGE_INFO")
+    @Column(name = "CHANGE_INFO")
     protected String changeInfo;
 
-    @Column(name="TRX_ID", length=1024)
+    @Column(name = "TRX_ID", length = 1024)
     protected String transactionId;
 
-    @Column(name="REQ_ID")
+    @Column(name = "REQ_ID")
     protected String requestId;
 
-    @Column(name="SESS_ID", length=512)
+    @Column(name = "SESS_ID", length = 512)
     protected String sessionId;
 
-    @Column(name="SESS_TYPE")
+    @Column(name = "SESS_TYPE")
     protected String sessionType;
 
     /**
      * Default constructor. This will set all the attributes to default value.
      */
-    public XXTrxLogV2( ) {
+    public XXTrxLogV2() {
     }
 
     public XXTrxLogV2(int objectClassType, Long objectId, String objectName, String action) {
@@ -119,128 +126,128 @@ public class XXTrxLogV2 implements java.io.Serializable {
         this.changeInfo            = changeInfo;
     }
 
-    public void setId(Long id) {
-        this.id=id;
-    }
-
     public Long getId() {
         return id;
     }
 
-    public void setCreateTime( Date createTime ) {
-        this.createTime = createTime;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public Date getCreateTime( ) {
+    public Date getCreateTime() {
         return this.createTime;
     }
 
-    public void setAddedByUserId( Long addedByUserId ) {
-        this.addedByUserId = addedByUserId;
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 
-    public Long getAddedByUserId( ) {
+    public Long getAddedByUserId() {
         return this.addedByUserId;
     }
 
-    public void setObjectClassType( int objectClassType ) {
-        this.objectClassType = objectClassType;
+    public void setAddedByUserId(Long addedByUserId) {
+        this.addedByUserId = addedByUserId;
     }
 
-    public int getObjectClassType( ) {
+    public int getObjectClassType() {
         return this.objectClassType;
     }
 
-    public void setObjectId( Long objectId ) {
-        this.objectId = objectId;
+    public void setObjectClassType(int objectClassType) {
+        this.objectClassType = objectClassType;
     }
 
-    public Long getObjectId( ) {
+    public Long getObjectId() {
         return this.objectId;
     }
 
-    public void setObjectName( String objectName ) {
-        this.objectName = objectName;
+    public void setObjectId(Long objectId) {
+        this.objectId = objectId;
     }
 
-    public String getObjectName( ) {
+    public String getObjectName() {
         return this.objectName;
     }
 
-    public void setParentObjectClassType( int parentObjectClassType ) {
-        this.parentObjectClassType = parentObjectClassType;
+    public void setObjectName(String objectName) {
+        this.objectName = objectName;
     }
 
-    public int getParentObjectClassType( ) {
+    public int getParentObjectClassType() {
         return this.parentObjectClassType;
     }
 
-    public void setParentObjectId( Long parentObjectId ) {
-        this.parentObjectId = parentObjectId;
+    public void setParentObjectClassType(int parentObjectClassType) {
+        this.parentObjectClassType = parentObjectClassType;
     }
 
-    public Long getParentObjectId( ) {
+    public Long getParentObjectId() {
         return this.parentObjectId;
     }
 
-    public void setParentObjectName( String parentObjectName ) {
-        this.parentObjectName = parentObjectName;
+    public void setParentObjectId(Long parentObjectId) {
+        this.parentObjectId = parentObjectId;
     }
 
-    public String getParentObjectName( ) {
+    public String getParentObjectName() {
         return this.parentObjectName;
     }
 
-    public void setAction( String action ) {
-        this.action = action;
+    public void setParentObjectName(String parentObjectName) {
+        this.parentObjectName = parentObjectName;
     }
 
-    public String getAction( ) {
+    public String getAction() {
         return this.action;
     }
 
-    public void setChangeInfo( String changeInfo ) {
-        this.changeInfo = changeInfo;
+    public void setAction(String action) {
+        this.action = action;
     }
 
-    public String getChangeInfo( ) {
+    public String getChangeInfo() {
         return this.changeInfo;
     }
 
-    public void setTransactionId( String transactionId ) {
-        this.transactionId = transactionId;
+    public void setChangeInfo(String changeInfo) {
+        this.changeInfo = changeInfo;
     }
 
-    public String getTransactionId( ) {
+    public String getTransactionId() {
         return this.transactionId;
     }
 
-    public void setRequestId( String requestId ) {
-        this.requestId = requestId;
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 
-    public String getRequestId( ) {
+    public String getRequestId() {
         return this.requestId;
     }
 
-    public void setSessionId( String sessionId ) {
-        this.sessionId = sessionId;
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 
-    public String getSessionId( ) {
+    public String getSessionId() {
         return this.sessionId;
     }
 
-    public void setSessionType( String sessionType ) {
-        this.sessionType = sessionType;
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 
-    public String getSessionType( ) {
+    public String getSessionType() {
         return this.sessionType;
     }
 
+    public void setSessionType(String sessionType) {
+        this.sessionType = sessionType;
+    }
+
     @Override
-    public String toString( ) {
+    public String toString() {
         String str = "XXTrxLogV2={";
         str += super.toString();
         str += "objectClassType={" + objectClassType + "} ";

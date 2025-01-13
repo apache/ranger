@@ -17,12 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
-
-
-import java.util.*;
-
-import javax.persistence.NoResultException;
+package org.apache.ranger.db;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
@@ -31,153 +26,153 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 @Service
 public class XXGroupUserDao extends BaseDao<XXGroupUser> {
-	private static final Logger logger = LoggerFactory.getLogger(XXGroupUserDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(XXGroupUserDao.class);
 
-	public XXGroupUserDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXGroupUserDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public void deleteByGroupIdAndUserId(Long groupId, Long userId) {
-		getEntityManager()
-				.createNamedQuery("XXGroupUser.deleteByGroupIdAndUserId")
-				.setParameter("userId", userId)
-				.setParameter("parentGroupId", groupId).executeUpdate();
+    public void deleteByGroupIdAndUserId(Long groupId, Long userId) {
+        getEntityManager().createNamedQuery("XXGroupUser.deleteByGroupIdAndUserId").setParameter("userId", userId).setParameter("parentGroupId", groupId).executeUpdate();
+    }
 
-	}
+    public List<XXGroupUser> findByUserId(Long userId) {
+        if (userId != null) {
+            try {
+                return getEntityManager().createNamedQuery("XXGroupUser.findByUserId", XXGroupUser.class).setParameter("userId", userId).getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ResourceId not provided.");
 
-	public List<XXGroupUser> findByUserId(Long userId) {
-		if (userId != null) {
-			try {
-				return getEntityManager()
-						.createNamedQuery("XXGroupUser.findByUserId", XXGroupUser.class)
-						.setParameter("userId", userId)
-						.getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ResourceId not provided.");
-			return new ArrayList<XXGroupUser>();
-		}
-		return null;
-	}
+            return new ArrayList<>();
+        }
 
-	/**
-	 * @param xUserId
-	 *            -- Id of X_USER table
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public List<Long> findGroupIdListByUserId(Long xUserId) {
-		if (xUserId != null) {
-			try {
-				return getEntityManager().createNamedQuery("XXGroupUser.findGroupIdListByUserId").setParameter("xUserId", xUserId).getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("UserId not provided.");
-			return new ArrayList<Long>();
-		}
-		return null;
-	}
+        return null;
+    }
 
-	public Set<String> findGroupNamesByUserName(String userName) {
-		List<String> groupList = null;
+    /**
+     * @param xUserId -- Id of X_USER table
+     * @return
+     */
+    public List<Long> findGroupIdListByUserId(Long xUserId) {
+        if (xUserId != null) {
+            try {
+                return getEntityManager().createNamedQuery("XXGroupUser.findGroupIdListByUserId", Long.class).setParameter("xUserId", xUserId).getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("UserId not provided.");
 
-		if (userName != null) {
-			try {
-				groupList = getEntityManager().createNamedQuery("XXGroupUser.findGroupNamesByUserName", String.class).setParameter("userName", userName).getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("UserId not provided.");
-		}
+            return new ArrayList<>();
+        }
 
-		if(groupList != null) {
-			return new HashSet<String>(groupList);
-		}
+        return null;
+    }
 
-		return new HashSet<String>();
-	}
+    public Set<String> findGroupNamesByUserName(String userName) {
+        List<String> groupList = null;
 
-	public List<XXGroupUser> findByGroupId(Long groupId) {
-		if (groupId == null) {
-			return new ArrayList<XXGroupUser>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXGroupUser.findByGroupId", tClass).setParameter("groupId", groupId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXGroupUser>();
-		}
-	}
+        if (userName != null) {
+            try {
+                groupList = getEntityManager().createNamedQuery("XXGroupUser.findGroupNamesByUserName", String.class).setParameter("userName", userName).getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("UserId not provided.");
+        }
 
-	public XXGroupUser findByGroupNameAndUserId(String groupName, Long userId) {
-		if (StringUtils.isNotBlank(groupName) && userId != null) {
-			try {
-				return getEntityManager()
-						.createNamedQuery("XXGroupUser.findByGroupNameAndUserId", XXGroupUser.class)
-						.setParameter("userId", userId)
-						.setParameter("groupName", groupName)
-						.getSingleResult();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("userId and/or groupId not provided.");
-			return new XXGroupUser();
-		}
-		return null;
-	}
+        if (groupList != null) {
+            return new HashSet<>(groupList);
+        }
 
-	public Map<String, Set<String>> findUsersByGroupIds() {
-		Map<String, Set<String>> groupUsers = new HashMap<>();
+        return new HashSet<>();
+    }
 
-		try {
-			List<Object[]> rows = (List<Object[]>) getEntityManager()
-					.createNamedQuery("XXGroupUser.findUsersByGroupIds")
-					.getResultList();
-			if (rows != null) {
-				for (Object[] row : rows) {
-					if (groupUsers.containsKey((String)row[0])) {
-						groupUsers.get((String)row[0]).add((String)row[1]);
-					} else {
-						Set<String> users = new HashSet<>();
-						users.add((String)row[1]);
-						groupUsers.put((String)row[0], users);
-					}
-				}
-			}
-		} catch (NoResultException e) {
-			//Ignore
-		}
-		return groupUsers;
-	}
+    public List<XXGroupUser> findByGroupId(Long groupId) {
+        if (groupId == null) {
+            return new ArrayList<>();
+        }
 
-	public Map<String, XXGroupUser> findUsersByGroupName(String groupName) {
-		Map<String, XXGroupUser> users = new HashMap<>();
+        try {
+            return getEntityManager().createNamedQuery("XXGroupUser.findByGroupId", tClass).setParameter("groupId", groupId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-		if (StringUtils.isNotBlank(groupName)) {
-			try {
-				List<Object[]> rows = (List<Object[]>) getEntityManager()
-						.createNamedQuery("XXGroupUser.findUsersByGroupName")
-						.setParameter("groupName", groupName)
-						.getResultList();
-				if (rows != null) {
-					for (Object[] row : rows) {
-							users.put((String)row[0], (XXGroupUser)row[1]);
-					}
-				}
-			} catch (NoResultException e) {
-				if (logger.isDebugEnabled()) {
-					logger.debug(e.getMessage());
-				}
-			}
-		}
+    public XXGroupUser findByGroupNameAndUserId(String groupName, Long userId) {
+        if (StringUtils.isNotBlank(groupName) && userId != null) {
+            try {
+                return getEntityManager().createNamedQuery("XXGroupUser.findByGroupNameAndUserId", XXGroupUser.class).setParameter("userId", userId).setParameter("groupName", groupName).getSingleResult();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("userId and/or groupId not provided.");
 
-		return users;
-	}
+            return new XXGroupUser();
+        }
+
+        return null;
+    }
+
+    public Map<String, Set<String>> findUsersByGroupIds() {
+        Map<String, Set<String>> groupUsers = new HashMap<>();
+
+        try {
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupIds", Object[].class).getResultList();
+
+            if (rows != null) {
+                for (Object[] row : rows) {
+                    if (groupUsers.containsKey((String) row[0])) {
+                        groupUsers.get((String) row[0]).add((String) row[1]);
+                    } else {
+                        Set<String> users = new HashSet<>();
+
+                        users.add((String) row[1]);
+                        groupUsers.put((String) row[0], users);
+                    }
+                }
+            }
+        } catch (NoResultException e) {
+            //Ignore
+        }
+
+        return groupUsers;
+    }
+
+    public Map<String, XXGroupUser> findUsersByGroupName(String groupName) {
+        Map<String, XXGroupUser> users = new HashMap<>();
+
+        if (StringUtils.isNotBlank(groupName)) {
+            try {
+                List<Object[]> rows = getEntityManager().createNamedQuery("XXGroupUser.findUsersByGroupName", Object[].class).setParameter("groupName", groupName).getResultList();
+
+                if (rows != null) {
+                    for (Object[] row : rows) {
+                        users.put((String) row[0], (XXGroupUser) row[1]);
+                    }
+                }
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        }
+
+        return users;
+    }
 }

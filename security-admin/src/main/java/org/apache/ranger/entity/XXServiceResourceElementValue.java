@@ -19,7 +19,7 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
+import org.apache.ranger.common.AppConstants;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -30,164 +30,139 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.apache.ranger.common.AppConstants;
+import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
-@Table(name="x_service_resource_element_val")
+@Table(name = "x_service_resource_element_val")
 public class XXServiceResourceElementValue extends XXDBBase implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name = "X_SERVICE_RES_EL_VAL_SEQ", sequenceName = "X_SERVICE_RES_EL_VAL_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_RES_EL_VAL_SEQ")
-	@Column(name = "id")
-	protected Long id;
+    @Id
+    @SequenceGenerator(name = "X_SERVICE_RES_EL_VAL_SEQ", sequenceName = "X_SERVICE_RES_EL_VAL_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_RES_EL_VAL_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	@Column(name = "res_element_id")
-	protected Long resElementId;
+    @Column(name = "res_element_id")
+    protected Long resElementId;
 
-	@Column(name = "value")
-	protected String value;
+    @Column(name = "value")
+    protected String value;
 
-	@Column(name = "sort_order")
-	protected Integer sortOrder;
+    @Column(name = "sort_order")
+    protected Integer sortOrder;
 
-	@Override
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * @return the resElementId
+     */
+    public Long getResElementId() {
+        return resElementId;
+    }
 
-	@Override
-	public Long getId() {
-		return id;
-	}
+    /**
+     * @param resElementId the resElementId to set
+     */
+    public void setResElementId(Long resElementId) {
+        this.resElementId = resElementId;
+    }
 
-	/**
-	 * @return the resElementId
-	 */
-	public Long getResElementId() {
-		return resElementId;
-	}
+    /**
+     * @return the value
+     */
+    public String getValue() {
+        return value;
+    }
 
-	/**
-	 * @param resElementId
-	 *            the resElementId to set
-	 */
-	public void setResElementId(Long resElementId) {
-		this.resElementId = resElementId;
-	}
+    /**
+     * @param value the value to set
+     */
+    public void setValue(String value) {
+        this.value = value;
+    }
 
-	/**
-	 * @return the value
-	 */
-	public String getValue() {
-		return value;
-	}
+    /**
+     * @return the sortOrder
+     */
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
 
-	/**
-	 * @param value
-	 *            the value to set
-	 */
-	public void setValue(String value) {
-		this.value = value;
-	}
+    /**
+     * @param sortOrder the sortOrder to set
+     */
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 
-	/**
-	 * @return the sortOrder
-	 */
-	public Integer getSortOrder() {
-		return sortOrder;
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE_ELEMENT_VALUE;
+    }
 
-	/**
-	 * @param sortOrder
-	 *            the sortOrder to set
-	 */
-	public void setSortOrder(Integer sortOrder) {
-		this.sortOrder = sortOrder;
-	}
+    @Override
+    public Long getId() {
+        return id;
+    }
 
-	@Override
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_XA_SERVICE_RESOURCE_ELEMENT_VALUE;
-	}
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((resElementId == null) ? 0 : resElementId.hashCode());
-		result = prime * result + ((sortOrder == null) ? 0 : sortOrder.hashCode());
-		result = prime * result + ((value == null) ? 0 : value.hashCode());
-		return result;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, resElementId, sortOrder, value);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		XXServiceResourceElementValue other = (XXServiceResourceElementValue) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		if (resElementId == null) {
-			if (other.resElementId != null)
-				return false;
-		} else if (!resElementId.equals(other.resElementId))
-			return false;
-		if (sortOrder == null) {
-			if (other.sortOrder != null)
-				return false;
-		} else if (!sortOrder.equals(other.sortOrder))
-			return false;
-		if (value == null) {
-			if (other.value != null)
-				return false;
-		} else if (!value.equals(other.value))
-			return false;
-		return true;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		toString(sb);
-		return sb.toString();
-	}
+        XXServiceResourceElementValue other = (XXServiceResourceElementValue) obj;
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("{ ");
-		sb.append(super.toString() + "} ");
-		sb.append("id={").append(id).append("} ");
-		sb.append("resElementId={").append(resElementId).append("} ");
-		sb.append("value={").append(value).append("} ");
-		sb.append("sortOrder={").append(sortOrder).append("} ");
-		sb.append(" }");
+        return Objects.equals(id, other.id) &&
+                Objects.equals(resElementId, other.resElementId) &&
+                Objects.equals(sortOrder, other.sortOrder) &&
+                Objects.equals(value, other.value);
+    }
 
-		return sb;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        toString(sb);
+        return sb.toString();
+    }
 
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("{ ");
+        sb.append(super.toString() + "} ");
+        sb.append("id={").append(id).append("} ");
+        sb.append("resElementId={").append(resElementId).append("} ");
+        sb.append("value={").append(value).append("} ");
+        sb.append("sortOrder={").append(sortOrder).append("} ");
+        sb.append(" }");
+
+        return sb;
+    }
 }
