@@ -27,8 +27,6 @@
     <name>Security Admin Web Application</name>
     <description>security-admin-tool java web application</description>
     <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <skipJSTests>false</skipJSTests>
     </properties>

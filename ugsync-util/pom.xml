@@ -26,10 +26,6 @@
     <packaging>jar</packaging>
     <name>User Group Synchronizer Util</name>
     <description>User Group Synchronizer Util</description>
-    <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
