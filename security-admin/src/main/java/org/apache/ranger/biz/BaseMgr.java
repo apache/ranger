@@ -17,9 +17,6 @@
  * under the License.
  */
 
-/**
- *
- */
 package org.apache.ranger.biz;
 
 import org.apache.ranger.common.MessageEnums;
@@ -53,7 +50,7 @@ public abstract class BaseMgr {
             try {
                 baseDao.remove(id);
             } catch (Exception e) {
-                logger.error("Error deleting {}}. Id={}", entityName, id, e);
+                logger.error("Error deleting {}. Id = {}", entityName, id, e);
                 throw restErrorUtil.createRESTException("This " + entityName + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, "" + id + ", error=" + e.getMessage());
             }
         } else {
