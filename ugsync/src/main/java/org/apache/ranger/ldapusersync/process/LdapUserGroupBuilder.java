@@ -438,36 +438,9 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             userSearchFilter = computedSearchFilter;
         }
 
-        LOG.info("LdapUserGroupBuilder initialization completed with --  "
-                + "ldapUrl: " + ldapUrl
-                + ",  ldapBindDn: " + ldapBindDn
-                + ",  ldapBindPassword: ***** "
-                + ",  ldapAuthenticationMechanism: " + ldapAuthenticationMechanism
-                + ",  searchBase: " + searchBase
-                + ",  userSearchBase: " + Arrays.toString(userSearchBase)
-                + ",  userSearchScope: " + userSearchScope
-                + ",  userObjectClass: " + userObjectClass
-                + ",  userSearchFilter: " + userSearchFilter
-                + ",  extendedUserSearchFilter: " + extendedUserSearchFilter
-                + ",  userNameAttribute: " + userNameAttribute
-                + ",  userSearchAttributes: " + userSearchAttributes
-                + ",  userGroupNameAttributeSet: " + userGroupNameAttributeSet
-                + ",  otherUserAttributes: " + otherUserAttributes
-                + ",  pagedResultsEnabled: " + pagedResultsEnabled
-                + ",  pagedResultsSize: " + pagedResultsSize
-                + ",  groupSearchEnabled: " + groupSearchEnabled
-                + ",  groupSearchBase: " + Arrays.toString(groupSearchBase)
-                + ",  groupSearchScope: " + groupSearchScope
-                + ",  groupObjectClass: " + groupObjectClass
-                + ",  groupSearchFilter: " + groupSearchFilter
-                + ",  extendedGroupSearchFilter: " + extendedGroupSearchFilter
-                + ",  extendedAllGroupsSearchFilter: " + extendedAllGroupsSearchFilter
-                + ",  groupMemberAttributeName: " + groupMemberAttributeName
-                + ",  groupNameAttribute: " + groupNameAttribute
-                + ",  groupSearchAttributes: " + groupSearchAttributes
-                + ",  groupSearchFirstEnabled: " + groupSearchFirstEnabled
-                + ",  userSearchEnabled: " + userSearchEnabled
-                + ",  ldapReferral: " + ldapReferral);
+        LOG.info("LdapUserGroupBuilder initialization completed with --  " +
+                "ldapUrl: {},  ldapBindDn: {},  ldapBindPassword: ***** ,  ldapAuthenticationMechanism: {},  searchBase: {},  userSearchBase: {},  userSearchScope: {},  userObjectClass: {},  userSearchFilter: {},  extendedUserSearchFilter: {},  userNameAttribute: {},  userSearchAttributes: {},  userGroupNameAttributeSet: {},  otherUserAttributes: {},  pagedResultsEnabled: {},  pagedResultsSize: {},  groupSearchEnabled: {},  groupSearchBase: {},  groupSearchScope: {},  groupObjectClass: {},  groupSearchFilter: {},  extendedGroupSearchFilter: {},  extendedAllGroupsSearchFilter: {},  groupMemberAttributeName: {},  groupNameAttribute: {},  groupSearchAttributes: {},  groupSearchFirstEnabled: {},  userSearchEnabled: {},  ldapReferral: {}",
+                ldapUrl, ldapBindDn, ldapAuthenticationMechanism, searchBase, Arrays.toString(userSearchBase), userSearchScope, userObjectClass, userSearchFilter, extendedUserSearchFilter, userNameAttribute, userSearchAttributes, userGroupNameAttributeSet, otherUserAttributes, pagedResultsEnabled, pagedResultsSize, groupSearchEnabled, Arrays.toString(groupSearchBase), groupSearchScope, groupObjectClass, groupSearchFilter, extendedGroupSearchFilter, extendedAllGroupsSearchFilter, groupMemberAttributeName, groupNameAttribute, groupSearchAttributes, groupSearchFirstEnabled, userSearchEnabled, ldapReferral);
     }
 
     private void closeLdapContext() throws Throwable {
@@ -1246,7 +1219,12 @@ public class LdapUserGroupBuilder implements UserGroupSource {
             LdapName  subjectDN = new LdapName(name);
             List<Rdn> rdns      = subjectDN.getRdns();
 
-            for (Rdn rdn : rdns) {
+            for (int i = rdns.size() - 1; i >= 0; i--) {
+                if (StringUtils.isNotEmpty(shortName)) {
+                    break;
+                }
+
+                Rdn rdn = rdns.get(i);
                 Attributes attributes = rdn.toAttributes();
 
                 try {
@@ -1257,7 +1235,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
                         if (value != null) {
                             shortName = GROUP_NAME_ATTRIBUTE + value;
-                            break;
                         }
                     }
                 } catch (NoSuchElementException ignore) {
@@ -1285,7 +1262,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
         try {
             createLdapContext();
 
-            SearchControls searchControls = new SearchControls();
+            SearchControls searchControls    = new SearchControls();
             Set<String>    searchAttributes  = new HashSet<>();
             int            total;
 
