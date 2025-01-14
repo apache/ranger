@@ -90,7 +90,7 @@ import java.util.Set;
 public class SecurityZoneREST {
     private static final Logger LOG = LoggerFactory.getLogger(SecurityZoneREST.class);
 
-    private static final String STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE = "User is not authorized to access zone(s).";
+    public static final String STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE = "User is not authorized to access zone(s).";
     private static final String ERR_ANOTHER_SEC_ZONE_OPER_IN_PROGRESS  = "Another security zone operation is already in progress";
 
     @Autowired

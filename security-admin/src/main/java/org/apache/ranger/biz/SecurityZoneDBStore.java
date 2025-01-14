@@ -22,6 +22,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
@@ -38,6 +39,7 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.rest.SecurityZoneREST;
 import org.apache.ranger.service.RangerBaseModelService;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.slf4j.Logger;
@@ -247,6 +249,10 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     }
 
     public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(Long zoneId, HttpServletRequest request) {
+        if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_SECURITY_ZONE)) {
+            throw restErrorUtil.createRESTException(SecurityZoneREST.STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE, MessageEnums.OPER_NO_PERMISSION);
+        }
+
         String  namePrefix         = request.getParameter(SearchFilter.SERVICE_NAME_PREFIX);
         boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
 
