@@ -29,6 +29,10 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.Subject;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.yarn.client.json.model.YarnSchedulerResponse;
@@ -37,9 +41,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 
 public class YarnClient extends BaseClient {
 
@@ -113,8 +114,8 @@ public class YarnClient extends BaseClient {
 							return null;
 						}
 
-						Client client = Client.create();
-						ClientResponse response = null;
+						Client client = ClientBuilder.newClient();
+						Response response = null;
 						for(String currentUrl : yarnQUrls)
 						{
 							if(currentUrl == null || currentUrl.trim().isEmpty())
@@ -145,7 +146,7 @@ public class YarnClient extends BaseClient {
 						List<String> lret = new ArrayList<String>();
 						try {
 							if (response != null && response.getStatus() == 200) {
-									String jsonString = response.getEntity(String.class);
+									String jsonString = response.readEntity(String.class);
 									Gson gson = new GsonBuilder().setPrettyPrinting().create();
 									YarnSchedulerResponse yarnQResponse = gson.fromJson(jsonString, YarnSchedulerResponse.class);
 									if (yarnQResponse != null) {
@@ -196,22 +197,22 @@ public class YarnClient extends BaseClient {
 							}
 
 							if (client != null) {
-								client.destroy();
+								client.close();
 							}
 						}
 						return lret;
 					}
 
-					private ClientResponse getQueueResponse(String url, Client client) {
+					private Response getQueueResponse(String url, Client client) {
 
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("getQueueResponse():calling " + url);
 						}
 
-						WebResource webResource = client.resource(url);
+						WebTarget webResource = client.target(url);
 
-						ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE)
-								.get(ClientResponse.class);
+						Response response = webResource.request(EXPECTED_MIME_TYPE)
+								.get(Response.class);
 
 							if (response != null) {
 								if (LOG.isDebugEnabled()) {
@@ -219,7 +220,7 @@ public class YarnClient extends BaseClient {
 								}
 								if (response.getStatus() != 200) {
 									LOG.info("getQueueResponse():response.getStatus()= " + response.getStatus() + " for URL " + url + ", failed to get queue list");
-									String jsonString = response.getEntity(String.class);
+									String jsonString = response.readEntity(String.class);
 									LOG.info(jsonString);
 								}
 						}

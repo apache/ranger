@@ -19,19 +19,12 @@
 package org.apache.ranger.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.ws.rs.core.Response;
 import org.apache.ranger.biz.KmsKeyMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -49,8 +42,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.sun.jersey.api.client.UniformInterfaceException;
 
 
 @Path("keys")
@@ -194,29 +185,36 @@ public class XKeyREST {
 	
 	private void handleError(Exception e) {
 		String message = e.getMessage();
-		if (e instanceof UniformInterfaceException){
-			 UniformInterfaceException uie=(UniformInterfaceException)e;
-			 message = uie.getResponse().getEntity(String.class);
-			 logger.error(message);
-			 try {
-				JsonNode rootNode = JsonUtilsV2.getMapper().readTree(message);
-				JsonNode excpNode = rootNode != null ? rootNode.get("RemoteException") : null;
-				JsonNode msgNode  = excpNode != null ? excpNode.get("message") : null;
+		if (e instanceof WebApplicationException){
+			WebApplicationException uie=(WebApplicationException)e;
+			Response response = uie.getResponse();
+			if (response.hasEntity()){
+				try {
+					message = uie.getResponse().readEntity(String.class);
+					logger.error(message);
 
-				message = msgNode != null ? msgNode.asText() : null;
-			} catch (JsonProcessingException e1) {
-				logger.error("Unable to parse the error message, So sending error message as it is - Error : " + e1.getMessage());
+					JsonNode rootNode = JsonUtilsV2.getMapper().readTree(message);
+					JsonNode excpNode = rootNode != null ? rootNode.get("RemoteException") : null;
+					JsonNode msgNode  = excpNode != null ? excpNode.get("message") : null;
+
+					message = msgNode != null ? msgNode.asText() : null;
+				} catch (JsonProcessingException e1) {
+					logger.error("Unable to parse the error message, So sending error message as it is - Error : " + e1.getMessage());
+				}
 			}
 		}
-		if (!(message==null) && !(message.isEmpty()) && message.contains("Connection refused")){
-			message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";
-		} else if (!(message==null) && !(message.isEmpty()) && (message.contains("response status of 403") || message.contains("HTTP Status 403"))){
+		if (message != null && !message.isEmpty()) {
+			if (message.contains("Connection refused")) {
+				message = "Connection refused: Please check the KMS provider URL and whether the Ranger KMS is running";
+			} else if (message.contains("response status of 403") || message.contains("HTTP Status 403")) {
+				message = UNAUTHENTICATED_MSG;
+			} else if (message.contains("response status of 401") || message.contains("HTTP Status 401 - Authentication required")) {
+				message = UNAUTHENTICATED_MSG;
+			}
+		} else {
 			message = UNAUTHENTICATED_MSG;
-		} else if (!(message==null) && !(message.isEmpty()) && (message.contains("response status of 401") || message.contains("HTTP Status 401 - Authentication required"))){
-			message = UNAUTHENTICATED_MSG;
-		} else if (message == null) {
-		    message = UNAUTHENTICATED_MSG;
 		}
+
 		throw restErrorUtil.createRESTException(message, MessageEnums.ERROR_SYSTEM);
 	}	
 }

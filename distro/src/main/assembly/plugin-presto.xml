@@ -72,8 +72,6 @@
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-                    <include>com.sun.jersey:jersey-core</include>
-                    <include>com.sun.jersey:jersey-server</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -93,7 +91,6 @@
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>org.glassfish.jersey.media:jersey-media-json-binding</include>
-                    <include>com.sun.jersey:jersey-json</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>

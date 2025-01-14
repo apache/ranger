@@ -27,10 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.Gson;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import jakarta.ws.rs.client.*;
+import jakarta.ws.rs.core.*;
 import org.apache.atlas.model.discovery.AtlasSearchResult;
 import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.commons.io.FilenameUtils;
@@ -51,8 +49,6 @@ import org.apache.ranger.plugin.util.PasswordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.security.auth.Subject;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.NewCookie;
 
 public class RangerServiceAtlas extends RangerBaseService {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceAtlas.class);
@@ -269,7 +265,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 		public Map<String, Object> validateConfig() {
 			Map<String, Object> ret = new HashMap<>();
 
-			loginToAtlas(Client.create());
+			loginToAtlas(ClientBuilder.newClient());
 
 			BaseClient.generateResponseDataMap(true, "ConnectionTest Successful", "ConnectionTest Successful", null, null, ret);
 
@@ -388,8 +384,8 @@ public class RangerServiceAtlas extends RangerBaseService {
 			return ret;
 		}
 
-		private ClientResponse loginToAtlas(Client client) {
-			ClientResponse ret      = null;
+		private Response loginToAtlas(Client client) {
+			Response ret      = null;
 			HadoopException excp     = null;
 			String          loginUrl = null;
 
@@ -397,8 +393,8 @@ public class RangerServiceAtlas extends RangerBaseService {
 				try {
 					loginUrl = atlasUrl + URL_LOGIN;
 
-					WebResource                    webResource = client.resource(loginUrl);
-					MultivaluedMap<String, String> formData    = new MultivaluedMapImpl();
+					WebTarget webResource = client.target(loginUrl);
+					MultivaluedMap<String, String> formData    = new MultivaluedHashMap<>();
 					String                         password    = null;
 
 					try {
@@ -415,7 +411,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 					formData.add("j_password", password);
 
 					try {
-						ret = webResource.type(WEB_RESOURCE_CONTENT_TYPE).post(ClientResponse.class, formData);
+						ret = webResource.request(WEB_RESOURCE_CONTENT_TYPE).post(Entity.form(formData));
 					} catch (Exception e) {
 						LOG.error("failed to login to Atlas at " + loginUrl, e);
 					}
@@ -466,20 +462,20 @@ public class RangerServiceAtlas extends RangerBaseService {
 						Client client = null;
 
 						try {
-							client = Client.create();
+							client = ClientBuilder.newClient();
 
-							ClientResponse      loginResponse = loginToAtlas(client);
-							WebResource         webResource   = client.resource(atlasUrl + URL_GET_TYPESDEF_HEADERS);
-							WebResource.Builder builder       = webResource.getRequestBuilder();
+							Response      loginResponse = loginToAtlas(client);
+							WebTarget         webResource   = client.target(atlasUrl + URL_GET_TYPESDEF_HEADERS);
+							Invocation.Builder builder       = webResource.request(MediaType.APPLICATION_JSON);
 
-							for (NewCookie cook : loginResponse.getCookies()) {
+							for (NewCookie cook : loginResponse.getCookies().values()) {
 								builder = builder.cookie(cook);
 							}
 
-							ClientResponse response = builder.get(ClientResponse.class);
+							Response response = builder.get(Response.class);
 
 							if (response != null) {
-								String jsonString = response.getEntity(String.class);
+								String jsonString = response.readEntity(String.class);
 								Gson   gson       = new Gson();
 								List   types      = gson.fromJson(jsonString, List.class);
 
@@ -514,7 +510,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 							LOG.error(msgDesc, t);
 						} finally {
 							if (client != null) {
-								client.destroy();
+								client.close();
 							}
 						}
 					}
@@ -552,9 +548,9 @@ public class RangerServiceAtlas extends RangerBaseService {
 						Client client = null;
 
 						try {
-							client = Client.create();
+							client = ClientBuilder.newClient();
 
-							ClientResponse loginResponse     = loginToAtlas(client);
+							Response loginResponse     = loginToAtlas(client);
 							String         entitySearcApiUrl = atlasUrl + "/api/atlas/" + URl_ENTITY_SEARCH;
 							StringBuilder  searchUrl         = new StringBuilder();
 
@@ -564,17 +560,17 @@ public class RangerServiceAtlas extends RangerBaseService {
 									 .append("&attrValuePrefix=" + userInput + "&limit=25");
 
 
-							WebResource         webResource = client.resource(searchUrl.toString());
-							WebResource.Builder builder     = webResource.getRequestBuilder();
+							WebTarget         webResource = client.target(searchUrl.toString());
+							Invocation.Builder builder     = webResource.request(MediaType.APPLICATION_JSON);
 
-							for (NewCookie cook : loginResponse.getCookies()) {
+							for (NewCookie cook : loginResponse.getCookies().values()) {
 								builder = builder.cookie(cook);
 							}
 
-							ClientResponse response = builder.get(ClientResponse.class);
+							Response response = builder.get(Response.class);
 
 							if (response != null) {
-								String            jsonString   = response.getEntity(String.class);
+								String            jsonString   = response.readEntity(String.class);
 								Gson              gson         = new Gson();
 								AtlasSearchResult searchResult = gson.fromJson(jsonString, AtlasSearchResult.class);
 
@@ -594,7 +590,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 							LOG.error(msgDesc, t);
 						} finally {
 							if (client != null) {
-								client.destroy();
+								client.close();
 							}
 						}
 					}

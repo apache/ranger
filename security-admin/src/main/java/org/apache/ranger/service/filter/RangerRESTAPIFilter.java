@@ -33,18 +33,21 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.ContainerResponseContext;
+import jakarta.ws.rs.container.ContainerResponseFilter;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.UriBuilder;
 import org.apache.ranger.common.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 
-import com.sun.jersey.api.container.filter.LoggingFilter;
-import com.sun.jersey.api.uri.UriTemplate;
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerResponse;
 
-public class RangerRESTAPIFilter extends LoggingFilter {
+public class RangerRESTAPIFilter implements ContainerRequestFilter, ContainerResponseFilter {
+
 	Logger logger = LoggerFactory.getLogger(RangerRESTAPIFilter.class);
 	static volatile boolean initDone = false;
 
@@ -55,70 +58,62 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 	List<String> loggedRestPathErrors = new ArrayList<String>();
 
 	void init() {
-		if (initDone) {
-			return;
-		}
-		synchronized (RangerRESTAPIFilter.class) {
-			if (initDone) {
-				return;
+		// double-checked locking
+		if (!initDone) {
+			synchronized (this) {
+				if (!initDone) {
+					logStdOut = PropertiesUtil.getBooleanProperty("xa.restapi.log.enabled", false);
+
+					// Build hash map
+					try {
+						loadPathPatterns();
+					} catch (Throwable t) {
+						logger.error(
+								"Error parsing REST classes for PATH patterns. Error ignored, but should be fixed immediately",
+								t);
+					}
+					initDone = true;
+				}
 			}
-
-			logStdOut = PropertiesUtil.getBooleanProperty(
-					"xa.restapi.log.enabled", false);
-
-			// Build hash map
-			try {
-				loadPathPatterns();
-			} catch (Throwable t) {
-				logger.error(
-						"Error parsing REST classes for PATH patterns. Error ignored, but should be fixed immediately",
-						t);
-			}
-			initDone = true;
 		}
-
 	}
 
 	/*
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * com.sun.jersey.spi.container.ContainerRequestFilter#filter(com.sun.jersey
-	 * .spi.container.ContainerRequest)
+	 * jakarta.ws.rs.container.ContainerRequestFilter#filter(jakarta.ws.rs.container.ContainerRequestContext)
 	 */
 	@Override
-	public ContainerRequest filter(ContainerRequest request) {
+	public void filter(ContainerRequestContext request) {
 		if (!initDone) {
 			init();
 		}
 		if (logStdOut) {
-			String path = request.getRequestUri().getPath();
+			String path = request.getUriInfo().getPath();
 
-			if ((request.getMediaType() == null || !"multipart".equals(request.getMediaType()
-					.getType()))
+			if ((request.getMediaType() == null || !"multipart".equals(request.getMediaType().getType()))
 					&& !path.endsWith("/service/general/logs")) {
 				try {
-					request = super.filter(request);
+					logRequestDetails(request);
 				} catch (Throwable t) {
 					logger.error("Error FILTER logging. path=" + path, t);
 				}
 			}
 		}
-
-		return request;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 *
 	 * @see
-	 * com.sun.jersey.spi.container.ContainerResponseFilter#filter(com.sun.jersey
-	 * .spi.container.ContainerRequest,
-	 * com.sun.jersey.spi.container.ContainerResponse)
+	 * jakarta.ws.rs.container.ContainerResponseFilter#filter(
+	 * jakarta.ws.rs.container.ContainerRequestContext,
+	 * jakarta.ws.rs.container.ContainerResponseContext)
 	 */
 	@Override
-	public ContainerResponse filter(ContainerRequest request,
-			ContainerResponse response) {
+	public void filter(ContainerRequestContext request,
+			ContainerResponseContext response) {
 		if (logStdOut) {
 			// If it is image, then don't call super
 			if (response.getMediaType() == null) {
@@ -126,12 +121,9 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 			}
 			if (response.getMediaType() == null
 					|| !"image".equals(response.getMediaType().getType())) {
-
-				response = super.filter(request, response);
+				logResponseDetails(response);
 			}
 		}
-
-		return response;
 	}
 
 	private void loadPathPatterns() throws ClassNotFoundException {
@@ -177,13 +169,14 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 
 					String fullPath = path.value();
 					String regEx = httpMethod + ":" + path.value();
+
 					if (servicePath != null) {
 						if (!servicePath.startsWith("/")) {
 							servicePath = "/" + servicePath;
 						}
-						UriTemplate ut = new UriTemplate(servicePath);
-						regEx = httpMethod + ":" + path.value()
-								+ ut.getPattern().getRegex();
+
+						UriBuilder uriBuilder = UriBuilder.fromPath(servicePath);
+						regEx = httpMethod + ":" + path.value() + Pattern.quote(uriBuilder.build().getPath());
 						fullPath += servicePath;
 					}
 					Pattern regexPattern = Pattern.compile(regEx);
@@ -259,6 +252,20 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 		}
 
 		return classes;
+	}
+
+	private void logRequestDetails(ContainerRequestContext requestContext) {
+		// Puedes registrar detalles de la petición, como el método y la URI
+		String method = requestContext.getMethod();
+		String uri = requestContext.getUriInfo().getRequestUri().toString();
+		logger.info("Request - Method: {}, URI: {}", method, uri);
+	}
+
+	private void logResponseDetails(ContainerResponseContext responseContext) {
+		// Puedes registrar detalles de la respuesta, como el código de estado y los headers
+		int status = responseContext.getStatus();
+		MediaType mediaType = responseContext.getMediaType();
+		logger.info("Response - Status: {}, MediaType: {}", status, mediaType);
 	}
 
 }
