@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+/opt/mssql/bin/sqlservr &
 
 # Wait for SQL Server to be ready
 echo "Waiting for SQL Server to start..."
@@ -38,8 +39,18 @@ if [ $i -eq $RETRIES ]; then
     exit 1
 fi
 
+# Disable SSL encryption by setting 'force encryption' to 0
+echo "Disabling SSL encryption..."
+/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'rangerR0cks!' -Q "
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'force encryption', 0;
+RECONFIGURE;
+"
+echo "SSL encryption disabled."
 
-sqlcmd -S localhost -U mssql -P 'rangerR0cks!' -Q "
+
+/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'rangerR0cks!' -Q "
 
 -- Set the database context
 USE master;
@@ -68,4 +79,8 @@ CREATE LOGIN hive WITH PASSWORD = 'rangerR0cks!';
 CREATE USER hive FOR LOGIN hive;
 ALTER ROLE db_owner ADD MEMBER hive; -- Grant equivalent high-level permissions
 GO
-"
+" -C
+
+# Bring SQL Server to the foreground
+wait -n
+exec /opt/mssql/bin/sqlservr
