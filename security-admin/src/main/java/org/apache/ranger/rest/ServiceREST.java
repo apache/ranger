@@ -1986,6 +1986,7 @@ public class ServiceREST {
         return ret;
     }
 
+    @Deprecated
     @GET
     @Path("/policies/downloadExcel")
     @Produces("application/ms-excel")
@@ -2038,6 +2039,7 @@ public class ServiceREST {
         }
     }
 
+    @Deprecated
     @GET
     @Path("/policies/csv")
     @Produces("text/csv")
