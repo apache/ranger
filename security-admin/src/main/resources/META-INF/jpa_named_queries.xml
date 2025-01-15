@@ -1724,6 +1724,12 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXSecurityZone.getAllZoneIdNames">
+		<query>
+			select obj.id, obj.name from XXSecurityZone obj
+		</query>
+	</named-query>
+
 	<named-query name="XXSecurityZoneRefGroup.findByZoneId">
         <query>
             select obj from XXSecurityZoneRefGroup obj where obj.zoneId = :zoneId
