@@ -11,13 +11,15 @@ services:
     networks:
       - ranger
     healthcheck:
+      # -C bypasses SSL validation
       test: [
         "CMD-SHELL",
-        "sqlcmd -S localhost -U SA -P 'rangerR0cks!' -Q \"SELECT 1\" || exit 1"
+        "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P rangerR0cks! -Q \"SELECT 1\" -C"
       ]
-      interval: 10s
-      timeout: 2s
-      retries: 30
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=rangerR0cks!
