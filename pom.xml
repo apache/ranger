@@ -211,7 +211,6 @@
         <springframework.test.version>6.0.0</springframework.test.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
-        <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <tomcat.embed.version>10.1.31</tomcat.embed.version>
         <testng.version>7.5.1</testng.version>
         <velocity.version>2.3</velocity.version>
