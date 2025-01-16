@@ -172,14 +172,16 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
     static void setOwnerUser(RangerHiveResource resource, HivePrivilegeObject hiveObj, IMetaStoreClient metaStoreClient, Map<String, String> objOwners) {
         if (hiveObj != null) {
             String objName = null;
-            String owner   = null;
+            String owner   = hiveObj.getOwnerName();
 
             // resource.setOwnerUser(hiveObj.getOwnerName());
             switch (hiveObj.getType()) {
                 case DATABASE:
                     try {
                         objName = hiveObj.getDbname();
-                        owner   = objOwners != null ? objOwners.get(objName) : null;
+                        if (StringUtils.isBlank(owner) && objOwners != null) {
+                            owner = objOwners.get(objName);
+                        }
 
                         if (StringUtils.isBlank(owner)) {
                             Database database = metaStoreClient != null ? metaStoreClient.getDatabase(hiveObj.getDbname()) : null;
@@ -199,7 +201,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                 case COLUMN:
                     try {
                         objName = hiveObj.getDbname() + "." + hiveObj.getObjectName();
-                        owner   = objOwners != null ? objOwners.get(objName) : null;
+                        if (StringUtils.isBlank(owner) && objOwners != null) {
+                            owner = objOwners.get(objName);
+                        }
 
                         if (StringUtils.isBlank(owner)) {
                             Table table = metaStoreClient != null ? metaStoreClient.getTable(hiveObj.getDbname(), hiveObj.getObjectName()) : null;
