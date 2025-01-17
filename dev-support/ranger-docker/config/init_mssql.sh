@@ -24,7 +24,7 @@ RETRIES=30  # Number of retries
 SLEEP_INTERVAL=5  # Seconds to wait between retries
 for i in $(seq 1 $RETRIES); do
     # Try to connect to SQL Server
-    /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "rangerR0cks!" -Q "SELECT 1" > /dev/null 2>&1
+    /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P "rangerR0cks!" -Q "SELECT 1" -C > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo "SQL Server is ready!"
         break
@@ -38,17 +38,6 @@ if [ $i -eq $RETRIES ]; then
     echo "SQL Server did not become ready in time. Exiting."
     exit 1
 fi
-
-# Disable SSL encryption by setting 'force encryption' to 0
-echo "Disabling SSL encryption..."
-/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'rangerR0cks!' -Q "
-EXEC sp_configure 'show advanced options', 1;
-RECONFIGURE;
-EXEC sp_configure 'force encryption', 0;
-RECONFIGURE;
-"
-echo "SSL encryption disabled."
-
 
 /opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'rangerR0cks!' -Q "
 

@@ -143,5 +143,6 @@ jobs:
 
       - name: View sql server logs
         run: |
+          sleep 30
           docker logs ranger-sqlserver
-
+          docker logs ranger
