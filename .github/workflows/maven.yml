@@ -105,19 +105,11 @@ jobs:
         run: |
           cp ranger-*.tar.gz dev-support/ranger-docker/dist
           cp version dev-support/ranger-docker/dist
-      
-      - name: Cache downloaded archives
-        uses: actions/cache@v4
-        with:
-          path: dev-support/ranger-docker/downloads
-          key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
-          restore-keys: |
-            ${{ runner.os }}-ranger-downloads-
 
       - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
-          ./download-archives.sh hadoop hive hbase kafka knox ozone
+          ./download-archives.sh kafka
       
       - name: Clean up Docker space
         run: docker system prune --all --force --volumes
