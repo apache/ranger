@@ -84,7 +84,7 @@
         <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
         <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
         <distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>
-        <dnsjava.version>2.1.7</dnsjava.version>
+        <dnsjava.version>3.6.2</dnsjava.version>
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.13.2</enunciate.version>
