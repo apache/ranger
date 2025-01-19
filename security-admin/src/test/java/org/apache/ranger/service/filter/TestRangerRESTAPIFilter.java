@@ -19,6 +19,7 @@
 
 package org.apache.ranger.service.filter;
 
+import com.sun.jersey.spi.container.ContainerRequest;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,22 +28,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerRESTAPIFilter {
+    @InjectMocks
+    RangerRESTAPIFilter rangerRESTAPIFilter = new RangerRESTAPIFilter();
 
-        @InjectMocks
-        RangerRESTAPIFilter rangerRESTAPIFilter = new RangerRESTAPIFilter();
+    @Mock
+    ContainerRequest request;
 
-        @Mock
-        ContainerRequest request;
-
-        @Test
-        public void test1Filter() {
-                rangerRESTAPIFilter.filter(request);
-
-        }
-
+    @Test
+    public void test1Filter() {
+        rangerRESTAPIFilter.filter(request);
+    }
 }

@@ -19,60 +19,65 @@
 
 package org.apache.ranger.amazon.cloudwatch;
 
-import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination.CONFIG_PREFIX;
-import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination.PROP_REGION;
-
+import com.amazonaws.services.logs.AWSLogs;
+import com.amazonaws.services.logs.AWSLogsClientBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.amazonaws.services.logs.AWSLogs;
-import com.amazonaws.services.logs.AWSLogsClientBuilder;
+import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination.CONFIG_PREFIX;
+import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination.PROP_REGION;
 
 /**
  * This class initializes the CloudWatch client
- *
  */
 @Component
 public class CloudWatchMgr {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CloudWatchMgr.class);
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(CloudWatchMgr.class);
+    private AWSLogs client;
+    private String  regionName;
 
-	private AWSLogs client = null;
-	private String regionName;
+    public AWSLogs getClient() {
+        AWSLogs me = client;
 
-	synchronized void connect() {
-		if (client == null) {
-			synchronized (CloudWatchMgr.class) {
-				if (client == null) {
-					regionName = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + PROP_REGION);
-					try {
-						client = newClient();
-					} catch (Throwable t) {
-						LOGGER.error("Can't connect to CloudWatch region: " + regionName, t);
-					}
-				}
-			}
-		}
-	}
+        if (me == null) {
+            me = connect();
+        }
 
-	public AWSLogs getClient() {
-		if (client == null) {
-			synchronized (CloudWatchMgr.class) {
-				if (client == null) {
-					connect();
-				}
-			}
-		}
-		return client;
-	}
+        return me;
+    }
 
-	private AWSLogs newClient() {
-		if (StringUtils.isBlank(regionName)) {
-			return AWSLogsClientBuilder.standard().build();
-		}
-		return AWSLogsClientBuilder.standard().withRegion(regionName).build();
-	}
+    synchronized AWSLogs connect() {
+        AWSLogs me = client;
+
+        if (me == null) {
+            synchronized (CloudWatchMgr.class) {
+                me = client;
+
+                if (me == null) {
+                    try {
+                        me     = newClient();
+                        client = me;
+                    } catch (Throwable t) {
+                        LOGGER.error("Can't connect to CloudWatch region:{} ", regionName, t);
+                    }
+                }
+            }
+        }
+
+        return me;
+    }
+
+    private AWSLogs newClient() {
+        regionName = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + PROP_REGION);
+
+        if (StringUtils.isBlank(regionName)) {
+            return AWSLogsClientBuilder.standard().build();
+        }
+
+        return AWSLogsClientBuilder.standard().withRegion(regionName).build();
+    }
 }

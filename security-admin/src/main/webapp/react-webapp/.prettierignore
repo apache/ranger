@@ -1,0 +1,6 @@
+dist/
+node_modules/
+src/index.html
+src/images/
+README.md
+config/

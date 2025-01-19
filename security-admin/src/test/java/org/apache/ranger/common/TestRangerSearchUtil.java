@@ -24,111 +24,109 @@ import java.util.Date;
 import java.util.List;
 
 public class TestRangerSearchUtil {
-	private final RangerSearchUtil  searchUtil   = new RangerSearchUtil();
-	private final List<SearchField> searchFields = new ArrayList<>();
+    private static final String SEARCH_PARAM_ID                = "id";
+    private static final String SEARCH_PARAM_NAME              = "name";
+    private static final String SEARCH_PARAM_NAME_CONTAINS     = "nameContains";
+    private static final String SEARCH_PARAM_IS_ENABLED        = "isEnabled";
+    private static final String SEARCH_PARAM_CREATED_TIME      = "createdTime";
+    private static final String SEARCH_PARAM_CREATED_TIME_FROM = "createdTimeFrom";
+    private static final String SEARCH_PARAM_CREATED_TIME_TO   = "createdTimeTo";
+    private static final String SEARCH_PARAM_EXCLUDE_ID        = "excludeId";
+    private static final String SEARCH_PARAM_EXCLUDE_NAME      = "excludeName";
+    private static final String WHERE_PREFIX     = "WHERE 1 = 1 ";
+    private static final String WHERE_PREFIX_AND = WHERE_PREFIX + " and ";
+    private final RangerSearchUtil  searchUtil   = new RangerSearchUtil();
+    private final List<SearchField> searchFields = new ArrayList<>();
 
-	private static final String SEARCH_PARAM_ID                = "id";
-	private static final String SEARCH_PARAM_NAME              = "name";
-	private static final String SEARCH_PARAM_NAME_CONTAINS     = "nameContains";
-	private static final String SEARCH_PARAM_IS_ENABLED        = "isEnabled";
-	private static final String SEARCH_PARAM_CREATED_TIME      = "createdTime";
-	private static final String SEARCH_PARAM_CREATED_TIME_FROM = "createdTimeFrom";
-	private static final String SEARCH_PARAM_CREATED_TIME_TO   = "createdTimeTo";
-	private static final String SEARCH_PARAM_EXCLUDE_ID        = "excludeId";
-	private static final String SEARCH_PARAM_EXCLUDE_NAME      = "excludeName";
+    public TestRangerSearchUtil() {
+        searchFields.add(new SearchField(SEARCH_PARAM_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SEARCH_PARAM_NAME, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SEARCH_PARAM_IS_ENABLED, "obj.isEnabled", SearchField.DATA_TYPE.BOOLEAN, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SEARCH_PARAM_CREATED_TIME, "obj.createdTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SEARCH_PARAM_NAME_CONTAINS, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField(SEARCH_PARAM_CREATED_TIME_FROM, "obj.createdTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField(SEARCH_PARAM_CREATED_TIME_TO, "obj.createdTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_THAN));
+        searchFields.add(new SearchField(SEARCH_PARAM_EXCLUDE_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.NOT_EQUALS));
+        searchFields.add(new SearchField(SEARCH_PARAM_EXCLUDE_NAME, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.NOT_EQUALS));
+    }
 
-	private static final String WHERE_PREFIX     = "WHERE 1 = 1 ";
-	private static final String WHERE_PREFIX_AND = WHERE_PREFIX + " and ";
+    @Test
+    public void testEmptyCriteria() {
+        SearchCriteria criteria    = new SearchCriteria();
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-	public TestRangerSearchUtil() {
-		searchFields.add(new SearchField(SEARCH_PARAM_ID,                "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SEARCH_PARAM_NAME,              "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SEARCH_PARAM_IS_ENABLED,        "obj.isEnabled",   SearchField.DATA_TYPE.BOOLEAN, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SEARCH_PARAM_CREATED_TIME,      "obj.createdTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SEARCH_PARAM_NAME_CONTAINS,     "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField(SEARCH_PARAM_CREATED_TIME_FROM, "obj.createdTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
-		searchFields.add(new SearchField(SEARCH_PARAM_CREATED_TIME_TO,   "obj.createdTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.LESS_THAN));
-		searchFields.add(new SearchField(SEARCH_PARAM_EXCLUDE_ID,        "obj.id",          SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.NOT_EQUALS));
-		searchFields.add(new SearchField(SEARCH_PARAM_EXCLUDE_NAME,      "obj.name",        SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.NOT_EQUALS));
-	}
+        Assert.assertEquals(WHERE_PREFIX, whereClause);
+    }
 
-	@Test
-	public void testEmptyCriteria() {
-		SearchCriteria criteria    = new SearchCriteria();
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testIntEquals() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_ID, 1);
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX, whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "obj.id = :id", whereClause);
+    }
 
-	@Test
-	public void testIntEquals() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_ID, 1);
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testStringEquals() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_NAME, "test-name");
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "obj.id = :id", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "LOWER(obj.name) = :name", whereClause);
+    }
 
-	@Test
-	public void testStringEquals() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_NAME, "test-name");
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testBooleanEquals() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_IS_ENABLED, false);
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "LOWER(obj.name) = :name", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "obj.isEnabled = :isEnabled", whereClause);
+    }
 
-	@Test
-	public void testBooleanEquals() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_IS_ENABLED, false);
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testDateEquals() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_CREATED_TIME, new Date());
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "obj.isEnabled = :isEnabled", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "obj.createdTime = :createdTime", whereClause);
+    }
 
-	@Test
-	public void testDateEquals() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_CREATED_TIME, new Date());
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testStringContains() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_NAME_CONTAINS, "test-name");
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "obj.createdTime = :createdTime", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "LOWER(obj.name) like :nameContains", whereClause);
+    }
 
-	@Test
-	public void testStringContains() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_NAME_CONTAINS, "test-name");
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testDateFrom() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_CREATED_TIME_FROM, new Date());
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "LOWER(obj.name) like :nameContains", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "obj.createdTime >= :createdTimeFrom", whereClause);
+    }
 
-	@Test
-	public void testDateFrom() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_CREATED_TIME_FROM, new Date());
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testDateTo() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_CREATED_TIME_TO, new Date());
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "obj.createdTime >= :createdTimeFrom", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "obj.createdTime < :createdTimeTo", whereClause);
+    }
 
-	@Test
-	public void testDateTo() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_CREATED_TIME_TO, new Date());
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testIntNotEquals() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_EXCLUDE_ID, 1);
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "obj.createdTime < :createdTimeTo", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "obj.id != :excludeId", whereClause);
+    }
 
-	@Test
-	public void testIntNotEquals() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_EXCLUDE_ID, 1);
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
+    @Test
+    public void testStringNotEquals() {
+        SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_EXCLUDE_NAME, "test-name");
+        String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
 
-		Assert.assertEquals(WHERE_PREFIX_AND + "obj.id != :excludeId", whereClause);
-	}
-
-	@Test
-	public void testStringNotEquals() {
-		SearchCriteria criteria    = new SearchCriteria(SEARCH_PARAM_EXCLUDE_NAME, "test-name");
-		String         whereClause = searchUtil.buildWhereClause(criteria, searchFields).toString();
-
-		Assert.assertEquals(WHERE_PREFIX_AND + "LOWER(obj.name) != :excludeName", whereClause);
-	}
+        Assert.assertEquals(WHERE_PREFIX_AND + "LOWER(obj.name) != :excludeName", whereClause);
+    }
 }

@@ -17,61 +17,61 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
+package org.apache.ranger.db;
+
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXGroupGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.NoResultException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXGroupGroup;
-import org.springframework.stereotype.Service;
-
 @Service
 public class XXGroupGroupDao extends BaseDao<XXGroupGroup> {
+    private static final Logger logger = LoggerFactory.getLogger(XXGroupGroupDao.class);
 
-	private static final Logger logger = LoggerFactory.getLogger(XXGroupGroupDao.class);
-
-	public XXGroupGroupDao( RangerDaoManagerBase daoManager ) {
-		super(daoManager);
+    public XXGroupGroupDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
     }
+
     public List<XXGroupGroup> findByGroupId(Long groupId) {
-		if (groupId == null) {
-			return new ArrayList<XXGroupGroup>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXGroupGroup.findByGroupId", tClass)
-					.setParameter("groupId", groupId)
-					.setParameter("parentGroupId", groupId)
-					.getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXGroupGroup>();
-		}
-	}
+        if (groupId == null) {
+            return new ArrayList<>();
+        }
 
-	public Set<String> findGroupNamesByGroupName(String groupName) {
-		List<String> groupList = null;
+        try {
+            return getEntityManager().createNamedQuery("XXGroupGroup.findByGroupId", tClass)
+                    .setParameter("groupId", groupId)
+                    .setParameter("parentGroupId", groupId)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-		if (groupName != null) {
-			try {
-				groupList = getEntityManager().createNamedQuery("XXGroupGroup.findGroupNamesByGroupName", String.class).setParameter("groupName", groupName).getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("GroupName not provided...");
-		}
+    public Set<String> findGroupNamesByGroupName(String groupName) {
+        List<String> groupList = null;
 
-		if(groupList != null) {
-			return new HashSet<String>(groupList);
-		}
+        if (groupName != null) {
+            try {
+                groupList = getEntityManager().createNamedQuery("XXGroupGroup.findGroupNamesByGroupName", String.class).setParameter("groupName", groupName).getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("GroupName not provided...");
+        }
 
-		return new HashSet<String>();
-	}
+        if (groupList != null) {
+            return new HashSet<>(groupList);
+        }
+
+        return new HashSet<>();
+    }
 }
-

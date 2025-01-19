@@ -413,18 +413,11 @@ function UserAccessLayout() {
     }
   };
 
-  const exportPolicy = async (exportType) => {
-    let exportResp;
-    let exportApiUrl = "/plugins/policies/exportJson";
-
-    if (exportType === "downloadExcel") {
-      exportApiUrl = "/plugins/policies/downloadExcel";
-    } else if (exportType === "csv") {
-      exportApiUrl = "/plugins/policies/csv";
-    }
+  const exportPolicy = async () => {
+    const exportApiUrl = "/plugins/policies/exportJson";
 
     try {
-      exportResp = await fetchApi({
+      const exportResp = await fetchApi({
         url: exportApiUrl,
         params: searchParamsObj,
         responseType: "blob"
@@ -432,7 +425,6 @@ function UserAccessLayout() {
 
       if (exportResp.status === 200) {
         downloadFile({
-          exportType: exportType,
           apiResponse: exportResp.data
         });
       } else {
@@ -443,16 +435,8 @@ function UserAccessLayout() {
     }
   };
 
-  const downloadFile = ({ exportType, apiResponse }) => {
-    let fileExtension;
-
-    if (exportType === "downloadExcel") {
-      fileExtension = ".xls";
-    } else if (exportType === "csv") {
-      fileExtension = ".csv";
-    } else {
-      fileExtension = ".json";
-    }
+  const downloadFile = ({ apiResponse }) => {
+    const fileExtension = ".json";
 
     const fileName =
       "Ranger_Policies_" +
@@ -705,40 +689,32 @@ function UserAccessLayout() {
           </Col>
         </Row>
         <Row>
-          <Col sm={12} className="mt-3 text-end">
-            <Dropdown
-              as={ButtonGroup}
-              key="left"
-              drop="start"
-              size="sm"
-              className="manage-export"
-              title="Export all below policies"
-            >
-              <Dropdown.Toggle
-                data-name="downloadFormatBtn"
-                data-cy="downloadFormatBtn"
+          {!isAuditRole && (
+            <Col sm={12} className="mt-3 text-end">
+              <Dropdown
+                as={ButtonGroup}
+                key="left"
+                drop="start"
+                size="sm"
+                className="manage-export"
+                title="Export all below policies"
               >
-                <i className="fa-fw fa fa-external-link-square"></i> Export
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={() => exportPolicy("downloadExcel")}>
-                  Excel file
-                </Dropdown.Item>
-                <Dropdown.Divider />
-                <Dropdown.Item onClick={() => exportPolicy("csv")}>
-                  CSV file
-                </Dropdown.Item>
-                {!isAuditRole && (
+                <Dropdown.Toggle
+                  data-name="downloadFormatBtn"
+                  data-cy="downloadFormatBtn"
+                >
+                  <i className="fa-fw fa fa-external-link-square"></i> Export
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
                   <React.Fragment>
-                    <Dropdown.Divider />
-                    <Dropdown.Item onClick={() => exportPolicy("exportJson")}>
+                    <Dropdown.Item onClick={() => exportPolicy()}>
                       JSON file
                     </Dropdown.Item>
                   </React.Fragment>
-                )}
-              </Dropdown.Menu>
-            </Dropdown>
-          </Col>
+                </Dropdown.Menu>
+              </Dropdown>
+            </Col>
+          )}
         </Row>
         {filterServiceDefs?.map((serviceDef) => (
           <SearchPolicyTable

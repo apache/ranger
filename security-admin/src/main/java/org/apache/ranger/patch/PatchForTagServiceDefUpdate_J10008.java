@@ -24,6 +24,7 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
@@ -36,168 +37,190 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.apache.ranger.entity.XXServiceDef;
+
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class PatchForTagServiceDefUpdate_J10008 extends BaseLoader {
-	private static final Logger logger = LoggerFactory.getLogger(PatchForTagServiceDefUpdate_J10008.class);
-	public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME  = "tag";
-	public static final String SCRIPT_POLICY_CONDITION_NAME = "expression";
+    private static final Logger logger = LoggerFactory.getLogger(PatchForTagServiceDefUpdate_J10008.class);
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME = "tag";
+    public static final String SCRIPT_POLICY_CONDITION_NAME             = "expression";
 
-	@Autowired
-	ServiceDBStore svcDBStore;
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	JSONUtil jsonUtil;
+    @Autowired
+    ServiceDBStore svcDBStore;
 
-	@Autowired
-	RangerPolicyService policyService;
+    @Autowired
+    JSONUtil jsonUtil;
 
-	@Autowired
-	StringUtil stringUtil;
+    @Autowired
+    RangerPolicyService policyService;
 
-	@Autowired
-	XPolicyService xPolService;
+    @Autowired
+    StringUtil stringUtil;
 
-	@Autowired
-	XPermMapService xPermMapService;
-	
-	@Autowired
-	RangerBizUtil bizUtil;
+    @Autowired
+    XPolicyService xPolService;
 
-	@Autowired
-	RangerValidatorFactory validatorFactory;
+    @Autowired
+    XPermMapService xPermMapService;
 
-	@Autowired
-	ServiceDBStore svcStore;
+    @Autowired
+    RangerBizUtil bizUtil;
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForTagServiceDefUpdate_J10008 loader = (PatchForTagServiceDefUpdate_J10008) CLIUtil.getBean(PatchForTagServiceDefUpdate_J10008.class);
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting!!!");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
-	
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+    @Autowired
+    RangerValidatorFactory validatorFactory;
 
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForTagServiceDefUpdate.execLoad()");
-		try {
-			updateTagServiceDef();
-		} catch (Exception e) {
-			logger.error("Error whille updateTagServiceDef()data.", e);
-		}
-		logger.info("<== PatchForTagServiceDefUpdate.execLoad()");
-	}
+    @Autowired
+    ServiceDBStore svcStore;
 
-	@Override
-	public void printStats() {
-		logger.info("PatchForTagServiceDefUpdate data ");
-	}
+    public static void main(String[] args) {
+        logger.info("main()");
 
-	private void updateTagServiceDef(){
-		RangerServiceDef embeddedTagServiceDef = null;
-		RangerServiceDef dbTagServiceDef 		= null;
-		List<RangerServiceDef.RangerPolicyConditionDef> 	embeddedTagPolicyConditionDefs  = null;
-		XXServiceDef xXServiceDefObj			= null;
-		try{
-			embeddedTagServiceDef=EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
-			if(embeddedTagServiceDef!=null){
-				embeddedTagPolicyConditionDefs = embeddedTagServiceDef.getPolicyConditions();
-				if (embeddedTagPolicyConditionDefs == null) {
-					logger.error("Policy Conditions are empyt in tag service def json");
-					return;
-				}
-				
-				if (checkScriptPolicyCondPresent(embeddedTagPolicyConditionDefs) == false) {
-					logger.error(SCRIPT_POLICY_CONDITION_NAME + "policy condition not found!!");
-					return;
-				}
-				
-				xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
-				if (xXServiceDefObj == null) {
-					logger.error("Service def for " + SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME + " is not found!!");
-					return;
-				}
-				
-				Map<String, String> serviceDefOptionsPreUpdate=null;
-				String jsonStrPreUpdate=null;
-				jsonStrPreUpdate=xXServiceDefObj.getDefOptions();
-				if (!StringUtils.isEmpty(jsonStrPreUpdate)) {
-					serviceDefOptionsPreUpdate=jsonUtil.jsonToMap(jsonStrPreUpdate);
-				}
-				xXServiceDefObj=null;
-				dbTagServiceDef=svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
-				
-				if(dbTagServiceDef!=null){				
-					dbTagServiceDef.setPolicyConditions(embeddedTagPolicyConditionDefs);
-					RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
-					validator.validate(dbTagServiceDef, Action.UPDATE);
+        try {
+            PatchForTagServiceDefUpdate_J10008 loader = (PatchForTagServiceDefUpdate_J10008) CLIUtil.getBean(PatchForTagServiceDefUpdate_J10008.class);
 
-					svcStore.updateServiceDef(dbTagServiceDef);
-					
-					xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
-					if(xXServiceDefObj!=null) {
-						String jsonStrPostUpdate=xXServiceDefObj.getDefOptions();
-						Map<String, String> serviceDefOptionsPostUpdate = null;
-						if (!StringUtils.isEmpty(jsonStrPostUpdate)) {
-							serviceDefOptionsPostUpdate =jsonUtil.jsonToMap(jsonStrPostUpdate);
-						}
-						if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-							if(serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-								String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-								if (preUpdateValue == null) {
-									serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-								} else {
-									serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
-								}
-								xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
-								daoMgr.getXXServiceDef().update(xXServiceDefObj);
-							}
-						}
-					}
-				}
-			}
-		}catch(Exception e)
-		{
-			logger.error("Error while updating "+SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME+"service-def", e);
-		}
-	}
+            loader.init();
 
-	private boolean checkScriptPolicyCondPresent(List<RangerServiceDef.RangerPolicyConditionDef> policyCondDefs) {
-		boolean ret = false;
-		for(RangerServiceDef.RangerPolicyConditionDef policyCondDef : policyCondDefs) {
-			if ( SCRIPT_POLICY_CONDITION_NAME.equals(policyCondDef.getName()) ) {
-				ret = true ;
-				break;
-			}
-		}
-		return ret;
-	}
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
 
-	private String mapToJsonString(Map<String, String> map) throws Exception{
-		String ret = null;
-		if(map != null) {
-			ret = jsonUtil.readMapToString(map);
-		}
-		return ret;
-	}
+            logger.info("Load complete. Exiting!!!");
+
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
+
+            System.exit(1);
+        }
+    }
+
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
+
+    @Override
+    public void printStats() {
+        logger.info("PatchForTagServiceDefUpdate data ");
+    }
+
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForTagServiceDefUpdate.execLoad()");
+
+        try {
+            updateTagServiceDef();
+        } catch (Exception e) {
+            logger.error("Error whille updateTagServiceDef()data.", e);
+        }
+
+        logger.info("<== PatchForTagServiceDefUpdate.execLoad()");
+    }
+
+    private void updateTagServiceDef() {
+        try {
+            RangerServiceDef embeddedTagServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+
+            if (embeddedTagServiceDef != null) {
+                List<RangerServiceDef.RangerPolicyConditionDef> embeddedTagPolicyConditionDefs = embeddedTagServiceDef.getPolicyConditions();
+
+                if (embeddedTagPolicyConditionDefs == null) {
+                    logger.error("Policy Conditions are empyt in tag service def json");
+
+                    return;
+                }
+
+                if (!checkScriptPolicyCondPresent(embeddedTagPolicyConditionDefs)) {
+                    logger.error("{} policy condition not found!!", SCRIPT_POLICY_CONDITION_NAME);
+
+                    return;
+                }
+
+                XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+
+                if (xXServiceDefObj == null) {
+                    logger.error("Service def for {} is not found!!", SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+                    return;
+                }
+
+                Map<String, String> serviceDefOptionsPreUpdate = null;
+                String              jsonStrPreUpdate           = xXServiceDefObj.getDefOptions();
+
+                if (!StringUtils.isEmpty(jsonStrPreUpdate)) {
+                    serviceDefOptionsPreUpdate = jsonUtil.jsonToMap(jsonStrPreUpdate);
+                }
+
+                RangerServiceDef dbTagServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+
+                if (dbTagServiceDef != null) {
+                    dbTagServiceDef.setPolicyConditions(embeddedTagPolicyConditionDefs);
+
+                    RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcStore);
+
+                    validator.validate(dbTagServiceDef, Action.UPDATE);
+
+                    svcStore.updateServiceDef(dbTagServiceDef);
+
+                    xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+
+                    if (xXServiceDefObj != null) {
+                        String              jsonStrPostUpdate           = xXServiceDefObj.getDefOptions();
+                        Map<String, String> serviceDefOptionsPostUpdate = null;
+
+                        if (!StringUtils.isEmpty(jsonStrPostUpdate)) {
+                            serviceDefOptionsPostUpdate = jsonUtil.jsonToMap(jsonStrPostUpdate);
+                        }
+
+                        if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                            if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                                String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+
+                                if (preUpdateValue == null) {
+                                    serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+                                } else {
+                                    serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
+                                }
+
+                                xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
+
+                                daoMgr.getXXServiceDef().update(xXServiceDefObj);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while updating {} service-def", SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME, e);
+        }
+    }
+
+    private boolean checkScriptPolicyCondPresent(List<RangerServiceDef.RangerPolicyConditionDef> policyCondDefs) {
+        boolean ret = false;
+
+        for (RangerServiceDef.RangerPolicyConditionDef policyCondDef : policyCondDefs) {
+            if (SCRIPT_POLICY_CONDITION_NAME.equals(policyCondDef.getName())) {
+                ret = true;
+
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    private String mapToJsonString(Map<String, String> map) {
+        String ret = null;
+
+        if (map != null) {
+            ret = jsonUtil.readMapToString(map);
+        }
+
+        return ret;
+    }
 }

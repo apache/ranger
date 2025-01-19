@@ -17,107 +17,113 @@
 
 package org.apache.ranger.patch;
 
-import java.util.Date;
-import java.util.List;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceVersionInfo;
-
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+import java.util.List;
+
 @Component
 public class PatchForServiceVersionInfo_J10004 extends BaseLoader {
-	private static final Logger logger = LoggerFactory
-			.getLogger(PatchForServiceVersionInfo_J10004.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForServiceVersionInfo_J10004.class);
 
-	@Autowired
-	RangerDaoManager daoManager;
+    @Autowired
+    RangerDaoManager daoManager;
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForServiceVersionInfo_J10004 loader = (PatchForServiceVersionInfo_J10004) CLIUtil
-					.getBean(PatchForServiceVersionInfo_J10004.class);
+    public static void main(String[] args) {
+        logger.info("main()");
+        try {
+            PatchForServiceVersionInfo_J10004 loader = (PatchForServiceVersionInfo_J10004) CLIUtil.getBean(PatchForServiceVersionInfo_J10004.class);
 
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting!!!");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+            loader.init();
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
 
-	@Override
-	public void execLoad() {
-		logger.info("==> ServiceVersionInfoPatch.execLoad()");
-		copyVersionsFromServiceToServiceVersionInfo();
-		logger.info("<== ServiceVersionInfoPatch.execLoad()");
-	}
+            logger.info("Load complete. Exiting!!!");
 
-	public void copyVersionsFromServiceToServiceVersionInfo() {
-		List<XXService> allServices = daoManager.getXXService().getAll();
-		Date now = new Date();
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
 
-		for (XXService xService : allServices) {
+            System.exit(1);
+        }
+    }
 
-			boolean needToCreateServiceVersionInfo = false;
-			XXServiceVersionInfo serviceVersionInfoDbObj = daoManager.getXXServiceVersionInfo().findByServiceId(xService.getId());
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-			if (serviceVersionInfoDbObj == null) {
-				needToCreateServiceVersionInfo = true;
-				serviceVersionInfoDbObj = new XXServiceVersionInfo();
-				serviceVersionInfoDbObj.setServiceId(xService.getId());
-			}
-			serviceVersionInfoDbObj.setPolicyVersion(xService.getPolicyVersion() == null ? 1L : xService.getPolicyVersion());
-			serviceVersionInfoDbObj.setTagVersion(xService.getTagVersion());
-			serviceVersionInfoDbObj.setPolicyUpdateTime(xService.getPolicyUpdateTime());
-			serviceVersionInfoDbObj.setTagUpdateTime(xService.getTagUpdateTime());
+    @Override
+    public void printStats() {
+    }
 
-			if (needToCreateServiceVersionInfo) {
-				daoManager.getXXServiceVersionInfo().create(serviceVersionInfoDbObj);
-				logger.info("Created serviceVesionInfo for serviceName [" + xService.getName() + "]");
-			} else {
-				daoManager.getXXServiceVersionInfo().update(serviceVersionInfoDbObj);
-				logger.info("Updated serviceVesionInfo for serviceName [" + xService.getName() + "]");
-			}
+    @Override
+    public void execLoad() {
+        logger.info("==> ServiceVersionInfoPatch.execLoad()");
 
-			// Consider this scenario:
-			// 1. ranger-admin is upgraded to use versions from x_service_version_info table;
-			// 2. there are updates to policies and/or tags;
-			// 3. no plug-ins download service-policies;
-			// 4. upgrade is rolled back, for ranger-admin to use versions from x_service table;
-			// 5. Now plug-in downloads service-policies.
-			// In this scenario, plug-ins will miss the policy/tag updates down in step 2. To ensure that
-			// plug-ins get updated policies/tags, we increment versions in x_service table when x_service_version_info
-			// table is updated in this patch. This may cause one potentially unnecessary download to plugin in case
-			// step 2 above did not take place, but it is safer.
+        copyVersionsFromServiceToServiceVersionInfo();
 
-			xService.setPolicyVersion(xService.getPolicyVersion() == null ? 2L : xService.getPolicyVersion() + 1);
-			xService.setTagVersion(xService.getTagVersion() + 1);
+        logger.info("<== ServiceVersionInfoPatch.execLoad()");
+    }
 
-			xService.setPolicyUpdateTime(now);
-			xService.setTagUpdateTime(now);
+    public void copyVersionsFromServiceToServiceVersionInfo() {
+        List<XXService> allServices = daoManager.getXXService().getAll();
+        Date            now         = new Date();
 
-			daoManager.getXXService().update(xService);
-			logger.info("Incremented policy and tag versions for serviceName [" + xService.getName() + "]");
-		}
-	}
+        for (XXService xService : allServices) {
+            boolean              needToCreateServiceVersionInfo = false;
+            XXServiceVersionInfo serviceVersionInfoDbObj        = daoManager.getXXServiceVersionInfo().findByServiceId(xService.getId());
 
-	@Override
-	public void printStats() {
-	}
+            if (serviceVersionInfoDbObj == null) {
+                needToCreateServiceVersionInfo = true;
+                serviceVersionInfoDbObj        = new XXServiceVersionInfo();
 
+                serviceVersionInfoDbObj.setServiceId(xService.getId());
+            }
+
+            serviceVersionInfoDbObj.setPolicyVersion(xService.getPolicyVersion() == null ? 1L : xService.getPolicyVersion());
+            serviceVersionInfoDbObj.setTagVersion(xService.getTagVersion());
+            serviceVersionInfoDbObj.setPolicyUpdateTime(xService.getPolicyUpdateTime());
+            serviceVersionInfoDbObj.setTagUpdateTime(xService.getTagUpdateTime());
+
+            if (needToCreateServiceVersionInfo) {
+                daoManager.getXXServiceVersionInfo().create(serviceVersionInfoDbObj);
+
+                logger.info("Created serviceVesionInfo for serviceName [{}]", xService.getName());
+            } else {
+                daoManager.getXXServiceVersionInfo().update(serviceVersionInfoDbObj);
+
+                logger.info("Updated serviceVesionInfo for serviceName [{}]", xService.getName());
+            }
+
+            // Consider this scenario:
+            // 1. ranger-admin is upgraded to use versions from x_service_version_info table;
+            // 2. there are updates to policies and/or tags;
+            // 3. no plug-ins download service-policies;
+            // 4. upgrade is rolled back, for ranger-admin to use versions from x_service table;
+            // 5. Now plug-in downloads service-policies.
+            // In this scenario, plug-ins will miss the policy/tag updates down in step 2. To ensure that
+            // plug-ins get updated policies/tags, we increment versions in x_service table when x_service_version_info
+            // table is updated in this patch. This may cause one potentially unnecessary download to plugin in case
+            // step 2 above did not take place, but it is safer.
+
+            xService.setPolicyVersion(xService.getPolicyVersion() == null ? 2L : xService.getPolicyVersion() + 1);
+            xService.setTagVersion(xService.getTagVersion() + 1);
+            xService.setPolicyUpdateTime(now);
+            xService.setTagUpdateTime(now);
+
+            daoManager.getXXService().update(xService);
+
+            logger.info("Incremented policy and tag versions for serviceName [{}]", xService.getName());
+        }
+    }
 }

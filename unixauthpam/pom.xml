@@ -27,10 +27,6 @@
     <packaging>uexe</packaging>
     <name>PAM Authenticator</name>
     <description>PAM authentication service</description>
-    <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
-    </properties>
     <build>
         <plugins>
             <plugin>

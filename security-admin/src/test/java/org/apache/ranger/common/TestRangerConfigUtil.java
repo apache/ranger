@@ -21,31 +21,30 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class TestRangerConfigUtil {
+    @Autowired
+    RangerConfigUtil xaConfigUtil = new RangerConfigUtil();
 
-	@Autowired
-	RangerConfigUtil xaConfigUtil = new RangerConfigUtil();	
+    @Test
+    public void testGetDefaultMaxRows() {
+        int maxRow = xaConfigUtil.getDefaultMaxRows();
+        Assert.assertEquals(maxRow, xaConfigUtil.defaultMaxRows);
+    }
 
-	@Test
-	public void testGetDefaultMaxRows() {
-		int maxrow = xaConfigUtil.getDefaultMaxRows();
-		Assert.assertEquals(maxrow,xaConfigUtil.defaultMaxRows );
-	}
-	
-	@Test
-	public void testIsAccessFilterEnabled() {
-		boolean value = xaConfigUtil.isAccessFilterEnabled();
+    @Test
+    public void testIsAccessFilterEnabled() {
+        boolean value = xaConfigUtil.isAccessFilterEnabled();
         Assert.assertTrue(value);
-	}
-	
-	@Test
-	public void testGetWebAppRootURL(){
-		String returnValue = xaConfigUtil.getWebAppRootURL();
-		Assert.assertEquals(returnValue,xaConfigUtil.webappRootURL);
-	}
-	
-	@Test
-	public void testGetRoles(){
-		String[] str=xaConfigUtil.getRoles();
-		Assert.assertArrayEquals(str, xaConfigUtil.roles);
-	}
+    }
+
+    @Test
+    public void testGetWebAppRootURL() {
+        String returnValue = xaConfigUtil.getWebAppRootURL();
+        Assert.assertEquals(returnValue, xaConfigUtil.webappRootURL);
+    }
+
+    @Test
+    public void testGetRoles() {
+        String[] str = xaConfigUtil.getRoles();
+        Assert.assertArrayEquals(str, xaConfigUtil.roles);
+    }
 }

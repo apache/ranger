@@ -17,53 +17,57 @@
 
 package org.apache.ranger.view;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VXModulePermission extends VXDataObject implements Serializable {
+    private static final long         serialVersionUID = 1L;
+    protected            String       module;
+    protected            List<String> userNameList     = new ArrayList<>();
+    protected            List<String> groupNameList    = new ArrayList<>();
 
-	private static final long serialVersionUID = 1L;
-	protected String module;
-	protected List<String> userNameList = new ArrayList<String>();
-	protected List<String> groupNameList = new ArrayList<String>();
+    public String getModule() {
+        return module;
+    }
 
-	public String getModule() {
-		return module;
-	}
-	public void setModule(String module) {
-		this.module = module;
-	}
-	public List<String> getUserNameList() {
-		return userNameList;
-	}
-	public void setUserNameList(List<String> userNameList) {
-		this.userNameList = userNameList;
-	}
-	public List<String> getGroupNameList() {
-		return groupNameList;
-	}
-	public void setGroupNameList(List<String> groupNameList) {
-		this.groupNameList = groupNameList;
-	}
+    public void setModule(String module) {
+        this.module = module;
+    }
 
-	@Override
-	public String toString() {
-		String str = "VXModulePermission={";
-		str += super.toString();
-		str += "id={" + id + "} ";
-		str += "module={" + module + " } ";
-		str += "userNameList={" + userNameList + " } ";
-		str += "groupNameList={" + groupNameList + " } ";
-		str += "}";
-		return str;
-	}
+    public List<String> getUserNameList() {
+        return userNameList;
+    }
+
+    public void setUserNameList(List<String> userNameList) {
+        this.userNameList = userNameList;
+    }
+
+    public List<String> getGroupNameList() {
+        return groupNameList;
+    }
+
+    public void setGroupNameList(List<String> groupNameList) {
+        this.groupNameList = groupNameList;
+    }
+
+    @Override
+    public String toString() {
+        String str = "VXModulePermission={";
+        str += super.toString();
+        str += "id={" + id + "} ";
+        str += "module={" + module + " } ";
+        str += "userNameList={" + userNameList + " } ";
+        str += "groupNameList={" + groupNameList + " } ";
+        str += "}";
+        return str;
+    }
 }

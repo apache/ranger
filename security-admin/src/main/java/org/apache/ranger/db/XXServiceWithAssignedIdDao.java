@@ -23,9 +23,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class XXServiceWithAssignedIdDao extends BaseDao<XXServiceWithAssignedId> {
-
-	public XXServiceWithAssignedIdDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
-
+    public XXServiceWithAssignedIdDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 }

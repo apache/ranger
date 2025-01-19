@@ -29,24 +29,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class RangerGdsBaseModelService<T extends XXDBBase, V extends RangerGdsBaseModelObject> extends RangerAuditedModelService<T, V> {
-
     protected RangerGdsBaseModelService(int classType) {
         super(classType, -1);
     }
 
-
     protected RangerGdsBaseModelService(int classType, int parentClassType) {
         super(classType, parentClassType);
 
-        searchFields.add(new SearchField(SearchFilter.GUID,              "obj.guid",       SearchField.DATA_TYPE.STRING,  SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField(SearchFilter.IS_ENABLED,        "obj.isEnabled",  SearchField.DATA_TYPE.BOOLEAN, SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField(SearchFilter.CREATE_TIME_START, "obj.createTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
-        searchFields.add(new SearchField(SearchFilter.CREATE_TIME_END,   "obj.createTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
-        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_START, "obj.updateTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
-        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_END,   "obj.createTime", SearchField.DATA_TYPE.DATE,    SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.GUID, "obj.guid", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", SearchField.DATA_TYPE.BOOLEAN, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.CREATE_TIME_START, "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.CREATE_TIME_END, "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_START, "obj.updateTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField(SearchFilter.UPDATE_TIME_END, "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
 
-        trxLogAttrs.put("description",    new VTrxLogAttr("description", "Description"));
-        trxLogAttrs.put("options",        new VTrxLogAttr("options", "Options"));
+        trxLogAttrs.put("description", new VTrxLogAttr("description", "Description"));
+        trxLogAttrs.put("options", new VTrxLogAttr("options", "Options"));
         trxLogAttrs.put("additionalInfo", new VTrxLogAttr("additionalInfo", "Additional info"));
     }
 

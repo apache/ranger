@@ -17,10 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.biz;
-
-import java.util.List;
-import java.util.stream.Collectors;
+package org.apache.ranger.biz;
 
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -36,100 +33,99 @@ import org.apache.ranger.view.VXTrxLogList;
 import org.apache.ranger.view.VXTrxLogV2;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class XAuditMgrBase {
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
+    @Autowired
+    RangerTrxLogV2Service xTrxLogService;
 
-	@Autowired
-	RangerTrxLogV2Service xTrxLogService;
+    @Autowired
+    XAccessAuditService xAccessAuditService;
 
-	@Autowired
-	XAccessAuditService xAccessAuditService;
-	public VXTrxLog getXTrxLog(Long id){
-		VXTrxLogV2 ret = xTrxLogService.readResource(id);
+    public VXTrxLog getXTrxLog(Long id) {
+        VXTrxLogV2 ret = xTrxLogService.readResource(id);
 
-		return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
-	}
+        return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
+    }
 
-	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog){
-		VXTrxLogV2 ret = xTrxLogService.createResource(new VXTrxLogV2(vXTrxLog));
+    public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
+        VXTrxLogV2 ret = xTrxLogService.createResource(new VXTrxLogV2(vXTrxLog));
 
-		return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
-	}
+        return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
+    }
 
-	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
-		VXTrxLogV2 ret =  xTrxLogService.updateResource(new VXTrxLogV2(vXTrxLog));
+    public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
+        VXTrxLogV2 ret = xTrxLogService.updateResource(new VXTrxLogV2(vXTrxLog));
 
-		return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
-	}
+        return ret != null ? VXTrxLogV2.toVXTrxLog(ret) : null;
+    }
 
-	public void deleteXTrxLog(Long id, boolean force) {
-		 if (force) {
-			 xTrxLogService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public void deleteXTrxLog(Long id, boolean force) {
+        if (force) {
+            xTrxLogService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
-	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
-		PList<VXTrxLogV2> vXTrxLogsV2 = xTrxLogService.searchTrxLogs(searchCriteria);
-		List<VXTrxLog>    vxTrxLogs   = vXTrxLogsV2.getList().stream().map(VXTrxLogV2::toVXTrxLog).collect(Collectors.toList());
-		VXTrxLogList      ret         = new VXTrxLogList(vxTrxLogs);
+    public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
+        PList<VXTrxLogV2> vXTrxLogsV2 = xTrxLogService.searchTrxLogs(searchCriteria);
+        List<VXTrxLog>    vxTrxLogs   = vXTrxLogsV2.getList().stream().map(VXTrxLogV2::toVXTrxLog).collect(Collectors.toList());
+        VXTrxLogList      ret         = new VXTrxLogList(vxTrxLogs);
 
-		ret.setStartIndex(vXTrxLogsV2.getStartIndex());
-		ret.setPageSize(vXTrxLogsV2.getPageSize());
-		ret.setTotalCount(vXTrxLogsV2.getTotalCount());
-		ret.setResultSize(vXTrxLogsV2.getResultSize());
-		ret.setSortBy(vXTrxLogsV2.getSortBy());
-		ret.setSortType(vXTrxLogsV2.getSortType());
+        ret.setStartIndex(vXTrxLogsV2.getStartIndex());
+        ret.setPageSize(vXTrxLogsV2.getPageSize());
+        ret.setTotalCount(vXTrxLogsV2.getTotalCount());
+        ret.setResultSize(vXTrxLogsV2.getResultSize());
+        ret.setSortBy(vXTrxLogsV2.getSortBy());
+        ret.setSortType(vXTrxLogsV2.getSortType());
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
-		long count = xTrxLogService.getTrxLogsCount(searchCriteria);
+    public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
+        long count = xTrxLogService.getTrxLogsCount(searchCriteria);
 
-		VXLong ret = new VXLong();
+        VXLong ret = new VXLong();
 
-		ret.setValue(count);
+        ret.setValue(count);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public VXAccessAudit getXAccessAudit(Long id){
-		return (VXAccessAudit)xAccessAuditService.readResource(id);
-	}
+    public VXAccessAudit getXAccessAudit(Long id) {
+        return xAccessAuditService.readResource(id);
+    }
 
-	public VXAccessAudit createXAccessAudit(VXAccessAudit vXAccessAudit){
-		vXAccessAudit =  (VXAccessAudit)xAccessAuditService.createResource(vXAccessAudit);
-		return vXAccessAudit;
-	}
+    public VXAccessAudit createXAccessAudit(VXAccessAudit vXAccessAudit) {
+        vXAccessAudit = xAccessAuditService.createResource(vXAccessAudit);
 
-	public VXAccessAudit updateXAccessAudit(VXAccessAudit vXAccessAudit) {
-		vXAccessAudit =  (VXAccessAudit)xAccessAuditService.updateResource(vXAccessAudit);
-		return vXAccessAudit;
-	}
+        return vXAccessAudit;
+    }
 
-	public void deleteXAccessAudit(Long id, boolean force) {
-		 if (force) {
-			 xAccessAuditService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+    public VXAccessAudit updateXAccessAudit(VXAccessAudit vXAccessAudit) {
+        vXAccessAudit = xAccessAuditService.updateResource(vXAccessAudit);
 
-	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
-		return xAccessAuditService.searchXAccessAudits(searchCriteria);
-	}
+        return vXAccessAudit;
+    }
 
-	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
-		return xAccessAuditService.getSearchCount(searchCriteria,
-				xAccessAuditService.searchFields);
-	}
+    public void deleteXAccessAudit(Long id, boolean force) {
+        if (force) {
+            xAccessAuditService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
+    public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
+        return xAccessAuditService.searchXAccessAudits(searchCriteria);
+    }
+
+    public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
+        return xAccessAuditService.getSearchCount(searchCriteria, xAccessAuditService.searchFields);
+    }
 }

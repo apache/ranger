@@ -17,10 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.common.db;
-
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
+package org.apache.ranger.common.db;
 
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.UserSessionBase;
@@ -30,82 +27,77 @@ import org.apache.ranger.security.context.RangerSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+
 public class JPABeanCallbacks {
-	private static final Logger logger = LoggerFactory.getLogger(JPABeanCallbacks.class);
+    private static final Logger logger = LoggerFactory.getLogger(JPABeanCallbacks.class);
 
-	@PrePersist
-	void onPrePersist(Object o) {
-		try {
-			if (o != null && o instanceof XXDBBase) {
-				XXDBBase entity = (XXDBBase) o;
+    @PrePersist
+    void onPrePersist(Object o) {
+        try {
+            if (o instanceof XXDBBase) {
+                XXDBBase entity = (XXDBBase) o;
 
-				entity.setUpdateTime(DateUtil.getUTCDate());
-				if (entity.getAddedByUserId() == null || entity.getAddedByUserId() == 0) {
+                entity.setUpdateTime(DateUtil.getUTCDate());
+                if (entity.getAddedByUserId() == null || entity.getAddedByUserId() == 0) {
+                    logger.debug("AddedByUserId is null or 0 and hence getting it from userSession for {}", entity.getId());
 
-					if (logger.isDebugEnabled()) {
-						logger.debug("AddedByUserId is null or 0 and hence getting it from userSession for " + entity.getId());
-					}
-					RangerSecurityContext context = RangerContextHolder
-							.getSecurityContext();
-					if (context != null) {
-						UserSessionBase userSession = context.getUserSession();
-						if (userSession != null) {
-							entity.setAddedByUserId(userSession.getUserId());
-							entity.setUpdatedByUserId(userSession
-									.getUserId());
-						} else {
-							if (logger.isDebugEnabled()) {
-								logger.debug("User session not found for this request. Identity of originator of this change cannot be recorded");
-							}
-						}
-					} else {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Security context not found for this request. Identity of originator of this change cannot be recorded");
-						}
-					}
-				}
-			}
-		} catch (Throwable t) {
-			logger.error("", t);
-		}
+                    RangerSecurityContext context = RangerContextHolder.getSecurityContext();
 
-	}
+                    if (context != null) {
+                        UserSessionBase userSession = context.getUserSession();
 
-	// @PostPersist
-	// void onPostPersist(Object o) {
-	// if (o != null && o instanceof MBase) {
-	// MBase entity = (MBase) o;
-	// if (logger.isDebugEnabled()) {
-	// logger.debug("DBChange.create:class=" + o.getClass().getName()
-	// + entity.getId());
-	// }
-	//
-	// }
-	// }
+                        if (userSession != null) {
+                            entity.setAddedByUserId(userSession.getUserId());
+                            entity.setUpdatedByUserId(userSession.getUserId());
+                        } else {
+                            logger.debug("User session not found for this request. Identity of originator of this change cannot be recorded");
+                        }
+                    } else {
+                        logger.debug("Security context not found for this request. Identity of originator of this change cannot be recorded");
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            logger.error("", t);
+        }
+    }
 
-	// @PostLoad void onPostLoad(Object o) {}
+    // @PostPersist
+    // void onPostPersist(Object o) {
+    // if (o != null && o instanceof MBase) {
+    // MBase entity = (MBase) o;
+    // if (logger.isDebugEnabled()) {
+    // logger.debug("DBChange.create:class=" + o.getClass().getName()
+    // + entity.getId());
+    // }
+    //
+    // }
+    // }
 
-	@PreUpdate
-	void onPreUpdate(Object o) {
-		try {
-			if (o != null && o instanceof XXDBBase) {
-				XXDBBase entity = (XXDBBase) o;
-				entity.setUpdateTime(DateUtil.getUTCDate());
-			}
-		} catch (Throwable t) {
-			logger.error("", t);
-		}
+    // @PostLoad void onPostLoad(Object o) {}
 
-	}
+    @PreUpdate
+    void onPreUpdate(Object o) {
+        try {
+            if (o instanceof XXDBBase) {
+                XXDBBase entity = (XXDBBase) o;
 
-	// @PostUpdate
-	// void onPostUpdate(Object o) {
-	// }
+                entity.setUpdateTime(DateUtil.getUTCDate());
+            }
+        } catch (Throwable t) {
+            logger.error("", t);
+        }
+    }
 
-	// @PreRemove void onPreRemove(Object o) {}
+    // @PostUpdate
+    // void onPostUpdate(Object o) {
+    // }
 
-	// @PostRemove
-	// void onPostRemove(Object o) {
-	// }
+    // @PreRemove void onPreRemove(Object o) {}
 
+    // @PostRemove
+    // void onPostRemove(Object o) {
+    // }
 }

@@ -1544,8 +1544,9 @@ export const getServiceDefIcon = (serviceDefName) => {
   let imageStyling;
 
   try {
-    const serviceDefIcon =
-      require(`../images/serviceDefIcons/${serviceDefName}/icon.svg`).default;
+    const serviceDefIcon = require(
+      `../images/serviceDefIcons/${serviceDefName}/icon.svg`
+    ).default;
     imagePath = serviceDefIcon;
     imageStyling = { height: "27px", width: "27px" };
   } catch (error) {

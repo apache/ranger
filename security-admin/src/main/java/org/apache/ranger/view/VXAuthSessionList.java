@@ -17,35 +17,35 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXAuthSession
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAuthSessionList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXAuthSession> vXAuthSessions = new ArrayList<VXAuthSession>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXAuthSession> vXAuthSessions = new ArrayList<>();
 
     public VXAuthSessionList() {
-	super();
+        super();
     }
 
     public VXAuthSessionList(List<VXAuthSession> objList) {
-	super(objList);
-	this.vXAuthSessions = objList;
+        super(objList);
+        this.vXAuthSessions = objList;
     }
 
     /**
@@ -53,7 +53,7 @@ public class VXAuthSessionList extends VList {
      */
     @JsonProperty("vXAuthSessions")
     public List<VXAuthSession> getVXAuthSessions() {
-	return vXAuthSessions;
+        return vXAuthSessions;
     }
 
     /**
@@ -62,20 +62,19 @@ public class VXAuthSessionList extends VList {
      */
     @JsonProperty("vXAuthSessions")
     public void setVXAuthSessions(List<VXAuthSession> vXAuthSessions) {
-	this.vXAuthSessions = vXAuthSessions;
+        this.vXAuthSessions = vXAuthSessions;
     }
 
     @Override
     public int getListSize() {
-	if (vXAuthSessions != null) {
-	    return vXAuthSessions.size();
-	}
-	return 0;
+        if (vXAuthSessions != null) {
+            return vXAuthSessions.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXAuthSession> getList() {
-	return vXAuthSessions;
+        return vXAuthSessions;
     }
-
 }

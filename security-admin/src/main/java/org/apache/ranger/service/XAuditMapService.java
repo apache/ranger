@@ -17,8 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.entity.XXAuditMap;
@@ -30,74 +29,77 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class XAuditMapService extends XAuditMapServiceBase<XXAuditMap, VXAuditMap> {
+    public XAuditMapService() {
+        searchFields.add(new SearchField("resourceId", "obj.resourceId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("userId", "obj.userId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("groupId", "obj.groupId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+    }
 
-	public XAuditMapService() {
-		searchFields.add(new SearchField("resourceId", "obj.resourceId",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("userId", "obj.userId",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("groupId", "obj.groupId",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-	}
+    @Override
+    protected void validateForCreate(VXAuditMap vObj) {
+        // TODO Auto-generated method stub
+    }
 
-	@Override
-	protected void validateForCreate(VXAuditMap vObj) {
-		// TODO Auto-generated method stub
+    @Override
+    protected void validateForUpdate(VXAuditMap vObj, XXAuditMap mObj) {
+        // TODO Auto-generated method stub
+    }
 
-	}
+    @Override
+    protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int operationContext) {
+        XXAuditMap ret = null;
 
-	@Override
-	protected void validateForUpdate(VXAuditMap vObj, XXAuditMap mObj) {
-		// TODO Auto-generated method stub
+        if (vObj != null && mObj != null) {
+            ret = super.mapViewToEntityBean(vObj, mObj, operationContext);
 
-	}
+            if (ret.getAddedByUserId() == null || ret.getAddedByUserId() == 0) {
+                if (!stringUtil.isEmpty(vObj.getOwner())) {
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
 
-	@Override
-	protected XXAuditMap mapViewToEntityBean(VXAuditMap vObj, XXAuditMap mObj, int OPERATION_CONTEXT) {
-	    XXAuditMap ret = null;
-		if(vObj!=null && mObj!=null){
-			ret = super.mapViewToEntityBean(vObj, mObj, OPERATION_CONTEXT);
-			XXPortalUser xXPortalUser=null;
-			if(ret.getAddedByUserId()==null || ret.getAddedByUserId()==0){
-				if(!stringUtil.isEmpty(vObj.getOwner())){
-					xXPortalUser=daoManager.getXXPortalUser().findByLoginId(vObj.getOwner());
-					if(xXPortalUser!=null){
-						ret.setAddedByUserId(xXPortalUser.getId());
-					}
-				}
-			}
-			if(ret.getUpdatedByUserId()==null || ret.getUpdatedByUserId()==0){
-				if(!stringUtil.isEmpty(vObj.getUpdatedBy())){
-					xXPortalUser= daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
-					if(xXPortalUser!=null){
-						ret.setUpdatedByUserId(xXPortalUser.getId());
-					}		
-				}
-			}
-		}
-		return ret;
-	}
+                    if (xXPortalUser != null) {
+                        ret.setAddedByUserId(xXPortalUser.getId());
+                    }
+                }
+            }
 
-	@Override
-	protected VXAuditMap mapEntityToViewBean(VXAuditMap vObj, XXAuditMap mObj) {
-	    VXAuditMap ret = null;
-		if(mObj!=null && vObj!=null){
-			ret = super.mapEntityToViewBean(vObj, mObj);
-			XXPortalUser xXPortalUser=null;
-			if(stringUtil.isEmpty(ret.getOwner())){
-				xXPortalUser= daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
-				if(xXPortalUser!=null){
-					ret.setOwner(xXPortalUser.getLoginId());
-				}
-			}
-			if(stringUtil.isEmpty(ret.getUpdatedBy())){
-				xXPortalUser= daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
-				if(xXPortalUser!=null){
-					ret.setUpdatedBy(xXPortalUser.getLoginId());
-				}
-			}
-		}
-		return ret;
-	}
+            if (ret.getUpdatedByUserId() == null || ret.getUpdatedByUserId() == 0) {
+                if (!stringUtil.isEmpty(vObj.getUpdatedBy())) {
+                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(vObj.getUpdatedBy());
 
+                    if (xXPortalUser != null) {
+                        ret.setUpdatedByUserId(xXPortalUser.getId());
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    protected VXAuditMap mapEntityToViewBean(VXAuditMap vObj, XXAuditMap mObj) {
+        VXAuditMap ret = null;
+
+        if (mObj != null && vObj != null) {
+            ret = super.mapEntityToViewBean(vObj, mObj);
+
+            if (stringUtil.isEmpty(ret.getOwner())) {
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getAddedByUserId());
+
+                if (xXPortalUser != null) {
+                    ret.setOwner(xXPortalUser.getLoginId());
+                }
+            }
+
+            if (stringUtil.isEmpty(ret.getUpdatedBy())) {
+                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(mObj.getUpdatedByUserId());
+
+                if (xXPortalUser != null) {
+                    ret.setUpdatedBy(xXPortalUser.getLoginId());
+                }
+            }
+        }
+
+        return ret;
+    }
 }
