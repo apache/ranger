@@ -106,7 +106,7 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
     private void updatePolicyGUIDToUniqueValue() {
         logger.info("==> updatePolicyGUIDToUniqueValue() ");
 
-        List<XXSecurityZone> allXXZones   = daoMgr.getXXSecurityZoneDao().getAll();
+        List<XXSecurityZone> allXXZones   = daoMgr.getXXSecurityZoneDao().getAllZoneIdNames();
         List<XXService>      allXXService = daoMgr.getXXService().getAll();
 
         if (CollectionUtils.isNotEmpty(allXXZones) && CollectionUtils.isNotEmpty(allXXService)) {
