@@ -91,7 +91,7 @@
         <fasterxml.jackson.databind.version>2.17.2</fasterxml.jackson.databind.version>
         <fasterxml.jackson.version>2.17.2</fasterxml.jackson.version>
         <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
-        <gcp.protobuf-java.version>3.19.6</gcp.protobuf-java.version>
+        <gcp.protobuf-java.version>3.25.5</gcp.protobuf-java.version>
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
@@ -188,7 +188,7 @@
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
         <presto.version>333</presto.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protobuf-java.version>3.19.6</protobuf-java.version>
+        <protobuf-java.version>3.25.5</protobuf-java.version>
         <ratis-thirdparty.version>0.7.0</ratis-thirdparty.version>
         <ratis.version>2.1.0</ratis.version>
         <reload4j.version>1.2.19</reload4j.version>
