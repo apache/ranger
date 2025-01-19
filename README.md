@@ -58,7 +58,7 @@ Ranger is built using [Apache Maven](https://maven.apache.org/). To run Ranger:
 
 2. On the root folder, please execute the following Maven command:
 
-   `mvn clean compile package install`
+   `mvn clean install`
 
    `mvn eclipse:eclipse`
 
