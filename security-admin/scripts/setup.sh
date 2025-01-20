@@ -746,7 +746,7 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "MSSQL" ]
 	then
 		propertyName=ranger.jpa.jdbc.url
-		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};trustServerCertificate=true;"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
