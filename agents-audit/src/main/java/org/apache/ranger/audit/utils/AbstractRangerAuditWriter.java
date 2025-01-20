@@ -45,12 +45,13 @@ import java.util.Properties;
 public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     private static final Logger logger = LoggerFactory.getLogger(AbstractRangerAuditWriter.class);
 
-    public static final String  PROP_FILESYSTEM_DIR              = "dir";
-    public static final String  PROP_FILESYSTEM_SUBDIR           = "subdir";
-    public static final String  PROP_FILESYSTEM_FILE_NAME_FORMAT = "filename.format";
-    public static final String  PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
-    public static final String  PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
-    public static final String  PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String PROP_FILESYSTEM_DIR                  = "dir";
+    public static final String PROP_FILESYSTEM_SUBDIR               = "subdir";
+    public static final String PROP_FILESYSTEM_FILE_NAME_FORMAT     = "filename.format";
+    public static final String PROP_FILESYSTEM_FILE_ROLLOVER        = "file.rollover.sec";
+    public static final String PROP_FILESYSTEM_ROLLOVER_PERIOD      = "file.rollover.period";
+    public static final String PROP_FILESYSTEM_FILE_EXTENSION       = ".log";
+    public static final String PROP_IS_APPEND_ON_EXCEPTIONS_ENABLED = ".append.on.exceptions.enabled";
 
     public Configuration       conf;
     public FileSystem          fileSystem;
@@ -70,6 +71,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public Date                nextRollOverTime;
     public int                 fileRolloverSec = 24 * 60 * 60; // In seconds
     public boolean             rollOverByDuration;
+    public boolean             isAppendOnExceptionsEnabled;
 
     public volatile FSDataOutputStream  ostream;   // output stream wrapped in logWriter
 
@@ -225,11 +227,14 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             logFileNameFormat = "%app-type%_ranger_audit_%hostname%" + fileExtension;
         }
 
+        isAppendOnExceptionsEnabled = MiscUtil.getBooleanProperty(props, propPrefix + PROP_IS_APPEND_ON_EXCEPTIONS_ENABLED, false);
+
         logFolder = logFolderProp + "/" + logSubFolder;
 
         logger.info("logFolder={}, destName={}", logFolder, auditProviderName);
         logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, auditProviderName);
         logger.info("config={}", auditConfigs);
+        logger.info("isAppendOnExceptionsEnabled={}", isAppendOnExceptionsEnabled);
 
         rolloverPeriod  = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_ROLLOVER_PERIOD);
         rollingTimeUtil = RollingTimeUtil.getInstance();
@@ -306,8 +311,8 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         if (logWriter == null) {
             boolean appendMode = false;
 
-            // if append is supported, reuse last log file
-            if (reUseLastLogFile && fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND)) {
+            // if append is supported and enabled via config param, reuse last log file
+            if (isAppendOnExceptionsEnabled && reUseLastLogFile && fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND)) {
                 logger.info("Appending to last log file. auditPath = {}", fullPath);
 
                 try {
