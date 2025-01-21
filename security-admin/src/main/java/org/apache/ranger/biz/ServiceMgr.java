@@ -134,11 +134,15 @@ public class ServiceMgr {
             }
         }
 
-        Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
+        RangerBaseService svc = null;
 
-        service.setConfigs(newConfigs);
+        if (service != null) {
+            Map<String, String> newConfigs = rangerSvcService.getConfigsWithDecryptedPassword(service);
 
-        RangerBaseService svc = getRangerServiceByService(service, svcStore);
+            service.setConfigs(newConfigs);
+
+            svc = getRangerServiceByService(service, svcStore);
+        }
 
         LOG.debug("==> ServiceMgr.lookupResource for Service: ({}Context: {})", svc, context);
 
@@ -663,7 +667,7 @@ public class ServiceMgr {
             } finally {
                 Thread.currentThread().setContextClassLoader(clsLoader);
 
-                if (LOG.isDebugEnabled()) {
+                if (start != null) {
                     Date finish        = new Date();
                     long waitTime      = start.getTime() - creation.getTime();
                     long executionTime = finish.getTime() - start.getTime();

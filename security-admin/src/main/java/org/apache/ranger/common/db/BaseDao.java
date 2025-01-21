@@ -388,6 +388,6 @@ public abstract class BaseDao<T> {
             BATCH_DELETE_BATCH_SIZE = DEFAULT_BATCH_DELETE_BATCH_SIZE;
         }
 
-        logger.info(PROP_BATCH_DELETE_BATCH_SIZE + "=" + BATCH_DELETE_BATCH_SIZE);
+        logger.info("{}={}", PROP_BATCH_DELETE_BATCH_SIZE, BATCH_DELETE_BATCH_SIZE);
     }
 }

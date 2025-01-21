@@ -468,8 +468,10 @@ public class RangerSearchUtil extends SearchUtil {
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST || (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STRING)) {
                 List<String> strValueList = new ArrayList<>();
 
-                for (Object value : multiValue) {
-                    strValueList.add(String.valueOf(value));
+                if (multiValue != null) {
+                    for (Object value : multiValue) {
+                        strValueList.add(String.valueOf(value));
+                    }
                 }
 
                 if (!strValueList.isEmpty()) {
@@ -593,8 +595,10 @@ public class RangerSearchUtil extends SearchUtil {
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST || (isMultiValue && searchField.getDataType() == SearchField.DATA_TYPE.STRING)) {
                 List<String> strValueList = new ArrayList<>();
 
-                for (Object value : multiValue) {
-                    strValueList.add(String.valueOf(value));
+                if (multiValue != null) {
+                    for (Object value : multiValue) {
+                        strValueList.add(String.valueOf(value));
+                    }
                 }
 
                 if (!strValueList.isEmpty()) {

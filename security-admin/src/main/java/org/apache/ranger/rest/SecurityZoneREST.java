@@ -180,7 +180,7 @@ public class SecurityZoneREST {
         ensureUserAllowOperationOnServiceForZone(securityZone);
         removeEmptyEntries(securityZone);
 
-        if (securityZone.getId() != null && !zoneId.equals(securityZone.getId())) {
+        if (securityZone.getId() != null && !securityZone.getId().equals(zoneId)) {
             throw restErrorUtil.createRESTException("zoneId mismatch!!");
         } else {
             securityZone.setId(zoneId);

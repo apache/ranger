@@ -69,7 +69,8 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
     }
 
     public long getRecentAuthFailureCountByLoginId(String loginId, int timeRangezSecond) {
-        Date authWindowStartTime = new Date(DateUtil.getUTCDate().getTime() - timeRangezSecond * 1000L);
+        Date utcDate             = DateUtil.getUTCDate();
+        Date authWindowStartTime = new Date((utcDate != null ? utcDate.getTime() : System.currentTimeMillis()) - timeRangezSecond * 1000L);
 
         return getEntityManager()
                 .createNamedQuery("XXAuthSession.getRecentAuthFailureCountByLoginId", Long.class)

@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.DecimalFormat;
+import java.util.Date;
 
 /**
  *
@@ -40,7 +41,7 @@ public abstract class BaseLoader {
 
     protected final RangerAdminConfig config;
 
-    long          startTime         = DateUtil.getUTCDate().getTime();
+    long          startTime         = getCurrentTime();
     long          lastTime          = startTime;
     int           countSoFar;
     int           countFromLastTime;
@@ -90,7 +91,7 @@ public abstract class BaseLoader {
     @Transactional(readOnly = false, propagation = Propagation.REQUIRED)
     public void load() {
         if (firstCall) {
-            startTime = DateUtil.getUTCDate().getTime();
+            startTime = getCurrentTime();
 
             startProgressMonitor();
 
@@ -109,7 +110,7 @@ public abstract class BaseLoader {
         }
 
         if (!moreToProcess) {
-            long endTime = DateUtil.getUTCDate().getTime();
+            long endTime = getCurrentTime();
 
             logger.info("###############################################");
 
@@ -157,7 +158,7 @@ public abstract class BaseLoader {
     public String timeTakenSoFar(int lineCount) {
         countSoFar = lineCount;
 
-        long   currTime = DateUtil.getUTCDate().getTime();
+        long   currTime = getCurrentTime();
         String retStr   = formatTimeTaken(currTime - startTime);
 
         if (currTime - startTime > 0 && countSoFar > 0) {
@@ -215,5 +216,11 @@ public abstract class BaseLoader {
         }
 
         return retValue;
+    }
+
+    private static long getCurrentTime() {
+        Date utcDate = DateUtil.getUTCDate();
+
+        return utcDate != null ? utcDate.getTime() : System.currentTimeMillis();
     }
 }

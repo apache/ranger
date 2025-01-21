@@ -678,6 +678,10 @@ public class AuditFileSpool implements Runnable {
                             try {
                                 AuditIndexRecord record = MiscUtil.fromJson(line, AuditIndexRecord.class);
 
+                                if (record == null) {
+                                    continue;
+                                }
+
                                 logFile     = new File(record.getFilePath());
                                 archiveFile = new File(archiveFolder, logFile.getName());
 

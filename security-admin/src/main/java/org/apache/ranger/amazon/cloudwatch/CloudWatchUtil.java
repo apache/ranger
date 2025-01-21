@@ -218,9 +218,15 @@ public class CloudWatchUtil {
         // Add FilterPattern which will only fetch logs required
         FilterLogEventsRequest filterLogEventsRequest = new FilterLogEventsRequest()
                 .withLogGroupName(logGroupName)
-                .withStartTime(fromDate.getTime())
-                .withEndTime(toDate.getTime())
                 .withFilterPattern(filterPattern.toString());
+
+        if (fromDate != null) {
+            filterLogEventsRequest.withStartTime(fromDate.getTime());
+        }
+
+        if (toDate != null) {
+            filterLogEventsRequest.withEndTime(toDate.getTime());
+        }
 
         if (StringUtils.isNotBlank(logStreamPrefix)) {
             filterLogEventsRequest.setLogStreamNamePrefix(logStreamPrefix);

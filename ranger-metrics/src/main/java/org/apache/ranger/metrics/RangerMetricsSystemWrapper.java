@@ -55,12 +55,12 @@ public class RangerMetricsSystemWrapper {
     public void init(String serviceName, List<RangerMetricsSourceWrapper> sourceWrappers, List<RangerMetricsSinkWrapper> sinkWrappers) {
         // Initialize metrics system
         MetricsSystem metricsSystem  = DefaultMetricsSystem.initialize(serviceName);
-        Set<String>   sourceContexts = new HashSet<String>();
+        Set<String>   sourceContexts = new HashSet<>();
         sourceContexts.add(serviceName);
 
         // Ranger Source
         if (Objects.isNull(sourceWrappers) || sourceWrappers.isEmpty()) {
-            sourceWrappers = new ArrayList<RangerMetricsSourceWrapper>();
+            sourceWrappers = new ArrayList<>();
         }
         sourceWrappers.add(new RangerMetricsSourceWrapper("RangerJVM", "Ranger common metric source (RangerMetricsJvmSource)", serviceName, new RangerMetricsJvmSource(serviceName)));
         sourceWrappers.add(new RangerMetricsSourceWrapper("RangerContainer", "Ranger web container metric source (RangerMetricsContainerSource)", serviceName, new RangerMetricsContainerSource(serviceName)));
@@ -72,7 +72,7 @@ public class RangerMetricsSystemWrapper {
 
         // Ranger Sink
         if (Objects.isNull(sinkWrappers) || sinkWrappers.isEmpty()) {
-            sinkWrappers = new ArrayList<RangerMetricsSinkWrapper>();
+            sinkWrappers = new ArrayList<>();
         }
 
         // Prometheus

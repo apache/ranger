@@ -142,7 +142,7 @@ public class KMSMetricUtil {
                             String                     jsonEncKeyByAlgo                = null;
 
                             if (keyProvider != null && keyProvider.getKeys() != null && keyProvider.getKeys().size() > 0) {
-                                List<String> keyList = new ArrayList<String>();
+                                List<String> keyList = new ArrayList<>();
 
                                 keyList.addAll(keyProvider.getKeys());
 

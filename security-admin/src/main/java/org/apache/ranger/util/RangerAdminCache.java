@@ -29,7 +29,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class RangerAdminCache<K, V> extends RangerCache<K, V> {
-    private static final Logger      LOG                                          = LoggerFactory.getLogger(RangerDBValueLoader.class);
+    private static final Logger      LOG                                          = LoggerFactory.getLogger(RangerAdminCache.class);
 
     public static final  int         DEFAULT_ADMIN_CACHE_LOADER_THREADS_COUNT     = 1;
     public static final  RefreshMode DEFAULT_ADMIN_CACHE_REFRESH_MODE             = RefreshMode.ON_ACCESS;
