@@ -17,63 +17,59 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
- *
  *
  */
 public class SearchValue {
     static final Logger logger = LoggerFactory.getLogger(SearchValue.class);
 
     SearchField searchField;
-    Object value = null;
-    List<?> valueList = null;
-    boolean isNull = false;
+    Object      value;
+    List<?>     valueList;
+    boolean     isNull;
 
-   /**
+    /**
      * @return the value
      */
     public Object getValue() {
-	if (value != null) {
-	    return value;
-	}
-	if (valueList.size() == 1) {
-	    return valueList.get(0);
-	}
-	logger.error("getValue() called for null.", new Throwable());
-	return value;
+        if (value != null) {
+            return value;
+        }
+
+        if (valueList.size() == 1) {
+            return valueList.get(0);
+        }
+
+        logger.error("getValue() called for null.", new Throwable());
+
+        return value;
     }
-
-
 
     /**
      * @return the valueList
      */
     public List<?> getValueList() {
-	return valueList;
+        return valueList;
     }
 
     /**
      * @return the searchField
      */
     public SearchField getSearchField() {
-	return searchField;
+        return searchField;
     }
-
-
-
 
     public boolean isList() {
-	return valueList != null && valueList.size() > 1;
+        return valueList != null && valueList.size() > 1;
     }
-
 }

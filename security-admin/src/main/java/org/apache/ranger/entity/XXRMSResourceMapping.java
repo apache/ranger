@@ -29,68 +29,76 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+
 import java.io.Serializable;
 import java.util.Date;
 
 @Entity
 @Cacheable(false)
-@Table(name="x_rms_resource_mapping")
+@Table(name = "x_rms_resource_mapping")
 public class XXRMSResourceMapping implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name="X_RMS_RESOURCE_MAPPING_SEQ",sequenceName="X_RMS_RESOURCE_MAPPING_SEQ",allocationSize=1)
-	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_RMS_RESOURCE_MAPPING_SEQ")
-	@Column(name="id")
-	protected Long id;
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Id
+    @SequenceGenerator(name = "X_RMS_RESOURCE_MAPPING_SEQ", sequenceName = "X_RMS_RESOURCE_MAPPING_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RMS_RESOURCE_MAPPING_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="change_timestamp")
-	protected Date changeTimestamp;
-	public Date getChangeTimestamp() {
-		return changeTimestamp;
-	}
-	public void setChangeTimestamp(Date changeTimestamp) {
-		this.changeTimestamp = changeTimestamp;
-	}
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "change_timestamp")
+    protected Date changeTimestamp;
 
-	@Column(name="hl_resource_id")
-	protected Long hlResourceId;
-	public Long getHlResourceId() {
-		return hlResourceId;
-	}
-	public void setHlResourceId(Long hlResourceId) {
-		this.hlResourceId = hlResourceId;
-	}
+    @Column(name = "hl_resource_id")
+    protected Long hlResourceId;
 
-	@Column(name="ll_resource_id")
-	protected Long llResourceId;
-	public Long getLlResourceId() {
-		return llResourceId;
-	}
-	public void setLlResourceId(Long llResourceId) {
-		this.llResourceId = llResourceId;
-	}
+    @Column(name = "ll_resource_id")
+    protected Long llResourceId;
 
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_RMS_RESOURCE_MAPPING;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String toString( ) {
-		String str = "XXResourceMapping={";
-		str += "id={" + id + "} ";
-		str += "changeTimestamp={" + changeTimestamp + "} ";
-		str += "hlResourceId={" + hlResourceId + "} ";
-		str += "llResourceId={" + llResourceId + "} ";
-		str += "}";
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-		return str;
-	}
+    public Date getChangeTimestamp() {
+        return changeTimestamp;
+    }
 
+    public void setChangeTimestamp(Date changeTimestamp) {
+        this.changeTimestamp = changeTimestamp;
+    }
+
+    public Long getHlResourceId() {
+        return hlResourceId;
+    }
+
+    public void setHlResourceId(Long hlResourceId) {
+        this.hlResourceId = hlResourceId;
+    }
+
+    public Long getLlResourceId() {
+        return llResourceId;
+    }
+
+    public void setLlResourceId(Long llResourceId) {
+        this.llResourceId = llResourceId;
+    }
+
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_RMS_RESOURCE_MAPPING;
+    }
+
+    public String toString() {
+        String str = "XXResourceMapping={";
+        str += "id={" + id + "} ";
+        str += "changeTimestamp={" + changeTimestamp + "} ";
+        str += "hlResourceId={" + hlResourceId + "} ";
+        str += "llResourceId={" + llResourceId + "} ";
+        str += "}";
+
+        return str;
+    }
 }

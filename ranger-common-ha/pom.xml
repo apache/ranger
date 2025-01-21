@@ -29,8 +29,6 @@
     <name>Ranger HA Common Library</name>
     <description>Ranger HA Common Library</description>
     <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

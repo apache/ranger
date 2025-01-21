@@ -19,30 +19,28 @@
 
 package org.apache.ranger.security.listener;
 
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionEvent;
 import javax.servlet.http.HttpSessionListener;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class RangerHttpSessionListener implements HttpSessionListener {
+    private static final CopyOnWriteArrayList<HttpSession> listOfSession = new CopyOnWriteArrayList<>();
 
-	private static CopyOnWriteArrayList<HttpSession> listOfSession = new CopyOnWriteArrayList<HttpSession>();
+    public static CopyOnWriteArrayList<HttpSession> getActiveSessionOnServer() {
+        return listOfSession;
+    }
 
-	@Override
-	public void sessionCreated(HttpSessionEvent event) {
-		listOfSession.add(event.getSession());
-	}
+    @Override
+    public void sessionCreated(HttpSessionEvent event) {
+        listOfSession.add(event.getSession());
+    }
 
-	@Override
-	public void sessionDestroyed(HttpSessionEvent event) {
-		if (!listOfSession.isEmpty()) {
-			listOfSession.remove(event.getSession());
-		}
-	}
-
-	public static CopyOnWriteArrayList<HttpSession> getActiveSessionOnServer() {
-		return listOfSession;
-	}
-
+    @Override
+    public void sessionDestroyed(HttpSessionEvent event) {
+        if (!listOfSession.isEmpty()) {
+            listOfSession.remove(event.getSession());
+        }
+    }
 }

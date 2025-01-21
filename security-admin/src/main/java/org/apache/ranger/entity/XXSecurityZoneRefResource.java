@@ -19,7 +19,6 @@
 
 package org.apache.ranger.entity;
 
-import java.util.Objects;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,56 +28,43 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_resource")
-public class XXSecurityZoneRefResource extends XXDBBase implements java.io.Serializable{
-	private static final long serialVersionUID = 1L;
-  	@Id
+public class XXSecurityZoneRefResource extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
     @SequenceGenerator(name = "x_sec_zone_ref_resource_SEQ", sequenceName = "x_sec_zone_ref_resource_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_resource_SEQ")
     @Column(name = "id")
     protected Long id;
 
-  	/**
-	 * zoneId of the XXSecurityZoneRefResource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "zone_id")
-	protected Long zoneId;
+    /**
+     * zoneId of the XXSecurityZoneRefResource
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "zone_id")
+    protected Long zoneId;
 
-  	/**
-	 * resourceDefId of the XXSecurityZoneRefResource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "resource_def_id")
-	protected Long resourceDefId;
+    /**
+     * resourceDefId of the XXSecurityZoneRefResource
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "resource_def_id")
+    protected Long resourceDefId;
 
-	/**
-	 * resourceName of the XXSecurityZoneRefResource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "resource_name")
-	protected String resourceName;
-
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-
-    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
+    /**
+     * resourceName of the XXSecurityZoneRefResource
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "resource_name")
+    protected String resourceName;
 
     @Override
     public Long getId() {
@@ -86,100 +72,105 @@ public class XXSecurityZoneRefResource extends XXDBBase implements java.io.Seria
     }
 
     /**
-	 * This method sets the value to the member attribute <b> zoneId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param zoneId
-	 *            Value to set member attribute <b> zoneId</b>
-	 */
-	public void setZoneId(Long zoneId) {
-		this.zoneId = zoneId;
-	}
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
 
-	/**
-	 * Returns the value for the member attribute <b>zoneId</b>
-	 *
-	 * @return Date - value of member attribute <b>zoneId</b> .
-	 */
-	public Long getZoneId() {
-		return this.zoneId;
-	}
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> resourceDefId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param resourceDefId
-	 *            Value to set member attribute <b> resourceDefId</b>
-	 */
-	public void setResourceDefId(Long resourceDefId) {
-		this.resourceDefId = resourceDefId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, zoneId, resourceDefId, resourceName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>resourceDefId</b>
-	 *
-	 * @return Date - value of member attribute <b>resourceDefId</b> .
-	 */
-	public Long getResourceDefId() {
-		return resourceDefId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * This method sets the value to the member attribute <b> resourceName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param resourceName
-	 *            Value to set member attribute <b> resourceName</b>
-	 */
-	public void setResourceName(String resourceName) {
-		this.resourceName = resourceName;
-	}
+        XXSecurityZoneRefResource other = (XXSecurityZoneRefResource) obj;
 
-	/**
-	 * Returns the value for the member attribute <b>resourceName</b>
-	 *
-	 * @return Date - value of member attribute <b>resourceName</b> .
-	 */
-	public String getResourceName() {
-		return resourceName;
-	}
+        return Objects.equals(id, other.id) &&
+                Objects.equals(zoneId, other.zoneId) &&
+                Objects.equals(resourceDefId, other.resourceDefId) &&
+                Objects.equals(resourceName, other.resourceName);
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, zoneId, resourceDefId, resourceName);
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXSecurityZoneRefResource [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", resourceDefId=" + resourceDefId + ", resourceName=" + resourceName + "]";
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * Returns the value for the member attribute <b>zoneId</b>
+     *
+     * @return Date - value of member attribute <b>zoneId</b> .
+     */
+    public Long getZoneId() {
+        return this.zoneId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * This method sets the value to the member attribute <b> zoneId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param zoneId Value to set member attribute <b> zoneId</b>
+     */
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
+    }
 
-		XXSecurityZoneRefResource other = (XXSecurityZoneRefResource) obj;
+    /**
+     * Returns the value for the member attribute <b>resourceDefId</b>
+     *
+     * @return Date - value of member attribute <b>resourceDefId</b> .
+     */
+    public Long getResourceDefId() {
+        return resourceDefId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(zoneId, other.zoneId) &&
-			   Objects.equals(resourceDefId, other.resourceDefId) &&
-			   Objects.equals(resourceName, other.resourceName);
-	}
+    /**
+     * This method sets the value to the member attribute <b> resourceDefId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param resourceDefId Value to set member attribute <b> resourceDefId</b>
+     */
+    public void setResourceDefId(Long resourceDefId) {
+        this.resourceDefId = resourceDefId;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXSecurityZoneRefResource [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", resourceDefId="
-				+ resourceDefId + ", resourceName=" + resourceName +  "]";
-	}
+    /**
+     * Returns the value for the member attribute <b>resourceName</b>
+     *
+     * @return Date - value of member attribute <b>resourceName</b> .
+     */
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> resourceName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param resourceName Value to set member attribute <b> resourceName</b>
+     */
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
 }

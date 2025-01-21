@@ -42,13 +42,13 @@
         <atlas.jackson.databind.version>2.11.3</atlas.jackson.databind.version>
         <atlas.jackson.version>2.11.3</atlas.jackson.version>
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
-        <atlas.version>2.2.0</atlas.version>
+        <atlas.version>2.4.0</atlas.version>
         <aws-java-sdk.version>1.12.765</aws-java-sdk.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <cglib.version>2.2.0-b23</cglib.version>
-        <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
+        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
-        <checkstyle.skip>true</checkstyle.skip>
+        <checkstyle.skip>false</checkstyle.skip>
         <checkstyle.version>8.29</checkstyle.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
         <com.microsoft.azure.adal4j.version>1.6.4</com.microsoft.azure.adal4j.version>
@@ -86,14 +86,14 @@
         <distMgmtStagingId>apache.staging.https</distMgmtStagingId>
         <distMgmtStagingName>Apache Release Distribution Repository</distMgmtStagingName>
         <distMgmtStagingUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtStagingUrl>
-        <dnsjava.version>2.1.7</dnsjava.version>
+        <dnsjava.version>3.6.2</dnsjava.version>
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.13.2</enunciate.version>
         <fasterxml.jackson.databind.version>2.17.2</fasterxml.jackson.databind.version>
         <fasterxml.jackson.version>2.17.2</fasterxml.jackson.version>
         <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
-        <gcp.protobuf-java.version>3.19.6</gcp.protobuf-java.version>
+        <gcp.protobuf-java.version>3.25.5</gcp.protobuf-java.version>
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
@@ -172,7 +172,7 @@
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <netty-all.version>4.1.116.Final</netty-all.version>
-        <nimbus-jose-jwt.version>9.31</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>10.0.1</nimbus-jose-jwt.version>
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.6.7</orc.core.version>
         <orc.version>1.5.8</orc.version>
@@ -190,7 +190,7 @@
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
         <presto.version>333</presto.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protobuf-java.version>3.19.6</protobuf-java.version>
+        <protobuf-java.version>3.25.5</protobuf-java.version>
         <ratis-thirdparty.version>0.7.0</ratis-thirdparty.version>
         <ratis.version>2.1.0</ratis.version>
         <reload4j.version>1.2.19</reload4j.version>
@@ -207,7 +207,7 @@
         <sonar.language>java</sonar.language>
         <spotbugs.failOnViolation>false</spotbugs.failOnViolation>
         <spotbugs.plugin.version>4.7.3.5</spotbugs.plugin.version>
-        <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
+        <spring-ldap-core.version>2.4.4</spring-ldap-core.version>
         <springframework.security.version>5.7.12</springframework.security.version>
         <springframework.test.version>5.3.39</springframework.test.version>
         <springframework.version>5.3.39</springframework.version>
@@ -625,6 +625,8 @@
                         <exclude>**/default_secondary_config.json</exclude>
                         <exclude>**/babel.config.json</exclude>
                         <exclude>**/react-webapp/src/images/**</exclude>
+                        <exclude>**/react-webapp/.prettierrc</exclude>
+                        <exclude>**/react-webapp/.prettierignore</exclude>
                         <exclude>**/docs/src/site/resources/css/custom.css</exclude>
                         <exclude>**/docs/src/site/resources/ranger-logo.svg</exclude>
                         <exclude>**/docs/src/site/resources/override-banner.js</exclude>

@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,111 +37,111 @@ import java.util.Set;
 
 @Service
 public class XXGdsDataShareInDatasetDao extends BaseDao<XXGdsDataShareInDataset> {
-	private static final Logger LOG = LoggerFactory.getLogger(XXGdsDataShareInDatasetDao.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XXGdsDataShareInDatasetDao.class);
 
-	public XXGdsDataShareInDatasetDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXGdsDataShareInDatasetDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXGdsDataShareInDataset findByGuid(String guid) {
-		XXGdsDataShareInDataset ret = null;
+    public XXGdsDataShareInDataset findByGuid(String guid) {
+        XXGdsDataShareInDataset ret = null;
 
-		if (StringUtils.isNotBlank(guid)) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByGuid", tClass)
-						                .setParameter("guid", guid).getSingleResult();
-			} catch (NoResultException e) {
-				LOG.debug("findByGuid({}): ", guid, e);
-			}
-		}
+        if (StringUtils.isNotBlank(guid)) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByGuid", tClass)
+                        .setParameter("guid", guid).getSingleResult();
+            } catch (NoResultException e) {
+                LOG.debug("findByGuid({}): ", guid, e);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public XXGdsDataShareInDataset findByDataShareIdAndDatasetId(Long dataShareId, Long datasetId) {
-		XXGdsDataShareInDataset ret = null;
+    public XXGdsDataShareInDataset findByDataShareIdAndDatasetId(Long dataShareId, Long datasetId) {
+        XXGdsDataShareInDataset ret = null;
 
-		if (dataShareId != null && datasetId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByDataShareIdAndDatasetId", tClass)
-										.setParameter("dataShareId", dataShareId)
-										.setParameter("datasetId", datasetId).getSingleResult();
-			} catch (NoResultException e) {
-				LOG.debug("findByDataShareIdAndDatasetId({}): ", dataShareId, e);
-			}
-		}
+        if (dataShareId != null && datasetId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByDataShareIdAndDatasetId", tClass)
+                        .setParameter("dataShareId", dataShareId)
+                        .setParameter("datasetId", datasetId).getSingleResult();
+            } catch (NoResultException e) {
+                LOG.debug("findByDataShareIdAndDatasetId({}): ", dataShareId, e);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<XXGdsDataShareInDataset> findByDataShareId(Long dataShareId) {
-		List<XXGdsDataShareInDataset> ret = null;
+    public List<XXGdsDataShareInDataset> findByDataShareId(Long dataShareId) {
+        List<XXGdsDataShareInDataset> ret = null;
 
-		if (dataShareId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByDataShareId", tClass)
-						                .setParameter("dataShareId", dataShareId).getResultList();
-			} catch (NoResultException e) {
-				LOG.debug("findByDataShareId({}): ", dataShareId, e);
-			}
-		}
+        if (dataShareId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByDataShareId", tClass)
+                        .setParameter("dataShareId", dataShareId).getResultList();
+            } catch (NoResultException e) {
+                LOG.debug("findByDataShareId({}): ", dataShareId, e);
+            }
+        }
 
-		return ret != null ? ret : Collections.emptyList();
-	}
+        return ret != null ? ret : Collections.emptyList();
+    }
 
-	public List<XXGdsDataShareInDataset> findByDatasetId(Long datasetId) {
-		List<XXGdsDataShareInDataset> ret = null;
+    public List<XXGdsDataShareInDataset> findByDatasetId(Long datasetId) {
+        List<XXGdsDataShareInDataset> ret = null;
 
-		if (datasetId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByDatasetId", tClass)
-						                .setParameter("datasetId", datasetId).getResultList();
-			} catch (NoResultException e) {
-				LOG.debug("findByDatasetId({}): ", datasetId, e);
-			}
-		}
+        if (datasetId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findByDatasetId", tClass)
+                        .setParameter("datasetId", datasetId).getResultList();
+            } catch (NoResultException e) {
+                LOG.debug("findByDatasetId({}): ", datasetId, e);
+            }
+        }
 
-		return ret != null ? ret : Collections.emptyList();
-	}
+        return ret != null ? ret : Collections.emptyList();
+    }
 
-	public Map<Short, Long> getDataSharesInDatasetCountByStatus(Long datasetId) {
-		Map<Short, Long> ret = Collections.emptyMap();
+    public Map<Short, Long> getDataSharesInDatasetCountByStatus(Long datasetId) {
+        Map<Short, Long> ret = Collections.emptyMap();
 
-		if (datasetId != null) {
-			try {
-				List<Object[]> rows = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.getDataSharesInDatasetCountByStatus", Object[].class)
-				                                        .setParameter("datasetId", datasetId).getResultList();
-				if (rows != null) {
-					ret = new HashMap<>();
+        if (datasetId != null) {
+            try {
+                List<Object[]> rows = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.getDataSharesInDatasetCountByStatus", Object[].class)
+                        .setParameter("datasetId", datasetId).getResultList();
+                if (rows != null) {
+                    ret = new HashMap<>();
 
-					for (Object[] row : rows) {
-						if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
-							ret.put((Short) row[0], (Long) row[1]);
-						}
-					}
-				}
-			} catch (NoResultException e) {
-				LOG.debug("getDataSharesInDatasetCountByStatus({}): ", datasetId, e);
-			}
-		}
+                    for (Object[] row : rows) {
+                        if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
+                            ret.put((Short) row[0], (Long) row[1]);
+                        }
+                    }
+                }
+            } catch (NoResultException e) {
+                LOG.debug("getDataSharesInDatasetCountByStatus({}): ", datasetId, e);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<Long> findDataShareIdsInStatuses(Long datasetId, Set<Integer> statuses) {
-		List<Long> ret = null;
+    public List<Long> findDataShareIdsInStatuses(Long datasetId, Set<Integer> statuses) {
+        List<Long> ret = null;
 
-		if (datasetId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findDataShareIdsInStatuses", Long.class)
-				                        .setParameter("datasetId", datasetId)
-				                        .setParameter("statuses", statuses)
-				                        .getResultList();
-			} catch (NoResultException e) {
-				LOG.debug("XXGdsDataShareInDataset({}, {}): ", datasetId, statuses, e);
-			}
-		}
+        if (datasetId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDataShareInDataset.findDataShareIdsInStatuses", Long.class)
+                        .setParameter("datasetId", datasetId)
+                        .setParameter("statuses", statuses)
+                        .getResultList();
+            } catch (NoResultException e) {
+                LOG.debug("XXGdsDataShareInDataset({}, {}): ", datasetId, statuses, e);
+            }
+        }
 
-		return ret != null ? ret : Collections.emptyList();
-	}
+        return ret != null ? ret : Collections.emptyList();
+    }
 }

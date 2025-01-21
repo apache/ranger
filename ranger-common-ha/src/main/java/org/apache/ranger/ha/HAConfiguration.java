@@ -38,8 +38,8 @@ public class HAConfiguration {
     private static final String RANGER_SERVER_HA_PREFIX                    = ".server.ha.";
     public  static final  String RANGER_SERVER_HA_ADDRESS_PREFIX            = RANGER_SERVER_HA_PREFIX + "address.";
     public  static final  String RANGER_SERVER_HA_IDS                       = RANGER_SERVER_HA_PREFIX + "ids";
-    public  static final  String RANGER_HA_SERVICE_HTTPS_PORT               = RANGER_SERVER_HA_PREFIX + "https.port";
-    public  static final  String RANGER_HA_SERVICE_HTTP_PORT                = RANGER_SERVER_HA_PREFIX + "http.port";
+    public  static final  String RANGER_HA_SERVICE_HTTPS_PORT               = ".service.https.port";
+    public  static final  String RANGER_HA_SERVICE_HTTP_PORT                = ".service.http.port";
     public  static final  String RANGER_SERVICE_SSL_ENABLED                 = RANGER_SERVER_HA_PREFIX + "ssl.enabled";
     private static final String ZOOKEEPER_PREFIX                           = "zookeeper.";
     private static final String RANGER_SERVER_HA_ZK_ROOT_KEY               = RANGER_SERVER_HA_PREFIX + ZOOKEEPER_PREFIX + "zkroot";

@@ -18,172 +18,166 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_access_type")
-public class XXPolicyRefAccessType extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyRefAccessType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_ref_access_type_SEQ", sequenceName = "x_policy_ref_access_type_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_access_type_SEQ")
-	@Column(name = "id")
-	protected Long id;
+public class XXPolicyRefAccessType extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * policyId of the XXPolicyRefAccessType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_id")
-	protected Long policyId;
+    /**
+     * id of the XXPolicyRefAccessType
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_ref_access_type_SEQ", sequenceName = "x_policy_ref_access_type_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_access_type_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * accessDefId of the XXPolicyRefAccessType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "access_def_id")
-	protected Long accessDefId;
+    /**
+     * policyId of the XXPolicyRefAccessType
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_id")
+    protected Long policyId;
 
-	/**
-	 * accessTypeName of the XXPolicyRefAccessType
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "access_type_name")
-	protected String accessTypeName;
+    /**
+     * accessDefId of the XXPolicyRefAccessType
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "access_def_id")
+    protected Long accessDefId;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * accessTypeName of the XXPolicyRefAccessType
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "access_type_name")
+    protected String accessTypeName;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyId
-	 *            Value to set member attribute <b> policyId</b>
-	 */
-	public void setPolicyId(Long policyId) {
-		this.policyId = policyId;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyId</b> .
-	 */
-	public Long getPolicyId() {
-		return this.policyId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, policyId, accessDefId, accessTypeName);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> accessDefId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param accessDefId
-	 *            Value to set member attribute <b> accessDefId</b>
-	 */
-	public void setAccessDefId(Long accessDefId) {
-		this.accessDefId = accessDefId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>accessDefId</b>
-	 *
-	 * @return Date - value of member attribute <b>accessDefId</b> .
-	 */
-	public Long getAccessDefId() {
-		return accessDefId;
-	}
+        XXPolicyRefAccessType other = (XXPolicyRefAccessType) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> accessTypeName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param accessTypeName
-	 *            Value to set member attribute <b> accessTypeName</b>
-	 */
-	public void setAccessTypeName(String accessTypeName) {
-		this.accessTypeName = accessTypeName;
-	}
+        return super.equals(obj) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(accessDefId, other.accessDefId) &&
+                Objects.equals(accessTypeName, other.accessTypeName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>accessTypeName</b>
-	 *
-	 * @return Date - value of member attribute <b>accessTypeName</b> .
-	 */
-	public String getAccessTypeName() {
-		return accessTypeName;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyRefAccessType [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", accessDefId=" + accessDefId + ", accessTypeName=" + accessTypeName + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, policyId, accessDefId, accessTypeName);
-	}
+    /**
+     * Returns the value for the member attribute <b>policyId</b>
+     *
+     * @return Date - value of member attribute <b>policyId</b> .
+     */
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * This method sets the value to the member attribute <b> policyId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyId Value to set member attribute <b> policyId</b>
+     */
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * Returns the value for the member attribute <b>accessDefId</b>
+     *
+     * @return Date - value of member attribute <b>accessDefId</b> .
+     */
+    public Long getAccessDefId() {
+        return accessDefId;
+    }
 
-		XXPolicyRefAccessType other = (XXPolicyRefAccessType) obj;
+    /**
+     * This method sets the value to the member attribute <b> accessDefId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param accessDefId Value to set member attribute <b> accessDefId</b>
+     */
+    public void setAccessDefId(Long accessDefId) {
+        this.accessDefId = accessDefId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(policyId, other.policyId) &&
-			   Objects.equals(accessDefId, other.accessDefId) &&
-			   Objects.equals(accessTypeName, other.accessTypeName);
-	}
+    /**
+     * Returns the value for the member attribute <b>accessTypeName</b>
+     *
+     * @return Date - value of member attribute <b>accessTypeName</b> .
+     */
+    public String getAccessTypeName() {
+        return accessTypeName;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyRefAccessType [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", accessDefId="
-				+ accessDefId + ", accessTypeName=" + accessTypeName +  "]";
-	}
-
-
-
+    /**
+     * This method sets the value to the member attribute <b> accessTypeName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param accessTypeName Value to set member attribute <b> accessTypeName</b>
+     */
+    public void setAccessTypeName(String accessTypeName) {
+        this.accessTypeName = accessTypeName;
+    }
 }

@@ -19,12 +19,12 @@
 
 package org.apache.ranger.entity;
 
-import java.util.Date;
-import java.util.Objects;
+import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
 
 import javax.persistence.Cacheable;
-import javax.persistence.Entity;
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,10 +34,10 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.DateUtil;
+import java.util.Date;
+import java.util.Objects;
 
-@EntityListeners( org.apache.ranger.common.db.JPABeanCallbacks.class)
+@EntityListeners(org.apache.ranger.common.db.JPABeanCallbacks.class)
 @Entity
 @Cacheable
 @Table(name = "x_tag_change_log")
@@ -51,7 +51,7 @@ public class XXTagChangeLog implements java.io.Serializable {
     protected Long id;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="create_time"   )
+    @Column(name = "create_time")
     protected Date createTime = DateUtil.getUTCDate();
 
     @Column(name = "service_id")
@@ -72,11 +72,11 @@ public class XXTagChangeLog implements java.io.Serializable {
     /**
      * Default constructor. This will set all the attributes to default value.
      */
-    public XXTagChangeLog( ) {
+    public XXTagChangeLog() {
         this(null, null, null, null, null, null, null);
     }
 
-    public XXTagChangeLog(Long id, Integer changeType, Long serviceTagsVersion, Long serviceResourceId,  Long tagId) {
+    public XXTagChangeLog(Long id, Integer changeType, Long serviceTagsVersion, Long serviceResourceId, Long tagId) {
         this(id, null, null, changeType, serviceTagsVersion, serviceResourceId, tagId);
     }
 
@@ -90,7 +90,7 @@ public class XXTagChangeLog implements java.io.Serializable {
         setTagId(tagId);
     }
 
-    public int getMyClassType( ) {
+    public int getMyClassType() {
         return AppConstants.CLASS_TYPE_NONE;
     }
 
@@ -98,60 +98,94 @@ public class XXTagChangeLog implements java.io.Serializable {
         return null;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Long getId() {
         return this.id;
     }
 
-    public void setCreateTime( Date createTime ) {
-        this.createTime = createTime;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public Date getCreateTime( ) {
+    public Date getCreateTime() {
         return this.createTime;
     }
 
-    public void setServiceId(Long serviceId) {
-        this.serviceId = serviceId;
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 
     public Long getServiceId() {
         return this.serviceId;
     }
 
-    public void setChangeType(Integer changeType) { this.changeType = changeType; }
+    public void setServiceId(Long serviceId) {
+        this.serviceId = serviceId;
+    }
 
-    public Integer getChangeType() { return this.changeType; }
+    public Integer getChangeType() {
+        return this.changeType;
+    }
 
-    public void setServiceTagsVersion(Long serviceTagsVersion) {
-        this.serviceTagsVersion = serviceTagsVersion;
+    public void setChangeType(Integer changeType) {
+        this.changeType = changeType;
     }
 
     public Long getServiceTagsVersion() {
         return this.serviceTagsVersion;
     }
 
-    public Long getServiceResourceId() { return this.serviceResourceId; }
+    public void setServiceTagsVersion(Long serviceTagsVersion) {
+        this.serviceTagsVersion = serviceTagsVersion;
+    }
+
+    public Long getServiceResourceId() {
+        return this.serviceResourceId;
+    }
 
     public void setServiceResourceId(Long serviceResourceId) {
         this.serviceResourceId = serviceResourceId;
     }
 
-    public Long getTagId() { return this.tagId; }
+    public Long getTagId() {
+        return this.tagId;
+    }
 
     public void setTagId(Long tagId) {
         this.tagId = tagId;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        XXTagChangeLog other = (XXTagChangeLog) obj;
+
+        return Objects.equals(this.id, other.id) && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceTagsVersion, other.serviceTagsVersion) && Objects.equals(this.serviceResourceId, other.serviceResourceId) && Objects.equals(this.tagId, other.tagId);
+    }
+
     /**
      * This return the bean content in string format
+     *
      * @return formatedStr
      */
     @Override
-    public String toString( ) {
+    public String toString() {
         String str = "XXTagChangeLog={";
         str += "id={" + id + "} ";
         str += "createTime={" + createTime + "} ";
@@ -163,29 +197,4 @@ public class XXTagChangeLog implements java.io.Serializable {
         str += "}";
         return str;
     }
-
-    /**
-     * Checks for all attributes except referenced db objects
-     * @return true if all attributes match
-     */
-    @Override
-    public boolean equals( Object obj) {
-        if (obj == null)
-            return false;
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-
-        XXTagChangeLog other = (XXTagChangeLog) obj;
-
-        return Objects.equals(this.id, other.id) && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.serviceId, other.serviceId)
-                && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceTagsVersion, other.serviceTagsVersion)
-                && Objects.equals(this.serviceResourceId, other.serviceResourceId) && Objects.equals(this.tagId, other.tagId);
-    }
-
 }
-
-

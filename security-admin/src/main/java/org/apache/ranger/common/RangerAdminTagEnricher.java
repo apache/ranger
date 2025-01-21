@@ -23,7 +23,6 @@ import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
-
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -36,16 +35,16 @@ import org.slf4j.LoggerFactory;
 public class RangerAdminTagEnricher extends RangerTagEnricher {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAdminTagEnricher.class);
 
-    private static TagStore         tagStore   = null;
-    private static RangerDaoManager daoManager = null;
+    private static TagStore         tagStore;
+    private static RangerDaoManager daoManager;
 
-    private static boolean ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS_INITIALIZED = false;
+    private static boolean ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS_INITIALIZED;
     private static boolean ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS;
 
     private Long serviceId;
 
     public static void setTagStore(TagStore tagStore) {
-        RangerAdminTagEnricher.tagStore   = tagStore;
+        RangerAdminTagEnricher.tagStore = tagStore;
     }
 
     public static void setDaoManager(RangerDaoManager daoManager) {
@@ -54,9 +53,8 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
 
     @Override
     public void init() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminTagEnricher.init()");
-        }
+        LOG.debug("==> RangerAdminTagEnricher.init()");
+
         super.init();
 
         if (!ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS_INITIALIZED) {
@@ -73,92 +71,83 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
             LOG.error("ServiceDBStore/TagDBStore is not initialized!! Internal Error!");
         } else {
             super.init();
+
             try {
                 RangerService service = svcStore.getServiceByName(serviceName);
+
                 serviceId = service.getId();
+
                 createLock();
             } catch (Exception e) {
-                LOG.error("Cannot find service with name:[" + serviceName + "]", e);
+                LOG.error("Cannot find service with name:[{}]", serviceName, e);
                 LOG.error("This will cause tag-enricher in Ranger-Admin to fail!!");
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminTagEnricher.init()");
-        }
+
+        LOG.debug("<== RangerAdminTagEnricher.init()");
+    }
+
+    @Override
+    public void enrich(RangerAccessRequest request) {
+        LOG.debug("==> RangerAdminTagEnricher.enrich({})", request);
+
+        refreshTagsIfNeeded();
+        super.enrich(request);
+
+        LOG.debug("<== RangerAdminTagEnricher.enrich({})", request);
     }
 
     @Override
     protected RangerReadWriteLock createLock() {
         boolean useReadWriteLock = tagStore != null && tagStore.isInPlaceTagUpdateSupported();
 
-        LOG.info("Policy-Engine will" + (useReadWriteLock ? " " : " not ") + "use read-write locking to update tags in place when tag-deltas are provided");
+        LOG.info("Policy-Engine will{}use read-write locking to update tags in place when tag-deltas are provided", useReadWriteLock ? " " : " not ");
 
         return new RangerReadWriteLock(useReadWriteLock);
     }
 
     @Override
-    public void enrich(RangerAccessRequest request) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminTagEnricher.enrich(" + request + ")");
-        }
-
-        refreshTagsIfNeeded();
-        super.enrich(request);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminTagEnricher.enrich(" + request + ")");
-        }
+    public String toString() {
+        return "RangerAdminTagEnricher={serviceName=" + serviceName + ", " + "serviceId=" + serviceId + "}";
     }
 
     private void refreshTagsIfNeeded() {
-
-        final Long        enrichedServiceTagsVersion = getServiceTagsVersion();
-        final Long        resourceTrieVersion        = getResourceTrieVersion();
-        ServiceTags       serviceTags                = null;
+        final Long  enrichedServiceTagsVersion = getServiceTagsVersion();
+        final Long  resourceTrieVersion        = getResourceTrieVersion();
+        ServiceTags serviceTags                = null;
 
         try {
-
-            boolean needsBackwardCompatibility = !ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS || enrichedServiceTagsVersion == -1L;
-
-            XXServiceVersionInfo serviceVersionInfoDbObj = daoManager.getXXServiceVersionInfo().findByServiceName(serviceName);
+            boolean              needsBackwardCompatibility = !ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS || enrichedServiceTagsVersion == -1L;
+            XXServiceVersionInfo serviceVersionInfoDbObj    = daoManager.getXXServiceVersionInfo().findByServiceName(serviceName);
 
             if (serviceVersionInfoDbObj == null) {
-                LOG.warn("serviceVersionInfo does not exist. name=" + serviceName);
+                LOG.warn("serviceVersionInfo does not exist. name={}", serviceName);
             }
 
             if (serviceVersionInfoDbObj == null || serviceVersionInfoDbObj.getTagVersion() == null || !enrichedServiceTagsVersion.equals(serviceVersionInfoDbObj.getTagVersion())) {
                 serviceTags = RangerServiceTagsCache.getInstance().getServiceTags(serviceName, serviceId, enrichedServiceTagsVersion, needsBackwardCompatibility, tagStore);
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Have the latest tag version already. Only need to check if it needs to be rebuilt");
-                }
+                LOG.debug("Have the latest tag version already. Only need to check if it needs to be rebuilt");
+
                 if (!enrichedServiceTagsVersion.equals(resourceTrieVersion)) {
                     serviceTags = RangerServiceTagsCache.getInstance().getServiceTags(serviceName, serviceId, resourceTrieVersion, needsBackwardCompatibility, tagStore);
                 }
             }
-
         } catch (Exception e) {
             LOG.error("Could not get cached service-tags, continue to use old ones..", e);
-            serviceTags = null;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Received serviceTags:[" + serviceTags + "]");
-        }
+        LOG.debug("Received serviceTags:[{}]", serviceTags);
 
         if (serviceTags != null) {
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("enrichedServiceTagsVersion=" + enrichedServiceTagsVersion + ", serviceTags-version=" + serviceTags.getTagVersion());
-            }
+            LOG.debug("enrichedServiceTagsVersion={}, serviceTags-version={}", enrichedServiceTagsVersion, serviceTags.getTagVersion());
 
             if (!enrichedServiceTagsVersion.equals(serviceTags.getTagVersion()) || !resourceTrieVersion.equals(serviceTags.getTagVersion())) {
-
-                synchronized(this) {
-
+                synchronized (this) {
                     if (serviceTags.getIsDelta()) {
                         // Avoid rebuilding service-tags - applyDelta may not work correctly if called twice
                         boolean rebuildOnlyIndex = true;
+
                         setServiceTags(serviceTags, rebuildOnlyIndex);
                     } else {
                         setServiceTags(serviceTags);
@@ -166,13 +155,5 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
                 }
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("RangerAdminTagEnricher={serviceName=").append(serviceName).append(", ");
-        sb.append("serviceId=").append(serviceId).append("}");
-        return sb.toString();
     }
 }

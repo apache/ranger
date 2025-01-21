@@ -875,8 +875,8 @@ function PolicyListing(props) {
               ${
                 alertMessage[serviceData.type].label
               } ACLs. If this behavior needs to be changed, modify ${
-              alertMessage[serviceData.type].label
-            }
+                alertMessage[serviceData.type].label
+              }
               plugin config - ${
                 alertMessage[serviceData.type].configs
               }-authorization.`}

@@ -17,26 +17,25 @@
 
 package org.apache.ranger.view;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RangerExportPolicyList extends RangerPolicyList implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	
-	Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
+    private static final long serialVersionUID = 1L;
 
-	public Map<String, Object> getMetaDataInfo() {
-		return metaDataInfo;
-	}
+    Map<String, Object> metaDataInfo = new LinkedHashMap<>();
 
-	public void setMetaDataInfo(Map<String, Object> metaDataInfo) {
-		this.metaDataInfo = metaDataInfo;
-	}
+    public Map<String, Object> getMetaDataInfo() {
+        return metaDataInfo;
+    }
 
+    public void setMetaDataInfo(Map<String, Object> metaDataInfo) {
+        this.metaDataInfo = metaDataInfo;
+    }
 }

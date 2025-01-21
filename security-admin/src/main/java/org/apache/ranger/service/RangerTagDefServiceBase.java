@@ -19,9 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RangerConfigUtil;
@@ -33,106 +30,111 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends RangerTagDef> extends
-		RangerBaseModelService<T, V> {
+import java.util.ArrayList;
+import java.util.List;
 
-	@Autowired
-	GUIDUtil guidUtil;
+public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends RangerTagDef> extends RangerBaseModelService<T, V> {
+    @Autowired
+    GUIDUtil guidUtil;
 
-	@Autowired
-	RangerAuditFields<?> rangerAuditFields;
-	
-	@Autowired
-	RangerConfigUtil configUtil;
+    @Autowired
+    RangerAuditFields<?> rangerAuditFields;
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
+    @Autowired
+    RangerConfigUtil configUtil;
 
-		xObj.setGuid(guid);
-		xObj.setVersion(vObj.getVersion());
-		xObj.setIsEnabled(vObj.getIsEnabled());
-		xObj.setName(vObj.getName());
-		xObj.setSource(vObj.getSource());
-		return xObj;
-	}
+    public List<RangerTagAttributeDef> getAttributeDefForTagDef(XXTagDef xtagDef) {
+        List<XXTagAttributeDef>                  tagAttrDefList   = daoMgr.getXXTagAttributeDef().findByTagDefId(xtagDef.getId());
+        List<RangerTagDef.RangerTagAttributeDef> attributeDefList = new ArrayList<>();
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T xObj) {
+        for (XXTagAttributeDef xAttrTag : tagAttrDefList) {
+            RangerTagAttributeDef attrDef = populateRangerTagAttributeDef(xAttrTag);
 
-		vObj.setGuid(xObj.getGuid());
-		vObj.setVersion(xObj.getVersion());
-		vObj.setIsEnabled(xObj.getIsEnabled());
-		vObj.setName(xObj.getName());
-		vObj.setSource(xObj.getSource());
+            attributeDefList.add(attrDef);
+        }
 
-		List<RangerTagAttributeDef> attributeDefs = getAttributeDefForTagDef(xObj);
-		vObj.setAttributeDefs(attributeDefs);
+        return attributeDefList;
+    }
 
-		return vObj;
-	}
+    /**
+     * @param xObj
+     * @return
+     */
+    public RangerTagAttributeDef populateRangerTagAttributeDef(XXTagAttributeDef xObj) {
+        RangerTagAttributeDef attrDef = new RangerTagAttributeDef();
 
-	public List<RangerTagAttributeDef> getAttributeDefForTagDef(XXTagDef xtagDef) {
-		List<XXTagAttributeDef> tagAttrDefList = daoMgr.getXXTagAttributeDef().findByTagDefId(xtagDef.getId());
-		List<RangerTagDef.RangerTagAttributeDef> attributeDefList = new ArrayList<RangerTagDef.RangerTagAttributeDef>();
+        attrDef.setName(xObj.getName());
+        attrDef.setType(xObj.getType());
 
-		for (XXTagAttributeDef xAttrTag : tagAttrDefList) {
-			RangerTagAttributeDef attrDef = populateRangerTagAttributeDef(xAttrTag);
-			attributeDefList.add(attrDef);
-		}
-		return attributeDefList;
-	}
+        return attrDef;
+    }
 
-	/**
-	 * @param xObj
-	 * @return
-	 */
-	public RangerTagAttributeDef populateRangerTagAttributeDef(XXTagAttributeDef xObj) {
-		RangerTagAttributeDef attrDef = new RangerTagAttributeDef();
-		attrDef.setName(xObj.getName());
-		attrDef.setType(xObj.getType());
-		return attrDef;
-	}
+    /**
+     * @param attrDef
+     * @param xTagAttrDef
+     * @param parentObj
+     * @return
+     */
+    public XXTagAttributeDef populateXXTagAttributeDef(RangerTagAttributeDef attrDef, XXTagAttributeDef xTagAttrDef, XXTagDef parentObj) {
+        if (xTagAttrDef == null) {
+            xTagAttrDef = new XXTagAttributeDef();
+        }
 
-	/**
-	 * @param attrDef
-	 * @param xTagAttrDef
-	 * @param parentObj
-	 * @return
-	 */
-	public XXTagAttributeDef populateXXTagAttributeDef(RangerTagAttributeDef attrDef, XXTagAttributeDef xTagAttrDef,
-			XXTagDef parentObj) {
+        xTagAttrDef = rangerAuditFields.populateAuditFields(xTagAttrDef, parentObj);
 
-		if (xTagAttrDef == null) {
-			xTagAttrDef = new XXTagAttributeDef();
-		}
+        xTagAttrDef.setTagDefId(parentObj.getId());
+        xTagAttrDef.setName(attrDef.getName());
+        xTagAttrDef.setType(attrDef.getType());
 
-		xTagAttrDef = rangerAuditFields.populateAuditFields(xTagAttrDef, parentObj);
+        return xTagAttrDef;
+    }
 
-		xTagAttrDef.setTagDefId(parentObj.getId());
-		xTagAttrDef.setName(attrDef.getName());
-		xTagAttrDef.setType(attrDef.getType());
-		return xTagAttrDef;
-	}
+    public PList<V> searchRangerTagDefs(SearchFilter searchFilter) {
+        PList<V> retList    = new PList<>();
+        List<V>  tagDefList = new ArrayList<>();
+        List<T> xTagDefList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-	public PList<V> searchRangerTagDefs(SearchFilter searchFilter) {
-		PList<V> retList = new PList<V>();
-		List<V> tagDefList = new ArrayList<V>();
+        for (T xTagDef : xTagDefList) {
+            V tagDef = populateViewBean(xTagDef);
 
-		List<T> xTagDefList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
+            tagDefList.add(tagDef);
+        }
 
-		for (T xTagDef : xTagDefList) {
-			V tagDef = populateViewBean(xTagDef);
-			tagDefList.add(tagDef);
-		}
+        retList.setList(tagDefList);
+        retList.setResultSize(tagDefList.size());
+        retList.setPageSize(searchFilter.getMaxRows());
+        retList.setStartIndex(searchFilter.getStartIndex());
+        retList.setSortType(searchFilter.getSortType());
+        retList.setSortBy(searchFilter.getSortBy());
 
-		retList.setList(tagDefList);
-		retList.setResultSize(tagDefList.size());
-		retList.setPageSize(searchFilter.getMaxRows());
-		retList.setStartIndex(searchFilter.getStartIndex());
-		retList.setSortType(searchFilter.getSortType());
-		retList.setSortBy(searchFilter.getSortBy());
+        return retList;
+    }
 
-		return retList;
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
+        String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
+
+        xObj.setGuid(guid);
+        xObj.setVersion(vObj.getVersion());
+        xObj.setIsEnabled(vObj.getIsEnabled());
+        xObj.setName(vObj.getName());
+        xObj.setSource(vObj.getSource());
+
+        return xObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T xObj) {
+        vObj.setGuid(xObj.getGuid());
+        vObj.setVersion(xObj.getVersion());
+        vObj.setIsEnabled(xObj.getIsEnabled());
+        vObj.setName(xObj.getName());
+        vObj.setSource(xObj.getSource());
+
+        List<RangerTagAttributeDef> attributeDefs = getAttributeDefForTagDef(xObj);
+
+        vObj.setAttributeDefs(attributeDefs);
+
+        return vObj;
+    }
 }

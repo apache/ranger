@@ -27,10 +27,6 @@
     <packaging>jar</packaging>
     <name>Unix User Group Synchronizer</name>
     <description>User, Group sync from sources such as Unix and LDAP</description>
-    <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>

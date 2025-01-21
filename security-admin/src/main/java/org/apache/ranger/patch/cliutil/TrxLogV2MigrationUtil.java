@@ -16,17 +16,6 @@
  */
 package org.apache.ranger.patch.cliutil;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXTrxLog;
@@ -47,15 +36,22 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
 @Component
 public class TrxLogV2MigrationUtil extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(TrxLogV2MigrationUtil.class);
 
-    private final Stats               stats;
-    private       TransactionTemplate txTemplate;
-    private       Iterator<String>    trxIdIter       = Collections.emptyIterator();
-    private       int                 commitBatchSize = 25;
-
+    private final Stats stats;
 
     @Autowired
     RangerDaoManager daoMgr;
@@ -64,11 +60,16 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
 
+    private TransactionTemplate txTemplate;
+    private Iterator<String>    trxIdIter       = Collections.emptyIterator();
+    private int                 commitBatchSize = 25;
+
+    public TrxLogV2MigrationUtil() {
+        this.stats = new Stats();
+    }
 
     public static void main(String[] args) {
-        if (logger.isDebugEnabled()) {
-            logger.info("TrxLogV2MigrationUtil: main()");
-        }
+        logger.info("TrxLogV2MigrationUtil: main()");
 
         try {
             TrxLogV2MigrationUtil loader = (TrxLogV2MigrationUtil) CLIUtil.getBean(TrxLogV2MigrationUtil.class);
@@ -89,15 +90,16 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
         }
     }
 
-    public TrxLogV2MigrationUtil() {
-        this.stats = new Stats();
-    }
-
     @Override
     public void init() throws Exception {
         txTemplate = new TransactionTemplate(txManager);
 
         txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    }
+
+    @Override
+    public void printStats() {
+        stats.logStats();
     }
 
     @Override
@@ -111,11 +113,6 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
         }
 
         logger.info("<== TrxLogV2MigrationUtil.execLoad(): migration completed. Transaction counts(total: {}, migrated: {}, already-migrated: {}, failed: {})", stats.totalCount, stats.migratedCount, stats.alreadyMigratedCount, stats.failedCount);
-    }
-
-    @Override
-    public void printStats() {
-        stats.logStats();
     }
 
     private void migrateTrxLogs() throws Exception {
@@ -135,10 +132,7 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
             Date startDate = Timestamp.valueOf(LocalDate.now().minusDays(trxRetentionDays).atStartOfDay());
             Date endDate   = Timestamp.valueOf(LocalDate.now().atTime(23, 59, 59, 999999999));
 
-            uniqueTrxIdList = daoMgr.getEntityManager().createNamedQuery("XXTrxLog.findDistinctTrxIdsByTimeInterval", String.class)
-                    .setParameter("startDate", startDate)
-                    .setParameter("endDate", endDate)
-                    .getResultList();
+            uniqueTrxIdList = daoMgr.getEntityManager().createNamedQuery("XXTrxLog.findDistinctTrxIdsByTimeInterval", String.class).setParameter("startDate", startDate).setParameter("endDate", endDate).getResultList();
         }
 
         trxIdIter = uniqueTrxIdList.iterator();
@@ -165,16 +159,12 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
     }
 
     private void migrateTrxLog(String trxId) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> TrxLogV2MigrationUtil.createTransactionLogByTrxId()");
-        }
+        logger.debug("==> TrxLogV2MigrationUtil.createTransactionLogByTrxId()");
 
         List<XXTrxLogV2> trxLogsV2 = daoMgr.getXXTrxLogV2().findByTransactionId(trxId);
 
         if (CollectionUtils.isNotEmpty(trxLogsV2)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("transaction({}): already migrated to v2", trxId);
-            }
+            logger.debug("transaction({}): already migrated to v2", trxId);
 
             stats.incrAlreadyMigratedCount();
         } else {
@@ -191,23 +181,17 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
 
                 createTrxLog(firstTrxLog, objChangeInfo);
 
-                if (logger.isDebugEnabled()) {
-                    logger.debug("transaction({}): migrated {} v1 records", trxId, v1TrxLogs.size());
-                }
+                logger.debug("transaction({}): migrated {} v1 records", trxId, v1TrxLogs.size());
 
                 stats.incrMigratedCount(firstTrxLog.getId(), firstTrxLog.getCreateTime());
             } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("transaction({}): no v1 records found", trxId);
-                }
+                logger.debug("transaction({}): no v1 records found", trxId);
 
                 stats.incrFailedCount();
             }
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== TrxLogV2MigrationUtil.createTransactionLogByTrxId()");
-        }
+        logger.debug("<== TrxLogV2MigrationUtil.createTransactionLogByTrxId()");
     }
 
     private List<XXTrxLog> getV1TrxLogs(String trxId) {
@@ -302,8 +286,7 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
     }
 
     private static XXTrxLogV2 toDBObject(VXTrxLogV2 vObj) {
-        XXTrxLogV2 ret = new XXTrxLogV2(vObj.getObjectClassType(), vObj.getObjectId(), vObj.getObjectName(),
-                                        vObj.getParentObjectClassType(), vObj.getParentObjectId(), vObj.getParentObjectName(), vObj.getAction());
+        XXTrxLogV2 ret = new XXTrxLogV2(vObj.getObjectClassType(), vObj.getObjectId(), vObj.getObjectName(), vObj.getParentObjectClassType(), vObj.getParentObjectId(), vObj.getParentObjectName(), vObj.getAction());
 
         ret.setCreateTime(vObj.getCreateDate());
         ret.setChangeInfo(toJson(vObj.getChangeInfo()));
@@ -333,33 +316,15 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
         return obj instanceof Long ? ((Number) obj).longValue() : 0L;
     }
 
-    class LogMigrationThread extends Thread {
-        @Override
-        public void run() {
-            List<String> trxIds = new ArrayList<>(commitBatchSize);
-
-            for (fetchNextBatch(trxIds); !trxIds.isEmpty(); fetchNextBatch(trxIds)) {
-                txTemplate.execute((TransactionCallback<Void>) status -> {
-                    for (String trxId : trxIds) {
-                        migrateTrxLog(trxId);
-                    }
-
-                    return null;
-                });
-            }
-        }
-    }
-
     public static class Stats {
-        private long                        totalCount;
         private final AtomicLong            migratedCount        = new AtomicLong();
         private final AtomicLong            failedCount          = new AtomicLong();
         private final AtomicLong            alreadyMigratedCount = new AtomicLong();
         private final AtomicLong            processedCount       = new AtomicLong();
         private final AtomicReference<Long> lastTrxId            = new AtomicReference<>();
         private final AtomicReference<Date> lastTrxDate          = new AtomicReference<>();
-
         private final ThreadLocal<SimpleDateFormat> dateFormatter = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy/MM/dd HH:mm:ss Z"));
+        private       long                  totalCount;
 
         public void incrMigratedCount(Long trxId, Date trxDate) {
             migratedCount.incrementAndGet();
@@ -381,19 +346,35 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
             incrProcessedCount();
         }
 
+        public void logStats() {
+            logger.info("PROGRESS: {} of {} transactions processed. Last migrated transaction(id={}, time={}). Counts(migrated: {}, failed: {}, already-migrated: {})", processedCount.get(), totalCount, lastTrxId.get(), toString(lastTrxDate.get()), migratedCount.get(), failedCount.get(), alreadyMigratedCount.get());
+        }
+
         private void incrProcessedCount() {
             if (processedCount.incrementAndGet() % 1000 == 0) {
                 logStats();
             }
         }
 
-        public void logStats() {
-            logger.info("PROGRESS: {} of {} transactions processed. Last migrated transaction(id={}, time={}). Counts(migrated: {}, failed: {}, already-migrated: {})",
-                        processedCount.get(), totalCount, lastTrxId.get(), toString(lastTrxDate.get()), migratedCount.get(), failedCount.get(), alreadyMigratedCount.get());
-        }
-
         private String toString(Date date) {
             return date != null ? dateFormatter.get().format(date) : null;
+        }
+    }
+
+    class LogMigrationThread extends Thread {
+        @Override
+        public void run() {
+            List<String> trxIds = new ArrayList<>(commitBatchSize);
+
+            for (fetchNextBatch(trxIds); !trxIds.isEmpty(); fetchNextBatch(trxIds)) {
+                txTemplate.execute((TransactionCallback<Void>) status -> {
+                    for (String trxId : trxIds) {
+                        migrateTrxLog(trxId);
+                    }
+
+                    return null;
+                });
+            }
         }
     }
 }

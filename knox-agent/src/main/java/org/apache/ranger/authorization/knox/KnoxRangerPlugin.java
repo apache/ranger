@@ -19,9 +19,6 @@
 
 package org.apache.ranger.authorization.knox;
 
-import java.util.List;
-import java.util.Set;
-
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.AccessType;
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.PluginConfiguration;
 import org.apache.ranger.authorization.knox.KnoxRangerPlugin.KnoxConstants.ResourceName;
@@ -31,104 +28,119 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
+import java.util.List;
+import java.util.Set;
+
 public class KnoxRangerPlugin extends RangerBasePlugin {
+    boolean initialized;
 
-	boolean initialized = false;
-	public KnoxRangerPlugin() {
-		super(PluginConfiguration.ServiceType, PluginConfiguration.AuditApplicationType);
-	}
-	
-	// must be synchronized so that accidental double init of plugin does not happen .. in case servlet instantiates multiple filters.
-	@Override
-	synchronized public void init() {
-		if (!initialized) {
-			// mandatory call to base plugin
-			super.init();
-			// One time call to register the audit hander with the policy engine.
-			super.setResultProcessor(new RangerDefaultAuditHandler(getConfig()));
-			initialized = true;
-		}
-	}
+    public KnoxRangerPlugin() {
+        super(PluginConfiguration.ServiceType, PluginConfiguration.AuditApplicationType);
+    }
 
-	public static class RequestBuilder {
-		String _service;
-		String _topology;
-		String _user;
-		Set<String> _groups;
-		String _clientIp;
-		String _remoteIp;
-		List<String> _forwardedAddresses;
-		
-		RequestBuilder service(String service) {
-			_service = service;
-			return this;
-		}
-		RequestBuilder topology(String topology) {
-			_topology = topology;
-			return this;
-		}
-		RequestBuilder user(String user) {
-			_user = user;
-			return this;
-		}
-		RequestBuilder groups(Set<String> groups) {
-			_groups = groups;
-			return this;
-		}
-		RequestBuilder clientIp(String clientIp) {
-			_clientIp = clientIp;
-			return this;
-		}
-		RequestBuilder remoteIp(String remoteIp) {
-			_remoteIp = remoteIp;
-			return this;
-		}
-		RequestBuilder forwardedAddresses(List<String> forwardedAddresses) {
-			_forwardedAddresses = forwardedAddresses;
-			return this;
-		}
-		void verifyBuildable() {
-			if (_topology == null) throw new IllegalStateException("_topology can't be null!");
-			if (_service == null) throw new IllegalStateException("_service can't be null!");
-			if (_user == null) throw new IllegalStateException("_user can't be null!");
-		}
-		
-		RangerAccessRequest build() {
-			// build resource
-			RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
-			resource.setValue(ResourceName.Service, _service);
-			resource.setValue(ResourceName.Topology, _topology);
-			// build request
-			RangerAccessRequestImpl request = new RangerAccessRequestImpl();
-			request.setAction(AccessType.Allow);
-			request.setAccessType(AccessType.Allow);
-			request.setClientIPAddress(_clientIp);
-			request.setUser(_user);
-			request.setUserGroups(_groups);
-			request.setResource(resource);
-			request.setRemoteIPAddress(_remoteIp);
-			request.setForwardedAddresses(_forwardedAddresses);
-			return request;
-		}
-	}
-	
-	public static class KnoxConstants {
+    // must be synchronized so that accidental double init of plugin does not happen .. in case servlet instantiates multiple filters.
+    @Override
+    public synchronized void init() {
+        if (!initialized) {
+            // mandatory call to base plugin
+            super.init();
+            // One time call to register the audit hander with the policy engine.
+            super.setResultProcessor(new RangerDefaultAuditHandler(getConfig()));
+            initialized = true;
+        }
+    }
 
-		// Plugin parameters
-		static class PluginConfiguration {
-			static final String ServiceType = "knox";
-			static final String AuditApplicationType = "knox";
-		}
-		
-		// must match the corresponding string used in service definition file
-		static class ResourceName {
-			static final String Topology = "topology";
-			static final String Service = "service";
-		}
+    public static class RequestBuilder {
+        String       service;
+        String       topology;
+        String       user;
+        Set<String>  groups;
+        String       clientIp;
+        String       remoteIp;
+        List<String> forwardedAddresses;
 
-		// must match the corresponding string used in service definition file
-		static class AccessType {
-			static final String Allow = "allow";
-		}
-	}
+        RequestBuilder service(String service) {
+            this.service = service;
+            return this;
+        }
+
+        RequestBuilder topology(String topology) {
+            this.topology = topology;
+            return this;
+        }
+
+        RequestBuilder user(String user) {
+            this.user = user;
+            return this;
+        }
+
+        RequestBuilder groups(Set<String> groups) {
+            this.groups = groups;
+            return this;
+        }
+
+        RequestBuilder clientIp(String clientIp) {
+            this.clientIp = clientIp;
+            return this;
+        }
+
+        RequestBuilder remoteIp(String remoteIp) {
+            this.remoteIp = remoteIp;
+            return this;
+        }
+
+        RequestBuilder forwardedAddresses(List<String> forwardedAddresses) {
+            this.forwardedAddresses = forwardedAddresses;
+            return this;
+        }
+
+        void verifyBuildable() {
+            if (topology == null) {
+                throw new IllegalStateException("_topology can't be null!");
+            }
+            if (service == null) {
+                throw new IllegalStateException("_service can't be null!");
+            }
+            if (user == null) {
+                throw new IllegalStateException("_user can't be null!");
+            }
+        }
+
+        RangerAccessRequest build() {
+            // build resource
+            RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
+            resource.setValue(ResourceName.Service, service);
+            resource.setValue(ResourceName.Topology, topology);
+            // build request
+            RangerAccessRequestImpl request = new RangerAccessRequestImpl();
+            request.setAction(AccessType.Allow);
+            request.setAccessType(AccessType.Allow);
+            request.setClientIPAddress(clientIp);
+            request.setUser(user);
+            request.setUserGroups(groups);
+            request.setResource(resource);
+            request.setRemoteIPAddress(remoteIp);
+            request.setForwardedAddresses(forwardedAddresses);
+            return request;
+        }
+    }
+
+    public static class KnoxConstants {
+        // Plugin parameters
+        static class PluginConfiguration {
+            static final String ServiceType          = "knox";
+            static final String AuditApplicationType = "knox";
+        }
+
+        // must match the corresponding string used in service definition file
+        static class ResourceName {
+            static final String Topology = "topology";
+            static final String Service  = "service";
+        }
+
+        // must match the corresponding string used in service definition file
+        static class AccessType {
+            static final String Allow = "allow";
+        }
+    }
 }

@@ -19,11 +19,6 @@
 
 package org.apache.ranger.patch;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -37,82 +32,86 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Component
-public class PatchForAllServiceDefForPolicyConditionUpdate_J10060 extends BaseLoader{
-	private static final Logger logger = LoggerFactory.getLogger(PatchForAllServiceDefForPolicyConditionUpdate_J10060.class);
+public class PatchForAllServiceDefForPolicyConditionUpdate_J10060 extends BaseLoader {
+    private static final Logger logger = LoggerFactory.getLogger(PatchForAllServiceDefForPolicyConditionUpdate_J10060.class);
 
-	@Autowired
-	ServiceDBStore svcStore;
+    @Autowired
+    ServiceDBStore svcStore;
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForAllServiceDefForPolicyConditionUpdate_J10060 loader = (PatchForAllServiceDefForPolicyConditionUpdate_J10060) CLIUtil.getBean(PatchForAllServiceDefForPolicyConditionUpdate_J10060.class);
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting!!!");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+    public static void main(String[] args) {
+        logger.info("main()");
+        try {
+            PatchForAllServiceDefForPolicyConditionUpdate_J10060 loader = (PatchForAllServiceDefForPolicyConditionUpdate_J10060) CLIUtil.getBean(PatchForAllServiceDefForPolicyConditionUpdate_J10060.class);
+            loader.init();
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
+            logger.info("Load complete. Exiting!!!");
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
+            System.exit(1);
+        }
+    }
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForAllServiceDefForPolicyConditionUpdate_J10060.execLoad()");
-		try {
-			updateAllServiceDef();
-		} catch (Exception e) {
-			logger.error("Error whille PatchForAllServiceDefForPolicyConditionUpdate_J10060()data.", e);
-		}
-		logger.info("<== PatchForAllServiceDefForPolicyConditionUpdate_J10060.execLoad()");
-	}
+    @Override
+    public void printStats() {
+        logger.info("PatchForAllServiceDefForPolicyConditionUpdate_J10060 data ");
+    }
 
-	@Override
-	public void printStats() {
-		logger.info("PatchForAllServiceDefForPolicyConditionUpdate_J10060 data ");
-	}
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForAllServiceDefForPolicyConditionUpdate_J10060.execLoad()");
+        try {
+            updateAllServiceDef();
+        } catch (Exception e) {
+            logger.error("Error whille PatchForAllServiceDefForPolicyConditionUpdate_J10060()data.", e);
+        }
+        logger.info("<== PatchForAllServiceDefForPolicyConditionUpdate_J10060.execLoad()");
+    }
 
-	private void updateAllServiceDef() {
+    private void updateAllServiceDef() {
+        try {
+            List<RangerServiceDef> allServiceDefs = svcStore.getServiceDefs(new SearchFilter());
 
-		try {
-		List<RangerServiceDef> allServiceDefs = svcStore.getServiceDefs(new SearchFilter());
+            if (CollectionUtils.isNotEmpty(allServiceDefs)) {
+                for (RangerServiceDef serviceDef : allServiceDefs) {
+                    if (CollectionUtils.isNotEmpty(serviceDef.getPolicyConditions())) {
+                        Map<Long, String>              uiHintPreVal           = new HashMap<>();
+                        List<RangerPolicyConditionDef> updatedPolicyCondition = new ArrayList<>();
+                        RangerServiceDef               embeddedTagServiceDef  = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDef.getName());
 
-		if (CollectionUtils.isNotEmpty(allServiceDefs)) {
-				for (RangerServiceDef serviceDef : allServiceDefs) {
-					if(CollectionUtils.isNotEmpty(serviceDef.getPolicyConditions())) {
-						Map<Long,String> uiHintPreVal = new HashMap<>();
-						List<RangerPolicyConditionDef> updatedPolicyCondition = new ArrayList<>();
-						RangerServiceDef embeddedTagServiceDef=EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDef.getName());
+                        List<RangerPolicyConditionDef> policyConditionsOld = embeddedTagServiceDef.getPolicyConditions();
+                        for (RangerPolicyConditionDef policyConditionOld : policyConditionsOld) {
+                            uiHintPreVal.put(policyConditionOld.getItemId(), policyConditionOld.getUiHint());
+                        }
 
-						List<RangerPolicyConditionDef> policyConditionsOld = embeddedTagServiceDef.getPolicyConditions();
-						for(RangerPolicyConditionDef policyConditionOld : policyConditionsOld) {
-							uiHintPreVal.put(policyConditionOld.getItemId(), policyConditionOld.getUiHint());
-						}
+                        List<RangerPolicyConditionDef> policyConditionsNew = serviceDef.getPolicyConditions();
+                        for (RangerPolicyConditionDef policyConditionNew : policyConditionsNew) {
+                            if (StringUtils.isNotEmpty(uiHintPreVal.get(policyConditionNew.getItemId()))) {
+                                policyConditionNew.setUiHint(uiHintPreVal.get(policyConditionNew.getItemId()));
+                            }
+                            updatedPolicyCondition.add(policyConditionNew);
+                        }
 
-						List<RangerPolicyConditionDef> policyConditionsNew = serviceDef.getPolicyConditions();
-						for (RangerPolicyConditionDef policyConditionNew : policyConditionsNew) {
-							if(StringUtils.isNotEmpty(uiHintPreVal.get(policyConditionNew.getItemId()))) {
-								policyConditionNew.setUiHint(uiHintPreVal.get(policyConditionNew.getItemId()));
-							}
-							updatedPolicyCondition.add(policyConditionNew);
-						}
-
-						serviceDef.setPolicyConditions(updatedPolicyCondition);
-						svcStore.updateServiceDef(serviceDef);
-					}
-			}
-		}
-		}catch (Exception e) {
-			logger.error("Error while patching service-def for policy condition:", e);
-		}
-	}
+                        serviceDef.setPolicyConditions(updatedPolicyCondition);
+                        svcStore.updateServiceDef(serviceDef);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error while patching service-def for policy condition:", e);
+        }
+    }
 }

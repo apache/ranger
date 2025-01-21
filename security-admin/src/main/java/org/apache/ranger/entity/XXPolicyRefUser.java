@@ -18,172 +18,166 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_user")
-public class XXPolicyRefUser extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyRefUser
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_ref_user_SEQ", sequenceName = "x_policy_ref_user_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_user_SEQ")
-	@Column(name = "id")
-	protected Long id;
+public class XXPolicyRefUser extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * policyId of the XXPolicyRefUser
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_id")
-	protected Long policyId;
+    /**
+     * id of the XXPolicyRefUser
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_ref_user_SEQ", sequenceName = "x_policy_ref_user_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_user_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * userId of the XXPolicyRefUser
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "user_id")
-	protected Long userId;
+    /**
+     * policyId of the XXPolicyRefUser
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_id")
+    protected Long policyId;
 
-	/**
-	 * userName of the XXPolicyRefUser
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "user_name")
-	protected String userName;
+    /**
+     * userId of the XXPolicyRefUser
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "user_id")
+    protected Long userId;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * userName of the XXPolicyRefUser
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "user_name")
+    protected String userName;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyId
-	 *            Value to set member attribute <b> policyId</b>
-	 */
-	public void setPolicyId(Long policyId) {
-		this.policyId = policyId;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyId</b> .
-	 */
-	public Long getPolicyId() {
-		return this.policyId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, policyId, userId, userName);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> userId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param userId
-	 *            Value to set member attribute <b> userId</b>
-	 */
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>userId</b>
-	 *
-	 * @return Date - value of member attribute <b>userId</b> .
-	 */
-	public Long getUserId() {
-		return userId;
-	}
+        XXPolicyRefUser other = (XXPolicyRefUser) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> userName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param userName
-	 *            Value to set member attribute <b> userName</b>
-	 */
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+        return super.equals(obj) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(userId, other.userId) &&
+                Objects.equals(userName, other.userName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>userName</b>
-	 *
-	 * @return Date - value of member attribute <b>userName</b> .
-	 */
-	public String getUserName() {
-		return userName;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyRefUser [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", userId=" + userId + ", userName=" + userName + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, policyId, userId, userName);
-	}
+    /**
+     * Returns the value for the member attribute <b>policyId</b>
+     *
+     * @return Date - value of member attribute <b>policyId</b> .
+     */
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * This method sets the value to the member attribute <b> policyId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyId Value to set member attribute <b> policyId</b>
+     */
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * Returns the value for the member attribute <b>userId</b>
+     *
+     * @return Date - value of member attribute <b>userId</b> .
+     */
+    public Long getUserId() {
+        return userId;
+    }
 
-		XXPolicyRefUser other = (XXPolicyRefUser) obj;
+    /**
+     * This method sets the value to the member attribute <b> userId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param userId Value to set member attribute <b> userId</b>
+     */
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(policyId, other.policyId) &&
-			   Objects.equals(userId, other.userId) &&
-			   Objects.equals(userName, other.userName);
-	}
+    /**
+     * Returns the value for the member attribute <b>userName</b>
+     *
+     * @return Date - value of member attribute <b>userName</b> .
+     */
+    public String getUserName() {
+        return userName;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyRefUser [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", userId="
-				+ userId + ", userName=" + userName +  "]";
-	}
-
-
-
+    /**
+     * This method sets the value to the member attribute <b> userName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param userName Value to set member attribute <b> userName</b>
+     */
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 }

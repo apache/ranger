@@ -147,25 +147,29 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
 
             {/* DATA_SHARE */}
 
-            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE.value && (
+            {objectClassType ==
+              ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE.value && (
               <DataShareLogs reportdata={reportdata} data={data} />
             )}
 
             {/* SHARED_RESOURCE */}
 
-            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
+            {objectClassType ==
+              ClassTypes.CLASS_TYPE_RANGER_SHARED_RESOURCE.value && (
               <SharedResourceLogs reportdata={reportdata} data={data} />
             )}
 
             {/* DATA_SHARE_IN_DATASET */}
 
-            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET.value && (
+            {objectClassType ==
+              ClassTypes.CLASS_TYPE_RANGER_DATA_SHARE_IN_DATASET.value && (
               <DataShareInDatasetLogs reportdata={reportdata} data={data} />
             )}
 
             {/* DATASET_IN_PROJECT */}
 
-            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_DATASET_IN_PROJECT.value && (
+            {objectClassType ==
+              ClassTypes.CLASS_TYPE_RANGER_DATASET_IN_PROJECT.value && (
               <DatasetInProjectLogs reportdata={reportdata} data={data} />
             )}
           </div>

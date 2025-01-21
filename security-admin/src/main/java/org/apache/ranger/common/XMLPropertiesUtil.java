@@ -19,22 +19,18 @@
 
 package org.apache.ranger.common;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.springframework.util.DefaultPropertiesPersister;
 
+import java.io.InputStream;
+import java.util.Properties;
+
 public class XMLPropertiesUtil extends DefaultPropertiesPersister {
+    public XMLPropertiesUtil() {
+    }
 
-	public XMLPropertiesUtil() {
-	}
-
-	@Override
-	public void loadFromXml(Properties properties, InputStream inputStream)
-			throws IOException {
+    @Override
+    public void loadFromXml(Properties properties, InputStream inputStream) {
         XMLUtils.loadConfig(inputStream, properties);
-	}
-
+    }
 }
