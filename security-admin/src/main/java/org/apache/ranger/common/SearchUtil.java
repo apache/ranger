@@ -22,6 +22,7 @@
  */
 package org.apache.ranger.common;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -474,7 +475,7 @@ public class SearchUtil {
                     intValueList = (Collection<Number>) paramValue;
                 }
 
-                if (!intValueList.isEmpty()) {
+                if (CollectionUtils.isNotEmpty(intValueList)) {
                     if (searchField.getCustomCondition() == null) {
                         if (intValueList.size() <= minInListLength) {
                             whereClause.append(" and ");
@@ -623,7 +624,7 @@ public class SearchUtil {
                     intValueList = (Collection<Number>) paramValue;
                 }
 
-                if (!intValueList.isEmpty() && intValueList.size() <= minInListLength) {
+                if (CollectionUtils.isNotEmpty(intValueList) && intValueList.size() <= minInListLength) {
                     int count = -1;
 
                     for (Number value : intValueList) {
@@ -631,7 +632,7 @@ public class SearchUtil {
 
                         query.setParameter(searchField.getClientFieldName() + "_" + count, value);
                     }
-                } else if (intValueList.size() > 1) {
+                } else if (CollectionUtils.isNotEmpty(intValueList) && intValueList.size() > 1) {
                     query.setParameter(searchField.getClientFieldName(), intValueList);
                 }
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.STR_LIST) {
