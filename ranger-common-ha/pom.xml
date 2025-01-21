@@ -110,9 +110,9 @@
             <version>${commons.lang.version}</version>
         </dependency>
         <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
-            <version>1</version>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+            <version>${jakarta-inject.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -125,9 +125,9 @@
             <version>${slf4j.version}</version>
         </dependency>
 		<dependency>
- 			<groupId>javax.annotation</groupId>
- 			<artifactId>jsr250-api</artifactId>
- 			<scope>provided</scope>
+ 			<groupId>jakarta.annotation</groupId>
+ 			<artifactId>jakarta.annotation-api</artifactId>
+            <version>${jakarta.annotation-api}</version>
  		</dependency>
 
         <!-- Test -->

@@ -17,7 +17,7 @@
 
 package org.apache.ranger.kms.biz;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServlet;
 
 import org.slf4j.Logger;

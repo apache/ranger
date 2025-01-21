@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import jakarta.ws.rs.ext.ContextResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.ext.Provider;
 
 
 @Provider

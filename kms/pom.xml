@@ -188,8 +188,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>jsr250-api</artifactId>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>${jakarta.annotation-api}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

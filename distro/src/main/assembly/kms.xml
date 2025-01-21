@@ -55,7 +55,7 @@
                     <include>org.apache.curator:curator-test</include>
                     <include>asm:asm-all</include>
                     <include>org.apache.httpcomponents:httpclient</include>
-                    <include>javax.activation:activation</include>
+                    <include>jakarta.activation:jakarta.activation-api</include>
                     <include>org.apache.directory.server:apacheds-i18n</include>
                     <include>org.apache.directory.server:apacheds-kerberos-codec</include>
                     <include>org.apache.directory.api:api-asn1-api</include>
@@ -76,7 +76,7 @@
                     <include>jakarta.annotation:jakarta.annotation-api:jar:${jakarta.annotation-api}</include>
                     <include>jakarta.inject:jakarta.inject-api:jar:${jakarta-inject.version}</include>
                     <include>jakarta.persistence:jakarta.persistence-api:jar:${jakarta.persistence.version}</include>
-                    <include>jakarta.validation:jakarta.validation-api</include>
+                    <include>jakarta.validation:jakarta.validation-api:jar:${jakarta.validation-api.version}</include>
                     <include>jakarta.ws.rs:jakarta.ws.rs-api:jar:${jakarta.ws.version}</include>
                     <include>jakarta.xml.bind:jakarta.xml.bind-api:jar:${jakarta.xml.version}</include>
                     <include>org.glassfish.jaxb:jaxb-core:jar:${jaxb.api.version}</include>

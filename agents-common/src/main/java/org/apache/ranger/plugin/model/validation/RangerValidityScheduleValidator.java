@@ -41,7 +41,7 @@ import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence.RecurrenceSchedule;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 public class RangerValidityScheduleValidator {
     private static final Logger LOG = LoggerFactory.getLogger(RangerValidityScheduleValidator.class);

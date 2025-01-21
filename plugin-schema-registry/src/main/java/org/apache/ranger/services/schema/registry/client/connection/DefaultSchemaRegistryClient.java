@@ -25,15 +25,14 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URLEncoder;
@@ -56,7 +55,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
     private static final String SCHEMAS_PATH = SCHEMA_REGISTRY_PATH + "/schemas/";
     private static final String SCHEMA_REGISTRY_VERSION_PATH = SCHEMA_REGISTRY_PATH + "/version";
     private static final String SSL_ALGORITHM = "TLSv1.2";
-    private final javax.ws.rs.client.Client client;
+    private final jakarta.ws.rs.client.Client client;
     private final Login login;
     private final UrlSelector urlSelector;
     private final Map<String, SchemaRegistryTargets> urlWithTargets;
@@ -67,7 +66,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
         login = SecurityUtils.initializeSecurityContext(conf);
         ClientConfig config = createClientConfig(conf);
         final boolean SSLEnabled = SecurityUtils.isHttpsConnection(conf);
-        ClientBuilder clientBuilder = JerseyClientBuilder.newBuilder()
+        ClientBuilder clientBuilder = ClientBuilder.newBuilder()
                 .withConfig(config)
                 .property(ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE);
         if (SSLEnabled) {

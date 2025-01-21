@@ -43,7 +43,7 @@
                     <include>io.airlift:log:jar:${trino.airlift.version}</include>
                     <include>io.airlift:log-manager:jar:${trino.airlift.version}</include>
                     <include>io.airlift:configuration:jar:${trino.airlift.version}</include>
-                    <include>javax.validation:validation-api:jar:${trino.validation-api.version}</include>
+                    <include>jakarta.validation:jakarta.validation-api:jar:${jakarta.validation-api.version}</include>
                     <include>jakarta.inject:jakarta.inject-api:jar:${jakarta-inject.version}</include>
                     <include>org.apache.bval:bval-jsr:jar:${trino.bval-jsr.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
