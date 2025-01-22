@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -464,9 +465,11 @@ public class SearchUtil {
             } else if (searchCriteria.getNotNullParamList().contains(searchField.getClientFieldName())) {
                 whereClause.append(" and ").append(searchField.getFieldName()).append(" is not null");
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST || isListValue && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-                Collection<Number> intValueList;
+                final Collection<Number> intValueList;
 
-                if ((paramValue instanceof Integer || paramValue instanceof Long)) {
+                if (paramValue == null) {
+                    intValueList = Collections.emptyList();
+                } else if (paramValue instanceof Integer || paramValue instanceof Long) {
                     intValueList = new ArrayList<>();
 
                     intValueList.add((Number) paramValue);
@@ -613,9 +616,11 @@ public class SearchUtil {
             if (searchCriteria.getNullParamList().contains(searchField.getClientFieldName()) || searchCriteria.getNotNullParamList().contains(searchField.getClientFieldName())) { //NOPMD
                 // Already addressed while building where clause
             } else if (searchField.getDataType() == SearchField.DATA_TYPE.INT_LIST || isListValue && searchField.getDataType() == SearchField.DATA_TYPE.INTEGER) {
-                Collection<Number> intValueList;
+                final Collection<Number> intValueList;
 
-                if ((paramValue instanceof Integer || paramValue instanceof Long)) {
+                if (paramValue == null) {
+                    intValueList = Collections.emptyList();
+                } else if (paramValue instanceof Integer || paramValue instanceof Long) {
                     intValueList = new ArrayList<>();
 
                     intValueList.add((Number) paramValue);

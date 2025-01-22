@@ -346,7 +346,7 @@ public class RangerKeyStore extends KeyStoreSpi {
                     int counter = 0;
 
                     for (int i = computed.length - 1; i >= 0; i--) {
-                        if (computed[i] != data[data.length - (1 + counter)]) {
+                        if (data == null || computed[i] != data[data.length - (1 + counter)]) {
                             Throwable t = new UnrecoverableKeyException("Password verification failed");
 
                             logger.error("Keystore was tampered with, or password was incorrect.", t);

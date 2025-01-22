@@ -57,7 +57,7 @@ public class RangerRestUtil {
      * @return
      */
     public void validateVUserProfileForUpdate(XXPortalUser gjUser, VXPortalUser userProfile) {
-        List<VXMessage> messageList = new ArrayList<VXMessage>();
+        List<VXMessage> messageList = new ArrayList<>();
 
         // Login Id can't be changed
         if (userProfile.getLoginId() != null && !gjUser.getLoginId().equalsIgnoreCase(userProfile.getLoginId())) {
@@ -97,7 +97,7 @@ public class RangerRestUtil {
     }
 
     void splitUserRoleList(Collection<String> collection) {
-        Collection<String> newCollection = new ArrayList<String>();
+        Collection<String> newCollection = new ArrayList<>();
         for (String role : collection) {
             String[] roles = role.split(",");
             newCollection.addAll(Arrays.asList(roles));

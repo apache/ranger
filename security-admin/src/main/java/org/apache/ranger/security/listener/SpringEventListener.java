@@ -113,6 +113,6 @@ public class SpringEventListener implements ApplicationListener<AbstractAuthenti
     protected String getUserAgent() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
-        return attributes.getRequest().getHeader("User-Agent");
+        return attributes != null ? attributes.getRequest().getHeader("User-Agent") : "Unknown";
     }
 }

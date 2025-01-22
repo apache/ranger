@@ -379,7 +379,7 @@ public class RESTErrorUtil {
     }
 
     public WebApplicationException createRESTException(String errorMessage, MessageEnums messageEnum, Long objectId, String fieldName, String logMessage, int statusCode) {
-        List<VXMessage> messageList = new ArrayList<VXMessage>();
+        List<VXMessage> messageList = new ArrayList<>();
 
         messageList.add(messageEnum.getMessage(objectId, fieldName));
 
@@ -407,7 +407,7 @@ public class RESTErrorUtil {
     }
 
     public WebApplicationException create404RESTException(String errorMessage, MessageEnums messageEnum, Long objectId, String fieldName, String logMessage) {
-        List<VXMessage> messageList = new ArrayList<VXMessage>();
+        List<VXMessage> messageList = new ArrayList<>();
 
         messageList.add(messageEnum.getMessage(objectId, fieldName));
 

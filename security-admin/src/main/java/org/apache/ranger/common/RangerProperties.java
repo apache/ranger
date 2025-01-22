@@ -28,7 +28,7 @@ public class RangerProperties extends HashMap<Object, Object> {
 
     private static final String XMLCONFIG_FILENAME_DELIMITOR = ",";
 
-    private String xmlConfigFileNames;
+    private final String xmlConfigFileNames;
 
     public RangerProperties(String xmlConfigFileNames) {
         this.xmlConfigFileNames = xmlConfigFileNames;

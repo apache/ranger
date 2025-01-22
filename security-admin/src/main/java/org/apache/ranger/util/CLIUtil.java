@@ -68,7 +68,7 @@ public class CLIUtil {
         ServletContext     servletContext = request.getSession().getServletContext();
         ApplicationContext ctx            = WebApplicationContextUtils.getWebApplicationContext(servletContext);
         Object[]           args           = new Object[] {};
-        String             messageValue   = ctx.getMessage(messagekey, args, Locale.getDefault());
+        String             messageValue   = ctx != null ? ctx.getMessage(messagekey, args, Locale.getDefault()) : "";
         return messageValue;
     }
 

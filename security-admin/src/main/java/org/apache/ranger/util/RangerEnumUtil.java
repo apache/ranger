@@ -65,8 +65,8 @@ public class RangerEnumUtil {
     public static final  String             ENUM_XXAuthSession_AuthType          = "XXAuthSession.AuthType";
     public static final  String             ENUM_XResponse_ResponseStatus        = "XResponse.ResponseStatus";
     private static final Logger             logger                               = LoggerFactory.getLogger(RangerEnumUtil.class);
-    protected            Map<String, VEnum> enumMap                              = new HashMap<String, VEnum>();
-    protected            List<VEnum>        enumList                             = new ArrayList<VEnum>();
+    protected            Map<String, VEnum> enumMap                              = new HashMap<>();
+    protected            List<VEnum>        enumList                             = new ArrayList<>();
 
     public List<VEnum> getEnums() {
         if (enumList.isEmpty()) {
@@ -121,7 +121,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_ActiveStatus);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -157,7 +157,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_ActivationStatus);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -238,7 +238,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_BooleanValue);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -274,7 +274,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_DataType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -364,7 +364,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_DeviceType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -427,7 +427,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_DiffLevel);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -472,7 +472,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_FileType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -499,7 +499,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_FreqType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -571,7 +571,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_MimeType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -625,7 +625,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_NumberFormat);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -670,7 +670,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_ObjectStatus);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -706,7 +706,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_PasswordResetStatus);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -751,7 +751,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_PriorityType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -796,7 +796,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_ProgressStatus);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -850,7 +850,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_RelationType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -877,7 +877,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_UserSource);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -913,7 +913,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_AssetType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -984,7 +984,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_AccessResult);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1011,7 +1011,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_PolicyType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1038,7 +1038,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_XAAuditType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1110,7 +1110,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_ResourceType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1226,7 +1226,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_XAGroupType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1271,7 +1271,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_XAPermForType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1307,7 +1307,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_XAPermType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1604,7 +1604,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_CommonEnums_ClassTypes);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1838,7 +1838,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_XXAuthSession_AuthStatus);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1910,7 +1910,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_XXAuthSession_AuthType);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 
@@ -1964,7 +1964,7 @@ public class RangerEnumUtil {
         ///////////////////////////////////
         vEnum = new VEnum();
         vEnum.setEnumName(ENUM_XResponse_ResponseStatus);
-        vEnum.setElementList(new ArrayList<VEnumElement>());
+        vEnum.setElementList(new ArrayList<>());
         enumList.add(vEnum);
         enumMap.put(vEnum.getEnumName(), vEnum);
 

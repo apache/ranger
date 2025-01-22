@@ -250,7 +250,8 @@ public class PatchMigration_J10002 extends BaseLoader {
         String       name        = xAsset.getName();
         String       description = xAsset.getDescription();
         int          typeInt     = xAsset.getAssetType();
-        XXServiceDef serviceDef  = daoMgr.getXXServiceDef().findByName(AppConstants.getLabelFor_AssetType(typeInt).toLowerCase());
+        String       label       = AppConstants.getLabelFor_AssetType(typeInt);
+        XXServiceDef serviceDef  = label != null ? daoMgr.getXXServiceDef().findByName(label.toLowerCase()) : null;
 
         if (serviceDef == null) {
             throw new Exception("No ServiceDefinition found for repository: " + name);

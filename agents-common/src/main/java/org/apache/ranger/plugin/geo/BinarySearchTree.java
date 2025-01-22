@@ -28,7 +28,7 @@ public class BinarySearchTree<T extends Comparable<T> & RangeChecker<V>, V> {
     }
 
     public void insert(final T value) {
-        Node<T> node = new Node<T>(value);
+        Node<T> node = new Node<>(value);
 
         if (root == null) {
             root = node;
@@ -104,7 +104,7 @@ public class BinarySearchTree<T extends Comparable<T> & RangeChecker<V>, V> {
     }
 
     void rebalance() {
-        Node<T> dummy = new Node<T>(null);
+        Node<T> dummy = new Node<>(null);
 
         dummy.setRight(root);
 

@@ -2543,22 +2543,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
-            }
-            if (obj == null) {
+            } else if (obj == null) {
+                return false;
+            } else if (getClass() != obj.getClass()) {
                 return false;
             }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
+
             RangerPolicyConditionDef other = (RangerPolicyConditionDef) obj;
             if (itemId == null) {
                 if (other.itemId != null) {
                     return false;
                 }
-            } else if (other.itemId != null || !itemId.equals(other.itemId)) {
+            } else if (!itemId.equals(other.itemId)) {
                 return false;
             }
-
             if (description == null) {
                 if (other.description != null) {
                     return false;

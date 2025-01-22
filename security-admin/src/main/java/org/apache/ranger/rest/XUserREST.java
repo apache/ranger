@@ -1466,7 +1466,7 @@ public class XUserREST {
                 isValid = true;
             }
 
-            if (isValid) {
+            if (isValid && xService != null) {
                 XXServiceDef  xServiceDef   = rangerDaoManager.getXXServiceDef().getById(xService.getType());
                 RangerService rangerService = svcStore.getServiceByName(serviceName);
 

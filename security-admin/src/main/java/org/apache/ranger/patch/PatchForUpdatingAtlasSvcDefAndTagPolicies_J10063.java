@@ -165,17 +165,17 @@ public class PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063 extends BaseLoader
                     }
                 }
             }
+
+            // delete XXAccessTypeDef records of tagDef where name startWith Atlas
+            List<XXAccessTypeDef> xxAccessTypes = daoMgr.getXXAccessTypeDef().findByServiceDefId(embeddedTagServiceDef.getId());
+
+            for (XXAccessTypeDef xAccess : xxAccessTypes) {
+                if (xAccess != null && xAccess.getName().startsWith(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME)) {
+                    svcStore.deleteXXAccessTypeDef(xAccess);
+                }
+            }
         } else {
             logger.error("The embedded Tag service-definition does not exist.");
-        }
-
-        // delete XXAccessTypeDef records of tagDef where name startWith Atlas
-        List<XXAccessTypeDef> xxAccessTypes = daoMgr.getXXAccessTypeDef().findByServiceDefId(embeddedTagServiceDef.getId());
-
-        for (XXAccessTypeDef xAccess : xxAccessTypes) {
-            if (xAccess != null && xAccess.getName().startsWith(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME)) {
-                svcStore.deleteXXAccessTypeDef(xAccess);
-            }
         }
 
         logger.info("<== PatchForUpdatingAtlasSvcDefAndTagPolicies_J10063.disableAtlasAccessForTagPolicies()");

@@ -82,7 +82,7 @@ public class RangerGeolocationDatabase {
     }
 
     public void setData(final BinarySearchTree<RangerGeolocationData, Long> dataArg) {
-        data = dataArg != null ? dataArg : new BinarySearchTree<RangerGeolocationData, Long>();
+        data = dataArg != null ? dataArg : new BinarySearchTree<>();
     }
 
     public void dump(ValuePrinter<RangerGeolocationData> processor) {

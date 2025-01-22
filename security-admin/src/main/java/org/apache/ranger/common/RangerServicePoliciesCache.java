@@ -281,7 +281,7 @@ public class RangerServicePoliciesCache {
             LOG.error("ServicePolicies is null object!!");
         }
 
-        LOG.debug("<== RangerServicePoliciesCache(serviceName={}).saveToCache()", policies.getServiceName());
+        LOG.debug("<== RangerServicePoliciesCache(serviceName={}).saveToCache()", policies != null ? policies.getServiceName() : "<null>");
     }
 
     private class ServicePoliciesWrapper {

@@ -31,8 +31,8 @@ import java.util.List;
 
 public abstract class RangerServiceResourceWithTagsServiceBase<T extends XXServiceResource, V extends RangerServiceResourceWithTags> extends RangerBaseModelService<T, V> {
     public PList<V> searchServiceResources(SearchFilter searchFilter) {
-        PList<V> retList       = new PList<V>();
-        List<V>  resourceList  = new ArrayList<V>();
+        PList<V> retList       = new PList<>();
+        List<V>  resourceList  = new ArrayList<>();
         List<T>  xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
         for (T xResource : xResourceList) {

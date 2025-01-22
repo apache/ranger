@@ -29,10 +29,9 @@ public class RoleUserAuthorityGranter implements AuthorityGranter {
     @Override
     public Set<String> grant(Principal principal) {
         if (principal instanceof UnixGroupPrincipal) {
-            Collections.singleton(principal.getName());
+            return Collections.singleton(principal.getName());
         } else {
-            Collections.singleton("ROLE_USER");
+            return Collections.singleton("ROLE_USER");
         }
-        return null;
     }
 }
