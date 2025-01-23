@@ -19,8 +19,6 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,119 +28,105 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_policy_label")
 public class XXPolicyLabel extends XXDBBase implements Serializable {
-        private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-        /**
-         * id of the XXPolicyLabel
-         * <ul>
-         * </ul>
-         *
-         */
-        @Id
-        @SequenceGenerator(name = "X_POLICY_LABEL_SEQ", sequenceName = "X_POLICY_LABEL_SEQ", allocationSize = 1)
-        @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_POLICY_LABEL_SEQ")
-        @Column(name = "id")
-        protected Long id;
+    /**
+     * id of the XXPolicyLabel
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "X_POLICY_LABEL_SEQ", sequenceName = "X_POLICY_LABEL_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_POLICY_LABEL_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-        /**
-         * Global Id for the object
-         * <ul>
-         * <li>The maximum length for this attribute is <b>512</b>.
-         * </ul>
-         *
-         */
-        @Column(name = "guid", unique = true, nullable = false, length = 512)
-        protected String guid;
+    /**
+     * Global Id for the object
+     * <ul>
+     * <li>The maximum length for this attribute is <b>512</b>.
+     * </ul>
+     */
+    @Column(name = "guid", unique = true, nullable = false, length = 512)
+    protected String guid;
 
-        /**
-         * policyLabel of the XXPolicyLabel
-         * <ul>
-         * </ul>
-         *
-         */
-        @Column(name = "label_name")
-        protected String policyLabel;
+    /**
+     * policyLabel of the XXPolicyLabel
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "label_name")
+    protected String policyLabel;
 
+    public Long getId() {
+        return id;
+    }
 
-        public void setId(Long id) {
-                this.id = id;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
         }
 
-        public Long getId() {
-                return id;
-        }
+        XXPolicyLabel other = (XXPolicyLabel) obj;
 
-        /**
-         * @return the gUID
-         */
-        public String getGuid() {
-                return guid;
-        }
+        return Objects.equals(id, other.id) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(policyLabel, other.policyLabel);
+    }
 
-        /**
-         * @param gUID
-         *            the gUID to set
-         */
-        public void setGuid(String gUID) {
-                guid = gUID;
-        }
+    @Override
+    public String toString() {
+        String str = "XXPolicyLabel={[id=" + id + ", ";
+        str += super.toString();
+        str += " , guid=" + guid + ", policyLabel=" + policyLabel + "]";
+        str += "}";
+        return str;
+    }
 
-        /**
-         * @param policyLabel
-         *            the policyLabel to set
-         */
-        public void setPolicyLabel(String policyLabel) {
-                this.policyLabel = policyLabel;
-        }
+    /**
+     * @return the gUID
+     */
+    public String getGuid() {
+        return guid;
+    }
 
-        /**
-         * @return the policyLabel
-         */
-        public String getPolicyLabel() {
-                return policyLabel;
-        }
+    /**
+     * @param gUID the gUID to set
+     */
+    public void setGuid(String gUID) {
+        guid = gUID;
+    }
 
-        @Override
-        public boolean equals(Object obj) {
-                if (this == obj)
-                        return true;
-                if (!super.equals(obj))
-                        return false;
-                if (getClass() != obj.getClass())
-                        return false;
-                XXPolicyLabel other = (XXPolicyLabel) obj;
-                if (id == null) {
-                        if (other.id != null)
-                                return false;
-                } else if (!id.equals(other.id))
-                        return false;
-                if (guid == null) {
-                        if (other.guid != null) {
-                                return false;
-                        }
-                } else if (!guid.equals(other.guid)) {
-                        return false;
-                }
-                if (policyLabel == null) {
-                        if (other.policyLabel != null) {
-                                return false;
-                        }
-                } else if (!policyLabel.equals(other.policyLabel)) {
-                        return false;
-                }
-                return true;
-        }
+    /**
+     * @return the policyLabel
+     */
+    public String getPolicyLabel() {
+        return policyLabel;
+    }
 
-        @Override
-        public String toString() {
-                String str = "XXPolicyLabel={[id=" + id + ", ";
-                str += super.toString();
-                str += " , guid=" + guid + ", policyLabel=" + policyLabel + "]";
-                str += "}";
-                return str;
-        }
+    /**
+     * @param policyLabel the policyLabel to set
+     */
+    public void setPolicyLabel(String policyLabel) {
+        this.policyLabel = policyLabel;
+    }
 }

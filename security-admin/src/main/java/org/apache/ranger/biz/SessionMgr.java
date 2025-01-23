@@ -17,18 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.biz;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+package org.apache.ranger.biz;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -67,495 +56,494 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
+
 @Component
 @Transactional
 public class SessionMgr {
+    static final Logger logger = LoggerFactory.getLogger(SessionMgr.class);
 
-	static final Logger logger = LoggerFactory.getLogger(SessionMgr.class);
+    private static final Long SESSION_UPDATE_INTERVAL_IN_MILLIS = 30 * DateUtils.MILLIS_PER_MINUTE;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
-	
-	@Autowired
-	RangerDaoManager daoManager;
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	XUserMgr xUserMgr;
+    @Autowired
+    RangerDaoManager daoManager;
 
-	@Autowired
-	AuthSessionService authSessionService;
+    @Autowired
+    XUserMgr xUserMgr;
 
-	@Autowired
-	HTTPUtil httpUtil;
+    @Autowired
+    AuthSessionService authSessionService;
 
-	@Autowired
-	StringUtil stringUtil;
-	
-	public SessionMgr() {
-		logger.debug("SessionManager created");
-	}
+    @Autowired
+    HTTPUtil httpUtil;
 
-	private static final Long SESSION_UPDATE_INTERVAL_IN_MILLIS = 30 * DateUtils.MILLIS_PER_MINUTE;
+    @Autowired
+    StringUtil stringUtil;
 
-	public UserSessionBase processSuccessLogin(int authType, String userAgent,
-			HttpServletRequest httpRequest) {
-		boolean newSessionCreation = true;
-		UserSessionBase userSession = null;
+    public SessionMgr() {
+        logger.debug("SessionManager created");
+    }
 
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		if (context != null) {
-			userSession = context.getUserSession();
-		}
+    public UserSessionBase processSuccessLogin(int authType, String userAgent, HttpServletRequest httpRequest) {
+        boolean               newSessionCreation = true;
+        UserSessionBase       userSession        = null;
+        RangerSecurityContext context            = RangerContextHolder.getSecurityContext();
 
-		Authentication authentication = SecurityContextHolder.getContext()
-				.getAuthentication();
-		WebAuthenticationDetails details = (WebAuthenticationDetails) authentication
-				.getDetails();
+        if (context != null) {
+            userSession = context.getUserSession();
+        }
 
-		String currentLoginId = authentication.getName();
-		if (userSession != null) {
-			if (validateUserSession(userSession, currentLoginId)) {
-				newSessionCreation = false;
-			}
-		}
+        Authentication           authentication = SecurityContextHolder.getContext().getAuthentication();
+        WebAuthenticationDetails details        = (WebAuthenticationDetails) authentication.getDetails();
+        String                   currentLoginId = authentication.getName();
 
-		if (newSessionCreation) {
+        if (userSession != null) {
+            if (validateUserSession(userSession, currentLoginId)) {
+                newSessionCreation = false;
+            }
+        }
 
-			getSSOSpnegoAuthCheckForAPI(currentLoginId, httpRequest);
-			// Need to build the UserSession
-			XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
-			if (gjUser == null) {
-				logger.error(
-						"Error getting user for loginId=" + currentLoginId,
-						new Exception());
-				return null;
-			}
+        if (newSessionCreation) {
+            getSSOSpnegoAuthCheckForAPI(currentLoginId, httpRequest);
 
-			XXAuthSession gjAuthSession = new XXAuthSession();
-			gjAuthSession.setLoginId(currentLoginId);
-			gjAuthSession.setUserId(gjUser.getId());
-			gjAuthSession.setAuthTime(DateUtil.getUTCDate());
-			gjAuthSession.setAuthStatus(XXAuthSession.AUTH_STATUS_SUCCESS);
-			gjAuthSession.setAuthType(authType);
-			if (details != null) {
-				gjAuthSession.setExtSessionId(details.getSessionId());
-				gjAuthSession.setRequestIP(details.getRemoteAddress());
-			}
+            // Need to build the UserSession
+            XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
 
-			if (userAgent != null) {
-				gjAuthSession.setRequestUserAgent(userAgent);
-			}
-			gjAuthSession.setDeviceType(httpUtil.getDeviceType(userAgent));
-			HttpSession session = httpRequest.getSession();
-			if (session != null) {
-				if (session.getAttribute("auditLoginId") == null) {
-					synchronized (session) {
-						if (session.getAttribute("auditLoginId") == null) {
-							boolean isDownloadLogEnabled = PropertiesUtil.getBooleanProperty("ranger.downloadpolicy.session.log.enabled", false);
-							if (isDownloadLogEnabled){
-								gjAuthSession = storeAuthSession(gjAuthSession);
-								session.setAttribute("auditLoginId", gjAuthSession.getId());
-							}
-							else if (!StringUtils.isEmpty(httpRequest.getRequestURI()) && !(httpRequest.getRequestURI().contains("/secure/policies/download/") || httpRequest.getRequestURI().contains("/secure/download/"))){
-								gjAuthSession = storeAuthSession(gjAuthSession);
-								session.setAttribute("auditLoginId", gjAuthSession.getId());
-							}else if (StringUtils.isEmpty(httpRequest.getRequestURI())){
-								gjAuthSession = storeAuthSession(gjAuthSession);
-								session.setAttribute("auditLoginId", gjAuthSession.getId());
-							}else{ //NOPMD
-								//do not log the details for download policy and tag
-							}														
-						}
-					}
-				}
-			}
+            if (gjUser == null) {
+                logger.error("Error getting user for loginId={}", currentLoginId, new Exception());
 
-			userSession = new UserSessionBase();
-			userSession.setXXPortalUser(gjUser);
-			userSession.setXXAuthSession(gjAuthSession);
-			if(httpRequest.getAttribute("spnegoEnabled") != null && (boolean)httpRequest.getAttribute("spnegoEnabled")){
-				userSession.setSpnegoEnabled(true);
-			}
+                return null;
+            }
 
-			Boolean ssoEnabled;
-			if (authType == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
-				ssoEnabled = true;
-			} else {
-				Object ssoEnabledObj = httpRequest.getAttribute("ssoEnabled");
-				ssoEnabled = ssoEnabledObj != null ? Boolean.valueOf(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-			}
+            XXAuthSession gjAuthSession = new XXAuthSession();
 
-			if (logger.isDebugEnabled()) {
-				logger.debug("session id = " + userSession.getLoginId() + " ssoenabled = " + ssoEnabled);
-			}
-			userSession.setSSOEnabled(ssoEnabled);
+            gjAuthSession.setLoginId(currentLoginId);
+            gjAuthSession.setUserId(gjUser.getId());
+            gjAuthSession.setAuthTime(DateUtil.getUTCDate());
+            gjAuthSession.setAuthStatus(XXAuthSession.AUTH_STATUS_SUCCESS);
+            gjAuthSession.setAuthType(authType);
 
-			resetUserSessionForProfiles(userSession);
-			resetUserModulePermission(userSession);
+            if (details != null) {
+                gjAuthSession.setExtSessionId(details.getSessionId());
+                gjAuthSession.setRequestIP(details.getRemoteAddress());
+            }
 
-			Calendar cal = Calendar.getInstance();
-			if(logger.isDebugEnabled()) {
-				if (details != null) {
-					logger.debug("Login Success: loginId=" + currentLoginId
-							+ ", sessionId=" + gjAuthSession.getId()
-							+ ", sessionId=" + details.getSessionId()
-							+ ", requestId=" + details.getRemoteAddress()
-							+ ", epoch=" + cal.getTimeInMillis());
-				} else {
-					logger.debug("Login Success: loginId=" + currentLoginId
-							+ ", sessionId=" + gjAuthSession.getId()
-							+ ", details is null"
-							+ ", epoch=" + cal.getTimeInMillis());
-				}
-			}
+            if (userAgent != null) {
+                gjAuthSession.setRequestUserAgent(userAgent);
+            }
 
-		}
+            gjAuthSession.setDeviceType(httpUtil.getDeviceType(userAgent));
 
-		return userSession;
-	}
+            HttpSession session = httpRequest.getSession();
 
-	private void getSSOSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
+            if (session != null) {
+                if (session.getAttribute("auditLoginId") == null) {
+                    synchronized (session) {
+                        if (session.getAttribute("auditLoginId") == null) {
+                            boolean isDownloadLogEnabled = PropertiesUtil.getBooleanProperty("ranger.downloadpolicy.session.log.enabled", false);
 
-		RangerSecurityContext context = RangerContextHolder.getSecurityContext();
-		UserSessionBase session = context != null ? context.getUserSession() : null;
-		boolean ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+                            if (isDownloadLogEnabled) {
+                                gjAuthSession = storeAuthSession(gjAuthSession);
 
-		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
-		if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean)request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
-			if(logger.isDebugEnabled()){
-				logger.debug("User : "+currentLoginId+" doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated");
-			}
-			xUserMgr.createServiceConfigUser(currentLoginId);
-		}
-	}
+                                session.setAttribute("auditLoginId", gjAuthSession.getId());
+                            } else if (!StringUtils.isEmpty(httpRequest.getRequestURI()) && !(httpRequest.getRequestURI().contains("/secure/policies/download/") || httpRequest.getRequestURI().contains("/secure/download/"))) {
+                                gjAuthSession = storeAuthSession(gjAuthSession);
 
-	public void resetUserModulePermission(UserSessionBase userSession) {
+                                session.setAttribute("auditLoginId", gjAuthSession.getId());
+                            } else if (StringUtils.isEmpty(httpRequest.getRequestURI())) {
+                                gjAuthSession = storeAuthSession(gjAuthSession);
 
-		XXUser xUser = daoManager.getXXUser().findByUserName(userSession.getLoginId());
-		if (xUser != null) {
-			List<String> permissionList = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), xUser.getId());
-			CopyOnWriteArraySet<String> userPermissions = new CopyOnWriteArraySet<String>(permissionList);
+                                session.setAttribute("auditLoginId", gjAuthSession.getId());
+                            } else { //NOPMD
+                                //do not log the details for download policy and tag
+                            }
+                        }
+                    }
+                }
+            }
 
-			UserSessionBase.RangerUserPermission rangerUserPermission = userSession.getRangerUserPermission();
+            userSession = new UserSessionBase();
 
-			if (rangerUserPermission == null) {
-				rangerUserPermission = new UserSessionBase.RangerUserPermission();
-			}
+            userSession.setXXPortalUser(gjUser);
+            userSession.setXXAuthSession(gjAuthSession);
 
-			rangerUserPermission.setUserPermissions(userPermissions);
-			rangerUserPermission.setLastUpdatedTime(Calendar.getInstance().getTimeInMillis());
-			userSession.setRangerUserPermission(rangerUserPermission);
-			if (logger.isDebugEnabled()) {
-				logger.debug("UserSession Updated to set new Permissions to User: " + userSession.getLoginId());
-			}
-		} else {
-			logger.error("No XUser found with username: " + userSession.getLoginId() + "So Permission is not set for the user");
-		}
-	}
+            if (httpRequest.getAttribute("spnegoEnabled") != null && (boolean) httpRequest.getAttribute("spnegoEnabled")) {
+                userSession.setSpnegoEnabled(true);
+            }
 
-	public void resetUserSessionForProfiles(UserSessionBase userSession) {
-		if (userSession == null) {
-			// Nothing to reset
-			return;
-		}
+            boolean ssoEnabled;
 
-		// Let's get the Current User Again
-		String currentLoginId = userSession.getLoginId();
+            if (authType == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+                ssoEnabled = true;
+            } else {
+                Object ssoEnabledObj = httpRequest.getAttribute("ssoEnabled");
 
-		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
-		userSession.setXXPortalUser(gjUser);
+                ssoEnabled = ssoEnabledObj != null ? Boolean.parseBoolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+            }
 
-		setUserRoles(userSession);
+            logger.debug("session id = {} ssoenabled = {}", userSession.getLoginId(), ssoEnabled);
 
-	}
+            userSession.setSSOEnabled(ssoEnabled);
 
-	private void setUserRoles(UserSessionBase userSession) {
+            resetUserSessionForProfiles(userSession);
+            resetUserModulePermission(userSession);
 
-		List<String> strRoleList = new ArrayList<String>();
-		List<XXPortalUserRole> roleList = daoManager.getXXPortalUserRole().findByUserId(
-				userSession.getUserId());
-		for (XXPortalUserRole gjUserRole : roleList) {
-			String userRole = gjUserRole.getUserRole();
-			strRoleList.add(userRole);
-		}
+            if (logger.isDebugEnabled()) {
+                Calendar cal = Calendar.getInstance();
 
-		if (strRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
-			userSession.setUserAdmin(true);
-			userSession.setKeyAdmin(false);
+                if (details != null) {
+                    logger.debug("Login Success: loginId={}, sessionId={}, sessionId={}, requestId={}, epoch={}", currentLoginId, gjAuthSession.getId(), details.getSessionId(), details.getRemoteAddress(), cal.getTimeInMillis());
+                } else {
+                    logger.debug("Login Success: loginId={}, sessionId={}, details is null, epoch={}", currentLoginId, gjAuthSession.getId(), cal.getTimeInMillis());
+                }
+            }
+        }
+
+        return userSession;
+    }
+
+    public void resetUserModulePermission(UserSessionBase userSession) {
+        XXUser xUser = daoManager.getXXUser().findByUserName(userSession.getLoginId());
+
+        if (xUser != null) {
+            List<String>                         permissionList       = daoManager.getXXModuleDef().findAccessibleModulesByUserId(userSession.getUserId(), xUser.getId());
+            CopyOnWriteArraySet<String>          userPermissions      = new CopyOnWriteArraySet<>(permissionList);
+            UserSessionBase.RangerUserPermission rangerUserPermission = userSession.getRangerUserPermission();
+
+            if (rangerUserPermission == null) {
+                rangerUserPermission = new UserSessionBase.RangerUserPermission();
+            }
+
+            rangerUserPermission.setUserPermissions(userPermissions);
+            rangerUserPermission.setLastUpdatedTime(Calendar.getInstance().getTimeInMillis());
+            userSession.setRangerUserPermission(rangerUserPermission);
+
+            logger.debug("UserSession Updated to set new Permissions to User: {}", userSession.getLoginId());
+        } else {
+            logger.error("No XUser found with username: {}So Permission is not set for the user", userSession.getLoginId());
+        }
+    }
+
+    public void resetUserSessionForProfiles(UserSessionBase userSession) {
+        if (userSession == null) {
+            // Nothing to reset
+            return;
+        }
+
+        // Let's get the Current User Again
+        String       currentLoginId = userSession.getLoginId();
+        XXPortalUser gjUser         = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
+
+        userSession.setXXPortalUser(gjUser);
+
+        setUserRoles(userSession);
+    }
+
+    public XXAuthSession processFailureLogin(int authStatus, int authType, String loginId, String remoteAddr, String sessionId, String userAgent) {
+        XXAuthSession gjAuthSession = new XXAuthSession();
+
+        gjAuthSession.setLoginId(loginId);
+        gjAuthSession.setUserId(null);
+        gjAuthSession.setAuthTime(DateUtil.getUTCDate());
+        gjAuthSession.setAuthStatus(authStatus);
+        gjAuthSession.setAuthType(authType);
+        gjAuthSession.setDeviceType(RangerCommonEnums.DEVICE_UNKNOWN);
+        gjAuthSession.setExtSessionId(sessionId);
+        gjAuthSession.setRequestIP(remoteAddr);
+        gjAuthSession.setRequestUserAgent(userAgent);
+
+        gjAuthSession = storeAuthSession(gjAuthSession);
+
+        return gjAuthSession;
+    }
+
+    // non-WEB processing
+    public UserSessionBase processStandaloneSuccessLogin(int authType, String ipAddress) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String         currentLoginId = authentication.getName();
+        XXPortalUser   gjUser         = daoManager.getXXPortalUser().findByLoginId(currentLoginId); // Need to build the UserSession
+
+        if (gjUser == null) {
+            logger.error("Error getting user for loginId={}", currentLoginId, new Exception());
+
+            return null;
+        }
+
+        XXAuthSession gjAuthSession = new XXAuthSession();
+
+        gjAuthSession.setLoginId(currentLoginId);
+        gjAuthSession.setUserId(gjUser.getId());
+        gjAuthSession.setAuthTime(DateUtil.getUTCDate());
+        gjAuthSession.setAuthStatus(XXAuthSession.AUTH_STATUS_SUCCESS);
+        gjAuthSession.setAuthType(authType);
+        gjAuthSession.setDeviceType(RangerCommonEnums.DEVICE_UNKNOWN);
+        gjAuthSession.setExtSessionId(null);
+        gjAuthSession.setRequestIP(ipAddress);
+        gjAuthSession.setRequestUserAgent(null);
+
+        gjAuthSession = storeAuthSession(gjAuthSession);
+
+        UserSessionBase userSession = new UserSessionBase();
+
+        userSession.setXXPortalUser(gjUser);
+        userSession.setXXAuthSession(gjAuthSession);
+
+        // create context with user-session and set in thread-local
+        RangerSecurityContext context = new RangerSecurityContext();
+
+        context.setUserSession(userSession);
+
+        RangerContextHolder.setSecurityContext(context);
+
+        resetUserSessionForProfiles(userSession);
+        resetUserModulePermission(userSession);
+
+        return userSession;
+    }
+
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXAuthSessionList searchAuthSessions(SearchCriteria searchCriteria) {
+        if (searchCriteria == null) {
+            searchCriteria = new SearchCriteria();
+        }
+
+        if (searchCriteria.getParamList() != null && !searchCriteria.getParamList().isEmpty()) {
+            int      clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
+            DateUtil dateUtil                 = new DateUtil();
+
+            if (searchCriteria.getParamList().containsKey("startDate")) {
+                Date temp = (Date) searchCriteria.getParamList().get("startDate");
+
+                temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
+                temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+
+                searchCriteria.getParamList().put("startDate", temp);
+            }
+
+            if (searchCriteria.getParamList().containsKey("endDate")) {
+                Date temp = (Date) searchCriteria.getParamList().get("endDate");
+
+                temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
+                temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+
+                searchCriteria.getParamList().put("endDate", temp);
+            }
+        }
+
+        return authSessionService.search(searchCriteria);
+    }
+
+    public VXLong countAuthSessions(SearchCriteria searchCriteria) {
+        return authSessionService.getSearchCount(searchCriteria, AuthSessionService.AUTH_SESSION_SEARCH_FLDS);
+    }
+
+    public VXAuthSession getAuthSession(Long id) {
+        return authSessionService.readResource(id);
+    }
+
+    public VXAuthSession getAuthSessionBySessionId(String authSessionId) {
+        if (stringUtil.isEmpty(authSessionId)) {
+            throw restErrorUtil.createRESTException("Please provide the auth session id.", MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        XXAuthSession xXAuthSession = daoManager.getXXAuthSession().getAuthSessionBySessionId(authSessionId);
+
+        if (xXAuthSession == null) {
+            throw restErrorUtil.createRESTException("Please provide a valid " + "session id.", MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        return authSessionService.populateViewBean(xXAuthSession);
+    }
+
+    /**
+     * Check whether the user failed to log in so many times that we need to lock it for
+     * a while. The current limit of is to fail at most n times in a sliding time window,
+     * otherwise the login verification will not be performed in the future.
+     *
+     * @param loginId
+     * @return
+     */
+    public boolean isLoginIdLocked(String loginId) {
+        boolean ret             = false;
+        boolean autoLockEnabled = PropertiesUtil.getBooleanProperty("ranger.admin.login.autolock.enabled", true);
+
+        if (autoLockEnabled) {
+            int  windowSeconds    = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.window.seconds", 300);
+            int  maxFailuresCount = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.maxfailure", 5);
+            long failuresCount    = daoManager.getXXAuthSession().getRecentAuthFailureCountByLoginId(loginId, windowSeconds);
+
+            ret = failuresCount >= maxFailuresCount;
+
+            logger.debug("isLoginIdLocked(loginId={}): windowSeconds={}, maxFailuresCount={}, failuresCount={}, ret={}", loginId, windowSeconds, maxFailuresCount, failuresCount, ret);
+        }
+
+        return ret;
+    }
+
+    public boolean isValidXAUser(String loginId) {
+        XXPortalUser pUser = daoManager.getXXPortalUser().findByLoginId(loginId);
+
+        if (pUser == null || pUser.getUserSource() == RangerCommonEnums.USER_FEDERATED) {
+            logger.error("Error getting user for loginId={} or  federated user", loginId);
+
+            return false;
+        } else {
+            logger.debug("{} is a valid user", loginId);
+
+            return true;
+        }
+    }
+
+    public CopyOnWriteArrayList<UserSessionBase> getActiveSessionsOnServer() {
+        CopyOnWriteArrayList<HttpSession>     activeHttpUserSessions   = RangerHttpSessionListener.getActiveSessionOnServer();
+        CopyOnWriteArrayList<UserSessionBase> activeRangerUserSessions = new CopyOnWriteArrayList<>();
+
+        if (CollectionUtils.isEmpty(activeHttpUserSessions)) {
+            return activeRangerUserSessions;
+        }
+
+        for (HttpSession httpSession : activeHttpUserSessions) {
+            if (httpSession.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY) == null) {
+                continue;
+            }
+
+            RangerSecurityContext securityContext = (RangerSecurityContext) httpSession.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY);
+
+            if (securityContext.getUserSession() != null) {
+                activeRangerUserSessions.add(securityContext.getUserSession());
+            }
+        }
+
+        return activeRangerUserSessions;
+    }
+
+    public Set<UserSessionBase> getActiveUserSessionsForPortalUserId(Long portalUserId) {
+        CopyOnWriteArrayList<UserSessionBase> activeSessions = getActiveSessionsOnServer();
+
+        if (CollectionUtils.isEmpty(activeSessions)) {
+            return null;
+        }
+
+        Set<UserSessionBase> activeUserSessions = new HashSet<>();
+
+        for (UserSessionBase session : activeSessions) {
+            if (session.getUserId().equals(portalUserId)) {
+                activeUserSessions.add(session);
+            }
+        }
+
+        logger.debug("No Session Found with portalUserId: {}", portalUserId);
+
+        return activeUserSessions;
+    }
+
+    public Set<UserSessionBase> getActiveUserSessionsForXUserId(Long xUserId) {
+        XXPortalUser portalUser = daoManager.getXXPortalUser().findByXUserId(xUserId);
+
+        if (portalUser != null) {
+            return getActiveUserSessionsForPortalUserId(portalUser.getId());
+        } else {
+            logger.debug("Could not find corresponding portalUser for xUserId{}", xUserId);
+
+            return null;
+        }
+    }
+
+    public synchronized void refreshPermissionsIfNeeded(UserSessionBase userSession) {
+        if (userSession != null) {
+            Long lastUpdatedTime = (userSession.getRangerUserPermission() != null) ? userSession.getRangerUserPermission().getLastUpdatedTime() : null;
+
+            if (lastUpdatedTime == null || (Calendar.getInstance().getTimeInMillis() - lastUpdatedTime) > SESSION_UPDATE_INTERVAL_IN_MILLIS) {
+                this.resetUserModulePermission(userSession);
+            }
+        }
+    }
+
+    protected boolean validateUserSession(UserSessionBase userSession, String currentLoginId) {
+        if (currentLoginId.equalsIgnoreCase(userSession.getXXPortalUser().getLoginId())) {
+            return true;
+        } else {
+            logger.warn("loginId doesn't match loginId from HTTPSession. Will create new session. loginId={}, userSession={}", currentLoginId, userSession, new Exception());
+
+            return false;
+        }
+    }
+
+    @Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
+    protected XXAuthSession storeAuthSession(XXAuthSession gjAuthSession) {
+        // daoManager.getEntityManager().getTransaction().begin();
+        XXAuthSession dbMAuthSession = daoManager.getXXAuthSession().create(gjAuthSession);
+
+        // daoManager.getEntityManager().getTransaction().commit();
+        return dbMAuthSession;
+    }
+
+    private void getSSOSpnegoAuthCheckForAPI(String currentLoginId, HttpServletRequest request) {
+        RangerSecurityContext context    = RangerContextHolder.getSecurityContext();
+        UserSessionBase       session    = context != null ? context.getUserSession() : null;
+        boolean               ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+        XXPortalUser          gjUser     = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
+
+        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
+            logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated", currentLoginId);
+
+            xUserMgr.createServiceConfigUser(currentLoginId);
+        }
+    }
+
+    private void setUserRoles(UserSessionBase userSession) {
+        List<String>           strRoleList = new ArrayList<>();
+        List<XXPortalUserRole> roleList    = daoManager.getXXPortalUserRole().findByUserId(userSession.getUserId());
+
+        for (XXPortalUserRole gjUserRole : roleList) {
+            String userRole = gjUserRole.getUserRole();
+
+            strRoleList.add(userRole);
+        }
+
+        if (strRoleList.contains(RangerConstants.ROLE_SYS_ADMIN)) {
+            userSession.setUserAdmin(true);
+            userSession.setKeyAdmin(false);
             userSession.setAuditUserAdmin(false);
             userSession.setAuditKeyAdmin(false);
-		} else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
-			userSession.setKeyAdmin(true);
-			userSession.setUserAdmin(false);
+        } else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN)) {
+            userSession.setKeyAdmin(true);
+            userSession.setUserAdmin(false);
             userSession.setAuditUserAdmin(false);
             userSession.setAuditKeyAdmin(false);
-		} else if (strRoleList.size() == 1 && RangerConstants.ROLE_USER.equals(strRoleList.get(0))) {
-			userSession.setKeyAdmin(false);
-			userSession.setUserAdmin(false);
-                        userSession.setAuditUserAdmin(false);
-                        userSession.setAuditKeyAdmin(false);
-                } else if (strRoleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-                        userSession.setAuditUserAdmin(true);
-                        userSession.setAuditKeyAdmin(false);
-                        userSession.setKeyAdmin(false);
-                        userSession.setUserAdmin(false);
-                } else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-                        userSession.setAuditKeyAdmin(true);
-                        userSession.setAuditUserAdmin(false);
-                        userSession.setKeyAdmin(false);
-                        userSession.setUserAdmin(false);
-		}
+        } else if (strRoleList.size() == 1 && RangerConstants.ROLE_USER.equals(strRoleList.get(0))) {
+            userSession.setKeyAdmin(false);
+            userSession.setUserAdmin(false);
+            userSession.setAuditUserAdmin(false);
+            userSession.setAuditKeyAdmin(false);
+        } else if (strRoleList.contains(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+            userSession.setAuditUserAdmin(true);
+            userSession.setAuditKeyAdmin(false);
+            userSession.setKeyAdmin(false);
+            userSession.setUserAdmin(false);
+        } else if (strRoleList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+            userSession.setAuditKeyAdmin(true);
+            userSession.setAuditUserAdmin(false);
+            userSession.setKeyAdmin(false);
+            userSession.setUserAdmin(false);
+        }
 
-		userSession.setUserRoleList(strRoleList);
-	}
-
-	public XXAuthSession processFailureLogin(int authStatus, int authType,
-			String loginId, String remoteAddr, String sessionId, String userAgent) {
-		XXAuthSession gjAuthSession = new XXAuthSession();
-		gjAuthSession.setLoginId(loginId);
-		gjAuthSession.setUserId(null);
-		gjAuthSession.setAuthTime(DateUtil.getUTCDate());
-		gjAuthSession.setAuthStatus(authStatus);
-		gjAuthSession.setAuthType(authType);
-		gjAuthSession.setDeviceType(RangerCommonEnums.DEVICE_UNKNOWN);
-		gjAuthSession.setExtSessionId(sessionId);
-		gjAuthSession.setRequestIP(remoteAddr);
-		gjAuthSession.setRequestUserAgent(userAgent);
-
-		gjAuthSession = storeAuthSession(gjAuthSession);
-		return gjAuthSession;
-	}
-
-	protected boolean validateUserSession(UserSessionBase userSession,
-			String currentLoginId) {
-		if (currentLoginId
-				.equalsIgnoreCase(userSession.getXXPortalUser().getLoginId())) {
-			return true;
-		} else {
-			logger.warn(
-					"loginId doesn't match loginId from HTTPSession. Will create new session. loginId="
-							+ currentLoginId + ", userSession=" + userSession,
-					new Exception());
-			return false;
-		}
-	}
-
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
-	protected XXAuthSession storeAuthSession(XXAuthSession gjAuthSession) {
-		// daoManager.getEntityManager().getTransaction().begin();
-		XXAuthSession dbMAuthSession = daoManager.getXXAuthSession().create(
-				gjAuthSession);
-		// daoManager.getEntityManager().getTransaction().commit();
-		return dbMAuthSession;
-	}
-
-	// non-WEB processing
-	public UserSessionBase processStandaloneSuccessLogin(int authType,
-			String ipAddress) {
-		Authentication authentication = SecurityContextHolder.getContext()
-				.getAuthentication();
-
-		String currentLoginId = authentication.getName();
-
-		// Need to build the UserSession
-		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
-		if (gjUser == null) {
-			logger.error("Error getting user for loginId=" + currentLoginId,
-					new Exception());
-			return null;
-		}
-
-		XXAuthSession gjAuthSession = new XXAuthSession();
-		gjAuthSession.setLoginId(currentLoginId);
-		gjAuthSession.setUserId(gjUser.getId());
-		gjAuthSession.setAuthTime(DateUtil.getUTCDate());
-		gjAuthSession.setAuthStatus(XXAuthSession.AUTH_STATUS_SUCCESS);
-		gjAuthSession.setAuthType(authType);
-		gjAuthSession.setDeviceType(RangerCommonEnums.DEVICE_UNKNOWN);
-		gjAuthSession.setExtSessionId(null);
-		gjAuthSession.setRequestIP(ipAddress);
-		gjAuthSession.setRequestUserAgent(null);
-
-		gjAuthSession = storeAuthSession(gjAuthSession);
-
-		UserSessionBase userSession = new UserSessionBase();
-		userSession.setXXPortalUser(gjUser);
-		userSession.setXXAuthSession(gjAuthSession);
-
-		// create context with user-session and set in thread-local
-		RangerSecurityContext context = new RangerSecurityContext();
-		context.setUserSession(userSession);
-		RangerContextHolder.setSecurityContext(context);
-
-		resetUserSessionForProfiles(userSession);
-		resetUserModulePermission(userSession);
-
-		return userSession;
-	}
-
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXAuthSessionList searchAuthSessions(SearchCriteria searchCriteria) {
-
-		if (searchCriteria == null) {
-			searchCriteria = new SearchCriteria();
-		}
-		if (searchCriteria.getParamList() != null
-				&& !searchCriteria.getParamList().isEmpty()) {
-			
-			int clientTimeOffsetInMinute=RestUtil.getClientTimeOffset();
-			java.util.Date temp = null;
-			DateUtil dateUtil = new DateUtil();
-			if (searchCriteria.getParamList().containsKey("startDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
-						"startDate");
-				temp = dateUtil.getDateFromGivenDate(temp, 0, 0, 0, 0);
-				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
-				searchCriteria.getParamList().put("startDate", temp);
-			}
-			if (searchCriteria.getParamList().containsKey("endDate")) {
-				temp = (java.util.Date) searchCriteria.getParamList().get(
-						"endDate");
-				temp = dateUtil.getDateFromGivenDate(temp, 0, 23, 59, 59);
-				temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
-				searchCriteria.getParamList().put("endDate", temp);
-			}
-		}
-		
-		return authSessionService.search(searchCriteria);
-	}
-
-	public VXLong countAuthSessions(SearchCriteria searchCriteria) {
-		return authSessionService.getSearchCount(searchCriteria,
-				AuthSessionService.AUTH_SESSION_SEARCH_FLDS);
-	}
-
-	public VXAuthSession getAuthSession(Long id) {
-		return authSessionService.readResource(id);
-	}
-
-	public VXAuthSession getAuthSessionBySessionId(String authSessionId) {
-		if(stringUtil.isEmpty(authSessionId)){
-			throw restErrorUtil.createRESTException("Please provide the auth session id.",
-					MessageEnums.INVALID_INPUT_DATA);
-		}
-		
-		XXAuthSession xXAuthSession = daoManager.getXXAuthSession()
-				.getAuthSessionBySessionId(authSessionId);
-		
-		if(xXAuthSession==null){
-			throw restErrorUtil.createRESTException("Please provide a valid "
-					+ "session id.", MessageEnums.INVALID_INPUT_DATA);
-		}
-		
-		VXAuthSession vXAuthSession = authSessionService.populateViewBean(xXAuthSession);
-		return vXAuthSession;
-	}
-
-	/**
-	 * Check whether the user failed to log in so many times that we need to lock it for
-	 * a while. The current limit of is to fail at most n times in a sliding time window,
-	 * otherwise the login verification will not be performed in the future.
-	 * @param loginId
-	 * @return
-	 */
-	public boolean isLoginIdLocked(String loginId) {
-		boolean ret             = false;
-		boolean autoLockEnabled = PropertiesUtil.getBooleanProperty("ranger.admin.login.autolock.enabled", true);
-
-		if (autoLockEnabled) {
-			int  windowSeconds    = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.window.seconds", 300);
-			int  maxFailuresCount = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.maxfailure", 5);
-			long failuresCount    = daoManager.getXXAuthSession().getRecentAuthFailureCountByLoginId(loginId, windowSeconds);
-
-			ret = failuresCount >= maxFailuresCount;
-
-			if (logger.isDebugEnabled()) {
-				logger.debug("isLoginIdLocked(loginId={}): windowSeconds={}, maxFailuresCount={}, failuresCount={}, ret={}", loginId, windowSeconds, maxFailuresCount, failuresCount, ret);
-			}
-		}
-
-		return ret;
-	}
-
-	public boolean isValidXAUser(String loginId) {
-		XXPortalUser pUser = daoManager.getXXPortalUser().findByLoginId(loginId);
-		if (pUser == null) {
-			logger.error("Error getting user for loginId=" + loginId);
-			return false;
-		} else {
-			if(logger.isDebugEnabled()) {
-				logger.debug(loginId + " is a valid user");
-			}
-			return true;
-		}
-		
-	}
-
-	public CopyOnWriteArrayList<UserSessionBase> getActiveSessionsOnServer() {
-
-		CopyOnWriteArrayList<HttpSession> activeHttpUserSessions = RangerHttpSessionListener.getActiveSessionOnServer();
-		CopyOnWriteArrayList<UserSessionBase> activeRangerUserSessions = new CopyOnWriteArrayList<UserSessionBase>();
-
-		if (CollectionUtils.isEmpty(activeHttpUserSessions)) {
-			return activeRangerUserSessions;
-		}
-
-		for (HttpSession httpSession : activeHttpUserSessions) {
-
-			if (httpSession.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY) == null) {
-				continue;
-			}
-
-			RangerSecurityContext securityContext = (RangerSecurityContext) httpSession.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY);
-			if (securityContext.getUserSession() != null) {
-				activeRangerUserSessions.add(securityContext.getUserSession());
-			}
-		}
-
-		return activeRangerUserSessions;
-	}
-
-	public Set<UserSessionBase> getActiveUserSessionsForPortalUserId(Long portalUserId) {
-		CopyOnWriteArrayList<UserSessionBase> activeSessions = getActiveSessionsOnServer();
-
-		if (CollectionUtils.isEmpty(activeSessions)) {
-			return null;
-		}
-
-		Set<UserSessionBase> activeUserSessions = new HashSet<UserSessionBase>();
-		for (UserSessionBase session : activeSessions) {
-			if (session.getUserId().equals(portalUserId)) {
-				activeUserSessions.add(session);
-			}
-		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("No Session Found with portalUserId: " + portalUserId);
-		}
-		return activeUserSessions;
-	}
-
-	public Set<UserSessionBase> getActiveUserSessionsForXUserId(Long xUserId) {
-		XXPortalUser portalUser = daoManager.getXXPortalUser().findByXUserId(xUserId);
-		if (portalUser != null) {
-			return getActiveUserSessionsForPortalUserId(portalUser.getId());
-		} else {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Could not find corresponding portalUser for xUserId" + xUserId);
-			}
-			return null;
-		}
-	}
-
-	public synchronized void refreshPermissionsIfNeeded(UserSessionBase userSession) {
-		if (userSession != null) {
-			Long lastUpdatedTime = (userSession.getRangerUserPermission() != null) ? userSession.getRangerUserPermission().getLastUpdatedTime() : null;
-			if (lastUpdatedTime == null || (Calendar.getInstance().getTimeInMillis() - lastUpdatedTime) > SESSION_UPDATE_INTERVAL_IN_MILLIS) {
-				this.resetUserModulePermission(userSession);
-			}
-		}
-	}
-
+        userSession.setUserRoleList(strRoleList);
+    }
 }

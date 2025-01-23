@@ -17,52 +17,51 @@
 
 package org.apache.ranger.view;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXModulePermissionList extends VList {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    List<VXModulePermission> vXModulePermissionList = new ArrayList<>();
 
-	List<VXModulePermission> vXModulePermissionList = new ArrayList<VXModulePermission>();
+    public VXModulePermissionList() {
+        super();
+    }
 
-	public VXModulePermissionList() {
-		super();
-	}
+    public VXModulePermissionList(List<VXModulePermission> objList) {
+        super(objList);
+        this.vXModulePermissionList = objList;
+    }
 
-	public VXModulePermissionList(List<VXModulePermission> objList) {
-		super(objList);
-		this.vXModulePermissionList = objList;
-	}
+    @JsonProperty("vXModulePermissionList")
+    public List<VXModulePermission> getvXModulePermissionList() {
+        return vXModulePermissionList;
+    }
 
-	@JsonProperty("vXModulePermissionList")
-	public List<VXModulePermission> getvXModulePermissionList() {
-		return vXModulePermissionList;
-	}
+    @JsonProperty("vXModulePermissionList")
+    public void setvXModulePermissionList(List<VXModulePermission> vXModulePermissionList) {
+        this.vXModulePermissionList = vXModulePermissionList;
+    }
 
-	@JsonProperty("vXModulePermissionList")
-	public void setvXModulePermissionList(List<VXModulePermission> vXModulePermissionList) {
-		this.vXModulePermissionList = vXModulePermissionList;
-	}
+    @Override
+    public int getListSize() {
+        if (vXModulePermissionList != null) {
+            return vXModulePermissionList.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public int getListSize() {
-		if(vXModulePermissionList != null) {
-			return vXModulePermissionList.size();
-		}
-		return 0;
-	}
-
-	@Override
-	public List<VXModulePermission> getList() {
-		return vXModulePermissionList;
-	}
+    @Override
+    public List<VXModulePermission> getList() {
+        return vXModulePermissionList;
+    }
 }

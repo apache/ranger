@@ -24,68 +24,70 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GeolocationMetadata {
-	private static final Logger LOG = LoggerFactory.getLogger(GeolocationMetadata.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GeolocationMetadata.class);
 
-	private String[] locationDataItemNames = new String[0];
+    private String[] locationDataItemNames = new String[0];
 
-	public static GeolocationMetadata create(String fields[], int index) {
-		GeolocationMetadata ret = null;
+    GeolocationMetadata() {}
 
-		if (fields.length > 2) {
-			String[] metadataNames = new String[fields.length-2];
+    GeolocationMetadata(final String[] locationDataItemNames) {
+        this.locationDataItemNames = locationDataItemNames;
+    }
 
-			for (int i = 2; i < fields.length; i++) {
-				metadataNames[i-2] = fields[i];
-			}
-			ret = new GeolocationMetadata(metadataNames);
-		} else {
-			LOG.error("GeolocationMetadata.createMetadata() - Not enough fields specified, need {start, end, location} at " + index);
-		}
+    public static GeolocationMetadata create(String[] fields, int index) {
+        GeolocationMetadata ret = null;
 
-		return ret;
-	}
+        if (fields.length > 2) {
+            String[] metadataNames = new String[fields.length - 2];
 
-	GeolocationMetadata() {}
+            for (int i = 2; i < fields.length; i++) {
+                metadataNames[i - 2] = fields[i];
+            }
 
-	GeolocationMetadata(final String[] locationDataItemNames) {
-		this.locationDataItemNames = locationDataItemNames;
-	}
+            ret = new GeolocationMetadata(metadataNames);
+        } else {
+            LOG.error("GeolocationMetadata.createMetadata() - Not enough fields specified, need {start, end, location} at {}", index);
+        }
 
-	public int getDataItemNameIndex(final String dataItemName) {
-		int ret = -1;
+        return ret;
+    }
 
-		if (!StringUtils.isBlank(dataItemName)) {
-			for (int i = 0; i < locationDataItemNames.length; i++) {
-				if (locationDataItemNames[i].equals(dataItemName)) {
-					ret = i;
-					break;
-				}
-			}
-		}
+    public int getDataItemNameIndex(final String dataItemName) {
+        int ret = -1;
 
-		return ret;
-	}
+        if (!StringUtils.isBlank(dataItemName)) {
+            for (int i = 0; i < locationDataItemNames.length; i++) {
+                if (locationDataItemNames[i].equals(dataItemName)) {
+                    ret = i;
 
-	public String[] getLocationDataItemNames() {
-		return locationDataItemNames;
-	}
+                    break;
+                }
+            }
+        }
 
-	@Override
-	public String toString( ) {
-		StringBuilder sb = new StringBuilder();
+        return ret;
+    }
 
-		toStringDump(sb);
+    public String[] getLocationDataItemNames() {
+        return locationDataItemNames;
+    }
 
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-	private StringBuilder toStringDump(StringBuilder sb) {
-		sb.append("FROM_IP,TO_IP,");
+        toStringDump(sb);
 
-		for (String locationDataItemName : locationDataItemNames) {
-			sb.append(locationDataItemName).append(", ");
-		}
+        return sb.toString();
+    }
 
-		return sb;
-	}
+    private StringBuilder toStringDump(StringBuilder sb) {
+        sb.append("FROM_IP,TO_IP,");
+
+        for (String locationDataItemName : locationDataItemNames) {
+            sb.append(locationDataItemName).append(", ");
+        }
+
+        return sb;
+    }
 }

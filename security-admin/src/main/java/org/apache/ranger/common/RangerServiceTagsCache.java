@@ -24,7 +24,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.plugin.store.TagStore;
-
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
@@ -38,157 +37,153 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerServiceTagsCache {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTagsCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTagsCache.class);
 
-	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
+    private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
-	private static volatile RangerServiceTagsCache sInstance = null;
+    private static volatile RangerServiceTagsCache sInstance;
 
-	private final boolean useServiceTagsCache;
-	private final int     waitTimeInSeconds;
-	private final boolean dedupStrings;
+    private final boolean useServiceTagsCache;
+    private final int     waitTimeInSeconds;
+    private final boolean dedupStrings;
 
-	private final Map<String, ServiceTagsWrapper> serviceTagsMap = new HashMap<>();
+    private final Map<String, ServiceTagsWrapper> serviceTagsMap = new HashMap<>();
 
-	public static RangerServiceTagsCache getInstance() {
-		if (sInstance == null) {
-			synchronized (RangerServiceTagsCache.class) {
-				if (sInstance == null) {
-					sInstance = new RangerServiceTagsCache();
-				}
-			}
-		}
-		return sInstance;
-	}
+    private RangerServiceTagsCache() {
+        RangerAdminConfig config = RangerAdminConfig.getInstance();
 
-	private RangerServiceTagsCache() {
-		RangerAdminConfig config = RangerAdminConfig.getInstance();
+        useServiceTagsCache = config.getBoolean("ranger.admin.tag.download.usecache", true);
+        waitTimeInSeconds   = config.getInt("ranger.admin.tag.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+        dedupStrings        = config.getBoolean("ranger.admin.tag.dedup.strings", Boolean.TRUE);
+    }
 
-		useServiceTagsCache = config.getBoolean("ranger.admin.tag.download.usecache", true);
-		waitTimeInSeconds   = config.getInt("ranger.admin.tag.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
-		dedupStrings        = config.getBoolean("ranger.admin.tag.dedup.strings", Boolean.TRUE);
-	}
+    public static RangerServiceTagsCache getInstance() {
+        RangerServiceTagsCache me = sInstance;
 
-	public void dump() {
+        if (me == null) {
+            synchronized (RangerServiceTagsCache.class) {
+                me = sInstance;
 
-		if (useServiceTagsCache) {
-			final Set<String> serviceNames;
+                if (me == null) {
+                    me        = new RangerServiceTagsCache();
+                    sInstance = me;
+                }
+            }
+        }
 
-			synchronized (this) {
-				serviceNames = serviceTagsMap.keySet();
-			}
+        return me;
+    }
 
-			if (CollectionUtils.isNotEmpty(serviceNames)) {
-				ServiceTagsWrapper cachedServiceTagsWrapper;
+    public void dump() {
+        if (useServiceTagsCache) {
+            final Set<String> serviceNames;
 
-				for (String serviceName : serviceNames) {
-					synchronized (this) {
-						cachedServiceTagsWrapper = serviceTagsMap.get(serviceName);
-					}
-					LOG.debug("serviceName:" + serviceName + ", Cached-MetaData:" + cachedServiceTagsWrapper);
-				}
-			}
-		}
-	}
+            synchronized (this) {
+                serviceNames = serviceTagsMap.keySet();
+            }
 
-	public ServiceTags getServiceTags(String serviceName, Long serviceId, Long lastKnownVersion, boolean needsBackwardCompatibility, TagStore tagStore) throws Exception {
+            if (CollectionUtils.isNotEmpty(serviceNames)) {
+                ServiceTagsWrapper cachedServiceTagsWrapper;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceTagsCache.getServiceTags(" + serviceName + ", " + serviceId + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + ")");
-		}
+                for (String serviceName : serviceNames) {
+                    synchronized (this) {
+                        cachedServiceTagsWrapper = serviceTagsMap.get(serviceName);
+                    }
 
-		ServiceTags ret = null;
+                    LOG.debug("serviceName:{}, Cached-MetaData:{}", serviceName, cachedServiceTagsWrapper);
+                }
+            }
+        }
+    }
 
-		if (StringUtils.isNotBlank(serviceName) && serviceId != null) {
+    public ServiceTags getServiceTags(String serviceName, Long serviceId, Long lastKnownVersion, boolean needsBackwardCompatibility, TagStore tagStore) throws Exception {
+        LOG.debug("==> RangerServiceTagsCache.getServiceTags({}, {}, {}, {})", serviceName, serviceId, lastKnownVersion, needsBackwardCompatibility);
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("useServiceTagsCache=" + useServiceTagsCache);
-			}
+        ServiceTags ret = null;
 
-			if (!useServiceTagsCache) {
-				if (tagStore != null) {
-					try {
-						ret = tagStore.getServiceTags(serviceName, -1L);
+        if (StringUtils.isNotBlank(serviceName) && serviceId != null) {
+            LOG.debug("useServiceTagsCache={}", useServiceTagsCache);
 
-						if (ret != null && dedupStrings) {
-							ret.dedupStrings();
-						}
-					} catch (Exception exception) {
-						LOG.error("getServiceTags(" + serviceName + "): failed to get latest tags from tag-store", exception);
-					}
-				} else {
-					LOG.error("getServiceTags(" + serviceName + "): failed to get latest tags as tag-store is null!");
-				}
-			} else {
-				ServiceTagsWrapper serviceTagsWrapper;
+            if (!useServiceTagsCache) {
+                if (tagStore != null) {
+                    try {
+                        ret = tagStore.getServiceTags(serviceName, -1L);
 
-				synchronized (this) {
-					serviceTagsWrapper = serviceTagsMap.get(serviceName);
+                        if (ret != null && dedupStrings) {
+                            ret.dedupStrings();
+                        }
+                    } catch (Exception exception) {
+                        LOG.error("getServiceTags({}): failed to get latest tags from tag-store", serviceName, exception);
+                    }
+                } else {
+                    LOG.error("getServiceTags({}): failed to get latest tags as tag-store is null!", serviceName);
+                }
+            } else {
+                ServiceTagsWrapper serviceTagsWrapper;
 
-					if (serviceTagsWrapper != null) {
-						if (!serviceId.equals(serviceTagsWrapper.getServiceId())) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Service [" + serviceName + "] changed service-id from " + serviceTagsWrapper.getServiceId()
-										+ " to " + serviceId);
-								LOG.debug("Recreating serviceTagsWrapper for serviceName [" + serviceName + "]");
-							}
-							serviceTagsMap.remove(serviceName);
-							serviceTagsWrapper = null;
-						}
-					}
-					if (serviceTagsWrapper == null) {
-						serviceTagsWrapper = new ServiceTagsWrapper(serviceId);
-						serviceTagsMap.put(serviceName, serviceTagsWrapper);
-					}
-				}
+                synchronized (this) {
+                    serviceTagsWrapper = serviceTagsMap.get(serviceName);
 
-				if (tagStore != null) {
-					ret = serviceTagsWrapper.getLatestOrCached(serviceName, tagStore, lastKnownVersion, needsBackwardCompatibility);
-				} else {
-					LOG.error("getServiceTags(" + serviceName + "): failed to get latest tags as tag-store is null!");
-					ret = serviceTagsWrapper.getServiceTags();
-				}
+                    if (serviceTagsWrapper != null) {
+                        if (!serviceId.equals(serviceTagsWrapper.getServiceId())) {
+                            LOG.debug("Service [{}] changed service-id from {} to {}", serviceName, serviceTagsWrapper.getServiceId(), serviceId);
+                            LOG.debug("Recreating serviceTagsWrapper for serviceName [{}]", serviceName);
 
-			}
-		} else {
-			LOG.error("getServiceTags() failed to get tags as serviceName is null or blank and/or serviceId is null!");
-		}
+                            serviceTagsMap.remove(serviceName);
+                            serviceTagsWrapper = null;
+                        }
+                    }
+                    if (serviceTagsWrapper == null) {
+                        serviceTagsWrapper = new ServiceTagsWrapper(serviceId);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceTagsCache.getServiceTags(" + serviceName + ", " + serviceId + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + "): count=" + ((ret == null || ret.getTags() == null) ? 0 : ret.getTags().size()));
-		}
+                        serviceTagsMap.put(serviceName, serviceTagsWrapper);
+                    }
+                }
 
-		return ret;
-	}
+                if (tagStore != null) {
+                    ret = serviceTagsWrapper.getLatestOrCached(serviceName, tagStore, lastKnownVersion, needsBackwardCompatibility);
+                } else {
+                    LOG.error("getServiceTags({}): failed to get latest tags as tag-store is null!", serviceName);
+
+                    ret = serviceTagsWrapper.getServiceTags();
+                }
+            }
+        } else {
+            LOG.error("getServiceTags() failed to get tags as serviceName is null or blank and/or serviceId is null!");
+        }
+
+        LOG.debug("<== RangerServiceTagsCache.getServiceTags({}, {}, {}, {}): count={}", serviceName, serviceId, lastKnownVersion, needsBackwardCompatibility, (ret == null || ret.getTags() == null) ? 0 : ret.getTags().size());
+
+        return ret;
+    }
 
     /**
      * Reset service tag cache using serviceName if provided.
      * If serviceName is empty, reset everything.
+     *
      * @param serviceName
      * @return true if was able to reset service tag cache, false otherwise
      */
     public boolean resetCache(final String serviceName) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceTagsCache.resetCache({})", serviceName);
-        }
+        LOG.debug("==> RangerServiceTagsCache.resetCache({})", serviceName);
 
         boolean ret = false;
+
         synchronized (this) {
             if (!serviceTagsMap.isEmpty()) {
                 if (StringUtils.isBlank(serviceName)) {
                     serviceTagsMap.clear();
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for all services.");
-                    }
+
+                    LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for all services.");
+
                     ret = true;
                 } else {
                     ServiceTagsWrapper removedServicePoliciesWrapper = serviceTagsMap.remove(serviceName.trim()); // returns null if key not found
+
                     ret = removedServicePoliciesWrapper != null;
 
                     if (ret) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for [{}] service.", serviceName);
-                        }
+                        LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for [{}] service.", serviceName);
                     } else {
                         LOG.warn("RangerServiceTagsCache.resetCache(): Caching for [{}] service not found, hence reset is skipped.", serviceName);
                     }
@@ -198,233 +193,210 @@ public class RangerServiceTagsCache {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceTagsCache.resetCache(): ret={}", ret);
-        }
+        LOG.debug("<== RangerServiceTagsCache.resetCache(): ret={}", ret);
 
         return ret;
     }
 
-	private class ServiceTagsWrapper {
-		final Long serviceId;
-		ServiceTags serviceTags;
-		Date updateTime = null;
-		long longestDbLoadTimeInMs = -1;
+    private class ServiceTagsWrapper {
+        final Long             serviceId;
+        ServiceTags            serviceTags;
+        Date                   updateTime;
+        long                   longestDbLoadTimeInMs = -1;
+        ServiceTagsDeltasCache deltaCache;
+        ReentrantLock          lock = new ReentrantLock();
 
-		ServiceTagsDeltasCache deltaCache;
+        ServiceTagsWrapper(Long serviceId) {
+            this.serviceId = serviceId;
+            serviceTags    = null;
+        }
 
-		class ServiceTagsDeltasCache {
-			final long        		fromVersion;
-			final ServiceTags 		serviceTagsDelta;
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
 
-			ServiceTagsDeltasCache(final long fromVersion, ServiceTags serviceTagsDelta) {
-				this.fromVersion         = fromVersion;
-				this.serviceTagsDelta    = serviceTagsDelta;
-			}
-			ServiceTags getServiceTagsDeltaFromVersion(long fromVersion) {
-				return this.fromVersion == fromVersion ? this.serviceTagsDelta : null;
-			}
-		}
-		ReentrantLock lock = new ReentrantLock();
+            toString(sb);
 
-		ServiceTagsWrapper(Long serviceId) {
-			this.serviceId = serviceId;
-			serviceTags = null;
-		}
+            return sb.toString();
+        }
 
-		Long getServiceId() { return serviceId; }
+        Long getServiceId() {
+            return serviceId;
+        }
 
-		ServiceTags getServiceTags() {
-			return serviceTags;
-		}
+        ServiceTags getServiceTags() {
+            return serviceTags;
+        }
 
-		Date getUpdateTime() {
-			return updateTime;
-		}
+        Date getUpdateTime() {
+            return updateTime;
+        }
 
-		ServiceTags getLatestOrCached(String serviceName, TagStore tagStore, Long lastKnownVersion, boolean needsBackwardCompatibility) throws Exception {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> RangerServiceTagsCache.getLatestOrCached(lastKnownVersion=" + lastKnownVersion + ", " + needsBackwardCompatibility + ")");
-			}
-			ServiceTags	ret		   = null;
-			boolean		lockResult = false;
+        ServiceTags getLatestOrCached(String serviceName, TagStore tagStore, Long lastKnownVersion, boolean needsBackwardCompatibility) throws Exception {
+            LOG.debug("==> RangerServiceTagsCache.getLatestOrCached(lastKnownVersion={}, {})", lastKnownVersion, needsBackwardCompatibility);
 
-			try {
-				final boolean isCacheCompletelyLoaded;
+            ServiceTags ret        = null;
+            boolean     lockResult = false;
 
-				lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
-				if (lockResult) {
+            try {
+                final boolean isCacheCompletelyLoaded;
 
-					isCacheCompletelyLoaded = getLatest(serviceName, tagStore);
+                lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
 
-					if (isCacheCompletelyLoaded) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("ServiceTags cache was completely loaded from database ");
-						}
-					}
-					if (needsBackwardCompatibility || isCacheCompletelyLoaded
-							|| lastKnownVersion == -1L || lastKnownVersion.equals(serviceTags.getTagVersion())) {
-						// Looking for all tags, or Some disqualifying change encountered
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Need to return all cached ServiceTags: [needsBackwardCompatibility:" + needsBackwardCompatibility + ", isCacheCompletelyLoaded:" + isCacheCompletelyLoaded + ", lastKnownVersion:" + lastKnownVersion + ", serviceTagsVersion:" + serviceTags.getTagVersion() + "]");
-						}
-						ret = this.serviceTags;
-					} else {
-						boolean isDeltaCacheReinitialized = false;
-						ServiceTags serviceTagsDelta = this.deltaCache != null ? this.deltaCache.getServiceTagsDeltaFromVersion(lastKnownVersion) : null;
+                if (lockResult) {
+                    isCacheCompletelyLoaded = getLatest(serviceName, tagStore);
 
-						if (serviceTagsDelta == null) {
-							serviceTagsDelta = tagStore.getServiceTagsDelta(serviceName, lastKnownVersion);
-							isDeltaCacheReinitialized = true;
-						}
-						if (serviceTagsDelta != null) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Deltas were requested. Returning deltas from lastKnownVersion:[" + lastKnownVersion + "]");
-							}
-							if (isDeltaCacheReinitialized) {
-								this.deltaCache = new ServiceTagsDeltasCache(lastKnownVersion, serviceTagsDelta);
-							}
-							ret = serviceTagsDelta;
-						} else {
-							LOG.warn("Deltas were requested, but could not get them!! lastKnownVersion:[" + lastKnownVersion + "]; Returning cached ServiceTags:[" + (serviceTags != null ? serviceTags.getTagVersion() : -1L) + "]");
+                    if (isCacheCompletelyLoaded) {
+                        LOG.debug("ServiceTags cache was completely loaded from database ");
+                    }
 
-							this.deltaCache = null;
-							ret = this.serviceTags;
-						}
-					}
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached ServiceTags");
-					}
-					ret = this.serviceTags;
-				}
-			} catch (InterruptedException exception) {
-				LOG.error("getLatestOrCached:lock got interrupted..", exception);
-			} finally {
-				if (lockResult) {
-					lock.unlock();
-				}
-			}
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerServiceTagsCache.getLatestOrCached(lastKnownVersion=" + lastKnownVersion + ", " + needsBackwardCompatibility + "): " + ret);
-			}
+                    if (needsBackwardCompatibility || isCacheCompletelyLoaded || lastKnownVersion == -1L || lastKnownVersion.equals(serviceTags.getTagVersion())) {
+                        // Looking for all tags, or Some disqualifying change encountered
+                        LOG.debug("Need to return all cached ServiceTags: [needsBackwardCompatibility:{}, isCacheCompletelyLoaded:{}, lastKnownVersion:{}, serviceTagsVersion:{}]", needsBackwardCompatibility, isCacheCompletelyLoaded, lastKnownVersion, serviceTags.getTagVersion());
 
-			return ret;
-		}
+                        ret = this.serviceTags;
+                    } else {
+                        boolean     isDeltaCacheReinitialized = false;
+                        ServiceTags serviceTagsDelta          = this.deltaCache != null ? this.deltaCache.getServiceTagsDeltaFromVersion(lastKnownVersion) : null;
 
-		boolean getLatest(String serviceName, TagStore tagStore) throws Exception {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> ServiceTagsWrapper.getLatest(" + serviceName + ")");
-			}
+                        if (serviceTagsDelta == null) {
+                            serviceTagsDelta          = tagStore.getServiceTagsDelta(serviceName, lastKnownVersion);
+                            isDeltaCacheReinitialized = true;
+                        }
+                        if (serviceTagsDelta != null) {
+                            LOG.debug("Deltas were requested. Returning deltas from lastKnownVersion:[{}]", lastKnownVersion);
 
-			boolean isCacheCompletelyLoaded = false;
+                            if (isDeltaCacheReinitialized) {
+                                this.deltaCache = new ServiceTagsDeltasCache(lastKnownVersion, serviceTagsDelta);
+                            }
 
-			final Long cachedServiceTagsVersion = serviceTags != null ? serviceTags.getTagVersion() : -1L;
+                            ret = serviceTagsDelta;
+                        } else {
+                            LOG.warn("Deltas were requested, but could not get them!! lastKnownVersion:[{}]; Returning cached ServiceTags:[{}]", lastKnownVersion, serviceTags != null ? serviceTags.getTagVersion() : -1L);
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Found ServiceTags in-cache : " + (serviceTags != null));
-			}
+                            this.deltaCache = null;
+                            ret             = this.serviceTags;
+                        }
+                    }
+                } else {
+                    LOG.debug("Could not get lock in [{}] seconds, returning cached ServiceTags", waitTimeInSeconds);
 
-			Long tagVersionInDb = tagStore.getTagVersion(serviceName);
+                    ret = this.serviceTags;
+                }
+            } catch (InterruptedException exception) {
+                LOG.error("getLatestOrCached:lock got interrupted..", exception);
+            } finally {
+                if (lockResult) {
+                    lock.unlock();
+                }
+            }
 
-			if (serviceTags == null || tagVersionInDb == null || !tagVersionInDb.equals(cachedServiceTagsVersion)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("loading serviceTags from db ... cachedServiceTagsVersion=" + cachedServiceTagsVersion + ", tagVersionInDb=" + tagVersionInDb);
-				}
+            LOG.debug("<== RangerServiceTagsCache.getLatestOrCached(lastKnownVersion={}, {}): {}", lastKnownVersion, needsBackwardCompatibility, ret);
 
-				long startTimeMs = System.currentTimeMillis();
+            return ret;
+        }
 
-				ServiceTags serviceTagsFromDb = tagStore.getServiceTags(serviceName, cachedServiceTagsVersion);
+        boolean getLatest(String serviceName, TagStore tagStore) throws Exception {
+            LOG.debug("==> ServiceTagsWrapper.getLatest({})", serviceName);
 
-				long dbLoadTime = System.currentTimeMillis() - startTimeMs;
+            boolean    isCacheCompletelyLoaded  = false;
+            final Long cachedServiceTagsVersion = serviceTags != null ? serviceTags.getTagVersion() : -1L;
 
-				if (dbLoadTime > longestDbLoadTimeInMs) {
-					longestDbLoadTimeInMs = dbLoadTime;
-				}
-				updateTime = new Date();
+            LOG.debug("Found ServiceTags in-cache : {}", serviceTags != null);
 
-				if (serviceTagsFromDb != null) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("loading serviceTags from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
-					}
+            Long tagVersionInDb = tagStore.getTagVersion(serviceName);
 
-					if (dedupStrings) {
-						serviceTagsFromDb.dedupStrings();
-					}
+            if (serviceTags == null || tagVersionInDb == null || !tagVersionInDb.equals(cachedServiceTagsVersion)) {
+                LOG.debug("loading serviceTags from db ... cachedServiceTagsVersion={}, tagVersionInDb={}", cachedServiceTagsVersion, tagVersionInDb);
 
-					if (serviceTags == null) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Initializing ServiceTags cache for the first time");
-						}
+                long        startTimeMs       = System.currentTimeMillis();
+                ServiceTags serviceTagsFromDb = tagStore.getServiceTags(serviceName, cachedServiceTagsVersion);
+                long        dbLoadTime        = System.currentTimeMillis() - startTimeMs;
 
-						this.serviceTags = serviceTagsFromDb;
-						this.deltaCache  = null;
-						pruneUnusedAttributes();
-						isCacheCompletelyLoaded = true;
-					} else if (!serviceTagsFromDb.getIsDelta()) {
-						// service-tags are loaded because of some disqualifying event
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Complete set of tag are loaded from database, because of some disqualifying event or because tag-delta is not supported");
-						}
+                if (dbLoadTime > longestDbLoadTimeInMs) {
+                    longestDbLoadTimeInMs = dbLoadTime;
+                }
 
-						this.serviceTags = serviceTagsFromDb;
-						this.deltaCache  = null;
-						pruneUnusedAttributes();
-						isCacheCompletelyLoaded = true;
-					} else { // Previously cached service tags are still valid - no disqualifying change
-						// Rebuild tags cache from original tags and deltas
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Retrieved tag-deltas from database. These will be applied on top of ServiceTags version:[" + cachedServiceTagsVersion + "], tag-deltas:[" + serviceTagsFromDb.getTagVersion() + "]");
-						}
+                updateTime = new Date();
 
-						boolean supportsTagsDedeup = TagDBStore.isSupportsTagsDedup();
-						this.serviceTags = RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb, supportsTagsDedeup);
-						this.deltaCache  = new ServiceTagsDeltasCache(cachedServiceTagsVersion, serviceTagsFromDb);
-					}
-				} else {
-					LOG.error("Could not get tags from database, from-version:[" + cachedServiceTagsVersion + ")");
-				}
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("ServiceTags old-version:[" + cachedServiceTagsVersion + "], new-version:[" + serviceTags.getTagVersion() + "]");
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("ServiceTags Cache already has the latest version, version:[" + cachedServiceTagsVersion + "]");
-				}
-			}
+                if (serviceTagsFromDb != null) {
+                    LOG.debug("loading serviceTags from database and it took:{} seconds", TimeUnit.MILLISECONDS.toSeconds(dbLoadTime));
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== ServiceTagsWrapper.getLatest(" + serviceName + "): " + isCacheCompletelyLoaded);
-			}
+                    if (dedupStrings) {
+                        serviceTagsFromDb.dedupStrings();
+                    }
 
-			return isCacheCompletelyLoaded;
-		}
+                    if (serviceTags == null) {
+                        LOG.debug("Initializing ServiceTags cache for the first time");
 
-		private void pruneUnusedAttributes() {
-			RangerServiceTagsDeltaUtil.pruneUnusedAttributes(this.serviceTags);
-		}
+                        this.serviceTags = serviceTagsFromDb;
+                        this.deltaCache  = null;
 
-		StringBuilder toString(StringBuilder sb) {
-			sb.append("RangerServiceTagsWrapper={");
+                        pruneUnusedAttributes();
 
-			sb.append("updateTime=").append(updateTime)
-					.append(", longestDbLoadTimeInMs=").append(longestDbLoadTimeInMs)
-					.append(", Service-Version:").append(serviceTags != null ? serviceTags.getTagVersion() : "null")
-					.append(", Number-Of-Tags:").append(serviceTags != null ? serviceTags.getTags().size() : 0);
+                        isCacheCompletelyLoaded = true;
+                    } else if (!serviceTagsFromDb.getIsDelta()) {
+                        // service-tags are loaded because of some disqualifying event
+                        LOG.debug("Complete set of tag are loaded from database, because of some disqualifying event or because tag-delta is not supported");
 
-			sb.append("} ");
+                        this.serviceTags = serviceTagsFromDb;
+                        this.deltaCache  = null;
 
-			return sb;
-		}
+                        pruneUnusedAttributes();
 
-		@Override
-		public String toString() {
-			StringBuilder sb = new StringBuilder();
+                        isCacheCompletelyLoaded = true;
+                    } else { // Previously cached service tags are still valid - no disqualifying change
+                        // Rebuild tags cache from original tags and deltas
+                        LOG.debug("Retrieved tag-deltas from database. These will be applied on top of ServiceTags version:[{}], tag-deltas:[{}]", cachedServiceTagsVersion, serviceTagsFromDb.getTagVersion());
 
-			toString(sb);
+                        boolean supportsTagsDedeup = TagDBStore.isSupportsTagsDedup();
 
-			return sb.toString();
-		}
-	}
+                        this.serviceTags = RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb, supportsTagsDedeup);
+                        this.deltaCache  = new ServiceTagsDeltasCache(cachedServiceTagsVersion, serviceTagsFromDb);
+                    }
+                } else {
+                    LOG.error("Could not get tags from database, from-version:[{})", cachedServiceTagsVersion);
+                }
+
+                LOG.debug("ServiceTags old-version:[{}], new-version:[{}]", cachedServiceTagsVersion, serviceTags.getTagVersion());
+            } else {
+                LOG.debug("ServiceTags Cache already has the latest version, version:[{}]", cachedServiceTagsVersion);
+            }
+
+            LOG.debug("<== ServiceTagsWrapper.getLatest({}): {}", serviceName, isCacheCompletelyLoaded);
+
+            return isCacheCompletelyLoaded;
+        }
+
+        StringBuilder toString(StringBuilder sb) {
+            sb.append("RangerServiceTagsWrapper={");
+
+            sb.append("updateTime=").append(updateTime)
+                    .append(", longestDbLoadTimeInMs=").append(longestDbLoadTimeInMs)
+                    .append(", Service-Version:").append(serviceTags != null ? serviceTags.getTagVersion() : "null")
+                    .append(", Number-Of-Tags:").append(serviceTags != null ? serviceTags.getTags().size() : 0);
+
+            sb.append("} ");
+
+            return sb;
+        }
+
+        private void pruneUnusedAttributes() {
+            RangerServiceTagsDeltaUtil.pruneUnusedAttributes(this.serviceTags);
+        }
+
+        class ServiceTagsDeltasCache {
+            final long        fromVersion;
+            final ServiceTags serviceTagsDelta;
+
+            ServiceTagsDeltasCache(final long fromVersion, ServiceTags serviceTagsDelta) {
+                this.fromVersion      = fromVersion;
+                this.serviceTagsDelta = serviceTagsDelta;
+            }
+
+            ServiceTags getServiceTagsDeltaFromVersion(long fromVersion) {
+                return this.fromVersion == fromVersion ? this.serviceTagsDelta : null;
+            }
+        }
+    }
 }
-

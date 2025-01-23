@@ -30,8 +30,7 @@ import javax.security.auth.login.LoginException;
 
 /**
  * Used to authenticate and execute actions when Kerberos is enabled and a keytab is being used.
- *
- * */
+ */
 public class KerberosJAASConfigUser extends AbstractKerberosUser {
     private static final Logger LOG = LoggerFactory.getLogger(KerberosJAASConfigUser.class);
 
@@ -43,20 +42,19 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
         this.config     = config;
     }
 
-
     @Override
     public String getPrincipal() {
         String                  ret     = null;
         AppConfigurationEntry[] entries = config.getAppConfigurationEntry(configName);
 
         if (entries != null) {
-           for (AppConfigurationEntry entry : entries) {
-               if (entry.getOptions().containsKey(InMemoryJAASConfiguration.JAAS_PRINCIPAL_PROP)) {
-                   ret = (String) entry.getOptions().get(InMemoryJAASConfiguration.JAAS_PRINCIPAL_PROP);
+            for (AppConfigurationEntry entry : entries) {
+                if (entry.getOptions().containsKey(InMemoryJAASConfiguration.JAAS_PRINCIPAL_PROP)) {
+                    ret = (String) entry.getOptions().get(InMemoryJAASConfiguration.JAAS_PRINCIPAL_PROP);
 
-                   break;
-               }
-           }
+                    break;
+                }
+            }
         }
 
         return ret;
@@ -64,15 +62,9 @@ public class KerberosJAASConfigUser extends AbstractKerberosUser {
 
     @Override
     protected LoginContext createLoginContext(Subject subject) throws LoginException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> KerberosJAASConfigUser.createLoginContext()");
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== KerberosJAASConfigUser.createLoginContext(), Subject: " + subject);
-        }
+        LOG.debug("==> KerberosJAASConfigUser.createLoginContext()");
+        LOG.debug("<== KerberosJAASConfigUser.createLoginContext(), Subject: {}", subject);
 
         return new LoginContext(configName, subject, null, config);
     }
 }
-

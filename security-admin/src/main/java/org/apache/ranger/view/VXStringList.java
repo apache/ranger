@@ -17,35 +17,35 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXString
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXStringList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXString> vXStrings = new ArrayList<VXString>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXString> vXStrings = new ArrayList<>();
 
     public VXStringList() {
-	super();
+        super();
     }
 
     public VXStringList(List<VXString> objList) {
-	super(objList);
-	this.vXStrings = objList;
+        super(objList);
+        this.vXStrings = objList;
     }
 
     /**
@@ -53,7 +53,7 @@ public class VXStringList extends VList {
      */
     @JsonProperty("vXStrings")
     public List<VXString> getVXStrings() {
-	return vXStrings;
+        return vXStrings;
     }
 
     /**
@@ -62,20 +62,19 @@ public class VXStringList extends VList {
      */
     @JsonProperty("vXStrings")
     public void setVXStrings(List<VXString> vXStrings) {
-	this.vXStrings = vXStrings;
+        this.vXStrings = vXStrings;
     }
 
     @Override
     public int getListSize() {
-	if (vXStrings != null) {
-	    return vXStrings.size();
-	}
-	return 0;
+        if (vXStrings != null) {
+            return vXStrings.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXString> getList() {
-	return vXStrings;
+        return vXStrings;
     }
-
 }

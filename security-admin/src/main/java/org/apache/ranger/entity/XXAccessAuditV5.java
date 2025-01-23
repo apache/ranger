@@ -17,68 +17,75 @@
  * under the License.
  */
 
- package org.apache.ranger.entity;
+package org.apache.ranger.entity;
 
 /**
  * Access Audit
- *
  */
+
+import org.apache.ranger.common.AppConstants;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
-import org.apache.ranger.common.AppConstants;
-
 @Entity
 @Table(name = "xa_access_audit")
 public class XXAccessAuditV5 extends XXAccessAuditBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_XA_ACCESS_AUDIT_V5;
-	}
+    @Column(name = "SEQ_NUM")
+    protected long sequenceNumber;
 
-	@Column(name="SEQ_NUM")
-	protected long sequenceNumber;
+    @Column(name = "EVENT_COUNT")
+    protected long eventCount;
 
-	@Column(name="EVENT_COUNT")
-	protected long eventCount;
+    //event duration in ms
+    @Column(name = "EVENT_DUR_MS")
+    protected long eventDuration;
 
-	//event duration in ms
-	@Column(name="EVENT_DUR_MS")
-	protected long eventDuration;
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_ACCESS_AUDIT_V5;
+    }
 
-	public long getSequenceNumber() {
-		return sequenceNumber;
-	}
-	public void setSequenceNumber(long sequenceNumber) {
-		this.sequenceNumber = sequenceNumber;
-	}
-	public long getEventCount() {
-		return eventCount;
-	}
-	public void setEventCount(long eventCount) {
-		this.eventCount = eventCount;
-	}
-	public long getEventDuration() {
-		return eventDuration;
-	}
-	public void setEventDuration(long eventDuration) {
-		this.eventDuration = eventDuration;
-	}
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = super.toString();
 
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	@Override
-	public String toString( ) {
-		String str = super.toString();
-		str += "sequenceNumber={" + sequenceNumber + "}";
-		str += "eventCount={" + eventCount + "}";
-		str += "eventDuration={" + eventDuration + "}";
-		return str;
-	}
+        str += "sequenceNumber={" + sequenceNumber + "}";
+        str += "eventCount={" + eventCount + "}";
+        str += "eventDuration={" + eventDuration + "}";
+
+        return str;
+    }
+
+    public long getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    public void setSequenceNumber(long sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
+
+    public long getEventCount() {
+        return eventCount;
+    }
+
+    public void setEventCount(long eventCount) {
+        this.eventCount = eventCount;
+    }
+
+    public long getEventDuration() {
+        return eventDuration;
+    }
+
+    public void setEventDuration(long eventDuration) {
+        this.eventDuration = eventDuration;
+    }
 }

@@ -17,63 +17,63 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 @Service
 public class XXAccessTypeDefDao extends BaseDao<XXAccessTypeDef> {
+    public XXAccessTypeDefDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXAccessTypeDefDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
-	
-	public List<XXAccessTypeDef> findByServiceDefId(Long serviceDefId) {
-		if (serviceDefId == null) {
-			return new ArrayList<XXAccessTypeDef>();
-		}
-		try {
-			List<XXAccessTypeDef> retList = getEntityManager()
-					.createNamedQuery("XXAccessTypeDef.findByServiceDefId", tClass)
-					.setParameter("serviceDefId", serviceDefId).getResultList();
-			return retList;
-		} catch (NoResultException e) {
-			return new ArrayList<XXAccessTypeDef>();
-		}
-	}
+    public List<XXAccessTypeDef> findByServiceDefId(Long serviceDefId) {
+        if (serviceDefId == null) {
+            return new ArrayList<>();
+        }
 
-	public XXAccessTypeDef findByNameAndServiceId(String name, Long serviceId) {
-		if(name == null || serviceId == null) {
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXAccessTypeDef.findByNameAndServiceId", tClass)
-					.setParameter("name", name).setParameter("serviceId", serviceId)
-					.getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXAccessTypeDef.findByServiceDefId", tClass)
+                    .setParameter("serviceDefId", serviceDefId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<String> getNamesByServiceName(String serviceName) {
-		List<String> ret = null;
+    public XXAccessTypeDef findByNameAndServiceId(String name, Long serviceId) {
+        if (name == null || serviceId == null) {
+            return null;
+        }
 
-		if (serviceName != null) {
-			try {
-			    ret = getEntityManager().createNamedQuery("XXAccessTypeDef.getNamesByServiceName", String.class)
-			                            .setParameter("serviceName", serviceName).getResultList();
-			} catch (NoResultException excp) {
-			    // ignore
-			}
-		}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXAccessTypeDef.findByNameAndServiceId", tClass)
+                    .setParameter("name", name).setParameter("serviceId", serviceId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-		return ret != null ? ret : Collections.emptyList();
-	}
+    public List<String> getNamesByServiceName(String serviceName) {
+        List<String> ret = null;
+
+        if (serviceName != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXAccessTypeDef.getNamesByServiceName", String.class)
+                        .setParameter("serviceName", serviceName).getResultList();
+            } catch (NoResultException excp) {
+                // ignore
+            }
+        }
+
+        return ret != null ? ret : Collections.emptyList();
+    }
 }

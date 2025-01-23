@@ -18,9 +18,6 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,22 +27,22 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 /**
  * The persistent class for the x_role_ref_role database table.
- *
  */
 @Entity
 @Cacheable
-@Table(name="x_role_ref_role")
+@Table(name = "x_role_ref_role")
 public class XXRoleRefRole extends XXDBBase implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
     /**
      * id of the XXRoleRefRole
      * <ul>
      * </ul>
-     *
      */
     @Id
     @SequenceGenerator(name = "x_role_ref_role_SEQ", sequenceName = "x_role_ref_role_SEQ", allocationSize = 1)
@@ -57,7 +54,6 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
      * roleId of the XXRoleRefRole
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "role_id")
     protected Long roleId;
@@ -66,7 +62,6 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
      * subRoleId of the XXRoleRefRole
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "role_ref_id")
     protected Long subRoleId;
@@ -75,7 +70,6 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
      * subRoleName of the XXRoleRefRole
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "role_name")
     protected String subRoleName;
@@ -84,21 +78,9 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
      * subRoleType of the XXRoleRefRole
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "priv_type")
     protected Integer subRoleType;
-
-	/**
-     * This method sets the value to the member attribute <b> id</b> . You
-     * cannot set null to the attribute.
-     *
-     * @param id
-     *            Value to set member attribute <b> id</b>
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     /**
      * Returns the value for the member attribute <b>id</b>
@@ -110,83 +92,14 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
     }
 
     /**
-     * This method sets the value to the member attribute <b> roleId</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param roleId
-     *            Value to set member attribute <b> roleId</b>
-     */
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>roleId</b>
-     *
-     * @return Long - value of member attribute <b>roleId</b> .
-     */
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> subRoleId</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param subRoleId
-     *            Value to set member attribute <b> subRoleId</b>
-     */
-    public void setSubRoleId(Long subRoleId) {
-        this.subRoleId = subRoleId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>subRoleId</b>
-     *
-     * @return Long - value of member attribute <b>subRoleId</b> .
-     */
-    public Long getSubRoleId() {
-        return this.subRoleId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> subRoleName</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param subRoleName
-     *            Value to set member attribute <b> subRoleName</b>
-     */
-    public void setSubRoleName(String subRoleName) {
-        this.subRoleName = subRoleName;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>subRoleName</b>
-     *
-     */
-    public String getSubRoleName() {
-        return subRoleName;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>subRoleType</b>
-     *
-     * @return subRoleType - value of member attribute <b>subRoleType</b> .
-     */
-    public Integer getSubRoleType() {
-		return subRoleType;
-	}
-
-    /**
-     * This method sets the value to the member attribute <b> subRoleType</b> . You
+     * This method sets the value to the member attribute <b> id</b> . You
      * cannot set null to the attribute.
      *
-     * @param subRoleType
-     *            Value to set member attribute <b> subRoleType</b>
+     * @param id Value to set member attribute <b> id</b>
      */
-	public void setSubRoleType(Integer subRoleType) {
-		this.subRoleType = subRoleType;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public int hashCode() {
@@ -202,20 +115,17 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
         XXRoleRefRole other = (XXRoleRefRole) obj;
 
-        return super.equals(obj) &&
-                Objects.equals(id, other.id) &&
+        return Objects.equals(id, other.id) &&
                 Objects.equals(roleId, other.roleId) &&
                 Objects.equals(subRoleId, other.subRoleId) &&
                 Objects.equals(subRoleName, other.subRoleName) &&
-        		Objects.equals(subRoleType, other.subRoleType);
+                Objects.equals(subRoleType, other.subRoleType);
     }
 
     /*
@@ -225,7 +135,80 @@ public class XXRoleRefRole extends XXDBBase implements Serializable {
      */
     @Override
     public String toString() {
-        return "XXRoleRefRole [" + super.toString() + " id=" + id + ", roleId=" + roleId +", subRoleId=" + subRoleId 
-                + ", subRoleName=" + subRoleName + ", subRoleType=" + subRoleType + "]";
+        return "XXRoleRefRole [" + super.toString() + " id=" + id + ", roleId=" + roleId + ", subRoleId=" + subRoleId + ", subRoleName=" + subRoleName + ", subRoleType=" + subRoleType + "]";
+    }
+
+    /**
+     * Returns the value for the member attribute <b>roleId</b>
+     *
+     * @return Long - value of member attribute <b>roleId</b> .
+     */
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> roleId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param roleId Value to set member attribute <b> roleId</b>
+     */
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>subRoleId</b>
+     *
+     * @return Long - value of member attribute <b>subRoleId</b> .
+     */
+    public Long getSubRoleId() {
+        return this.subRoleId;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> subRoleId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param subRoleId Value to set member attribute <b> subRoleId</b>
+     */
+    public void setSubRoleId(Long subRoleId) {
+        this.subRoleId = subRoleId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>subRoleName</b>
+     */
+    public String getSubRoleName() {
+        return subRoleName;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> subRoleName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param subRoleName Value to set member attribute <b> subRoleName</b>
+     */
+    public void setSubRoleName(String subRoleName) {
+        this.subRoleName = subRoleName;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>subRoleType</b>
+     *
+     * @return subRoleType - value of member attribute <b>subRoleType</b> .
+     */
+    public Integer getSubRoleType() {
+        return subRoleType;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> subRoleType</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param subRoleType Value to set member attribute <b> subRoleType</b>
+     */
+    public void setSubRoleType(Integer subRoleType) {
+        this.subRoleType = subRoleType;
     }
 }

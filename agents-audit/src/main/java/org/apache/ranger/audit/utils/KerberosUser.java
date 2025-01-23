@@ -20,6 +20,7 @@
 package org.apache.ranger.audit.utils;
 
 import javax.security.auth.login.LoginException;
+
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -28,7 +29,6 @@ import java.security.PrivilegedExceptionAction;
  * A keytab-based user that can login/logout and perform actions as the given user.
  */
 public interface KerberosUser {
-
     /**
      * Performs a login for the given user.
      *
@@ -62,8 +62,7 @@ public interface KerberosUser {
      * @throws IllegalStateException if attempting to execute an action before performing a login
      * @throws PrivilegedActionException if the action itself threw an exception
      */
-    <T> T doAs(PrivilegedExceptionAction<T> action)
-            throws IllegalStateException, PrivilegedActionException;
+    <T> T doAs(PrivilegedExceptionAction<T> action) throws IllegalStateException, PrivilegedActionException;
 
     /**
      * Performs a re-login if the TGT is close to expiration.
@@ -82,6 +81,4 @@ public interface KerberosUser {
      * @return the principal for this user
      */
     String getPrincipal();
-
 }
-

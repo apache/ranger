@@ -17,14 +17,15 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRole;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -35,57 +36,52 @@ public class XXRoleDao extends BaseDao<XXRole> {
     public XXRoleDao(RangerDaoManagerBase daoManager) {
         super(daoManager);
     }
+
     public XXRole findByRoleId(Long roleId) {
         if (roleId == null) {
             return null;
         }
+
         try {
-            XXRole xxRole = getEntityManager()
-                    .createNamedQuery("XXRole.findByRoleId", tClass)
-                    .setParameter("roleId", roleId)
-                    .getSingleResult();
-            return xxRole;
+            return getEntityManager().createNamedQuery("XXRole.findByRoleId", tClass).setParameter("roleId", roleId).getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
     }
+
     public XXRole findByRoleName(String roleName) {
         if (StringUtils.isBlank(roleName)) {
             return null;
         }
+
         try {
-            XXRole xxRole = getEntityManager()
-                    .createNamedQuery("XXRole.findByRoleName", tClass)
-                    .setParameter("roleName", roleName)
-                    .getSingleResult();
-            return xxRole;
+            return getEntityManager().createNamedQuery("XXRole.findByRoleName", tClass).setParameter("roleName", roleName).getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
     }
+
     public List<XXRole> findByServiceId(Long serviceId) {
         List<XXRole> ret;
+
         try {
-            ret = getEntityManager()
-                    .createNamedQuery("XXRole.findByServiceId", tClass)
-                    .setParameter("serviceId", serviceId)
-                    .getResultList();
+            ret = getEntityManager().createNamedQuery("XXRole.findByServiceId", tClass).setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
+            ret = Collections.emptyList();
         }
+
         return ret;
     }
 
     public List<String> findRoleNamesByServiceId(Long serviceId) {
         List<String> ret;
+
         try {
-            ret = getEntityManager()
-                    .createNamedQuery("XXRole.findRoleNamesByServiceId", String.class)
-                    .setParameter("serviceId", serviceId)
-                    .getResultList();
+            ret = getEntityManager().createNamedQuery("XXRole.findRoleNamesByServiceId", String.class).setParameter("serviceId", serviceId).getResultList();
         } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
+            ret = Collections.emptyList();
         }
+
         return ret;
     }
 
@@ -93,38 +89,36 @@ public class XXRoleDao extends BaseDao<XXRole> {
         try {
             return getEntityManager().createNamedQuery("XXRole.getAllNames", String.class).getResultList();
         } catch (NoResultException e) {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 
-    @SuppressWarnings("unchecked")
-	public List<XXRole> findByUserId(Long UserId) {
-		if (UserId == null) {
-			return null;
-		}
-		List<XXRole> ret;
-		try {
-			ret = getEntityManager().createNamedQuery("XXRole.findByUserId", tClass).setParameter("userId", UserId)
-					.getResultList();
-		} catch (NoResultException e) {
-			ret = ListUtils.EMPTY_LIST;
-		}
-		return ret;
-	}
+    public List<XXRole> findByUserId(Long userId) {
+        if (userId == null) {
+            return null;
+        }
 
-    @SuppressWarnings("unchecked")
+        List<XXRole> ret;
+
+        try {
+            ret = getEntityManager().createNamedQuery("XXRole.findByUserId", tClass).setParameter("userId", userId).getResultList();
+        } catch (NoResultException e) {
+            ret = Collections.emptyList();
+        }
+
+        return ret;
+    }
+
     public List<XXRole> findByGroupId(Long groupId) {
         if (groupId == null) {
             return null;
         }
         List<XXRole> ret;
         try {
-            ret = getEntityManager().createNamedQuery("XXRole.findByGroupId", tClass).setParameter("groupId", groupId)
-                    .getResultList();
+            ret = getEntityManager().createNamedQuery("XXRole.findByGroupId", tClass).setParameter("groupId", groupId).getResultList();
         } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
+            ret = Collections.emptyList();
         }
         return ret;
     }
 }
-

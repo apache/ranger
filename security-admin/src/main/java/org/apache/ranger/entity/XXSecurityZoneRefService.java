@@ -19,7 +19,6 @@
 
 package org.apache.ranger.entity;
 
-import java.util.Objects;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,56 +28,43 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_service")
-public class XXSecurityZoneRefService extends XXDBBase implements java.io.Serializable{
-	private static final long serialVersionUID = 1L;
-  	@Id
+public class XXSecurityZoneRefService extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
     @SequenceGenerator(name = "x_sec_zone_ref_service_SEQ", sequenceName = "x_sec_zone_ref_service_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_service_SEQ")
     @Column(name = "id")
     protected Long id;
 
-  	/**
-	 * zoneId of the XXSecurityZoneRefService
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "zone_id")
-	protected Long zoneId;
+    /**
+     * zoneId of the XXSecurityZoneRefService
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "zone_id")
+    protected Long zoneId;
 
-  	/**
-	 * serviceId of the XXSecurityZoneRefService
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "service_id")
-	protected Long serviceId;
+    /**
+     * serviceId of the XXSecurityZoneRefService
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "service_id")
+    protected Long serviceId;
 
-	/**
-	 * serviceName of the XXSecurityZoneRefService
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "service_name")
-	protected String serviceName;
-
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	
-    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
+    /**
+     * serviceName of the XXSecurityZoneRefService
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "service_name")
+    protected String serviceName;
 
     @Override
     public Long getId() {
@@ -86,101 +72,105 @@ public class XXSecurityZoneRefService extends XXDBBase implements java.io.Serial
     }
 
     /**
-	 * This method sets the value to the member attribute <b> zoneId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param zoneId
-	 *            Value to set member attribute <b> zoneId</b>
-	 */
-	public void setZoneId(Long zoneId) {
-		this.zoneId = zoneId;
-	}
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
 
-	/**
-	 * Returns the value for the member attribute <b>zoneId</b>
-	 *
-	 * @return Date - value of member attribute <b>zoneId</b> .
-	 */
-	public Long getZoneId() {
-		return this.zoneId;
-	}
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> serviceId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param serviceId
-	 *            Value to set member attribute <b> serviceId</b>
-	 */
-	public void setServiceId(Long serviceId) {
-		this.serviceId = serviceId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, zoneId, serviceId, serviceName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>serviceId</b>
-	 *
-	 * @return Date - value of member attribute <b>serviceId</b> .
-	 */
-	public Long getServiceId() {
-		return serviceId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * This method sets the value to the member attribute <b> serviceName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param serviceName
-	 *            Value to set member attribute <b> serviceName</b>
-	 */
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
+        XXSecurityZoneRefService other = (XXSecurityZoneRefService) obj;
 
-	/**
-	 * Returns the value for the member attribute <b>serviceName</b>
-	 *
-	 * @return Date - value of member attribute <b>serviceName</b> .
-	 */
-	public String getServiceName() {
-		return serviceName;
-	}
+        return Objects.equals(id, other.id) &&
+                Objects.equals(zoneId, other.zoneId) &&
+                Objects.equals(serviceId, other.serviceId) &&
+                Objects.equals(serviceName, other.serviceName);
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, zoneId, serviceId, serviceName);
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXSecurityZoneRefService [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", serviceId=" + serviceId + ", serviceName=" + serviceName + "]";
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * Returns the value for the member attribute <b>zoneId</b>
+     *
+     * @return Date - value of member attribute <b>zoneId</b> .
+     */
+    public Long getZoneId() {
+        return this.zoneId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * This method sets the value to the member attribute <b> zoneId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param zoneId Value to set member attribute <b> zoneId</b>
+     */
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
+    }
 
-		XXSecurityZoneRefService other = (XXSecurityZoneRefService) obj;
+    /**
+     * Returns the value for the member attribute <b>serviceId</b>
+     *
+     * @return Date - value of member attribute <b>serviceId</b> .
+     */
+    public Long getServiceId() {
+        return serviceId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(zoneId, other.zoneId) &&
-			   Objects.equals(serviceId, other.serviceId) &&
-			   Objects.equals(serviceName, other.serviceName);
-	}
+    /**
+     * This method sets the value to the member attribute <b> serviceId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param serviceId Value to set member attribute <b> serviceId</b>
+     */
+    public void setServiceId(Long serviceId) {
+        this.serviceId = serviceId;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXSecurityZoneRefService [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", serviceId="
-				+ serviceId + ", serviceName=" + serviceName +  "]";
-	}
+    /**
+     * Returns the value for the member attribute <b>serviceName</b>
+     *
+     * @return Date - value of member attribute <b>serviceName</b> .
+     */
+    public String getServiceName() {
+        return serviceName;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b> serviceName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param serviceName Value to set member attribute <b> serviceName</b>
+     */
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
 }

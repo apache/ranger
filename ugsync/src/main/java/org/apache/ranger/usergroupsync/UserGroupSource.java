@@ -17,13 +17,12 @@
  * under the License.
  */
 
- package org.apache.ranger.usergroupsync;
-
+package org.apache.ranger.usergroupsync;
 
 public interface UserGroupSource {
-	void init() throws Throwable;
+    void init() throws Throwable;
 
-	boolean isChanged();
+    boolean isChanged();
 
-	void updateSink(UserGroupSink sink) throws Throwable;
+    void updateSink(UserGroupSink sink) throws Throwable;
 }

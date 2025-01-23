@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,19 +17,18 @@
  */
 package org.apache.ranger.credentialapi;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.File;
-import java.util.Arrays;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class Testbuildks {
+import java.io.File;
+import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class Testbuildks {
     private String keystoreFile;
 
     @BeforeEach
@@ -48,16 +47,16 @@ public class Testbuildks {
 
     @Test
     public void testBuildKSsuccess() throws Exception {
-        buildks buildksOBJ = new buildks();
-        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile, "","jceks"};
-        int rc1 = buildksOBJ.createCredential(argsCreateCommand);
+        buildks  buildksOBJ        = new buildks();
+        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile, "", "jceks"};
+        int      rc1               = buildksOBJ.createCredential(argsCreateCommand);
         assertEquals(0, rc1);
 
-        String[] argsListCommand = {"list", "-provider","jceks://file@/" + keystoreFile};
-        int rc2=buildksOBJ.listCredential(argsListCommand);
+        String[] argsListCommand = {"list", "-provider", "jceks://file@/" + keystoreFile};
+        int      rc2             = buildksOBJ.listCredential(argsListCommand);
         assertEquals(0, rc2);
 
-        String[] argsGetCommand = {"get", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
+        String[] argsGetCommand = {"get", "TestCredential1", "-provider", "jceks://file@/" + keystoreFile};
         System.out.println("Get command = " + Arrays.toString(argsGetCommand));
         String pw = buildksOBJ.getCredential(argsGetCommand);
         assertEquals("PassworD123", pw);
@@ -65,8 +64,8 @@ public class Testbuildks {
         boolean getCredentialPassed = pw.equals("PassworD123");
         assertTrue(getCredentialPassed);
 
-        String[] argsDeleteCommand = new String[] {"delete", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
-        boolean isSilentMode = true;
+        String[] argsDeleteCommand = new String[] {"delete", "TestCredential1", "-provider", "jceks://file@/" + keystoreFile};
+        boolean  isSilentMode      = true;
 
         int rc3 = buildksOBJ.deleteCredential(argsDeleteCommand, isSilentMode);
         assertEquals(0, rc3);
@@ -74,17 +73,17 @@ public class Testbuildks {
 
     @Test
     public void testInvalidProvider() throws Exception {
-        buildks buildksOBJ = new buildks();
-        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
-        int rc1 = buildksOBJ.createCredential(argsCreateCommand);
+        buildks  buildksOBJ        = new buildks();
+        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/" + keystoreFile};
+        int      rc1               = buildksOBJ.createCredential(argsCreateCommand);
         assertEquals(-1, rc1);
     }
 
     @Test
     public void testInvalidCommand() throws Exception {
-        buildks buildksOBJ = new buildks();
-        String[] argsCreateCommand = {"creat", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/"+keystoreFile};
-        int rc1 = buildksOBJ.createCredential(argsCreateCommand);
+        buildks  buildksOBJ        = new buildks();
+        String[] argsCreateCommand = {"creat", "TestCredential1", "-value", "PassworD123", "-provider", "jksp://file@/" + keystoreFile};
+        int      rc1               = buildksOBJ.createCredential(argsCreateCommand);
         assertEquals(-1, rc1);
     }
 }

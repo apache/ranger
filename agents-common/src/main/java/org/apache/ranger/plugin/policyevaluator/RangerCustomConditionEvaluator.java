@@ -23,8 +23,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
@@ -37,9 +37,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 //
-// this class should have been named RangerConditionEvaluatorFactory
+// this class serves as a factory to instantiate RangerConditionEvaluator implementations
 //
 public class RangerCustomConditionEvaluator {
     private static final Logger LOG                           = LoggerFactory.getLogger(RangerCustomConditionEvaluator.class);
@@ -49,17 +48,16 @@ public class RangerCustomConditionEvaluator {
 
     private static final RangerPolicyConditionDef EXPRESSION_CONDITION_DEF = ServiceDefUtil.createImplicitExpressionConditionDef(-1L);
 
+    private RangerCustomConditionEvaluator() {
+    }
 
     public static RangerCustomConditionEvaluator getInstance() {
         return RangerCustomConditionEvaluator.SingletonHolder.s_instance;
     }
 
-    private RangerCustomConditionEvaluator() {
-    }
-
     public List<RangerConditionEvaluator> getPolicyConditionEvaluators(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
         RangerPerfTracer perf     = null;
-        String           parentId = "policyId=" + policy.getId() ;
+        String           parentId = "policyId=" + policy.getId();
 
         if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_INIT_LOG)) {
             perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_INIT_LOG, "RangerPolicyEvaluator.getPolicyConditionEvaluators(" + parentId + ")");
@@ -97,7 +95,7 @@ public class RangerCustomConditionEvaluator {
                 RangerPolicyConditionDef conditionDef = ServiceDefUtil.getConditionDef(serviceDef, condition.getType());
 
                 if (conditionDef == null) {
-                    LOG.error("RangerCustomConditionEvaluator.getConditionEvaluators(" + parentId + "): conditionDef '" + condition.getType() + "' not found. Ignoring the condition");
+                    LOG.error("RangerCustomConditionEvaluator.getConditionEvaluators({}): conditionDef '{}' not found. Ignoring the condition", parentId, condition.getType());
 
                     continue;
                 }
@@ -112,7 +110,7 @@ public class RangerCustomConditionEvaluator {
             ret = Collections.emptyList();
         }
 
-        return  ret;
+        return ret;
     }
 
     public RangerConditionEvaluator getConditionEvaluator(String parentId, RangerPolicyItemCondition condition, RangerPolicyConditionDef conditionDef, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
@@ -136,7 +134,7 @@ public class RangerCustomConditionEvaluator {
 
                 RangerPerfTracer.log(perf);
             } else {
-                LOG.error("RangerCustomConditionEvaluator.getConditionEvaluator(" + parentId + "): failed to init ConditionEvaluator '" + condition.getType() + "'; evaluatorClassName='" + conditionDef.getEvaluator() + "'");
+                LOG.error("RangerCustomConditionEvaluator.getConditionEvaluator({}): failed to init ConditionEvaluator '{}'; evaluatorClassName='{}'", parentId, condition.getType(), conditionDef.getEvaluator());
             }
         } else {
             ret = null;
@@ -170,24 +168,20 @@ public class RangerCustomConditionEvaluator {
     }
 
     private RangerConditionEvaluator newConditionEvaluator(String className) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerCustomConditionEvaluator.newConditionEvaluator(" + className + ")");
-        }
+        LOG.debug("==> RangerCustomConditionEvaluator.newConditionEvaluator({})", className);
 
         RangerConditionEvaluator evaluator = null;
 
         try {
             @SuppressWarnings("unchecked")
-            Class<RangerConditionEvaluator> evaluatorClass = (Class<RangerConditionEvaluator>)Class.forName(className);
+            Class<RangerConditionEvaluator> evaluatorClass = (Class<RangerConditionEvaluator>) Class.forName(className);
 
             evaluator = evaluatorClass.newInstance();
         } catch (Throwable t) {
-            LOG.error("RangerCustomConditionEvaluator.newConditionEvaluator(" + className + "): error instantiating evaluator", t);
+            LOG.error("RangerCustomConditionEvaluator.newConditionEvaluator({}): error instantiating evaluator", className, t);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerCustomConditionEvaluator.newConditionEvaluator(" + className + "): " + evaluator);
-        }
+        LOG.debug("<== RangerCustomConditionEvaluator.newConditionEvaluator({}): {}", className, evaluator);
 
         return evaluator;
     }

@@ -15,15 +15,9 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- 
-*/
-package org.apache.ranger.rest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+ */
+package org.apache.ranger.rest;
 
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -42,244 +36,243 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class TestServiceTagProcessor {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    @InjectMocks
+    ServiceTagsProcessor sTagProcessor = new ServiceTagsProcessor(null);
+    @Mock
+    ServiceTags serviceTags;
+    @Mock
+    RangerValidatorFactory validatorFactory;
+    @Mock
+    TestServiceREST testServiceRest;
 
-	@InjectMocks
-	ServiceTagsProcessor sTagProcessor = new ServiceTagsProcessor(null);
+    @Test
+    public void test1processError() throws Exception {
+        ServiceTagsProcessor sTagProcessor = new ServiceTagsProcessor(null);
+        sTagProcessor.process(serviceTags);
+        Assert.assertNull(serviceTags);
+    }
 
-	@Mock
-	ServiceTags serviceTags;
+    @Test
+    public void test2processAddOrUpdate() throws Exception {
+        serviceTags = new ServiceTags();
+        Map<Long, RangerTagDef> fd             = new HashMap<>();
+        List<RangerTag>         associatedTags = new ArrayList<>();
+        RangerTagDef            rTagDef        = Mockito.mock(RangerTagDef.class);
+        rTagDef.setGuid("guid");
+        rTagDef.setName("rTagDefname");
+        fd.put(1L, rTagDef);
+        serviceTags.setTagDefinitions(fd);
+        List<RangerServiceResource> serviceResources = new ArrayList<>();
+        RangerServiceResource       rserRes          = new RangerServiceResource();
+        testServiceRest = new TestServiceREST();
+        RangerPolicy rp = testServiceRest.rangerPolicy();
+        rserRes.setResourceElements(rp.getResources());
+        rserRes.setGuid("guId");
+        rserRes.setId(1L);
+        serviceResources.add(rserRes);
+        serviceTags.setServiceResources(serviceResources);
+        Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
+        resourceToTagIds.put(1L, new ArrayList<>(Arrays.asList(11L, 1L, 13L)));
+        serviceTags.setResourceToTagIds(resourceToTagIds);
 
-	@Mock
-	RangerValidatorFactory validatorFactory;
+        RangerTag rTag = new RangerTag();
+        rTag.setId(22L);
+        rTag.setOwner((short) 1);
+        Map<Long, RangerTag> tags = new HashMap<>();
+        tags.put(1L, rTag);
+        serviceTags.setTags(tags);
 
-	@Mock
-	TestServiceREST testServiceRest;
+        RangerTag rTag2 = new RangerTag();
+        rTag2.setId(22L);
+        rTag2.setOwner((short) 1);
+        Map<Long, RangerTag> tags2 = new HashMap<>();
+        tags2.put(1L, rTag2);
+        associatedTags.add(rTag2);
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+        TagStore tagStore = Mockito.mock(TagStore.class);
+        sTagProcessor = new ServiceTagsProcessor(tagStore);
+        Mockito.when(tagStore.createTagDef(rTagDef)).thenReturn(rTagDef);
+        Mockito.when(tagStore.getServiceResourceByGuid(rserRes.getGuid())).thenReturn(rserRes);
+        Mockito.when(tagStore.createTag(rTag2)).thenReturn(rTag);
 
-	@Test
-	public void test1processError() throws Exception {
-		ServiceTagsProcessor sTagProcessor = new ServiceTagsProcessor(null);
-		sTagProcessor.process(serviceTags);
-		Assert.assertNull(serviceTags);
-	}
+        Mockito.when(tagStore.getTagsForResourceId(rserRes.getId())).thenReturn(associatedTags);
+        sTagProcessor.process(serviceTags);
+        Mockito.verify(tagStore).createTagDef(rTagDef);
+        Mockito.verify(tagStore).getServiceResourceByGuid(rserRes.getGuid());
+        Mockito.verify(tagStore).createTag(rTag2);
+    }
 
-	@Test
-	public void test2processAddOrUpdate() throws Exception {
-		serviceTags = new ServiceTags();
-		Map<Long, RangerTagDef> fd = new HashMap<>();
-		List<RangerTag> associatedTags = new ArrayList<>();
-		RangerTagDef rTagDef = Mockito.mock(RangerTagDef.class);
-		rTagDef.setGuid("guid");
-		rTagDef.setName("rTagDefname");
-		fd.put(1l, rTagDef);
-		serviceTags.setTagDefinitions(fd);
-		List<RangerServiceResource> serviceResources = new ArrayList<RangerServiceResource>();
-		RangerServiceResource rserRes = new RangerServiceResource();
-		testServiceRest = new TestServiceREST();
-		RangerPolicy rp = testServiceRest.rangerPolicy();
-		rserRes.setResourceElements(rp.getResources());
-		rserRes.setGuid("guId");
-		rserRes.setId(1L);
-		serviceResources.add(rserRes);
-		serviceTags.setServiceResources(serviceResources);
-		Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
-		resourceToTagIds.put(1L, new ArrayList<Long>(Arrays.asList(11L, 1L, 13L)));
-		serviceTags.setResourceToTagIds(resourceToTagIds);
+    @Test
+    public void test3process() throws Exception {
+        serviceTags = new ServiceTags();
+        Map<Long, RangerTagDef> fd             = new HashMap<>();
+        List<RangerTag>         associatedTags = new ArrayList<>();
+        RangerTagDef            rTagDef        = Mockito.mock(RangerTagDef.class);
+        rTagDef.setGuid("guid");
+        rTagDef.setName("rTagDefname");
+        fd.put(1L, rTagDef);
+        serviceTags.setTagDefinitions(fd);
+        List<RangerServiceResource> serviceResources = new ArrayList<>();
+        RangerServiceResource       rserRes          = new RangerServiceResource();
+        testServiceRest = new TestServiceREST();
+        RangerPolicy rp = testServiceRest.rangerPolicy();
+        rserRes.setResourceElements(rp.getResources());
+        rserRes.setGuid("guId");
+        rserRes.setId(1L);
+        serviceResources.add(rserRes);
+        serviceTags.setServiceResources(serviceResources);
 
-		RangerTag rTag = new RangerTag();
-		rTag.setId(22L);
-		rTag.setOwner((short) 1);
-		Map<Long, RangerTag> tags = new HashMap<>();
-		tags.put(1L, rTag);
-		serviceTags.setTags(tags);
+        Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
+        resourceToTagIds.put(1L, new ArrayList<>(Arrays.asList(22L, 1L, 0L)));
+        serviceTags.setResourceToTagIds(resourceToTagIds);
 
-		RangerTag rTag2 = new RangerTag();
-		rTag2.setId(22L);
-		rTag2.setOwner((short) 1);
-		Map<Long, RangerTag> tags2 = new HashMap<>();
-		tags2.put(1L, rTag2);
-		associatedTags.add(rTag2);
+        RangerTag rTag = new RangerTag();
+        rTag.setId(22L);
+        rTag.setType("type1");
+        Map<Long, RangerTag> tags = new HashMap<>();
+        rTag.setOwner((short) 0);
+        tags.put(1L, rTag);
+        serviceTags.setTags(tags);
 
-		TagStore tagStore = Mockito.mock(TagStore.class);
-		sTagProcessor = new ServiceTagsProcessor(tagStore);
-		Mockito.when(tagStore.createTagDef(rTagDef)).thenReturn(rTagDef);
-		Mockito.when(tagStore.getServiceResourceByGuid(rserRes.getGuid())).thenReturn(rserRes);
-		Mockito.when(tagStore.createTag(rTag2)).thenReturn(rTag);
+        associatedTags.add(rTag);
 
-		Mockito.when(tagStore.getTagsForResourceId(rserRes.getId())).thenReturn(associatedTags);
-		sTagProcessor.process(serviceTags);
-		Mockito.verify(tagStore).createTagDef(rTagDef);
-		Mockito.verify(tagStore).getServiceResourceByGuid(rserRes.getGuid());
-		Mockito.verify(tagStore).createTag(rTag2);
-	}
+        TagStore tagStore = Mockito.mock(TagStore.class);
+        sTagProcessor = new ServiceTagsProcessor(tagStore);
+        Mockito.when(tagStore.createTagDef(rTagDef)).thenReturn(rTagDef);
+        Mockito.when(tagStore.getServiceResourceByGuid(rserRes.getGuid())).thenReturn(rserRes);
+        Mockito.when(tagStore.getTagsForResourceId(rserRes.getId())).thenReturn(associatedTags);
 
-	@Test
-	public void test3process() throws Exception {
-		serviceTags = new ServiceTags();
-		Map<Long, RangerTagDef> fd = new HashMap<>();
-		List<RangerTag> associatedTags = new ArrayList<>();
-		RangerTagDef rTagDef = Mockito.mock(RangerTagDef.class);
-		rTagDef.setGuid("guid");
-		rTagDef.setName("rTagDefname");
-		fd.put(1l, rTagDef);
-		serviceTags.setTagDefinitions(fd);
-		List<RangerServiceResource> serviceResources = new ArrayList<RangerServiceResource>();
-		RangerServiceResource rserRes = new RangerServiceResource();
-		testServiceRest = new TestServiceREST();
-		RangerPolicy rp = testServiceRest.rangerPolicy();
-		rserRes.setResourceElements(rp.getResources());
-		rserRes.setGuid("guId");
-		rserRes.setId(1L);
-		serviceResources.add(rserRes);
-		serviceTags.setServiceResources(serviceResources);
+        sTagProcessor.process(serviceTags);
 
-		Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
-		resourceToTagIds.put(1L, new ArrayList<Long>(Arrays.asList(22L, 1L, 0L)));
-		serviceTags.setResourceToTagIds(resourceToTagIds);
+        Mockito.verify(tagStore).createTagDef(rTagDef);
+        Mockito.verify(tagStore).getServiceResourceByGuid(rserRes.getGuid());
+        Mockito.verify(tagStore).getTagsForResourceId(rserRes.getId());
+    }
 
-		RangerTag rTag = new RangerTag();
-		rTag.setId(22L);
-		rTag.setType("type1");
-		Map<Long, RangerTag> tags = new HashMap<>();
-		rTag.setOwner((short) 0);
-		tags.put(1L, rTag);
-		serviceTags.setTags(tags);
+    @Test
+    public void test4processDelete() throws Exception {
+        serviceTags = new ServiceTags();
+        serviceTags.setOp(ServiceTags.OP_DELETE);
+        Map<Long, RangerTagDef> fd             = new HashMap<>();
+        List<RangerTag>         associatedTags = new ArrayList<>();
+        RangerTagDef            rTagDef        = Mockito.mock(RangerTagDef.class);
+        rTagDef.setGuid("guid");
+        rTagDef.setName("rTagDefName");
+        fd.put(1L, rTagDef);
+        serviceTags.setTagDefinitions(fd);
+        List<RangerServiceResource> serviceResources = new ArrayList<>();
+        RangerServiceResource       rserRes          = new RangerServiceResource();
+        testServiceRest = new TestServiceREST();
+        RangerPolicy rp = testServiceRest.rangerPolicy();
+        rserRes.setResourceElements(rp.getResources());
+        rserRes.setGuid("guId");
+        rserRes.setId(1L);
+        rserRes.setServiceName("serviceName1");
+        serviceResources.add(rserRes);
+        serviceTags.setServiceResources(serviceResources);
+        List<RangerTagResourceMap> tagResourceMaps = new ArrayList<>();
+        tagResourceMaps.add(new RangerTagResourceMap());
+        Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
+        resourceToTagIds.put(1L, new ArrayList<>(Arrays.asList(22L, 1L, 0L)));
+        serviceTags.setResourceToTagIds(resourceToTagIds);
 
-		associatedTags.add(rTag);
+        RangerTag rTag = new RangerTag();
+        rTag.setId(22L);
+        rTag.setType("type1");
+        rTag.setGuid("tagGuID");
+        Map<Long, RangerTag> tags = new HashMap<>();
+        rTag.setOwner((short) 0);
+        tags.put(1L, rTag);
+        serviceTags.setTags(tags);
 
-		TagStore tagStore = Mockito.mock(TagStore.class);
-		sTagProcessor = new ServiceTagsProcessor(tagStore);
-		Mockito.when(tagStore.createTagDef(rTagDef)).thenReturn(rTagDef);
-		Mockito.when(tagStore.getServiceResourceByGuid(rserRes.getGuid())).thenReturn(rserRes);
-		Mockito.when(tagStore.getTagsForResourceId(rserRes.getId())).thenReturn(associatedTags);
+        RangerServiceResourceSignature serializer               = new RangerServiceResourceSignature(rserRes);
+        String                         serviceResourceSignature = serializer.getSignature();
+        associatedTags.add(rTag);
+        TagStore tagStore = Mockito.mock(TagStore.class);
+        sTagProcessor = new ServiceTagsProcessor(tagStore);
 
-		sTagProcessor.process(serviceTags);
+        Mockito.when(tagStore.getServiceResourceByGuid(rserRes.getGuid())).thenReturn(null);
+        Mockito.when(tagStore.getServiceResourceByServiceAndResourceSignature(rserRes.getServiceName(), serviceResourceSignature)).thenReturn(rserRes);
+        Mockito.when(tagStore.getTagResourceMapsForResourceGuid(rserRes.getGuid())).thenReturn(tagResourceMaps);
+        Mockito.doNothing().when(tagStore).deleteServiceResource(rserRes.getId());
+        Mockito.when(tagStore.getTagByGuid(rTag.getGuid())).thenReturn(rTag);
+        Mockito.doNothing().when(tagStore).deleteTag(rTag.getId());
+        Mockito.when(tagStore.getTagDefByGuid(rTagDef.getGuid())).thenReturn(rTagDef);
 
-		Mockito.verify(tagStore).createTagDef(rTagDef);
-		Mockito.verify(tagStore).getServiceResourceByGuid(rserRes.getGuid());
-		Mockito.verify(tagStore).getTagsForResourceId(rserRes.getId());
-	}
+        sTagProcessor.process(serviceTags);
 
-	@Test
-	public void test4processDelete() throws Exception {
-		serviceTags = new ServiceTags();
-		serviceTags.setOp(ServiceTags.OP_DELETE);
-		Map<Long, RangerTagDef> fd = new HashMap<>();
-		List<RangerTag> associatedTags = new ArrayList<>();
-		RangerTagDef rTagDef = Mockito.mock(RangerTagDef.class);
-		rTagDef.setGuid("guid");
-		rTagDef.setName("rTagDefName");
-		fd.put(1l, rTagDef);
-		serviceTags.setTagDefinitions(fd);
-		List<RangerServiceResource> serviceResources = new ArrayList<RangerServiceResource>();
-		RangerServiceResource rserRes = new RangerServiceResource();
-		testServiceRest = new TestServiceREST();
-		RangerPolicy rp = testServiceRest.rangerPolicy();
-		rserRes.setResourceElements(rp.getResources());
-		rserRes.setGuid("guId");
-		rserRes.setId(1L);
-		rserRes.setServiceName("serviceName1");
-		serviceResources.add(rserRes);
-		serviceTags.setServiceResources(serviceResources);
-		List<RangerTagResourceMap> tagResourceMaps = new ArrayList<RangerTagResourceMap>();
-		tagResourceMaps.add(new RangerTagResourceMap());
-		Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
-		resourceToTagIds.put(1L, new ArrayList<Long>(Arrays.asList(22L, 1L, 0L)));
-		serviceTags.setResourceToTagIds(resourceToTagIds);
+        Mockito.verify(tagStore).getServiceResourceByGuid(rserRes.getGuid());
+        Mockito.verify(tagStore).getServiceResourceByServiceAndResourceSignature(rserRes.getServiceName(), serviceResourceSignature);
+        Mockito.verify(tagStore).getTagResourceMapsForResourceGuid(rserRes.getGuid());
+        Mockito.verify(tagStore).deleteServiceResource(rserRes.getId());
+        Mockito.verify(tagStore).getTagByGuid(rTag.getGuid());
+        Mockito.verify(tagStore).deleteTag(rTag.getId());
+        Mockito.verify(tagStore).getTagDefByGuid(rTagDef.getGuid());
+    }
 
-		RangerTag rTag = new RangerTag();
-		rTag.setId(22L);
-		rTag.setType("type1");
-		rTag.setGuid("tagGuID");
-		Map<Long, RangerTag> tags = new HashMap<>();
-		rTag.setOwner((short) 0);
-		tags.put(1L, rTag);
-		serviceTags.setTags(tags);
+    @Test
+    public void test5processReplace() throws Exception {
+        serviceTags = new ServiceTags();
+        serviceTags.setOp(ServiceTags.OP_REPLACE);
+        Map<Long, RangerTagDef> fd             = new HashMap<>();
+        List<RangerTag>         associatedTags = new ArrayList<>();
+        RangerTagDef            rTagDef        = Mockito.mock(RangerTagDef.class);
+        rTagDef.setGuid("guid");
+        rTagDef.setName("rTagDefName");
+        fd.put(1L, rTagDef);
+        serviceTags.setTagDefinitions(fd);
+        List<RangerServiceResource> serviceResources = new ArrayList<>();
+        RangerServiceResource       rserRes          = new RangerServiceResource();
+        testServiceRest = new TestServiceREST();
+        RangerPolicy rp = testServiceRest.rangerPolicy();
+        rserRes.setResourceElements(rp.getResources());
+        rserRes.setGuid("guId");
+        rserRes.setId(1L);
+        rserRes.setServiceName("serviceName1");
+        serviceResources.add(rserRes);
+        serviceTags.setServiceResources(serviceResources);
+        List<RangerTagResourceMap> tagResourceMaps = new ArrayList<>();
+        serviceTags.setServiceName("tagServiceName");
+        RangerTagResourceMap rangerTagRmp = new RangerTagResourceMap();
+        rangerTagRmp.setId(2L);
+        tagResourceMaps.add(rangerTagRmp);
+        Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
+        resourceToTagIds.put(1L, new ArrayList<>(Arrays.asList(22L, 1L, 0L)));
+        serviceTags.setResourceToTagIds(resourceToTagIds);
 
-		RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(rserRes);
-		String serviceResourceSignature = serializer.getSignature();
-		associatedTags.add(rTag);
-		TagStore tagStore = Mockito.mock(TagStore.class);
-		sTagProcessor = new ServiceTagsProcessor(tagStore);
+        RangerTag rTag = new RangerTag();
+        rTag.setId(22L);
+        rTag.setType("type1");
+        rTag.setGuid("tagGuID");
+        Map<Long, RangerTag> tags = new HashMap<>();
+        rTag.setOwner((short) 0);
+        tags.put(1L, rTag);
+        serviceTags.setTags(tags);
+        associatedTags.add(rTag);
+        TagStore tagStore = Mockito.mock(TagStore.class);
+        sTagProcessor = new ServiceTagsProcessor(tagStore);
 
-		Mockito.when(tagStore.getServiceResourceByGuid(rserRes.getGuid())).thenReturn(null);
-		Mockito.when(tagStore.getServiceResourceByServiceAndResourceSignature(rserRes.getServiceName(),
-				serviceResourceSignature)).thenReturn(rserRes);
-		Mockito.when(tagStore.getTagResourceMapsForResourceGuid(rserRes.getGuid())).thenReturn(tagResourceMaps);
-		Mockito.doNothing().when(tagStore).deleteServiceResource(rserRes.getId());
-		Mockito.when(tagStore.getTagByGuid(rTag.getGuid())).thenReturn(rTag);
-		Mockito.doNothing().when(tagStore).deleteTag(rTag.getId());
-		Mockito.when(tagStore.getTagDefByGuid(rTagDef.getGuid())).thenReturn(rTagDef);
+        List<String> serviceResourcesInDb = new ArrayList<>(Collections.singletonList("guid"));
+        Mockito.when(tagStore.getServiceResourceGuidsByService(serviceTags.getServiceName())).thenReturn(serviceResourcesInDb);
+        Mockito.when(tagStore.getTagResourceMapsForResourceGuid(Mockito.anyString())).thenReturn(tagResourceMaps);
+        Mockito.doNothing().when(tagStore).deleteTagResourceMap(rangerTagRmp.getId());
+        Mockito.doNothing().when(tagStore).deleteServiceResourceByGuid(Mockito.anyString());
 
-		sTagProcessor.process(serviceTags);
+        sTagProcessor.process(serviceTags);
 
-		Mockito.verify(tagStore).getServiceResourceByGuid(rserRes.getGuid());
-		Mockito.verify(tagStore).getServiceResourceByServiceAndResourceSignature(rserRes.getServiceName(),
-				serviceResourceSignature);
-		Mockito.verify(tagStore).getTagResourceMapsForResourceGuid(rserRes.getGuid());
-		Mockito.verify(tagStore).deleteServiceResource(rserRes.getId());
-		Mockito.verify(tagStore).getTagByGuid(rTag.getGuid());
-		Mockito.verify(tagStore).deleteTag(rTag.getId());
-		Mockito.verify(tagStore).getTagDefByGuid(rTagDef.getGuid());
-	}
-
-	@Test
-	public void test5processReplace() throws Exception {
-		serviceTags = new ServiceTags();
-		serviceTags.setOp(ServiceTags.OP_REPLACE);
-		Map<Long, RangerTagDef> fd = new HashMap<>();
-		List<RangerTag> associatedTags = new ArrayList<>();
-		RangerTagDef rTagDef = Mockito.mock(RangerTagDef.class);
-		rTagDef.setGuid("guid");
-		rTagDef.setName("rTagDefName");
-		fd.put(1l, rTagDef);
-		serviceTags.setTagDefinitions(fd);
-		List<RangerServiceResource> serviceResources = new ArrayList<RangerServiceResource>();
-		RangerServiceResource rserRes = new RangerServiceResource();
-		testServiceRest = new TestServiceREST();
-		RangerPolicy rp = testServiceRest.rangerPolicy();
-		rserRes.setResourceElements(rp.getResources());
-		rserRes.setGuid("guId");
-		rserRes.setId(1L);
-		rserRes.setServiceName("serviceName1");
-		serviceResources.add(rserRes);
-		serviceTags.setServiceResources(serviceResources);
-		List<RangerTagResourceMap> tagResourceMaps = new ArrayList<RangerTagResourceMap>();
-		serviceTags.setServiceName("tagServiceName");
-		RangerTagResourceMap rangerTagRmp = new RangerTagResourceMap();
-		rangerTagRmp.setId(2L);
-		tagResourceMaps.add(rangerTagRmp);
-		Map<Long, List<Long>> resourceToTagIds = new HashMap<>();
-		resourceToTagIds.put(1L, new ArrayList<Long>(Arrays.asList(22L, 1L, 0L)));
-		serviceTags.setResourceToTagIds(resourceToTagIds);
-
-		RangerTag rTag = new RangerTag();
-		rTag.setId(22L);
-		rTag.setType("type1");
-		rTag.setGuid("tagGuID");
-		Map<Long, RangerTag> tags = new HashMap<>();
-		rTag.setOwner((short) 0);
-		tags.put(1L, rTag);
-		serviceTags.setTags(tags);
-		associatedTags.add(rTag);
-		TagStore tagStore = Mockito.mock(TagStore.class);
-		sTagProcessor = new ServiceTagsProcessor(tagStore);
-
-		List<String> serviceResourcesInDb = new ArrayList<>(Arrays.asList("guid"));
-		Mockito.when(tagStore.getServiceResourceGuidsByService(serviceTags.getServiceName()))
-				.thenReturn(serviceResourcesInDb);
-		Mockito.when(tagStore.getTagResourceMapsForResourceGuid(Mockito.anyString())).thenReturn(tagResourceMaps);
-		Mockito.doNothing().when(tagStore).deleteTagResourceMap(rangerTagRmp.getId());
-		Mockito.doNothing().when(tagStore).deleteServiceResourceByGuid(Mockito.anyString());
-
-		sTagProcessor.process(serviceTags);
-
-		Mockito.verify(tagStore).getServiceResourceGuidsByService(serviceTags.getServiceName());
-		Mockito.verify(tagStore).getTagResourceMapsForResourceGuid(Mockito.anyString());
-		Mockito.verify(tagStore).deleteTagResourceMap(rangerTagRmp.getId());
-		Mockito.verify(tagStore).deleteServiceResourceByGuid(Mockito.anyString());
-	}
+        Mockito.verify(tagStore).getServiceResourceGuidsByService(serviceTags.getServiceName());
+        Mockito.verify(tagStore).getTagResourceMapsForResourceGuid(Mockito.anyString());
+        Mockito.verify(tagStore).deleteTagResourceMap(rangerTagRmp.getId());
+        Mockito.verify(tagStore).deleteServiceResourceByGuid(Mockito.anyString());
+    }
 }

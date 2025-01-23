@@ -22,23 +22,24 @@ package org.apache.ranger.security.context;
 import java.io.Serializable;
 
 public class RangerAdminOpContext implements Serializable {
-	private static final long serialVersionUID = 1L;
-	private boolean bulkModeContext = false;
-	private Boolean createPrincipalsIfAbsent = null;
+    private static final long serialVersionUID = 1L;
 
-	public boolean isBulkModeContext() {
-		return bulkModeContext;
-	}
+    private boolean bulkModeContext;
+    private Boolean createPrincipalsIfAbsent;
 
-	public void setBulkModeContext(boolean bulkMode) {
-		this.bulkModeContext = bulkMode;
-	}
+    public boolean isBulkModeContext() {
+        return bulkModeContext;
+    }
 
-	public Boolean getCreatePrincipalsIfAbsent() {
-		return createPrincipalsIfAbsent;
-	}
+    public void setBulkModeContext(boolean bulkMode) {
+        this.bulkModeContext = bulkMode;
+    }
 
-	public void setCreatePrincipalsIfAbsent(Boolean createPrincipalsIfAbsent) {
-		this.createPrincipalsIfAbsent = createPrincipalsIfAbsent;
-	}
+    public Boolean getCreatePrincipalsIfAbsent() {
+        return createPrincipalsIfAbsent;
+    }
+
+    public void setCreatePrincipalsIfAbsent(Boolean createPrincipalsIfAbsent) {
+        this.createPrincipalsIfAbsent = createPrincipalsIfAbsent;
+    }
 }

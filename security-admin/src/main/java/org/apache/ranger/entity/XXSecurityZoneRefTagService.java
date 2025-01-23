@@ -18,8 +18,6 @@
  */
 package org.apache.ranger.entity;
 
-import java.util.Objects;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,87 +26,84 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_tag_srvc")
-public class XXSecurityZoneRefTagService extends XXDBBase implements java.io.Serializable{
-        private static final long serialVersionUID = 1L;
-	@Id
+public class XXSecurityZoneRefTagService extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
     @SequenceGenerator(name = "x_sec_zone_ref_tag_srvc_SEQ", sequenceName = "x_sec_zone_ref_tag_srvc_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_tag_srvc_SEQ")
     @Column(name = "id")
     protected Long id;
 
-	@Column(name = "zone_id")
-        protected Long zoneId;
+    @Column(name = "zone_id")
+    protected Long zoneId;
 
-	@Column(name = "tag_srvc_id")
-        protected Long tagServiceId;
+    @Column(name = "tag_srvc_id")
+    protected Long tagServiceId;
 
-	@Column(name = "tag_srvc_name")
-        protected String tagServiceName;
+    @Column(name = "tag_srvc_name")
+    protected String tagServiceName;
 
-        @Override
-        public void setId(Long id) {
-                this.id=id;
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, zoneId, tagServiceId, tagServiceName);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
         }
 
-        @Override
-        public Long getId() {
-                return id;
-        }
+        XXSecurityZoneRefTagService other = (XXSecurityZoneRefTagService) obj;
 
-        public Long getZoneId() {
-                return zoneId;
-        }
+        return Objects.equals(id, other.id) && Objects.equals(zoneId, other.zoneId) && Objects.equals(tagServiceId, other.tagServiceId) && Objects.equals(tagServiceName, other.tagServiceName);
+    }
 
-        public Long getTagServiceId() {
-                return tagServiceId;
-        }
+    @Override
+    public String toString() {
+        return "XXSecurityZoneRefTagService [id=" + id + ", zoneId=" + zoneId + ", tagServiceId=" + tagServiceId + ", tagServiceName=" + tagServiceName + "]";
+    }
 
-        public String getTagServiceName() {
-                return tagServiceName;
-        }
+    public Long getZoneId() {
+        return zoneId;
+    }
 
-        public void setZoneId(Long zoneId) {
-                this.zoneId = zoneId;
-        }
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
+    }
 
-        public void setTagServiceId(Long tagServiceId) {
-                this.tagServiceId = tagServiceId;
-        }
+    public Long getTagServiceId() {
+        return tagServiceId;
+    }
 
-        public void setTagServiceName(String tagServiceName) {
-                this.tagServiceName = tagServiceName;
-        }
+    public void setTagServiceId(Long tagServiceId) {
+        this.tagServiceId = tagServiceId;
+    }
 
-        @Override
-        public int hashCode() {
-                return Objects.hash(super.hashCode(), id, zoneId, tagServiceId, tagServiceName);
-        }
+    public String getTagServiceName() {
+        return tagServiceName;
+    }
 
-        @Override
-        public boolean equals(Object obj) {
-                if (this == obj) {
-                        return true;
-                }
-
-                if (getClass() != obj.getClass()) {
-                        return false;
-                }
-
-                XXSecurityZoneRefTagService other = (XXSecurityZoneRefTagService) obj;
-
-                return super.equals(obj) &&
-                           Objects.equals(id, other.id) &&
-                           Objects.equals(zoneId, other.zoneId) &&
-                           Objects.equals(tagServiceId, other.tagServiceId) &&
-                           Objects.equals(tagServiceName, other.tagServiceName);
-        }
-
-        @Override
-        public String toString() {
-                return "XXSecurityZoneRefTagService [id=" + id + ", zoneId=" + zoneId + ", tagServiceId=" + tagServiceId
-                                + ", tagServiceName=" + tagServiceName + "]";
-        }
+    public void setTagServiceName(String tagServiceName) {
+        this.tagServiceName = tagServiceName;
+    }
 }

@@ -43,288 +43,324 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
-	private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefUpdate_J10041.class);
-	private static final List<String> OZONE_CONFIGS = new ArrayList<>(
-			Arrays.asList("dfs.datanode.kerberos.principal", "dfs.namenode.kerberos.principal", "dfs.secondary.namenode.kerberos.principal", "commonNameForCertificate"));
-	private static final String OZONE_RESOURCE_VOLUME = "volume";
-	private static final String OZONE_RESOURCE_KEY = "key";
-	private static final String ACCESS_TYPE_READ_ACL = "read_acl";
-	private static final String ACCESS_TYPE_WRITE_ACL = "write_acl";
+    private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneServiceDefUpdate_J10041.class);
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    private static final List<String> OZONE_CONFIGS         = new ArrayList<>(Arrays.asList("dfs.datanode.kerberos.principal", "dfs.namenode.kerberos.principal", "dfs.secondary.namenode.kerberos.principal", "commonNameForCertificate"));
+    private static final String       OZONE_RESOURCE_VOLUME = "volume";
+    private static final String       OZONE_RESOURCE_KEY    = "key";
+    private static final String       ACCESS_TYPE_READ_ACL  = "read_acl";
+    private static final String       ACCESS_TYPE_WRITE_ACL = "write_acl";
 
-	@Autowired
-	ServiceDBStore svcDBStore;
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	JSONUtil jsonUtil;
+    @Autowired
+    ServiceDBStore svcDBStore;
 
-	@Autowired
-	RangerPolicyService policyService;
+    @Autowired
+    JSONUtil jsonUtil;
 
-	@Autowired
-	StringUtil stringUtil;
+    @Autowired
+    RangerPolicyService policyService;
 
-	@Autowired
-	XPolicyService xPolService;
+    @Autowired
+    StringUtil stringUtil;
 
-	@Autowired
-	XPermMapService xPermMapService;
+    @Autowired
+    XPolicyService xPolService;
 
-	@Autowired
-	RangerBizUtil bizUtil;
+    @Autowired
+    XPermMapService xPermMapService;
 
-	@Autowired
-	RangerValidatorFactory validatorFactory;
+    @Autowired
+    RangerBizUtil bizUtil;
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForOzoneServiceDefUpdate_J10041 loader = (PatchForOzoneServiceDefUpdate_J10041) CLIUtil.getBean(PatchForOzoneServiceDefUpdate_J10041.class);
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting.");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+    @Autowired
+    RangerValidatorFactory validatorFactory;
 
-	@Override
-	public void printStats() {
-		logger.info("PatchForOzoneServiceDefUpdate data ");
-	}
+    public static void main(String[] args) {
+        logger.info("main()");
 
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForOzoneServiceDefUpdate.execLoad()");
-		try {
-			if (!updateOzoneServiceDef()) {
-				logger.error("Failed to apply the patch.");
-				System.exit(1);
-			}
-		} catch (Exception e) {
-			logger.error("Error while updateOzoneServiceDef()data.", e);
-			System.exit(1);
-		}
-		logger.info("<== PatchForOzoneServiceDefUpdate.execLoad()");
-	}
+        try {
+            PatchForOzoneServiceDefUpdate_J10041 loader = (PatchForOzoneServiceDefUpdate_J10041) CLIUtil.getBean(PatchForOzoneServiceDefUpdate_J10041.class);
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+            loader.init();
 
-	private boolean updateOzoneServiceDef() throws Exception {
-		RangerServiceDef ret;
-		RangerServiceDef embeddedOzoneServiceDef;
-		RangerServiceDef dbOzoneServiceDef;
-		List<RangerServiceDef.RangerServiceConfigDef>   embeddedOzoneConfigDefs;
-		List<RangerServiceDef.RangerResourceDef>   embeddedOzoneResourceDefs;
-		List<RangerServiceDef.RangerAccessTypeDef> embeddedOzoneAccessTypes;
-		XXServiceDef xXServiceDefObj;
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
 
-		embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+            logger.info("Load complete. Exiting.");
 
-		if (embeddedOzoneServiceDef != null) {
-			xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
-			Map<String, String> serviceDefOptionsPreUpdate;
-			String jsonPreUpdate;
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
 
-			if (xXServiceDefObj != null) {
-				jsonPreUpdate = xXServiceDefObj.getDefOptions();
-				serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
-			} else {
-				logger.error("Ozone service-definition does not exist in the Ranger DAO. No patching is needed!!");
-				return true;
-			}
-			dbOzoneServiceDef = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+            System.exit(1);
+        }
+    }
 
-			if (dbOzoneServiceDef != null) {
-				// Remove old Ozone configs
-				embeddedOzoneConfigDefs = embeddedOzoneServiceDef.getConfigs();
-				if (checkNotConfigPresent(embeddedOzoneConfigDefs)) {
-					dbOzoneServiceDef.setConfigs(embeddedOzoneConfigDefs);
-				}
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-				// Update volume resource with recursive flag false and key resource with recursive flag true
-				embeddedOzoneResourceDefs = embeddedOzoneServiceDef.getResources();
-				if (checkVolKeyResUpdate(embeddedOzoneResourceDefs)) {
-					dbOzoneServiceDef.setResources(embeddedOzoneResourceDefs);
-				}
+    @Override
+    public void printStats() {
+        logger.info("PatchForOzoneServiceDefUpdate data ");
+    }
 
-				// Add new access types
-				embeddedOzoneAccessTypes = embeddedOzoneServiceDef.getAccessTypes();
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForOzoneServiceDefUpdate.execLoad()");
 
-				if (embeddedOzoneAccessTypes != null) {
-					if (checkAccessTypesPresent(embeddedOzoneAccessTypes)) {
-						if (!embeddedOzoneAccessTypes.toString().equalsIgnoreCase(dbOzoneServiceDef.getAccessTypes().toString())) {
-							dbOzoneServiceDef.setAccessTypes(embeddedOzoneAccessTypes);
-						}
-					}
-				}
-			} else {
-				logger.error("Ozone service-definition does not exist in the db store.");
-				return false;
-			}
-			RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcDBStore);
-			validator.validate(dbOzoneServiceDef, RangerValidator.Action.UPDATE);
+        try {
+            if (!updateOzoneServiceDef()) {
+                logger.error("Failed to apply the patch.");
 
-			ret = svcDBStore.updateServiceDef(dbOzoneServiceDef);
-			if (ret == null) {
-				throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME + " service-def");
-			}
-			xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
-			if (xXServiceDefObj != null) {
-				String jsonStrPostUpdate = xXServiceDefObj.getDefOptions();
-				Map<String, String> serviceDefOptionsPostUpdate = jsonStringToMap(jsonStrPostUpdate);
-				if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-					if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-						String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-						if (preUpdateValue == null) {
-							serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-						} else {
-							serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
-						}
-						xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
-						daoMgr.getXXServiceDef().update(xXServiceDefObj);
-					}
-				}
-			} else {
-				logger.error("Ozone service-definition does not exist in the Ranger DAO.");
-				return false;
-			}
-			List<XXService> dbServices = daoMgr.getXXService().findByServiceDefId(embeddedOzoneServiceDef.getId());
-			if (CollectionUtils.isNotEmpty(dbServices)) {
-				for(XXService dbService : dbServices) {
-					SearchFilter filter = new SearchFilter();
-					filter.setParam(SearchFilter.SERVICE_NAME, dbService.getName());
-					updateExisitngOzonePolicies(svcDBStore.getServicePolicies(dbService.getId(), filter));
-				}
-			}
-		} else {
-			logger.error("The embedded Ozone service-definition does not exist.");
-			return false;
-		}
-		return true;
-	}
+                System.exit(1);
+            }
+        } catch (Exception e) {
+            logger.error("Error while updateOzoneServiceDef()data.", e);
 
-	private boolean checkNotConfigPresent(List<RangerServiceDef.RangerServiceConfigDef> configDefs) {
-		boolean ret = false;
-		List<String> configNames = new ArrayList<>();
-		for (RangerServiceDef.RangerServiceConfigDef configDef : configDefs) {
-			configNames.add(configDef.getName());
-		}
-		for (String delConfig : OZONE_CONFIGS) {
-			if (!configNames.contains(delConfig)) {
-				ret = true;
-				break;
-			}
-		}
-		return ret;
-	}
+            System.exit(1);
+        }
 
-	private boolean checkVolKeyResUpdate(List<RangerServiceDef.RangerResourceDef> embeddedOzoneResDefs) {
-		boolean ret = false;
-		for (RangerServiceDef.RangerResourceDef resDef : embeddedOzoneResDefs) {
-			if ((resDef.getName().equals(OZONE_RESOURCE_VOLUME) && (!resDef.getRecursiveSupported()  || resDef.getExcludesSupported())) ||
-					(resDef.getName().equals(OZONE_RESOURCE_KEY) && resDef.getRecursiveSupported())) {
-				ret = true;
-				break;
-			}
-		}
-		return ret;
-	}
+        logger.info("<== PatchForOzoneServiceDefUpdate.execLoad()");
+    }
 
-	private boolean checkAccessTypesPresent(List<RangerServiceDef.RangerAccessTypeDef> embeddedOzoneAccessTypes) {
-		boolean ret = false;
-		for (RangerServiceDef.RangerAccessTypeDef accessDef : embeddedOzoneAccessTypes) {
-			if (ACCESS_TYPE_READ_ACL.equals(accessDef.getName()) || ACCESS_TYPE_WRITE_ACL.equals(accessDef.getName())) {
-				ret = true;
-				break;
-			}
-		}
-		return ret;
-	}
+    protected Map<String, String> jsonStringToMap(String jsonStr) {
+        Map<String, String> ret = null;
 
-	private void updateExisitngOzonePolicies(List<RangerPolicy> policies) throws Exception{
-		if (CollectionUtils.isNotEmpty(policies)) {
-			for (RangerPolicy policy : policies) {
-				List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
-				if (CollectionUtils.isNotEmpty(policyItems)) {
-					for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
-						// Add new access types
-						policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("read_acl"));
-						policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("write_acl"));
-					}
-				}
-				Map<String, RangerPolicy.RangerPolicyResource> policyResources = policy.getResources();
-				if (MapUtils.isNotEmpty(policyResources)) {
-					if (policyResources.containsKey(OZONE_RESOURCE_VOLUME)) {
-						// Set recursive flag as false for volume resource
-						policyResources.get(OZONE_RESOURCE_VOLUME).setIsRecursive(false);
-						// Set exclude support flag as true for volume resource
-						policyResources.get(OZONE_RESOURCE_VOLUME).setIsExcludes(false);
-					}
-					if (policyResources.containsKey(OZONE_RESOURCE_KEY)) {
-						// Set is recursive flag as true for volume resource
-						policyResources.get(OZONE_RESOURCE_KEY).setIsRecursive(true);
-					}
-				}
-				svcDBStore.updatePolicy(policy);
-			}
-		}
-	}
+        if (!StringUtils.isEmpty(jsonStr)) {
+            try {
+                ret = jsonUtil.jsonToMap(jsonStr);
+            } catch (Exception ex) {
+                // fallback to earlier format: "name1=value1;name2=value2"
+                for (String optionString : jsonStr.split(";")) {
+                    if (StringUtils.isEmpty(optionString)) {
+                        continue;
+                    }
 
+                    String[] nvArr = optionString.split("=");
+                    String   name  = nvArr.length > 0 ? nvArr[0].trim() : null;
+                    String   value = nvArr.length > 1 ? nvArr[1].trim() : null;
 
-	private String mapToJsonString(Map<String, String> map) {
-		String ret = null;
-		if (map != null) {
-			try {
-				ret = jsonUtil.readMapToString(map);
-			} catch (Exception ex) {
-				logger.warn("mapToJsonString() failed to convert map: " + map, ex);
-			}
-		}
-		return ret;
-	}
+                    if (StringUtils.isEmpty(name)) {
+                        continue;
+                    }
 
-	protected Map<String, String> jsonStringToMap(String jsonStr) {
-		Map<String, String> ret = null;
-		if (!StringUtils.isEmpty(jsonStr)) {
-			try {
-				ret = jsonUtil.jsonToMap(jsonStr);
-			} catch (Exception ex) {
-				// fallback to earlier format: "name1=value1;name2=value2"
-				for (String optionString : jsonStr.split(";")) {
-					if (StringUtils.isEmpty(optionString)) {
-						continue;
-					}
-					String[] nvArr = optionString.split("=");
-					String name = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
-					String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
-					if (StringUtils.isEmpty(name)) {
-						continue;
-					}
-					if (ret == null) {
-						ret = new HashMap<String, String>();
-					}
-					ret.put(name, value);
-				}
-			}
-		}
-		return ret;
-	}
+                    if (ret == null) {
+                        ret = new HashMap<>();
+                    }
+
+                    ret.put(name, value);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean updateOzoneServiceDef() throws Exception {
+        RangerServiceDef embeddedOzoneServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+        if (embeddedOzoneServiceDef != null) {
+            XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+            if (xXServiceDefObj == null) {
+                logger.error("Ozone service-definition does not exist in the Ranger DAO. No patching is needed!!");
+                return true;
+            }
+
+            String              jsonPreUpdate              = xXServiceDefObj.getDefOptions();
+            Map<String, String> serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
+            RangerServiceDef    dbOzoneServiceDef          = svcDBStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+            if (dbOzoneServiceDef != null) {
+                // Remove old Ozone configs
+                List<RangerServiceDef.RangerServiceConfigDef> embeddedOzoneConfigDefs = embeddedOzoneServiceDef.getConfigs();
+
+                if (checkNotConfigPresent(embeddedOzoneConfigDefs)) {
+                    dbOzoneServiceDef.setConfigs(embeddedOzoneConfigDefs);
+                }
+
+                // Update volume resource with recursive flag false and key resource with recursive flag true
+                List<RangerServiceDef.RangerResourceDef> embeddedOzoneResourceDefs = embeddedOzoneServiceDef.getResources();
+
+                if (checkVolKeyResUpdate(embeddedOzoneResourceDefs)) {
+                    dbOzoneServiceDef.setResources(embeddedOzoneResourceDefs);
+                }
+
+                // Add new access types
+                List<RangerServiceDef.RangerAccessTypeDef> embeddedOzoneAccessTypes = embeddedOzoneServiceDef.getAccessTypes();
+
+                if (embeddedOzoneAccessTypes != null) {
+                    if (checkAccessTypesPresent(embeddedOzoneAccessTypes)) {
+                        if (!embeddedOzoneAccessTypes.toString().equalsIgnoreCase(dbOzoneServiceDef.getAccessTypes().toString())) {
+                            dbOzoneServiceDef.setAccessTypes(embeddedOzoneAccessTypes);
+                        }
+                    }
+                }
+            } else {
+                logger.error("Ozone service-definition does not exist in the db store.");
+
+                return false;
+            }
+
+            RangerServiceDefValidator validator = validatorFactory.getServiceDefValidator(svcDBStore);
+
+            validator.validate(dbOzoneServiceDef, RangerValidator.Action.UPDATE);
+
+            RangerServiceDef ret = svcDBStore.updateServiceDef(dbOzoneServiceDef);
+
+            if (ret == null) {
+                throw new RuntimeException("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME + " service-def");
+            }
+
+            xXServiceDefObj = daoMgr.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_OZONE_NAME);
+
+            if (xXServiceDefObj != null) {
+                String              jsonStrPostUpdate           = xXServiceDefObj.getDefOptions();
+                Map<String, String> serviceDefOptionsPostUpdate = jsonStringToMap(jsonStrPostUpdate);
+
+                if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                    if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                        String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+
+                        if (preUpdateValue == null) {
+                            serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+                        } else {
+                            serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
+                        }
+
+                        xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
+
+                        daoMgr.getXXServiceDef().update(xXServiceDefObj);
+                    }
+                }
+            } else {
+                logger.error("Ozone service-definition does not exist in the Ranger DAO.");
+
+                return false;
+            }
+            List<XXService> dbServices = daoMgr.getXXService().findByServiceDefId(embeddedOzoneServiceDef.getId());
+
+            if (CollectionUtils.isNotEmpty(dbServices)) {
+                for (XXService dbService : dbServices) {
+                    SearchFilter filter = new SearchFilter();
+
+                    filter.setParam(SearchFilter.SERVICE_NAME, dbService.getName());
+
+                    updateExisitngOzonePolicies(svcDBStore.getServicePolicies(dbService.getId(), filter));
+                }
+            }
+        } else {
+            logger.error("The embedded Ozone service-definition does not exist.");
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean checkNotConfigPresent(List<RangerServiceDef.RangerServiceConfigDef> configDefs) {
+        boolean      ret         = false;
+        List<String> configNames = new ArrayList<>();
+
+        for (RangerServiceDef.RangerServiceConfigDef configDef : configDefs) {
+            configNames.add(configDef.getName());
+        }
+
+        for (String delConfig : OZONE_CONFIGS) {
+            if (!configNames.contains(delConfig)) {
+                ret = true;
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean checkVolKeyResUpdate(List<RangerServiceDef.RangerResourceDef> embeddedOzoneResDefs) {
+        boolean ret = false;
+
+        for (RangerServiceDef.RangerResourceDef resDef : embeddedOzoneResDefs) {
+            if ((resDef.getName().equals(OZONE_RESOURCE_VOLUME) && (!resDef.getRecursiveSupported() || resDef.getExcludesSupported())) || (resDef.getName().equals(OZONE_RESOURCE_KEY) && resDef.getRecursiveSupported())) {
+                ret = true;
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean checkAccessTypesPresent(List<RangerServiceDef.RangerAccessTypeDef> embeddedOzoneAccessTypes) {
+        boolean ret = false;
+
+        for (RangerServiceDef.RangerAccessTypeDef accessDef : embeddedOzoneAccessTypes) {
+            if (ACCESS_TYPE_READ_ACL.equals(accessDef.getName()) || ACCESS_TYPE_WRITE_ACL.equals(accessDef.getName())) {
+                ret = true;
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    private void updateExisitngOzonePolicies(List<RangerPolicy> policies) throws Exception {
+        if (CollectionUtils.isNotEmpty(policies)) {
+            for (RangerPolicy policy : policies) {
+                List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
+
+                if (CollectionUtils.isNotEmpty(policyItems)) {
+                    for (RangerPolicy.RangerPolicyItem policyItem : policyItems) {
+                        // Add new access types
+                        policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("read_acl"));
+                        policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess("write_acl"));
+                    }
+                }
+
+                Map<String, RangerPolicy.RangerPolicyResource> policyResources = policy.getResources();
+
+                if (MapUtils.isNotEmpty(policyResources)) {
+                    if (policyResources.containsKey(OZONE_RESOURCE_VOLUME)) {
+                        // Set recursive flag as false for volume resource
+                        policyResources.get(OZONE_RESOURCE_VOLUME).setIsRecursive(false);
+                        // Set exclude support flag as true for volume resource
+                        policyResources.get(OZONE_RESOURCE_VOLUME).setIsExcludes(false);
+                    }
+
+                    if (policyResources.containsKey(OZONE_RESOURCE_KEY)) {
+                        // Set is recursive flag as true for volume resource
+                        policyResources.get(OZONE_RESOURCE_KEY).setIsRecursive(true);
+                    }
+                }
+
+                svcDBStore.updatePolicy(policy);
+            }
+        }
+    }
+
+    private String mapToJsonString(Map<String, String> map) {
+        String ret = null;
+
+        if (map != null) {
+            try {
+                ret = jsonUtil.readMapToString(map);
+            } catch (Exception ex) {
+                logger.warn("mapToJsonString() failed to convert map: {}", map, ex);
+            }
+        }
+
+        return ret;
+    }
 }

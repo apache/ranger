@@ -36,46 +36,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class EntityNotificationWrapper {
-	private static final Logger LOG = LoggerFactory.getLogger(EntityNotificationWrapper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EntityNotificationWrapper.class);
 
-	public enum NotificationOpType { UNKNOWN, ENTITY_CREATE, ENTITY_UPDATE, ENTITY_DELETE, CLASSIFICATION_ADD, CLASSIFICATION_UPDATE, CLASSIFICATION_DELETE}
-
-	public static class RangerAtlasClassification {
-		private final String                       name;
-		private final Map<String, String>          attributes;
-		private final List<RangerValiditySchedule> validityPeriods;
-
-		public RangerAtlasClassification(String name, Map<String, String> attributes, List<RangerValiditySchedule> validityPeriods) {
-			this.name            = name;
-			this.attributes      = attributes;
-			this.validityPeriods = validityPeriods;
-		}
-		public String getName() {
-			return name;
-		}
-		public Map<String, String> getAttributes() {
-			return attributes;
-		}
-		public List<RangerValiditySchedule> getValidityPeriods() {
-			return validityPeriods;
-		}
-
-	}
-    private final RangerAtlasEntity                         rangerAtlasEntity;
-    private final String                                    entityTypeName;
-    private final boolean                                   isEntityActive;
-    private final boolean                                   isEntityTypeHandled;
-    private final boolean                                   isEntityDeleteOp;
-    private final boolean                                   isEntityCreateOp;
-    private final boolean                                   isEmptyClassifications;
-    private final List<RangerAtlasClassification>           classifications;
-    private final NotificationOpType                        opType;
+    private final RangerAtlasEntity               rangerAtlasEntity;
+    private final String                          entityTypeName;
+    private final boolean                         isEntityActive;
+    private final boolean                         isEntityTypeHandled;
+    private final boolean                         isEntityDeleteOp;
+    private final boolean                         isEntityCreateOp;
+    private final boolean                         isEmptyClassifications;
+    private final List<RangerAtlasClassification> classifications;
+    private final NotificationOpType              opType;
 
     EntityNotificationWrapper(@Nonnull EntityNotification notification) {
         EntityNotification.EntityNotificationType notificationType = notification.getType();
@@ -98,7 +76,7 @@ public class EntityNotificationWrapper {
                 List<AtlasClassification> allClassifications = atlasEntity.getClassifications();
 
                 if (CollectionUtils.isNotEmpty(allClassifications)) {
-                    classifications                = new ArrayList<>();
+                    classifications = new ArrayList<>();
 
                     for (AtlasClassification classification : allClassifications) {
                         String classificationName = classification.getTypeName();
@@ -115,7 +93,7 @@ public class EntityNotificationWrapper {
                         }
 
                         List<RangerValiditySchedule> validitySchedules = null;
-                        List<TimeBoundary> validityPeriods = classification.getValidityPeriods();
+                        List<TimeBoundary>           validityPeriods   = classification.getValidityPeriods();
 
                         if (CollectionUtils.isNotEmpty(validityPeriods)) {
                             validitySchedules = convertTimeSpecFromAtlasToRanger(validityPeriods);
@@ -123,7 +101,7 @@ public class EntityNotificationWrapper {
                         classifications.add(new RangerAtlasClassification(classificationName, attributes, validitySchedules));
                     }
                 } else {
-                    classifications                = null;
+                    classifications = null;
                 }
 
                 EntityNotificationV2.OperationType operationType = v2Notification.getOperationType();
@@ -147,7 +125,7 @@ public class EntityNotificationWrapper {
                         opType = NotificationOpType.CLASSIFICATION_DELETE;
                         break;
                     default:
-                        LOG.error("Received OperationType [" + operationType + "], converting to UNKNOWN");
+                        LOG.error("Received OperationType [{}], converting to UNKNOWN", operationType);
                         opType = NotificationOpType.UNKNOWN;
                         break;
                 }
@@ -213,7 +191,7 @@ public class EntityNotificationWrapper {
                         opType = NotificationOpType.CLASSIFICATION_DELETE;
                         break;
                     default:
-                        LOG.error("Received OperationType [" + operationType + "], converting to UNKNOWN");
+                        LOG.error("Received OperationType [{}], converting to UNKNOWN", operationType);
                         opType = NotificationOpType.UNKNOWN;
                         break;
                 }
@@ -221,56 +199,22 @@ public class EntityNotificationWrapper {
             break;
 
             default: {
-                LOG.error("Unknown notification type - [" + notificationType + "]");
+                LOG.error("Unknown notification type - [{}]", notificationType);
 
-                rangerAtlasEntity              = null;
-                entityTypeName                 = null;
-                isEntityActive                 = false;
-                isEntityTypeHandled            = false;
-                isEntityDeleteOp               = false;
-                isEntityCreateOp               = false;
-                isEmptyClassifications         = true;
-                classifications                = null;
-                opType                         = NotificationOpType.UNKNOWN;
+                rangerAtlasEntity      = null;
+                entityTypeName         = null;
+                isEntityActive         = false;
+                isEntityTypeHandled    = false;
+                isEntityDeleteOp       = false;
+                isEntityCreateOp       = false;
+                isEmptyClassifications = true;
+                classifications        = null;
+                opType                 = NotificationOpType.UNKNOWN;
             }
 
             break;
         }
     }
-
-	public RangerAtlasEntity getRangerAtlasEntity() {
-		return rangerAtlasEntity;
-	}
-
-	public String getEntityTypeName() {
-		return entityTypeName;
-	}
-
-	public boolean getIsEntityTypeHandled() {
-		return isEntityTypeHandled;
-	}
-
-	public boolean getIsEntityDeleteOp() {
-		return isEntityDeleteOp;
-	}
-
-	public boolean getIsEntityCreateOp() {
-		return isEntityCreateOp;
-	}
-
-	public boolean getIsEmptyClassifications() {
-		return isEmptyClassifications;
-	}
-
-	public List<RangerAtlasClassification> getClassifications() {
-		return classifications;
-	}
-
-    public NotificationOpType getOpType() {
-        return opType;
-    }
-
-    public boolean getIsEntityActive() { return isEntityActive; }
 
     public static List<RangerValiditySchedule> convertTimeSpecFromAtlasToRanger(List<TimeBoundary> atlasTimeSpec) {
         List<RangerValiditySchedule> rangerTimeSpec = null;
@@ -290,5 +234,67 @@ public class EntityNotificationWrapper {
         }
 
         return rangerTimeSpec;
+    }
+
+    public RangerAtlasEntity getRangerAtlasEntity() {
+        return rangerAtlasEntity;
+    }
+
+    public String getEntityTypeName() {
+        return entityTypeName;
+    }
+
+    public boolean getIsEntityTypeHandled() {
+        return isEntityTypeHandled;
+    }
+
+    public boolean getIsEntityDeleteOp() {
+        return isEntityDeleteOp;
+    }
+
+    public boolean getIsEntityCreateOp() {
+        return isEntityCreateOp;
+    }
+
+    public boolean getIsEmptyClassifications() {
+        return isEmptyClassifications;
+    }
+
+    public List<RangerAtlasClassification> getClassifications() {
+        return classifications;
+    }
+
+    public NotificationOpType getOpType() {
+        return opType;
+    }
+
+    public boolean getIsEntityActive() {
+        return isEntityActive;
+    }
+
+    public enum NotificationOpType { UNKNOWN, ENTITY_CREATE, ENTITY_UPDATE, ENTITY_DELETE, CLASSIFICATION_ADD, CLASSIFICATION_UPDATE, CLASSIFICATION_DELETE }
+
+    public static class RangerAtlasClassification {
+        private final String                       name;
+        private final Map<String, String>          attributes;
+        private final List<RangerValiditySchedule> validityPeriods;
+
+        public RangerAtlasClassification(String name, Map<String, String> attributes, List<RangerValiditySchedule> validityPeriods) {
+            this.name            = name;
+            this.attributes      = attributes;
+            this.validityPeriods = validityPeriods;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Map<String, String> getAttributes() {
+            return attributes;
+        }
+
+        public List<RangerValiditySchedule> getValidityPeriods() {
+            return validityPeriods;
+        }
     }
 }

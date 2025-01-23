@@ -35,4 +35,6 @@ public class HbaseConstants {
     public static final String FAMILIES         = "families";
     public static final String SINGLE_QUOTES    = "'";
     public static final String ARROW            = "=>";
+
+    private HbaseConstants() {}
 }

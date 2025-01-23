@@ -1,20 +1,20 @@
 /**
-* Copyright 2022 Comcast Cable Communications Management, LLC
-*
-* Licensed under the Apache License, Version 2.0 (the ""License"");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an ""AS IS"" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright 2022 Comcast Cable Communications Management, LLC
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the ""License"");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an ""AS IS"" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or   implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * <p>
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
@@ -25,29 +25,30 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
-* Accepts a json string, parses it into a {@link DocumentContext}.
+ * Accepts a json string, parses it into a {@link DocumentContext}.
  * Individual fields can be updated in the {@link DocumentContext}.
  * And a new json string can be obtained.
-**/
+ **/
 public class JsonManipulator {
     /**
-    the overall document
+     the overall document
      **/
     private final DocumentContext documentContext;
 
     /**
-    a {@link DocumentContext} that specializes in returning field names (not values)
+     a {@link DocumentContext} that specializes in returning field names (not values)
      **/
     private final DocumentContext fieldContextDocument;
 
     private final Set<String> fields;
-
 
     /**
      *
@@ -100,18 +101,20 @@ public class JsonManipulator {
 
     /**
      *
-      * @return The names of all the edge fields in the {@link DocumentContext}.
+     * @return The names of all the edge fields in the {@link DocumentContext}.
      * Note that is a value is nested (ie it is of type map) that it is not returned.
      * For example if the full field set was Set(address, address.city, address.street, address.state),
      * only Set(address.city, address.street, address.state) would be returned
      */
-    public Set<String> getFields() { return fields; }
+    public Set<String> getFields() {
+        return fields;
+    }
 
     /**
      * Does the actual masking of values.
      * @param fieldAccess
      */
-    public void maskFields(List<FieldLevelAccess> fieldAccess){
+    public void maskFields(List<FieldLevelAccess> fieldAccess) {
         Stream<FieldLevelAccess> maskedFields = fieldAccess.stream().filter(fa -> fa.hasAccess && fa.isMasked);
 
         maskedFields.forEach(fa -> {
@@ -121,14 +124,13 @@ public class JsonManipulator {
                 final Object realValue = documentContext.read(fullFieldPath);
                 final Object maskedValue;
 
-                //I know I could use polymorphism to not have different methods
-                //but I prefer the readability and the clarity of different method names
+                //I know I could use polymorphism to not have different methods but I prefer the readability and the clarity of different method names
                 if (realValue instanceof String) {
-                    maskedValue = DataMasker.maskString((String)realValue, fa.maskType, fa.customMaskedValue);
+                    maskedValue = DataMasker.maskString((String) realValue, fa.maskType, fa.customMaskedValue);
                 } else if (realValue instanceof Number) {
-                    maskedValue = DataMasker.maskNumber((Number)realValue, fa.maskType, fa.customMaskedValue);
+                    maskedValue = DataMasker.maskNumber((Number) realValue, fa.maskType, fa.customMaskedValue);
                 } else if (realValue instanceof Boolean) {
-                    maskedValue = DataMasker.maskBoolean((Boolean)realValue, fa.maskType, fa.customMaskedValue);
+                    maskedValue = DataMasker.maskBoolean((Boolean) realValue, fa.maskType, fa.customMaskedValue);
                 } else {
                     throw new MaskingException("unable to determine field type: " + realValue);
                 }
@@ -141,28 +143,28 @@ public class JsonManipulator {
     /**
      * @return the current/updated json string of the {@link DocumentContext} that is being worked on
      */
-    public String getJsonString(){return documentContext.jsonString();}
-
+    public String getJsonString() {
+        return documentContext.jsonString();
+    }
 
     /**
      * Used for testing
      * @param fullPath
      * @return the value at a specific path
      */
-    String readString(String fullPath){
+    String readString(String fullPath) {
         return documentContext.read(fullPath).toString();
     }
 
     private void checkIsValidJson(String jsonString) {
         try {
-            JsonParser.parseString(jsonString); // throws JsonSyntaxException
+            JsonParser.parseString(jsonString);
         } catch (JsonSyntaxException e) {
             throw new MaskingException("invalid input json; unable to mask", e);
         }
     }
 
-    private List<String> getMatchingFields(String fieldPath){
-        return fieldContextDocument.read("$."+fieldPath);
+    private List<String> getMatchingFields(String fieldPath) {
+        return fieldContextDocument.read("$." + fieldPath);
     }
 }
-

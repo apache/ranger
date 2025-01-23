@@ -18,11 +18,12 @@
  */
 package org.apache.ranger.authz.handler;
 
-import java.util.Properties;
-
 import javax.servlet.http.HttpServletRequest;
 
+import java.util.Properties;
+
 public interface RangerAuthHandler {
-    void initialize(final Properties config) throws Exception;
-    RangerAuth authenticate(final HttpServletRequest request);
+    void initialize(Properties config) throws Exception;
+
+    RangerAuth authenticate(HttpServletRequest request);
 }

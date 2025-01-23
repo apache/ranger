@@ -19,125 +19,124 @@
 
 package org.apache.ranger.examples.sampleapp;
 
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
-import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
+
 public class SampleApp {
-	private static final Logger LOG = LoggerFactory.getLogger(SampleApp.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SampleApp.class);
 
-	private static final Set<String> VALID_ACCESS_TYPES = new HashSet<String>();
+    private static final Set<String> VALID_ACCESS_TYPES = new HashSet<>();
 
-	private IAuthorizer authorizer = null;
+    private IAuthorizer authorizer;
 
-	public static void main(String[] args) {
-		SampleApp app = new SampleApp();
+    public static void main(String[] args) {
+        SampleApp app = new SampleApp();
 
-		app.init();
+        app.init();
 
-		app.run();
-	}
+        app.run();
+    }
 
-	public void init() {
-		VALID_ACCESS_TYPES.add("read");
-		VALID_ACCESS_TYPES.add("write");
-		VALID_ACCESS_TYPES.add("execute");
+    public void init() {
+        VALID_ACCESS_TYPES.add("read");
+        VALID_ACCESS_TYPES.add("write");
+        VALID_ACCESS_TYPES.add("execute");
 
-		authorizer = createAuthorizer();
-	}
+        authorizer = createAuthorizer();
+    }
 
-	public void run() {
-		LOG.debug("==> SampleApp.run()");
+    public void run() {
+        LOG.debug("==> SampleApp.run()");
 
-		do {
-			String input = getInput();
+        do {
+            String input = getInput();
 
-			if(input == null) {
-				break;
-			}
+            if (input == null) {
+                break;
+            }
 
-			if(input.trim().isEmpty()) {
-				continue;
-			}
+            if (input.trim().isEmpty()) {
+                continue;
+            }
 
-			String[]    args       = input.split("\\s+");
-			String      accessType = getStringArg(args, 0);
-			String      fileName   = getStringArg(args, 1);
-			String      userName   = getStringArg(args, 2);
-			Set<String> userGroups = new HashSet<String>();
+            String[]    args       = input.split("\\s+");
+            String      accessType = getStringArg(args, 0);
+            String      fileName   = getStringArg(args, 1);
+            String      userName   = getStringArg(args, 2);
+            Set<String> userGroups = new HashSet<>(Arrays.asList(args).subList(3, args.length));
 
-			for(int i = 3; i < args.length; i++) {
-				userGroups.add(args[i]);
-			}
+            if (fileName == null || accessType == null || userName == null) {
+                LOG.info("Insufficient arguments. Usage: <accessType> <fileName> <userName> [userGroup1 userGroup2 userGroup3 ..]");
 
-			if(fileName == null || accessType == null || userName == null) {
-				LOG.info("Insufficient arguments. Usage: <accessType> <fileName> <userName> [userGroup1 userGroup2 userGroup3 ..]");
+                continue;
+            }
 
-				continue;
-			}
+            if (!VALID_ACCESS_TYPES.contains(accessType)) {
+                LOG.info("{}: invalid accessType", accessType);
 
-			if(! VALID_ACCESS_TYPES.contains(accessType)) {
-				LOG.info(accessType + ": invalid accessType");
+                continue;
+            }
 
-				continue;
-			}
+            if (authorizer.authorize(fileName, accessType, userName, userGroups)) {
+                LOG.info("Authorized!");
+            } else {
+                LOG.info("Not authorized!");
+            }
+        }
+        while (true);
 
-			if(authorizer.authorize(fileName, accessType, userName, userGroups)) {
-				LOG.info("Authorized!");
-			} else {
-				LOG.info("Not authorized!");
-			}
-		} while(true);
+        LOG.debug("<== SampleApp.run()");
+    }
 
-		LOG.debug("<== SampleApp.run()");
-	}
+    private IAuthorizer createAuthorizer() {
+        IAuthorizer ret            = null;
+        String      authzClassName = System.getProperty("sampleapp.authorizer");
 
-	private IAuthorizer createAuthorizer() {
-		IAuthorizer ret = null;
+        if (authzClassName != null) {
+            try {
+                Class<IAuthorizer> clz = (Class<IAuthorizer>) Class.forName(authzClassName);
 
-		String authzClassName = System.getProperty("sampleapp.authorizer");
+                ret = clz.newInstance();
+            } catch (Exception excp) {
+                LOG.warn("Failed to create authorizer of type '{}'", authzClassName, excp);
+            }
+        }
 
-		if(authzClassName != null) {
-			try {
-				Class<IAuthorizer> clz = (Class<IAuthorizer>) Class.forName(authzClassName);
+        if (ret == null) {
+            LOG.info("Using default authorizer");
 
-				ret = clz.newInstance();
-			} catch(Exception excp) {
-				LOG.warn("Failed to create authorizer of type '" + authzClassName + "'", excp);
-			}
-		}
+            ret = new DefaultAuthorizer();
+        }
 
-		if(ret == null) {
-			LOG.info("Using default authorizer");
-			ret = new DefaultAuthorizer();
-		}
+        ret.init();
 
-		ret.init();
+        return ret;
+    }
 
-		return ret;
-	}
+    private String getStringArg(String[] args, int index) {
+        if (args == null || args.length <= index) {
+            return null;
+        }
 
-	private String getStringArg(String[] args, int index) {
-		if(args == null || args.length <= index) {
-			return null;
-		}
+        return args[index];
+    }
 
-		return args[index];
-	}
+    private String getInput() {
+        try (Scanner inputReader = new Scanner(System.in, StandardCharsets.UTF_8.name())) {
+            System.out.print("command> ");
+            System.out.flush();
 
-	private String getInput() {
+            return inputReader.nextLine();
+        } catch (Exception excp) {
+            // ignore
+        }
 
-		try (Scanner inputReader = new Scanner(System.in, StandardCharsets.UTF_8.name())) {
-			System.out.print("command> ");
-			System.out.flush();
-			return inputReader.nextLine();
-		} catch(Exception excp) {
-			// ignore
-		}
-
-		return null;
-	}
+        return null;
+    }
 }

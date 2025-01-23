@@ -28,34 +28,41 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerOzoneAuthorizer implements IAccessAuthorizer {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
 
-    private static final Logger LOG  = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
+    private static final String RANGER_PLUGIN_TYPE                     = "ozone";
+    private static final String RANGER_OZONE_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.ozone.authorizer.RangerOzoneAuthorizer";
 
-    private static final String   RANGER_PLUGIN_TYPE                       = "ozone";
-    private static final String   RANGER_OZONE_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.ozone.authorizer.RangerOzoneAuthorizer";
-
-    private RangerPluginClassLoader rangerPluginClassLoader        = null;
-    private IAccessAuthorizer       ozoneAuthorizationProviderImpl = null;
+    private RangerPluginClassLoader rangerPluginClassLoader;
+    private IAccessAuthorizer       ozoneAuthorizationProviderImpl;
 
     public RangerOzoneAuthorizer() {
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOzoneAuthorizer.RangerOzoneAuthorizer()");
-        }
+        LOG.debug("==> RangerOzoneAuthorizer.RangerOzoneAuthorizer()");
 
         this.init();
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOzoneAuthorizer.RangerOzoneAuthorizer()");
+        LOG.debug("<== RangerOzoneAuthorizer.RangerOzoneAuthorizer()");
+    }
+
+    @Override
+    public boolean checkAccess(IOzoneObj ozoneObject, RequestContext context) throws OMException {
+        LOG.debug("==> RangerOzoneAuthorizer.checkAccess()");
+
+        try {
+            activatePluginClassLoader();
+
+            return ozoneAuthorizationProviderImpl.checkAccess(ozoneObject, context);
+        } finally {
+            deactivatePluginClassLoader();
+
+            LOG.debug("<== RangerOzoneAuthorizer.checkAccess()");
         }
     }
 
-    private void init(){
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOzoneAuthorizer.init()");
-        }
+    private void init() {
+        LOG.debug("==> RangerOzoneAuthorizer.init()");
 
         try {
-
             rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
             @SuppressWarnings("unchecked")
@@ -71,43 +78,17 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             deactivatePluginClassLoader();
         }
 
-        if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOzoneAuthorizer.init()");
-        }
-    }
-
-    @Override
-    public boolean checkAccess(IOzoneObj ozoneObject, RequestContext context) throws OMException {
-
-        boolean ret = false;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOzoneAuthorizer.checkAccess()");
-        }
-
-        try {
-            activatePluginClassLoader();
-
-            ret = ozoneAuthorizationProviderImpl.checkAccess(ozoneObject, context);
-        } finally {
-            deactivatePluginClassLoader();
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOzoneAuthorizer.checkAccess()");
-        }
-
-        return ret;
+        LOG.debug("<== RangerOzoneAuthorizer.init()");
     }
 
     private void activatePluginClassLoader() {
-        if(rangerPluginClassLoader != null) {
+        if (rangerPluginClassLoader != null) {
             rangerPluginClassLoader.activate();
         }
     }
 
     private void deactivatePluginClassLoader() {
-        if(rangerPluginClassLoader != null) {
+        if (rangerPluginClassLoader != null) {
             rangerPluginClassLoader.deactivate();
         }
     }

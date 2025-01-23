@@ -17,7 +17,7 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common.annotation;
@@ -27,11 +27,12 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * Annotating the REST APIs
- *
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RangerAnnotationRestAPI {
-    public String api_name() default "";
-    public boolean updates_generic_objects() default false;
-    public String updates_classes() default "";
+    String api_name() default "";
+
+    boolean updates_generic_objects() default false;
+
+    String updates_classes() default "";
 }

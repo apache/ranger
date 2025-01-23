@@ -20,15 +20,24 @@
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
 import com.google.gson.JsonParser;
-import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.*;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.CUSTOM;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_DATE_SHOW_YEAR;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_HASH;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_NONE;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_NULL;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_SHOW_FIRST_4;
+import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_SHOW_LAST_4;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class TestJsonManipulator {
     static final String testString1 = "{\n" +
@@ -51,7 +60,6 @@ public class TestJsonManipulator {
             "    }\n" +
             "}\n";
 
-
     static final String bigTester = "{" +
             "    \"someString\": \"42207ad4-590e-4d5d-a65f-6a4ccddca9e3002\"," +
             "    \"someNumber\": 12345678," +
@@ -68,19 +76,18 @@ public class TestJsonManipulator {
             "    }\n" +
             "}\n";
 
-
     @Test
     public void testFieldNames1() {
         JsonManipulator js = new JsonManipulator("{foo: 1}");
 
-        Assert.assertEquals(js.getFields().size(), 1);
+        assertEquals(js.getFields().size(), 1);
     }
 
     @Test
     public void testFieldNames2() {
         JsonManipulator js = new JsonManipulator("{foo: 1, bar: 2}");
 
-        Assert.assertEquals(js.getFields().size(), 2);
+        assertEquals(js.getFields().size(), 2);
     }
 
     @Test
@@ -91,26 +98,26 @@ public class TestJsonManipulator {
 
         Set<String> fields = js.getFields();
 
-        Assert.assertTrue(fields.contains("customerRelationshipId"));
-        Assert.assertTrue(fields.contains("partner"));
-        Assert.assertTrue(fields.contains("acquisitionDate"));
-        Assert.assertTrue(fields.contains("customerSubtype.*"));
-        Assert.assertTrue(fields.contains("accountnumber"));
-        Assert.assertTrue(fields.contains("address.addressLine1"));
-        Assert.assertTrue(fields.contains("address.addressLine2"));
-        Assert.assertTrue(fields.contains("address.city"));
-        Assert.assertTrue(fields.contains("address.zipCode"));
-        Assert.assertTrue(fields.contains("address.zipCodePlus4"));
-        Assert.assertTrue(fields.contains("address.state"));
-        Assert.assertTrue(fields.contains("address.country"));
-        Assert.assertEquals(js.getFields().size(), 12);
+        assertTrue(fields.contains("customerRelationshipId"));
+        assertTrue(fields.contains("partner"));
+        assertTrue(fields.contains("acquisitionDate"));
+        assertTrue(fields.contains("customerSubtype.*"));
+        assertTrue(fields.contains("accountnumber"));
+        assertTrue(fields.contains("address.addressLine1"));
+        assertTrue(fields.contains("address.addressLine2"));
+        assertTrue(fields.contains("address.city"));
+        assertTrue(fields.contains("address.zipCode"));
+        assertTrue(fields.contains("address.zipCodePlus4"));
+        assertTrue(fields.contains("address.state"));
+        assertTrue(fields.contains("address.country"));
+        assertEquals(js.getFields().size(), 12);
     }
 
-    @Test(expectedExceptions = {MaskingException.class})
+    @Test(expectedExceptions = MaskingException.class)
     public void invalidJson() {
         JsonManipulator js = new JsonManipulator("{foo:\"bar\"");
 
-        Assert.assertEquals(js.getFields().size(), 1);
+        assertEquals(js.getFields().size(), 1);
     }
 
     @Test
@@ -118,23 +125,23 @@ public class TestJsonManipulator {
         String          condensedString = JsonParser.parseString(testString1).toString();
         JsonManipulator man             = new JsonManipulator(condensedString);
 
-        Assert.assertEquals(man.getJsonString(), condensedString);
+        assertEquals(man.getJsonString(), condensedString);
     }
 
     @Test
     public void testBigTesterFieldNames() {
         JsonManipulator man = new JsonManipulator(bigTester);
 
-        Assert.assertEquals(man.getFields().size(), 11);
+        assertEquals(man.getFields().size(), 11);
     }
 
     @DataProvider(name = "simpleMasks")
-    public Object[][] simpleMasks(){
+    public Object[][] simpleMasks() {
         return new Object[][] {
                 //basic string masking
                 {"{\"string1\":\"value1\"}",
-                        Arrays.asList(
-                        new FieldLevelAccess("string1", true, 1L, true, MASK_NULL, "customValue")),
+                        Collections.singletonList(
+                                new FieldLevelAccess("string1", true, 1L, true, MASK_NULL, "customValue")),
                         "{\"string1\":null}"},
                 {"{\"string1\":\"value1\"}",
                         Arrays.asList(
@@ -214,22 +221,11 @@ public class TestJsonManipulator {
                         Arrays.asList(
                                 new FieldLevelAccess("string1.*", true, 1L, true, MASK, "true")),
                         "{\"string1\":[\"*******\",\"**********\"]}"},
-
-
         };
     }
 
-    @Test(dataProvider = "simpleMasks")
-    void testSimpleMasks(String json, List<FieldLevelAccess> fieldAccess, String outputJson){
-        JsonManipulator man = new JsonManipulator(json);
-
-        man.maskFields(fieldAccess);
-
-        Assert.assertEquals(man.getJsonString(), outputJson);
-    }
-
     @DataProvider(name = "complexMasks")
-    public Object[][] complexMasks(){
+    public Object[][] complexMasks() {
         return new Object[][] {
                 //test masking two fields
                 {bigTester,
@@ -243,9 +239,8 @@ public class TestJsonManipulator {
                                 new FieldLevelAccess("someBoolean", true, 1L, true, CUSTOM, "false")),
                         "someBoolean", "false"},
 
-
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("someString", true, 1L, true, CUSTOM, "555")),
                         "someString", "555"},
                 {bigTester,
@@ -257,51 +252,60 @@ public class TestJsonManipulator {
                                 new FieldLevelAccess("stringArray.*", true, 1L, true, CUSTOM, "555")),
                         "stringArray.*", "[\"555\",\"555\"]"},
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("booleanArray.*", true, 1L, true, CUSTOM, "false")),
                         "booleanArray.*", "[false,false,false]"},
 
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("aMap.mapString", true, 1L, true, CUSTOM, "foo")),
                         "aMap.mapString", "foo"},
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("aMap.mapBoolean", true, 1L, true, CUSTOM, "true")),
                         "aMap.mapBoolean", "true"},
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("aMap.mapNumber", true, 1L, true, CUSTOM, "444")),
                         "aMap.mapNumber", "444"},
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("aMap.mapStrinArray.*", true, 1L, true, CUSTOM, "baa")),
                         "aMap.mapStrinArray.*", "[\"baa\",\"baa\"]"},
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("aMap.mapMap.mapMapString", true, 1L, true, CUSTOM, "444qqq")),
                         "aMap.mapMap.mapMapString", "444qqq"},
 
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("aMap.mapMap.mapMapString", false, 1L, true, CUSTOM, "444qqq")),
                         "aMap.mapMap.mapMapString", "19019"},
                 {bigTester,
-                        Arrays.asList(
+                        Collections.singletonList(
                                 new FieldLevelAccess("aMap.mapMap.mapMapString", true, 1L, false, CUSTOM, "444qqq")),
                         "aMap.mapMap.mapMapString", "19019"},
         };
     }
 
+    @Test(dataProvider = "simpleMasks")
+    void testSimpleMasks(String json, List<FieldLevelAccess> fieldAccess, String outputJson) {
+        JsonManipulator man = new JsonManipulator(json);
+
+        man.maskFields(fieldAccess);
+
+        assertEquals(man.getJsonString(), outputJson);
+    }
+
     @Test(dataProvider = "complexMasks")
-    void testComplexMasks(String json, List<FieldLevelAccess> fieldAccess, String fieldName, String value){
+    void testComplexMasks(String json, List<FieldLevelAccess> fieldAccess, String fieldName, String value) {
         JsonManipulator man = new JsonManipulator(json);
         man.maskFields(fieldAccess);
-        Assert.assertEquals(man.readString(fieldName), value);
+        assertEquals(man.readString(fieldName), value);
     }
 
     @Test
-    void testRecordsInArray(){
+    void testRecordsInArray() {
         String json = "{\n" +
                 "  \"modifiedTimestamp\": \"2000-01-23T04:56:07.000Z\",\n" +
                 "  \"source\": [\n" +
@@ -323,11 +327,11 @@ public class TestJsonManipulator {
                 "  \"modifiedBy\": \"batchJob\"\n" +
                 "}";
         JsonManipulator man = new JsonManipulator(json);
-        Assert.assertEquals(man.getFields().size(), 10);
+        assertEquals(man.getFields().size(), 10);
     }
 
     @Test
-    void testRecordsInArray2(){
+    void testRecordsInArray2() {
         String json = "{\n" +
                 "  \"modifiedTimestamp\": \"2000-01-23T04:56:07.000Z\",\n" +
                 "  \"source\": [\n" +
@@ -353,11 +357,10 @@ public class TestJsonManipulator {
                 "  \"modifiedBy\": \"batchJob\"\n" +
                 "}";
         JsonManipulator man = new JsonManipulator(json);
-        Assert.assertEquals(man.getFields().size(), 10);
+        assertEquals(man.getFields().size(), 10);
 
-        FieldLevelAccess fieldAccess = new FieldLevelAccess("customAttributes.*.key",
-                true, 1L, true, CUSTOM, "THEMASK");
-        man.maskFields(Arrays.asList(fieldAccess));
-        Assert.assertEquals(man.readString("customAttributes.[0].key"), "THEMASK");
+        FieldLevelAccess fieldAccess = new FieldLevelAccess("customAttributes.*.key", true, 1L, true, CUSTOM, "THEMASK");
+        man.maskFields(Collections.singletonList(fieldAccess));
+        assertEquals(man.readString("customAttributes.[0].key"), "THEMASK");
     }
 }

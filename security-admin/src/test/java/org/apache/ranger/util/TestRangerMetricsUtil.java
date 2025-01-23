@@ -19,17 +19,18 @@
 
 package org.apache.ranger.util;
 
-import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+
+import java.util.Map;
 
 public class TestRangerMetricsUtil {
     @InjectMocks
     RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
 
     @Test
-    public void testGetRangerMetricsValues() throws Exception {
+    public void testGetRangerMetricsValues() {
         Map<String, Object> rangerMetricsMap = rangerMetricsUtil.getValues();
 
         Assert.assertNotNull(rangerMetricsMap);
@@ -37,14 +38,14 @@ public class TestRangerMetricsUtil {
         Assert.assertNotNull(rangerMetricsMap.get("os.vcpus"));
         Assert.assertNotNull(rangerMetricsMap.get("memory"));
 
-        Map<String, Object> memoryDetailsMap = (Map<String, Object>)rangerMetricsMap.get("memory");
+        Map<String, Object> memoryDetailsMap = (Map<String, Object>) rangerMetricsMap.get("memory");
 
         Assert.assertNotNull(memoryDetailsMap.get("heapMax"));
         Assert.assertNotNull(memoryDetailsMap.get("heapCommitted"));
         Assert.assertNotNull(memoryDetailsMap.get("heapUsed"));
         Assert.assertNotNull(memoryDetailsMap.get("memory_pool_usages"));
 
-        Map<String, Object> poolDivisionDetailsMap = (Map<String, Object>)memoryDetailsMap.get("memory_pool_usages");
+        Map<String, Object> poolDivisionDetailsMap = (Map<String, Object>) memoryDetailsMap.get("memory_pool_usages");
 
         Assert.assertTrue(poolDivisionDetailsMap.size() > 0);
     }

@@ -19,125 +19,126 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTag;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class XXTagDao extends BaseDao<XXTag> {
+    public XXTagDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXTagDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public List<XXTag> findByResourceId(Long resourceId) {
+        if (resourceId == null) {
+            return new ArrayList<>();
+        }
 
-	public List<XXTag> findByResourceId(Long resourceId) {
-		if (resourceId == null) {
-			return new ArrayList<XXTag>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findByResourceId", tClass)
-					.setParameter("resourceId", resourceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTag>();
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findByResourceId", tClass)
+                    .setParameter("resourceId", resourceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public List<String> findTagTypesByServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<String>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findTagTypesByServiceId")
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<String>();
-		}
-	}
+    public List<String> findTagTypesByServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
 
-	public XXTag findByGuid(String guid) {
-		if (StringUtil.isEmpty(guid)) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findByGuid", tClass)
-					.setParameter("guid", guid).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findTagTypesByServiceId", String.class)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<XXTag> findByName(String name) {
-		if (StringUtils.isEmpty(name)) {
-			return new ArrayList<XXTag>();
-		}
+    public XXTag findByGuid(String guid) {
+        if (StringUtil.isEmpty(guid)) {
+            return null;
+        }
 
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findByName", tClass)
-					.setParameter("name", name).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTag>();
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findByGuid", tClass)
+                    .setParameter("guid", guid).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	public List<XXTag> findForResourceId(Long resourceId) {
-		if (resourceId == null) {
-			return new ArrayList<XXTag>();
-		}
+    public List<XXTag> findByName(String name) {
+        if (StringUtils.isEmpty(name)) {
+            return new ArrayList<>();
+        }
 
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findByResourceId", tClass)
-					.setParameter("resourceId", resourceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTag>();
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findByName", tClass)
+                    .setParameter("name", name).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<XXTag> findForResourceGuid(String resourceGuid) {
-		if (StringUtils.isEmpty(resourceGuid)) {
-			return new ArrayList<XXTag>();
-		}
+    public List<XXTag> findForResourceId(Long resourceId) {
+        if (resourceId == null) {
+            return new ArrayList<>();
+        }
 
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findByResourceGuid", tClass)
-					.setParameter("resourceGuid", resourceGuid).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTag>();
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findByResourceId", tClass)
+                    .setParameter("resourceId", resourceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<XXTag> findByServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<XXTag>();
-		}
+    public List<XXTag> findForResourceGuid(String resourceGuid) {
+        if (StringUtils.isEmpty(resourceGuid)) {
+            return new ArrayList<>();
+        }
 
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findByServiceId", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTag>();
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findByResourceGuid", tClass)
+                    .setParameter("resourceGuid", resourceGuid).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<XXTag> findByServiceIdAndOwner(Long serviceId, Short owner) {
-		if (serviceId == null) {
-			return new ArrayList<XXTag>();
-		}
+    public List<XXTag> findByServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
 
-		try {
-			return getEntityManager().createNamedQuery("XXTag.findByServiceIdAndOwner", tClass)
-					.setParameter("serviceId", serviceId)
-					.setParameter("owner", owner)
-					.getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTag>();
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findByServiceId", tClass)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public List<XXTag> findByServiceIdAndOwner(Long serviceId, Short owner) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXTag.findByServiceIdAndOwner", tClass)
+                    .setParameter("serviceId", serviceId)
+                    .setParameter("owner", owner)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 }

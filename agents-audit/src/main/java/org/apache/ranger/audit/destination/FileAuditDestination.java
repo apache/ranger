@@ -19,6 +19,11 @@
 
 package org.apache.ranger.audit.destination;
 
+import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -29,216 +34,232 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.provider.MiscUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * This class write the logs to local file
  */
 public class FileAuditDestination extends AuditDestination {
-	private static final Logger logger = LoggerFactory
-			.getLogger(FileAuditDestination.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileAuditDestination.class);
 
-	public static final String PROP_FILE_LOCAL_DIR = "dir";
-	public static final String PROP_FILE_LOCAL_FILE_NAME_FORMAT = "filename.format";
-	public static final String PROP_FILE_FILE_ROLLOVER = "file.rollover.sec";
+    public static final String PROP_FILE_LOCAL_DIR              = "dir";
+    public static final String PROP_FILE_LOCAL_FILE_NAME_FORMAT = "filename.format";
+    public static final String PROP_FILE_FILE_ROLLOVER          = "file.rollover.sec";
 
-	String baseFolder = null;
-	String fileFormat = null;
-	int fileRolloverSec = 24 * 60 * 60; // In seconds
-	private String logFileNameFormat;
+    int         fileRolloverSec = 24 * 60 * 60; // In seconds
+    boolean     initDone;
+    PrintWriter logWriter;
 
-	boolean initDone = false;
+    private String  logFileNameFormat;
+    private File    logFolder;
+    private Date    fileCreateTime;
+    private String  currentFileName;
+    private boolean isStopped;
 
-	private File logFolder;
-	PrintWriter logWriter = null;
+    @Override
+    public void init(Properties prop, String propPrefix) {
+        super.init(prop, propPrefix);
 
-	private Date fileCreateTime = null;
+        // Initialize properties for this class
+        // Initial folder and file properties
+        String logFolderProp = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_LOCAL_DIR);
 
-	private String currentFileName;
+        logFileNameFormat = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILE_LOCAL_FILE_NAME_FORMAT);
+        fileRolloverSec   = MiscUtil.getIntProperty(props, propPrefix + "." + PROP_FILE_FILE_ROLLOVER, fileRolloverSec);
 
-	private boolean isStopped = false;
+        if (logFolderProp == null || logFolderProp.isEmpty()) {
+            logger.error("File destination folder is not configured. Please set {}. {}. name= {}", propPrefix, PROP_FILE_LOCAL_DIR, getName());
 
-	@Override
-	public void init(Properties prop, String propPrefix) {
-		super.init(prop, propPrefix);
+            return;
+        }
 
-		// Initialize properties for this class
-		// Initial folder and file properties
-		String logFolderProp = MiscUtil.getStringProperty(props, propPrefix
-				+ "." + PROP_FILE_LOCAL_DIR);
-		logFileNameFormat = MiscUtil.getStringProperty(props, propPrefix + "."
-				+ PROP_FILE_LOCAL_FILE_NAME_FORMAT);
-		fileRolloverSec = MiscUtil.getIntProperty(props, propPrefix + "."
-				+ PROP_FILE_FILE_ROLLOVER, fileRolloverSec);
+        logFolder = new File(logFolderProp);
 
-		if (logFolderProp == null || logFolderProp.isEmpty()) {
-			logger.error("File destination folder is not configured. Please set {}. {}. name= {}",  propPrefix,  PROP_FILE_LOCAL_DIR,  getName());
-			return;
-		}
-		logFolder = new File(logFolderProp);
-		if (!logFolder.isDirectory()) {
-			logFolder.mkdirs();
-			if (!logFolder.isDirectory()) {
-				logger.error("FileDestination folder not found and can't be created. folder={}, name={}", logFolder.getAbsolutePath(), getName());
-				return;
-			}
-		}
-		logger.info("logFolder={}, name={}", logFolder,  getName());
+        if (!logFolder.isDirectory()) {
+            logFolder.mkdirs();
 
-		if (logFileNameFormat == null || logFileNameFormat.isEmpty()) {
-			logFileNameFormat = "%app-type%_ranger_audit.log";
-		}
+            if (!logFolder.isDirectory()) {
+                logger.error("FileDestination folder not found and can't be created. folder={}, name={}", logFolder.getAbsolutePath(), getName());
 
-		logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, getName());
+                return;
+            }
+        }
 
-		initDone = true;
-	}
+        logger.info("logFolder={}, name={}", logFolder, getName());
 
-	@Override
-	synchronized public boolean logJSON(Collection<String> events) {
-		logStatusIfRequired();
-		addTotalCount(events.size());
+        if (logFileNameFormat == null || logFileNameFormat.isEmpty()) {
+            logFileNameFormat = "%app-type%_ranger_audit.log";
+        }
 
-		if (isStopped) {
-			logError("logJSON() called after stop was requested. name={}", getName());
-			addDeferredCount(events.size());
-			return false;
-		}
+        logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, getName());
 
-		try {
-			PrintWriter out = getLogFileStream();
-			for (String event : events) {
-				out.println(event);
-			}
-			out.flush();
-		} catch (Throwable t) {
-			addDeferredCount(events.size());
-			logError("Error writing to log file.", t);
-			return false;
-		}
-		addSuccessCount(events.size());
-		return true;
-	}
+        initDone = true;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#log(java.util.Collection)
-	 */
-	@Override
-	public boolean log(Collection<AuditEventBase> events) {
-		if (isStopped) {
-			addTotalCount(events.size());
-			addDeferredCount(events.size());
-			logError("log() called after stop was requested. name={}", getName());
-			return false;
-		}
-		List<String> jsonList = new ArrayList<String>();
-		for (AuditEventBase event : events) {
-			try {
-				jsonList.add(MiscUtil.stringify(event));
-			} catch (Throwable t) {
-				addTotalCount(1);
-				addFailedCount(1);
-				logFailedEvent(event);
-				logger.error("Error converting to JSON. event={}", event);
-			}
-		}
-		return logJSON(jsonList);
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#start()
+     */
+    @Override
+    public void start() {
+        // Nothing to do here. We will open the file when the first log request
+        // comes
+    }
 
-	}
+    @Override
+    public synchronized void stop() {
+        isStopped = true;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#start()
-	 */
-	@Override
-	public void start() {
-		// Nothing to do here. We will open the file when the first log request
-		// comes
-	}
+        if (logWriter != null) {
+            try {
+                logWriter.flush();
+                logWriter.close();
+            } catch (Throwable t) {
+                logger.error("Error on closing log writer. Exception will be ignored. name={}, fileName={}", getName(), currentFileName);
+            }
 
-	@Override
-	synchronized public void stop() {
-		isStopped = true;
-		if (logWriter != null) {
-			try {
-				logWriter.flush();
-				logWriter.close();
-			} catch (Throwable t) {
-				logger.error("Error on closing log writer. Exception will be ignored. name= {}, fileName=  {}", getName(), currentFileName);
-			}
-			logWriter = null;
-		}
-		logStatus();
-	}
+            logWriter = null;
+        }
 
-	// Helper methods in this class
-	synchronized private PrintWriter getLogFileStream() throws Exception {
-		closeFileIfNeeded();
+        logStatus();
+    }
 
-		// Either there are no open log file or the previous one has been rolled
-		// over
-		if (logWriter == null) {
-			Date currentTime = new Date();
-			// Create a new file
-			String fileName = MiscUtil.replaceTokens(logFileNameFormat,
-					currentTime.getTime());
-			File outLogFile = new File(logFolder, fileName);
-			if (outLogFile.exists()) {
-				// Let's try to get the next available file
-				int i = 0;
-				while (true) {
-					i++;
-					int lastDot = fileName.lastIndexOf('.');
-					String baseName = fileName.substring(0, lastDot);
-					String extension = fileName.substring(lastDot);
-					String newFileName = baseName + "." + i + extension;
-					File newLogFile = new File(logFolder, newFileName);
-					if (!newLogFile.exists()) {
-						// Move the file
-						if (!outLogFile.renameTo(newLogFile)) {
-							logger.error("Error renameing file. {}  to {} " , outLogFile, newLogFile);
-						}
-						break;
-					}
-				}
-			}
-			if (!outLogFile.exists()) {
-				logger.info("Creating new file. destName={} , fileName={} ", getName(), fileName);
-				// Open the file
-				logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
-						outLogFile)));
-			} else {
-				logWriter = new PrintWriter(new BufferedWriter(new FileWriter(
-						outLogFile, true)));
-			}
-			fileCreateTime = new Date();
-			currentFileName = outLogFile.getPath();
-		}
-		return logWriter;
-	}
+    @Override
+    public synchronized boolean logJSON(Collection<String> events) {
+        logStatusIfRequired();
+        addTotalCount(events.size());
 
-	private void closeFileIfNeeded() {
-		if (logWriter == null) {
-			return;
-		}
-		if (System.currentTimeMillis() - fileCreateTime.getTime() > fileRolloverSec * 1000) {
-			logger.info("Closing file. Rolling over. name={} , fileName={}", getName(), currentFileName);
-			try {
-				logWriter.flush();
-				logWriter.close();
-			} catch (Throwable t) {
-				logger.error("Error on closing log writter. Exception will be ignored. name={} , fileName={}", getName(), currentFileName);
-			}
-			logWriter = null;
-			currentFileName = null;
-		}
-	}
+        if (isStopped) {
+            logError("logJSON() called after stop was requested. name={}", getName());
 
+            addDeferredCount(events.size());
+
+            return false;
+        }
+
+        try {
+            PrintWriter out = getLogFileStream();
+
+            for (String event : events) {
+                out.println(event);
+            }
+
+            out.flush();
+        } catch (Throwable t) {
+            addDeferredCount(events.size());
+
+            logError("Error writing to log file.", t);
+
+            return false;
+        }
+
+        addSuccessCount(events.size());
+
+        return true;
+    }
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.apache.ranger.audit.provider.AuditProvider#log(java.util.Collection)
+     */
+    @Override
+    public boolean log(Collection<AuditEventBase> events) {
+        if (isStopped) {
+            addTotalCount(events.size());
+            addDeferredCount(events.size());
+
+            logError("log() called after stop was requested. name={}", getName());
+
+            return false;
+        }
+
+        List<String> jsonList = new ArrayList<>();
+
+        for (AuditEventBase event : events) {
+            try {
+                jsonList.add(MiscUtil.stringify(event));
+            } catch (Throwable t) {
+                addTotalCount(1);
+                addFailedCount(1);
+                logFailedEvent(event);
+
+                logger.error("Error converting to JSON. event={}", event);
+            }
+        }
+
+        return logJSON(jsonList);
+    }
+
+    // Helper methods in this class
+    private synchronized PrintWriter getLogFileStream() throws Exception {
+        closeFileIfNeeded();
+
+        // Either there are no open log file or the previous one has been rolled
+        // over
+        if (logWriter == null) {
+            // Create a new file
+            Date   currentTime = new Date();
+            String fileName    = MiscUtil.replaceTokens(logFileNameFormat, currentTime.getTime());
+            File   outLogFile  = new File(logFolder, fileName);
+
+            if (outLogFile.exists()) {
+                // Let's try to get the next available file
+                int i = 0;
+
+                while (true) {
+                    i++;
+
+                    int    lastDot     = fileName.lastIndexOf('.');
+                    String baseName    = fileName.substring(0, lastDot);
+                    String extension   = fileName.substring(lastDot);
+                    String newFileName = baseName + "." + i + extension;
+                    File   newLogFile  = new File(logFolder, newFileName);
+
+                    if (!newLogFile.exists()) {
+                        // Move the file
+                        if (!outLogFile.renameTo(newLogFile)) {
+                            logger.error("Error renameing file. {}  to {} ", outLogFile, newLogFile);
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            if (!outLogFile.exists()) {
+                logger.info("Creating new file. destName={} , fileName={} ", getName(), fileName);
+
+                // Open the file
+                logWriter = new PrintWriter(new BufferedWriter(new FileWriter(outLogFile)));
+            } else {
+                logWriter = new PrintWriter(new BufferedWriter(new FileWriter(outLogFile, true)));
+            }
+
+            fileCreateTime  = new Date();
+            currentFileName = outLogFile.getPath();
+        }
+
+        return logWriter;
+    }
+
+    private void closeFileIfNeeded() {
+        if (logWriter == null) {
+            return;
+        }
+
+        if (System.currentTimeMillis() - fileCreateTime.getTime() > fileRolloverSec * 1000L) {
+            logger.info("Closing file. Rolling over. name={} , fileName={}", getName(), currentFileName);
+
+            try {
+                logWriter.flush();
+                logWriter.close();
+            } catch (Throwable t) {
+                logger.error("Error on closing log writter. Exception will be ignored. name={} , fileName={}", getName(), currentFileName);
+            }
+
+            logWriter       = null;
+            currentFileName = null;
+        }
+    }
 }

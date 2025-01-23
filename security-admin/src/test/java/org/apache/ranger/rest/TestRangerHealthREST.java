@@ -17,11 +17,6 @@
 
 package org.apache.ranger.rest;
 
-import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.UP;
-
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.plugin.model.RangerServerHealth;
 import org.apache.ranger.util.RangerServerHealthUtil;
@@ -35,18 +30,24 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static org.apache.ranger.plugin.model.RangerServerHealth.RangerServerStatus.UP;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerHealthREST {
     @Mock
     RangerServerHealthUtil rangerServerHealthUtil;
     @InjectMocks
-    RangerHealthREST rangerHealthREST = new RangerHealthREST();
+    RangerHealthREST       rangerHealthREST = new RangerHealthREST();
     @Mock
-    RangerBizUtil xaBizUtil;
+    RangerBizUtil          xaBizUtil;
 
     @Test
-    public void testHealthCheckStatusAPI() throws Exception {
+    public void testHealthCheckStatusAPI() {
         String dbVersion = "23.2.0";
         Mockito.when(xaBizUtil.getDBVersion()).thenReturn(dbVersion);
         Mockito.when(rangerServerHealthUtil.getRangerServerHealth(dbVersion)).thenReturn(createRangerServerHealth());
@@ -58,20 +59,20 @@ public class TestRangerHealthREST {
 
     private RangerServerHealth createRangerServerHealth() {
         Map<String, Object> componentsMap = new HashMap<>();
-        Map<String, Object> dbMap = new LinkedHashMap<>();
+        Map<String, Object> dbMap         = new LinkedHashMap<>();
         dbMap.put("status", UP);
         Map<String, Object> dbDetailsMap = new LinkedHashMap<>();
-        dbDetailsMap.put("database","Oracle 21.3c");
-        dbDetailsMap.put("validationQuery","SELECT banner from v$version where rownum<2");
-        dbMap.put("details",dbDetailsMap);
-        componentsMap.put("db",dbMap);
+        dbDetailsMap.put("database", "Oracle 21.3c");
+        dbDetailsMap.put("validationQuery", "SELECT banner from v$version where rownum<2");
+        dbMap.put("details", dbDetailsMap);
+        componentsMap.put("db", dbMap);
         Map<String, Object> auditProviderMap = new LinkedHashMap<>();
         auditProviderMap.put("status", UP);
         Map<String, Object> auditProviderDetailsMap = new LinkedHashMap<>();
-        auditProviderDetailsMap.put("provider","Elastic Search");
-        auditProviderDetailsMap.put("providerHealthCheckEndpoint","http://localhost:9200/_cluster/health?pretty");
+        auditProviderDetailsMap.put("provider", "Elastic Search");
+        auditProviderDetailsMap.put("providerHealthCheckEndpoint", "http://localhost:9200/_cluster/health?pretty");
         auditProviderDetailsMap.put("details", auditProviderDetailsMap);
-        componentsMap.put("auditProvider",auditProviderMap);
+        componentsMap.put("auditProvider", auditProviderMap);
         RangerServerHealth rangerRServerHealth = RangerServerHealth.up().withDetail("components", componentsMap).build();
         return rangerRServerHealth;
     }

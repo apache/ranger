@@ -95,9 +95,8 @@ function reducer(state, action) {
 }
 
 export const SideBar = () => {
-  const { allServiceDefs, serviceDefs, tagServiceDefs } = cloneDeep(
-    getServiceDef()
-  );
+  const { allServiceDefs, serviceDefs, tagServiceDefs } =
+    cloneDeep(getServiceDef());
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const [keyState, dispatch] = useReducer(reducer, {
     loader: false,

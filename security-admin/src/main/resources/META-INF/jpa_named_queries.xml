@@ -406,6 +406,10 @@
 		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId and obj.zoneId = :zoneId order by obj.id</query>
 	</named-query>
 
+	<named-query name="XXPolicy.getMetaAttributesForPolicies">
+		<query>SELECT obj.id, obj.createTime, obj.updateTime FROM XXPolicy obj WHERE obj.id IN :policyIds</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findByServiceId">
 		<query>select obj from XXPolicy obj where obj.service = :serviceId order by obj.id</query>
 	</named-query>
@@ -748,7 +752,7 @@
 
 	<named-query name="XXService.getAllServiceHeaders">
 		<query>
-			SELECT obj.id, obj.name, obj.displayName, svcDef.name FROM XXService obj
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled FROM XXService obj
 			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
 		</query>
 	</named-query>
@@ -1794,7 +1798,7 @@
 
     <named-query name="XXSecurityZoneRefService.findServiceHeaderInfosByZoneId">
         <query>
-			SELECT obj.id, obj.name, obj.displayName, svcDef.name FROM XXService obj
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled FROM XXService obj
 			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
 			 WHERE obj.id IN (SELECT ref.serviceId FROM XXSecurityZoneRefService ref WHERE ref.zoneId = :zoneId)
         </query>
@@ -1814,7 +1818,7 @@
 
     <named-query name="XXSecurityZoneRefTagService.findServiceHeaderInfosByZoneId">
         <query>
-			SELECT obj.id, obj.name, obj.displayName, svcDef.name FROM XXService obj
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled FROM XXService obj
 			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
 			 WHERE obj.id IN (SELECT ref.tagServiceId FROM XXSecurityZoneRefTagService ref WHERE ref.zoneId = :zoneId)
         </query>

@@ -17,35 +17,35 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXCredentialStore
-
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXCredentialStoreList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXCredentialStore> vXCredentialStores = new ArrayList<VXCredentialStore>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXCredentialStore> vXCredentialStores = new ArrayList<>();
 
     public VXCredentialStoreList() {
-	super();
+        super();
     }
 
     public VXCredentialStoreList(List<VXCredentialStore> objList) {
-	super(objList);
-	this.vXCredentialStores = objList;
+        super(objList);
+        this.vXCredentialStores = objList;
     }
 
     /**
@@ -53,7 +53,7 @@ public class VXCredentialStoreList extends VList {
      */
     @JsonProperty("vXCredentialStores")
     public List<VXCredentialStore> getVXCredentialStores() {
-	return vXCredentialStores;
+        return vXCredentialStores;
     }
 
     /**
@@ -62,20 +62,19 @@ public class VXCredentialStoreList extends VList {
      */
     @JsonProperty("vXCredentialStores")
     public void setVXCredentialStores(List<VXCredentialStore> vXCredentialStores) {
-	this.vXCredentialStores = vXCredentialStores;
+        this.vXCredentialStores = vXCredentialStores;
     }
 
     @Override
     public int getListSize() {
-	if (vXCredentialStores != null) {
-	    return vXCredentialStores.size();
-	}
-	return 0;
+        if (vXCredentialStores != null) {
+            return vXCredentialStores.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXCredentialStore> getList() {
-	return vXCredentialStores;
+        return vXCredentialStores;
     }
-
 }

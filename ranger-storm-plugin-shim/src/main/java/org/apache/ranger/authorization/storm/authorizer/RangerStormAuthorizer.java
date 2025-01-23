@@ -19,119 +19,92 @@
 
 package org.apache.ranger.authorization.storm.authorizer;
 
-
+import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.apache.storm.security.auth.IAuthorizer;
+import org.apache.storm.security.auth.ReqContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
-
-import org.apache.storm.security.auth.IAuthorizer;
-import org.apache.storm.security.auth.ReqContext;
-
 public class RangerStormAuthorizer implements IAuthorizer {
-	private static final Logger LOG  = LoggerFactory.getLogger(RangerStormAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
 
-	private static final String   RANGER_PLUGIN_TYPE                      = "storm";
-	private static final String   RANGER_STORM_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer";
+    private static final String RANGER_PLUGIN_TYPE                     = "storm";
+    private static final String RANGER_STORM_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer";
 
-	private IAuthorizer 	        rangerStormAuthorizerImpl = null;
-	private RangerPluginClassLoader rangerPluginClassLoader   = null;
-	
-	public RangerStormAuthorizer() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerStormAuthorizer.RangerStormAuthorizer()");
-		}
+    private IAuthorizer             rangerStormAuthorizerImpl;
+    private RangerPluginClassLoader rangerPluginClassLoader;
 
-		this.init();
+    public RangerStormAuthorizer() {
+        LOG.debug("==> RangerStormAuthorizer.RangerStormAuthorizer()");
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerStormAuthorizer.RangerStormAuthorizer()");
-		}
-	}
-	
-	private void init(){
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerStormAuthorizer.init()");
-		}
+        this.init();
 
-		try {
-			
-			rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
-			
-			@SuppressWarnings("unchecked")
-			Class<IAuthorizer> cls = (Class<IAuthorizer>) Class.forName(RANGER_STORM_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+        LOG.debug("<== RangerStormAuthorizer.RangerStormAuthorizer()");
+    }
 
-			activatePluginClassLoader();
+    @Override
+    public void prepare(Map stormConf) {
+        LOG.debug("==> RangerStormAuthorizer.prepare()");
 
-			rangerStormAuthorizerImpl = cls.newInstance();
-		} catch (Exception e) {
-			// check what need to be done
-			LOG.error("Error Enabling RangerStormPlugin", e);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        try {
+            activatePluginClassLoader();
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerStormAuthorizer.init()");
-		}
-	}
+            rangerStormAuthorizerImpl.prepare(stormConf);
+        } finally {
+            deactivatePluginClassLoader();
+        }
 
-	@Override
-	public void prepare(Map storm_conf) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerStormAuthorizer.prepare()");
-		}
+        LOG.debug("<== RangerStormAuthorizer.prepare()");
+    }
 
-		try {
-			activatePluginClassLoader();
+    @Override
+    public boolean permit(ReqContext context, String operation, Map topologyConf) {
+        LOG.debug("==> RangerStormAuthorizer.permit()");
 
-			rangerStormAuthorizerImpl.prepare(storm_conf);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        try {
+            activatePluginClassLoader();
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerStormAuthorizer.prepare()");
-		}
+            return rangerStormAuthorizerImpl.permit(context, operation, topologyConf);
+        } finally {
+            deactivatePluginClassLoader();
 
-	}
+            LOG.debug("<== RangerStormAuthorizer.permit()");
+        }
+    }
 
-	@Override
-	public boolean permit(ReqContext context, String operation, Map topology_conf) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerStormAuthorizer.permit()");
-		}
-		
-		boolean ret = false;
+    private void init() {
+        LOG.debug("==> RangerStormAuthorizer.init()");
 
-		try {
-			activatePluginClassLoader();
+        try {
+            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-			ret = rangerStormAuthorizerImpl.permit(context, operation, topology_conf);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+            @SuppressWarnings("unchecked")
+            Class<IAuthorizer> cls = (Class<IAuthorizer>) Class.forName(RANGER_STORM_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerStormAuthorizer.permit()");
-		}
-		
-		return ret;
-	}
-	
+            activatePluginClassLoader();
 
-	private void activatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.activate();
-		}
-	}
+            rangerStormAuthorizerImpl = cls.newInstance();
+        } catch (Exception e) {
+            // check what need to be done
+            LOG.error("Error Enabling RangerStormPlugin", e);
+        } finally {
+            deactivatePluginClassLoader();
+        }
 
-	private void deactivatePluginClassLoader() {
-		if(rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.deactivate();
-		}
-	}
-	
+        LOG.debug("<== RangerStormAuthorizer.init()");
+    }
+
+    private void activatePluginClassLoader() {
+        if (rangerPluginClassLoader != null) {
+            rangerPluginClassLoader.activate();
+        }
+    }
+
+    private void deactivatePluginClassLoader() {
+        if (rangerPluginClassLoader != null) {
+            rangerPluginClassLoader.deactivate();
+        }
+    }
 }

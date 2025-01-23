@@ -30,19 +30,20 @@ import org.springframework.security.crypto.util.EncodingUtils;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
-    private static final int DEFAULT_HASH_WIDTH = 256;
-    private static final int DEFAULT_ITERATIONS = 185000;
-    private final BytesKeyGenerator saltGenerator;
-    private final byte[] secret;
-    private final int hashWidth;
-    private final int iterations;
-    private String algorithm;
-    private boolean encodeHashAsBase64;
+    private static final int               DEFAULT_HASH_WIDTH = 256;
+    private static final int               DEFAULT_ITERATIONS = 185000;
+    private final        BytesKeyGenerator saltGenerator;
+    private final        byte[]            secret;
+    private final        int               hashWidth;
+    private final        int               iterations;
+    private              String            algorithm;
+    private              boolean           encodeHashAsBase64;
 
     public Pbkdf2PasswordEncoderCust(CharSequence secret) {
         this(secret, DEFAULT_ITERATIONS, DEFAULT_HASH_WIDTH);
@@ -50,10 +51,10 @@ public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
 
     public Pbkdf2PasswordEncoderCust(CharSequence secret, int iterations, int hashWidth) {
         this.saltGenerator = KeyGenerators.secureRandom(16);
-        this.algorithm = Pbkdf2PasswordEncoder.SecretKeyFactoryAlgorithm.PBKDF2WithHmacSHA512.name();
-        this.secret = Utf8.encode(secret);
-        this.iterations = iterations;
-        this.hashWidth = hashWidth;
+        this.algorithm     = Pbkdf2PasswordEncoder.SecretKeyFactoryAlgorithm.PBKDF2WithHmacSHA512.name();
+        this.secret        = Utf8.encode(secret);
+        this.iterations    = iterations;
+        this.hashWidth     = hashWidth;
     }
 
     public void setAlgorithm(Pbkdf2PasswordEncoder.SecretKeyFactoryAlgorithm secretKeyFactoryAlgorithm) {
@@ -74,9 +75,16 @@ public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
 
     @Override
     public String encode(CharSequence rawPassword) {
-        byte[] salt = this.saltGenerator.generateKey();
+        byte[] salt    = this.saltGenerator.generateKey();
         byte[] encoded = this.encode(rawPassword, salt);
         return this.encode(encoded);
+    }
+
+    @Override
+    public boolean matches(CharSequence rawPassword, String encodedPassword) {
+        byte[] digested = this.decode(encodedPassword);
+        byte[] salt     = EncodingUtils.subArray(digested, 0, this.saltGenerator.getKeyLength());
+        return matches(digested, this.encode(rawPassword, salt));
     }
 
     public void setEncodeHashAsBase64(boolean encodeHashAsBase64) {
@@ -87,17 +95,9 @@ public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
         return this.encodeHashAsBase64 ? Utf8.decode(Base64.encode(bytes)) : String.valueOf(Hex.encode(bytes));
     }
 
-    @Override
-    public boolean matches(CharSequence rawPassword, String encodedPassword) {
-        byte[] digested = this.decode(encodedPassword);
-        byte[] salt = EncodingUtils.subArray(digested, 0, this.saltGenerator.getKeyLength());
-        return matches(digested, this.encode(rawPassword, salt));
-    }
-    
     private static boolean matches(byte[] expected, byte[] actual) {
-    	return Arrays.equals(expected, actual);
+        return Arrays.equals(expected, actual);
     }
-
 
     private byte[] decode(String encodedBytes) {
         return this.encodeHashAsBase64 ? Base64.decode(Utf8.encode(encodedBytes)) : Hex.decode(encodedBytes);
@@ -105,9 +105,9 @@ public class Pbkdf2PasswordEncoderCust implements PasswordEncoder {
 
     private byte[] encode(CharSequence rawPassword, byte[] salt) {
         try {
-            PBEKeySpec spec = new PBEKeySpec(rawPassword.toString().toCharArray(), EncodingUtils.concatenate(new byte[][]{salt, this.secret}), this.iterations, this.hashWidth);
-            SecretKeyFactory skf = SecretKeyFactory.getInstance(this.algorithm);
-            return EncodingUtils.concatenate(new byte[][]{salt, skf.generateSecret(spec).getEncoded()});
+            PBEKeySpec       spec = new PBEKeySpec(rawPassword.toString().toCharArray(), EncodingUtils.concatenate(salt, this.secret), this.iterations, this.hashWidth);
+            SecretKeyFactory skf  = SecretKeyFactory.getInstance(this.algorithm);
+            return EncodingUtils.concatenate(salt, skf.generateSecret(spec).getEncoded());
         } catch (GeneralSecurityException var5) {
             throw new IllegalStateException("Could not create hash", var5);
         }

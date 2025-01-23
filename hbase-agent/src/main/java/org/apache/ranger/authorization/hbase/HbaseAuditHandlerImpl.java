@@ -18,9 +18,6 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -28,138 +25,126 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements HbaseAuditHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(HbaseAuditHandlerImpl.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(HbaseAuditHandlerImpl.class);
-	static final List<AuthzAuditEvent> _EmptyList = new ArrayList<AuthzAuditEvent>();
-	final List<AuthzAuditEvent> _allEvents = new ArrayList<AuthzAuditEvent>();
-	// we replace its contents anytime new audit events are generated.
-	AuthzAuditEvent _mostRecentEvent = null;
-	boolean _superUserOverride = false;
-	
-	@Override
-	public AuthzAuditEvent getAuthzEvents(RangerAccessResult result) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.getAuthzEvents(" + result + ")");
-		}
+    final List<AuthzAuditEvent> allEventsList = new ArrayList<>();
 
-		resetResourceForAudit(result.getAccessRequest());
-		AuthzAuditEvent event = super.getAuthzEvents(result);
-		// first accumulate last set of events and then capture these as the most recent ones
-		if (_mostRecentEvent != null) {
-			LOG.debug("getAuthzEvents: got one event from default audit handler");
-			_allEvents.add(_mostRecentEvent);
-		} else {
-			LOG.debug("getAuthzEvents: no event produced by default audit handler");
-		}
-		_mostRecentEvent = event;
+    // we replace its contents anytime new audit events are generated.
+    AuthzAuditEvent mostRecentEvent;
+    boolean         superUserOverride;
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> getAuthzEvents: mostRecentEvent:" + _mostRecentEvent);
-		}
-		// We return null because we don't want default audit handler to audit anything!
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.getAuthzEvents(" + result + "): null");
-		}
-		return null;
-	}
-	
-	@Override
-	public List<AuthzAuditEvent> getCapturedEvents() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.getCapturedEvents()");
-		}
+    @Override
+    public AuthzAuditEvent getAuthzEvents(RangerAccessResult result) {
+        LOG.debug("==> HbaseAuditHandlerImpl.getAuthzEvents({})", result);
 
-		// construct a new collection since we don't want to lose track of which were the most recent events;
-		List<AuthzAuditEvent> result = new ArrayList<AuthzAuditEvent>(_allEvents);
-		if (_mostRecentEvent != null) {
-			result.add(_mostRecentEvent);
-		}
-		applySuperUserOverride(result);
+        resetResourceForAudit(result.getAccessRequest());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.getAuthzEvents(): count[" + result.size() + "] :result : " + result);
-		}
-		return result;
-	}
+        AuthzAuditEvent event = super.getAuthzEvents(result);
 
-	@Override
-	public AuthzAuditEvent getAndDiscardMostRecentEvent() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.getAndDiscardMostRecentEvent():");
-		}
+        // first accumulate last set of events and then capture these as the most recent ones
+        if (mostRecentEvent != null) {
+            LOG.debug("getAuthzEvents: got one event from default audit handler");
 
-		AuthzAuditEvent result = _mostRecentEvent;
-		applySuperUserOverride(result);
-		_mostRecentEvent = null;
+            allEventsList.add(mostRecentEvent);
+        } else {
+            LOG.debug("getAuthzEvents: no event produced by default audit handler");
+        }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.getAndDiscardMostRecentEvent(): " + result);
-		}
-		return result;
-	}
+        mostRecentEvent = event;
 
-	@Override
-	public void setMostRecentEvent(AuthzAuditEvent event) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.setMostRecentEvent(" + event + ")");
-		}
-		_mostRecentEvent = event;
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.setMostRecentEvent(...)");
-		}
-	}
+        LOG.debug("==> getAuthzEvents: mostRecentEvent:{}", mostRecentEvent);
 
-	@Override
-	public void setSuperUserOverride(boolean override) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.setSuperUserOverride(" + override + ")");
-		}
+        // We return null because we don't want default audit handler to audit anything!
+        LOG.debug("<== HbaseAuditHandlerImpl.getAuthzEvents({}): null", result);
 
-		_superUserOverride = override;
+        return null;
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.setSuperUserOverride(...)");
-		}
-	}
-	
-	void applySuperUserOverride(List<AuthzAuditEvent> events) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.applySuperUserOverride(" + events + ")");
-		}
+    @Override
+    public List<AuthzAuditEvent> getCapturedEvents() {
+        LOG.debug("==> HbaseAuditHandlerImpl.getCapturedEvents()");
 
-		for (AuthzAuditEvent event : events) {
-			applySuperUserOverride(event);
-		}
+        // construct a new collection since we don't want to lose track of which were the most recent events;
+        List<AuthzAuditEvent> result = new ArrayList<>(allEventsList);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(...)");
-		}
-	}
-	
-	void applySuperUserOverride(AuthzAuditEvent event) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.applySuperUserOverride(" + event + ")");
-		}
-		if (event != null && _superUserOverride) {
-			event.setAccessResult((short) 1);
-			event.setPolicyId(-1);
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(...)");
-		}
-	}
+        if (mostRecentEvent != null) {
+            result.add(mostRecentEvent);
+        }
 
-	private void resetResourceForAudit(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> HbaseAuditHandlerImpl.resetResourceForAudit(" + request + ")");
-		}
-		if (request != null && request.getResource() instanceof RangerHBaseResource) {
-			RangerHBaseResource hbaseResource = (RangerHBaseResource) request.getResource();
-			hbaseResource.resetValue(RangerHBaseResource.KEY_TABLE);
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== HbaseAuditHandlerImpl.resetResourceForAudit(" + request + ")");
-		}
-	}
+        applySuperUserOverride(result);
+
+        LOG.debug("<== HbaseAuditHandlerImpl.getAuthzEvents(): count[{}] :result : {}", result.size(), result);
+
+        return result;
+    }
+
+    @Override
+    public AuthzAuditEvent getAndDiscardMostRecentEvent() {
+        LOG.debug("==> HbaseAuditHandlerImpl.getAndDiscardMostRecentEvent():");
+
+        AuthzAuditEvent result = mostRecentEvent;
+
+        applySuperUserOverride(result);
+
+        mostRecentEvent = null;
+
+        LOG.debug("<== HbaseAuditHandlerImpl.getAndDiscardMostRecentEvent(): {}", result);
+
+        return result;
+    }
+
+    @Override
+    public void setMostRecentEvent(AuthzAuditEvent event) {
+        LOG.debug("==> HbaseAuditHandlerImpl.setMostRecentEvent({})", event);
+
+        mostRecentEvent = event;
+
+        LOG.debug("<== HbaseAuditHandlerImpl.setMostRecentEvent(...)");
+    }
+
+    @Override
+    public void setSuperUserOverride(boolean override) {
+        LOG.debug("==> HbaseAuditHandlerImpl.setSuperUserOverride({})", override);
+
+        superUserOverride = override;
+
+        LOG.debug("<== HbaseAuditHandlerImpl.setSuperUserOverride(...)");
+    }
+
+    void applySuperUserOverride(List<AuthzAuditEvent> events) {
+        LOG.debug("==> HbaseAuditHandlerImpl.applySuperUserOverride({})", events);
+
+        for (AuthzAuditEvent event : events) {
+            applySuperUserOverride(event);
+        }
+
+        LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(...)");
+    }
+
+    void applySuperUserOverride(AuthzAuditEvent event) {
+        LOG.debug("==> HbaseAuditHandlerImpl.applySuperUserOverride({})", event);
+
+        if (event != null && superUserOverride) {
+            event.setAccessResult((short) 1);
+            event.setPolicyId(-1);
+        }
+
+        LOG.debug("<== HbaseAuditHandlerImpl.applySuperUserOverride(...)");
+    }
+
+    private void resetResourceForAudit(RangerAccessRequest request) {
+        LOG.debug("==> HbaseAuditHandlerImpl.resetResourceForAudit({})", request);
+
+        if (request != null && request.getResource() instanceof RangerHBaseResource) {
+            RangerHBaseResource hbaseResource = (RangerHBaseResource) request.getResource();
+
+            hbaseResource.resetValue(RangerHBaseResource.KEY_TABLE);
+        }
+
+        LOG.debug("<== HbaseAuditHandlerImpl.resetResourceForAudit({})", request);
+    }
 }

@@ -720,7 +720,7 @@ def main(argv):
 		
 	elif XA_DB_FLAVOR == "ORACLE":
 		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN)
+		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_OPTS, JAVA_BIN, is_override_db_connection_string, db_override_jdbc_connection_string)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME ,oracle_core_file)
 
 	elif XA_DB_FLAVOR == "POSTGRES":

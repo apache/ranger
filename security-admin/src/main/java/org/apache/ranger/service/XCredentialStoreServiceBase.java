@@ -17,61 +17,56 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
-/**
- *
- */
-
-import java.util.ArrayList;
-import java.util.List;
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXCredentialStore;
 import org.apache.ranger.view.VXCredentialStore;
 import org.apache.ranger.view.VXCredentialStoreList;
 
-public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V extends VXCredentialStore>
-		extends AbstractBaseResourceService<T, V> {
-	public static final String NAME = "XCredentialStore";
+import java.util.ArrayList;
+import java.util.List;
 
-	public XCredentialStoreServiceBase() {
+public abstract class XCredentialStoreServiceBase<T extends XXCredentialStore, V extends VXCredentialStore> extends AbstractBaseResourceService<T, V> {
+    public static final String NAME = "XCredentialStore";
 
-	}
+    public XCredentialStoreServiceBase() {
+    }
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
-		mObj.setName( vObj.getName());
-		mObj.setDescription( vObj.getDescription());
-		return mObj;
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXCredentialStoreList searchXCredentialStores(SearchCriteria searchCriteria) {
+        VXCredentialStoreList   returnList           = new VXCredentialStoreList();
+        List<VXCredentialStore> xCredentialStoreList = new ArrayList<>();
+        List<T>                 resultList           = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		vObj.setName( mObj.getName());
-		vObj.setDescription( mObj.getDescription());
-		return vObj;
-	}
+        // Iterate over the result list and create the return list
+        for (T gjXCredentialStore : resultList) {
+            VXCredentialStore vXCredentialStore = populateViewBean(gjXCredentialStore);
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXCredentialStoreList searchXCredentialStores(SearchCriteria searchCriteria) {
-		VXCredentialStoreList returnList = new VXCredentialStoreList();
-		List<VXCredentialStore> xCredentialStoreList = new ArrayList<VXCredentialStore>();
+            xCredentialStoreList.add(vXCredentialStore);
+        }
 
-		List<T> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+        returnList.setVXCredentialStores(xCredentialStoreList);
 
-		// Iterate over the result list and create the return list
-		for (T gjXCredentialStore : resultList) {
-			VXCredentialStore vXCredentialStore = populateViewBean(gjXCredentialStore);
-			xCredentialStoreList.add(vXCredentialStore);
-		}
+        return returnList;
+    }
 
-		returnList.setVXCredentialStores(xCredentialStoreList);
-		return returnList;
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        mObj.setName(vObj.getName());
+        mObj.setDescription(vObj.getDescription());
 
+        return mObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        vObj.setName(mObj.getName());
+        vObj.setDescription(mObj.getDescription());
+
+        return vObj;
+    }
 }

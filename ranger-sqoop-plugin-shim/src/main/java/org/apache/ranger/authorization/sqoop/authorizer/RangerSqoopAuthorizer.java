@@ -19,8 +19,6 @@
 
 package org.apache.ranger.authorization.sqoop.authorizer;
 
-import java.util.List;
-
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.model.MPrincipal;
@@ -29,82 +27,70 @@ import org.apache.sqoop.security.AuthorizationValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 public class RangerSqoopAuthorizer extends AuthorizationValidator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerSqoopAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSqoopAuthorizer.class);
 
-	private static final String RANGER_PLUGIN_TYPE = "sqoop";
-	private static final String RANGER_SQOOP_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer";
+    private static final String RANGER_PLUGIN_TYPE                     = "sqoop";
+    private static final String RANGER_SQOOP_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer";
 
-	private AuthorizationValidator  authorizationValidator  = null;
-	private RangerPluginClassLoader rangerPluginClassLoader = null;
+    private AuthorizationValidator  authorizationValidator;
+    private RangerPluginClassLoader rangerPluginClassLoader;
 
-	public RangerSqoopAuthorizer() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
-		}
+    public RangerSqoopAuthorizer() {
+        LOG.debug("==> RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
 
-		this.init();
+        this.init();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
-		}
-	}
+        LOG.debug("<== RangerSqoopAuthorizer.RangerSqoopAuthorizer()");
+    }
 
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSqoopAuthorizer.init()");
-		}
+    public void init() {
+        LOG.debug("==> RangerSqoopAuthorizer.init()");
 
-		try {
+        try {
+            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-			rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
+            @SuppressWarnings("unchecked")
+            Class<AuthorizationValidator> cls = (Class<AuthorizationValidator>) Class.forName(RANGER_SQOOP_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
 
-			@SuppressWarnings("unchecked")
-			Class<AuthorizationValidator> cls = (Class<AuthorizationValidator>) Class.forName(
-					RANGER_SQOOP_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
+            activatePluginClassLoader();
 
-			activatePluginClassLoader();
+            authorizationValidator = cls.newInstance();
+        } catch (Exception e) {
+            LOG.error("Error Enabling RangerSqoopAuthorizer", e);
+        } finally {
+            deactivatePluginClassLoader();
+        }
 
-			authorizationValidator = cls.newInstance();
-		} catch (Exception e) {
-			LOG.error("Error Enabling RangerSqoopAuthorizer", e);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        LOG.debug("<== RangerSqoopAuthorizer.init()");
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSqoopAuthorizer.init()");
-		}
-	}
+    @Override
+    public void checkPrivileges(MPrincipal principal, List<MPrivilege> privileges) throws SqoopException {
+        LOG.debug("==> RangerSqoopAuthorizer.checkPrivileges()");
 
-	@Override
-	public void checkPrivileges(MPrincipal principal, List<MPrivilege> privileges) throws SqoopException {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSqoopAuthorizer.checkPrivileges()");
-		}
+        try {
+            activatePluginClassLoader();
 
-		try {
-			activatePluginClassLoader();
+            authorizationValidator.checkPrivileges(principal, privileges);
+        } finally {
+            deactivatePluginClassLoader();
+        }
 
-			authorizationValidator.checkPrivileges(principal, privileges);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+        LOG.debug("<== RangerSqoopAuthorizer.checkPrivileges()");
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSqoopAuthorizer.checkPrivileges()");
-		}
-	}
+    private void activatePluginClassLoader() {
+        if (rangerPluginClassLoader != null) {
+            rangerPluginClassLoader.activate();
+        }
+    }
 
-	private void activatePluginClassLoader() {
-		if (rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.activate();
-		}
-	}
-
-	private void deactivatePluginClassLoader() {
-		if (rangerPluginClassLoader != null) {
-			rangerPluginClassLoader.deactivate();
-		}
-	}
+    private void deactivatePluginClassLoader() {
+        if (rangerPluginClassLoader != null) {
+            rangerPluginClassLoader.deactivate();
+        }
+    }
 }

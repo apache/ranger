@@ -40,8 +40,8 @@ RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && 
     cp -f /home/ranger/scripts/ranger-knox-sandbox.xml /opt/knox/conf/topologies/sandbox.xml && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-knox-setup.sh ${RANGER_SCRIPTS}/ranger-knox.sh ${RANGER_SCRIPTS}/ranger-knox-expect.py
 
-ENV KNOX_HOME  /opt/knox
-ENV PATH       /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/knox/bin
+ENV KNOX_HOME=/opt/knox
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/knox/bin
 
 RUN chmod a+rwx /home/ranger/scripts/ranger-knox-expect.py
 

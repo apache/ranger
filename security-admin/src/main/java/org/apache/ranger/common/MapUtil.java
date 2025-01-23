@@ -17,42 +17,46 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common;
+
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-
 @Service
 @Scope("singleton")
-public class MapUtil implements Serializable{
-    static Map<Integer, String> policyExportAuditSyncStatusMessageMap=new HashMap<Integer, String>();
+public class MapUtil implements Serializable {
+    static Map<Integer, String> policyExportAuditSyncStatusMessageMap = new HashMap<>();
 
     public static void init() {
-    	policyExportAuditSyncStatusMessageMap=new HashMap<Integer, String>();
-    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(200), "Policies synced to plugin");
-    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(202), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(400), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(401), "Bad Credentials");
-    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(403), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(404), "Error syncing policies");
-    	policyExportAuditSyncStatusMessageMap.put(Integer.valueOf(500), "Error syncing policies");
+        policyExportAuditSyncStatusMessageMap = new HashMap<>();
+
+        policyExportAuditSyncStatusMessageMap.put(200, "Policies synced to plugin");
+        policyExportAuditSyncStatusMessageMap.put(202, "Error syncing policies");
+        policyExportAuditSyncStatusMessageMap.put(400, "Error syncing policies");
+        policyExportAuditSyncStatusMessageMap.put(401, "Bad Credentials");
+        policyExportAuditSyncStatusMessageMap.put(403, "Error syncing policies");
+        policyExportAuditSyncStatusMessageMap.put(404, "Error syncing policies");
+        policyExportAuditSyncStatusMessageMap.put(500, "Error syncing policies");
     }
 
     public static String getPolicyExportAuditSyncStatus(int key) {
-    	String status="";
-    	if(policyExportAuditSyncStatusMessageMap==null || policyExportAuditSyncStatusMessageMap.isEmpty()){
-    		init();
-    	}
-    	if(policyExportAuditSyncStatusMessageMap!=null && policyExportAuditSyncStatusMessageMap.containsKey(key)){
-    		status=policyExportAuditSyncStatusMessageMap.get(key);
-    	}
-    	return status;
+        String status = "";
+
+        if (policyExportAuditSyncStatusMessageMap == null || policyExportAuditSyncStatusMessageMap.isEmpty()) {
+            init();
+        }
+
+        if (policyExportAuditSyncStatusMessageMap != null && policyExportAuditSyncStatusMessageMap.containsKey(key)) {
+            status = policyExportAuditSyncStatusMessageMap.get(key);
+        }
+
+        return status;
     }
 }

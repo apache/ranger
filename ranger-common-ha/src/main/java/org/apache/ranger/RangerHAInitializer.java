@@ -27,36 +27,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class RangerHAInitializer {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerHAInitializer.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerHAInitializer.class);
+    protected ServiceState        serviceState;
+    protected CuratorFactory      curatorFactory;
+    protected ActiveInstanceState activeInstanceState;
 
-	protected ServiceState serviceState = null;
-	protected CuratorFactory curatorFactory = null;
-	protected ActiveInstanceState activeInstanceState = null;
+    public RangerHAInitializer() {
+    }
 
-	public RangerHAInitializer() {
+    public RangerHAInitializer(Configuration configuration) {
+        try {
+            init(configuration);
+        } catch (Exception e) {
+            LOG.error("RangerHAInitializer initialization failed {}", e.getMessage());
+        }
+    }
 
-	}
+    public void init(Configuration configuration) throws Exception {
+        LOG.debug("==> RangerHAInitializer.init() initialization started ");
 
-	public RangerHAInitializer(Configuration configuration) {
-		try {
-			init(configuration);
-		} catch (Exception e) {
-			LOG.error("RangerHAInitializer initialization failed",e.getMessage());
-		}
-	}
+        this.serviceState        = ServiceState.getInstance(configuration);
+        this.curatorFactory      = CuratorFactory.getInstance(configuration);
+        this.activeInstanceState = new ActiveInstanceState(configuration, this.curatorFactory);
 
-	public void init(Configuration configuration) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerHAInitializer.init() initialization started ");
-		}
-		this.serviceState = ServiceState.getInstance(configuration);
-		this.curatorFactory = CuratorFactory.getInstance(configuration);
-		this.activeInstanceState = new ActiveInstanceState(configuration,this.curatorFactory);
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHAInitializer.init() initialization completed ");
-		}
-	}
+        LOG.debug("<== RangerHAInitializer.init() initialization completed ");
+    }
 
-	public abstract void stop() ;
+    public abstract void stop();
 }

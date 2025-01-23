@@ -17,50 +17,51 @@
 package org.apache.ranger.view;
 
 public class VXMetricContextEnricher implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	
-	String serviceName;
-	int totalCount;
-	
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public VXMetricContextEnricher() {
-	}
-	
-	/**
-	 * @return the serviceName
-	 */
-	public String getServiceName() {
-		return serviceName;
-	}
-	/**
-	 * @param serviceName the serviceName to set
-	 */
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
-	/**
-	 * @return the totalCount
-	 */
-	public int getTotalCount() {
-		return totalCount;
-	}
-	/**
-	 * @param totalCount the totalCount to set
-	 */
-	public void setTotalCount(int totalCount) {
-		this.totalCount = totalCount;
-	}
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	public String toString() {
-		String str = "VXMeticContextEnricher=[";
-		str += "serviceName={" + serviceName + "},";
-		str += "totalCount={" + totalCount +"} ";
-		str += "]";
-		return str;
-	}
-	
+    String serviceName;
+    int    totalCount;
 
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXMetricContextEnricher() {
+    }
+
+    /**
+     * @return the serviceName
+     */
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    /**
+     * @param serviceName the serviceName to set
+     */
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
+    /**
+     * @return the totalCount
+     */
+    public int getTotalCount() {
+        return totalCount;
+    }
+
+    /**
+     * @param totalCount the totalCount to set
+     */
+    public void setTotalCount(int totalCount) {
+        this.totalCount = totalCount;
+    }
+
+    @Override
+    public String toString() {
+        String str = "VXMeticContextEnricher=[";
+        str += "serviceName={" + serviceName + "},";
+        str += "totalCount={" + totalCount + "} ";
+        str += "]";
+        return str;
+    }
 }

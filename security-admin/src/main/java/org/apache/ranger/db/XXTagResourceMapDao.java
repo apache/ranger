@@ -19,176 +19,179 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
+    public XXTagResourceMapDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXTagResourceMapDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXTagResourceMap findByGuid(String resourceGuid) {
+        if (StringUtil.isEmpty(resourceGuid)) {
+            return null;
+        }
 
-	public XXTagResourceMap findByGuid(String resourceGuid) {
-		if (StringUtil.isEmpty(resourceGuid)) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByGuid", tClass)
-					.setParameter("guid", resourceGuid).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTagResourceMap.findByGuid", tClass)
+                    .setParameter("guid", resourceGuid).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	public List<XXTagResourceMap> findByResourceId(Long resourceId) {
-		List<XXTagResourceMap> ret = null;
+    public List<XXTagResourceMap> findByResourceId(Long resourceId) {
+        List<XXTagResourceMap> ret;
 
-		if (resourceId == null) {
-			ret = new ArrayList<>();
-		} else {
-			try {
-				List<Object[]> rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceId", Object[].class)
-						                                .setParameter("resourceId", resourceId).getResultList();
+        if (resourceId == null) {
+            ret = new ArrayList<>();
+        } else {
+            try {
+                List<Object[]> rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceId", Object[].class)
+                        .setParameter("resourceId", resourceId).getResultList();
 
-				ret = fromRows(rows);
-			} catch (NoResultException e) {
-				ret = new ArrayList<>();
-			}
-		}
+                ret = fromRows(rows);
+            } catch (NoResultException e) {
+                ret = new ArrayList<>();
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<XXTagResourceMap> findByResourceGuid(String resourceGuid) {
-		List<XXTagResourceMap> ret = null;
+    public List<XXTagResourceMap> findByResourceGuid(String resourceGuid) {
+        List<XXTagResourceMap> ret;
 
-		if (resourceGuid == null) {
-			ret = new ArrayList<>();
-		} else {
-			try {
-				List<Object[]> rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceGuid", Object[].class)
-						                                .setParameter("resourceGuid", resourceGuid).getResultList();
+        if (resourceGuid == null) {
+            ret = new ArrayList<>();
+        } else {
+            try {
+                List<Object[]> rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceGuid", Object[].class)
+                        .setParameter("resourceGuid", resourceGuid).getResultList();
 
-				ret = fromRows(rows);
-			} catch (NoResultException e) {
-				ret = new ArrayList<>();
-			}
-		}
+                ret = fromRows(rows);
+            } catch (NoResultException e) {
+                ret = new ArrayList<>();
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<Long> findTagIdsForResourceId(Long resourceId) {
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.getTagIdsForResourceId", Long.class)
-					.setParameter("resourceId", resourceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<Long>();
-		}
-	}
+    public List<Long> findTagIdsForResourceId(Long resourceId) {
+        try {
+            return getEntityManager().createNamedQuery("XXTagResourceMap.getTagIdsForResourceId", Long.class)
+                    .setParameter("resourceId", resourceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<XXTagResourceMap> findByTagId(Long tagId) {
-		List<XXTagResourceMap> ret = null;
+    public List<XXTagResourceMap> findByTagId(Long tagId) {
+        List<XXTagResourceMap> ret;
 
-		if (tagId == null) {
-			ret = new ArrayList<>();
-		} else {
-			try {
-				List<Object[]>  rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByTagId", Object[].class)
-                                                         .setParameter("tagId", tagId).getResultList();
+        if (tagId == null) {
+            ret = new ArrayList<>();
+        } else {
+            try {
+                List<Object[]> rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByTagId", Object[].class)
+                        .setParameter("tagId", tagId).getResultList();
 
-				ret = fromRows(rows);
-			} catch (NoResultException e) {
-				ret = new ArrayList<>();
-			}
-		}
+                ret = fromRows(rows);
+            } catch (NoResultException e) {
+                ret = new ArrayList<>();
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<XXTagResourceMap> findByTagGuid(String tagGuid) {
-		if (StringUtil.isEmpty(tagGuid)) {
-			return new ArrayList<XXTagResourceMap>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagGuid", tClass)
-					.setParameter("tagGuid", tagGuid).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTagResourceMap>();
-		}
-	}
+    public List<XXTagResourceMap> findByTagGuid(String tagGuid) {
+        if (StringUtil.isEmpty(tagGuid)) {
+            return new ArrayList<>();
+        }
+        try {
+            return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagGuid", tClass)
+                    .setParameter("tagGuid", tagGuid).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public XXTagResourceMap findByTagAndResourceId(Long tagId, Long resourceId) {
-		if (tagId == null || resourceId == null) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagAndResourceId", tClass)
-					.setParameter("tagId", tagId)
-					.setParameter("resourceId", resourceId).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+    public XXTagResourceMap findByTagAndResourceId(Long tagId, Long resourceId) {
+        if (tagId == null || resourceId == null) {
+            return null;
+        }
 
-	public XXTagResourceMap findByTagAndResourceGuid(String tagGuid, String resourceGuid) {
-		if (tagGuid == null || resourceGuid == null) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagAndResourceGuid", tClass)
-					.setParameter("tagGuid", tagGuid)
-					.setParameter("resourceGuid", resourceGuid).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagAndResourceId", tClass)
+                    .setParameter("tagId", tagId)
+                    .setParameter("resourceId", resourceId).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	public List<XXTagResourceMap> findByServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return new ArrayList<XXTagResourceMap>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByServiceId", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTagResourceMap>();
-		}
-	}
+    public XXTagResourceMap findByTagAndResourceGuid(String tagGuid, String resourceGuid) {
+        if (tagGuid == null || resourceGuid == null) {
+            return null;
+        }
 
-	private XXTagResourceMap fromRow(Object[] row) {
-		XXTagResourceMap ret = new XXTagResourceMap();
+        try {
+            return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagAndResourceGuid", tClass)
+                    .setParameter("tagGuid", tagGuid)
+                    .setParameter("resourceGuid", resourceGuid).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-		ret.setId((Long) row[0]);
-		ret.setGuid((String) row[1]);
-		ret.setTagId((Long) row[2]);
-		ret.setResourceId((Long) row[3]);
+    public List<XXTagResourceMap> findByServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
 
-		return ret;
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXTagResourceMap.findByServiceId", tClass)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	private List<XXTagResourceMap> fromRows(List<Object[]> rows) {
-		final List<XXTagResourceMap> ret;
+    private XXTagResourceMap fromRow(Object[] row) {
+        XXTagResourceMap ret = new XXTagResourceMap();
 
-		if (CollectionUtils.isNotEmpty(rows)) {
-			ret = new ArrayList<>(rows.size());
+        ret.setId((Long) row[0]);
+        ret.setGuid((String) row[1]);
+        ret.setTagId((Long) row[2]);
+        ret.setResourceId((Long) row[3]);
 
-			for (Object[] row : rows) {
-				ret.add(fromRow(row));
-			}
-		} else {
-			ret = new ArrayList<>();
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    private List<XXTagResourceMap> fromRows(List<Object[]> rows) {
+        final List<XXTagResourceMap> ret;
+
+        if (CollectionUtils.isNotEmpty(rows)) {
+            ret = new ArrayList<>(rows.size());
+
+            for (Object[] row : rows) {
+                ret.add(fromRow(row));
+            }
+        } else {
+            ret = new ArrayList<>();
+        }
+
+        return ret;
+    }
 }

@@ -18,67 +18,74 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_service_def")
 public class XXServiceDef extends XXServiceDefBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * id of the XXServiceDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_service_def_SEQ", sequenceName = "x_service_def_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_service_def_SEQ")
-	@Column(name = "id")
-	protected Long id;
+    /**
+     * id of the XXServiceDef
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_service_def_SEQ", sequenceName = "x_service_def_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_service_def_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	@Override
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    @Override
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	@Override
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	@Override
-	public String toString() {
-		return "XXServiceDef [id=" + id + "]";
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		XXServiceDef other = (XXServiceDef) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
+        XXServiceDef other = (XXServiceDef) obj;
+
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public String toString() {
+        return "XXServiceDef [id=" + id + "]";
+    }
 }

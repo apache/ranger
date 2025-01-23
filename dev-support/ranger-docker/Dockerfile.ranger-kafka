@@ -37,7 +37,7 @@ RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/
     cp -f /home/ranger/scripts/ranger-kafka-plugin-install.properties /opt/ranger/ranger-kafka-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-kafka-setup.sh ${RANGER_SCRIPTS}/ranger-kafka.sh
 
-ENV KAFKA_HOME /opt/kafka
-ENV PATH       /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/kafka/bin
+ENV KAFKA_HOME=/opt/kafka
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/kafka/bin
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-kafka.sh" ]

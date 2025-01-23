@@ -17,117 +17,116 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXRMSResourceMapping;
+import org.apache.ranger.entity.XXRMSServiceResource;
+import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.plugin.model.RangerServiceResource;
-import org.apache.ranger.entity.XXRMSResourceMapping;
-import org.apache.ranger.entity.XXRMSServiceResource;
-import org.springframework.stereotype.Service;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- */
 @Service
 public class XXRMSResourceMappingDao extends BaseDao<XXRMSResourceMapping> {
+    public XXRMSResourceMappingDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	//private static final Log LOG = LogFactory.getLog(XXRMSResourceMappingDao.class);
+    public List<Object[]> getResourceMappings() {
+        return getEntityManager().createNamedQuery("XXRMSResourceMapping.getResourceMapping", Object[].class).getResultList();
+    }
 
-	public XXRMSResourceMappingDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public void deleteByHlResourceId(Long resourceId) {
+        getEntityManager()
+                .createNamedQuery("XXRMSResourceMapping.deleteByHlResourceId")
+                .setParameter("resourceId", resourceId)
+                .executeUpdate();
+    }
 
-	@SuppressWarnings("unchecked")
-	public List<Object[]> getResourceMappings() {
-		return getEntityManager().createNamedQuery("XXRMSResourceMapping.getResourceMapping").getResultList();
-	}
+    public void deleteByLlResourceId(Long resourceId) {
+        getEntityManager()
+                .createNamedQuery("XXRMSResourceMapping.deleteByLlResourceId")
+                .setParameter("resourceId", resourceId)
+                .executeUpdate();
+    }
 
-	public void deleteByHlResourceId(Long resourceId) {
-		getEntityManager()
-			.createNamedQuery("XXRMSResourceMapping.deleteByHlResourceId")
-			.setParameter("resourceId", resourceId)
-			.executeUpdate();
-	}
+    public void deleteByHlAndLlResourceId(Long hlResourceId, Long llResourceId) {
+        getEntityManager()
+                .createNamedQuery("XXRMSResourceMapping.deleteByHlAndLlResourceId")
+                .setParameter("hlResourceId", hlResourceId)
+                .setParameter("llResourceId", llResourceId)
+                .executeUpdate();
+    }
 
-	public void deleteByLlResourceId(Long resourceId) {
-		getEntityManager()
-				.createNamedQuery("XXRMSResourceMapping.deleteByLlResourceId")
-				.setParameter("resourceId", resourceId)
-				.executeUpdate();
-	}
+    public XXRMSResourceMapping findByHlAndLlResourceId(Long hlResourceId, Long llResourceId) {
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXRMSResourceMapping.findByHlAndLlResourceId", XXRMSResourceMapping.class)
+                    .setParameter("hlResourceId", hlResourceId)
+                    .setParameter("llResourceId", llResourceId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            // ignore
+        }
 
-	public void deleteByHlAndLlResourceId(Long hlResourceId, Long llResourceId) {
-		getEntityManager()
-				.createNamedQuery("XXRMSResourceMapping.deleteByHlAndLlResourceId")
-				.setParameter("hlResourceId", hlResourceId)
-				.setParameter("llResourceId", llResourceId)
-				.executeUpdate();
-	}
+        return null;
+    }
 
-	public XXRMSResourceMapping findByHlAndLlResourceId(Long hlResourceId, Long llResourceId) {
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXRMSResourceMapping.findByHlAndLlResourceId", XXRMSResourceMapping.class)
-					.setParameter("hlResourceId", hlResourceId)
-					.setParameter("llResourceId", llResourceId)
-					.getSingleResult();
-		} catch (NoResultException e) {
-		}
-		return null;
-	}
+    public List<Long> findByHlResource(RangerServiceResource hlResource) {
+        return findByHlResourceId(hlResource.getId());
+    }
 
-	public List<Long> findByHlResource(RangerServiceResource hlResource) {
-		return findByHlResourceId(hlResource.getId());
-	}
+    public List<Long> findByHlResourceId(Long hlResourceId) {
+        return getEntityManager()
+                .createNamedQuery("XXRMSResourceMapping.findByHlResourceId", Long.class)
+                .setParameter("hlResourceId", hlResourceId)
+                .getResultList();
+    }
 
-	public List<Long> findByHlResourceId(Long hlResourceId) {
-		return getEntityManager()
-				.createNamedQuery("XXRMSResourceMapping.findByHlResourceId", Long.class)
-				.setParameter("hlResourceId", hlResourceId)
-				.getResultList();
-	}
+    public List<Long> findByLlResource(RangerServiceResource llResource) {
+        return findByLlResourceId(llResource.getId());
+    }
 
-	public List<Long> findByLlResource(RangerServiceResource llResource) {
-		return findByLlResourceId(llResource.getId());
-	}
+    public List<Long> findByLlResourceId(Long llResourceId) {
+        return getEntityManager()
+                .createNamedQuery("XXRMSResourceMapping.findByLlResourceId", Long.class)
+                .setParameter("llResourceId", llResourceId)
+                .getResultList();
+    }
 
-	public List<Long> findByLlResourceId(Long llResourceId) {
-		return getEntityManager()
-				.createNamedQuery("XXRMSResourceMapping.findByLlResourceId", Long.class)
-				.setParameter("llResourceId", llResourceId)
-				.getResultList();
-	}
+    public List<RangerServiceResource> getServiceResourcesByLlResourceId(long llResourceId) {
+        List<RangerServiceResource> ret = new ArrayList<>();
 
-	public List<RangerServiceResource> getServiceResourcesByLlResourceId(long llResourceId) {
-		List<RangerServiceResource> ret = new ArrayList<>();
+        List<Object[]> rows = null;
 
-		List<Object[]> rows = null;
-		try {
-			rows = getEntityManager()
-					.createNamedQuery("XXRMSResourceMapping.getServiceResourcesByLlResourceId", Object[].class)
-					.setParameter("llResourceId", llResourceId)
-					.getResultList();
-		} catch (NoResultException e) {
-			// Nothing
-		}
+        try {
+            rows = getEntityManager()
+                    .createNamedQuery("XXRMSResourceMapping.getServiceResourcesByLlResourceId", Object[].class)
+                    .setParameter("llResourceId", llResourceId)
+                    .getResultList();
+        } catch (NoResultException e) {
+            // Nothing
+        }
 
-		if (CollectionUtils.isNotEmpty(rows)) {
-			for (Object[] row : rows) {
-				XXRMSServiceResource xxServiceResource = new XXRMSServiceResource();
-				xxServiceResource.setId((Long) row[0]);
-				xxServiceResource.setGuid((String) row[1]);
-				xxServiceResource.setVersion((Long) row[2]);
-				xxServiceResource.setIsEnabled((Boolean) row[3]);
-				xxServiceResource.setResourceSignature((String) row[4]);
-				xxServiceResource.setServiceId((Long) row[5]);
-				xxServiceResource.setServiceResourceElements((String) row[6]);
-				ret.add(XXRMSServiceResourceDao.populateViewBean(xxServiceResource));
-			}
-		}
-		return ret;
-	}
+        if (CollectionUtils.isNotEmpty(rows)) {
+            for (Object[] row : rows) {
+                XXRMSServiceResource xxServiceResource = new XXRMSServiceResource();
 
+                xxServiceResource.setId((Long) row[0]);
+                xxServiceResource.setGuid((String) row[1]);
+                xxServiceResource.setVersion((Long) row[2]);
+                xxServiceResource.setIsEnabled((Boolean) row[3]);
+                xxServiceResource.setResourceSignature((String) row[4]);
+                xxServiceResource.setServiceId((Long) row[5]);
+                xxServiceResource.setServiceResourceElements((String) row[6]);
+
+                ret.add(XXRMSServiceResourceDao.populateViewBean(xxServiceResource));
+            }
+        }
+
+        return ret;
+    }
 }

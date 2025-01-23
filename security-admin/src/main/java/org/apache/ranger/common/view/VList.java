@@ -17,32 +17,29 @@
  * under the License.
  */
 
- package org.apache.ranger.common.view;
-
+package org.apache.ranger.common.view;
 
 import java.util.List;
 
-
-public abstract class VList extends ViewBaseBean implements
-	java.io.Serializable {
+public abstract class VList extends ViewBaseBean implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
      * Start index for the result
      */
-    protected int startIndex;
+    protected int    startIndex;
     /**
      * Page size used for the result
      */
-    protected int pageSize;
+    protected int    pageSize;
     /**
      * Total records in the database for the given search conditions
      */
-    protected long totalCount;
+    protected long   totalCount;
     /**
      * Number of rows returned for the search condition
      */
-    protected int resultSize;
+    protected int    resultSize;
     /**
      * Sort type. Either desc or asc
      */
@@ -63,74 +60,66 @@ public abstract class VList extends ViewBaseBean implements
     /**
      * Initialize with existing list
      *
-     * @param size
+     * @param objectList
      */
     public VList(@SuppressWarnings("rawtypes") List objectList) {
-	int size = 0;
-	if (objectList != null) {
-	    size = objectList.size();
-	}
+        int size = 0;
+        if (objectList != null) {
+            size = objectList.size();
+        }
 
-	startIndex = 0;
-	pageSize = size;
-	totalCount = size;
-	resultSize = size;
-	sortType = null;
-	sortBy = null;
+        startIndex = 0;
+        pageSize   = size;
+        totalCount = size;
+        resultSize = size;
+        sortType   = null;
+        sortBy     = null;
     }
 
-    abstract public int getListSize();
+    public abstract int getListSize();
 
-    abstract public List<?> getList();
+    public abstract List<?> getList();
+
+    public int getStartIndex() {
+        return startIndex;
+    }
 
     /**
      * This method sets the value to the member attribute <b>startIndex</b>. You
      * cannot set null to the attribute.
      *
-     * @param startIndex
-     *            Value to set member attribute <b>startIndex</b>
+     * @param startIndex Value to set member attribute <b>startIndex</b>
      */
     public void setStartIndex(int startIndex) {
-	this.startIndex = startIndex;
+        this.startIndex = startIndex;
     }
-    public int getStartIndex() { return startIndex; }
 
+    public int getPageSize() {
+        return pageSize;
+    }
 
     /**
      * This method sets the value to the member attribute <b>pageSize</b>. You
      * cannot set null to the attribute.
      *
-     * @param pageSize
-     *            Value to set member attribute <b>pageSize</b>
+     * @param pageSize Value to set member attribute <b>pageSize</b>
      */
     public void setPageSize(int pageSize) {
-	this.pageSize = pageSize;
+        this.pageSize = pageSize;
     }
-    public int getPageSize() { return pageSize; }
+
+    public long getTotalCount() {
+        return totalCount;
+    }
 
     /**
      * This method sets the value to the member attribute <b>totalCount</b>. You
      * cannot set null to the attribute.
      *
-     * @param totalCount
-     *            Value to set member attribute <b>totalCount</b>
+     * @param totalCount Value to set member attribute <b>totalCount</b>
      */
     public void setTotalCount(long totalCount) {
-	this.totalCount = totalCount;
-    }
-    public long getTotalCount() { return totalCount; }
-
-
-
-    /**
-     * This method sets the value to the member attribute <b>resultSize</b>. You
-     * cannot set null to the attribute.
-     *
-     * @param resultSize
-     *            Value to set member attribute <b>resultSize</b>
-     */
-    public void setResultSize(int resultSize) {
-	this.resultSize = resultSize;
+        this.totalCount = totalCount;
     }
 
     /**
@@ -139,39 +128,46 @@ public abstract class VList extends ViewBaseBean implements
      * @return int - value of member attribute <b>resultSize</b>.
      */
     public int getResultSize() {
-	return getListSize();
+        return getListSize();
+    }
+
+    /**
+     * This method sets the value to the member attribute <b>resultSize</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param resultSize Value to set member attribute <b>resultSize</b>
+     */
+    public void setResultSize(int resultSize) {
+        this.resultSize = resultSize;
+    }
+
+    public String getSortType() {
+        return sortType;
     }
 
     /**
      * This method sets the value to the member attribute <b>sortType</b>. You
      * cannot set null to the attribute.
      *
-     * @param sortType
-     *            Value to set member attribute <b>sortType</b>
+     * @param sortType Value to set member attribute <b>sortType</b>
      */
     public void setSortType(String sortType) {
-	this.sortType = sortType;
+        this.sortType = sortType;
     }
-    public String getSortType() { return sortType; }
 
+    public String getSortBy() {
+        return sortBy;
+    }
 
     /**
      * This method sets the value to the member attribute <b>sortBy</b>. You
      * cannot set null to the attribute.
      *
-     * @param sortBy
-     *            Value to set member attribute <b>sortBy</b>
+     * @param sortBy Value to set member attribute <b>sortBy</b>
      */
     public void setSortBy(String sortBy) {
-	this.sortBy = sortBy;
+        this.sortBy = sortBy;
     }
-    public String getSortBy() { return sortBy; }
-
-
-
-
-
-
 
     /*
      * (non-Javadoc)
@@ -180,11 +176,10 @@ public abstract class VList extends ViewBaseBean implements
      */
     @Override
     public String toString() {
-	return "VList [startIndex=" + startIndex + ", pageSize="
-		+ pageSize + ", totalCount=" + totalCount
-		+ ", resultSize=" + resultSize + ", sortType="
-		+ sortType + ", sortBy=" + sortBy + ", queryTimeMS="
-		+ queryTimeMS + "]";
+        return "VList [startIndex=" + startIndex + ", pageSize="
+                + pageSize + ", totalCount=" + totalCount
+                + ", resultSize=" + resultSize + ", sortType="
+                + sortType + ", sortBy=" + sortBy + ", queryTimeMS="
+                + queryTimeMS + "]";
     }
-
 }

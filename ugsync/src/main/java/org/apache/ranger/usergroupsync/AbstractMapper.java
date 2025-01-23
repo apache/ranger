@@ -23,19 +23,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractMapper implements Mapper {
-	
-	protected static final Logger logger = LoggerFactory.getLogger(AbstractMapper.class);
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractMapper.class);
 
-	@Override
-	public void init(String baseProperty) {
-		// TODO Auto-generated method stub
+    @Override
+    public void init(String baseProperty) {
+        // TODO Auto-generated method stub
+    }
 
-	}
-
-	@Override
-	public String transform(String attrValue) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+    @Override
+    public String transform(String attrValue) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
