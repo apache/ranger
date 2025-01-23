@@ -106,10 +106,18 @@ jobs:
           cp ranger-*.tar.gz dev-support/ranger-docker/dist
           cp version dev-support/ranger-docker/dist
 
+      - name: Cache downloaded archives
+        uses: actions/cache@v4
+        with:
+          path: dev-support/ranger-docker/downloads
+          key: ${{ runner.os }}-ranger-downloads-${{ hashFiles('dev-support/ranger-docker/.env') }}
+          restore-keys: |
+            ${{ runner.os }}-ranger-downloads-
+
       - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
-          ./download-archives.sh kafka
+          ./download-archives.sh hadoop hive hbase kafka knox ozone
       
       - name: Clean up Docker space
         run: docker system prune --all --force --volumes
@@ -123,18 +131,59 @@ jobs:
           export RANGER_DB_TYPE=sqlserver
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
-          -f docker-compose.ranger.yml build
+          -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-usersync.yml \
+          -f docker-compose.ranger-tagsync.yml \
+          -f docker-compose.ranger-kms.yml \
+          -f docker-compose.ranger-hadoop.yml \
+          -f docker-compose.ranger-hbase.yml \
+          -f docker-compose.ranger-kafka.yml \
+          -f docker-compose.ranger-hive.yml \
+          -f docker-compose.ranger-knox.yml \
+          -f docker-compose.ranger-ozone.yml build
 
       - name: Bring up containers
         run: |
           cd dev-support/ranger-docker
+          ./scripts/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=sqlserver
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
-          -f docker-compose.ranger.yml up -d
+          -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-usersync.yml \
+          -f docker-compose.ranger-tagsync.yml \
+          -f docker-compose.ranger-kms.yml \
+          -f docker-compose.ranger-hadoop.yml \
+          -f docker-compose.ranger-hbase.yml \
+          -f docker-compose.ranger-kafka.yml \
+          -f docker-compose.ranger-hive.yml \
+          -f docker-compose.ranger-knox.yml \
+          -f docker-compose.ranger-ozone.yml up -d
 
       - name: View sql server logs
         run: |
           sleep 30
           docker logs ranger-sqlserver
           docker logs ranger
+
+      - name: Check status of containers and remove them
+        run: |
+          sleep 60
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
+          flag=true;
+          for container in "${containers[@]}"; do
+              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
+                  echo "Container $container is running!";
+              else
+                  flag=false;
+                  echo "Container $container is NOT running!";
+              fi
+          done
+          
+          if [[ $flag == true ]]; then
+              echo "All required containers are up and running";
+              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
+          else
+              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
+              exit 1;
+          fi

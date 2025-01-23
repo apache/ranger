@@ -22,9 +22,6 @@ ARG RANGER_DB_TYPE
 ARG TARGETARCH
 ARG RANGER_ADMIN_JAVA_VERSION
 
-ENV JAVA_HOME=/usr/lib/jvm/java-1.${RANGER_ADMIN_JAVA_VERSION}.0-openjdk-${TARGETARCH}
-# ENV RANGER_ADMIN_CONF=/opt/ranger/admin/conf
-
 RUN if [ "${OS_NAME}" = "UBUNTU" ]; then\
     update-java-alternatives --set "$JAVA_HOME";\
     fi
@@ -62,9 +59,6 @@ RUN mv /home/ranger/dist/ojdbc8.jar /usr/share/java/oracle.jar
 FROM ranger AS ranger_sqlserver
 COPY ./downloads/mssql-jdbc-12.8.1.jre8.jar            /home/ranger/dist/
 RUN mv /home/ranger/dist/mssql-jdbc-12.8.1.jre8.jar    /usr/share/java/mssql.jar
-
-# to trust the self-signed certificate
-ENV JAVA_OPTS="${JAVA_OPTS} -DtrustServerCertificate=true"
 
 FROM ranger_${RANGER_DB_TYPE}
 
