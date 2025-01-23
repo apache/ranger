@@ -48,6 +48,7 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
 import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
+import org.apache.ranger.plugin.model.RangerGds.DatasetsSummary;
 import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
 import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
@@ -119,6 +120,9 @@ public class GdsDBStore extends AbstractGdsStore {
     public static final String NOT_AUTHORIZED_FOR_PROJECT_POLICIES     = "User is not authorized to manage policies for this dataset";
     public static final String NOT_AUTHORIZED_TO_VIEW_PROJECT_POLICIES = "User is not authorized to view policies for this dataset";
     public static final String GDS_POLICY_NAME_TIMESTAMP_SEP           = "@";
+
+    public static final String LABELS                                  = "labelCounts";
+    public static final String KEYWORDS                                = "keywordCounts";
 
     private static final Set<Integer> SHARE_STATUS_AGR = new HashSet<>(Arrays.asList(GdsShareStatus.ACTIVE.ordinal(), GdsShareStatus.GRANTED.ordinal(), GdsShareStatus.REQUESTED.ordinal()));
 
@@ -1370,17 +1374,66 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     public PList<DatasetSummary> getDatasetSummary(SearchFilter filter) {
-        LOG.debug("==> getDatasetSummary({})", filter);
+        return getDatasetSummary(filter, false);
+    }
 
-        PList<RangerDataset>  datasets       = getUnscrubbedDatasets(filter);
-        List<DatasetSummary>  datasetSummary = toDatasetSummary(datasets.getList(), getGdsPermissionFromFilter(filter));
-        PList<DatasetSummary> ret            = new PList<>(datasetSummary, datasets.getStartIndex(), datasets.getPageSize(), datasets.getTotalCount(), datasets.getResultSize(), datasets.getSortType(), datasets.getSortBy());
+    public DatasetsSummary getEnhancedDatasetSummary(SearchFilter filter) {
+        return getDatasetSummary(filter, true);
+    }
 
-        ret.setQueryTimeMS(datasets.getQueryTimeMS());
+    public DatasetsSummary getDatasetSummary(SearchFilter filter, boolean includeAdditionalInfo) {
+        LOG.debug("==> getDatasetSummary({}, {})", filter, includeAdditionalInfo);
 
-        LOG.debug("<== getDatasetSummary({}): ret={}", filter, ret);
+        PList<RangerDataset>              datasets;
+        Map<String, Map<String, Integer>> additionalInfo = null;
+
+        if (includeAdditionalInfo) {
+            List<RangerDataset> datasetsMatchingCriteria = fetchDatasetsBySearchCriteria(filter);
+            additionalInfo = buildAdditionalInfoForDatasets(datasetsMatchingCriteria);
+            datasets       = applyPaginataionAndSorting(datasetsMatchingCriteria, filter);
+        } else {
+            datasets       = getUnscrubbedDatasets(filter);
+        }
+
+        List<DatasetSummary>  datasetSummary          = toDatasetSummary(datasets.getList(), getGdsPermissionFromFilter(filter));
+        PList<DatasetSummary> paginatedDatasetSummary = createdPaginatedDatasetSummary(datasets, datasetSummary);
+        DatasetsSummary       ret                     = new DatasetsSummary(paginatedDatasetSummary, additionalInfo);
+
+        LOG.debug("<== getDatasetSummary({}, {}): ret={}", filter, includeAdditionalInfo, ret);
 
         return ret;
+    }
+
+    private Map<String, Map<String, Integer>> buildAdditionalInfoForDatasets(List<RangerDataset> datasets) {
+        Map<String, Map<String, Integer>> additionalInfo = new HashMap<>();
+        for (RangerDataset dataset : datasets) {
+            updateAdditionalInfo(LABELS, dataset.getLabels(), additionalInfo);
+            updateAdditionalInfo(KEYWORDS, dataset.getKeywords(), additionalInfo);
+        }
+        return additionalInfo;
+    }
+
+    private void updateAdditionalInfo(String field, List<String> fieldValues, Map<String, Map<String, Integer>> additionalInfo) {
+        if (CollectionUtils.isNotEmpty(fieldValues)) {
+            Map<String, Integer> aggregatedFieldMap = additionalInfo.computeIfAbsent(field, key -> new HashMap<>());
+            for (String value : fieldValues) {
+                aggregatedFieldMap.put(value, aggregatedFieldMap.getOrDefault(value, 0) + 1);
+            }
+        }
+    }
+
+    private PList<DatasetSummary> createdPaginatedDatasetSummary(PList<RangerDataset> datasets, List<DatasetSummary> datasetSummary) {
+        PList<DatasetSummary> paginatedDatasetSummary = new PList<>(
+                datasetSummary,
+                datasets.getStartIndex(),
+                datasets.getPageSize(),
+                datasets.getTotalCount(),
+                datasets.getResultSize(),
+                datasets.getSortType(),
+                datasets.getSortBy());
+
+        paginatedDatasetSummary.setQueryTimeMS(datasets.getQueryTimeMS());
+        return paginatedDatasetSummary;
     }
 
     public PList<DataShareSummary> getDataShareSummary(SearchFilter filter) {
@@ -1698,6 +1751,12 @@ public class GdsDBStore extends AbstractGdsStore {
     }
 
     private PList<RangerDataset> getUnscrubbedDatasets(SearchFilter filter) {
+        List<RangerDataset> datasets = fetchDatasetsBySearchCriteria(filter);
+
+        return applyPaginataionAndSorting(datasets, filter);
+    }
+
+    private List<RangerDataset> fetchDatasetsBySearchCriteria(SearchFilter filter) {
         filter.setParam(SearchFilter.RETRIEVE_ALL_PAGES, "true");
 
         GdsPermission       gdsPermission  = getGdsPermissionFromFilter(filter);
@@ -1727,10 +1786,14 @@ public class GdsDBStore extends AbstractGdsStore {
             }
         }
 
+        return datasets;
+    }
+
+    private PList<RangerDataset> applyPaginataionAndSorting(List<RangerDataset> datasets, SearchFilter filter) {
         int maxRows    = filter.getMaxRows();
         int startIndex = filter.getStartIndex();
 
-        return getPList(datasets, startIndex, maxRows, result.getSortBy(), result.getSortType());
+        return getPList(datasets, startIndex, maxRows, filter.getSortBy(), filter.getSortType());
     }
 
     private PList<RangerDataShare> getUnscrubbedDataShares(SearchFilter filter) {

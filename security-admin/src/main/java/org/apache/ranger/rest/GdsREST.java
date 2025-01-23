@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.DataShareInDatasetSummary;
 import org.apache.ranger.plugin.model.RangerGds.DataShareSummary;
 import org.apache.ranger.plugin.model.RangerGds.DatasetSummary;
+import org.apache.ranger.plugin.model.RangerGds.DatasetsSummary;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
@@ -449,13 +450,13 @@ public class GdsREST {
         LOG.debug("==> GdsREST.getDatasetSummary()");
 
         PList<DatasetSummary> ret;
-        RangerPerfTracer      perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDatasetSummary()");
-        SearchFilter          filter = null;
+        RangerPerfTracer perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getDatasetSummary()");
+        SearchFilter     filter = null;
 
         try {
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
-            ret = gdsStore.getDatasetSummary(filter);
+            ret    = gdsStore.getDatasetSummary(filter);
         } catch (WebApplicationException we) {
             throw we;
         } catch (Throwable ex) {
@@ -466,7 +467,37 @@ public class GdsREST {
             RangerPerfTracer.log(perf);
         }
 
-        LOG.debug("<== GdsREST.getDatasetSummary(): {}", ret);
+        LOG.debug("<== GdsREST.getDatasetSummary()");
+
+        return ret;
+    }
+
+    @GET
+    @Path("/dataset/enhancedsummary")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_DATASET_SUMMARY + "\")")
+    public DatasetsSummary getEnhancedDatasetSummary(@Context HttpServletRequest request) {
+        LOG.debug("==> GdsREST.getEnhancedDatasetSummary()");
+
+        DatasetsSummary ret;
+        RangerPerfTracer perf   = RangerPerfTracer.getPerfTracer(PERF_LOG, "GdsREST.getEnhancedDatasetSummary()");
+        SearchFilter     filter = null;
+
+        try {
+            filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+
+            ret    = gdsStore.getEnhancedDatasetSummary(filter);
+        } catch (WebApplicationException we) {
+            throw we;
+        } catch (Throwable ex) {
+            LOG.error("getEnhancedDatasetSummary({}) failed", filter, ex);
+
+            throw restErrorUtil.createRESTException(ex.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== GdsREST.getEnhancedDatasetSummary()");
 
         return ret;
     }
