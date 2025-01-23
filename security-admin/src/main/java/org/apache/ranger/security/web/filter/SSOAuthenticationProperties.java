@@ -24,14 +24,13 @@ import java.util.Collections;
 import java.util.List;
 
 public class SSOAuthenticationProperties {
-
-    private String authenticationProviderUrl;
+    private String       authenticationProviderUrl;
     private RSAPublicKey publicKey;
-    private String cookieName = "hadoop-jwt";
-    private String originalUrlQueryParam;
-    private String[] userAgentList;
-    private List<String> audiences = Collections.emptyList();
-    private String expectedSigAlg;
+    private String       cookieName = "hadoop-jwt";
+    private String       originalUrlQueryParam;
+    private String[]     userAgentList;
+    private List<String> audiences  = Collections.emptyList();
+    private String       expectedSigAlg;
 
     public String getAuthenticationProviderUrl() {
         return authenticationProviderUrl;
@@ -95,4 +94,3 @@ public class SSOAuthenticationProperties {
         this.expectedSigAlg = expectedSigAlg;
     }
 }
-

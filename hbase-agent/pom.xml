@@ -28,8 +28,6 @@
     <name>HBase Security Plugin</name>
     <description>HBase Security Plugins</description>
     <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
         <hbase.jetty.version>12.0.12</hbase.jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>

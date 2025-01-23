@@ -19,9 +19,6 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,22 +28,22 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The persistent class for the x_policy_ref_role database table.
- *
  */
 @Entity
 @Cacheable
-@Table(name="x_policy_ref_role")
+@Table(name = "x_policy_ref_role")
 public class XXPolicyRefRole extends XXDBBase implements Serializable {
-
     private static final long serialVersionUID = 1L;
+
     /**
      * id of the XXPolicyRefRole
      * <ul>
      * </ul>
-     *
      */
     @Id
     @SequenceGenerator(name = "x_policy_ref_role_SEQ", sequenceName = "x_policy_ref_role_SEQ", allocationSize = 1)
@@ -58,7 +55,6 @@ public class XXPolicyRefRole extends XXDBBase implements Serializable {
      * policyId of the XXPolicyRefRole
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "policy_id")
     protected Long policyId;
@@ -67,7 +63,6 @@ public class XXPolicyRefRole extends XXDBBase implements Serializable {
      * roleId of the XXPolicyRefRole
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "role_id")
     protected Long roleId;
@@ -76,21 +71,9 @@ public class XXPolicyRefRole extends XXDBBase implements Serializable {
      * roleName of the XXPolicyRefRole
      * <ul>
      * </ul>
-     *
      */
     @Column(name = "role_name")
     protected String roleName;
-
-    /**
-     * This method sets the value to the member attribute <b> id</b> . You
-     * cannot set null to the attribute.
-     *
-     * @param id
-     *            Value to set member attribute <b> id</b>
-     */
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     /**
      * Returns the value for the member attribute <b>id</b>
@@ -102,62 +85,13 @@ public class XXPolicyRefRole extends XXDBBase implements Serializable {
     }
 
     /**
-     * This method sets the value to the member attribute <b> policyId</b> .
-     * You cannot set null to the attribute.
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
      *
-     * @param policyId
-     *            Value to set member attribute <b> policyId</b>
+     * @param id Value to set member attribute <b> id</b>
      */
-    public void setPolicyId(Long policyId) {
-        this.policyId = policyId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>policyId</b>
-     *
-     * @return Long - value of member attribute <b>policyId</b> .
-     */
-    public Long getPolicyId() {
-        return this.policyId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> roleId</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param roleId
-     *            Value to set member attribute <b> roleId</b>
-     */
-    public void setRoleId(Long roleId) {
-        this.roleId = roleId;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>roleId</b>
-     *
-     * @return Long - value of member attribute <b>roleId</b> .
-     */
-    public Long getRoleId() {
-        return roleId;
-    }
-
-    /**
-     * This method sets the value to the member attribute <b> roleName</b> .
-     * You cannot set null to the attribute.
-     *
-     * @param roleName
-     *            Value to set member attribute <b> roleName</b>
-     */
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
-    }
-
-    /**
-     * Returns the value for the member attribute <b>roleName</b>
-     *
-     */
-    public String getRoleName() {
-        return roleName;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Override
@@ -174,9 +108,7 @@ public class XXPolicyRefRole extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-
-        if (getClass() != obj.getClass()) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
@@ -196,9 +128,61 @@ public class XXPolicyRefRole extends XXDBBase implements Serializable {
      */
     @Override
     public String toString() {
-        return "XXPolicyRefRole [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", roleId=" + roleId
-                + ", roleName=" + roleName + "]";
+        return "XXPolicyRefRole [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", roleId=" + roleId + ", roleName=" + roleName + "]";
     }
 
-}
+    /**
+     * Returns the value for the member attribute <b>policyId</b>
+     *
+     * @return Long - value of member attribute <b>policyId</b> .
+     */
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b> policyId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyId Value to set member attribute <b> policyId</b>
+     */
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>roleId</b>
+     *
+     * @return Long - value of member attribute <b>roleId</b> .
+     */
+    public Long getRoleId() {
+        return roleId;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> roleId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param roleId Value to set member attribute <b> roleId</b>
+     */
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>roleName</b>
+     */
+    public String getRoleName() {
+        return roleName;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> roleName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param roleName Value to set member attribute <b> roleName</b>
+     */
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
+}

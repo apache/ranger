@@ -18,172 +18,166 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_resource")
-public class XXPolicyRefResource extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyRefResource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_ref_resource_SEQ", sequenceName = "x_policy_ref_resource_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_resource_SEQ")
-	@Column(name = "id")
-	protected Long id;
+public class XXPolicyRefResource extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * policyId of the XXPolicyRefResource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_id")
-	protected Long policyId;
+    /**
+     * id of the XXPolicyRefResource
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_ref_resource_SEQ", sequenceName = "x_policy_ref_resource_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_ref_resource_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * resourceDefId of the XXPolicyRefResource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "resource_def_id")
-	protected Long resourceDefId;
+    /**
+     * policyId of the XXPolicyRefResource
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_id")
+    protected Long policyId;
 
-	/**
-	 * resource_name of the XXPolicyRefResource
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "resource_name")
-	protected String resourceName;
+    /**
+     * resourceDefId of the XXPolicyRefResource
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "resource_def_id")
+    protected Long resourceDefId;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * resource_name of the XXPolicyRefResource
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "resource_name")
+    protected String resourceName;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyId
-	 *            Value to set member attribute <b> policyId</b>
-	 */
-	public void setPolicyId(Long policyId) {
-		this.policyId = policyId;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyId</b> .
-	 */
-	public Long getPolicyId() {
-		return this.policyId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, policyId, resourceDefId, resourceName);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> resourceDefId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param resourceDefId
-	 *            Value to set member attribute <b> resourceDefId</b>
-	 */
-	public void setResourceDefId(Long resourceDefId) {
-		this.resourceDefId = resourceDefId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>resourceDefId</b>
-	 *
-	 * @return Date - value of member attribute <b>resourceDefId</b> .
-	 */
-	public Long getResourceDefId() {
-		return resourceDefId;
-	}
+        XXPolicyRefResource other = (XXPolicyRefResource) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> resource_name</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param resourceName
-	 *            Value to set member attribute <b> resource_name</b>
-	 */
-	public void setResourceName(String resourceName) {
-		this.resourceName = resourceName;
-	}
+        return super.equals(obj) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(policyId, other.policyId) &&
+                Objects.equals(resourceDefId, other.resourceDefId) &&
+                Objects.equals(resourceName, other.resourceName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>resourceName</b>
-	 *
-	 * @return Date - value of member attribute <b>resourceName</b> .
-	 */
-	public String getResourceName() {
-		return resourceName;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyRefResource [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", resourceDefId=" + resourceDefId + ", resource_name=" + resourceName + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, policyId, resourceDefId, resourceName);
-	}
+    /**
+     * Returns the value for the member attribute <b>policyId</b>
+     *
+     * @return Date - value of member attribute <b>policyId</b> .
+     */
+    public Long getPolicyId() {
+        return this.policyId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * This method sets the value to the member attribute <b> policyId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyId Value to set member attribute <b> policyId</b>
+     */
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * Returns the value for the member attribute <b>resourceDefId</b>
+     *
+     * @return Date - value of member attribute <b>resourceDefId</b> .
+     */
+    public Long getResourceDefId() {
+        return resourceDefId;
+    }
 
-		XXPolicyRefResource other = (XXPolicyRefResource) obj;
+    /**
+     * This method sets the value to the member attribute <b> resourceDefId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param resourceDefId Value to set member attribute <b> resourceDefId</b>
+     */
+    public void setResourceDefId(Long resourceDefId) {
+        this.resourceDefId = resourceDefId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(policyId, other.policyId) &&
-			   Objects.equals(resourceDefId, other.resourceDefId) &&
-			   Objects.equals(resourceName, other.resourceName);
-	}
+    /**
+     * Returns the value for the member attribute <b>resourceName</b>
+     *
+     * @return Date - value of member attribute <b>resourceName</b> .
+     */
+    public String getResourceName() {
+        return resourceName;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyRefResource [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", resourceDefId="
-				+ resourceDefId + ", resource_name=" + resourceName + "]";
-	}
-
-
-
+    /**
+     * This method sets the value to the member attribute <b> resource_name</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param resourceName Value to set member attribute <b> resource_name</b>
+     */
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
 }

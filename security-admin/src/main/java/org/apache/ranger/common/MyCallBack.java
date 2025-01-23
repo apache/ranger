@@ -17,11 +17,10 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common;
-
 
 public interface MyCallBack {
     /**

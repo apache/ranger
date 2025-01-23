@@ -16,12 +16,6 @@
  */
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -47,122 +41,117 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerPolicyService {
+    private static final Long              Id     = 8L;
+    @Rule
+    public               ExpectedException thrown = ExpectedException.none();
+    @InjectMocks
+    RangerPolicyService policyService = new RangerPolicyService();
+    @Mock
+    RangerDaoManager daoManager;
+    @Mock
+    RangerServiceService svcService;
+    @Mock
+    JSONUtil jsonUtil;
+    @Mock
+    RangerServiceDefService serviceDefService;
+    @Mock
+    StringUtil stringUtil;
+    @Mock
+    XUserService xUserService;
+    @Mock
+    RangerBizUtil bizUtil;
 
-	private static Long Id = 8L;
+    public void setup() {
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(true);
+    }
 
-	@InjectMocks
-	RangerPolicyService policyService = new RangerPolicyService();
+    @Test
+    public void test1ValidateForCreate() {
+        RangerPolicy rangerPolicy = rangerPolicy();
+        policyService.validateForCreate(rangerPolicy);
+        Assert.assertNotNull(rangerPolicy);
+    }
 
-	@Mock
-	RangerDaoManager daoManager;
+    @Test
+    public void test2ValidateForUpdate() {
+        RangerPolicy rangerPolicy = rangerPolicy();
+        XXPolicy     policy       = policy();
+        policyService.validateForUpdate(rangerPolicy, policy);
 
-	@Mock
-	RangerServiceService svcService;
+        Assert.assertNotNull(rangerPolicy);
+    }
 
-	@Mock
-	JSONUtil jsonUtil;
+    @Test
+    public void test8getTransactionLog() {
+        RangerPolicy rangerPolicy = rangerPolicy();
 
-	@Mock
-	RangerServiceDefService serviceDefService;
+        policyService.createTransactionLog(rangerPolicy, null, 1);
+    }
 
-	@Mock
-	StringUtil stringUtil;
+    private RangerPolicy rangerPolicy() {
+        List<RangerPolicyItemAccess>    accesses         = new ArrayList<>();
+        List<String>                    users            = new ArrayList<>();
+        List<String>                    groups           = new ArrayList<>();
+        List<RangerPolicyItemCondition> conditions       = new ArrayList<>();
+        List<RangerPolicyItem>          policyItems      = new ArrayList<>();
+        RangerPolicyItem                rangerPolicyItem = new RangerPolicyItem();
+        rangerPolicyItem.setAccesses(accesses);
+        rangerPolicyItem.setConditions(conditions);
+        rangerPolicyItem.setGroups(groups);
+        rangerPolicyItem.setUsers(users);
+        rangerPolicyItem.setDelegateAdmin(false);
 
-	@Mock
-	XUserService xUserService;
+        policyItems.add(rangerPolicyItem);
 
-	@Mock
-	RangerBizUtil bizUtil;
+        Map<String, RangerPolicyResource> policyResource       = new HashMap<>();
+        RangerPolicyResource              rangerPolicyResource = new RangerPolicyResource();
+        rangerPolicyResource.setIsExcludes(true);
+        rangerPolicyResource.setIsRecursive(true);
+        rangerPolicyResource.setValue("1");
+        rangerPolicyResource.setValues(users);
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(Id);
+        policy.setCreateTime(new Date());
+        policy.setDescription("policy");
+        policy.setGuid("policyguid");
+        policy.setIsEnabled(true);
+        policy.setName("HDFS_1-1-20150316062453");
+        policy.setUpdatedBy("Admin");
+        policy.setUpdateTime(new Date());
+        policy.setService("HDFS_1-1-20150316062453");
+        policy.setIsAuditEnabled(true);
+        policy.setPolicyItems(policyItems);
+        policy.setResources(policyResource);
+        policy.setPolicyType(0);
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+        return policy;
+    }
 
-	public void setup() {
-		RangerSecurityContext context = new RangerSecurityContext();
-		context.setUserSession(new UserSessionBase());
-		RangerContextHolder.setSecurityContext(context);
-		UserSessionBase currentUserSession = ContextUtil
-				.getCurrentUserSession();
-		currentUserSession.setUserAdmin(true);
-	}
-
-	private RangerPolicy rangerPolicy() {
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
-		List<String> users = new ArrayList<String>();
-		List<String> groups = new ArrayList<String>();
-		List<RangerPolicyItemCondition> conditions = new ArrayList<RangerPolicyItemCondition>();
-		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
-		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
-		rangerPolicyItem.setAccesses(accesses);
-		rangerPolicyItem.setConditions(conditions);
-		rangerPolicyItem.setGroups(groups);
-		rangerPolicyItem.setUsers(users);
-		rangerPolicyItem.setDelegateAdmin(false);
-
-		policyItems.add(rangerPolicyItem);
-
-		Map<String, RangerPolicyResource> policyResource = new HashMap<String, RangerPolicyResource>();
-		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource();
-		rangerPolicyResource.setIsExcludes(true);
-		rangerPolicyResource.setIsRecursive(true);
-		rangerPolicyResource.setValue("1");
-		rangerPolicyResource.setValues(users);
-		RangerPolicy policy = new RangerPolicy();
-		policy.setId(Id);
-		policy.setCreateTime(new Date());
-		policy.setDescription("policy");
-		policy.setGuid("policyguid");
-		policy.setIsEnabled(true);
-		policy.setName("HDFS_1-1-20150316062453");
-		policy.setUpdatedBy("Admin");
-		policy.setUpdateTime(new Date());
-		policy.setService("HDFS_1-1-20150316062453");
-		policy.setIsAuditEnabled(true);
-		policy.setPolicyItems(policyItems);
-		policy.setResources(policyResource);
-		policy.setPolicyType(0);
-
-		return policy;
-	}
-
-	private XXPolicy policy() {
-		XXPolicy xxPolicy = new XXPolicy();
-		xxPolicy.setId(Id);
-		xxPolicy.setName("HDFS_1-1-20150316062453");
-		xxPolicy.setAddedByUserId(Id);
-		xxPolicy.setCreateTime(new Date());
-		xxPolicy.setDescription("test");
-		xxPolicy.setIsAuditEnabled(false);
-		xxPolicy.setIsEnabled(false);
-		xxPolicy.setService(1L);
-		xxPolicy.setUpdatedByUserId(Id);
-		xxPolicy.setUpdateTime(new Date());
-		return xxPolicy;
-	}
-
-	@Test
-	public void test1ValidateForCreate() {
-		RangerPolicy rangerPolicy = rangerPolicy();
-		policyService.validateForCreate(rangerPolicy);
-		Assert.assertNotNull(rangerPolicy);
-	}
-
-	@Test
-	public void test2ValidateForUpdate() {
-		RangerPolicy rangerPolicy = rangerPolicy();
-		XXPolicy policy = policy();
-		policyService.validateForUpdate(rangerPolicy, policy);
-
-		Assert.assertNotNull(rangerPolicy);
-	}
-
-	@Test
-	public void test8getTransactionLog() {
-		RangerPolicy rangerPolicy = rangerPolicy();
-
-		policyService.createTransactionLog(rangerPolicy, null, 1);
-	}
+    private XXPolicy policy() {
+        XXPolicy xxPolicy = new XXPolicy();
+        xxPolicy.setId(Id);
+        xxPolicy.setName("HDFS_1-1-20150316062453");
+        xxPolicy.setAddedByUserId(Id);
+        xxPolicy.setCreateTime(new Date());
+        xxPolicy.setDescription("test");
+        xxPolicy.setIsAuditEnabled(false);
+        xxPolicy.setIsEnabled(false);
+        xxPolicy.setService(1L);
+        xxPolicy.setUpdatedByUserId(Id);
+        xxPolicy.setUpdateTime(new Date());
+        return xxPolicy;
+    }
 }

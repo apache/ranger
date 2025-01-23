@@ -25,10 +25,6 @@
     <artifactId>conditions-enrichers</artifactId>
     <name>Ranger Examples - Conditions and ContextEnrichers</name>
     <description>Ranger Examples - Conditions and ContextEnrichers</description>
-    <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.ranger</groupId>

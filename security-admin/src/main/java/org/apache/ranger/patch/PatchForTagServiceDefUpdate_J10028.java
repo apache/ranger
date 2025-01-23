@@ -45,272 +45,295 @@ import java.util.Map;
 
 @Component
 public class PatchForTagServiceDefUpdate_J10028 extends BaseLoader {
-	private static final Logger logger = LoggerFactory.getLogger(PatchForTagServiceDefUpdate_J10028.class);
-	private static final String SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME = "tag";
+    private static final Logger logger = LoggerFactory.getLogger(PatchForTagServiceDefUpdate_J10028.class);
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    private static final String SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME = "tag";
 
-	@Autowired
-	ServiceDBStore svcDBStore;
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	JSONUtil jsonUtil;
+    @Autowired
+    ServiceDBStore svcDBStore;
 
-	@Autowired
-	RangerPolicyService policyService;
+    @Autowired
+    JSONUtil jsonUtil;
 
-	@Autowired
-	StringUtil stringUtil;
+    @Autowired
+    RangerPolicyService policyService;
 
-	@Autowired
-	XPolicyService xPolService;
+    @Autowired
+    StringUtil stringUtil;
 
-	@Autowired
-	XPermMapService xPermMapService;
+    @Autowired
+    XPolicyService xPolService;
 
-	@Autowired
-	RangerBizUtil bizUtil;
+    @Autowired
+    XPermMapService xPermMapService;
 
-	@Autowired
-	RangerValidatorFactory validatorFactory;
+    @Autowired
+    RangerBizUtil bizUtil;
 
-	@Autowired
-	ServiceDBStore svcStore;
+    @Autowired
+    RangerValidatorFactory validatorFactory;
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForTagServiceDefUpdate_J10028 loader = (PatchForTagServiceDefUpdate_J10028) CLIUtil.getBean(PatchForTagServiceDefUpdate_J10028.class);
-			loader.init();
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-			logger.info("Load complete. Exiting.");
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+    @Autowired
+    ServiceDBStore svcStore;
 
-	@Override
-	public void printStats() {
-		logger.info("PatchForTagServiceDefUpdate data ");
-	}
+    public static void main(String[] args) {
+        logger.info("main()");
 
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForTagServiceDefUpdate.execLoad()");
-		try {
-			if (!updateTagServiceDef()) {
-				logger.error("Failed to apply the patch.");
-				System.exit(1);
-			}
-		} catch (Exception e) {
-			logger.error("Error while updateTagServiceDef()data.", e);
-			System.exit(1);
-		}
-		logger.info("<== PatchForTagServiceDefUpdate.execLoad()");
-	}
+        try {
+            PatchForTagServiceDefUpdate_J10028 loader = (PatchForTagServiceDefUpdate_J10028) CLIUtil.getBean(PatchForTagServiceDefUpdate_J10028.class);
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+            loader.init();
 
-	private boolean updateTagServiceDef() throws Exception {
-		RangerServiceDef ret;
-		RangerServiceDef embeddedTagServiceDef;
-		RangerServiceDef dbTagServiceDef;
-		XXServiceDef xXServiceDefObj;
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
 
-		embeddedTagServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+            logger.info("Load complete. Exiting.");
 
-		if (embeddedTagServiceDef != null) {
-			xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
-			Map<String, String> serviceDefOptionsPreUpdate;
-			String jsonPreUpdate;
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
 
-			if (xXServiceDefObj != null) {
-				jsonPreUpdate = xXServiceDefObj.getDefOptions();
-				serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
-			} else {
-				logger.error("Tag service-definition does not exist in the Ranger DAO. No patching is needed");
-				return true;
-			}
-			dbTagServiceDef = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+            System.exit(1);
+        }
+    }
 
-			boolean isTagServiceUpdated;
-			if (dbTagServiceDef != null) {
-				isTagServiceUpdated = updateResourceInTagServiceDef(dbTagServiceDef);
-			} else {
-				logger.error("Tag service-definition does not exist in the db store.");
-				return false;
-			}
-			if (isTagServiceUpdated) {
-				ret = svcStore.updateServiceDef(dbTagServiceDef);
-				if (ret == null) {
-					throw new RuntimeException("Error while updating " + SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME + " service-def");
-				}
-				xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
-				if (xXServiceDefObj != null) {
-					String jsonStrPostUpdate = xXServiceDefObj.getDefOptions();
-					Map<String, String> serviceDefOptionsPostUpdate = jsonStringToMap(jsonStrPostUpdate);
-					if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-						if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
-							String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-							if (preUpdateValue == null) {
-								serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
-							} else {
-								serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
-							}
-							xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
-							daoMgr.getXXServiceDef().update(xXServiceDefObj);
-						}
-					}
-				} else {
-					logger.error("Tag service-definition does not exist in the Ranger DAO.");
-					return false;
-				}
-			}
-		} else {
-			logger.error("The embedded Tag service-definition does not exist.");
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-	private String mapToJsonString(Map<String, String> map) {
-		String ret = null;
-		if (map != null) {
-			try {
-				ret = jsonUtil.readMapToString(map);
-			} catch (Exception ex) {
-				logger.warn("mapToJsonString() failed to convert map: " + map, ex);
-			}
-		}
-		return ret;
-	}
+    @Override
+    public void printStats() {
+        logger.info("PatchForTagServiceDefUpdate data ");
+    }
 
-	private Map<String, String> jsonStringToMap(String jsonStr) {
-		Map<String, String> ret = null;
-		if (!StringUtils.isEmpty(jsonStr)) {
-			try {
-				ret = jsonUtil.jsonToMap(jsonStr);
-			} catch (Exception ex) {
-				// fallback to earlier format: "name1=value1;name2=value2"
-				for (String optionString : jsonStr.split(";")) {
-					if (StringUtils.isEmpty(optionString)) {
-						continue;
-					}
-					String[] nvArr = optionString.split("=");
-					String name = (nvArr.length > 0) ? nvArr[0].trim() : null;
-					String value = (nvArr.length > 1) ? nvArr[1].trim() : null;
-					if (StringUtils.isEmpty(name)) {
-						continue;
-					}
-					if (ret == null) {
-						ret = new HashMap<>();
-					}
-					ret.put(name, value);
-				}
-			}
-		}
-		return ret;
-	}
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForTagServiceDefUpdate.execLoad()");
 
-	private boolean updateResourceInTagServiceDef(RangerServiceDef tagServiceDef) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("==> PatchForTagServiceDefUpdate_J10028.updateResourceInTagServiceDef(" + tagServiceDef + ")");
-		}
-		boolean ret = false;
+        try {
+            if (!updateTagServiceDef()) {
+                logger.error("Failed to apply the patch.");
 
-		final RangerServiceDef.RangerResourceDef accessPolicyTagResource = getResourceDefForTagResource(tagServiceDef.getResources());
+                System.exit(1);
+            }
+        } catch (Exception e) {
+            logger.error("Error while updateTagServiceDef()data.", e);
 
-		if (accessPolicyTagResource != null) {
+            System.exit(1);
+        }
 
-			RangerServiceDef.RangerDataMaskDef dataMaskDef = tagServiceDef.getDataMaskDef();
+        logger.info("<== PatchForTagServiceDefUpdate.execLoad()");
+    }
 
-			if (dataMaskDef != null) {
-				if (CollectionUtils.isNotEmpty(dataMaskDef.getAccessTypes())) {
-					addOrUpdateResourceDefForTagResource(dataMaskDef.getResources(), accessPolicyTagResource);
-					ret = true;
-				} else {
-					if (CollectionUtils.isNotEmpty(dataMaskDef.getResources())) {
-						dataMaskDef.setResources(null);
-						ret = true;
-					}
-				}
-			}
+    private boolean updateTagServiceDef() throws Exception {
+        RangerServiceDef embeddedTagServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
 
-			RangerServiceDef.RangerRowFilterDef rowFilterDef = tagServiceDef.getRowFilterDef();
+        if (embeddedTagServiceDef != null) {
+            XXServiceDef xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
 
-			if (rowFilterDef != null) {
-				boolean autopropagateRowfilterdefToTag = config.getBoolean(AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP, AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT);
-				if (autopropagateRowfilterdefToTag) {
-					if (CollectionUtils.isNotEmpty(rowFilterDef.getAccessTypes())) {
-						addOrUpdateResourceDefForTagResource(rowFilterDef.getResources(), accessPolicyTagResource);
-						ret = true;
-					} else {
-						if (CollectionUtils.isNotEmpty(rowFilterDef.getResources())) {
-							rowFilterDef.setResources(null);
-							ret = true;
-						}
-					}
-				}
-			}
-		} else {
-			logger.warn("Resource with name :[" + RangerServiceTag.TAG_RESOURCE_NAME + "] not found in  tag-service-definition!!");
-		}
+            if (xXServiceDefObj == null) {
+                logger.error("Tag service-definition does not exist in the Ranger DAO. No patching is needed");
+                return true;
+            }
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("<== PatchForTagServiceDefUpdate_J10028.updateResourceInTagServiceDef(" + tagServiceDef + ") : " + ret);
-		}
+            String              jsonPreUpdate              = xXServiceDefObj.getDefOptions();
+            Map<String, String> serviceDefOptionsPreUpdate = jsonStringToMap(jsonPreUpdate);
+            RangerServiceDef    dbTagServiceDef            = svcDBStore.getServiceDefByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
+            boolean             isTagServiceUpdated;
 
-		return ret;
-	}
+            if (dbTagServiceDef != null) {
+                isTagServiceUpdated = updateResourceInTagServiceDef(dbTagServiceDef);
+            } else {
+                logger.error("Tag service-definition does not exist in the db store.");
 
-	private RangerServiceDef.RangerResourceDef getResourceDefForTagResource(List<RangerServiceDef.RangerResourceDef> resourceDefs) {
+                return false;
+            }
 
-		RangerServiceDef.RangerResourceDef ret = null;
+            if (isTagServiceUpdated) {
+                RangerServiceDef ret = svcStore.updateServiceDef(dbTagServiceDef);
 
-		if (CollectionUtils.isNotEmpty(resourceDefs)) {
-			for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
-				if (resourceDef.getName().equals(RangerServiceTag.TAG_RESOURCE_NAME)) {
-					ret = resourceDef;
-					break;
-				}
-			}
-		}
+                if (ret == null) {
+                    throw new RuntimeException("Error while updating " + SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME + " service-def");
+                }
 
-		return ret;
-	}
+                xXServiceDefObj = daoMgr.getXXServiceDef().findByName(SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME);
 
-	private void addOrUpdateResourceDefForTagResource(List<RangerServiceDef.RangerResourceDef> resourceDefs, RangerServiceDef.RangerResourceDef tagResourceDef) {
+                if (xXServiceDefObj != null) {
+                    String              jsonStrPostUpdate           = xXServiceDefObj.getDefOptions();
+                    Map<String, String> serviceDefOptionsPostUpdate = jsonStringToMap(jsonStrPostUpdate);
 
-		RangerServiceDef.RangerResourceDef tagResourceDefInResourceDefs = getResourceDefForTagResource(resourceDefs);
+                    if (serviceDefOptionsPostUpdate != null && serviceDefOptionsPostUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                        if (serviceDefOptionsPreUpdate == null || !serviceDefOptionsPreUpdate.containsKey(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES)) {
+                            String preUpdateValue = serviceDefOptionsPreUpdate == null ? null : serviceDefOptionsPreUpdate.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
 
-		if (tagResourceDefInResourceDefs == null) {
-			resourceDefs.add(tagResourceDef);
-		} else {
-			tagResourceDefInResourceDefs.setDescription(tagResourceDef.getDescription());
-			tagResourceDefInResourceDefs.setLabel(tagResourceDef.getLabel());
-			tagResourceDefInResourceDefs.setValidationMessage(tagResourceDef.getValidationMessage());
-			tagResourceDefInResourceDefs.setValidationRegEx(tagResourceDef.getValidationRegEx());
-			tagResourceDefInResourceDefs.setRbKeyDescription(tagResourceDef.getRbKeyDescription());
-			tagResourceDefInResourceDefs.setRbKeyLabel(tagResourceDef.getRbKeyLabel());
-			tagResourceDefInResourceDefs.setRbKeyValidationMessage(tagResourceDef.getRbKeyValidationMessage());
-			tagResourceDefInResourceDefs.setUiHint(tagResourceDef.getUiHint());
-			tagResourceDefInResourceDefs.setMatcher(tagResourceDef.getMatcher());
-			tagResourceDefInResourceDefs.setMatcherOptions(tagResourceDef.getMatcherOptions());
-			tagResourceDefInResourceDefs.setLookupSupported(tagResourceDef.getLookupSupported());
-			tagResourceDefInResourceDefs.setExcludesSupported(tagResourceDef.getExcludesSupported());
-			tagResourceDefInResourceDefs.setRecursiveSupported(tagResourceDef.getRecursiveSupported());
-			tagResourceDefInResourceDefs.setMandatory(tagResourceDef.getMandatory());
-			tagResourceDefInResourceDefs.setLevel(tagResourceDef.getLevel());
-			tagResourceDefInResourceDefs.setIsValidLeaf(tagResourceDef.getIsValidLeaf());
-			tagResourceDefInResourceDefs.setParent(tagResourceDef.getParent());
-		}
-	}
+                            if (preUpdateValue == null) {
+                                serviceDefOptionsPostUpdate.remove(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES);
+                            } else {
+                                serviceDefOptionsPostUpdate.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, preUpdateValue);
+                            }
+
+                            xXServiceDefObj.setDefOptions(mapToJsonString(serviceDefOptionsPostUpdate));
+
+                            daoMgr.getXXServiceDef().update(xXServiceDefObj);
+                        }
+                    }
+                } else {
+                    logger.error("Tag service-definition does not exist in the Ranger DAO.");
+
+                    return false;
+                }
+            }
+        } else {
+            logger.error("The embedded Tag service-definition does not exist.");
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private String mapToJsonString(Map<String, String> map) {
+        String ret = null;
+
+        if (map != null) {
+            try {
+                ret = jsonUtil.readMapToString(map);
+            } catch (Exception ex) {
+                logger.warn("mapToJsonString() failed to convert map: {}", map, ex);
+            }
+        }
+
+        return ret;
+    }
+
+    private Map<String, String> jsonStringToMap(String jsonStr) {
+        Map<String, String> ret = null;
+
+        if (!StringUtils.isEmpty(jsonStr)) {
+            try {
+                ret = jsonUtil.jsonToMap(jsonStr);
+            } catch (Exception ex) {
+                // fallback to earlier format: "name1=value1;name2=value2"
+                for (String optionString : jsonStr.split(";")) {
+                    if (StringUtils.isEmpty(optionString)) {
+                        continue;
+                    }
+
+                    String[] nvArr = optionString.split("=");
+                    String   name  = (nvArr.length > 0) ? nvArr[0].trim() : null;
+                    String   value = (nvArr.length > 1) ? nvArr[1].trim() : null;
+
+                    if (StringUtils.isEmpty(name)) {
+                        continue;
+                    }
+
+                    if (ret == null) {
+                        ret = new HashMap<>();
+                    }
+
+                    ret.put(name, value);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean updateResourceInTagServiceDef(RangerServiceDef tagServiceDef) {
+        logger.debug("==> PatchForTagServiceDefUpdate_J10028.updateResourceInTagServiceDef({})", tagServiceDef);
+
+        boolean                                  ret                     = false;
+        final RangerServiceDef.RangerResourceDef accessPolicyTagResource = getResourceDefForTagResource(tagServiceDef.getResources());
+
+        if (accessPolicyTagResource != null) {
+            RangerServiceDef.RangerDataMaskDef dataMaskDef = tagServiceDef.getDataMaskDef();
+
+            if (dataMaskDef != null) {
+                if (CollectionUtils.isNotEmpty(dataMaskDef.getAccessTypes())) {
+                    addOrUpdateResourceDefForTagResource(dataMaskDef.getResources(), accessPolicyTagResource);
+
+                    ret = true;
+                } else {
+                    if (CollectionUtils.isNotEmpty(dataMaskDef.getResources())) {
+                        dataMaskDef.setResources(null);
+
+                        ret = true;
+                    }
+                }
+            }
+
+            RangerServiceDef.RangerRowFilterDef rowFilterDef = tagServiceDef.getRowFilterDef();
+
+            if (rowFilterDef != null) {
+                boolean autopropagateRowfilterdefToTag = config.getBoolean(AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP, AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT);
+
+                if (autopropagateRowfilterdefToTag) {
+                    if (CollectionUtils.isNotEmpty(rowFilterDef.getAccessTypes())) {
+                        addOrUpdateResourceDefForTagResource(rowFilterDef.getResources(), accessPolicyTagResource);
+
+                        ret = true;
+                    } else {
+                        if (CollectionUtils.isNotEmpty(rowFilterDef.getResources())) {
+                            rowFilterDef.setResources(null);
+
+                            ret = true;
+                        }
+                    }
+                }
+            }
+        } else {
+            logger.warn("Resource with name :[{}] not found in  tag-service-definition!!", RangerServiceTag.TAG_RESOURCE_NAME);
+        }
+
+        logger.debug("<== PatchForTagServiceDefUpdate_J10028.updateResourceInTagServiceDef({}) : {}", tagServiceDef, ret);
+
+        return ret;
+    }
+
+    private RangerServiceDef.RangerResourceDef getResourceDefForTagResource(List<RangerServiceDef.RangerResourceDef> resourceDefs) {
+        RangerServiceDef.RangerResourceDef ret = null;
+
+        if (CollectionUtils.isNotEmpty(resourceDefs)) {
+            for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
+                if (resourceDef.getName().equals(RangerServiceTag.TAG_RESOURCE_NAME)) {
+                    ret = resourceDef;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private void addOrUpdateResourceDefForTagResource(List<RangerServiceDef.RangerResourceDef> resourceDefs, RangerServiceDef.RangerResourceDef tagResourceDef) {
+        RangerServiceDef.RangerResourceDef tagResourceDefInResourceDefs = getResourceDefForTagResource(resourceDefs);
+
+        if (tagResourceDefInResourceDefs == null) {
+            resourceDefs.add(tagResourceDef);
+        } else {
+            tagResourceDefInResourceDefs.setDescription(tagResourceDef.getDescription());
+            tagResourceDefInResourceDefs.setLabel(tagResourceDef.getLabel());
+            tagResourceDefInResourceDefs.setValidationMessage(tagResourceDef.getValidationMessage());
+            tagResourceDefInResourceDefs.setValidationRegEx(tagResourceDef.getValidationRegEx());
+            tagResourceDefInResourceDefs.setRbKeyDescription(tagResourceDef.getRbKeyDescription());
+            tagResourceDefInResourceDefs.setRbKeyLabel(tagResourceDef.getRbKeyLabel());
+            tagResourceDefInResourceDefs.setRbKeyValidationMessage(tagResourceDef.getRbKeyValidationMessage());
+            tagResourceDefInResourceDefs.setUiHint(tagResourceDef.getUiHint());
+            tagResourceDefInResourceDefs.setMatcher(tagResourceDef.getMatcher());
+            tagResourceDefInResourceDefs.setMatcherOptions(tagResourceDef.getMatcherOptions());
+            tagResourceDefInResourceDefs.setLookupSupported(tagResourceDef.getLookupSupported());
+            tagResourceDefInResourceDefs.setExcludesSupported(tagResourceDef.getExcludesSupported());
+            tagResourceDefInResourceDefs.setRecursiveSupported(tagResourceDef.getRecursiveSupported());
+            tagResourceDefInResourceDefs.setMandatory(tagResourceDef.getMandatory());
+            tagResourceDefInResourceDefs.setLevel(tagResourceDef.getLevel());
+            tagResourceDefInResourceDefs.setIsValidLeaf(tagResourceDef.getIsValidLeaf());
+            tagResourceDefInResourceDefs.setParent(tagResourceDef.getParent());
+        }
+    }
 }

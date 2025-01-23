@@ -19,9 +19,9 @@
 
 package org.apache.ranger.service;
 
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.view.VXModuleDef;
-
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,35 +34,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.entity.XXGroup;
-
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestXGroupPermissionService {
-	@Mock
-	XGroupPermissionService xGroupPermissionService;
+    @Mock
+    XGroupPermissionService xGroupPermissionService;
 
-	@Mock
-	XXGroupPermission xXGroupPermission;
+    @Mock
+    XXGroupPermission xXGroupPermission;
 
-	@Mock
-	XXGroup XXGroup;
+    @Mock
+    XXGroup xxGroup;
 
-	@Mock
-	VXModuleDef vXModuleDef;
+    @Mock
+    VXModuleDef vXModuleDef;
 
-	@Test
-	public void test1PopulateViewBean() {
-		xGroupPermissionService.populateViewBean(xXGroupPermission);
+    @Test
+    public void test1PopulateViewBean() {
+        xGroupPermissionService.populateViewBean(xXGroupPermission);
+    }
 
-	}
-
-	@Test
-	public void test2GetPopulatedVXGroupPermissionList() {
-		List<XXGroupPermission> xgroupPermissionList = new ArrayList<XXGroupPermission>();
-		Map<Long, String> xXGroupNameMap = new HashMap<Long, String>();
-		xXGroupNameMap.put(XXGroup.getId(), XXGroup.getName());
-		xGroupPermissionService.getPopulatedVXGroupPermissionList(xgroupPermissionList, xXGroupNameMap, vXModuleDef);
-
-	}
+    @Test
+    public void test2GetPopulatedVXGroupPermissionList() {
+        List<XXGroupPermission> xgroupPermissionList = new ArrayList<>();
+        Map<Long, String>       xXGroupNameMap       = new HashMap<>();
+        xXGroupNameMap.put(xxGroup.getId(), xxGroup.getName());
+        xGroupPermissionService.getPopulatedVXGroupPermissionList(xgroupPermissionList, xXGroupNameMap, vXModuleDef);
+    }
 }

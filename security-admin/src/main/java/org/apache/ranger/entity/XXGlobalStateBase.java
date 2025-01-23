@@ -20,6 +20,7 @@ package org.apache.ranger.entity;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
+
 import java.util.Objects;
 
 @MappedSuperclass
@@ -36,25 +37,36 @@ public abstract class XXGlobalStateBase extends XXDBBase {
     @Column(name = "app_data")
     protected String appData;
 
-    public Long getVersion() { return version; }
-    public String getStateName() { return stateName; }
+    public Long getVersion() {
+        return version;
+    }
+
+    public String getStateName() {
+        return stateName;
+    }
 
     public void setStateName(String stateName) {
         this.stateName = stateName;
     }
 
-    public void setAppData(String appData) {this.appData = appData;}
-    public String getAppData() { return appData; }
+    public String getAppData() {
+        return appData;
+    }
+
+    public void setAppData(String appData) {
+        this.appData = appData;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), version, stateName);
+    }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
@@ -66,11 +78,6 @@ public abstract class XXGlobalStateBase extends XXDBBase {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), version, stateName);
-    }
-
-    @Override
     public String toString() {
         String str = "XXGlobalStateBase={";
         str += super.toString();
@@ -79,4 +86,3 @@ public abstract class XXGlobalStateBase extends XXDBBase {
         return str;
     }
 }
-

@@ -17,35 +17,35 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXPolicyExportAudit
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPolicyExportAuditList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXPolicyExportAudit> vXPolicyExportAudits = new ArrayList<VXPolicyExportAudit>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXPolicyExportAudit> vXPolicyExportAudits = new ArrayList<>();
 
     public VXPolicyExportAuditList() {
-	super();
+        super();
     }
 
     public VXPolicyExportAuditList(List<VXPolicyExportAudit> objList) {
-	super(objList);
-	this.vXPolicyExportAudits = objList;
+        super(objList);
+        this.vXPolicyExportAudits = objList;
     }
 
     /**
@@ -53,7 +53,7 @@ public class VXPolicyExportAuditList extends VList {
      */
     @JsonProperty("vXPolicyExportAudits")
     public List<VXPolicyExportAudit> getVXPolicyExportAudits() {
-	return vXPolicyExportAudits;
+        return vXPolicyExportAudits;
     }
 
     /**
@@ -62,20 +62,19 @@ public class VXPolicyExportAuditList extends VList {
      */
     @JsonProperty("vXPolicyExportAudits")
     public void setVXPolicyExportAudits(List<VXPolicyExportAudit> vXPolicyExportAudits) {
-	this.vXPolicyExportAudits = vXPolicyExportAudits;
+        this.vXPolicyExportAudits = vXPolicyExportAudits;
     }
 
     @Override
     public int getListSize() {
-	if (vXPolicyExportAudits != null) {
-	    return vXPolicyExportAudits.size();
-	}
-	return 0;
+        if (vXPolicyExportAudits != null) {
+            return vXPolicyExportAudits.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXPolicyExportAudit> getList() {
-	return vXPolicyExportAudits;
+        return vXPolicyExportAudits;
     }
-
 }

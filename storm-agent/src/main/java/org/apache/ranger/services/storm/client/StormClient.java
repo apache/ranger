@@ -138,7 +138,7 @@ public class StormClient {
 
     public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) {
         boolean             connectivityStatus = false;
-        Map<String, Object> responseData       = new HashMap<String, Object>();
+        Map<String, Object> responseData       = new HashMap<>();
         StormClient stormClient                = getStormClient(serviceName, configs);
         List<String> strList                   = getStormResources(stormClient, "", null);
 
@@ -255,7 +255,7 @@ public class StormClient {
                 try {
                     if (response != null) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("getTopologyList():response.getStatus()= " + response.getStatus());
+                            LOG.debug("getTopologyList():response.getStatus()= {}", response.getStatus());
                         }
                         if (response.getStatus() == 200) {
                             String               jsonString           = response.getEntity(String.class);
@@ -274,7 +274,7 @@ public class StormClient {
                                         }
                                         if (topologyName != null) {
                                             if (topologyNameMatching == null || topologyNameMatching.isEmpty() || FilenameUtils.wildcardMatch(topology.getName(), topologyNameMatching + "*")) {
-                                                LOG.debug("getTopologyList():Adding topology " + topologyName);
+                                                LOG.debug("getTopologyList():Adding topology {}", topologyName);
                                                 lret.add(topologyName);
                                             }
                                         }

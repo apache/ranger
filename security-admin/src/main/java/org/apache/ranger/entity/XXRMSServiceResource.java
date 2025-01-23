@@ -31,225 +31,186 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
-@Table(name="x_rms_service_resource")
+@Table(name = "x_rms_service_resource")
 public class XXRMSServiceResource extends XXDBBase {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name = "X_RMS_SERVICE_RESOURCE_SEQ", sequenceName = "X_RMS_SERVICE_RESOURCE_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RMS_SERVICE_RESOURCE_SEQ")
-	@Column(name = "id")
-	protected Long id;
+    @Id
+    @SequenceGenerator(name = "X_RMS_SERVICE_RESOURCE_SEQ", sequenceName = "X_RMS_SERVICE_RESOURCE_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_RMS_SERVICE_RESOURCE_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	@Column(name = "guid", unique = true, nullable = false, length = 512)
-	protected String guid;
+    @Column(name = "guid", unique = true, nullable = false, length = 512)
+    protected String guid;
 
-	@Version
-	@Column(name = "version")
-	protected Long version;
+    @Version
+    @Column(name = "version")
+    protected Long version;
 
-	@Column(name = "is_enabled")
-	protected Boolean isEnabled;
+    @Column(name = "is_enabled")
+    protected Boolean isEnabled;
 
-	@Column(name = "resource_signature")
-	protected String resourceSignature;
+    @Column(name = "resource_signature")
+    protected String resourceSignature;
 
-	@Column(name = "service_id")
-	protected Long serviceId;
+    @Column(name = "service_id")
+    protected Long serviceId;
 
-	@Column(name = "service_resource_elements_text")
-	protected String serviceResourceElements;
+    @Column(name = "service_resource_elements_text")
+    protected String serviceResourceElements;
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * @return the guid
+     */
+    public String getGuid() {
+        return guid;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    /**
+     * @param guid the guid to set
+     */
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
 
-	/**
-	 * @return the guid
-	 */
-	public String getGuid() {
-		return guid;
-	}
+    /**
+     * @return the serviceId
+     */
+    public Long getServiceId() {
+        return serviceId;
+    }
 
-	/**
-	 * @param guid
-	 *            the guid to set
-	 */
-	public void setGuid(String guid) {
-		this.guid = guid;
-	}
+    /**
+     * @param serviceId the serviceId to set
+     */
+    public void setServiceId(Long serviceId) {
+        this.serviceId = serviceId;
+    }
 
-	/**
-	 * @return the serviceId
-	 */
-	public Long getServiceId() {
-		return serviceId;
-	}
+    /**
+     * @return the resourceSignature
+     */
+    public String getResourceSignature() {
+        return resourceSignature;
+    }
 
-	/**
-	 * @param serviceId
-	 *            the serviceId to set
-	 */
-	public void setServiceId(Long serviceId) {
-		this.serviceId = serviceId;
-	}
+    /**
+     * @param resourceSignature the resourceSignature to set
+     */
+    public void setResourceSignature(String resourceSignature) {
+        this.resourceSignature = resourceSignature;
+    }
 
-	/**
-	 * @return the resourceSignature
-	 */
-	public String getResourceSignature() {
-		return resourceSignature;
-	}
+    /**
+     * @return the version
+     */
+    public Long getVersion() {
+        return version;
+    }
 
-	/**
-	 * @param resourceSignature
-	 *            the resourceSignature to set
-	 */
-	public void setResourceSignature(String resourceSignature) {
-		this.resourceSignature = resourceSignature;
-	}
+    /**
+     * @param version the version to set
+     */
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
-	/**
-	 * @return the version
-	 */
-	public Long getVersion() {
-		return version;
-	}
+    /**
+     * @return the isEnabled
+     */
+    public Boolean getIsEnabled() {
+        return isEnabled;
+    }
 
-	/**
-	 * @param version
-	 *            the version to set
-	 */
-	public void setVersion(Long version) {
-		this.version = version;
-	}
+    /**
+     * @param isEnabled the isEnabled to set
+     */
+    public void setIsEnabled(Boolean isEnabled) {
+        this.isEnabled = isEnabled;
+    }
 
-	/**
-	 * @return the isEnabled
-	 */
-	public Boolean getIsEnabled() {
-		return isEnabled;
-	}
+    public String getServiceResourceElements() {
+        return serviceResourceElements;
+    }
 
-	/**
-	 * @param isEnabled
-	 *            the isEnabled to set
-	 */
-	public void setIsEnabled(Boolean isEnabled) {
-		this.isEnabled = isEnabled;
-	}
+    public void setServiceResourceElements(String serviceResourceElements) {
+        this.serviceResourceElements = serviceResourceElements;
+    }
 
-	public String getServiceResourceElements() { return serviceResourceElements; }
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_RMS_SERVICE_RESOURCE;
+    }
 
-	public void setServiceResourceElements(String serviceResourceElements) {
-		this.serviceResourceElements = serviceResourceElements;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_RMS_SERVICE_RESOURCE;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((guid == null) ? 0 : guid.hashCode());
-		result = prime * result + ((version == null) ? 0 : version.hashCode());
-		result = prime * result + ((isEnabled == null) ? 0 : isEnabled.hashCode());
-		result = prime * result + ((resourceSignature == null) ? 0 : resourceSignature.hashCode());
-		result = prime * result + ((serviceId == null) ? 0 : serviceId.hashCode());
-		result = prime * result + ((serviceResourceElements == null) ? 0 : serviceResourceElements.hashCode());
-		return result;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, guid, version, isEnabled, resourceSignature, serviceId, serviceResourceElements);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		XXRMSServiceResource other = (XXRMSServiceResource) obj;
-		if (resourceSignature == null) {
-			if (other.resourceSignature != null)
-				return false;
-		} else if (!resourceSignature.equals(other.resourceSignature))
-			return false;
-		if (guid == null) {
-			if (other.guid != null)
-				return false;
-		} else if (!guid.equals(other.guid))
-			return false;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		if (isEnabled == null) {
-			if (other.isEnabled != null)
-				return false;
-		} else if (!isEnabled.equals(other.isEnabled))
-			return false;
-		if (serviceId == null) {
-			if (other.serviceId != null)
-				return false;
-		} else if (!serviceId.equals(other.serviceId))
-			return false;
-		if (version == null) {
-			if (other.version != null)
-				return false;
-		} else if (!version.equals(other.version))
-			return false;
-		if (serviceResourceElements == null) {
-			if (other.serviceResourceElements != null)
-				return false;
-		} else if (!serviceResourceElements.equals(other.serviceResourceElements))
-			return false;
-		return true;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		toString(sb);
-		return sb.toString();
-	}
+        XXRMSServiceResource other = (XXRMSServiceResource) obj;
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("{ ");
-		sb.append("id={").append(id).append("} ");
-		sb.append("guid={").append(guid).append("} ");
-		sb.append("version={").append(version).append("} ");
-		sb.append("isEnabled={").append(isEnabled).append("} ");
-		sb.append("resourceSignature={").append(resourceSignature).append("} ");
-		sb.append("serviceId={").append(serviceId).append("} ");
-		sb.append("serviceResourceElements={").append(serviceResourceElements).append("} ");
-		sb.append(" }");
+        return Objects.equals(resourceSignature, other.resourceSignature) &&
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(isEnabled, other.isEnabled) &&
+                Objects.equals(serviceId, other.serviceId) &&
+                Objects.equals(version, other.version) &&
+                Objects.equals(serviceResourceElements, other.serviceResourceElements);
+    }
 
-		return sb;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        toString(sb);
+        return sb.toString();
+    }
 
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("{ ");
+        sb.append("id={").append(id).append("} ");
+        sb.append("guid={").append(guid).append("} ");
+        sb.append("version={").append(version).append("} ");
+        sb.append("isEnabled={").append(isEnabled).append("} ");
+        sb.append("resourceSignature={").append(resourceSignature).append("} ");
+        sb.append("serviceId={").append(serviceId).append("} ");
+        sb.append("serviceResourceElements={").append(serviceResourceElements).append("} ");
+        sb.append(" }");
+
+        return sb;
+    }
 }

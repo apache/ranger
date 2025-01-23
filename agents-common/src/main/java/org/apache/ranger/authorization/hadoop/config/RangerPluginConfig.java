@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class RangerPluginConfig extends RangerConfiguration {
@@ -62,6 +63,10 @@ public class RangerPluginConfig extends RangerConfiguration {
     private       Set<String>               serviceAdmins       = Collections.emptySet();
 
     public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, RangerPolicyEngineOptions policyEngineOptions) {
+        this(serviceType, serviceName, appId, clusterName, clusterType, null, policyEngineOptions);
+    }
+
+    public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, List<File> additionalConfigFiles, RangerPolicyEngineOptions policyEngineOptions) {
         super();
 
         addResourcesForServiceType(serviceType);
@@ -72,6 +77,16 @@ public class RangerPluginConfig extends RangerConfiguration {
         this.serviceName    = StringUtils.isEmpty(serviceName) ? this.get(propertyPrefix + ".service.name") : serviceName;
 
         addResourcesForServiceName(this.serviceType, this.serviceName);
+
+        if (additionalConfigFiles != null) {
+            for (File configFile : additionalConfigFiles) {
+                try {
+                    addResource(configFile.toURI().toURL());
+                } catch (Throwable t) {
+                    LOG.warn("failed to load configurations from {}", configFile, t);
+                }
+            }
+        }
 
         String trustedProxyAddressString = this.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 

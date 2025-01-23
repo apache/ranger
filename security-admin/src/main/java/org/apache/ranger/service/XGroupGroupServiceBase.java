@@ -17,63 +17,58 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
-/**
- *
- */
-
-import java.util.ArrayList;
-import java.util.List;
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXGroupGroup;
 import org.apache.ranger.view.VXGroupGroup;
 import org.apache.ranger.view.VXGroupGroupList;
 
-public abstract class XGroupGroupServiceBase<T extends XXGroupGroup, V extends VXGroupGroup>
-		extends AbstractBaseResourceService<T, V> {
-	public static final String NAME = "XGroupGroup";
+import java.util.ArrayList;
+import java.util.List;
 
-	public XGroupGroupServiceBase() {
+public abstract class XGroupGroupServiceBase<T extends XXGroupGroup, V extends VXGroupGroup> extends AbstractBaseResourceService<T, V> {
+    public static final String NAME = "XGroupGroup";
 
-	}
+    public XGroupGroupServiceBase() {
+    }
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
-		mObj.setName( vObj.getName());
-		mObj.setParentGroupId( vObj.getParentGroupId());
-		mObj.setGroupId( vObj.getGroupId());
-		return mObj;
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXGroupGroupList searchXGroupGroups(SearchCriteria searchCriteria) {
+        VXGroupGroupList   returnList      = new VXGroupGroupList();
+        List<VXGroupGroup> xGroupGroupList = new ArrayList<>();
+        List<T>            resultList      = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		vObj.setName( mObj.getName());
-		vObj.setParentGroupId( mObj.getParentGroupId());
-		vObj.setGroupId( mObj.getGroupId());
-		return vObj;
-	}
+        // Iterate over the result list and create the return list
+        for (T gjXGroupGroup : resultList) {
+            V vXGroupGroup = populateViewBean(gjXGroupGroup);
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXGroupGroupList searchXGroupGroups(SearchCriteria searchCriteria) {
-		VXGroupGroupList returnList = new VXGroupGroupList();
-		List<VXGroupGroup> xGroupGroupList = new ArrayList<VXGroupGroup>();
+            xGroupGroupList.add(vXGroupGroup);
+        }
 
-		List<T> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+        returnList.setVXGroupGroups(xGroupGroupList);
 
-		// Iterate over the result list and create the return list
-		for (T gjXGroupGroup : resultList) {
-			V vXGroupGroup = populateViewBean(gjXGroupGroup);
-			xGroupGroupList.add(vXGroupGroup);
-		}
+        return returnList;
+    }
 
-		returnList.setVXGroupGroups(xGroupGroupList);
-		return returnList;
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        mObj.setName(vObj.getName());
+        mObj.setParentGroupId(vObj.getParentGroupId());
+        mObj.setGroupId(vObj.getGroupId());
 
+        return mObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        vObj.setName(mObj.getName());
+        vObj.setParentGroupId(mObj.getParentGroupId());
+        vObj.setGroupId(mObj.getGroupId());
+
+        return vObj;
+    }
 }

@@ -369,11 +369,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   })
                 )
               : !isEmpty(filterdiff)
-              ? filterdiff.map((obj) => obj).join(", ")
-              : "--"
+                ? filterdiff.map((obj) => obj).join(", ")
+                : "--"
             : !isEmpty(oldvals)
-            ? oldvals.values.map((obj) => obj).join(", ")
-            : "--"}
+              ? oldvals.values.map((obj) => obj).join(", ")
+              : "--"}
         </>
       );
     };
@@ -408,11 +408,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   })
                 )
               : !isEmpty(filterdiff)
-              ? filterdiff.map((obj) => obj).join(", ")
-              : "--"
+                ? filterdiff.map((obj) => obj).join(", ")
+                : "--"
             : !isEmpty(newvals)
-            ? newvals.values.map((obj) => obj).join(", ")
-            : "--"}
+              ? newvals.values.map((obj) => obj).join(", ")
+              : "--"}
         </>
       );
     };
@@ -1059,8 +1059,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
             })
           )
         : filterdiff[index]?.permissions !== undefined
-        ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
-        : "<empty>";
+          ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
+          : "<empty>";
     };
 
     const getMaskingLabel = (DataMasklabel, dataMaskInfo, index) => {
@@ -1377,8 +1377,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
             })
           )
         : filterdiff[index]?.permissions !== undefined
-        ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
-        : "<empty>";
+          ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
+          : "<empty>";
     };
 
     const getMaskingLabel = (DataMasklabel, dataMaskInfo, index) => {

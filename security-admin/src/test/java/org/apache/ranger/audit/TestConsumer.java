@@ -19,9 +19,6 @@
 
 package org.apache.ranger.audit;
 
-import java.util.Collection;
-import java.util.Properties;
-
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -29,184 +26,181 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Properties;
+
 public class TestConsumer extends AuditDestination {
-	private static final Logger logger = LoggerFactory.getLogger(TestConsumer.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestConsumer.class);
 
-	int countTotal = 0;
-	int sumTotal = 0;
-	int batchCount = 0;
-	AuthzAuditEvent lastEvent = null;
-	AuthzAuditEvent lastOutOfSeqEvent = null;
-	String providerName = getClass().getName();
-	boolean isDown = false;
+    String          providerName  = getClass().getName();
+    int             countTotal;
+    int             sumTotal;
+    int             batchCount;
+    AuthzAuditEvent lastEvent;
+    AuthzAuditEvent lastOutOfSeqEvent;
+    boolean         isDown;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger
-	 * .audit.model.AuditEventBase)
-	 */
-	@Override
-	public boolean log(AuditEventBase event) {
-		if (isDown) {
-			return false;
-		}
-		countTotal++;
-		if (event instanceof AuthzAuditEvent) {
-			AuthzAuditEvent azEvent = (AuthzAuditEvent) event;
-			sumTotal += azEvent.getEventCount();
-			logger.info("EVENT:" + event);
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#log(org.apache.ranger
+     * .audit.model.AuditEventBase)
+     */
+    @Override
+    public boolean log(AuditEventBase event) {
+        if (isDown) {
+            return false;
+        }
+        countTotal++;
+        if (event instanceof AuthzAuditEvent) {
+            AuthzAuditEvent azEvent = (AuthzAuditEvent) event;
+            sumTotal += azEvent.getEventCount();
+            logger.info("EVENT: {}", event);
 
-			processEvent(azEvent);
-		}
-		return true;
-	}
+            processEvent(azEvent);
+        }
+        return true;
+    }
 
-	@Override
-	public boolean log(Collection<AuditEventBase> events) {
-		if (isDown) {
-			return false;
-		}
-		batchCount++;
-		for (AuditEventBase event : events) {
-			log(event);
-		}
-		return true;
-	}
+    @Override
+    public boolean logJSON(String jsonStr) {
+        if (isDown) {
+            return false;
+        }
+        countTotal++;
+        AuthzAuditEvent event = MiscUtil.fromJson(jsonStr, AuthzAuditEvent.class);
+        sumTotal += event.getEventCount();
+        logger.info("JSON: {}", jsonStr);
+        processEvent(event);
+        return true;
+    }
 
-	@Override
-	public boolean logJSON(String jsonStr) {
-		if (isDown) {
-			return false;
-		}
-		countTotal++;
-		AuthzAuditEvent event = MiscUtil.fromJson(jsonStr,
-				AuthzAuditEvent.class);
-		sumTotal += event.getEventCount();
-		logger.info("JSON:" + jsonStr);
-		processEvent(event);
-		return true;
-	}
+    @Override
+    public boolean logJSON(Collection<String> events) {
+        if (isDown) {
+            return false;
+        }
+        batchCount++;
+        for (String event : events) {
+            logJSON(event);
+        }
+        return true;
+    }
 
-	@Override
-	public boolean logJSON(Collection<String> events) {
-		if (isDown) {
-			return false;
-		}
-		batchCount++;
-		for (String event : events) {
-			logJSON(event);
-		}
-		return true;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties)
+     */
+    @Override
+    public void init(Properties prop) {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties
-	 * )
-	 */
-	@Override
-	public void init(Properties prop) {
-		// Nothing to do here
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#getName()
+     */
+    @Override
+    public String getName() {
+        return providerName;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#start()
-	 */
-	@Override
-	public void start() {
-		// Nothing to do here
-	}
+    @Override
+    public boolean log(Collection<AuditEventBase> events) {
+        if (isDown) {
+            return false;
+        }
+        batchCount++;
+        for (AuditEventBase event : events) {
+            log(event);
+        }
+        return true;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#stop()
-	 */
-	@Override
-	public void stop() {
-		// Nothing to do here
-	}
+    public int getCountTotal() {
+        return countTotal;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete()
-	 */
-	@Override
-	public void waitToComplete() {
-	}
+    public int getSumTotal() {
+        return sumTotal;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#flush()
-	 */
-	@Override
-	public void flush() {
-		// Nothing to do here
-	}
+    public int getBatchCount() {
+        return batchCount;
+    }
 
-	public int getCountTotal() {
-		return countTotal;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties
+     * , java.lang.String)
+     */
+    @Override
+    public void init(Properties prop, String basePropertyName) {
+    }
 
-	public int getSumTotal() {
-		return sumTotal;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#start()
+     */
+    @Override
+    public void start() {
+        // Nothing to do here
+    }
 
-	public int getBatchCount() {
-		return batchCount;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#stop()
+     */
+    @Override
+    public void stop() {
+        // Nothing to do here
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties
-	 * , java.lang.String)
-	 */
-	@Override
-	public void init(Properties prop, String basePropertyName) {
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete()
+     */
+    @Override
+    public void waitToComplete() {
+    }
 
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete(long)
+     */
+    @Override
+    public void waitToComplete(long timeout) {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#waitToComplete(long)
-	 */
-	@Override
-	public void waitToComplete(long timeout) {
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#flush()
+     */
+    @Override
+    public void flush() {
+    }
 
-	}
+    // Local methods
+    public AuthzAuditEvent isInSequence() {
+        return lastOutOfSeqEvent;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#getName()
-	 */
-	@Override
-	public String getName() {
-		return providerName;
-	}
-
-	// Local methods
-	public AuthzAuditEvent isInSequence() {
-		return lastOutOfSeqEvent;
-	}
-
-	private void processEvent(AuthzAuditEvent azEvent) {
-		if (lastEvent == null) {
-			lastEvent = azEvent;
-		} else if (lastOutOfSeqEvent == null) {
-			if (azEvent.getSeqNum() <= lastEvent.getSeqNum()) {
-				lastOutOfSeqEvent = azEvent;
-			}
-		}
-	}
+    private void processEvent(AuthzAuditEvent azEvent) {
+        if (lastEvent == null) {
+            lastEvent = azEvent;
+        } else if (lastOutOfSeqEvent == null) {
+            if (azEvent.getSeqNum() <= lastEvent.getSeqNum()) {
+                lastOutOfSeqEvent = azEvent;
+            }
+        }
+    }
 }

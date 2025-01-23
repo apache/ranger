@@ -17,20 +17,21 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.security.context;
 
-import java.io.Serializable;
-
 import org.apache.ranger.common.RequestContext;
 import org.apache.ranger.common.UserSessionBase;
 
-public class RangerSecurityContext implements Serializable{
+import java.io.Serializable;
+
+public class RangerSecurityContext implements Serializable {
     private static final long serialVersionUID = 1L;
+
     private UserSessionBase userSession;
-    private RequestContext requestContext;
+    private RequestContext  requestContext;
 
     public UserSessionBase getUserSession() {
         return userSession;
@@ -53,6 +54,4 @@ public class RangerSecurityContext implements Serializable{
     public void setRequestContext(RequestContext requestContext) {
         this.requestContext = requestContext;
     }
-
-
 }

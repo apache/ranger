@@ -19,19 +19,18 @@
 
 package org.apache.ranger.entity;
 
+import org.apache.ranger.common.AppConstants;
+
 import javax.persistence.Entity;
 import javax.persistence.Table;
-
-import org.apache.ranger.common.AppConstants;
 
 @Entity
 @Table(name = "xa_access_audit")
 public class XXAccessAuditV4 extends XXAccessAuditBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_XA_ACCESS_AUDIT_V4;
-	}
-
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_ACCESS_AUDIT_V4;
+    }
 }

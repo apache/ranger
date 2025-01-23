@@ -49,6 +49,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosTicket;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.PrivilegedActionException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -319,32 +320,30 @@ public class ElasticSearchAuditDestination extends AuditDestination {
     }
 
     private RestHighLevelClient newClient() {
+        RestHighLevelClient restHighLevelClient = null;
+
         try {
             if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password) && password.contains("keytab") && new File(password).exists()) {
                 subject = CredentialsProviderUtil.login(user, password);
             }
 
             RestClientBuilder restClientBuilder = getRestClientBuilder(hosts, protocol, user, password, port);
+            restHighLevelClient = new RestHighLevelClient(restClientBuilder);
+            boolean exists = false;
 
-            try (RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClientBuilder)) {
-                LOG.debug("Initialized client");
-
-                boolean exists = false;
-
-                try {
-                    exists = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
-                } catch (Exception e) {
-                    LOG.warn("Error validating index {}", this.index);
-                }
-
-                if (exists) {
-                    LOG.debug("Index exists");
-                } else {
-                    LOG.info("Index does not exist");
-                }
-
-                return restHighLevelClient;
+            try {
+                exists = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
+            } catch (Exception e) {
+                LOG.warn("Error validating index {}", this.index);
             }
+
+            if (exists) {
+                LOG.debug("Index exists");
+            } else {
+                LOG.info("Index does not exist");
+            }
+
+            return restHighLevelClient;
         } catch (Throwable t) {
             lastLoggedAt.updateAndGet(lastLoggedAt -> {
                 long now     = System.currentTimeMillis();
@@ -358,6 +357,16 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                     return lastLoggedAt;
                 }
             });
+
+            if (restHighLevelClient != null) {
+                try {
+                    restHighLevelClient.close();
+                    LOG.debug("Closed RestHighLevelClient after failure");
+                } catch (IOException e) {
+                    LOG.warn("Error closing RestHighLevelClient: {}", e.getMessage(), e);
+                }
+            }
+
             return null;
         }
     }

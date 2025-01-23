@@ -18,9 +18,6 @@
  */
 package org.apache.ranger.service;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchUtil;
@@ -40,73 +37,73 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestXAccessAuditService {
+    @InjectMocks
+    XAccessAuditService xAccessAuditService;
 
-	@InjectMocks
-	XAccessAuditService xAccessAuditService;
+    @Mock
+    SearchCriteria searchCriteria;
 
-	@Mock
-	SearchCriteria searchCriteria;
+    @Mock
+    SearchUtil searchUtil;
 
-	@Mock
-	SearchUtil searchUtil;
+    @Mock
+    SortField sortField;
 
-	@Mock
-	SortField sortField;
+    @Mock
+    SearchField searchField;
 
-	@Mock
-	SearchField searchField;
+    @Mock
+    BaseDao entityDao;
 
-	@Mock
-	BaseDao entityDao;
+    @Mock
+    Query query;
 
-	@Mock
-	Query query;
+    @Mock
+    VList vList;
 
-	@Mock
-	VList vList;
+    @Mock
+    XXAccessAudit xXAccessAudit;
 
-	@Mock
-	XXAccessAudit xXAccessAudit;
+    @Mock
+    VXAccessAuditList vXAccessAuditList;
 
-	@Mock
-	VXAccessAuditList vXAccessAuditList;
+    @Mock
+    EntityManager em;
 
-	@Mock
-	EntityManager em;
+    @Mock
+    RangerDaoManager daoManager;
 
-	@Mock
-	RangerDaoManager daoManager;
+    @Mock
+    XXServiceDao xXServiceDao;
 
-	@Mock
-	XXServiceDao xXServiceDao;
+    @Test
+    public void test1SearchXAccessAudits() {
+        SearchCriteria testSearchCriteria = createsearchCriteria();
+        xAccessAuditService.searchXAccessAudits(testSearchCriteria);
+    }
 
-	@Test
-	public void test1SearchXAccessAudits() {
-		SearchCriteria testSearchCriteria = createsearchCriteria();
-		xAccessAuditService.searchXAccessAudits(testSearchCriteria);
+    @Test
+    public void test2PopulateViewBean() {
+        Mockito.when(daoManager.getXXService()).thenReturn(xXServiceDao);
+        xAccessAuditService.populateViewBean(xXAccessAudit);
+    }
 
-	}
-
-	@Test
-	public void test2PopulateViewBean() {
-		Mockito.when(daoManager.getXXService()).thenReturn(xXServiceDao);
-		xAccessAuditService.populateViewBean(xXAccessAudit);
-
-	}
-
-	private SearchCriteria createsearchCriteria() {
-		SearchCriteria testsearchCriteria = new SearchCriteria();
-		testsearchCriteria.setStartIndex(0);
-		testsearchCriteria.setMaxRows(Integer.MAX_VALUE);
-		testsearchCriteria.setSortBy("id");
-		testsearchCriteria.setSortType("asc");
-		testsearchCriteria.setGetCount(true);
-		testsearchCriteria.setOwnerId(null);
-		testsearchCriteria.setGetChildren(false);
-		testsearchCriteria.setDistinct(false);
-		return testsearchCriteria;
-	}
+    private SearchCriteria createsearchCriteria() {
+        SearchCriteria testsearchCriteria = new SearchCriteria();
+        testsearchCriteria.setStartIndex(0);
+        testsearchCriteria.setMaxRows(Integer.MAX_VALUE);
+        testsearchCriteria.setSortBy("id");
+        testsearchCriteria.setSortType("asc");
+        testsearchCriteria.setGetCount(true);
+        testsearchCriteria.setOwnerId(null);
+        testsearchCriteria.setGetChildren(false);
+        testsearchCriteria.setDistinct(false);
+        return testsearchCriteria;
+    }
 }

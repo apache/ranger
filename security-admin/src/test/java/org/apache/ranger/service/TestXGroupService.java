@@ -19,9 +19,16 @@
 package org.apache.ranger.service;
 
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXPortalUserDao;
+import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXPortalUser;
+import org.apache.ranger.util.RangerEnumUtil;
+import org.apache.ranger.view.VXGroup;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,16 +37,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.apache.ranger.entity.XXDBBase;
-import org.apache.ranger.entity.XXGroup;
-import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.util.RangerEnumUtil;
-import org.apache.ranger.view.VXGroup;
 
 import java.util.Date;
-
-import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.db.BaseDao;
 
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_CONTEXT;
@@ -47,122 +46,120 @@ import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_
 @RunWith(MockitoJUnitRunner.Silent.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestXGroupService {
+    @InjectMocks
+    XGroupService xGroupService;
 
-	@InjectMocks
-	XGroupService XGroupService;
+    @Mock
+    RangerDaoManager daoManager;
 
-	@Mock
-	RangerDaoManager daoManager;
+    @Mock
+    XXGroupDao xXGroupDao;
 
-	@Mock
-	XXGroupDao xXGroupDao;
+    @Mock
+    XXGroup resource;
 
-	@Mock
-	XXGroup resource;
+    @Mock
+    VXGroup vxGroup;
 
-	@Mock
-	VXGroup vxGroup;
+    @Mock
+    XXPortalUserDao xXPortalUserDao;
 
-	@Mock
-	XXPortalUserDao xXPortalUserDao;
+    @Mock
+    BaseDao entityDao;
 
-	@Mock
-	BaseDao entityDao;
+    @Mock
+    XXDBBase xXDBBase;
 
-	@Mock
-	XXDBBase xXDBBase;
+    @Mock
+    XXPortalUser tUser;
 
-	@Mock
-	XXPortalUser tUser;
+    @Mock
+    RangerEnumUtil xaEnumUtil;
 
-	@Mock
-	RangerEnumUtil xaEnumUtil;
+    @Mock
+    StringUtil stringUtil;
 
-	@Mock
-	StringUtil stringUtil;
+    @Mock
+    RangerBizUtil bizUtil;
 
-	@Mock
-	RangerBizUtil bizUtil;
+    @Mock
+    AbstractBaseResourceService abstractBaseResourceService;
 
-	@Mock
-	AbstractBaseResourceService abstractBaseResourceService;
+    @Test
+    public void test1GetGroupByGroupName() {
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+        XXGroup xxGroup = createXXGroup();
+        Mockito.when(xXGroupDao.findByGroupName(xxGroup.getName())).thenReturn(xxGroup);
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        Mockito.when(xXPortalUserDao.getById(xxGroup.getAddedByUserId())).thenReturn(tUser);
+        xGroupService.getGroupByGroupName(xxGroup.getName());
+    }
 
-	@Test
-	public void test1GetGroupByGroupName() {
-		Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
-		XXGroup xxGroup = createXXGroup();
-		Mockito.when(xXGroupDao.findByGroupName(xxGroup.getName())).thenReturn(xxGroup);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
-		Mockito.when(xXPortalUserDao.getById(xxGroup.getAddedByUserId())).thenReturn(tUser);
-		XGroupService.getGroupByGroupName(xxGroup.getName());
-	}
+    @Test
+    public void test2CreateXGroupWithOutLogin() {
+        VXGroup vxGroup = createvXGroup();
+        Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
+        XXGroup resource = createXXGroup();
+        Mockito.when(xXGroupDao.findByGroupName(vxGroup.getName())).thenReturn(resource);
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        Mockito.when(xXPortalUserDao.getById(1L)).thenReturn(tUser);
+        Mockito.when(entityDao.update(resource)).thenReturn(resource);
+        xGroupService.createXGroupWithOutLogin(vxGroup);
+    }
 
-	@Test
-	public void test2CreateXGroupWithOutLogin() {
-		VXGroup vxGroup = createvXGroup();
-		Mockito.when(daoManager.getXXGroup()).thenReturn(xXGroupDao);
-		XXGroup resource = createXXGroup();
-		Mockito.when(xXGroupDao.findByGroupName(vxGroup.getName())).thenReturn(resource);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
-		Mockito.when(xXPortalUserDao.getById(1l)).thenReturn(tUser);
-		Mockito.when(entityDao.update(resource)).thenReturn(resource);
-		XGroupService.createXGroupWithOutLogin(vxGroup);
-	}
+    @Test
+    public void test3ReadResourceWithOutLogin() {
+        XXGroup resource = createXXGroup();
+        Mockito.when(entityDao.getById(resource.getId())).thenReturn(resource);
+        Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        Mockito.when(xXPortalUserDao.getById(resource.getAddedByUserId())).thenReturn(tUser);
+        xGroupService.readResourceWithOutLogin(resource.getId());
+    }
 
-	@Test
-	public void test3ReadResourceWithOutLogin() {
-		XXGroup resource = createXXGroup();
-		Mockito.when(entityDao.getById(resource.getId())).thenReturn(resource);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
-		Mockito.when(xXPortalUserDao.getById(resource.getAddedByUserId())).thenReturn(tUser);
-		XGroupService.readResourceWithOutLogin(resource.getId());
-	}
+    @Test
+    public void test4GetTransactionLog() {
+        VXGroup vObj = createvXGroup();
+        xGroupService.createTransactionLog(vObj, null, OPERATION_UPDATE_CONTEXT);
+    }
 
-	@Test
-	public void test4GetTransactionLog() {
-		VXGroup vObj = createvXGroup();
-		XGroupService.createTransactionLog(vObj, null, OPERATION_UPDATE_CONTEXT);
-	}
+    @Test
+    public void test5GetTransactionLog() {
+        VXGroup vObj = createvXGroup();
 
-	@Test
-	public void test5GetTransactionLog() {
-		VXGroup vObj = createvXGroup();
+        xGroupService.createTransactionLog(vObj, null, OPERATION_CREATE_CONTEXT);
+    }
 
-		XGroupService.createTransactionLog(vObj, null, OPERATION_CREATE_CONTEXT);
-	}
+    public VXGroup createvXGroup() {
+        VXGroup vXGroup = new VXGroup();
+        Date    date    = new Date();
+        vXGroup.setCreateDate(date);
+        vXGroup.setCredStoreId(1L);
+        vXGroup.setDescription("this is test description");
+        vXGroup.setGroupSource(0);
+        vXGroup.setGroupType(1);
+        vXGroup.setId(1L);
+        vXGroup.setIsVisible(1);
+        vXGroup.setName("testGroup");
+        vXGroup.setMObj(xXDBBase);
+        vXGroup.setOwner("admin");
+        vXGroup.setUpdateDate(date);
+        vXGroup.setUpdatedBy("admin");
+        return vXGroup;
+    }
 
-	public VXGroup createvXGroup() {
-		VXGroup vXGroup = new VXGroup();
-		Date date = new Date();
-		vXGroup.setCreateDate(date);
-		vXGroup.setCredStoreId(1L);
-		vXGroup.setDescription("this is test description");
-		vXGroup.setGroupSource(0);
-		vXGroup.setGroupType(1);
-		vXGroup.setId(1L);
-		vXGroup.setIsVisible(1);
-		vXGroup.setName("testGroup");
-		vXGroup.setMObj(xXDBBase);
-		vXGroup.setOwner("admin");
-		vXGroup.setUpdateDate(date);
-		vXGroup.setUpdatedBy("admin");
-		return vXGroup;
-	}
-
-	private XXGroup createXXGroup() {
-		XXGroup xXGroup = new XXGroup();
-		Date date = new Date();
-		xXGroup.setAddedByUserId(1L);
-		xXGroup.setCreateTime(date);
-		xXGroup.setCredStoreId(1L);
-		xXGroup.setDescription("this is test description");
-		xXGroup.setGroupSource(0);
-		xXGroup.setGroupType(1);
-		xXGroup.setId(1L);
-		xXGroup.setIsVisible(1);
-		xXGroup.setName("testGroup");
-		xXGroup.setUpdateTime(date);
-		return xXGroup;
-	}
-
+    private XXGroup createXXGroup() {
+        XXGroup xXGroup = new XXGroup();
+        Date    date    = new Date();
+        xXGroup.setAddedByUserId(1L);
+        xXGroup.setCreateTime(date);
+        xXGroup.setCredStoreId(1L);
+        xXGroup.setDescription("this is test description");
+        xXGroup.setGroupSource(0);
+        xXGroup.setGroupType(1);
+        xXGroup.setId(1L);
+        xXGroup.setIsVisible(1);
+        xXGroup.setName("testGroup");
+        xXGroup.setUpdateTime(date);
+        return xXGroup;
+    }
 }

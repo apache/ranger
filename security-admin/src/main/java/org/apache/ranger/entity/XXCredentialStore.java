@@ -17,12 +17,13 @@
  * under the License.
  */
 
- package org.apache.ranger.entity;
+package org.apache.ranger.entity;
 
 /**
  * Credential Store
- *
  */
+
+import org.apache.ranger.common.AppConstants;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -32,134 +33,143 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.apache.ranger.common.AppConstants;
-
+import java.util.Objects;
 
 @Entity
-@Table(name="x_cred_store")
+@Table(name = "x_cred_store")
 public class XXCredentialStore extends XXDBBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name="X_CRED_STORE_SEQ",sequenceName="X_CRED_STORE_SEQ",allocationSize=1)
-	@GeneratedValue(strategy=GenerationType.AUTO,generator="X_CRED_STORE_SEQ")
-	@Column(name="ID")
-	protected Long id;
+    @Id
+    @SequenceGenerator(name = "X_CRED_STORE_SEQ", sequenceName = "X_CRED_STORE_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_CRED_STORE_SEQ")
+    @Column(name = "ID")
+    protected Long id;
 
-	@Override
-	public void setId(Long id) {
-		this.id=id;
-	}
-	@Override
-	public Long getId() {
-		return id;
-	}
-	/**
-	 * Name
-	 * <ul>
-	 * <li>The maximum length for this attribute is <b>1024</b>.
-	 * </ul>
-	 *
-	 */
-	@Column(name="STORE_NAME"  , nullable=false , length=1024)
-	protected String name;
+    /**
+     * Name
+     * <ul>
+     * <li>The maximum length for this attribute is <b>1024</b>.
+     * </ul>
+     */
+    @Column(name = "STORE_NAME", nullable = false, length = 1024)
+    protected String name;
 
-	/**
-	 * Description
-	 * <ul>
-	 * <li>The maximum length for this attribute is <b>4000</b>.
-	 * </ul>
-	 *
-	 */
-	@Column(name="DESCR"  , nullable=false , length=4000)
-	protected String description;
+    /**
+     * Description
+     * <ul>
+     * <li>The maximum length for this attribute is <b>4000</b>.
+     * </ul>
+     */
+    @Column(name = "DESCR", nullable = false, length = 4000)
+    protected String description;
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public XXCredentialStore ( ) {
-	}
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public XXCredentialStore() {
+    }
 
-	@Override
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_XA_CRED_STORE;
-	}
+    public static String getEnumName(String fieldName) {
+        //Later TODO
+        //return super.getEnumName(fieldName);
+        return null;
+    }
 
-	@Override
-	public String getMyDisplayValue() {
-		return getDescription( );
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_CRED_STORE;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>name</b>.
-	 * You cannot set null to the attribute.
-	 * @param name Value to set member attribute <b>name</b>
-	 */
-	public void setName( String name ) {
-		this.name = name;
-	}
+    @Override
+    public String getMyDisplayValue() {
+        return getDescription();
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>name</b>
-	 * @return String - value of member attribute <b>name</b>.
-	 */
-	public String getName( ) {
-		return this.name;
-	}
+    @Override
+    public Long getId() {
+        return id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>description</b>.
-	 * You cannot set null to the attribute.
-	 * @param description Value to set member attribute <b>description</b>
-	 */
-	public void setDescription( String description ) {
-		this.description = description;
-	}
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>description</b>
-	 * @return String - value of member attribute <b>description</b>.
-	 */
-	public String getDescription( ) {
-		return this.description;
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	@Override
-	public String toString( ) {
-		String str = "XXCredentialStore={";
-		str += super.toString();
-		str += "name={" + name + "} ";
-		str += "description={" + description + "} ";
-		str += "}";
-		return str;
-	}
+    /**
+     * Checks for all attributes except referenced db objects
+     *
+     * @return true if all attributes match
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Checks for all attributes except referenced db objects
-	 * @return true if all attributes match
-	*/
-	@Override
-	public boolean equals( Object obj) {
-		if ( !super.equals(obj) ) {
-			return false;
-		}
-		XXCredentialStore other = (XXCredentialStore) obj;
-        	if ((this.name == null && other.name != null) || (this.name != null && !this.name.equals(other.name))) {
-            		return false;
-        	}
-        	if ((this.description == null && other.description != null) || (this.description != null && !this.description.equals(other.description))) {
-            		return false;
-        	}
-		return true;
-	}
-	public static String getEnumName(String fieldName ) {
-		//Later TODO
-		//return super.getEnumName(fieldName);
-		return null;
-	}
+        XXCredentialStore other = (XXCredentialStore) obj;
 
+        return Objects.equals(name, other.name) &&
+                Objects.equals(description, other.description);
+    }
+
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    @Override
+    public String toString() {
+        String str = "XXCredentialStore={";
+        str += super.toString();
+        str += "name={" + name + "} ";
+        str += "description={" + description + "} ";
+        str += "}";
+        return str;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>name</b>
+     *
+     * @return String - value of member attribute <b>name</b>.
+     */
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b>name</b>.
+     * You cannot set null to the attribute.
+     *
+     * @param name Value to set member attribute <b>name</b>
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>description</b>
+     *
+     * @return String - value of member attribute <b>description</b>.
+     */
+    public String getDescription() {
+        return this.description;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b>description</b>.
+     * You cannot set null to the attribute.
+     *
+     * @param description Value to set member attribute <b>description</b>
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
 }

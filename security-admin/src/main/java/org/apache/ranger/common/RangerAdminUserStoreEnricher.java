@@ -30,30 +30,27 @@ public class RangerAdminUserStoreEnricher extends RangerUserStoreEnricher {
 
     @Override
     public void init() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminUserStoreEnricher.init()");
-        }
+        LOG.debug("==> RangerAdminUserStoreEnricher.init()");
 
         super.init();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminUserStoreEnricher.init()");
-        }
+        LOG.debug("<== RangerAdminUserStoreEnricher.init()");
     }
 
     @Override
     public void enrich(RangerAccessRequest request) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerAdminUserStoreEnricher.enrich(" + request + ")");
-        }
+        LOG.debug("==> RangerAdminUserStoreEnricher.enrich({})", request);
 
         refreshUserStoreIfNeeded();
 
         super.enrich(request);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerAdminUserStoreEnricher.enrich(" + request + ")");
-        }
+        LOG.debug("<== RangerAdminUserStoreEnricher.enrich({})", request);
+    }
+
+    @Override
+    public String toString() {
+        return "RangerAdminUserStoreEnricher={serviceName=" + serviceName + "}";
     }
 
     private void refreshUserStoreIfNeeded() {
@@ -69,12 +66,5 @@ public class RangerAdminUserStoreEnricher extends RangerUserStoreEnricher {
                 }
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("RangerAdminUserStoreEnricher={serviceName=").append(serviceName).append("}");
-        return sb.toString();
     }
 }

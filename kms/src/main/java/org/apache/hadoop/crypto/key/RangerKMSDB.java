@@ -205,7 +205,7 @@ public class RangerKMSDB {
 
                 jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX + DB_URL));
 
-                logger.info(PROPERTY_PREFIX + DB_URL + "=" + conf.get(PROPERTY_PREFIX + DB_URL));
+                logger.info("{}{}={}", PROPERTY_PREFIX, DB_URL, conf.get(PROPERTY_PREFIX + DB_URL));
 
                 if ("true".equalsIgnoreCase(dbSslVerifyServerCertificate) || "true".equalsIgnoreCase(dbSslRequired)) {
                     if (!"1-way".equalsIgnoreCase((dbSslAuthType))) {

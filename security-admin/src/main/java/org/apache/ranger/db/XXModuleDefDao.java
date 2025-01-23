@@ -17,129 +17,127 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXModuleDef;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
-public class XXModuleDefDao extends BaseDao<XXModuleDef>{
+public class XXModuleDefDao extends BaseDao<XXModuleDef> {
+    public XXModuleDefDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXModuleDefDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXModuleDef findByModuleName(String moduleName) {
+        if (moduleName == null) {
+            return null;
+        }
 
-	public XXModuleDef findByModuleName(String moduleName){
-		if (moduleName == null) {
-			return null;
-		}
-		try {
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXModuleDef.findByModuleName", tClass)
+                    .setParameter("moduleName", moduleName)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-			return (XXModuleDef) getEntityManager()
-					.createNamedQuery("XXModuleDef.findByModuleName")
-					.setParameter("moduleName", moduleName)
-					.getSingleResult();
-		} catch (Exception e) {
+    public XXModuleDef findByModuleId(Long id) {
+        if (id == null) {
+            return new XXModuleDef();
+        }
 
-		}
-		return null;
-	}
+        try {
+            List<XXModuleDef> xxModuelDefs = getEntityManager()
+                    .createNamedQuery("XXModuleDef.findByModuleId", tClass)
+                    .setParameter("id", id).getResultList();
+            return xxModuelDefs.get(0);
+        } catch (NoResultException e) {
+            return new XXModuleDef();
+        }
+    }
 
+    @SuppressWarnings("unchecked")
+    public List<String> findModuleURLOfPemittedModules(Long userId) {
+        try {
+            String query = "select";
 
-	public XXModuleDef  findByModuleId(Long id) {
-		if(id == null) {
-			return new XXModuleDef();
-		}
-		try {
-			List<XXModuleDef> xxModuelDefs=getEntityManager()
-					.createNamedQuery("XXModuleDef.findByModuleId", tClass)
-					.setParameter("id", id).getResultList();
-			return xxModuelDefs.get(0);
-		} catch (NoResultException e) {
-			return new XXModuleDef();
-		}
-	}
+            query += " url";
+            query += " FROM";
+            query += "   x_modules_master";
+            query += " WHERE";
+            query += "  url NOT IN (SELECT ";
+            query += "    moduleMaster.url";
+            query += " FROM";
+            query += " x_modules_master moduleMaster,";
+            query += " x_user_module_perm userModulePermission";
+            query += " WHERE";
+            query += " moduleMaster.id = userModulePermission.module_id";
+            query += " AND userModulePermission.user_id = " + userId + ")";
+            query += " AND ";
+            query += " id NOT IN (SELECT DISTINCT";
+            query += " gmp.module_id";
+            query += " FROM";
+            query += " x_group_users xgu,";
+            query += " x_user xu,";
+            query += " x_group_module_perm gmp,";
+            query += " x_portal_user xpu";
+            query += " WHERE";
+            query += " xu.user_name = xpu.login_id";
+            query += " AND xu.id = xgu.user_id";
+            query += " AND xgu.p_group_id = gmp.group_id";
+            query += " AND xpu.id = " + userId + ")";
 
-	@SuppressWarnings("unchecked")
-	public List<String>  findModuleURLOfPemittedModules(Long userId) {
-		try {
+            return getEntityManager()
+                    .createNativeQuery(query)
+                    .getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
 
-			String query="select";
-			query+=" url";
-			query+=" FROM";
-			query+="   x_modules_master";
-			query+=" WHERE";
-			query+="  url NOT IN (SELECT ";
-			query+="    moduleMaster.url";
-			query+=" FROM";
-			query+=" x_modules_master moduleMaster,";
-			query+=" x_user_module_perm userModulePermission";
-			query+=" WHERE";
-			query+=" moduleMaster.id = userModulePermission.module_id";
-			query+=" AND userModulePermission.user_id = "+userId+")";
-			query+=" AND ";
-			query+=" id NOT IN (SELECT DISTINCT";
-			query+=" gmp.module_id";
-			query+=" FROM";
-			query+=" x_group_users xgu,";
-			query+=" x_user xu,";
-			query+=" x_group_module_perm gmp,";
-			query+=" x_portal_user xpu";
-			query+=" WHERE";
-			query+=" xu.user_name = xpu.login_id";
-			query+=" AND xu.id = xgu.user_id";
-			query+=" AND xgu.p_group_id = gmp.group_id";
-			query+=" AND xpu.id = "+userId+")";
+            return null;
+        }
+    }
 
-			return getEntityManager()
-					.createNativeQuery(query)
-					.getResultList();
+    public List<String> findAccessibleModulesByGroupIdList(List<Long> grpIdList) {
+        if (CollectionUtils.isEmpty(grpIdList)) {
+            return new ArrayList<>();
+        }
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXModuleDef.findAccessibleModulesByGroupId", String.class)
+                    .setParameter("grpIdList", grpIdList)
+                    .setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public List<String> findAccessibleModulesByGroupIdList(List<Long> grpIdList) {
-		if (CollectionUtils.isEmpty(grpIdList)) {
-			return new ArrayList<String>();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXModuleDef.findAccessibleModulesByGroupId").setParameter("grpIdList", grpIdList)
-					.setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<String>();
-		}
-	}
+    /**
+     * @param portalUserId
+     * @param xUserId
+     * @return This function will return all the modules accessible for particular user, considering all the groups as well in which that user belongs
+     */
+    public List<String> findAccessibleModulesByUserId(Long portalUserId, Long xUserId) {
+        if (portalUserId == null || xUserId == null) {
+            return new ArrayList<>();
+        }
 
-	/**
-	 * @param portalUserId
-	 * @param xUserId
-	 * @return This function will return all the modules accessible for particular user, considering all the groups as well in which that user belongs
-	 */
-	@SuppressWarnings("unchecked")
-	public List<String> findAccessibleModulesByUserId(Long portalUserId, Long xUserId) {
-		if (portalUserId == null || xUserId == null) {
-			return new ArrayList<String>();
-		}
-		try {
-
-			List<String> userPermList = getEntityManager().createNamedQuery("XXModuleDef.findAllAccessibleModulesByUserId").setParameter("portalUserId", portalUserId)
-					.setParameter("xUserId", xUserId).setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED).getResultList();
-
-			return userPermList;
-
-		} catch (NoResultException e) {
-			return new ArrayList<String>();
-		}
-	}
-
+        try {
+            return getEntityManager().createNamedQuery("XXModuleDef.findAllAccessibleModulesByUserId", String.class)
+                    .setParameter("portalUserId", portalUserId)
+                    .setParameter("xUserId", xUserId).setParameter("isAllowed", RangerCommonEnums.ACCESS_RESULT_ALLOWED)
+                    .getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 }

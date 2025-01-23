@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *	 http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,8 +25,6 @@
 
 package org.apache.ranger.patch;
 
-import java.util.List;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.db.RangerDaoManager;
@@ -43,161 +41,157 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.List;
 
 @Component
 public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
+    private static final Logger logger = LoggerFactory.getLogger(PatchForMigratingRangerServiceResource_J10037.class);
 
-	private static final Logger logger = LoggerFactory.getLogger(PatchForMigratingRangerServiceResource_J10037.class);
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    @Autowired
+    @Qualifier(value = "transactionManager")
+    PlatformTransactionManager txManager;
 
-	@Autowired
-	@Qualifier(value = "transactionManager")
-	PlatformTransactionManager txManager;
+    @Autowired
+    RangerServiceResourceService serviceResourceService;
 
-	@Autowired
-	RangerServiceResourceService serviceResourceService;
+    public static void main(String[] args) {
+        logger.info("main() starts");
 
-	public static void main(String[] args) {
-		logger.info("main() starts");
-		try {
-			PatchForMigratingRangerServiceResource_J10037 loader = (PatchForMigratingRangerServiceResource_J10037) CLIUtil
-					.getBean(PatchForMigratingRangerServiceResource_J10037.class);
+        try {
+            PatchForMigratingRangerServiceResource_J10037 loader = (PatchForMigratingRangerServiceResource_J10037) CLIUtil.getBean(PatchForMigratingRangerServiceResource_J10037.class);
 
-			loader.init();
+            loader.init();
 
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
 
-			logger.info("Load complete. Exiting!!!");
+            logger.info("Load complete. Exiting!!!");
 
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+            System.exit(1);
+        }
+    }
 
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForMigratingRangerServiceResource.execLoad()");
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-		try {
-			updateRangerServiceResourceSignature();
-		} catch (Exception e) {
-			logger.error("Error while updateRangerServiceResourceSignature()", e);
-			System.exit(1);
-		}
+    @Override
+    public void printStats() {
+        logger.info(" Updating Ranger Service Resource signature ");
+    }
 
-		logger.info("<== PatchForMigratingRangerServiceResource.execLoad()");
-	}
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForMigratingRangerServiceResource.execLoad()");
 
-	@Override
-	public void printStats() {
-		logger.info(" Updating Ranger Service Resource signature ");
-	}
+        try {
+            updateRangerServiceResourceSignature();
+        } catch (Exception e) {
+            logger.error("Error while updateRangerServiceResourceSignature()", e);
 
-	private void updateRangerServiceResourceSignature() throws Exception {
-		logger.info("==> updateRangerServiceResourceSignature() start ");
+            System.exit(1);
+        }
 
-		List<XXService> allServices = daoMgr.getXXService().getAll();
+        logger.info("<== PatchForMigratingRangerServiceResource.execLoad()");
+    }
 
-		if (CollectionUtils.isNotEmpty(allServices)) {
+    private void updateRangerServiceResourceSignature() throws Exception {
+        logger.info("==> updateRangerServiceResourceSignature() start ");
 
-			for (XXService xService : allServices) {
-				logger.info("processing ranger service: " + xService);
+        List<XXService> allServices = daoMgr.getXXService().getAll();
 
-				List<String> serviceResourceGuids = daoMgr.getXXServiceResource().findServiceResourceGuidsInServiceId(xService.getId());
+        if (CollectionUtils.isNotEmpty(allServices)) {
+            for (XXService xService : allServices) {
+                logger.info("processing ranger service: {}", xService);
 
-				if (CollectionUtils.isNotEmpty(serviceResourceGuids)) {
+                List<String> serviceResourceGuids = daoMgr.getXXServiceResource().findServiceResourceGuidsInServiceId(xService.getId());
 
-					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+                if (CollectionUtils.isNotEmpty(serviceResourceGuids)) {
+                    TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
-					int chunkSize   = 1000; // hardcoded
-					int numOfChunks = (serviceResourceGuids.size() / chunkSize) + 1;
+                    int chunkSize   = 1000; // hardcoded
+                    int numOfChunks = (serviceResourceGuids.size() / chunkSize) + 1;
 
-					for (int chunkIndex = 0; chunkIndex < numOfChunks; chunkIndex++) {
-						List<String> chunk = serviceResourceGuids.subList(chunkIndex * chunkSize, (chunkIndex == numOfChunks -1 ? serviceResourceGuids.size() : (chunkIndex + 1) * chunkSize));
+                    for (int chunkIndex = 0; chunkIndex < numOfChunks; chunkIndex++) {
+                        List<String>                 chunk         = serviceResourceGuids.subList(chunkIndex * chunkSize, (chunkIndex == numOfChunks - 1 ? serviceResourceGuids.size() : (chunkIndex + 1) * chunkSize));
+                        ServiceResourceUpdaterThread updaterThread = new ServiceResourceUpdaterThread(txTemplate, chunk);
+                        String                       errorMsg      = runThread(updaterThread);
 
-						ServiceResourceUpdaterThread updaterThread = new ServiceResourceUpdaterThread(txTemplate, chunk);
+                        if (StringUtils.isNotEmpty(errorMsg)) {
+                            throw new Exception(errorMsg);
+                        }
+                    }
+                } else {
+                    logger.info("No Ranger service resource found for service : {}", xService.getDisplayName());
+                }
+            }
+        } else {
+            logger.info("No Ranger service found");
+        }
 
-						String errorMsg = runThread(updaterThread);
+        logger.info("<== updateRangerServiceResourceSgnature() end");
+    }
 
-						if (StringUtils.isNotEmpty(errorMsg)) {
-							throw new Exception(errorMsg);
-						}
-					}
-				} else {
-					logger.info("No Ranger service resource found for service : " + xService.getDisplayName());
-				}
-			}
-		} else {
-			logger.info("No Ranger service found");
-		}
+    private String runThread(ServiceResourceUpdaterThread updaterThread) throws Exception {
+        updaterThread.setDaemon(true);
+        updaterThread.start();
+        updaterThread.join();
 
-		logger.info("<== updateRangerServiceResourceSgnature() end");
-	}
+        return updaterThread.getErrorMsg();
+    }
 
-	private String runThread(ServiceResourceUpdaterThread updaterThread) throws Exception {
-		updaterThread.setDaemon(true);
-		updaterThread.start();
-		updaterThread.join();
-		return updaterThread.getErrorMsg();
-	}
+    private class ServiceResourceUpdaterThread extends Thread {
+        final TransactionTemplate txTemplate;
+        final List<String>        entityGuids;
+        String                    errorMsg;
 
-	private class ServiceResourceUpdaterThread extends Thread {
-		final TransactionTemplate     txTemplate;
-		final List<String>            entityGuids;
-		String                        errorMsg;
+        ServiceResourceUpdaterThread(TransactionTemplate txTemplate, final List<String> entityGuids) {
+            this.txTemplate  = txTemplate;
+            this.entityGuids = entityGuids;
+            this.errorMsg    = null;
+        }
 
-		ServiceResourceUpdaterThread(TransactionTemplate txTemplate, final List<String> entityGuids) {
-			this.txTemplate  = txTemplate;
-			this.entityGuids = entityGuids;
-			this.errorMsg    = null;
-		}
+        public String getErrorMsg() {
+            return errorMsg;
+        }
 
-		public String getErrorMsg() {
-			return errorMsg;
-		}
+        @Override
+        public void run() {
+            txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-		@Override
-		public void run() {
-			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            errorMsg = txTemplate.execute(status -> {
+                String ret = null;
+                try {
+                    if (CollectionUtils.isNotEmpty(entityGuids)) {
+                        for (String entityGuid : entityGuids) {
+                            XXServiceResource              entityObject = daoMgr.getXXServiceResource().findByGuid(entityGuid);
+                            RangerServiceResource          viewObject   = serviceResourceService.getPopulatedViewObject(entityObject);
+                            RangerServiceResourceSignature serializer   = new RangerServiceResourceSignature(viewObject);
 
-			errorMsg = txTemplate.execute(new TransactionCallback<String>() {
-				@Override
-				public String doInTransaction(TransactionStatus status) {
-					String ret = null;
-					try {
-						if (CollectionUtils.isNotEmpty(entityGuids)) {
-							for (String entityGuid : entityGuids) {
-								XXServiceResource              entityObject = daoMgr.getXXServiceResource().findByGuid(entityGuid);
-								RangerServiceResource          viewObject   = serviceResourceService.getPopulatedViewObject(entityObject);
-								RangerServiceResourceSignature serializer   = new RangerServiceResourceSignature(viewObject);
+                            entityObject.setResourceSignature(serializer.getSignature());
 
-								entityObject.setResourceSignature(serializer.getSignature());
+                            daoMgr.getXXServiceResource().update(entityObject);
+                        }
+                    }
+                } catch (Throwable e) {
+                    logger.error("signature update  failed :[rangerServiceResource={}", entityGuids, e);
 
-								daoMgr.getXXServiceResource().update(entityObject);
-							}
-						}
-					} catch (Throwable e) {
-						logger.error("signature update  failed :[rangerServiceResource=" + entityGuids + "]", e);
-						ret = e.toString();
-					}
-					return ret;
-				}
-			});
-		}
-	}
+                    ret = e.toString();
+                }
 
+                return ret;
+            });
+        }
+    }
 }

@@ -27,10 +27,6 @@
     <packaging>jar</packaging>
     <name>Unix Authentication Service</name>
     <description>Unix authentication service</description>
-    <properties>
-        <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.skip>false</checkstyle.skip>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>

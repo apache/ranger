@@ -115,23 +115,19 @@
     </div>
     {{/if}}
     <div class="row">
-        <div class="col-md-12">
-            <div class="btn-group dropleft btn-right" style="margin-top:10px;">
-                <button type="button" data-name="downloadFormatBtn" class="btn btn-primary btn-sm dropdown-toggle" title="Export all below policies" data-toggle="dropdown">
-                    <i class="fa-fw fa fa-external-link-square"></i> Export
-                </button>
-                <div class="dropdown-menu drop-font download-list">
-                    <a data-id="xlsFormat" class="downloadFormat dropdown-item" href="javascript:void(0)">Excel file</a>
-                    <div class="dropdown-divider"></div>
-                    <a data-id="csvFormat" class="downloadFormat dropdown-item" href="javascript:void(0)">CSV file</a>
-                    {{#showExportJson}}
-                    <div class="dropdown-divider"></div>
-                    <a data-id="jsonFormat" class="downloadFormat dropdown-item" href="javascript:void(0)">JSON file</a>
-                    {{/showExportJson}}
+        {{#showExportJson}}
+            <div class="col-md-12">
+                <div class="btn-group dropleft btn-right" style="margin-top:10px;">
+                    <button type="button" data-name="downloadFormatBtn" class="btn btn-primary btn-sm dropdown-toggle" title="Export all below policies" data-toggle="dropdown">
+                        <i class="fa-fw fa fa-external-link-square"></i> Export
+                    </button>
+                    <div class="dropdown-menu drop-font download-list">
+                        <a data-id="jsonFormat" class="downloadFormat dropdown-item" href="javascript:void(0)">JSON file</a>
+                    </div>
                 </div>
             </div>
-        </div>
-        <a href="javascript:void(0)" data-id="downloadReport"></a>
+            <a href="javascript:void(0)" data-id="downloadReport"></a>
+        {{/showExportJson}}
     </div>
     <div class="row report-table">
         <div class="col-md-12">

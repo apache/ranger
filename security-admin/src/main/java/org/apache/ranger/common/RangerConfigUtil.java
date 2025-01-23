@@ -25,61 +25,58 @@ import org.springframework.stereotype.Component;
 
 /**
  *
- *
  */
 @Component
 public class RangerConfigUtil {
-	private static final Logger logger = LoggerFactory.getLogger(RangerConfigUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(RangerConfigUtil.class);
 
-	String webappRootURL;
-	int defaultMaxRows = 250;
-	String[] roles;
-	boolean accessFilterEnabled = true;
-	boolean isModerationEnabled = false;
-	boolean isUserPrefEnabled = false;
+    String   webappRootURL;
+    int      defaultMaxRows = 250;
+    String[] roles;
+    boolean  accessFilterEnabled;
+    boolean  isModerationEnabled;
+    boolean  isUserPrefEnabled;
 
-	public RangerConfigUtil() {
+    public RangerConfigUtil() {
+        webappRootURL = PropertiesUtil.getProperty("ranger.externalurl");
 
-		webappRootURL = PropertiesUtil.getProperty("ranger.externalurl");
-		if (webappRootURL == null || webappRootURL.trim().length() == 0) {
-			logger.error("webapp URL is not set. Please ranger.externalurl property");
-		}
+        if (webappRootURL == null || webappRootURL.trim().isEmpty()) {
+            logger.error("webapp URL is not set. Please ranger.externalurl property");
+        }
 
-		defaultMaxRows = PropertiesUtil.getIntProperty(
-				"ranger.db.maxrows.default", defaultMaxRows);
-		roles = PropertiesUtil.getPropertyStringList("ranger.users.roles.list");
+        defaultMaxRows = PropertiesUtil.getIntProperty("ranger.db.maxrows.default", defaultMaxRows);
+        roles          = PropertiesUtil.getPropertyStringList("ranger.users.roles.list");
 
-		accessFilterEnabled = PropertiesUtil.getBooleanProperty("ranger.db.access.filter.enable", true);
-		isModerationEnabled = PropertiesUtil.getBooleanProperty("ranger.moderation.enabled", isModerationEnabled);
-		isUserPrefEnabled = PropertiesUtil.getBooleanProperty("ranger.userpref.enabled", isUserPrefEnabled);
-	}	
+        accessFilterEnabled = PropertiesUtil.getBooleanProperty("ranger.db.access.filter.enable", true);
+        isModerationEnabled = PropertiesUtil.getBooleanProperty("ranger.moderation.enabled", isModerationEnabled);
+        isUserPrefEnabled   = PropertiesUtil.getBooleanProperty("ranger.userpref.enabled", isUserPrefEnabled);
+    }
 
-	/**
-	 * @return the defaultMaxRows
-	 */
-	public int getDefaultMaxRows() {
-		return defaultMaxRows;
-	}
+    /**
+     * @return the defaultMaxRows
+     */
+    public int getDefaultMaxRows() {
+        return defaultMaxRows;
+    }
 
-	/**
-	 * @return the roles
-	 */
-	public String[] getRoles() {
-		return roles;
-	}
+    /**
+     * @return the roles
+     */
+    public String[] getRoles() {
+        return roles;
+    }
 
-	/**
-	 * @return the accessFilterEnabled
-	 */
-	public boolean isAccessFilterEnabled() {
-		return accessFilterEnabled;
-	}
+    /**
+     * @return the accessFilterEnabled
+     */
+    public boolean isAccessFilterEnabled() {
+        return accessFilterEnabled;
+    }
 
-	/**
-	 * @return the webAppRootURL
-	 */
-	public String getWebAppRootURL() {
-		return webappRootURL;
-	}
-
+    /**
+     * @return the webAppRootURL
+     */
+    public String getWebAppRootURL() {
+        return webappRootURL;
+    }
 }

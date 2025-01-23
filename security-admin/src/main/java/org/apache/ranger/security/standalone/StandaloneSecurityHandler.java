@@ -17,14 +17,10 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.security.standalone;
-
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.RangerConstants;
@@ -40,39 +36,42 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+
 @Component
 public class StandaloneSecurityHandler {
-	public static final String AUTH_MANAGER_BEAN_NAME = "authenticationManager";
-	public static final String ACCESS_DECISION_MANAGER_BEAN_NAME = "customAccessDecisionManager";
+    public static final String AUTH_MANAGER_BEAN_NAME            = "authenticationManager";
+    public static final String ACCESS_DECISION_MANAGER_BEAN_NAME = "customAccessDecisionManager";
 
-	@Autowired
-	SessionMgr sessionMgr;
+    @Autowired
+    SessionMgr sessionMgr;
 
-	public void login(String userName, String password,
-			ApplicationContext context) throws Exception {
-		// [1] Create AUTH Token
-		Authentication token = new UsernamePasswordAuthenticationToken(
-				userName, password);
+    public void login(String userName, String password, ApplicationContext context) throws Exception {
+        // [1] Create AUTH Token
+        Authentication token = new UsernamePasswordAuthenticationToken(userName, password);
 
-		// [2] Authenticate User
-		AuthenticationManager am = (AuthenticationManager) context
-				.getBean(AUTH_MANAGER_BEAN_NAME);
-		token = am.authenticate(token);
+        // [2] Authenticate User
+        AuthenticationManager am = (AuthenticationManager) context.getBean(AUTH_MANAGER_BEAN_NAME);
 
-		// [3] Check User Access
-		AffirmativeBased accessDecisionManager = (AffirmativeBased) context
-				.getBean(ACCESS_DECISION_MANAGER_BEAN_NAME);
-		Collection<ConfigAttribute> list = new ArrayList<ConfigAttribute>();
-		SecurityConfig config = new SecurityConfig(RangerConstants.ROLE_SYS_ADMIN);
-		list.add(config);
-		accessDecisionManager.decide(token, null, list);
+        token = am.authenticate(token);
 
-		// [4] set token in spring context
-		SecurityContextHolder.getContext().setAuthentication(token);
+        // [3] Check User Access
+        AffirmativeBased            accessDecisionManager = (AffirmativeBased) context.getBean(ACCESS_DECISION_MANAGER_BEAN_NAME);
+        Collection<ConfigAttribute> list                  = new ArrayList<>();
+        SecurityConfig              config                = new SecurityConfig(RangerConstants.ROLE_SYS_ADMIN);
 
-		// [5] Process Success login
-		InetAddress thisIp = InetAddress.getLocalHost();
-		sessionMgr.processStandaloneSuccessLogin(
-				XXAuthSession.AUTH_TYPE_PASSWORD, thisIp.getHostAddress());
-	}
+        list.add(config);
+
+        accessDecisionManager.decide(token, null, list);
+
+        // [4] set token in spring context
+        SecurityContextHolder.getContext().setAuthentication(token);
+
+        // [5] Process Success login
+        InetAddress thisIp = InetAddress.getLocalHost();
+
+        sessionMgr.processStandaloneSuccessLogin(XXAuthSession.AUTH_TYPE_PASSWORD, thisIp.getHostAddress());
+    }
 }

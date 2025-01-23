@@ -18,16 +18,6 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import java.io.IOException;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
@@ -41,16 +31,26 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
 @Lazy(true)
 @Component
 public class RangerJwtAuthWrapper extends GenericFilterBean {
     private static final Logger LOG = Logger.getLogger(RangerJwtAuthWrapper.class);
 
-    private String[] browserUserAgents = new String[] {""}; //Initialize with empty
-
     @Lazy(true)
     @Autowired
     RangerJwtAuthFilter rangerJwtAuthFilter;
+
+    private String[] browserUserAgents = new String[] {""}; //Initialize with empty
 
     @PostConstruct
     public void initialize() {
@@ -83,29 +83,20 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
 
             if (!isRequestAuthenticated()) {
                 String userAgent = ((HttpServletRequest) request).getHeader("User-Agent");
+
                 if (isBrowserAgent(userAgent)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Redirecting to login page as request does not have valid JWT auth details.");
-                    }
+                    LOG.debug("Redirecting to login page as request does not have valid JWT auth details.");
+
                     ((HttpServletResponse) response).sendRedirect("/login.jsp");
                 }
             }
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("===>> RangerJwtAuthWrapper.doFilter() - Skipping JWT auth.");
-            }
+            LOG.debug("===>> RangerJwtAuthWrapper.doFilter() - Skipping JWT auth.");
         }
 
         filterChain.doFilter(request, response); // proceed with filter chain
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<<<=== RangerJwtAuthWrapper.doFilter()");
-        }
-    }
-
-    private boolean isRequestAuthenticated() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.isAuthenticated();
+        LOG.debug("<<<=== RangerJwtAuthWrapper.doFilter()");
     }
 
     protected boolean isBrowserAgent(String userAgent) {
@@ -121,5 +112,11 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
         }
 
         return isBrowserAgent;
+    }
+
+    private boolean isRequestAuthenticated() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        return auth != null && auth.isAuthenticated();
     }
 }

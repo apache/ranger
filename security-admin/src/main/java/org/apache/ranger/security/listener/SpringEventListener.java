@@ -17,9 +17,8 @@
  * under the License.
  */
 
- package org.apache.ranger.security.listener;
+package org.apache.ranger.security.listener;
 
-import java.util.Calendar;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.entity.XXAuthSession;
 import org.slf4j.Logger;
@@ -29,17 +28,16 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationEvent;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationFailureDisabledEvent;
-import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.authentication.event.AuthenticationFailureLockedEvent;
+import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Calendar;
 
-public class SpringEventListener implements
-	ApplicationListener<AbstractAuthenticationEvent> {
-
+public class SpringEventListener implements ApplicationListener<AbstractAuthenticationEvent> {
     private static final Logger logger = LoggerFactory.getLogger(SpringEventListener.class);
 
     @Autowired
@@ -47,92 +45,74 @@ public class SpringEventListener implements
 
     @Override
     public void onApplicationEvent(AbstractAuthenticationEvent event) {
-	try {
-	    if (event instanceof AuthenticationSuccessEvent) {
-		process((AuthenticationSuccessEvent) event);
-	    } else if (event instanceof AuthenticationFailureBadCredentialsEvent) {
-		process((AuthenticationFailureBadCredentialsEvent) event);
-	    } else if (event instanceof AuthenticationFailureLockedEvent) {
-		process((AuthenticationFailureLockedEvent) event);
-	    } else if (event instanceof AuthenticationFailureDisabledEvent) {
-		process((AuthenticationFailureDisabledEvent) event);
-	    }
-	    // igonre all other events
-
-	} catch (Exception e) {
-	    logger.error("Exception in Spring Event Listener.", e);
-	}
+        try {
+            if (event instanceof AuthenticationSuccessEvent) {
+                process((AuthenticationSuccessEvent) event);
+            } else if (event instanceof AuthenticationFailureBadCredentialsEvent) {
+                process((AuthenticationFailureBadCredentialsEvent) event);
+            } else if (event instanceof AuthenticationFailureLockedEvent) {
+                process((AuthenticationFailureLockedEvent) event);
+            } else if (event instanceof AuthenticationFailureDisabledEvent) {
+                process((AuthenticationFailureDisabledEvent) event);
+            }
+            // igonre all other events
+        } catch (Exception e) {
+            logger.error("Exception in Spring Event Listener.", e);
+        }
     }
 
     protected void process(AuthenticationSuccessEvent authSuccessEvent) {
-	Authentication auth = authSuccessEvent.getAuthentication();
-	WebAuthenticationDetails details = (WebAuthenticationDetails) auth
-		.getDetails();
-	String remoteAddress = details != null ? details.getRemoteAddress()
-		: "";
-	String sessionId = details != null ? details.getSessionId() : "";
+        Authentication           auth          = authSuccessEvent.getAuthentication();
+        WebAuthenticationDetails details       = (WebAuthenticationDetails) auth.getDetails();
+        String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
+        String                   sessionId     = details != null ? details.getSessionId() : "";
 
-	Calendar cal = Calendar.getInstance();
-	logger.info("Login Successful:" + auth.getName() + " | Ip Address:"
-			+ remoteAddress + " | sessionId=" + sessionId +  " | Epoch=" +cal.getTimeInMillis() );
+        Calendar cal = Calendar.getInstance();
 
-	// success logins are processed further in
-	// AKASecurityContextFormationFilter
+        logger.info("Login Successful:{} | Ip Address:{} sessionId={} | Epoch={}", auth.getName(), remoteAddress, sessionId, cal.getTimeInMillis());
+        // success logins are processed further in
+        // AKASecurityContextFormationFilter
     }
 
-    protected void process(
-	    AuthenticationFailureBadCredentialsEvent authFailEvent) {
-	Authentication auth = authFailEvent.getAuthentication();
-	WebAuthenticationDetails details = (WebAuthenticationDetails) auth
-		.getDetails();
-	String remoteAddress = details != null ? details.getRemoteAddress()
-		: "";
-	String sessionId = details != null ? details.getSessionId() : "";
-	String userAgent = getUserAgent();
+    protected void process(AuthenticationFailureBadCredentialsEvent authFailEvent) {
+        Authentication           auth          = authFailEvent.getAuthentication();
+        WebAuthenticationDetails details       = (WebAuthenticationDetails) auth.getDetails();
+        String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
+        String                   sessionId     = details != null ? details.getSessionId() : "";
+        String                   userAgent     = getUserAgent();
 
-	logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:"
-		+ remoteAddress + " | Bad Credentials");
+        logger.info("Login Unsuccessful:{} | Ip Address:{} | Bad Credentials", auth.getName(), remoteAddress);
 
-	sessionMgr.processFailureLogin(
-		XXAuthSession.AUTH_STATUS_WRONG_PASSWORD,
-		XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(),
-		remoteAddress, sessionId, userAgent);
+        sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_WRONG_PASSWORD, XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(), remoteAddress, sessionId, userAgent);
     }
 
     protected void process(AuthenticationFailureLockedEvent authFailEvent) {
-		Authentication           auth          = authFailEvent.getAuthentication();
-		WebAuthenticationDetails details       = (WebAuthenticationDetails) auth.getDetails();
-		String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
-		String                   sessionId     = details != null ? details.getSessionId() : "";
-		String                   userAgent     = getUserAgent();
+        Authentication           auth          = authFailEvent.getAuthentication();
+        WebAuthenticationDetails details       = (WebAuthenticationDetails) auth.getDetails();
+        String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
+        String                   sessionId     = details != null ? details.getSessionId() : "";
+        String                   userAgent     = getUserAgent();
 
-		logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:" + remoteAddress + " | User account is locked");
+        logger.info("Login Unsuccessful:{} | Ip Address:{} | User account is locked", auth.getName(), remoteAddress);
 
-		sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_LOCKED, XXAuthSession.AUTH_TYPE_PASSWORD,
-				auth.getName(), remoteAddress, sessionId, userAgent);
-	}
-
-    protected void process(AuthenticationFailureDisabledEvent authFailEvent) {
-	Authentication auth = authFailEvent.getAuthentication();
-	WebAuthenticationDetails details = (WebAuthenticationDetails) auth
-		.getDetails();
-	String remoteAddress = details != null ? details.getRemoteAddress()
-		: "";
-	String sessionId = details != null ? details.getSessionId() : "";
-	String userAgent = getUserAgent();
-
-	logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:"
-		+ remoteAddress + " | User Disabled");
-
-	sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_DISABLED,
-		XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(),
-		remoteAddress, sessionId, userAgent);
-
+        sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_LOCKED, XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(), remoteAddress, sessionId, userAgent);
     }
 
-	protected String getUserAgent() {
-		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-		String userAgent = attributes.getRequest().getHeader("User-Agent");
-		return userAgent;
-	}
+    protected void process(AuthenticationFailureDisabledEvent authFailEvent) {
+        Authentication           auth          = authFailEvent.getAuthentication();
+        WebAuthenticationDetails details       = (WebAuthenticationDetails) auth.getDetails();
+        String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
+        String                   sessionId     = details != null ? details.getSessionId() : "";
+        String                   userAgent     = getUserAgent();
+
+        logger.info("Login Unsuccessful:{} | Ip Address:{} | User Disabled", auth.getName(), remoteAddress);
+
+        sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_DISABLED, XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(), remoteAddress, sessionId, userAgent);
+    }
+
+    protected String getUserAgent() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+        return attributes != null ? attributes.getRequest().getHeader("User-Agent") : "Unknown";
+    }
 }

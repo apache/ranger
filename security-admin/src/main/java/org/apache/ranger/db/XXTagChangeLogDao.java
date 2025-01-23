@@ -17,12 +17,6 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTagChangeLog;
@@ -30,11 +24,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 /**
+ *
  */
 @Service
 public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
-
     private static final Logger LOG = LoggerFactory.getLogger(XXTagChangeLogDao.class);
 
     private static final int TAG_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER                  = 0;
@@ -52,20 +52,23 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
 
     public List<XXTagChangeLog> findLaterThan(Long version, Long serviceId) {
         final List<XXTagChangeLog> ret;
+
         if (version != null) {
             List<Object[]> logs = getEntityManager()
                     .createNamedQuery("XXTagChangeLog.findSinceVersion", Object[].class)
                     .setParameter("version", version)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
+
             // Ensure that first record has the same version as the base-version from where the records are fetched
             if (CollectionUtils.isNotEmpty(logs)) {
-                Iterator<Object[]> iter = logs.iterator();
-                boolean foundAndRemoved = false;
+                Iterator<Object[]> iter            = logs.iterator();
+                boolean            foundAndRemoved = false;
 
                 while (iter.hasNext()) {
-                    Object[] record = iter.next();
-                    Long recordVersion = (Long) record[TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER];
+                    Object[] record        = iter.next();
+                    Long     recordVersion = (Long) record[TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER];
+
                     if (version.equals(recordVersion)) {
                         iter.remove();
                         foundAndRemoved = true;
@@ -73,6 +76,7 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
                         break;
                     }
                 }
+
                 if (foundAndRemoved) {
                     ret = convert(logs);
                 } else {
@@ -89,31 +93,25 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
     }
 
     public void deleteOlderThan(int olderThanInDays) {
-
         Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Deleting records from x_tag_change_log that are older than " + olderThanInDays + " days, that is,  older than " + since);
-        }
+        LOG.debug("Deleting records from x_tag_change_log that are older than {} days, that is,  older than {}", olderThanInDays, since);
 
         getEntityManager().createNamedQuery("XXTagChangeLog.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
     }
 
     private List<XXTagChangeLog> convert(List<Object[]> queryResult) {
-
         final List<XXTagChangeLog> ret;
 
         if (CollectionUtils.isNotEmpty(queryResult)) {
-
             ret = new ArrayList<>(queryResult.size());
 
             for (Object[] log : queryResult) {
-
-                Long logRecordId        = (Long) log[TAG_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER];
-                Integer tagChangeType   = (Integer) log[TAG_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER];
-                Long serviceTagsVersion = (Long) log[TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER];
-                Long serviceResourceId  = (Long) log[TAG_CHANGE_LOG_RECORD_SERVICE_RESOURCE_ID_COLUMN_NUMBER];
-                Long tagId              = (Long) log[TAG_CHANGE_LOG_RECORD_TAG_ID_COLUMN_NUMBER];
+                Long    logRecordId        = (Long) log[TAG_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER];
+                Integer tagChangeType      = (Integer) log[TAG_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER];
+                Long    serviceTagsVersion = (Long) log[TAG_CHANGE_LOG_RECORD_VERSION_ID_COLUMN_NUMBER];
+                Long    serviceResourceId  = (Long) log[TAG_CHANGE_LOG_RECORD_SERVICE_RESOURCE_ID_COLUMN_NUMBER];
+                Long    tagId              = (Long) log[TAG_CHANGE_LOG_RECORD_TAG_ID_COLUMN_NUMBER];
 
                 ret.add(new XXTagChangeLog(logRecordId, tagChangeType, serviceTagsVersion, serviceResourceId, tagId));
             }
@@ -121,8 +119,5 @@ public class XXTagChangeLogDao extends BaseDao<XXTagChangeLog> {
             ret = null;
         }
         return ret;
-
     }
-
 }
-

@@ -210,7 +210,7 @@ public class RangerServiceHive extends RangerBaseService {
     }
 
     private List<RangerPolicyItem> createDefaultDBPolicyItem() {
-        List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+        List<RangerPolicyItemAccess> accesses = new ArrayList<>();
 
         accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
 
@@ -241,7 +241,7 @@ public class RangerServiceHive extends RangerBaseService {
     }
 
     private List<RangerPolicyItem> createInformationSchemaPolicyItem() {
-        List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+        List<RangerPolicyItemAccess> accesses = new ArrayList<>();
 
         accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
         RangerPolicyItem item = new RangerPolicyItem(accesses, null, Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC), null, null, false);
