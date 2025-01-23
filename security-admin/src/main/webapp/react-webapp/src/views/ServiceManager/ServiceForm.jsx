@@ -226,53 +226,37 @@ class ServiceForm extends Component {
           if (key === "resources" && !isEmpty(value)) {
             obj.resources = {};
 
-            let levels = uniq(map(serviceDef.resources, "level"));
+            const levels = uniq(map(serviceDef.resources, "level"));
 
-            levels.map((level) => {
-              let resourceObj = find(serviceDef.resources, {
-                level: level,
-                name: value[`resourceName-${level}`]?.name
-              });
-              if (
-                value[`resourceName-${level}`] !== undefined &&
-                value[`value-${level}`] !== undefined
-              ) {
-                obj.resources[value[`resourceName-${level}`].name] = {
-                  values: isArray(value[`value-${level}`])
-                    ? map(value[`value-${level}`], "value")
-                    : [value[`value-${level}`].value]
+            levels.forEach((level) => {
+              const resourceName = value[`resourceName-${level}`]?.name;
+              const resourceValue = value[`value-${level}`];
+              const isRecursiveSupport = value[`isRecursiveSupport-${level}`];
+              const isExcludesSupport = value[`isExcludesSupport-${level}`];
+
+              if (resourceName && resourceValue !== undefined) {
+                const resourceObj = find(serviceDef.resources, {
+                  level,
+                  name: resourceName
+                });
+
+                obj.resources[resourceName] = {
+                  values: Array.isArray(resourceValue)
+                    ? map(resourceValue, "value")
+                    : [resourceValue.value]
                 };
 
-                if (
-                  value[`isRecursiveSupport-${level}`] !== undefined &&
-                  resourceObj.recursiveSupported
-                ) {
-                  obj.resources[
-                    value[`resourceName-${level}`].name
-                  ].isRecursive = value[`isRecursiveSupport-${level}`];
-                } else if (
-                  value[`isRecursiveSupport-${level}`] === undefined &&
-                  resourceObj.recursiveSupported
-                ) {
-                  obj.resources[
-                    value[`resourceName-${level}`].name
-                  ].isRecursive = resourceObj.recursiveSupported;
+                if (resourceObj?.recursiveSupported) {
+                  obj.resources[resourceName].isRecursive =
+                    isRecursiveSupport !== undefined
+                      ? isRecursiveSupport
+                      : resourceObj.recursiveSupported;
                 }
-
-                if (
-                  value[`isExcludesSupport-${level}`] !== undefined &&
-                  resourceObj.excludesSupported
-                ) {
-                  obj.resources[
-                    value[`resourceName-${level}`].name
-                  ].isExcludes = value[`isExcludesSupport-${level}`];
-                } else if (
-                  value[`isExcludesSupport-${level}`] === undefined &&
-                  resourceObj.excludesSupported
-                ) {
-                  obj.resources[
-                    value[`resourceName-${level}`].name
-                  ].isExcludes = resourceObj.excludesSupported;
+                if (resourceObj?.excludesSupported) {
+                  obj.resources[resourceName].isExcludes =
+                    isExcludesSupport !== undefined
+                      ? !isExcludesSupport
+                      : false;
                 }
               }
             });
@@ -521,7 +505,7 @@ class ServiceForm extends Component {
             );
             if (setResources?.excludesSupported) {
               obj.resources[`isExcludesSupport-${setResources.level}`] =
-                value?.isExcludes != false;
+                value?.isExcludes ? !value.isExcludes : true;
             }
             if (setResources?.recursiveSupported) {
               obj.resources[`isRecursiveSupport-${setResources.level}`] =

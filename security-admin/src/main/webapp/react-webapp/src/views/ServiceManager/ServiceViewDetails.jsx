@@ -98,9 +98,9 @@ export const ServiceViewDetails = (props) => {
           {resources[key].isExcludes !== undefined ? (
             <h6 className="d-inline">
               {resources[key].isExcludes ? (
-                <span className="badge bg-dark float-end">Include</span>
-              ) : (
                 <span className="badge bg-dark float-end">Exclude</span>
+              ) : (
+                <span className="badge bg-dark float-end">Include</span>
               )}
             </h6>
           ) : (
