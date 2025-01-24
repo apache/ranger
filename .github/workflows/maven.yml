@@ -128,7 +128,7 @@ jobs:
           docker compose -f docker-compose.ranger-base.yml build
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
-          export RANGER_DB_TYPE=sqlserver
+          export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
           -f docker-compose.ranger.yml \
@@ -146,7 +146,7 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           ./scripts/ozone-plugin-docker-setup.sh
-          export RANGER_DB_TYPE=sqlserver
+          export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
           -f docker-compose.ranger.yml \
@@ -160,17 +160,10 @@ jobs:
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml up -d
 
-      - name: View sql server logs
-        run: |
-          sleep 30
-          docker logs ranger-sqlserver
-          docker logs ranger
-          docker logs ranger-kms
-
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-sqlserver ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
