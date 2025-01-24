@@ -38,7 +38,7 @@ RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/op
     cp -f /home/ranger/scripts/ranger-hbase-plugin-install.properties /opt/ranger/ranger-hbase-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh
 
-ENV HBASE_HOME /opt/hbase
-ENV PATH       /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hbase/bin
+ENV HBASE_HOME=/opt/hbase
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hbase/bin
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hbase.sh" ]

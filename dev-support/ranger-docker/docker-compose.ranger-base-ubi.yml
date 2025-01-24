@@ -1,0 +1,18 @@
+services:
+  ranger-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-base-ubi
+      args:
+        - UBI_VERSION=${UBI_VERSION}
+        - RANGER_BASE_UBI_JAVA_VERSION=${RANGER_BASE_UBI_JAVA_VERSION}
+    image: ranger-base
+    container_name: ranger-base
+    networks:
+      - ranger
+    environment:
+      - RANGER_VERSION
+
+networks:
+  ranger:
+    name: rangernw

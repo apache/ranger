@@ -30,195 +30,207 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RangerRoleValidator extends RangerValidator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerRoleValidator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerRoleValidator.class);
 
-	public RangerRoleValidator(RoleStore store) {
-		super(store);
-	}
+    public RangerRoleValidator(RoleStore store) {
+        super(store);
+    }
 
-	public void validate(RangerRole rangeRole, Action action) throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerRoleValidator.validate(%s, %s)", rangeRole, action));
-		}
+    public void validate(RangerRole rangeRole, Action action) throws Exception {
+        LOG.debug("==> RangerRoleValidator.validate({}, {})", rangeRole, action);
 
-		List<ValidationFailureDetails> failures = new ArrayList<>();
-		boolean valid = isValid(rangeRole, action, failures);
-		String message = "";
-		try {
-			if (!valid) {
-				message = serializeFailures(failures);
-				throw new Exception(message);
-			}
-		} finally {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("<== RangerRoleValidator.validate(%s, %s): %s, reason[%s]", rangeRole, action, valid, message));
-			}
-		}
-	}
+        List<ValidationFailureDetails> failures = new ArrayList<>();
+        boolean                        valid    = isValid(rangeRole, action, failures);
+        String                         message  = "";
 
-	@Override
-	boolean isValid(Long id, Action action, List<ValidationFailureDetails> failures) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerRoleValidator.isValid(%s, %s, %s)", id, action, failures));
-		}
+        try {
+            if (!valid) {
+                message = serializeFailures(failures);
 
-		boolean valid = true;
-		if (action != Action.DELETE) {
-			ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION;
-			failures.add(new ValidationFailureDetailsBuilder()
-					.isAnInternalError()
-					.becauseOf(error.getMessage())
-					.errorCode(error.getErrorCode())
-					.build());
-			valid = false;
-		} else if (id == null) {
-			ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_MISSING_FIELD;
-			failures.add(new ValidationFailureDetailsBuilder()
-					.becauseOf("Role id was null/missing")
-					.field("id")
-					.isMissing()
-					.errorCode(error.getErrorCode())
-					.becauseOf(error.getMessage(id))
-					.build());
-			valid = false;
-		} else if (!roleExists(id)) {
-			ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_INVALID_ROLE_ID;
-			failures.add(new ValidationFailureDetailsBuilder()
-					.becauseOf("Role with id[{0}] does not exist")
-					.field("id")
-					.isMissing()
-					.errorCode(error.getErrorCode())
-					.becauseOf(error.getMessage(id))
-					.build());
-			valid = false;
-		}
+                throw new Exception(message);
+            }
+        } finally {
+            LOG.debug("<== RangerRoleValidator.validate({}, {}): {}, reason[{}]", rangeRole, action, valid, message);
+        }
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerRoleValidator.isValid(%s, %s, %s): %s", id, action, failures, valid));
-		}
-		return valid;
-	}
+    @Override
+    boolean isValid(Long id, Action action, List<ValidationFailureDetails> failures) {
+        LOG.debug("==> RangerRoleValidator.isValid({}, {}, {})", id, action, failures);
 
+        boolean valid = true;
 
-	@Override
-	boolean isValid(String name, Action action, List<ValidationFailureDetails> failures) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerRoleValidator.isValid(%s, %s, %s)", name, action, failures));
-		}
+        if (action != Action.DELETE) {
+            ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION;
 
-		boolean valid = true;
-		if (action != Action.DELETE) {
-			ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION;
-			failures.add(new ValidationFailureDetailsBuilder()
-					.isAnInternalError()
-					.becauseOf(error.getMessage())
-					.errorCode(error.getErrorCode())
-					.build());
-			valid = false;
-		} else if (name == null) {
-			ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_MISSING_FIELD;
-			failures.add(new ValidationFailureDetailsBuilder()
-					.becauseOf("Role name was null/missing")
-					.field("id")
-					.isMissing()
-					.errorCode(error.getErrorCode())
-					.becauseOf(error.getMessage(name))
-					.build());
-			valid = false;
-		} else if (!roleExists(name)) {
-			ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_INVALID_ROLE_NAME;
-			failures.add(new ValidationFailureDetailsBuilder()
-					.becauseOf("Role with name[{0}] does not exist")
-					.field("name")
-					.isMissing()
-					.errorCode(error.getErrorCode())
-					.becauseOf(error.getMessage(name))
-					.build());
-			valid = false;
-		}
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .isAnInternalError()
+                    .becauseOf(error.getMessage())
+                    .errorCode(error.getErrorCode())
+                    .build());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerRoleValidator.isValid(%s, %s, %s): %s", name, action, failures, valid));
-		}
-		return valid;
-	}
+            valid = false;
+        } else if (id == null) {
+            ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_MISSING_FIELD;
 
-	boolean isValid(RangerRole rangerRole, Action action, List<ValidationFailureDetails> failures) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("==> RangerRoleValidator.isValid(%s, %s, %s)", rangerRole, action, failures));
-		}
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .becauseOf("Role id was null/missing")
+                    .field("id")
+                    .isMissing()
+                    .errorCode(error.getErrorCode())
+                    .becauseOf(error.getMessage(id))
+                    .build());
 
-		boolean valid = true;
-		if (rangerRole == null) {
-			ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_OBJECT;
-			failures.add(new ValidationFailureDetailsBuilder()
-					.isAnInternalError()
-					.isMissing()
-					.becauseOf(error.getMessage())
-					.errorCode(error.getErrorCode())
-					.build());
-			valid = false;
-		} else {
-			String roleName = rangerRole.getName();
-			if (StringUtils.isEmpty(roleName)) {
-				ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_NAME;
-				failures.add(new ValidationFailureDetailsBuilder()
-						.field("name")
-						.isMissing()
-						.becauseOf(error.getMessage())
-						.errorCode(error.getErrorCode())
-						.build());
-				valid = false;
-			}
+            valid = false;
+        } else if (!roleExists(id)) {
+            ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_INVALID_ROLE_ID;
 
-			Long id = rangerRole.getId();
-			RangerRole existingRangerRole = null;
-			if (null != id) {
-				existingRangerRole = getRangerRole(id);
-			}
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .becauseOf("Role with id[{0}] does not exist")
+                    .field("id")
+                    .isMissing()
+                    .errorCode(error.getErrorCode())
+                    .becauseOf(error.getMessage(id))
+                    .build());
 
-			if (action == Action.CREATE) {
-				if (existingRangerRole != null) {
-					String existingRoleName = existingRangerRole.getName();
-					if (roleName.equals(existingRoleName)) {
-						ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_ROLE_NAME_CONFLICT;
-						failures.add(new ValidationFailureDetailsBuilder()
-								.field("name")
-								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(existingRoleName))
-								.errorCode(error.getErrorCode())
-								.build());
-						valid = false;
-					}
-				}
-			} else  if (action == Action.UPDATE) { // id is ignored for CREATE
-					if (id == null) {
-						ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_MISSING_FIELD;
-						failures.add(new ValidationFailureDetailsBuilder()
-								.field("id")
-								.isMissing()
-								.becauseOf(error.getMessage(id))
-								.errorCode(error.getErrorCode())
-								.build());
-						valid = false;
-					}
-					if (existingRangerRole == null) {
-						ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_INVALID_ROLE_ID;
-						failures.add(new ValidationFailureDetailsBuilder()
-								.field("id")
-								.isSemanticallyIncorrect()
-								.becauseOf(error.getMessage(id))
-								.errorCode(error.getErrorCode())
-								.build());
-						valid = false;
-					}
-				}
-			}
+            valid = false;
+        }
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("<== RangerRoleValidator.isValid(%s, %s, %s): %s", rangerRole, action, failures, valid));
-			}
+        LOG.debug("<== RangerRoleValidator.isValid({}, {}, {}): {}", id, action, failures, valid);
 
-		return valid;
-	}
+        return valid;
+    }
+
+    @Override
+    boolean isValid(String name, Action action, List<ValidationFailureDetails> failures) {
+        LOG.debug("==> RangerRoleValidator.isValid({}, {}, {})", name, action, failures);
+
+        boolean valid = true;
+
+        if (action != Action.DELETE) {
+            ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .isAnInternalError()
+                    .becauseOf(error.getMessage())
+                    .errorCode(error.getErrorCode())
+                    .build());
+
+            valid = false;
+        } else if (name == null) {
+            ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_MISSING_FIELD;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .becauseOf("Role name was null/missing")
+                    .field("id")
+                    .isMissing()
+                    .errorCode(error.getErrorCode())
+                    .becauseOf(error.getMessage(name))
+                    .build());
+
+            valid = false;
+        } else if (!roleExists(name)) {
+            ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_INVALID_ROLE_NAME;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .becauseOf("Role with name[{0}] does not exist")
+                    .field("name")
+                    .isMissing()
+                    .errorCode(error.getErrorCode())
+                    .becauseOf(error.getMessage(name))
+                    .build());
+
+            valid = false;
+        }
+
+        LOG.debug("<== RangerRoleValidator.isValid({}, {}, {}): {}", name, action, failures, valid);
+
+        return valid;
+    }
+
+    boolean isValid(RangerRole rangerRole, Action action, List<ValidationFailureDetails> failures) {
+        LOG.debug("==> RangerRoleValidator.isValid({}, {}, {})", rangerRole, action, failures);
+
+        boolean valid = true;
+
+        if (rangerRole == null) {
+            ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_OBJECT;
+
+            failures.add(new ValidationFailureDetailsBuilder()
+                    .isAnInternalError()
+                    .isMissing()
+                    .becauseOf(error.getMessage())
+                    .errorCode(error.getErrorCode())
+                    .build());
+
+            valid = false;
+        } else {
+            String roleName = rangerRole.getName();
+
+            if (StringUtils.isEmpty(roleName)) {
+                ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_NAME;
+
+                failures.add(new ValidationFailureDetailsBuilder()
+                        .field("name")
+                        .isMissing()
+                        .becauseOf(error.getMessage())
+                        .errorCode(error.getErrorCode())
+                        .build());
+
+                valid = false;
+            }
+
+            Long       id                 = rangerRole.getId();
+            RangerRole existingRangerRole = (id != null) ? getRangerRole(id) : null;
+
+            if (action == Action.CREATE) {
+                if (existingRangerRole != null) {
+                    String existingRoleName = existingRangerRole.getName();
+
+                    if (roleName.equals(existingRoleName)) {
+                        ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_ROLE_NAME_CONFLICT;
+
+                        failures.add(new ValidationFailureDetailsBuilder()
+                                .field("name")
+                                .isSemanticallyIncorrect()
+                                .becauseOf(error.getMessage(existingRoleName))
+                                .errorCode(error.getErrorCode())
+                                .build());
+
+                        valid = false;
+                    }
+                }
+            } else if (action == Action.UPDATE) { // id is ignored for CREATE
+                if (id == null) {
+                    ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_MISSING_FIELD;
+
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("id")
+                            .isMissing()
+                            .becauseOf(error.getMessage(id))
+                            .errorCode(error.getErrorCode())
+                            .build());
+
+                    valid = false;
+                }
+
+                if (existingRangerRole == null) {
+                    ValidationErrorCode error = ValidationErrorCode.ROLE_VALIDATION_ERR_INVALID_ROLE_ID;
+
+                    failures.add(new ValidationFailureDetailsBuilder()
+                            .field("id")
+                            .isSemanticallyIncorrect()
+                            .becauseOf(error.getMessage(id))
+                            .errorCode(error.getErrorCode())
+                            .build());
+
+                    valid = false;
+                }
+            }
+        }
+
+        LOG.debug("<== RangerRoleValidator.isValid({}, {}, {}): {}", rangerRole, action, failures, valid);
+
+        return valid;
+    }
 }

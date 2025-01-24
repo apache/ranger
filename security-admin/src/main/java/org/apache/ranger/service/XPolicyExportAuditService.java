@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
@@ -32,36 +32,25 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class XPolicyExportAuditService extends XPolicyExportAuditServiceBase<XXPolicyExportAudit, VXPolicyExportAudit> {
+    public XPolicyExportAuditService() {
+        searchFields.add(new SearchField("httpRetCode", "obj.httpRetCode", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("clientIP", "obj.clientIP", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField("agentId", "obj.agentId", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField("repositoryName", "obj.repositoryName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField("cluster", "obj.clusterName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("startDate", "obj.createTime", DATA_TYPE.DATE, SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField("endDate", "obj.createTime", DATA_TYPE.DATE, SEARCH_TYPE.LESS_EQUAL_THAN));
 
-	public XPolicyExportAuditService(){
-		searchFields.add(new SearchField("httpRetCode", "obj.httpRetCode",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("clientIP", "obj.clientIP",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("agentId", "obj.agentId",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("repositoryName", "obj.repositoryName",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("cluster", "obj.clusterName",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("startDate", "obj.createTime",
-				DATA_TYPE.DATE, SEARCH_TYPE.GREATER_EQUAL_THAN));
-		searchFields.add(new SearchField("endDate", "obj.createTime",
-				DATA_TYPE.DATE, SEARCH_TYPE.LESS_EQUAL_THAN));
-		
-		sortFields.add(new SortField("createDate", "obj.createTime", true, SORT_ORDER.DESC));
-	}
-	
-	@Override
-	protected void validateForCreate(VXPolicyExportAudit vObj) {
-		// TODO Auto-generated method stub
+        sortFields.add(new SortField("createDate", "obj.createTime", true, SORT_ORDER.DESC));
+    }
 
-	}
+    @Override
+    protected void validateForCreate(VXPolicyExportAudit vObj) {
+        // TODO Auto-generated method stub
+    }
 
-	@Override
-	protected void validateForUpdate(VXPolicyExportAudit vObj, XXPolicyExportAudit mObj) {
-		// TODO Auto-generated method stub
-
-	}
-
+    @Override
+    protected void validateForUpdate(VXPolicyExportAudit vObj, XXPolicyExportAudit mObj) {
+        // TODO Auto-generated method stub
+    }
 }

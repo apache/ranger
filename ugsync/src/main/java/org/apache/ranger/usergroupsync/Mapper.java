@@ -20,7 +20,7 @@
 package org.apache.ranger.usergroupsync;
 
 public interface Mapper {
-	void init(String baseProperty);
+    void init(String baseProperty);
 
     String transform(String attrValue);
 }

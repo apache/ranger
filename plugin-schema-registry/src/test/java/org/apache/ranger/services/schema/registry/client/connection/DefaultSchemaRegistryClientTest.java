@@ -40,24 +40,20 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 @org.junit.Ignore
 public class DefaultSchemaRegistryClientTest {
-
     private static final String V1_API_PATH = "api/v1";
 
     private static LocalSchemaRegistryServer localSchemaRegistryServer;
-
     private static ISchemaRegistryClient client;
 
     @BeforeClass
     public static void init() throws Exception {
-        localSchemaRegistryServer =
-                new LocalSchemaRegistryServer(getFilePath("ssl-schema-registry.yaml"));
+        localSchemaRegistryServer = new LocalSchemaRegistryServer(getFilePath("ssl-schema-registry.yaml"));
 
         try {
             localSchemaRegistryServer.start();
-        } catch (Exception e){
+        } catch (Exception e) {
             localSchemaRegistryServer.stop();
             throw e;
         }
@@ -89,20 +85,18 @@ public class DefaultSchemaRegistryClientTest {
         client.registerSchemaMetadata(schemaMetadata2);
         client.registerSchemaMetadata(schemaMetadata3);
 
-        SchemaVersion sv = new SchemaVersion(getSchema("schema-text3.avcs"),
-                "Initial version of the schema");
+        SchemaVersion sv = new SchemaVersion(getSchema("schema-text3.avcs"), "Initial version of the schema");
         client.addSchemaVersion(schemaMetadata3, sv);
 
-        ///////////////////////////////////////////////
         Map<String, Object> conf = new HashMap<>();
         conf.put(SCHEMA_REGISTRY_URL.name(), "https://localhost:" + localSchemaRegistryServer.getLocalPort());
-        String keyStorePath = "./src/test/resources/keystore.jks";
+        String keyStorePath     = "./src/test/resources/keystore.jks";
         String keyStorePassword = "password";
-        String keyStoreType = "jks";
+        String keyStoreType     = "jks";
 
-        String trustStorePath = "./src/test/resources/truststore.jks";
+        String trustStorePath     = "./src/test/resources/truststore.jks";
         String trustStorePassword = "password";
-        String trustStoreType = "jks";
+        String trustStoreType     = "jks";
         conf.put("keyStorePath", keyStorePath);
         conf.put("keyStorePassword", keyStorePassword);
         conf.put("keyStoreType", keyStoreType);
@@ -112,38 +106,6 @@ public class DefaultSchemaRegistryClientTest {
         conf.put("trustStoreType", trustStoreType);
 
         DefaultSchemaRegistryClientTest.client = new DefaultSchemaRegistryClient(conf);
-
-    }
-
-    private static String getSchema(String schemaFileName) throws Exception {
-        try (FileInputStream fis = new FileInputStream(getFilePath(schemaFileName))) {
-            org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
-            return parser.parse(fis).toString();
-        } catch (Exception e) {
-            throw new Exception("Failed to read schema text from : "
-                    + getFilePath(schemaFileName), e);
-        }
-
-    }
-
-    private static String getFilePath(String serverYAMLFileName) throws URISyntaxException {
-        return new File(Resources.getResource(serverYAMLFileName)
-                .toURI())
-                .getAbsolutePath();
-    }
-
-    private static com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient getClient(String clientYAMLFileName) throws Exception {
-        String registryURL = localSchemaRegistryServer.getLocalURL() + V1_API_PATH;
-        Map<String, Object> conf = new HashMap<>();
-        try (FileInputStream fis = new FileInputStream(getFilePath(clientYAMLFileName))) {
-            conf = (Map<String, Object>) new Yaml().load(IOUtils.toString(fis, "UTF-8"));
-            conf.put("schema.registry.url", registryURL);
-        } catch(Exception e) {
-            throw new Exception("Failed to export schema client configuration for yaml : " + getFilePath(clientYAMLFileName), e);
-        }
-        conf.put(SCHEMA_REGISTRY_URL.name(), registryURL);
-
-        return new com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient(conf);
     }
 
     @Test
@@ -187,5 +149,34 @@ public class DefaultSchemaRegistryClientTest {
     @Test(expected = Exception.class)
     public void checkConnection2() throws Exception {
         new DefaultSchemaRegistryClient(new HashMap<>()).checkConnection();
+    }
+
+    private static String getSchema(String schemaFileName) throws Exception {
+        try (FileInputStream fis = new FileInputStream(getFilePath(schemaFileName))) {
+            org.apache.avro.Schema.Parser parser = new org.apache.avro.Schema.Parser();
+            return parser.parse(fis).toString();
+        } catch (Exception e) {
+            throw new Exception("Failed to read schema text from : " + getFilePath(schemaFileName), e);
+        }
+    }
+
+    private static String getFilePath(String serverYAMLFileName) throws URISyntaxException {
+        return new File(Resources.getResource(serverYAMLFileName)
+                .toURI())
+                .getAbsolutePath();
+    }
+
+    private static com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient getClient(String clientYAMLFileName) throws Exception {
+        String              registryURL = localSchemaRegistryServer.getLocalURL() + V1_API_PATH;
+        Map<String, Object> conf;
+        try (FileInputStream fis = new FileInputStream(getFilePath(clientYAMLFileName))) {
+            conf = new Yaml().load(IOUtils.toString(fis, "UTF-8"));
+            conf.put("schema.registry.url", registryURL);
+        } catch (Exception e) {
+            throw new Exception("Failed to export schema client configuration for yaml : " + getFilePath(clientYAMLFileName), e);
+        }
+        conf.put(SCHEMA_REGISTRY_URL.name(), registryURL);
+
+        return new com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient(conf);
     }
 }

@@ -18,263 +18,222 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_condition")
-public class XXPolicyItemCondition extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyItemCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_item_condition_SEQ", sequenceName = "x_policy_item_condition_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_condition_SEQ")
-	@Column(name = "id")
-	protected Long id;
+public class XXPolicyItemCondition extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * Global Id for the object
-	 * <ul>
-	 * <li>The maximum length for this attribute is <b>512</b>.
-	 * </ul>
-	 *
-	 */
-	@Column(name = "guid", unique = true, nullable = false, length = 512)
-	protected String GUID;
+    /**
+     * id of the XXPolicyItemCondition
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_item_condition_SEQ", sequenceName = "x_policy_item_condition_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_condition_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * policyItemId of the XXPolicyItemCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_item_id")
-	protected Long policyItemId;
+    /**
+     * Global Id for the object
+     * <ul>
+     * <li>The maximum length for this attribute is <b>512</b>.
+     * </ul>
+     */
+    @Column(name = "guid", unique = true, nullable = false, length = 512)
+    protected String guid;
 
-	/**
-	 * type of the XXPolicyItemCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "type")
-	protected Long type;
+    /**
+     * policyItemId of the XXPolicyItemCondition
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_item_id")
+    protected Long policyItemId;
 
-	/**
-	 * value of the XXPolicyItemCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "value")
-	protected String value;
+    /**
+     * type of the XXPolicyItemCondition
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "type")
+    protected Long type;
 
-	/**
-	 * order of the XXPolicyItemCondition
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "sort_order")
-	protected Integer order;
+    /**
+     * value of the XXPolicyItemCondition
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "value")
+    protected String value;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * order of the XXPolicyItemCondition
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "sort_order")
+    protected Integer order;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyItemId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyItemId
-	 *            Value to set member attribute <b> policyItemId</b>
-	 */
-	public void setPolicyItemId(Long policyItemId) {
-		this.policyItemId = policyItemId;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyItemId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyItemId</b> .
-	 */
-	public Long getPolicyitemid() {
-		return this.policyItemId;
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> type</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param type
-	 *            Value to set member attribute <b> type</b>
-	 */
-	public void setType(Long type) {
-		this.type = type;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>type</b>
-	 *
-	 * @return Date - value of member attribute <b>type</b> .
-	 */
-	public Long getType() {
-		return this.type;
-	}
+        XXPolicyItemCondition other = (XXPolicyItemCondition) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> value</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param value
-	 *            Value to set member attribute <b> value</b>
-	 */
-	public void setValue(String value) {
-		this.value = value;
-	}
+        return Objects.equals(id, other.id) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(policyItemId, other.policyItemId) &&
+                Objects.equals(type, other.type) &&
+                Objects.equals(value, other.value) &&
+                Objects.equals(guid, other.guid);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>value</b>
-	 *
-	 * @return Date - value of member attribute <b>value</b> .
-	 */
-	public String getValue() {
-		return this.value;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXPolicyItemCondition [" + super.toString() + " id=" + id
+                + ", guid=" + guid + ", policyItemId="
+                + policyItemId + ", type=" + type + ", value=" + value
+                + ", order=" + order + "]";
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> order</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param order
-	 *            Value to set member attribute <b> order</b>
-	 */
-	public void setOrder(Integer order) {
-		this.order = order;
-	}
+    /**
+     * This method sets the value to the member attribute <b> policyItemId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyItemId Value to set member attribute <b> policyItemId</b>
+     */
+    public void setPolicyItemId(Long policyItemId) {
+        this.policyItemId = policyItemId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>order</b>
-	 *
-	 * @return Date - value of member attribute <b>order</b> .
-	 */
-	public Integer getOrder() {
-		return this.order;
-	}
+    /**
+     * Returns the value for the member attribute <b>policyItemId</b>
+     *
+     * @return Date - value of member attribute <b>policyItemId</b> .
+     */
+    public Long getPolicyitemid() {
+        return this.policyItemId;
+    }
 
-	/**
-	 * @return the gUID
-	 */
-	public String getGUID() {
-		return GUID;
-	}
+    /**
+     * Returns the value for the member attribute <b>type</b>
+     *
+     * @return Date - value of member attribute <b>type</b> .
+     */
+    public Long getType() {
+        return this.type;
+    }
 
-	/**
-	 * @param gUID
-	 *            the gUID to set
-	 */
-	public void setGUID(String gUID) {
-		GUID = gUID;
-	}
+    /**
+     * This method sets the value to the member attribute <b> type</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param type Value to set member attribute <b> type</b>
+     */
+    public void setType(Long type) {
+        this.type = type;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		XXPolicyItemCondition other = (XXPolicyItemCondition) obj;
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
-		if (order == null) {
-			if (other.order != null) {
-				return false;
-			}
-		} else if (!order.equals(other.order)) {
-			return false;
-		}
-		if (policyItemId == null) {
-			if (other.policyItemId != null) {
-				return false;
-			}
-		} else if (!policyItemId.equals(other.policyItemId)) {
-			return false;
-		}
-		if (type == null) {
-			if (other.type != null) {
-				return false;
-			}
-		} else if (!type.equals(other.type)) {
-			return false;
-		}
-		if (value == null) {
-			if (other.value != null) {
-				return false;
-			}
-		} else if (!value.equals(other.value)) {
-			return false;
-		}
-		if (GUID == null) {
-			if (other.GUID != null) {
-				return false;
-			}
-		} else if (!GUID.equals(other.GUID)) {
-			return false;
-		}
-		return true;
-	}
+    /**
+     * Returns the value for the member attribute <b>value</b>
+     *
+     * @return Date - value of member attribute <b>value</b> .
+     */
+    public String getValue() {
+        return this.value;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXPolicyItemCondition [" + super.toString() + " id=" + id
-				+ ", guid=" + GUID + ", policyItemId="
-				+ policyItemId + ", type=" + type + ", value=" + value
-				+ ", order=" + order + "]";
-	}
+    /**
+     * This method sets the value to the member attribute <b> value</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param value Value to set member attribute <b> value</b>
+     */
+    public void setValue(String value) {
+        this.value = value;
+    }
 
+    /**
+     * Returns the value for the member attribute <b>order</b>
+     *
+     * @return Date - value of member attribute <b>order</b> .
+     */
+    public Integer getOrder() {
+        return this.order;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> order</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param order Value to set member attribute <b> order</b>
+     */
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
+
+    /**
+     * @return the gUID
+     */
+    public String getGUID() {
+        return guid;
+    }
+
+    /**
+     * @param gUID the gUID to set
+     */
+    public void setGUID(String gUID) {
+        guid = gUID;
+    }
 }

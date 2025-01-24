@@ -19,8 +19,8 @@
 
 package org.apache.ranger.biz;
 
-import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RangerPolicyAdminCacheForEngineOptions {
-    private static volatile RangerPolicyAdminCacheForEngineOptions sInstance = null;
+    private static volatile RangerPolicyAdminCacheForEngineOptions sInstance;
 
     private final Map<RangerPolicyEngineOptions, RangerPolicyAdminCache> policyAdminCacheForEngineOptions = Collections.synchronizedMap(new HashMap<>());
 
@@ -55,7 +55,6 @@ public class RangerPolicyAdminCacheForEngineOptions {
     }
 
     private RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
-
         RangerPolicyAdminCache policyAdminCache = policyAdminCacheForEngineOptions.get(options);
 
         if (policyAdminCache == null) {
@@ -73,4 +72,3 @@ public class RangerPolicyAdminCacheForEngineOptions {
         return policyAdminCache.getServicePoliciesAdmin(serviceName, svcStore, roleStore, zoneStore, options);
     }
 }
-

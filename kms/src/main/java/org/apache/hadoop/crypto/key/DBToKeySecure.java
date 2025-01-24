@@ -16,113 +16,105 @@
  */
 package org.apache.hadoop.crypto.key;
 
-import java.io.IOException;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.kms.dao.DaoManager;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import java.io.IOException;
 
 public class DBToKeySecure {
+    private static final String ENCRYPTION_KEY           = "ranger.db.encrypt.key.password";
+    private static final String KEYSECURE_MASTERKEY_NAME = "ranger.kms.keysecure.masterkey.name";
+    // private static final String KEYSECURE_PROTOCOL       = "ranger.kms.keysecure.protocol";
+    private static final String KEYSECURE_LOGIN          = "ranger.kms.keysecure.login";
+    private static final String CFGFILEPATH              = "ranger.kms.keysecure.sunpkcs11.cfg.filepath";
 
-        private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
-        private static final String KEYSECURE_MASTERKEY_NAME = "ranger.kms.keysecure.masterkey.name";
-//	private static final String KEYSECURE_PROTOCOL = "ranger.kms.keysecure.protocol";
-        private static final String KEYSECURE_LOGIN = "ranger.kms.keysecure.login";
-        private static final String CFGFILEPATH = "ranger.kms.keysecure.sunpkcs11.cfg.filepath";
+    public static void showUsage() {
+        System.err.println("USAGE: java " + DBToKeySecure.class.getName() + " <keySecureMasterKeyName> <keySecureUsername> <keySecurePassword> <sunpkcs11CfgFilePath>");
+    }
 
-        public static void showUsage() {
-                System.err
-                                .println("USAGE: java "
-                                                + DBToKeySecure.class.getName()
-                                                + " <keySecureMasterKeyName> <keySecureUsername> <keySecurePassword> <sunpkcs11CfgFilePath>");
+    public static void main(String[] args) {
+        if (args.length < 4) {
+            System.err.println("Invalid number of parameters found.");
+            showUsage();
+            System.exit(1);
+        } else {
+            Configuration conf    = RangerKeyStoreProvider.getDBKSConf();
+            String        keyName = args[0];
+
+            if (keyName == null || keyName.trim().isEmpty()) {
+                System.err.println("Key Secure master key name not provided.");
+                showUsage();
+                System.exit(1);
+            }
+
+            String username = args[1];
+
+            if (username == null || username.trim().isEmpty()) {
+                System.err.println("Key Secure username not provided.");
+                showUsage();
+                System.exit(1);
+            }
+
+            String password = args[2];
+
+            if (password == null || password.trim().isEmpty()) {
+                System.err.println("Key Secure password not provided.");
+                showUsage();
+                System.exit(1);
+            }
+
+            String cfgFilePath = args[3];
+
+            if (cfgFilePath == null || cfgFilePath.trim().isEmpty()) {
+                System.err.println("sunpkcs11 Configuration File Path not provided");
+                showUsage();
+                System.exit(1);
+            }
+
+            boolean result = new DBToKeySecure().doExportMKToKeySecure(keyName, username, password, cfgFilePath, conf);
+
+            if (result) {
+                System.out.println("Master Key from Ranger KMS DB has been successfully imported into Key Secure.");
+            } else {
+                System.out.println("Import of Master Key from DB has been unsuccessful.");
+                System.exit(1);
+            }
+
+            System.exit(0);
         }
+    }
 
-        public static void main(String[] args) {
+    private boolean doExportMKToKeySecure(String keyName, String username, String password, String cfgFilePath, Configuration conf) {
+        try {
+            String keySecureMKPassword = conf.get(ENCRYPTION_KEY);
 
-                if (args.length < 4) {
-                        System.err.println("Invalid number of parameters found.");
-                        showUsage();
-                        System.exit(1);
-                } else {
+            if (keySecureMKPassword == null || keySecureMKPassword.trim().equals("") || keySecureMKPassword.trim().equals("_") || keySecureMKPassword.trim().equals("crypted")) {
+                throw new IOException("Master Key Jceks does not exists");
+            }
 
-                        Configuration conf = RangerKeyStoreProvider.getDBKSConf();
+            conf.set(CFGFILEPATH, cfgFilePath);
+            conf.set(KEYSECURE_MASTERKEY_NAME, keyName);
+            conf.set(KEYSECURE_LOGIN, username + ":" + password);
 
-                        String keyName = args[0];
-                        if (keyName == null || keyName.trim().isEmpty()) {
-                                System.err.println("Key Secure master key name not provided.");
-                                showUsage();
-                                System.exit(1);
-                        }
+            RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);
+            DaoManager  daoManager  = rangerkmsDb.getDaoManager();
+            String      mkPassword  = conf.get(ENCRYPTION_KEY);
 
-                        String username = args[1];
-                        if (username == null || username.trim().isEmpty()) {
-                                System.err.println("Key Secure username not provided.");
-                                showUsage();
-                                System.exit(1);
-                        }
-                        String password = args[2];
-                        if (password == null || password.trim().isEmpty()) {
-                                System.err.println("Key Secure password not provided.");
-                                showUsage();
-                                System.exit(1);
-                        }
+            // Get Master Key from Ranger DB
+            RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+            String          mkey            = rangerMasterKey.getMasterKey(mkPassword);
+            byte[]          key             = Base64.decode(mkey);
 
-                        String cfgFilePath = args[3];
-                        if (cfgFilePath == null || cfgFilePath.trim().isEmpty()) {
-                                System.err.println("sunpkcs11 Configuration File Path not provided");
-                                showUsage();
-                                System.exit(1);
-                        }
+            if (conf != null) {
+                RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
 
-                        boolean result = new DBToKeySecure().doExportMKToKeySecure(keyName, username, password, cfgFilePath,  conf);
-                        if (result) {
-                                System.out
-                                                .println("Master Key from Ranger KMS DB has been successfully imported into Key Secure.");
-                        } else {
-                                System.out
-                                                .println("Import of Master Key from DB has been unsuccessful.");
-                                System.exit(1);
-                        }
-                        System.exit(0);
-                }
+                return rangerSafenetKeySecure.setMasterKey(password, key, conf);
+            }
+
+            return false;
+        } catch (Throwable t) {
+            throw new RuntimeException("Unable to import Master key from Ranger DB to KeySecure ", t);
         }
-
-        private boolean doExportMKToKeySecure(String keyName, String username, String password, String cfgFilePath, Configuration conf) {
-                try {
-                        String keySecureMKPassword = conf.get(ENCRYPTION_KEY);
-                        if (keySecureMKPassword == null
-                                        || keySecureMKPassword.trim().equals("")
-                                        || keySecureMKPassword.trim().equals("_")
-                                        || keySecureMKPassword.trim().equals("crypted")) {
-                                throw new IOException("Master Key Jceks does not exists");
-                        }
-
-                        conf.set(CFGFILEPATH, cfgFilePath);
-                        conf.set(KEYSECURE_MASTERKEY_NAME, keyName);
-                        conf.set(KEYSECURE_LOGIN,username + ":" + password);
-
-                        RangerKMSDB rangerkmsDb = new RangerKMSDB(conf);
-                        DaoManager daoManager = rangerkmsDb.getDaoManager();
-                        String mkPassword = conf.get(ENCRYPTION_KEY);
-
-                        // Get Master Key from Ranger DB
-                        RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
-                        String mkey = rangerMasterKey.getMasterKey(mkPassword);
-                        byte[] key = Base64.decode(mkey);
-
-                        if (conf != null) {
-                                RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(
-                                                conf);
-                                return rangerSafenetKeySecure.setMasterKey(password, key,conf);
-                        }
-
-                        return false;
-                } catch (Throwable t) {
-                        throw new RuntimeException(
-                                        "Unable to import Master key from Ranger DB to KeySecure ",
-                                        t);
-                }
-
-        }
-
+    }
 }

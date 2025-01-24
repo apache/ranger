@@ -41,6 +41,8 @@ CREATE PROCEDURE `insertRangerPrerequisiteGDSEntries`()
 BEGIN
 DECLARE adminID bigint;
 DECLARE moduleIdGovernedDataSharing bigint;
+DECLARE rangerusersyncID bigint;
+DECLARE rangertagsyncID bigint;
 
 call getXportalUIdByLoginId('admin', adminID);
 call getXportalUIdByLoginId('rangerusersync', rangerusersyncID);

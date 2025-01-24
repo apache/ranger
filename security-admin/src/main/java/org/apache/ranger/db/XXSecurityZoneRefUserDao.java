@@ -19,74 +19,76 @@
 
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.List;
-import javax.persistence.NoResultException;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
 
-public class XXSecurityZoneRefUserDao extends BaseDao<XXSecurityZoneRefUser>{
+import javax.persistence.NoResultException;
 
-	public XXSecurityZoneRefUserDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+import java.util.Collections;
+import java.util.List;
 
-	public List<XXSecurityZoneRefUser> findByZoneId(Long zoneId) {
+public class XXSecurityZoneRefUserDao extends BaseDao<XXSecurityZoneRefUser> {
+    public XXSecurityZoneRefUserDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
+
+    public List<XXSecurityZoneRefUser> findByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-        	List<XXSecurityZoneRefUser> xxZoneRefService = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefUser.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .getResultList();
-            return xxZoneRefService;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefUser> findAdminUsersByZoneId(Long zoneId) {
+    public List<XXSecurityZoneRefUser> findAdminUsersByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-        	List<XXSecurityZoneRefUser> xxZoneRefService = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefUser.findUserTypeByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .setParameter("userType", "1")
                     .getResultList();
-            return xxZoneRefService;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefUser> findAuditUsersByZoneId(Long zoneId) {
+    public List<XXSecurityZoneRefUser> findAuditUsersByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-        	List<XXSecurityZoneRefUser> xxZoneRefService = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefUser.findUserTypeByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .setParameter("userType", "0")
                     .getResultList();
-            return xxZoneRefService;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefUser> findByUserId(Long userId) {
-		if (userId == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXSecurityZoneRefUser.findByUserId", tClass)
-					.setParameter("userId", userId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.emptyList();
-		}
-	}
+    public List<XXSecurityZoneRefUser> findByUserId(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZoneRefUser.findByUserId", tClass)
+                    .setParameter("userId", userId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
 }

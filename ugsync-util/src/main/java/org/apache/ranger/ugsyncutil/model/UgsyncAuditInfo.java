@@ -17,118 +17,117 @@
  * under the License.
  */
 
- package org.apache.ranger.ugsyncutil.model;
+package org.apache.ranger.ugsyncutil.model;
 
 public class UgsyncAuditInfo {
+    private String             userName;
+    private Long               noOfNewUsers;
+    private Long               noOfNewGroups;
+    private Long               noOfModifiedUsers;
+    private Long               noOfModifiedGroups;
+    private String             syncSource;
+    private String             sessionId;
+    private LdapSyncSourceInfo ldapSyncSourceInfo;
+    private UnixSyncSourceInfo unixSyncSourceInfo;
+    private FileSyncSourceInfo fileSyncSourceInfo;
 
-	private String userName;
-	private Long noOfNewUsers;
-	private Long noOfNewGroups;
-	private Long noOfModifiedUsers;
-	private Long noOfModifiedGroups;
-	private String 	syncSource;
-	private String sessionId;
-	private LdapSyncSourceInfo ldapSyncSourceInfo;
-	private UnixSyncSourceInfo unixSyncSourceInfo;
-	private FileSyncSourceInfo fileSyncSourceInfo;
+    public Long getNoOfNewUsers() {
+        return noOfNewUsers;
+    }
 
-	public Long getNoOfNewUsers() {
-		return noOfNewUsers;
-	}
+    public void setNoOfNewUsers(Long noOfUsers) {
+        this.noOfNewUsers = noOfUsers;
+    }
 
-	public void setNoOfNewUsers(Long noOfUsers) {
-		this.noOfNewUsers = noOfUsers;
-	}
+    public Long getNoOfModifiedUsers() {
+        return noOfModifiedUsers;
+    }
 
-	public Long getNoOfModifiedUsers() {
-		return noOfModifiedUsers;
-	}
+    public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
+        this.noOfModifiedUsers = noOfModifiedUsers;
+    }
 
-	public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
-		this.noOfModifiedUsers = noOfModifiedUsers;
-	}
+    public Long getNoOfNewGroups() {
+        return noOfNewGroups;
+    }
 
-	public Long getNoOfNewGroups() {
-		return noOfNewGroups;
-	}
+    public void setNoOfNewGroups(Long noOfNewGroups) {
+        this.noOfNewGroups = noOfNewGroups;
+    }
 
-	public void setNoOfNewGroups(Long noOfNewGroups) {
-		this.noOfNewGroups = noOfNewGroups;
-	}
+    public Long getNoOfModifiedGroups() {
+        return noOfModifiedGroups;
+    }
 
-	public Long getNoOfModifiedGroups() {
-		return noOfModifiedGroups;
-	}
+    public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
+        this.noOfModifiedGroups = noOfModifiedGroups;
+    }
 
-	public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
-		this.noOfModifiedGroups = noOfModifiedGroups;
-	}
+    public String getSyncSource() {
+        return syncSource;
+    }
 
-	public String getSyncSource() {
-		return syncSource;
-	}
+    public void setSyncSource(String syncSource) {
+        this.syncSource = syncSource;
+    }
 
-	public void setSyncSource(String syncSource) {
-		this.syncSource = syncSource;
-	}
+    public LdapSyncSourceInfo getLdapSyncSourceInfo() {
+        return ldapSyncSourceInfo;
+    }
 
-	public LdapSyncSourceInfo getLdapSyncSourceInfo() {
-		return ldapSyncSourceInfo;
-	}
+    public void setLdapSyncSourceInfo(LdapSyncSourceInfo ldapSyncSourceInfo) {
+        this.ldapSyncSourceInfo = ldapSyncSourceInfo;
+    }
 
-	public void setLdapSyncSourceInfo(LdapSyncSourceInfo ldapSyncSourceInfo) {
-		this.ldapSyncSourceInfo = ldapSyncSourceInfo;
-	}
+    public UnixSyncSourceInfo getUnixSyncSourceInfo() {
+        return unixSyncSourceInfo;
+    }
 
-	public UnixSyncSourceInfo getUnixSyncSourceInfo() {
-		return unixSyncSourceInfo;
-	}
+    public void setUnixSyncSourceInfo(UnixSyncSourceInfo unixSyncSourceInfo) {
+        this.unixSyncSourceInfo = unixSyncSourceInfo;
+    }
 
-	public void setUnixSyncSourceInfo(UnixSyncSourceInfo unixSyncSourceInfo) {
-		this.unixSyncSourceInfo = unixSyncSourceInfo;
-	}
+    public FileSyncSourceInfo getFileSyncSourceInfo() {
+        return fileSyncSourceInfo;
+    }
 
-	public FileSyncSourceInfo getFileSyncSourceInfo() {
-		return fileSyncSourceInfo;
-	}
+    public void setFileSyncSourceInfo(FileSyncSourceInfo fileSyncSourceInfo) {
+        this.fileSyncSourceInfo = fileSyncSourceInfo;
+    }
 
-	public void setFileSyncSourceInfo(FileSyncSourceInfo fileSyncSourceInfo) {
-		this.fileSyncSourceInfo = fileSyncSourceInfo;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public String getUserName() {
-		return userName;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+    public String getSessionId() {
+        return sessionId;
+    }
 
-	public String getSessionId() {
-		return sessionId;
-	}
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        toString(sb);
+        return sb.toString();
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		toString(sb);
-		return sb.toString();
-	}
-
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("UgsyncAuditInfo [No. of New users= ").append(noOfNewUsers);
-		sb.append(", No. of New groups= ").append(noOfNewGroups);
-		sb.append(", No. of Modified users= ").append(noOfModifiedUsers);
-		sb.append(", No. of Modified groups= ").append(noOfModifiedGroups);
-		sb.append(", syncSource= ").append(syncSource);
-		sb.append(", ldapSyncSourceInfo= ").append(ldapSyncSourceInfo);
-		sb.append(", unixSyncSourceInfo= ").append(unixSyncSourceInfo);
-		sb.append(", fileSyncSourceInfo= ").append(fileSyncSourceInfo);
-		sb.append("]");
-		return sb;
-	}
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("UgsyncAuditInfo [No. of New users= ").append(noOfNewUsers);
+        sb.append(", No. of New groups= ").append(noOfNewGroups);
+        sb.append(", No. of Modified users= ").append(noOfModifiedUsers);
+        sb.append(", No. of Modified groups= ").append(noOfModifiedGroups);
+        sb.append(", syncSource= ").append(syncSource);
+        sb.append(", ldapSyncSourceInfo= ").append(ldapSyncSourceInfo);
+        sb.append(", unixSyncSourceInfo= ").append(unixSyncSourceInfo);
+        sb.append(", fileSyncSourceInfo= ").append(fileSyncSourceInfo);
+        sb.append("]");
+        return sb;
+    }
 }

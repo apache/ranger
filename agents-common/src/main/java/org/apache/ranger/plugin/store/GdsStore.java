@@ -62,7 +62,6 @@ public interface GdsStore {
 
     List<RangerPolicy> getDatasetPolicies(Long datasetId) throws Exception;
 
-
     RangerProject createProject(RangerProject dataset) throws Exception;
 
     RangerProject updateProject(RangerProject dataset) throws Exception;
@@ -89,7 +88,6 @@ public interface GdsStore {
 
     List<RangerPolicy> getProjectPolicies(Long projectId) throws Exception;
 
-
     RangerDataShare createDataShare(RangerDataShare dataShare) throws Exception;
 
     RangerDataShare updateDataShare(RangerDataShare dataShare) throws Exception;
@@ -100,17 +98,15 @@ public interface GdsStore {
 
     PList<RangerDataShare> searchDataShares(SearchFilter filter) throws Exception;
 
-
-    RangerSharedResource addSharedResource(RangerSharedResource resource) throws Exception;
+    List<RangerSharedResource> addSharedResources(List<RangerSharedResource> resources) throws Exception;
 
     RangerSharedResource updateSharedResource(RangerSharedResource resource) throws Exception;
 
-    void removeSharedResource(Long sharedResourceId) throws Exception;
+    void removeSharedResources(List<Long> sharedResourceIds) throws Exception;
 
     RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception;
 
     PList<RangerSharedResource> searchSharedResources(SearchFilter filter) throws Exception;
-
 
     RangerDataShareInDataset addDataShareInDataset(RangerDataShareInDataset dataShareInDataset) throws Exception;
 
@@ -121,7 +117,6 @@ public interface GdsStore {
     RangerDataShareInDataset getDataShareInDataset(Long dataShareInDatasetId) throws Exception;
 
     PList<RangerDataShareInDataset> searchDataShareInDatasets(SearchFilter filter) throws Exception;
-
 
     RangerDatasetInProject addDatasetInProject(RangerDatasetInProject datasetInProject) throws Exception;
 

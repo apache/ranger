@@ -39,6 +39,27 @@
       <level>INFO</level>
     </filter>
   </appender>
+  <appender name="perf_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
+    <!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy-->
+    <!--for further documentation-->
+    <file>./ranger-mem-sizing-perf.log</file>
+    <append>true</append>
+    <encoder>
+      <pattern>%d [%t] %msg%n</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>./ranger-mem-sizing-perf.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+  </appender>
+  <logger name="org.apache.ranger.perf.tagenricher.tags.retrieval" additivity="false" level="info">
+    <appender-ref ref="perf_appender"/>
+  </logger>
+  <logger name="org.apache.ranger.perf.policyresourcematcher.gethierarchy" additivity="false" level="info">
+    <appender-ref ref="perf_appender"/>
+  </logger>
   <root level="INFO">
     <appender-ref ref="file"/>
   </root>

@@ -19,19 +19,19 @@
 
 package org.apache.ranger.view;
 
-import org.apache.ranger.common.view.VList;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXTrxLogV2List extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     List<VXTrxLogV2> vXTrxLogs = new ArrayList<>();
 
     public VXTrxLogV2List() {
@@ -52,8 +52,7 @@ public class VXTrxLogV2List extends VList {
     }
 
     /**
-     * @param vXTrxLogs
-     *            the vXTrxLogs to set
+     * @param vXTrxLogs the vXTrxLogs to set
      */
     @JsonProperty("vXTrxLogs")
     public void setVXTrxLogs(List<VXTrxLogV2> vXTrxLogs) {
@@ -62,9 +61,9 @@ public class VXTrxLogV2List extends VList {
 
     @Override
     public int getListSize() {
-	if (vXTrxLogs != null) {
-	    return vXTrxLogs.size();
-	}
+        if (vXTrxLogs != null) {
+            return vXTrxLogs.size();
+        }
         return 0;
     }
 
@@ -72,5 +71,4 @@ public class VXTrxLogV2List extends VList {
     public List<VXTrxLogV2> getList() {
         return vXTrxLogs;
     }
-
 }

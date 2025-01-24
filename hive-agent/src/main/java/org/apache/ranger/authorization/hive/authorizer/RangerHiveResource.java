@@ -19,128 +19,133 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
-
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizer.HiveObjectType;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
 import java.io.File;
 import java.util.ArrayList;
 
-
 public class RangerHiveResource extends RangerAccessResourceImpl {
-	public static final String KEY_DATABASE = "database";
-	public static final String KEY_TABLE    = "table";
-	public static final String KEY_UDF      = "udf";
-	public static final String KEY_COLUMN   = "column";
-	public static final String KEY_URL		= "url";
-	public static final String KEY_HIVESERVICE = "hiveservice";
-	public static final String KEY_GLOBAL	 = "global";
+    public static final String KEY_DATABASE    = "database";
+    public static final String KEY_TABLE       = "table";
+    public static final String KEY_UDF         = "udf";
+    public static final String KEY_COLUMN      = "column";
+    public static final String KEY_URL         = "url";
+    public static final String KEY_HIVESERVICE = "hiveservice";
+    public static final String KEY_GLOBAL      = "global";
 
+    private HiveObjectType objectType;
 
-	private HiveObjectType objectType = null;
+    //FirstLevelResource => Database or URL or Hive Service or Global
+    //SecondLevelResource => Table or UDF
+    //ThirdLevelResource => column
+    public RangerHiveResource(HiveObjectType objectType, String firstLevelResource) {
+        this(objectType, firstLevelResource, null, null);
+    }
 
-	//FirstLevelResource => Database or URL or Hive Service or Global
-	//SecondLevelResource => Table or UDF
-	//ThirdLevelResource => column
-	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource) {
-		this(objectType, firstLevelResource, null, null);
-	}
+    public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource) {
+        this(objectType, firstLevelResource, secondLevelResource, null);
+    }
 
-	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource) {
-		this(objectType, firstLevelResource, secondLevelResource, null);
-	}
-	
-	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource, String thirdLevelResource) {
-		this.objectType = objectType;
+    public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource, String thirdLevelResource) {
+        this.objectType = objectType;
 
-		switch(objectType) {
-			case DATABASE:
-				setValue(KEY_DATABASE, firstLevelResource);
-			break;
+        switch (objectType) {
+            case DATABASE:
+                setValue(KEY_DATABASE, firstLevelResource);
+                break;
 
-			case FUNCTION:
-				if (firstLevelResource == null) {
-					firstLevelResource = "";
-				}
-				setValue(KEY_DATABASE, firstLevelResource);
-				setValue(KEY_UDF, secondLevelResource);
-			break;
+            case FUNCTION:
+                if (firstLevelResource == null) {
+                    firstLevelResource = "";
+                }
 
-			case COLUMN:
-				setValue(KEY_DATABASE, firstLevelResource);
-				setValue(KEY_TABLE, secondLevelResource);
-				setValue(KEY_COLUMN, thirdLevelResource);
-			break;
+                setValue(KEY_DATABASE, firstLevelResource);
+                setValue(KEY_UDF, secondLevelResource);
+                break;
 
-			case TABLE:
-			case VIEW:
-			case INDEX:
-			case PARTITION:
-				setValue(KEY_DATABASE, firstLevelResource);
-				setValue(KEY_TABLE, secondLevelResource);
-			break;
+            case COLUMN:
+                setValue(KEY_DATABASE, firstLevelResource);
+                setValue(KEY_TABLE, secondLevelResource);
+                setValue(KEY_COLUMN, thirdLevelResource);
+                break;
 
-			case URI:
-				ArrayList<String> objectList = new ArrayList<>();
-				if (StringUtils.isNotEmpty(firstLevelResource)) {
-					objectList.add(firstLevelResource);
-					if (!firstLevelResource.substring(firstLevelResource.length()-1).equals(File.separator)) {
-						firstLevelResource = firstLevelResource + File.separator;
-						objectList.add(firstLevelResource);
-					} else {
-						firstLevelResource = firstLevelResource.substring(firstLevelResource.length()-2);
-						objectList.add(firstLevelResource);
-					}
-				}
-				setValue(KEY_URL,objectList);
-			break;
+            case TABLE:
+            case VIEW:
+            case INDEX:
+            case PARTITION:
+                setValue(KEY_DATABASE, firstLevelResource);
+                setValue(KEY_TABLE, secondLevelResource);
+                break;
 
-			case SERVICE_NAME:
-				if (firstLevelResource == null) {
-					firstLevelResource = "";
-				}
-				setValue(KEY_HIVESERVICE,firstLevelResource);
-			break;
+            case URI:
+                ArrayList<String> objectList = new ArrayList<>();
+                if (StringUtils.isNotEmpty(firstLevelResource)) {
+                    objectList.add(firstLevelResource);
 
-			case GLOBAL:
-				if (firstLevelResource == null) {
-					firstLevelResource = KEY_GLOBAL;
-					//There is no resource name associated to global operations
-				}
-				setValue(KEY_GLOBAL,firstLevelResource);
-			break;
+                    if (!firstLevelResource.substring(firstLevelResource.length() - 1).equals(File.separator)) {
+                        firstLevelResource = firstLevelResource + File.separator;
 
-			case NONE:
-			default:
-			break;
-		}
-	}
+                        objectList.add(firstLevelResource);
+                    } else {
+                        firstLevelResource = firstLevelResource.substring(firstLevelResource.length() - 2);
 
-	public HiveObjectType getObjectType() {
-		return objectType;
-	}
+                        objectList.add(firstLevelResource);
+                    }
+                }
 
-	public String getDatabase() {
-		return (String) getValue(KEY_DATABASE);
-	}
+                setValue(KEY_URL, objectList);
+                break;
 
-	public String getTable() {
-		return (String) getValue(KEY_TABLE);
-	}
+            case SERVICE_NAME:
+                if (firstLevelResource == null) {
+                    firstLevelResource = "";
+                }
 
-	public String getUdf() {
-		return (String) getValue(KEY_UDF);
-	}
+                setValue(KEY_HIVESERVICE, firstLevelResource);
+                break;
 
-	public String getColumn() {
-		return (String) getValue(KEY_COLUMN);
-	}
+            case GLOBAL:
+                if (firstLevelResource == null) {
+                    firstLevelResource = KEY_GLOBAL;
+                    //There is no resource name associated to global operations
+                }
 
-	public String getUrl() {
-		return (String) getValue(KEY_URL);
-	}
+                setValue(KEY_GLOBAL, firstLevelResource);
+                break;
 
-	public String getHiveService() {
-		return (String) getValue(KEY_HIVESERVICE);
-	}
+            case NONE:
+            default:
+                break;
+        }
+    }
+
+    public HiveObjectType getObjectType() {
+        return objectType;
+    }
+
+    public String getDatabase() {
+        return (String) getValue(KEY_DATABASE);
+    }
+
+    public String getTable() {
+        return (String) getValue(KEY_TABLE);
+    }
+
+    public String getUdf() {
+        return (String) getValue(KEY_UDF);
+    }
+
+    public String getColumn() {
+        return (String) getValue(KEY_COLUMN);
+    }
+
+    public String getUrl() {
+        return (String) getValue(KEY_URL);
+    }
+
+    public String getHiveService() {
+        return (String) getValue(KEY_HIVESERVICE);
+    }
 }

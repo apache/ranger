@@ -21,8 +21,8 @@ package org.apache.ranger.plugin.contextenricher;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import org.apache.ranger.plugin.contextenricher.TestTagEnricher.TagEnricherTestCase.TestData;
@@ -30,7 +30,10 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -49,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class TestTagEnricher {
@@ -84,18 +88,18 @@ public class TestTagEnricher {
         assertEquals(matchTypes.get(2), MatchType.ANCESTOR);
         assertEquals(matchTypes.get(3), MatchType.DESCENDANT);
         assertEquals(matchTypes.get(4), MatchType.NONE);
-        assertEquals(matchTypes.get(5), null);
+        assertNull(matchTypes.get(5));
     }
 
     @Test
     public void testTagEnricher_hive() {
-        String[] hiveTestResourceFiles = { "/contextenricher/test_tagenricher_hive.json" };
+        String[] hiveTestResourceFiles = {"/contextenricher/test_tagenricher_hive.json"};
 
         runTestsFromResourceFiles(hiveTestResourceFiles);
     }
 
     private void runTestsFromResourceFiles(String[] resourceNames) {
-        for(String resourceName : resourceNames) {
+        for (String resourceName : resourceNames) {
             InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
             InputStreamReader reader   = new InputStreamReader(inStream);
 
@@ -128,14 +132,15 @@ public class TestTagEnricher {
         for (TestData test : testCase.tests) {
             RangerAccessRequestImpl request = new RangerAccessRequestImpl(test.resource, test.accessType, "testUser", null, null);
 
+            ((RangerMutableResource) request.getResource()).setServiceDef(testCase.serviceDef);
             tagEnricher.enrich(request);
 
             List<RangerTag> expected = test.result;
 
-            Set<RangerTagForEval> result   = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+            Set<RangerTagForEval> result = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
             expectedTags.clear();
-            if(expected != null) {
+            if (expected != null) {
                 for (RangerTag tag : expected) {
                     expectedTags.add(tag.getType());
                 }
@@ -143,8 +148,8 @@ public class TestTagEnricher {
             }
 
             resultTags.clear();
-            if(result != null) {
-                for(RangerTagForEval tag : result) {
+            if (result != null) {
+                for (RangerTagForEval tag : result) {
                     resultTags.add(tag.getType());
                 }
                 Collections.sort(resultTags);
@@ -163,8 +168,7 @@ public class TestTagEnricher {
         public Map<Long, List<Long>>       resourceToTagIds;
         public List<TestData>              tests;
 
-
-        class TestData {
+        static class TestData {
             public String               name;
             public RangerAccessResource resource;
             public String               accessType;
@@ -175,7 +179,7 @@ public class TestTagEnricher {
     static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
         @Override
         public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-                                                JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
         }
     }

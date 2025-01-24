@@ -21,29 +21,32 @@ package org.apache.ranger.authorization.credutils.kerberos;
 
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractJaasConf extends Configuration {
-    private final String userPrincipalName;
+    private final String  userPrincipalName;
     private final boolean enableDebugLogs;
 
     public AbstractJaasConf(final String userPrincipalName, final boolean enableDebugLogs) {
         this.userPrincipalName = userPrincipalName;
-        this.enableDebugLogs = enableDebugLogs;
+        this.enableDebugLogs   = enableDebugLogs;
     }
 
     @Override
     public AppConfigurationEntry[] getAppConfigurationEntry(final String name) {
         final Map<String, String> options = new HashMap<>();
+
         options.put("principal", userPrincipalName);
         options.put("isInitiator", Boolean.TRUE.toString());
         options.put("storeKey", Boolean.TRUE.toString());
         options.put("debug", Boolean.toString(enableDebugLogs));
+
         addOptions(options);
-        return new AppConfigurationEntry[] { new AppConfigurationEntry("com.sun.security.auth.module.Krb5LoginModule",
-                AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, Collections.unmodifiableMap(options)) };
+
+        return new AppConfigurationEntry[] {new AppConfigurationEntry("com.sun.security.auth.module.Krb5LoginModule", AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, Collections.unmodifiableMap(options))};
     }
 
     abstract void addOptions(Map<String, String> options);

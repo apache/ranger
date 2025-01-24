@@ -19,16 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 import org.apache.ranger.metrics.RangerAdminMetricsWrapper;
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.apache.ranger.util.RangerMetricsUtil;
@@ -40,17 +30,28 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Path("metrics")
 @Component
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class MetricsREST {
     private static final Logger LOG = LoggerFactory.getLogger(MetricsREST.class);
-    private static final RuntimeMXBean RUNTIME = ManagementFactory.getRuntimeMXBean();
-    private static final String JVM_MACHINE_ACTUAL_NAME = RUNTIME.getVmName();
-    private static final String VERSION = RUNTIME.getVmVersion();
-    private static final String JVM_MACHINE_REPRESENTATION_NAME = RUNTIME.getName();
-    private static final String JVM_VENDOR_NAME =  RUNTIME.getVmVendor();
+
+    private static final RuntimeMXBean RUNTIME                         = ManagementFactory.getRuntimeMXBean();
+    private static final String        JVM_MACHINE_ACTUAL_NAME         = RUNTIME.getVmName();
+    private static final String        VERSION                         = RUNTIME.getVmVersion();
+    private static final String        JVM_MACHINE_REPRESENTATION_NAME = RUNTIME.getName();
+    private static final String        JVM_VENDOR_NAME                 = RUNTIME.getVmVendor();
 
     @Autowired
     RangerMetricsUtil jvmMetricUtil;
@@ -60,25 +61,23 @@ public class MetricsREST {
 
     @GET
     @Path("/status")
-    @Produces({ "application/json" })
+    @Produces("application/json")
     public RangerMetrics getStatus() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> MetricsREST.getStatus()");
-        }
+        LOG.debug("==> MetricsREST.getStatus()");
 
-        Map<String, Object> jvm = new LinkedHashMap<>();
+        Map<String, Object> jvm       = new LinkedHashMap<>();
         Map<String, Object> vmDetails = new LinkedHashMap<>();
+
         vmDetails.put("JVM Machine Actual Name", JVM_MACHINE_ACTUAL_NAME);
         vmDetails.put("version", VERSION);
         vmDetails.put("JVM Machine Representation Name", JVM_MACHINE_REPRESENTATION_NAME);
         vmDetails.put("Up time of JVM", RUNTIME.getUptime());
         vmDetails.put("JVM Vendor Name", JVM_VENDOR_NAME);
         vmDetails.putAll(jvmMetricUtil.getValues());
-        jvm.put("jvm",vmDetails);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== MetricsREST.getStatus(): jvm=" + jvm);
-        }
+        jvm.put("jvm", vmDetails);
+
+        LOG.debug("<== MetricsREST.getStatus(): jvm={}", jvm);
 
         return new RangerMetrics(jvm);
     }
@@ -87,19 +86,18 @@ public class MetricsREST {
     @Path("/prometheus")
     @Produces(MediaType.TEXT_PLAIN)
     public String getMetricsPrometheus() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> MetricsREST.getMetricsPrometheus()");
-        }
+        LOG.debug("==> MetricsREST.getMetricsPrometheus()");
+
         String ret = "";
+
         try {
             ret = rangerAdminMetricsWrapper.getRangerMetricsInPrometheusFormat();
         } catch (Exception e) {
             LOG.error("MetricsREST.getMetricsPrometheus(): Exception occurred while getting metric.", e);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== MetricsREST.getMetricsPrometheus(): ret=" + ret);
-        }
+        LOG.debug("<== MetricsREST.getMetricsPrometheus(): ret={}", ret);
+
         return ret;
     }
 
@@ -107,20 +105,18 @@ public class MetricsREST {
     @Path("/json")
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Map<String, Object>> getMetricsJson() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> MetricsREST.getMetricsJson()");
-        }
+        LOG.debug("==> MetricsREST.getMetricsJson()");
 
         Map<String, Map<String, Object>> ret = null;
+
         try {
             ret = rangerAdminMetricsWrapper.getRangerMetrics();
         } catch (Exception e) {
             LOG.error("MetricsREST.getMetricsJson(): Exception occurred while getting metric.", e);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== MetricsREST.getMetricsJson(): ret=" + ret);
-        }
+        LOG.debug("<== MetricsREST.getMetricsJson(): ret={}", ret);
+
         return ret;
     }
 }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
+package org.apache.ranger.service;
 
 import org.apache.ranger.entity.XXCredentialStore;
 import org.apache.ranger.view.VXCredentialStore;
@@ -27,17 +27,13 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class XCredentialStoreService extends XCredentialStoreServiceBase<XXCredentialStore, VXCredentialStore> {
+    @Override
+    protected void validateForCreate(VXCredentialStore vObj) {
+        // TODO Auto-generated method stub
+    }
 
-	@Override
-	protected void validateForCreate(VXCredentialStore vObj) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void validateForUpdate(VXCredentialStore vObj, XXCredentialStore mObj) {
-		// TODO Auto-generated method stub
-
-	}
-
+    @Override
+    protected void validateForUpdate(VXCredentialStore vObj, XXCredentialStore mObj) {
+        // TODO Auto-generated method stub
+    }
 }

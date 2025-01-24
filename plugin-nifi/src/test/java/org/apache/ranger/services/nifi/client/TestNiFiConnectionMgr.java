@@ -26,23 +26,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TestNiFiConnectionMgr {
-
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testValidURLWithWrongEndPoint() throws Exception {
         final String nifiUrl = "http://localhost:8080/nifi";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
         NiFiConnectionMgr.getNiFiClient("nifi", configs);
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidURL() throws Exception {
         final String nifiUrl = "not a url";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
@@ -53,7 +52,7 @@ public class TestNiFiConnectionMgr {
     public void testAuthTypeNone() throws Exception {
         final String nifiUrl = "http://localhost:8080/nifi-api/resources";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
@@ -65,7 +64,7 @@ public class TestNiFiConnectionMgr {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAuthTypeNoneMissingURL() throws Exception {
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, null);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
@@ -76,7 +75,7 @@ public class TestNiFiConnectionMgr {
     public void testAuthTypeSSL() throws Exception {
         final String nifiUrl = "https://localhost:8080/nifi-api/resources";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.SSL.name());
 
@@ -95,7 +94,7 @@ public class TestNiFiConnectionMgr {
     public void testAuthTypeSSLWithNonHttpsUrl() throws Exception {
         final String nifiUrl = "http://localhost:8080/nifi-api/resources";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.SSL.name());
 
@@ -114,11 +113,10 @@ public class TestNiFiConnectionMgr {
     public void testAuthTypeSSLMissingConfigs() throws Exception {
         final String nifiUrl = "http://localhost:8080/nifi";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.SSL.name());
 
         NiFiConnectionMgr.getNiFiClient("nifi", configs);
     }
-
 }

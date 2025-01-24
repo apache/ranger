@@ -17,13 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.security.web.authentication;
-
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+package org.apache.ranger.security.web.authentication;
 
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.view.VXResponse;
@@ -32,39 +26,40 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler;
 
-public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler
-		implements LogoutSuccessHandler {
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-	@Autowired
-	JSONUtil jsonUtil;
+import java.io.IOException;
 
-	@Override
-	public void onLogoutSuccess(HttpServletRequest request,
-			HttpServletResponse response, Authentication authentication)
-			throws IOException, ServletException {
+public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler implements LogoutSuccessHandler {
+    @Autowired
+    JSONUtil jsonUtil;
 
-		request.getServletContext().removeAttribute(request.getRequestedSessionId());
-		
-		response.setContentType("application/json;charset=UTF-8");
-		response.setHeader("Cache-Control", "no-cache");
-		response.setHeader("X-Frame-Options", "DENY");
-		String jsonStr = "";
-		try {
-			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_OK);
-			vXResponse.setMsgDesc("Logout Successful");
-			jsonStr = jsonUtil.writeObjectAsString(vXResponse);
+    @Override
+    public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        request.getServletContext().removeAttribute(request.getRequestedSessionId());
 
-			response.setStatus(HttpServletResponse.SC_OK);
-			response.getWriter().write(jsonStr);
-			
-			if (logger.isDebugEnabled()) {
-				logger.debug("Log-out Successfully done. Returning Json : " +jsonStr);
-			}
-			
-		} catch (IOException e) {
-			logger.info("Error while writing JSON in HttpServletResponse");
-		}
-	}
+        response.setContentType("application/json;charset=UTF-8");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("X-Frame-Options", "DENY");
 
+        try {
+            VXResponse vXResponse = new VXResponse();
+
+            vXResponse.setStatusCode(HttpServletResponse.SC_OK);
+            vXResponse.setMsgDesc("Logout Successful");
+
+            String jsonStr = jsonUtil.writeObjectAsString(vXResponse);
+
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write(jsonStr);
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Log-out Successfully done. Returning Json :" + jsonStr);
+            }
+        } catch (IOException e) {
+            logger.info("Error while writing JSON in HttpServletResponse");
+        }
+    }
 }

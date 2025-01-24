@@ -39,166 +39,186 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 
 public class RangerOzoneAuthorizer implements IAccessAuthorizer {
-	public static final String ACCESS_TYPE_READ = "read";
-	public static final String ACCESS_TYPE_WRITE = "write";
-	public static final String ACCESS_TYPE_CREATE = "create";
-	public static final String ACCESS_TYPE_LIST = "list";
-	public static final String ACCESS_TYPE_DELETE = "delete";
-	public static final String ACCESS_TYPE_READ_ACL = "read_acl";
-	public static final String ACCESS_TYPE_WRITE_ACL = "write_acl";
+    private static final Logger LOG                        = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
+    private static final Logger PERF_OZONEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("ozoneauth.request");
 
+    public static final String ACCESS_TYPE_READ      = "read";
+    public static final String ACCESS_TYPE_WRITE     = "write";
+    public static final String ACCESS_TYPE_CREATE    = "create";
+    public static final String ACCESS_TYPE_LIST      = "list";
+    public static final String ACCESS_TYPE_DELETE    = "delete";
+    public static final String ACCESS_TYPE_READ_ACL  = "read_acl";
+    public static final String ACCESS_TYPE_WRITE_ACL = "write_acl";
+    public static final String KEY_RESOURCE_VOLUME   = "volume";
+    public static final String KEY_RESOURCE_BUCKET   = "bucket";
+    public static final String KEY_RESOURCE_KEY      = "key";
 
-    public static final String KEY_RESOURCE_VOLUME = "volume";
-	public static final String KEY_RESOURCE_BUCKET = "bucket";
-	public static final String KEY_RESOURCE_KEY = "key";
+    private static volatile RangerBasePlugin rangerPlugin;
 
-	private static final Logger PERF_OZONEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("ozoneauth.request");
+    RangerDefaultAuditHandler auditHandler;
 
-    private static final Logger LOG = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
+    public RangerOzoneAuthorizer() {
+        RangerBasePlugin plugin = rangerPlugin;
 
-	private static volatile RangerBasePlugin rangerPlugin = null;
-	RangerDefaultAuditHandler auditHandler = null;
+        if (plugin == null) {
+            synchronized (RangerOzoneAuthorizer.class) {
+                plugin = rangerPlugin;
 
-	public RangerOzoneAuthorizer() {
-		rangerPlugin = new RangerBasePlugin("ozone", "ozone");
+                if (plugin == null) {
+                    plugin = new RangerBasePlugin("ozone", "ozone");
 
-		rangerPlugin.init(); // this will initialize policy engine and policy refresher
-		auditHandler = new RangerDefaultAuditHandler();
-		rangerPlugin.setResultProcessor(auditHandler);
-	}
+                    plugin.init(); // this will initialize policy engine and policy refresher
 
-	@Override
-	public boolean checkAccess(IOzoneObj ozoneObject, RequestContext context) {
-		boolean returnValue = false;
-		if (ozoneObject == null) {
-			LOG.error("Ozone object is null!!");
-			return returnValue;
-		}
-		OzoneObj ozoneObj = (OzoneObj) ozoneObject;
-		UserGroupInformation ugi = context.getClientUgi();
-		ACLType operation = context.getAclRights();
-		String resource = ozoneObj.getPath();
+                    auditHandler = new RangerDefaultAuditHandler();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = " + operation + ", resource = " +
-					resource + ", store type = " + OzoneObj.StoreType.values() + ", ugi = " + ugi + ", ip = " +
-					context.getIp() + ", resourceType = " + ozoneObj.getResourceType() + ")");
-		}
+                    plugin.setResultProcessor(auditHandler);
 
-		if (rangerPlugin == null) {
-			MiscUtil.logErrorMessageByInterval(LOG,
-					"Authorizer is still not initialized");
-			return returnValue;
-		}
+                    rangerPlugin = plugin;
+                }
+            }
+        }
+    }
 
-		//TODO: If sorce type is S3 and resource is volume, then allow it by default
-		if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3 && ozoneObj.getResourceType() == OzoneObj.ResourceType.VOLUME) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("If store type is s3 and resource is volume, then we allow it by default!  Returning true");
-			}
-			LOG.warn("Allowing access by default since source type is S3 and resource type is Volume!!");
-			return true;
-		}
+    @Override
+    public boolean checkAccess(IOzoneObj ozoneObject, RequestContext context) {
+        boolean returnValue = false;
 
-		RangerPerfTracer perf = null;
+        if (ozoneObject == null) {
+            LOG.error("Ozone object is null!!");
 
-		if (RangerPerfTracer.isPerfTraceEnabled(PERF_OZONEAUTH_REQUEST_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_OZONEAUTH_REQUEST_LOG, "RangerOzoneAuthorizer.authorize(resource=" + resource + ")");
-		}
+            return false;
+        }
 
-		Date eventTime = new Date();
-		String accessType = mapToRangerAccessType(operation);
-		if (accessType == null) {
-			MiscUtil.logErrorMessageByInterval(LOG,
-					"Unsupported access type. operation=" + operation) ;
-			LOG.error("Unsupported access type. operation=" + operation + ", resource=" + resource);
-			return returnValue;
-		}
-		String action = accessType;
-		String clusterName = rangerPlugin.getClusterName();
+        OzoneObj             ozoneObj  = (OzoneObj) ozoneObject;
+        UserGroupInformation ugi       = context.getClientUgi();
+        ACLType              operation = context.getAclRights();
+        String               resource  = ozoneObj.getPath();
 
-		RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
-		rangerRequest.setUser(ugi.getShortUserName());
-		rangerRequest.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
-		rangerRequest.setClientIPAddress(context.getIp().getHostAddress());
-		rangerRequest.setRemoteIPAddress(context.getIp().getHostAddress());
-		rangerRequest.setAccessTime(eventTime);
+        LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = {}, resource = {}, store type = {}, ugi = {}, ip = {}, resourceType = {}", operation, resource, OzoneObj.StoreType.values(), ugi, context.getIp(), ozoneObj.getResourceType());
 
-		RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
-		rangerResource.setOwnerUser(context.getOwnerName());
+        if (rangerPlugin == null) {
+            MiscUtil.logErrorMessageByInterval(LOG, "Authorizer is still not initialized");
 
-		rangerRequest.setResource(rangerResource);
-		rangerRequest.setAccessType(accessType);
-		rangerRequest.setAction(action);
-		rangerRequest.setRequestData(resource);
-		rangerRequest.setClusterName(clusterName);
+            return false;
+        }
 
-		if (ozoneObj.getResourceType() == OzoneObj.ResourceType.VOLUME) {
-			rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
-		} else if (ozoneObj.getResourceType() == OzoneObj.ResourceType.BUCKET || ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
-			if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3) {
-				rangerResource.setValue(KEY_RESOURCE_VOLUME, "s3Vol");
-			} else {
-				rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
-			}
-			rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
-			if (ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
-				rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
-			}
-		} else {
-			LOG.error("Unsupported resource = " + resource);
-			MiscUtil.logErrorMessageByInterval(LOG, "Unsupported resource type " + ozoneObj.getResourceType() + " for resource = " + resource
-					+ ", request=" + rangerRequest);
-			return returnValue;
-		}
+        //TODO: If source type is S3 and resource is volume, then allow it by default
+        if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3 && ozoneObj.getResourceType() == OzoneObj.ResourceType.VOLUME) {
+            LOG.debug("If store type is s3 and resource is volume, then we allow it by default!  Returning true");
+            LOG.warn("Allowing access by default since source type is S3 and resource type is Volume!!");
 
-		try {
-			RangerAccessResult result = rangerPlugin
-					.isAccessAllowed(rangerRequest);
-			if (result == null) {
-				LOG.error("Ranger Plugin returned null. Returning false");
-			} else {
-				returnValue = result.getIsAllowed();
-			}
-		} catch (Throwable t) {
-			LOG.error("Error while calling isAccessAllowed(). request="
-					+ rangerRequest, t);
-		}
-		RangerPerfTracer.log(perf);
+            return true;
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("rangerRequest=" + rangerRequest + ", return="
-					+ returnValue);
-		}
-		return returnValue;
-	}
+        RangerPerfTracer perf = null;
 
-	private String mapToRangerAccessType(ACLType operation) {
-		String rangerAccessType = null;
-		switch (operation) {
-			case READ:
-				rangerAccessType = ACCESS_TYPE_READ;
-				break;
-			case WRITE:
-				rangerAccessType = ACCESS_TYPE_WRITE;
-				break;
-			case CREATE:
-				rangerAccessType = ACCESS_TYPE_CREATE;
-				break;
-			case DELETE:
-				rangerAccessType = ACCESS_TYPE_DELETE;
-				break;
-			case LIST:
-				rangerAccessType = ACCESS_TYPE_LIST;
-				break;
-			case READ_ACL:
-				rangerAccessType = ACCESS_TYPE_READ_ACL;
-				break;
-			case WRITE_ACL:
-				rangerAccessType = ACCESS_TYPE_WRITE_ACL;
-				break;
-		}
-		return rangerAccessType;
-	}
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_OZONEAUTH_REQUEST_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_OZONEAUTH_REQUEST_LOG, String.format("RangerOzoneAuthorizer.authorize(resource = %s)", resource));
+        }
+
+        Date   eventTime  = new Date();
+        String accessType = mapToRangerAccessType(operation);
+
+        if (accessType == null) {
+            String message = String.format("Unsupported access type. operation = %s", operation);
+
+            MiscUtil.logErrorMessageByInterval(LOG, message);
+            LOG.error("{}, resource = {}", message, resource);
+
+            return false;
+        }
+
+        String                  clusterName   = rangerPlugin.getClusterName();
+        RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
+
+        rangerRequest.setUser(ugi.getShortUserName());
+        rangerRequest.setUserGroups(Sets.newHashSet(ugi.getGroupNames()));
+        rangerRequest.setClientIPAddress(context.getIp().getHostAddress());
+        rangerRequest.setRemoteIPAddress(context.getIp().getHostAddress());
+        rangerRequest.setAccessTime(eventTime);
+
+        RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+
+        rangerResource.setOwnerUser(context.getOwnerName());
+        rangerRequest.setResource(rangerResource);
+        rangerRequest.setAccessType(accessType);
+        rangerRequest.setAction(accessType);
+        rangerRequest.setRequestData(resource);
+        rangerRequest.setClusterName(clusterName);
+
+        if (ozoneObj.getResourceType() == OzoneObj.ResourceType.VOLUME) {
+            rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
+        } else if (ozoneObj.getResourceType() == OzoneObj.ResourceType.BUCKET || ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
+            if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3) {
+                rangerResource.setValue(KEY_RESOURCE_VOLUME, "s3Vol");
+            } else {
+                rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
+            }
+
+            rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
+
+            if (ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
+                rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
+            }
+        } else {
+            LOG.error("Unsupported resource = {}", resource);
+
+            String message = String.format("Unsupported resource type = %s for resource = %s, request = %s", ozoneObj.getResourceType(), resource, rangerRequest);
+            MiscUtil.logErrorMessageByInterval(LOG, message);
+
+            return false;
+        }
+
+        try {
+            RangerAccessResult result = rangerPlugin.isAccessAllowed(rangerRequest);
+
+            if (result == null) {
+                LOG.error("Ranger Plugin returned null. Returning false");
+            } else {
+                returnValue = result.getIsAllowed();
+            }
+        } catch (Throwable t) {
+            LOG.error("Error while calling isAccessAllowed(). request = {}", rangerRequest, t);
+        }
+
+        RangerPerfTracer.log(perf);
+
+        LOG.debug("rangerRequest = {}, return = {}", rangerRequest, returnValue);
+
+        return returnValue;
+    }
+
+    private String mapToRangerAccessType(ACLType operation) {
+        final String rangerAccessType;
+
+        switch (operation) {
+            case READ:
+                rangerAccessType = ACCESS_TYPE_READ;
+                break;
+            case WRITE:
+                rangerAccessType = ACCESS_TYPE_WRITE;
+                break;
+            case CREATE:
+                rangerAccessType = ACCESS_TYPE_CREATE;
+                break;
+            case DELETE:
+                rangerAccessType = ACCESS_TYPE_DELETE;
+                break;
+            case LIST:
+                rangerAccessType = ACCESS_TYPE_LIST;
+                break;
+            case READ_ACL:
+                rangerAccessType = ACCESS_TYPE_READ_ACL;
+                break;
+            case WRITE_ACL:
+                rangerAccessType = ACCESS_TYPE_WRITE_ACL;
+                break;
+            default:
+                LOG.error("Unknown operation!");
+                rangerAccessType = null;
+                break;
+        }
+
+        return rangerAccessType;
+    }
 }
-

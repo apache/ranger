@@ -17,10 +17,6 @@
 
 package org.apache.ranger.authorization.elasticsearch.plugin.authc.user;
 
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -28,76 +24,77 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.RestStatus;
 
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+
 public class UsernamePasswordToken {
+    public static final String USERNAME          = "username";
+    public static final String BASIC_AUTH_PREFIX = "Basic ";
+    public static final String BASIC_AUTH_HEADER = "Authorization";
 
-	public static final String USERNAME = "username";
+    private String username;
+    private String password;
 
-	public static final String BASIC_AUTH_PREFIX = "Basic ";
+    public UsernamePasswordToken(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
 
-	public static final String BASIC_AUTH_HEADER = "Authorization";
+    public static UsernamePasswordToken parseToken(RestRequest request) {
+        Map<String, List<String>> headers = request.getHeaders();
 
-	private String username;
+        if (MapUtils.isEmpty(headers)) {
+            return null;
+        }
 
-	private String password;
+        List<String> authStrs = headers.get(BASIC_AUTH_HEADER);
 
-	public UsernamePasswordToken(String username, String password) {
-		this.username = username;
-		this.password = password;
-	}
+        if (CollectionUtils.isEmpty(authStrs)) {
+            return null;
+        }
 
-	public static UsernamePasswordToken parseToken(RestRequest request) {
+        String authStr = authStrs.get(0);
 
-		Map<String, List<String>> headers = request.getHeaders();
-		if (MapUtils.isEmpty(headers)) {
-			return null;
-		}
-		List<String> authStrs = headers.get(BASIC_AUTH_HEADER);
-		if (CollectionUtils.isEmpty(authStrs)) {
-			return null;
-		}
+        if (StringUtils.isEmpty(authStr)) {
+            return null;
+        }
 
-		String authStr = authStrs.get(0);
-		if (StringUtils.isEmpty(authStr)) {
-			return null;
-		}
+        String userPass;
 
-		String userPass = "";
-		try {
-			userPass = new String(Base64.getUrlDecoder().decode(authStr.substring(BASIC_AUTH_PREFIX.length())));
-		} catch (IllegalArgumentException e) {
-			throw new ElasticsearchStatusException("Error: Failed to parse user authentication.",
-					RestStatus.UNAUTHORIZED, e);
-		}
+        try {
+            userPass = new String(Base64.getUrlDecoder().decode(authStr.substring(BASIC_AUTH_PREFIX.length())));
+        } catch (IllegalArgumentException e) {
+            throw new ElasticsearchStatusException("Error: Failed to parse user authentication.", RestStatus.UNAUTHORIZED, e);
+        }
 
-		int i = StringUtils.indexOf(userPass, ':');
-		if (i <= 0) {
-			throw new ElasticsearchStatusException(
-					"Error: Parse user authentication to get the wrong userPass[{}].",
-					RestStatus.UNAUTHORIZED, userPass);
-		}
-		return new UsernamePasswordToken(StringUtils.substring(userPass, 0, i),
-				StringUtils.substring(userPass, i + 1, userPass.length()));
+        int i = StringUtils.indexOf(userPass, ':');
 
-	}
+        if (i <= 0) {
+            throw new ElasticsearchStatusException("Error: Parse user authentication to get the wrong userPass[{}].", RestStatus.UNAUTHORIZED, userPass);
+        }
 
-	public String getUsername() {
-		return username;
-	}
+        return new UsernamePasswordToken(StringUtils.substring(userPass, 0, i), StringUtils.substring(userPass, i + 1, userPass.length()));
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	@Override
-	public String toString() {
-		return "UsernamePasswordToken [username=" + username + ", password=" + "******" + "]";
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "UsernamePasswordToken [username=" + username + ", password=" + "******" + "]";
+    }
 }

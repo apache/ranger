@@ -19,74 +19,74 @@
 
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 
-public class XXSecurityZoneRefGroupDao extends BaseDao<XXSecurityZoneRefGroup>{
+import javax.persistence.NoResultException;
 
-	public XXSecurityZoneRefGroupDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+import java.util.Collections;
+import java.util.List;
 
-	public List<XXSecurityZoneRefGroup> findByZoneId(Long zoneId) {
+public class XXSecurityZoneRefGroupDao extends BaseDao<XXSecurityZoneRefGroup> {
+    public XXSecurityZoneRefGroupDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
+
+    public List<XXSecurityZoneRefGroup> findByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-        	List<XXSecurityZoneRefGroup> xxZoneRefService = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefGroup.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .getResultList();
-            return xxZoneRefService;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefGroup> findByGroupId(Long groupId) {
-		if (groupId == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXSecurityZoneRefGroup.findByGroupId", tClass)
-					.setParameter("groupId", groupId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.emptyList();
-		}
-	}
+    public List<XXSecurityZoneRefGroup> findByGroupId(Long groupId) {
+        if (groupId == null) {
+            return Collections.emptyList();
+        }
 
-	public List<XXSecurityZoneRefGroup> findAdminGroupByZoneId(Long zoneId) {
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZoneRefGroup.findByGroupId", tClass)
+                    .setParameter("groupId", groupId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<XXSecurityZoneRefGroup> findAdminGroupByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-        	List<XXSecurityZoneRefGroup> xxZoneRefGroup = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefGroup.findGroupTypeByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .setParameter("groupType", "1")
                     .getResultList();
-            return xxZoneRefGroup;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefGroup> findAuditGroupByZoneId(Long zoneId) {
+    public List<XXSecurityZoneRefGroup> findAuditGroupByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-        	List<XXSecurityZoneRefGroup> xxZoneRefGroup = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefGroup.findGroupTypeByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .setParameter("groupType", "0")
                     .getResultList();
-            return xxZoneRefGroup;
         } catch (NoResultException e) {
             return null;
         }

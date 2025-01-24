@@ -98,19 +98,19 @@ hdfs_share_1 = RangerDataShare({ 'name': 'hdfs-sales-2023',         'service': h
 hdfs_share_2 = RangerDataShare({ 'name': 'hdfs-finance-2023',       'service': hdfs_service, 'zone': zone_finance.name,  'acl': { 'groups': { grp_finance.name:  GdsPermission.ADMIN }}})
 
 hive_share_1.defaultAccessTypes = [ 'select' ]
-hive_share_1.defaultTagMasks    = [ { 'tagName': 'PII', 'maskInfo': { 'dataMaskType': 'MASK' } } ]
+hive_share_1.defaultTagMasks    = [ { 'values': [ 'PII' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_share_2.defaultAccessTypes = [ 'select' ]
-hive_share_2.defaultTagMasks    = [ { 'tagName': 'PII', 'maskInfo': { 'dataMaskType': 'MASK' } } ]
+hive_share_2.defaultTagMasks    = [ { 'values': [ 'PII' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_share_3.defaultAccessTypes = [ 'select' ]
-hive_share_3.defaultTagMasks    = [ { 'tagName': 'PII', 'maskInfo': { 'dataMaskType': 'MASK' } } ]
+hive_share_3.defaultTagMasks    = [ { 'values': [ 'PII' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_share_4.defaultAccessTypes = [ 'select' ]
-hive_share_4.defaultTagMasks    = [ { 'tagName': 'PII', 'maskInfo': { 'dataMaskType': 'MASK' } } ]
+hive_share_4.defaultTagMasks    = [ { 'values': [ 'PII' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_share_5.defaultAccessTypes = [ 'select' ]
-hive_share_5.defaultTagMasks    = [ { 'tagName': 'PII', 'maskInfo': { 'dataMaskType': 'MASK' } } ]
+hive_share_5.defaultTagMasks    = [ { 'values': [ 'PII' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hdfs_share_1.defaultAccessTypes = [ 'read' ]
 
@@ -193,19 +193,19 @@ hdfs_resource_1 = RangerSharedResource({ 'dataShareId': hdfs_share_1.id, 'name':
 hdfs_resource_2 = RangerSharedResource({ 'dataShareId': hdfs_share_2.id, 'name': '/finance/2023/', 'resource': { 'path': { 'values': [ '/finance/2023/' ], 'isRecursive': True } }, 'accessTypes': ['read']})
 
 hive_resource_1.rowFilter        = { 'filterExpr': "created_time >= '2023-01-01' and created_time < '2024-01-01'" }
-hive_resource_1.subResourceMasks = { 'col1': { 'dataMaskType': 'MASK' } }
+hive_resource_1.subResourceMasks = [ { 'values': [ 'col1' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_resource_2.rowFilter        = { 'filterExpr': "created_time >= '2023-01-01' and created_time < '2024-01-01'" }
-hive_resource_2.subResourceMasks = { 'amount': { 'dataMaskType': 'MASK' } }
+hive_resource_2.subResourceMasks = [ { 'values': [ 'amount' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_resource_3.rowFilter        = { 'filterExpr': "created_time >= '2023-01-01' and created_time < '2024-01-01'" }
-hive_resource_3.subResourceMasks = { 'amount': { 'dataMaskType': 'MASK' } }
+hive_resource_3.subResourceMasks = [ { 'values': [ 'amount' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_resource_4.rowFilter        = { 'filterExpr': "created_time >= '2023-01-01' and created_time < '2024-01-01'" }
-hive_resource_4.subResourceMasks = { 'amount': { 'dataMaskType': 'MASK' } }
+hive_resource_4.subResourceMasks = [ { 'values': [ 'amount' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_resource_5.rowFilter        = { 'filterExpr': "created_time >= '2023-01-01' and created_time < '2024-01-01'" }
-hive_resource_5.subResourceMasks = { 'amount': { 'dataMaskType': 'MASK' } }
+hive_resource_5.subResourceMasks = [ { 'values': [ 'amount' ], 'maskInfo': { 'dataMaskType': 'MASK' } } ]
 
 hive_resource_6.rowFilter        = { 'filterExpr': "created_time >= '2023-01-01' and created_time < '2024-01-01'" }
 

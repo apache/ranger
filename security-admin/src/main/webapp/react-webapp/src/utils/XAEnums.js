@@ -61,14 +61,17 @@ export const UserTypes = {
   USER_INTERNAL: {
     value: 0,
     label: "Internal",
-    rbkey: "xa.enum.AccessResult.ACCESS_RESULT_ALLOWED",
-    tt: "lbl.AccessResult_ACCESS_RESULT_ALLOWED"
+    variant: "success"
   },
   USER_EXTERNAL: {
     value: 1,
     label: "External",
-    rbkey: "xa.enum.AccessResult.ACCESS_RESULT_DENIED",
-    tt: "lbl.AccessResult_ACCESS_RESULT_DENIED"
+    variant: "warning"
+  },
+  USER_FEDERATED: {
+    value: 6,
+    label: "Federated",
+    variant: "secondary"
   }
 };
 

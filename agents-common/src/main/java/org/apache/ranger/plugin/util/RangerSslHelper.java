@@ -19,6 +19,19 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.apache.ranger.authorization.utils.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -31,258 +44,228 @@ import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
-import org.apache.ranger.authorization.utils.StringUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RangerSslHelper {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerSslHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSslHelper.class);
 
-	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE                  = "xasecure.policymgr.clientssl.keystore";	
-	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
-	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.keystore.credential.file";
-	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS = "sslKeyStore";
-	static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT     = "jks";	
+    static final String           RANGER_POLICYMGR_CLIENT_KEY_FILE                  = "xasecure.policymgr.clientssl.keystore";
+    static final String           RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
+    static final String           RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.keystore.credential.file";
+    static final String           RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS = "sslKeyStore";
+    static final String           RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT     = "jks";
+    static final String           RANGER_POLICYMGR_TRUSTSTORE_FILE                  = "xasecure.policymgr.clientssl.truststore";
+    static final String           RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE             = "xasecure.policymgr.clientssl.truststore.type";
+    static final String           RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.truststore.credential.file";
+    static final String           RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS = "sslTrustStore";
+    static final String           RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";
+    static final String           RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
+    static final String           RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
+    static final String           RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLSv1.2";
+    static final HostnameVerifier _Hv                                               = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
 
-	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE                  = "xasecure.policymgr.clientssl.truststore";	
-	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE             = "xasecure.policymgr.clientssl.truststore.type";	
-	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.truststore.credential.file";
-	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS = "sslTrustStore";
-	static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";	
+    final   String mSslConfigFileName;
+    private String mKeyStoreURL;
+    private String mKeyStoreAlias;
+    private String mKeyStoreFile;
+    private String mKeyStoreType;
+    private String mTrustStoreURL;
+    private String mTrustStoreAlias;
+    private String mTrustStoreFile;
+    private String mTrustStoreType;
 
-	static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
-	static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
-	static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLSv1.2";
+    public RangerSslHelper(String sslConfigFileName) {
+        mSslConfigFileName = sslConfigFileName;
 
-	private String mKeyStoreURL;
-	private String mKeyStoreAlias;
-	private String mKeyStoreFile;
-	private String mKeyStoreType;
-	private String mTrustStoreURL;
-	private String mTrustStoreAlias;
-	private String mTrustStoreFile;
-	private String mTrustStoreType;
+        LOG.debug("==> RangerSslHelper({})", mSslConfigFileName);
+    }
 
-	final static HostnameVerifier _Hv = new HostnameVerifier() {
-		
-		@Override
-		public boolean verify(String urlHostName, SSLSession session) {
-			return session.getPeerHost().equals(urlHostName);
-		}
-	};
-	
-	final String mSslConfigFileName;
+    public SSLContext createContext() {
+        readConfig();
 
-	public RangerSslHelper(String sslConfigFileName) {
-		mSslConfigFileName = sslConfigFileName;
+        KeyManager[]   kmList = getKeyManagers();
+        TrustManager[] tmList = getTrustManagers();
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSslHelper(" + mSslConfigFileName + ")");
-		}
+        return getSSLContext(kmList, tmList);
+    }
 
-	}
-	
-	public SSLContext createContext() {
-		readConfig();
-		KeyManager[]   kmList     = getKeyManagers();
-		TrustManager[] tmList     = getTrustManagers();
-		SSLContext     sslContext = getSSLContext(kmList, tmList);
-		return sslContext;
-	}
-	
-	public HostnameVerifier getHostnameVerifier() {
-		return _Hv;
-	}
-	
-	void readConfig() {
-		InputStream in =  null;
+    public HostnameVerifier getHostnameVerifier() {
+        return _Hv;
+    }
 
-		try {
-			Configuration conf = new Configuration();
+    @Override
+    public String toString() {
+        return "keyStoreAlias=" + mKeyStoreAlias + ", "
+                + "keyStoreFile=" + mKeyStoreFile + ", "
+                + "keyStoreType=" + mKeyStoreType + ", "
+                + "keyStoreURL=" + mKeyStoreURL + ", "
+                + "trustStoreAlias=" + mTrustStoreAlias + ", "
+                + "trustStoreFile=" + mTrustStoreFile + ", "
+                + "trustStoreType=" + mTrustStoreType + ", "
+                + "trustStoreURL=" + mTrustStoreURL;
+    }
 
-			in = getFileInputStream(mSslConfigFileName);
+    void readConfig() {
+        InputStream in = null;
 
-			if (in != null) {
-				conf.addResource(in);
-			}
+        try {
+            Configuration conf = new Configuration();
 
-			mKeyStoreURL   = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
-			mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
-			mKeyStoreType  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
-			mKeyStoreFile  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
+            in = getFileInputStream(mSslConfigFileName);
 
-			mTrustStoreURL   = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
-			mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
-			mTrustStoreType  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
-			mTrustStoreFile  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
+            if (in != null) {
+                conf.addResource(in);
+            }
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(toString());
-			}
-		}
-		catch(IOException ioe) {
-			LOG.error("Unable to load SSL Config FileName: [" + mSslConfigFileName + "]", ioe);
-		}
-		finally {
-			close(in, mSslConfigFileName);
-		}
-	}
-	
-	private KeyManager[] getKeyManagers() {
-		KeyManager[] kmList = null;
+            mKeyStoreURL   = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
+            mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
+            mKeyStoreType  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
+            mKeyStoreFile  = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
 
-		String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
+            mTrustStoreURL   = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
+            mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
+            mTrustStoreType  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
+            mTrustStoreFile  = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
 
-		if (!StringUtil.isEmpty(mKeyStoreFile) && !StringUtil.isEmpty(keyStoreFilepwd)) {
-			InputStream in =  null;
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(toString());
+            }
+        } catch (IOException ioe) {
+            LOG.error("Unable to load SSL Config FileName: [{}]", mSslConfigFileName, ioe);
+        } finally {
+            close(in, mSslConfigFileName);
+        }
+    }
 
-			try {
-				in = getFileInputStream(mKeyStoreFile);
+    private KeyManager[] getKeyManagers() {
+        KeyManager[] kmList = null;
 
-				if (in != null) {
-					KeyStore keyStore = KeyStore.getInstance(mKeyStoreType);
+        String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
 
-					keyStore.load(in, keyStoreFilepwd.toCharArray());
+        if (!StringUtil.isEmpty(mKeyStoreFile) && !StringUtil.isEmpty(keyStoreFilepwd)) {
+            InputStream in = null;
 
-					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
+            try {
+                in = getFileInputStream(mKeyStoreFile);
 
-					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
+                if (in != null) {
+                    KeyStore keyStore = KeyStore.getInstance(mKeyStoreType);
 
-					kmList = keyManagerFactory.getKeyManagers();
-				} else {
-					LOG.error("Unable to obtain keystore from file [" + mKeyStoreFile + "]");
-				}
-			} catch (KeyStoreException e) {
-				LOG.error("Unable to obtain from KeyStore", e);
-			} catch (NoSuchAlgorithmException e) {
-				LOG.error("SSL algorithm is available in the environment", e);
-			} catch (CertificateException e) {
-				LOG.error("Unable to obtain the requested certification ", e);
-			} catch (FileNotFoundException e) {
-				LOG.error("Unable to find the necessary SSL Keystore and TrustStore Files", e);
-			} catch (IOException e) {
-				LOG.error("Unable to read the necessary SSL Keystore and TrustStore Files", e);
-			} catch (UnrecoverableKeyException e) {
-				LOG.error("Unable to recover the key from keystore", e);
-			} finally {
-				close(in, mKeyStoreFile);
-			}
-		}
+                    keyStore.load(in, keyStoreFilepwd.toCharArray());
 
-		return kmList;
-	}
+                    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
 
-	private TrustManager[] getTrustManagers() {
-		TrustManager[] tmList = null;
+                    keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
 
-		String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
+                    kmList = keyManagerFactory.getKeyManagers();
+                } else {
+                    LOG.error("Unable to obtain keystore from file [{}]", mKeyStoreFile);
+                }
+            } catch (KeyStoreException e) {
+                LOG.error("Unable to obtain from KeyStore", e);
+            } catch (NoSuchAlgorithmException e) {
+                LOG.error("SSL algorithm is available in the environment", e);
+            } catch (CertificateException e) {
+                LOG.error("Unable to obtain the requested certification ", e);
+            } catch (FileNotFoundException e) {
+                LOG.error("Unable to find the necessary SSL Keystore and TrustStore Files", e);
+            } catch (IOException e) {
+                LOG.error("Unable to read the necessary SSL Keystore and TrustStore Files", e);
+            } catch (UnrecoverableKeyException e) {
+                LOG.error("Unable to recover the key from keystore", e);
+            } finally {
+                close(in, mKeyStoreFile);
+            }
+        }
 
-		if (!StringUtil.isEmpty(mTrustStoreFile) && !StringUtil.isEmpty(trustStoreFilepwd)) {
-			InputStream in =  null;
+        return kmList;
+    }
 
-			try {
-				in = getFileInputStream(mTrustStoreFile);
+    private TrustManager[] getTrustManagers() {
+        TrustManager[] tmList = null;
 
-				if (in != null) {
-					KeyStore trustStore = KeyStore.getInstance(mTrustStoreType);
+        String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
 
-					trustStore.load(in, trustStoreFilepwd.toCharArray());
+        if (!StringUtil.isEmpty(mTrustStoreFile) && !StringUtil.isEmpty(trustStoreFilepwd)) {
+            InputStream in = null;
 
-					TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(RANGER_SSL_TRUSTMANAGER_ALGO_TYPE);
+            try {
+                in = getFileInputStream(mTrustStoreFile);
 
-					trustManagerFactory.init(trustStore);
+                if (in != null) {
+                    KeyStore trustStore = KeyStore.getInstance(mTrustStoreType);
 
-					tmList = trustManagerFactory.getTrustManagers();
-				} else {
-					LOG.error("Unable to obtain keystore from file [" + mTrustStoreFile + "]");
-				}
-			} catch (KeyStoreException e) {
-				LOG.error("Unable to obtain from KeyStore", e);
-			} catch (NoSuchAlgorithmException e) {
-				LOG.error("SSL algorithm is available in the environment", e);
-			} catch (CertificateException e) {
-				LOG.error("Unable to obtain the requested certification ", e);
-			} catch (FileNotFoundException e) {
-				LOG.error("Unable to find the necessary SSL Keystore and TrustStore Files", e);
-			} catch (IOException e) {
-				LOG.error("Unable to read the necessary SSL Keystore and TrustStore Files", e);
-			} finally {
-				close(in, mTrustStoreFile);
-			}
-		}
-		
-		return tmList;
-	}
-	
-	private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
-		try {
-			if(tmList != null) {
-				SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
-	
-				sslContext.init(kmList, tmList, new SecureRandom());
-				
-				return sslContext;
-			}
-		} catch (NoSuchAlgorithmException e) {
-			LOG.error("SSL algorithm is available in the environment", e);
-		} catch (Exception e) {
-			LOG.error("Unable to initialize the SSLContext", e);
-		}
-		
-		return null;
-	}
+                    trustStore.load(in, trustStoreFilepwd.toCharArray());
 
-	private String getCredential(String url, String alias) {
-		return RangerCredentialProvider.getInstance().getCredentialString(url, alias);
-	}
+                    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(RANGER_SSL_TRUSTMANAGER_ALGO_TYPE);
 
-	private InputStream getFileInputStream(String fileName)  throws IOException {
-		InputStream in = null;
+                    trustManagerFactory.init(trustStore);
 
-		if(! StringUtil.isEmpty(fileName)) {
-			File f = new File(fileName);
+                    tmList = trustManagerFactory.getTrustManagers();
+                } else {
+                    LOG.error("Unable to obtain keystore from file [{}]", mTrustStoreFile);
+                }
+            } catch (KeyStoreException e) {
+                LOG.error("Unable to obtain from KeyStore", e);
+            } catch (NoSuchAlgorithmException e) {
+                LOG.error("SSL algorithm is available in the environment", e);
+            } catch (CertificateException e) {
+                LOG.error("Unable to obtain the requested certification ", e);
+            } catch (FileNotFoundException e) {
+                LOG.error("Unable to find the necessary SSL Keystore and TrustStore Files", e);
+            } catch (IOException e) {
+                LOG.error("Unable to read the necessary SSL Keystore and TrustStore Files", e);
+            } finally {
+                close(in, mTrustStoreFile);
+            }
+        }
 
-			if (f.exists()) {
-				in = new FileInputStream(f);
-			}
-			else {
-				in = ClassLoader.getSystemResourceAsStream(fileName);
-			}
-		}
+        return tmList;
+    }
 
-		return in;
-	}
+    private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
+        try {
+            if (tmList != null) {
+                SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
 
-	private void close(InputStream str, String filename) {
-		if (str != null) {
-			try {
-				str.close();
-			} catch (IOException excp) {
-				LOG.error("Error while closing file: [" + filename + "]", excp);
-			}
-		}
-	}
+                sslContext.init(kmList, tmList, new SecureRandom());
 
-	@Override
-	public String toString() {
-		return "keyStoreAlias=" + mKeyStoreAlias + ", "
-				+ "keyStoreFile=" + mKeyStoreFile + ", "
-				+ "keyStoreType="+ mKeyStoreType + ", "
-				+ "keyStoreURL=" + mKeyStoreURL + ", "
-				+ "trustStoreAlias=" + mTrustStoreAlias + ", "
-				+ "trustStoreFile=" + mTrustStoreFile + ", "
-				+ "trustStoreType=" + mTrustStoreType + ", "
-				+ "trustStoreURL=" + mTrustStoreURL
-				;
-	}
+                return sslContext;
+            }
+        } catch (NoSuchAlgorithmException e) {
+            LOG.error("SSL algorithm is available in the environment", e);
+        } catch (Exception e) {
+            LOG.error("Unable to initialize the SSLContext", e);
+        }
+
+        return null;
+    }
+
+    private String getCredential(String url, String alias) {
+        return RangerCredentialProvider.getInstance().getCredentialString(url, alias);
+    }
+
+    private InputStream getFileInputStream(String fileName) throws IOException {
+        InputStream in = null;
+
+        if (!StringUtil.isEmpty(fileName)) {
+            File f = new File(fileName);
+
+            if (f.exists()) {
+                in = new FileInputStream(f);
+            } else {
+                in = ClassLoader.getSystemResourceAsStream(fileName);
+            }
+        }
+
+        return in;
+    }
+
+    private void close(InputStream str, String filename) {
+        if (str != null) {
+            try {
+                str.close();
+            } catch (IOException excp) {
+                LOG.error("Error while closing file: [{}]", filename, excp);
+            }
+        }
+    }
 }

@@ -185,11 +185,11 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger-tagsync.server.ha.http.port</name>
+		<name>ranger-tagsync.service.http.port</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger-tagsync.server.ha.https.port</name>
+		<name>ranger-tagsync.service.https.port</name>
 		<value></value>
 	</property>
 </configuration>

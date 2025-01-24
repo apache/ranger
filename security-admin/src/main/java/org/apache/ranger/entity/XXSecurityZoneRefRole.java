@@ -27,56 +27,44 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_role")
-public class XXSecurityZoneRefRole extends XXDBBase implements java.io.Serializable{
-	private static final long serialVersionUID = 1L;
-  	@Id
+public class XXSecurityZoneRefRole extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
     @SequenceGenerator(name = "x_sec_zone_ref_role_SEQ", sequenceName = "x_sec_zone_ref_role_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_role_SEQ")
     @Column(name = "id")
     protected Long id;
 
-  	/**
-	 * zoneId of the XXSecurityZoneRefRole
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "zone_id")
-	protected Long zoneId;
+    /**
+     * zoneId of the XXSecurityZoneRefRole
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "zone_id")
+    protected Long zoneId;
 
-  	/**
-	 * roleId of the XXSecurityZoneRefRole
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "role_id")
-	protected Long roleId;
+    /**
+     * roleId of the XXSecurityZoneRefRole
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "role_id")
+    protected Long roleId;
 
-	/**
-	 * roleName of the XXSecurityZoneRefRole
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "role_name")
-	protected String roleName;
-
-	/**
-	 * roleType of the XXSecurityZoneRefRole , 1 for admin,0 for audit user.
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
+    /**
+     * roleName of the XXSecurityZoneRefRole
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "role_name")
+    protected String roleName;
 
     @Override
     public Long getId() {
@@ -84,100 +72,103 @@ public class XXSecurityZoneRefRole extends XXDBBase implements java.io.Serializa
     }
 
     /**
-	 * This method sets the value to the member attribute <b> zoneId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param zoneId
-	 *            Value to set member attribute <b> zoneId</b>
-	 */
-	public void setZoneId(Long zoneId) {
-		this.zoneId = zoneId;
-	}
+     * roleType of the XXSecurityZoneRefRole , 1 for admin,0 for audit user.
+     * <ul>
+     * </ul>
+     */
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>zoneId</b>
-	 *
-	 * @return Date - value of member attribute <b>zoneId</b> .
-	 */
-	public Long getZoneId() {
-		return this.zoneId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, zoneId, roleId, roleName);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> roleId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param roleId
-	 *            Value to set member attribute <b> roleId</b>
-	 */
-	public void setRoleId(Long roleId) {
-		this.roleId = roleId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>roleId</b>
-	 *
-	 * @return Date - value of member attribute <b>roleId</b> .
-	 */
-	public Long getRoleId() {
-		return roleId;
-	}
+        XXSecurityZoneRefRole other = (XXSecurityZoneRefRole) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> roleName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param roleName
-	 *            Value to set member attribute <b> roleName</b>
-	 */
-	public void setRoleName(String roleName) {
-		this.roleName = roleName;
-	}
+        return Objects.equals(id, other.id) &&
+                Objects.equals(zoneId, other.zoneId) &&
+                Objects.equals(roleId, other.roleId) &&
+                Objects.equals(roleName, other.roleName);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>roleName</b>
-	 *
-	 * @return Date - value of member attribute <b>roleName</b> .
-	 */
-	public String getRoleName() {
-		return roleName;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXSecurityZoneRefRole [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", roleId=" + roleId + ", roleName=" + roleName + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, zoneId, roleId, roleName);
-	}
+    /**
+     * Returns the value for the member attribute <b>zoneId</b>
+     *
+     * @return Date - value of member attribute <b>zoneId</b> .
+     */
+    public Long getZoneId() {
+        return this.zoneId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * This method sets the value to the member attribute <b> zoneId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param zoneId Value to set member attribute <b> zoneId</b>
+     */
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * Returns the value for the member attribute <b>roleId</b>
+     *
+     * @return Date - value of member attribute <b>roleId</b> .
+     */
+    public Long getRoleId() {
+        return roleId;
+    }
 
-		XXSecurityZoneRefRole other = (XXSecurityZoneRefRole) obj;
+    /**
+     * This method sets the value to the member attribute <b> roleId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param roleId Value to set member attribute <b> roleId</b>
+     */
+    public void setRoleId(Long roleId) {
+        this.roleId = roleId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(zoneId, other.zoneId) &&
-			   Objects.equals(roleId, other.roleId) &&
-			   Objects.equals(roleName, other.roleName);
-	}
+    /**
+     * Returns the value for the member attribute <b>roleName</b>
+     *
+     * @return Date - value of member attribute <b>roleName</b> .
+     */
+    public String getRoleName() {
+        return roleName;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXSecurityZoneRefRole [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", roleId="
-				+ roleId + ", roleName=" + roleName + "]";
-	}
+    /**
+     * This method sets the value to the member attribute <b> roleName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param roleName Value to set member attribute <b> roleName</b>
+     */
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 }

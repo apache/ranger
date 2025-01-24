@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.service;
 
-
 public interface RangerAuthContextListener {
     void contextChanged();
 }

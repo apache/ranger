@@ -149,9 +149,7 @@ const AddDatasetView = () => {
       if (datasetName == undefined) {
         toast.error("Dataset name cannot be empty!!");
         return;
-      }
-      else if (datasetName.length>512)
-      {
+      } else if (datasetName.length > 512) {
         toast.error("Dataset name must not exceed 512 characters!!");
         return;
       }

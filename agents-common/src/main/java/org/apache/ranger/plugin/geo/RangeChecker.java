@@ -20,5 +20,5 @@
 package org.apache.ranger.plugin.geo;
 
 public interface RangeChecker<V> {
-	int compareToRange(V value);
+    int compareToRange(V value);
 }

@@ -19,45 +19,58 @@
 package org.apache.ranger;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
-import org.apache.ranger.plugin.util.RangerPurgeResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.ranger.plugin.model.*;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.model.RangerPluginInfo;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceTags;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.RangerRESTClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.security.PrivilegedExceptionAction;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.net.URI;
-import java.util.*;
 
+import java.net.URI;
+import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.IllegalFormatException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class RangerClient {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerClient.class);
-    private static final String AUTH_KERBEROS    = "kerberos";
+    private static final Logger LOG           = LoggerFactory.getLogger(RangerClient.class);
+    private static final String AUTH_KERBEROS = "kerberos";
 
     // QueryParams
-    private static final String PARAM_DAYS                          = "days";
-    private static final String PARAM_EXEC_USER                     = "execUser";
-    private static final String PARAM_POLICY_NAME                   = "policyname";
-    private static final String PARAM_SERVICE_NAME                  = "serviceName";
-    private static final String PARAM_ZONE_NAME                     = "zoneName";
-    private static final String PARAM_PURGE_RECORD_TYPE             = "type";
-    private static final String PARAM_PURGE_RETENTION_DAYS          = "retentionDays";
+    private static final String PARAM_DAYS                 = "days";
+    private static final String PARAM_EXEC_USER            = "execUser";
+    private static final String PARAM_POLICY_NAME          = "policyname";
+    private static final String PARAM_SERVICE_NAME         = "serviceName";
+    private static final String PARAM_ZONE_NAME            = "zoneName";
+    private static final String PARAM_PURGE_RECORD_TYPE    = "type";
+    private static final String PARAM_PURGE_RETENTION_DAYS = "retentionDays";
 
     private static final String PARAM_RELOAD_SERVICE_POLICIES_CACHE = "reloadServicePoliciesCache";
 
     // URIs
-    private static final String URI_BASE                  = "/service/public/v2/api";
+    private static final String URI_BASE = "/service/public/v2/api";
 
     private static final String URI_SERVICEDEF            = URI_BASE + "/servicedef";
     private static final String URI_SERVICEDEF_BY_ID      = URI_SERVICEDEF + "/%d";
@@ -92,7 +105,6 @@ public class RangerClient {
     private static final String URI_PLUGIN_INFO           = URI_BASE + "/plugins/info";
     private static final String URI_POLICY_DELTAS         = URI_BASE + "/server/policydeltas";
     private static final String URI_PURGE_RECORDS         = URI_BASE + "/server/purge/records";
-
 
     // APIs
     public static final API CREATE_SERVICEDEF         = new API(URI_SERVICEDEF, HttpMethod.POST, Response.Status.OK);
@@ -153,7 +165,6 @@ public class RangerClient {
     public static final API DELETE_POLICY_DELTAS = new API(URI_POLICY_DELTAS, HttpMethod.DELETE, Response.Status.NO_CONTENT);
     public static final API PURGE_RECORDS        = new API(URI_PURGE_RECORDS, HttpMethod.DELETE, Response.Status.OK);
 
-
     private static final TypeReference<Void>                               TYPE_VOID                 = new TypeReference<Void>() {};
     private static final TypeReference<Set<String>>                        TYPE_SET_STRING           = new TypeReference<Set<String>>() {};
     private static final TypeReference<List<String>>                       TYPE_LIST_STRING          = new TypeReference<List<String>>() {};
@@ -168,30 +179,18 @@ public class RangerClient {
     private static final TypeReference<List<RangerServiceHeaderInfo>>      TYPE_LIST_SVC_HEADER_INFO = new TypeReference<List<RangerServiceHeaderInfo>>() {};
 
     private final RangerRESTClient restClient;
-    private boolean isSecureMode     = false;
-
-    private void authInit(String authType, String username, String password) {
-        if (AUTH_KERBEROS.equalsIgnoreCase(authType)) {
-            isSecureMode = true;
-            MiscUtil.loginWithKeyTab(password, username, null);
-            UserGroupInformation ugi = MiscUtil.getUGILoginUser();
-            LOG.info("RangerClient.authInit() UGI user: " + ugi.getUserName() + " principal: " + username);
-        } else {
-            restClient.setBasicAuthInfo(username, password);
-        }
-    }
+    private       boolean          isSecureMode;
 
     public RangerClient(String hostName, String authType, String username, String password, String configFile) {
         restClient = new RangerRESTClient(hostName, configFile, new Configuration());
         authInit(authType, username, password);
     }
 
-    public RangerClient(String hostname, String authType, String username, String password, String appId, String serviceType){
+    public RangerClient(String hostname, String authType, String username, String password, String appId, String serviceType) {
         this(hostname, authType, username, password,
-                new RangerPluginConfig(serviceType, null,appId,null,null,null)
+                new RangerPluginConfig(serviceType, null, appId, null, null, null)
                         .get("ranger.plugin." + serviceType + ".policy.rest.ssl.config.file"));
     }
-
 
     public RangerClient(RangerRESTClient restClient) {
         this.restClient = restClient;
@@ -232,7 +231,6 @@ public class RangerClient {
         return callAPI(FIND_SERVICEDEFS, filter, null, TYPE_LIST_SERVICE_DEF);
     }
 
-
     /*
      * Service APIs
      */
@@ -268,7 +266,6 @@ public class RangerClient {
         return callAPI(FIND_SERVICES, filter, null, TYPE_LIST_SERVICE);
     }
 
-
     /*
      * Policy APIs
      */
@@ -285,7 +282,7 @@ public class RangerClient {
     }
 
     public RangerPolicy updatePolicyByNameAndZone(String serviceName, String policyName, String zoneName, RangerPolicy policy) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_ZONE_NAME, zoneName);
 
@@ -301,7 +298,7 @@ public class RangerClient {
     }
 
     public void deletePolicy(String serviceName, String policyName) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_POLICY_NAME, policyName);
         queryParams.put("servicename", serviceName);
@@ -309,9 +306,8 @@ public class RangerClient {
         callAPI(DELETE_POLICY_BY_NAME, queryParams);
     }
 
-
     public void deletePolicyByNameAndZone(String serviceName, String policyName, String zoneName) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_POLICY_NAME, policyName);
         queryParams.put(PARAM_SERVICE_NAME, serviceName);
@@ -329,12 +325,13 @@ public class RangerClient {
     }
 
     public RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_ZONE_NAME, zoneName);
 
         return callAPI(GET_POLICY_BY_NAME.applyUrlFormat(serviceName, policyName), queryParams, null, RangerPolicy.class);
     }
+
     public List<RangerPolicy> getPoliciesInService(String serviceName) throws RangerServiceException {
         return callAPI(GET_POLICIES_IN_SERVICE.applyUrlFormat(serviceName), null, null, TYPE_LIST_POLICY);
     }
@@ -342,7 +339,6 @@ public class RangerClient {
     public List<RangerPolicy> findPolicies(Map<String, String> filter) throws RangerServiceException {
         return callAPI(FIND_POLICIES, filter, null, TYPE_LIST_POLICY);
     }
-
 
     /*
      * SecurityZone APIs
@@ -403,7 +399,7 @@ public class RangerClient {
     }
 
     public void deleteRole(String roleName, String execUser, String serviceName) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_EXEC_USER, execUser);
         queryParams.put(PARAM_SERVICE_NAME, serviceName);
@@ -416,7 +412,7 @@ public class RangerClient {
     }
 
     public RangerRole getRole(String roleName, String execUser, String serviceName) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_EXEC_USER, execUser);
         queryParams.put(PARAM_SERVICE_NAME, serviceName);
@@ -425,7 +421,7 @@ public class RangerClient {
     }
 
     public List<String> getAllRoleNames(String execUser, String serviceName) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_EXEC_USER, execUser);
         queryParams.put(PARAM_SERVICE_NAME, serviceName);
@@ -449,7 +445,6 @@ public class RangerClient {
         return callAPI(REVOKE_ROLE.applyUrlFormat(serviceName), null, request, RESTResponse.class);
     }
 
-
     /*
      * Admin APIs
      */
@@ -466,7 +461,7 @@ public class RangerClient {
     }
 
     public void deletePolicyDeltas(int days, boolean reloadServicePoliciesCache) throws RangerServiceException {
-        Map<String,String> queryParams = new HashMap<>();
+        Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put(PARAM_DAYS, String.valueOf(days));
         queryParams.put(PARAM_RELOAD_SERVICE_POLICIES_CACHE, String.valueOf(reloadServicePoliciesCache));
@@ -481,6 +476,17 @@ public class RangerClient {
         queryParams.put(PARAM_PURGE_RETENTION_DAYS, String.valueOf(retentionDays));
 
         return callAPI(PURGE_RECORDS, queryParams, null, TYPE_LIST_PURGE_RESULT);
+    }
+
+    private void authInit(String authType, String username, String password) {
+        if (AUTH_KERBEROS.equalsIgnoreCase(authType)) {
+            isSecureMode = true;
+            MiscUtil.loginWithKeyTab(password, username, null);
+            UserGroupInformation ugi = MiscUtil.getUGILoginUser();
+            LOG.info("RangerClient.authInit() UGI user: {} principal: {}", ugi.getUserName(), username);
+        } else {
+            restClient.setBasicAuthInfo(username, password);
+        }
     }
 
     private ClientResponse invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {
@@ -504,7 +510,7 @@ public class RangerClient {
                     break;
 
                 default:
-                    LOG.error(api.getMethod() + ": unsupported HTTP method");
+                    LOG.error("{}: unsupported HTTP method", api.getMethod());
 
                     clientResponse = null;
             }
@@ -517,7 +523,7 @@ public class RangerClient {
     private ClientResponse responseHandler(API api, Map<String, String> params, Object request) throws RangerServiceException {
         final ClientResponse clientResponse;
 
-        if (LOG.isDebugEnabled()){
+        if (LOG.isDebugEnabled()) {
             LOG.debug("Call         : {} {}", api.getMethod(), api.getNormalizedPath());
             LOG.debug("Content-type : {} ", api.getConsumes());
             LOG.debug("Accept       : {} ", api.getProduces());
@@ -530,7 +536,7 @@ public class RangerClient {
             try {
                 clientResponse = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
                     try {
-                        return invokeREST(api,params,request);
+                        return invokeREST(api, params, request);
                     } catch (RangerServiceException e) {
                         LOG.error(e.getMessage());
                     }
@@ -540,7 +546,7 @@ public class RangerClient {
                 throw new RangerServiceException(excp);
             }
         } else {
-            clientResponse = invokeREST(api,params,request);
+            clientResponse = invokeREST(api, params, request);
         }
 
         if (LOG.isDebugEnabled()) {
@@ -561,7 +567,7 @@ public class RangerClient {
 
     private void callAPI(API api, Map<String, String> params) throws RangerServiceException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> callAPI({},{})",api, params);
+            LOG.debug("==> callAPI({},{})", api, params);
         }
 
         responseHandler(api, params, null);
@@ -574,7 +580,7 @@ public class RangerClient {
     private <T> T callAPI(API api, Map<String, String> params, Object request, TypeReference<T> responseType) throws RangerServiceException {
         T ret = null;
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> callAPI({},{},{})",api, params, request);
+            LOG.debug("==> callAPI({},{},{})", api, params, request);
             LOG.debug("------------------------------------------------------");
         }
         final ClientResponse clientResponse = responseHandler(api, params, request);
@@ -597,7 +603,7 @@ public class RangerClient {
     private <T> T callAPI(API api, Map<String, String> params, Object request, Class<T> responseType) throws RangerServiceException {
         T ret = null;
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> callAPI({},{},{})",api, params, request);
+            LOG.debug("==> callAPI({},{},{})", api, params, request);
             LOG.debug("------------------------------------------------------");
         }
         final ClientResponse clientResponse = responseHandler(api, params, request);
@@ -625,7 +631,6 @@ public class RangerClient {
         private final Response.Status expectedStatus;
         private final String          consumes;
         private final String          produces;
-
 
         public API(String path, String method, Response.Status expectedStatus) {
             this(path, method, expectedStatus, MediaType.APPLICATION_JSON, MediaType.APPLICATION_JSON);
@@ -682,9 +687,9 @@ public class RangerClient {
         }
 
         public API applyUrlFormat(Object... params) throws RangerServiceException {
-            try{
+            try {
                 return new API(String.format(path, params), method, expectedStatus, consumes, produces);
-            } catch(IllegalFormatException e) {
+            } catch (IllegalFormatException e) {
                 LOG.error("Arguments not formatted properly");
 
                 throw new RangerServiceException(e);

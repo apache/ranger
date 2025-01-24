@@ -159,10 +159,11 @@
             <email>bpatel@apache.org</email>
             <timezone>Asia/Kolkata</timezone>
             <roles>
+                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
-                Freestone Infotech
+                Visa Inc
             </organization>
         </developer>
         <developer>
@@ -176,6 +177,18 @@
             </roles>
             <organization>
 		Privacera
+            </organization>
+        </developer>
+        <developer>
+            <id>brijesh</id>
+            <name>Brijesh Bhalala</name>
+            <email>brijesh@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
             </organization>
         </developer>
         <developer>
@@ -348,6 +361,18 @@
             </roles>
             <organization>
                 Cloudera
+            </organization>
+        </developer>
+        <developer>
+            <id>maheshbandal</id>
+            <name>Mahesh Bandal</name>
+            <email>maheshbandal@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
             </organization>
         </developer>
 	    <developer>

@@ -19,15 +19,6 @@
 
 package org.apache.ranger.metrics;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
 import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.ranger.metrics.sink.RangerMetricsJsonSink;
@@ -39,39 +30,49 @@ import org.apache.ranger.metrics.wrapper.RangerMetricsSourceWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
 public class RangerMetricsSystemWrapper {
     private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsSystemWrapper.class);
 
     private RangerMetricsPrometheusSink rangerMetricsPrometheusSink;
-    private RangerMetricsJsonSink rangerMetricsJsonSink;
+    private RangerMetricsJsonSink       rangerMetricsJsonSink;
 
     /**
      * Initialized metric system.
+     *
      * @param serviceName
      * @param sourceWrappers
      * @param sinkWrappers
      */
     public void init(String serviceName, List<RangerMetricsSourceWrapper> sourceWrappers, List<RangerMetricsSinkWrapper> sinkWrappers) {
         // Initialize metrics system
-        MetricsSystem metricsSystem = DefaultMetricsSystem.initialize(serviceName);
-        Set<String> sourceContexts = new HashSet<String>();
+        MetricsSystem metricsSystem  = DefaultMetricsSystem.initialize(serviceName);
+        Set<String>   sourceContexts = new HashSet<>();
         sourceContexts.add(serviceName);
 
         // Ranger Source
         if (Objects.isNull(sourceWrappers) || sourceWrappers.isEmpty()) {
-            sourceWrappers = new ArrayList<RangerMetricsSourceWrapper>();
+            sourceWrappers = new ArrayList<>();
         }
         sourceWrappers.add(new RangerMetricsSourceWrapper("RangerJVM", "Ranger common metric source (RangerMetricsJvmSource)", serviceName, new RangerMetricsJvmSource(serviceName)));
         sourceWrappers.add(new RangerMetricsSourceWrapper("RangerContainer", "Ranger web container metric source (RangerMetricsContainerSource)", serviceName, new RangerMetricsContainerSource(serviceName)));
 
-        for (RangerMetricsSourceWrapper sourceWrapper: sourceWrappers) {
+        for (RangerMetricsSourceWrapper sourceWrapper : sourceWrappers) {
             metricsSystem.register(sourceWrapper.getName(), sourceWrapper.getDescription(), sourceWrapper.getSource());
             sourceContexts.add(sourceWrapper.getContext());
         }
 
         // Ranger Sink
         if (Objects.isNull(sinkWrappers) || sinkWrappers.isEmpty()) {
-            sinkWrappers = new ArrayList<RangerMetricsSinkWrapper>();
+            sinkWrappers = new ArrayList<>();
         }
 
         // Prometheus
@@ -82,11 +83,11 @@ public class RangerMetricsSystemWrapper {
         rangerMetricsJsonSink = new RangerMetricsJsonSink(sourceContexts);
         sinkWrappers.add(new RangerMetricsSinkWrapper("Json", "Ranger common metric sink (RangerMetricsJsonSink)", rangerMetricsJsonSink));
 
-        for (RangerMetricsSinkWrapper sinkWrapper: sinkWrappers) {
+        for (RangerMetricsSinkWrapper sinkWrapper : sinkWrappers) {
             metricsSystem.register(sinkWrapper.getName(), sinkWrapper.getDescription(), sinkWrapper.getSink());
         }
 
-        LOG.info("===>> Ranger Metric system initialized successfully.");
+        LOG.info("Ranger Metric system initialized successfully!");
     }
 
     public String getRangerMetricsInPrometheusFormat() throws IOException {

@@ -19,80 +19,78 @@
 
 package org.apache.ranger.services.kylin.client;
 
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Map;
+
 public class KylinResourceMgr {
+    private static final Logger LOG = LoggerFactory.getLogger(KylinResourceMgr.class);
 
-	public static final String PROJECT = "project";
+    public static final String PROJECT = "project";
 
-	private static final Logger LOG = LoggerFactory.getLogger(KylinResourceMgr.class);
+    private KylinResourceMgr() {
+        // to block instantiation
+    }
 
-	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-		Map<String, Object> ret = null;
+    public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) {
+        Map<String, Object> ret;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> KylinResourceMgr.validateConfig ServiceName: " + serviceName + "Configs" + configs);
-		}
+        LOG.debug("==> KylinResourceMgr.validateConfig ServiceName: {}Configs{}", serviceName, configs);
 
-		try {
-			ret = KylinClient.connectionTest(serviceName, configs);
-		} catch (Exception e) {
-			LOG.error("<== KylinResourceMgr.validateConfig Error: " + e);
-			throw e;
-		}
+        try {
+            ret = KylinClient.connectionTest(serviceName, configs);
+        } catch (Exception e) {
+            LOG.error("<== KylinResourceMgr.validateConfig Error: {}", String.valueOf(e));
+            throw e;
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== KylinResourceMgr.validateConfig Result: " + ret);
-		}
-		return ret;
-	}
+        LOG.debug("<== KylinResourceMgr.validateConfig Result: {}", ret);
 
-	public static List<String> getKylinResources(String serviceName, Map<String, String> configs,
-			ResourceLookupContext context) {
-		String userInput = context.getUserInput();
-		String resource = context.getResourceName();
-		Map<String, List<String>> resourceMap = context.getResources();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> KylinResourceMgr.getKylinResources()  userInput: " + userInput + ", resource: " + resource
-					+ ", resourceMap: " + resourceMap);
-		}
+        return ret;
+    }
 
-		if (MapUtils.isEmpty(configs)) {
-			LOG.error("Connection Config is empty!");
-			return null;
-		}
+    public static List<String> getKylinResources(String serviceName, Map<String, String> configs, ResourceLookupContext context) {
+        String                    userInput   = context.getUserInput();
+        String                    resource    = context.getResourceName();
+        Map<String, List<String>> resourceMap = context.getResources();
 
-		if (StringUtils.isEmpty(userInput)) {
-			LOG.warn("User input is empty, set default value : *");
-			userInput = "*";
-		}
+        LOG.debug("==> KylinResourceMgr.getKylinResources()  userInput: {}, resource: {}, resourceMap: {}", userInput, resource, resourceMap);
 
-		List<String> projectList = null;
-		if (MapUtils.isNotEmpty(resourceMap)) {
-			projectList = resourceMap.get(PROJECT);
-		}
+        if (MapUtils.isEmpty(configs)) {
+            LOG.error("Connection Config is empty!");
 
-		final KylinClient kylinClient = KylinClient.getKylinClient(serviceName, configs);
-		if (kylinClient == null) {
-			LOG.error("Failed to getKylinClient!");
-			return null;
-		}
+            return null;
+        }
 
-		List<String> resultList = null;
+        if (StringUtils.isEmpty(userInput)) {
+            LOG.warn("User input is empty, set default value : *");
 
-		resultList = kylinClient.getProjectList(userInput, projectList);
+            userInput = "*";
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== KylinResourceMgr.getKylinResources() result: " + resultList);
-		}
-		return resultList;
-	}
+        List<String> projectList = null;
 
+        if (MapUtils.isNotEmpty(resourceMap)) {
+            projectList = resourceMap.get(PROJECT);
+        }
+
+        final KylinClient kylinClient = KylinClient.getKylinClient(serviceName, configs);
+
+        if (kylinClient == null) {
+            LOG.error("Failed to getKylinClient!");
+
+            return null;
+        }
+
+        List<String> resultList = kylinClient.getProjectList(userInput, projectList);
+
+        LOG.debug("<== KylinResourceMgr.getKylinResources() result: {}", resultList);
+
+        return resultList;
+    }
 }

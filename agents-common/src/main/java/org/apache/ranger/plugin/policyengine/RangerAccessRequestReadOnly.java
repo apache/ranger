@@ -26,85 +26,131 @@ import java.util.Map;
 import java.util.Set;
 
 public class RangerAccessRequestReadOnly implements RangerAccessRequest {
-	private final RangerAccessRequest source;
+    private final RangerAccessRequest source;
 
-	// Cached here for reducing access overhead
-	private final RangerAccessResource resource;
-	private final Set<String> userGroups;
-	private final Set<String> userRoles;
-	private final List<String> forwardedAddresses;
-	private final Map<String, Object> context;
+    // Cached here for reducing access overhead
+    private final RangerAccessResource resource;
+    private final Set<String>          userGroups;
+    private final Set<String>          userRoles;
+    private final List<String>         forwardedAddresses;
+    private final Map<String, Object>  context;
 
-	RangerAccessRequestReadOnly(final RangerAccessRequest source) {
-		this.source = source;
-		this.resource = source.getResource().getReadOnlyCopy();
-		this.userGroups = Collections.unmodifiableSet(source.getUserGroups());
-		this.userRoles = Collections.unmodifiableSet(source.getUserRoles());
-		this.context = Collections.unmodifiableMap(source.getContext());
-		this.forwardedAddresses = Collections.unmodifiableList(source.getForwardedAddresses());
-	}
+    RangerAccessRequestReadOnly(final RangerAccessRequest source) {
+        this.source             = source;
+        this.resource           = source.getResource().getReadOnlyCopy();
+        this.userGroups         = Collections.unmodifiableSet(source.getUserGroups());
+        this.userRoles          = Collections.unmodifiableSet(source.getUserRoles());
+        this.context            = Collections.unmodifiableMap(source.getContext());
+        this.forwardedAddresses = Collections.unmodifiableList(source.getForwardedAddresses());
+    }
 
-	@Override
-	public RangerAccessResource getResource() { return resource; }
+    @Override
+    public RangerAccessResource getResource() {
+        return resource;
+    }
 
-	@Override
-	public String getAccessType() { return source.getAccessType(); }
+    @Override
+    public String getAccessType() {
+        return source.getAccessType();
+    }
 
-	@Override
-	public boolean isAccessTypeAny() { return source.isAccessTypeAny(); }
+    @Override
+    public boolean isAccessTypeAny() {
+        return source.isAccessTypeAny();
+    }
 
-	@Override
-	public boolean isAccessTypeDelegatedAdmin() { return source.isAccessTypeDelegatedAdmin(); }
+    @Override
+    public boolean ignoreDescendantDeny() {
+        return source.ignoreDescendantDeny();
+    }
 
-	@Override
-	public String getUser() { return source.getUser(); }
+    @Override
+    public boolean isAccessTypeDelegatedAdmin() {
+        return source.isAccessTypeDelegatedAdmin();
+    }
 
-	@Override
-	public Set<String> getUserGroups() { return userGroups; }
+    @Override
+    public String getUser() {
+        return source.getUser();
+    }
 
-	@Override
-	public Set<String> getUserRoles() { return userRoles; }
+    @Override
+    public Set<String> getUserGroups() {
+        return userGroups;
+    }
 
-	@Override
-	public Date getAccessTime() { return source.getAccessTime(); }
+    @Override
+    public Set<String> getUserRoles() {
+        return userRoles;
+    }
 
-	@Override
-	public String getClientIPAddress() { return source.getClientIPAddress(); }
+    @Override
+    public Date getAccessTime() {
+        return source.getAccessTime();
+    }
 
-	@Override
-	public String getRemoteIPAddress() { return source.getRemoteIPAddress(); }
+    @Override
+    public String getClientIPAddress() {
+        return source.getClientIPAddress();
+    }
 
-	@Override
-	public List<String> getForwardedAddresses() { return forwardedAddresses; }
+    @Override
+    public String getRemoteIPAddress() {
+        return source.getRemoteIPAddress();
+    }
 
-	@Override
-	public String getClientType() { return source.getClientType(); }
+    @Override
+    public List<String> getForwardedAddresses() {
+        return forwardedAddresses;
+    }
 
-	@Override
-	public String getAction() { return source.getAction(); }
+    @Override
+    public String getClientType() {
+        return source.getClientType();
+    }
 
-	@Override
-	public String getRequestData() { return source.getRequestData(); }
+    @Override
+    public String getAction() {
+        return source.getAction();
+    }
 
-	@Override
-	public String getSessionId() { return source.getSessionId(); }
+    @Override
+    public String getRequestData() {
+        return source.getRequestData();
+    }
 
-	@Override
-	public Map<String, Object> getContext() { return context; }
+    @Override
+    public String getSessionId() {
+        return source.getSessionId();
+    }
 
-	@Override
-	public RangerAccessRequest getReadOnlyCopy() { return this; }
+    @Override
+    public String getClusterName() {
+        return source.getClusterName();
+    }
 
-	@Override
-	public ResourceMatchingScope getResourceMatchingScope() { return source.getResourceMatchingScope(); }
+    @Override
+    public String getClusterType() {
+        return source.getClusterType();
+    }
 
-	@Override
-	public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return source.getResourceElementMatchingScopes(); }
+    @Override
+    public Map<String, Object> getContext() {
+        return context;
+    }
 
-	@Override
-	public String getClusterName() { return source.getClusterName();	}
+    @Override
+    public RangerAccessRequest getReadOnlyCopy() {
+        return this;
+    }
 
-	@Override
-	public String getClusterType() {  return source.getClusterType();	}
+    @Override
+    public ResourceMatchingScope getResourceMatchingScope() {
+        return source.getResourceMatchingScope();
+    }
 
+    @Override
+    public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
+        return source.getResourceElementMatchingScopes();
+    }
 }

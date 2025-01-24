@@ -34,99 +34,88 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerTagResourceMapService {
-	@InjectMocks
-	RangerTagResourceMapService rangerTagResourceMapService;
+    @InjectMocks
+    RangerTagResourceMapService rangerTagResourceMapService;
 
-	@Mock
-	XXTagResourceMap xXTagResourceMap;
+    @Mock
+    XXTagResourceMap xXTagResourceMap;
 
-	@Mock
-	RangerDaoManager daoMgr;
+    @Mock
+    RangerDaoManager daoMgr;
 
-	@Mock
-	XXServiceVersionInfoDao xXServiceVersionInfoDao;
+    @Mock
+    XXServiceVersionInfoDao xXServiceVersionInfoDao;
 
-	@Mock
-	org.apache.ranger.db.XXPortalUserDao XXPortalUserDao;
+    @Mock
+    org.apache.ranger.db.XXPortalUserDao xXPortalUserDao;
 
-	@Mock
-	XXTagResourceMapDao xXTagResourceMapDao;
+    @Mock
+    XXTagResourceMapDao xXTagResourceMapDao;
 
-	@Test
-	public void test1PostCreate() {
-		Mockito.when(daoMgr.getXXPortalUser()).thenReturn(XXPortalUserDao);
-		Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xXServiceVersionInfoDao);
-		rangerTagResourceMapService.postCreate(xXTagResourceMap);
+    @Test
+    public void test1PostCreate() {
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xXServiceVersionInfoDao);
+        rangerTagResourceMapService.postCreate(xXTagResourceMap);
+    }
 
-	}
+    @Test
+    public void test3GetPopulatedViewObject() {
+        Mockito.when(daoMgr.getXXPortalUser()).thenReturn(xXPortalUserDao);
+        rangerTagResourceMapService.getPopulatedViewObject(xXTagResourceMap);
+    }
 
-	@Test
-	public void test3GetPopulatedViewObject() {
-		Mockito.when(daoMgr.getXXPortalUser()).thenReturn(XXPortalUserDao);
-		rangerTagResourceMapService.getPopulatedViewObject(xXTagResourceMap);
+    @Test
+    public void test4GetByTagId() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getByTagId(1L);
+    }
 
-	}
+    @Test
+    public void test5GetByTagGuid() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getByTagGuid("1");
+    }
 
-	@Test
-	public void test4GetByTagId() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getByTagId(1L);
+    @Test
+    public void test6GetByResourceId() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getByResourceId(1L);
+    }
 
-	}
+    @Test
+    public void test7GetTagIdsForResourceId() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getTagIdsForResourceId(1L);
+    }
 
-	@Test
-	public void test5GetByTagGuid() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getByTagGuid("1");
+    @Test
+    public void test8GetByResourceGuid() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getByResourceGuid("1");
+    }
 
-	}
+    @Test
+    public void test9GetByGuid() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getByGuid("1");
+    }
 
-	@Test
-	public void test6GetByResourceId() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getByResourceId(1L);
+    @Test
+    public void test10GetByTagAndResourceId() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getByTagAndResourceId(1L, 1L);
+    }
 
-	}
+    @Test
+    public void test11GetByTagAndResourceGuid() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getByTagAndResourceGuid("1", "1");
+    }
 
-	@Test
-	public void test7GetTagIdsForResourceId() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getTagIdsForResourceId(1L);
-
-	}
-
-	@Test
-	public void test8GetByResourceGuid() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getByResourceGuid("1");
-
-	}
-
-	@Test
-	public void test9GetByGuid() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getByGuid("1");
-
-	}
-
-	@Test
-	public void test10GetByTagAndResourceId() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getByTagAndResourceId(1L, 1L);
-
-	}
-
-	@Test
-	public void test11GetByTagAndResourceGuid() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getByTagAndResourceGuid("1", "1");
-
-	}
-
-	@Test
-	public void test12GetTagResourceMapsByServiceId() {
-		Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
-		rangerTagResourceMapService.getTagResourceMapsByServiceId(1L);
-
-	}
+    @Test
+    public void test12GetTagResourceMapsByServiceId() {
+        Mockito.when(daoMgr.getXXTagResourceMap()).thenReturn(xXTagResourceMapDao);
+        rangerTagResourceMapService.getTagResourceMapsByServiceId(1L);
+    }
 }

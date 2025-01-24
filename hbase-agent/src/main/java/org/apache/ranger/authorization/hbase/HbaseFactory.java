@@ -20,38 +20,36 @@ package org.apache.ranger.authorization.hbase;
 
 import org.apache.hadoop.conf.Configuration;
 
-
-
 // TODO remove this in favor of Guice DI
 public class HbaseFactory {
-	
-	static final HbaseUserUtils _UserUtils = new HbaseUserUtilsImpl();
-	static final HbaseAuthUtils _AuthUtils = new HbaseAuthUtilsImpl();
-	static final HbaseFactory _Factory = new HbaseFactory();
-	/**
-	 * This is a singleton
-	 */
-	private HbaseFactory() {
-		// TODO remove this clutch to enforce singleton by moving to a DI framework
-	}
-	
-	static HbaseFactory getInstance() {
-		return _Factory;
-	}
-	
-	HbaseAuthUtils getAuthUtils() {
-		return _AuthUtils;
-	}
-	
-	HbaseUserUtils getUserUtils() {
-		return _UserUtils;
-	}
-	
-	HbaseAuditHandler getAuditHandler() {
-		return new HbaseAuditHandlerImpl();
-	}
+    static final HbaseUserUtils userUtils = new HbaseUserUtilsImpl();
+    static final HbaseAuthUtils authUtils = new HbaseAuthUtilsImpl();
+    static final HbaseFactory   factory   = new HbaseFactory();
 
-	static void initialize(Configuration conf) {
-		HbaseUserUtilsImpl.initiailize(conf);
-	}
+    /**
+     * This is a singleton
+     */
+    private HbaseFactory() {
+        // TODO remove this clutch to enforce singleton by moving to a DI framework
+    }
+
+    static HbaseFactory getInstance() {
+        return factory;
+    }
+
+    static void initialize(Configuration conf) {
+        HbaseUserUtilsImpl.initialize(conf);
+    }
+
+    HbaseAuthUtils getAuthUtils() {
+        return authUtils;
+    }
+
+    HbaseUserUtils getUserUtils() {
+        return userUtils;
+    }
+
+    HbaseAuditHandler getAuditHandler() {
+        return new HbaseAuditHandlerImpl();
+    }
 }

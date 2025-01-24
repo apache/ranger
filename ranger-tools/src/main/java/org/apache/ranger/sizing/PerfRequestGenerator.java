@@ -31,15 +31,18 @@ import org.apache.ranger.plugin.util.ServiceTags;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 
 public class PerfRequestGenerator {
-    public PerfRequestGenerator() {
+    private final Set<String> resourceKeys;
+
+    public PerfRequestGenerator(Set<String> resourceKeys) {
+        this.resourceKeys = resourceKeys != null ? resourceKeys : Collections.emptySet();
     }
 
     public Collection<RangerAccessRequest> generate(ServicePolicies policies, ServiceTags tags) {
@@ -95,7 +98,11 @@ public class PerfRequestGenerator {
         Iterator<String> iterGroup       = groups.iterator();
 
         for (Map<String, Object> resource : resources) {
-            ret.add(new RangerAccessRequestImpl(new RangerAccessResourceImpl(resource), iterAccessTypes.next(), iterUser.next(), Collections.singleton(iterGroup.next()), null));
+            String      accessType = iterAccessTypes.next();
+            String      user       = iterUser.next();
+            Set<String> userGroups = Collections.singleton(iterGroup.next());
+
+            ret.add(new RangerAccessRequestImpl(new RangerAccessResourceImpl(resource), accessType, user, userGroups, null));
 
             if (!iterAccessTypes.hasNext()) {
                 iterAccessTypes = accessTypes.iterator();
@@ -118,7 +125,12 @@ public class PerfRequestGenerator {
             int resourceCount = 1;
 
             for (Map.Entry<String, RangerPolicyResource> entry : policyResource.entrySet()) {
-                resourceCount *= entry.getValue().getValues().size();
+                String       name   = entry.getKey();
+                List<String> values = entry.getValue().getValues();
+
+                if (!values.isEmpty() && (resourceKeys.isEmpty() || resourceKeys.contains(name))) {
+                    resourceCount *= values.size();
+                }
             }
 
             List<Map<String, Object>> toAdd = new ArrayList<>(resourceCount);
@@ -131,8 +143,10 @@ public class PerfRequestGenerator {
                 String       name   = entry.getKey();
                 List<String> values = entry.getValue().getValues();
 
-                for (int idxResource = 0; idxResource < resourceCount; idxResource++) {
-                    toAdd.get(idxResource).put(name, values.get(idxResource % values.size()));
+                if (!values.isEmpty() && (resourceKeys.isEmpty() || resourceKeys.contains(name))) {
+                    for (int idxResource = 0; idxResource < resourceCount; idxResource++) {
+                        toAdd.get(idxResource).put(name, values.get(idxResource % values.size()));
+                    }
                 }
             }
 

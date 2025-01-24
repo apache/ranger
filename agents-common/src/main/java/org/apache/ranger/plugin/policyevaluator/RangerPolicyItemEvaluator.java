@@ -18,53 +18,55 @@
  */
 package org.apache.ranger.plugin.policyevaluator;
 
-import java.io.Serializable;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
+import java.io.Serializable;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+
 public interface RangerPolicyItemEvaluator {
-	int POLICY_ITEM_TYPE_ALLOW            = 0;
-	int POLICY_ITEM_TYPE_DENY             = 1;
-	int POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS = 2;
-	int POLICY_ITEM_TYPE_DENY_EXCEPTIONS  = 3;
-	int POLICY_ITEM_TYPE_DATAMASK         = 4;
-	int POLICY_ITEM_TYPE_ROWFILTER        = 5;
+    int POLICY_ITEM_TYPE_ALLOW            = 0;
+    int POLICY_ITEM_TYPE_DENY             = 1;
+    int POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS = 2;
+    int POLICY_ITEM_TYPE_DENY_EXCEPTIONS  = 3;
+    int POLICY_ITEM_TYPE_DATAMASK         = 4;
+    int POLICY_ITEM_TYPE_ROWFILTER        = 5;
 
-	void init();
+    void init();
 
-	RangerPolicyItem getPolicyItem();
+    RangerPolicyItem getPolicyItem();
 
-	int getPolicyItemType();
+    int getPolicyItemType();
 
-	int getPolicyItemIndex();
+    int getPolicyItemIndex();
 
-	String getComments();
+    String getComments();
 
-	List<RangerConditionEvaluator> getConditionEvaluators();
+    List<RangerConditionEvaluator> getConditionEvaluators();
 
-	int getEvalOrder();
+    int getEvalOrder();
 
-	boolean isMatch(RangerAccessRequest request);
+    boolean isMatch(RangerAccessRequest request);
 
-	boolean matchUserGroupAndOwner(String user, Set<String> userGroups, Set<String> roles, String owner);
+    boolean matchUserGroupAndOwner(String user, Set<String> userGroups, Set<String> roles, String owner);
 
-	boolean matchAccessType(String accessType);
+    boolean matchAccessType(String accessType);
 
-	boolean matchCustomConditions(RangerAccessRequest request);
+    boolean matchCustomConditions(RangerAccessRequest request);
 
-	class EvalOrderComparator implements Comparator<RangerPolicyItemEvaluator>, Serializable {
-		@Override
-		public int compare(RangerPolicyItemEvaluator me, RangerPolicyItemEvaluator other) {
-			return Integer.compare(me.getEvalOrder(), other.getEvalOrder());
-		}
-	}
-	void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType);
-	RangerPolicyItem getWithImpliedGrants();
+    void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType);
+
+    RangerPolicyItem getWithImpliedGrants();
+
+    class EvalOrderComparator implements Comparator<RangerPolicyItemEvaluator>, Serializable {
+        @Override
+        public int compare(RangerPolicyItemEvaluator me, RangerPolicyItemEvaluator other) {
+            return Integer.compare(me.getEvalOrder(), other.getEvalOrder());
+        }
+    }
 }

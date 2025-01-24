@@ -18,15 +18,14 @@
  */
 package org.apache.ranger.audit.provider;
 
-
 public interface LogBuffer<T> {
-	void start(LogDestination<T> destination);
+    void start(LogDestination<T> destination);
 
-	void stop();
+    void stop();
 
-	boolean isAvailable();
+    boolean isAvailable();
 
-	boolean isEmpty();
+    boolean isEmpty();
 
-	boolean add(T log);
+    boolean add(T log);
 }

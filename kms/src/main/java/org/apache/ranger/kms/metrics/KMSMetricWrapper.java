@@ -31,57 +31,53 @@ import java.util.List;
 import java.util.Map;
 
 public class KMSMetricWrapper {
-
-    private static final Logger LOG = LoggerFactory.getLogger(KMSMetricWrapper.class);
-
+    private static final Logger LOG                = LoggerFactory.getLogger(KMSMetricWrapper.class);
     private static final Logger KMS_METRICS_LOGGER = LoggerFactory.getLogger("kms-metrics");
-
-    private KMSMetricSource kmsMetricSource;
-
-    private final RangerMetricsSystemWrapper rangerMetricsSystemWrapper;
-
-    private final KMSMetricsCollector kmsMetricsCollector;
 
     private static volatile KMSMetricWrapper instance;
 
-    private KMSMetricWrapper(boolean isMetricCollectionThreadSafe) {
+    private final RangerMetricsSystemWrapper rangerMetricsSystemWrapper;
+    private final KMSMetricsCollector        kmsMetricsCollector;
+    private final KMSMetricSource            kmsMetricSource;
 
-        LOG.info("Creating KMSMetricWrapper with thread-safe value=" + isMetricCollectionThreadSafe);
+    private KMSMetricWrapper(boolean isMetricCollectionThreadSafe) {
+        LOG.info("Creating KMSMetricWrapper with thread-safe value={}", isMetricCollectionThreadSafe);
+
         this.rangerMetricsSystemWrapper = new RangerMetricsSystemWrapper();
-        this.kmsMetricsCollector = KMSMetricsCollector.getInstance(isMetricCollectionThreadSafe);
-        this.kmsMetricSource = new KMSMetricSource(KMSMetrics.KMS_METRICS_CONTEXT, KMSMetrics.KMS_METRIC_RECORD, kmsMetricsCollector);
+        this.kmsMetricsCollector        = KMSMetricsCollector.getInstance(isMetricCollectionThreadSafe);
+        this.kmsMetricSource            = new KMSMetricSource(KMSMetrics.KMS_METRICS_CONTEXT, KMSMetrics.KMS_METRIC_RECORD, kmsMetricsCollector);
+
         init();
     }
 
-    public static KMSMetricWrapper getInstance( boolean isMetricCollectionThreadSafe ) {
-        if (null == instance) {
+    public static KMSMetricWrapper getInstance(boolean isMetricCollectionThreadSafe) {
+        KMSMetricWrapper me = instance;
 
+        if (me == null) {
             synchronized (KMSMetricWrapper.class) {
-                if (null == instance) {
-                    instance = new KMSMetricWrapper(isMetricCollectionThreadSafe);
+                me = instance;
+
+                if (me == null) {
+                    me       = new KMSMetricWrapper(isMetricCollectionThreadSafe);
+                    instance = me;
                 }
             }
-
         }
 
-        return instance;
+        return me;
     }
 
-
     public void init() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("===>> KMSMetricWrapper.init()");
-        }
+        LOG.debug("===>> KMSMetricWrapper.init()");
 
         // Source
         List<RangerMetricsSourceWrapper> sourceWrappers = new ArrayList<>();
+
         sourceWrappers.add(new RangerMetricsSourceWrapper("KMSMetricSource", "KMS metrics", KMSMetrics.KMS_METRICS_CONTEXT, kmsMetricSource));
 
         rangerMetricsSystemWrapper.init(KMSMetrics.KMS_METRICS_CONTEXT, sourceWrappers, null);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<<=== KMSMetricWrapper.init()");
-        }
+        LOG.debug("<<=== KMSMetricWrapper.init()");
     }
 
     public String getRangerMetricsInPrometheusFormat() throws Exception {
@@ -92,24 +88,19 @@ public class KMSMetricWrapper {
         return rangerMetricsSystemWrapper.getRangerMetrics();
     }
 
-    public KMSMetricsCollector getKmsMetricsCollector()
-    {
+    public KMSMetricsCollector getKmsMetricsCollector() {
         return this.kmsMetricsCollector;
     }
 
-    public void writeJsonMetricsToFile()
-    {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("===>> KMSMetricWrapper.writeJsonMetricsToFile()");
-        }
+    public void writeJsonMetricsToFile() {
+        LOG.debug("===>> KMSMetricWrapper.writeJsonMetricsToFile()");
+
         try {
             KMS_METRICS_LOGGER.info(JsonUtilsV2.mapToJson(this.getRangerMetricsInJsonFormat()));
         } catch (Exception e) {
             LOG.error("Error while writing metrics to metrics-log file", e);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<<=== KMSMetricWrapper.writeJsonMetricsToFile()");
-        }
+        LOG.debug("<<=== KMSMetricWrapper.writeJsonMetricsToFile()");
     }
 }

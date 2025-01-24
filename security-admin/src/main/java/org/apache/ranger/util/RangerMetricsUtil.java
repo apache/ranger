@@ -20,49 +20,38 @@
 package org.apache.ranger.util;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryType;
-import java.lang.management.MemoryUsage;
 
 /**
  * Connect Worker system and runtime information.
  */
 @Component
 public class RangerMetricsUtil {
-
-    private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
+    private static final Logger                LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
     private static final OperatingSystemMXBean OS;
-    private static final MemoryMXBean MEM_BEAN;
-
-    static {
-        OS = ManagementFactory.getOperatingSystemMXBean();
-        MEM_BEAN = ManagementFactory.getMemoryMXBean();
-    }
+    private static final MemoryMXBean          MEM_BEAN;
 
     public Map<String, Object> getValues() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerMetricsUtil.getValues()");
-        }
-        
+        LOG.debug("==> RangerMetricsUtil.getValues()");
+
         Map<String, Object> values = new LinkedHashMap<>();
         values.put("os.spec", StringUtils.join(Arrays.asList(addSystemInfo()), ", "));
         values.put("os.vcpus", String.valueOf(OS.getAvailableProcessors()));
         values.put("memory", addMemoryDetails());
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerMetricsUtil.getValues()" + values);
-        }
+        LOG.debug("<== RangerMetricsUtil.getValues():{}", values);
 
         return values;
     }
@@ -71,9 +60,7 @@ public class RangerMetricsUtil {
      * collect the pool division of java
      */
     protected Map<String, Object> getPoolDivision() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerMetricsUtil.getPoolDivision()");
-        }
+        LOG.debug("==> RangerMetricsUtil.getPoolDivision()");
 
         Map<String, Object> poolDivisionValues = new LinkedHashMap<>();
         for (MemoryPoolMXBean mpBean : ManagementFactory.getMemoryPoolMXBeans()) {
@@ -82,9 +69,7 @@ public class RangerMetricsUtil {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerMetricsUtil.getPoolDivision()" + poolDivisionValues);
-        }
+        LOG.debug("<== RangerMetricsUtil.getPoolDivision(){}", poolDivisionValues);
 
         return poolDivisionValues;
     }
@@ -93,13 +78,11 @@ public class RangerMetricsUtil {
      * Add memory details
      */
     protected Map<String, Object> addMemoryDetails() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerMetricsUtil.addMemoryDetails()");
-        }
+        LOG.debug("==> RangerMetricsUtil.addMemoryDetails()");
 
-        Map<String, Object> memory  = new LinkedHashMap<>();
-        MemoryUsage memHeapUsage = MEM_BEAN.getHeapMemoryUsage();
-        MemoryUsage nonHeapUsage = MEM_BEAN.getNonHeapMemoryUsage();
+        Map<String, Object> memory       = new LinkedHashMap<>();
+        MemoryUsage         memHeapUsage = MEM_BEAN.getHeapMemoryUsage();
+        MemoryUsage         nonHeapUsage = MEM_BEAN.getNonHeapMemoryUsage();
         memory.put("heapInit", String.valueOf(memHeapUsage.getInit()));
         memory.put("heapMax", String.valueOf(memHeapUsage.getMax()));
         memory.put("heapCommitted", String.valueOf(memHeapUsage.getCommitted()));
@@ -110,9 +93,7 @@ public class RangerMetricsUtil {
         memory.put("nonHeapUsed", String.valueOf(nonHeapUsage.getUsed()));
         memory.put("memory_pool_usages", getPoolDivision());
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerMetricsUtil.addMemoryDetails()" + memory);
-        }
+        LOG.debug("<== RangerMetricsUtil.addMemoryDetails(){}", memory);
 
         return memory;
     }
@@ -121,15 +102,16 @@ public class RangerMetricsUtil {
      * Collect system information.
      */
     protected String[] addSystemInfo() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerMetricsUtil.addSystemInfo()");
-        }
+        LOG.debug("==> RangerMetricsUtil.addSystemInfo()");
 
-        String[] osInfo = { OS.getName(), OS.getArch(), OS.getVersion() };
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerMetricsUtil.addSystemInfo()" + osInfo);
-        }
+        String[] osInfo = {OS.getName(), OS.getArch(), OS.getVersion()};
+        LOG.debug("<== RangerMetricsUtil.addSystemInfo(){}", osInfo);
 
         return osInfo;
+    }
+
+    static {
+        OS       = ManagementFactory.getOperatingSystemMXBean();
+        MEM_BEAN = ManagementFactory.getMemoryMXBean();
     }
 }

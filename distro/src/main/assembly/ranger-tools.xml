@@ -72,6 +72,10 @@
               <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
               <include>org.slf4j:slf4j-api</include>
               <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+              <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
+              <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+              <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
+              <include>com.google.code.gson:gson:jar:${gson.version}</include>
             </includes>
           </dependencySet>
         </dependencySets>

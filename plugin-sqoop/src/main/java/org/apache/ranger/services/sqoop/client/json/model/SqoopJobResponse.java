@@ -20,85 +20,84 @@ package org.apache.ranger.services.sqoop.client.json.model;
 import com.google.gson.annotations.SerializedName;
 
 public class SqoopJobResponse {
-	private Long id;
+    private Long   id;
+    private String name;
 
-	private String name;
+    @SerializedName("from-link-name")
+    private String fromLinkName;
 
-	@SerializedName("from-link-name")
-	private String fromLinkName;
+    @SerializedName("to-link-name")
+    private String toLinkName;
 
-	@SerializedName("to-link-name")
-	private String toLinkName;
+    @SerializedName("from-connector-name")
+    private String fromConnectorName;
 
-	@SerializedName("from-connector-name")
-	private String fromConnectorName;
+    @SerializedName("to-connector-name")
+    private String toConnectorName;
 
-	@SerializedName("to-connector-name")
-	private String toConnectorName;
+    @SerializedName("creation-user")
+    private String creationUser;
 
-	@SerializedName("creation-user")
-	private String creationUser;
+    public Long getId() {
+        return id;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getFromLinkName() {
+        return fromLinkName;
+    }
 
-	public String getFromLinkName() {
-		return fromLinkName;
-	}
+    public void setFromLinkName(String fromLinkName) {
+        this.fromLinkName = fromLinkName;
+    }
 
-	public void setFromLinkName(String fromLinkName) {
-		this.fromLinkName = fromLinkName;
-	}
+    public String getToLinkName() {
+        return toLinkName;
+    }
 
-	public String getToLinkName() {
-		return toLinkName;
-	}
+    public void setToLinkName(String toLinkName) {
+        this.toLinkName = toLinkName;
+    }
 
-	public void setToLinkName(String toLinkName) {
-		this.toLinkName = toLinkName;
-	}
+    public String getFromConnectorName() {
+        return fromConnectorName;
+    }
 
-	public String getFromConnectorName() {
-		return fromConnectorName;
-	}
+    public void setFromConnectorName(String fromConnectorName) {
+        this.fromConnectorName = fromConnectorName;
+    }
 
-	public void setFromConnectorName(String fromConnectorName) {
-		this.fromConnectorName = fromConnectorName;
-	}
+    public String getToConnectorName() {
+        return toConnectorName;
+    }
 
-	public String getToConnectorName() {
-		return toConnectorName;
-	}
+    public void setToConnectorName(String toConnectorName) {
+        this.toConnectorName = toConnectorName;
+    }
 
-	public void setToConnectorName(String toConnectorName) {
-		this.toConnectorName = toConnectorName;
-	}
+    public String getCreationUser() {
+        return creationUser;
+    }
 
-	public String getCreationUser() {
-		return creationUser;
-	}
+    public void setCreationUser(String creationUser) {
+        this.creationUser = creationUser;
+    }
 
-	public void setCreationUser(String creationUser) {
-		this.creationUser = creationUser;
-	}
-
-	@Override
-	public String toString() {
-		return "SqoopJobResponse [id=" + id + ", name=" + name + ", fromLinkName=" + fromLinkName + ", toLinkName="
-				+ toLinkName + ", fromConnectorName=" + fromConnectorName + ", toConnectorName=" + toConnectorName
-				+ ", creationUser=" + creationUser + "]";
-	}
+    @Override
+    public String toString() {
+        return "SqoopJobResponse [id=" + id + ", name=" + name + ", fromLinkName=" + fromLinkName + ", toLinkName="
+                + toLinkName + ", fromConnectorName=" + fromConnectorName + ", toConnectorName=" + toConnectorName
+                + ", creationUser=" + creationUser + "]";
+    }
 }

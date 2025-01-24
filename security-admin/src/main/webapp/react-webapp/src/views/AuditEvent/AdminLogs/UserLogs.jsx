@@ -168,11 +168,11 @@ export const UserLogs = ({ data, reportdata }) => {
                   })
                 )
               : !isEmpty(filterdiff)
-              ? filterdiff.map((obj) => obj).join(", ")
-              : "--"
+                ? filterdiff.map((obj) => obj).join(", ")
+                : "--"
             : !isEmpty(oldVals)
-            ? oldVals.map((obj) => obj).join(", ")
-            : "--"}
+              ? oldVals.map((obj) => obj).join(", ")
+              : "--"}
         </>
       );
     };
@@ -205,11 +205,11 @@ export const UserLogs = ({ data, reportdata }) => {
                   })
                 )
               : !isEmpty(filterdiff)
-              ? filterdiff.map((obj) => obj).join(", ")
-              : "--"
+                ? filterdiff.map((obj) => obj).join(", ")
+                : "--"
             : !isEmpty(newVals)
-            ? newVals.map((obj) => obj).join(", ")
-            : "--"}
+              ? newVals.map((obj) => obj).join(", ")
+              : "--"}
         </>
       );
     };

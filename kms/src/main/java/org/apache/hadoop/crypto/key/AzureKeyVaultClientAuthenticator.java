@@ -24,6 +24,20 @@ import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.authentication.KeyVaultCredentials;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
+import org.bouncycastle.operator.InputDecryptorProvider;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
+import org.bouncycastle.pkcs.PKCSException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -40,20 +54,6 @@ import java.util.Enumeration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
-import org.bouncycastle.operator.InputDecryptorProvider;
-import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
-import org.bouncycastle.pkcs.PKCSException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
     private static final Logger logger = LoggerFactory.getLogger(AzureKeyVaultClientAuthenticator.class);
@@ -62,29 +62,21 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
     private final String authClientSecret;
 
     public AzureKeyVaultClientAuthenticator(String clientID, String clientSecret) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AzureKeyVaultClientAuthenticator({})", clientID);
-        }
+        logger.debug("==> AzureKeyVaultClientAuthenticator({})", clientID);
 
         this.authClientID     = clientID;
         this.authClientSecret = clientSecret;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AzureKeyVaultClientAuthenticator({})", clientID);
-        }
+        logger.debug("<== AzureKeyVaultClientAuthenticator({})", clientID);
     }
 
     public AzureKeyVaultClientAuthenticator(String clientID) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AzureKeyVaultClientAuthenticator({})", clientID);
-        }
+        logger.debug("==> AzureKeyVaultClientAuthenticator({})", clientID);
 
         this.authClientID     = clientID;
         this.authClientSecret = null;
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AzureKeyVaultClientAuthenticator({})", clientID);
-        }
+        logger.debug("<== AzureKeyVaultClientAuthenticator({})", clientID);
     }
 
     /**
@@ -93,16 +85,12 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
      */
     @Override
     public String doAuthenticate(String authorization, String resource, String scope) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> doAuthenticate({}, {}, {})", authorization, resource, scope);
-        }
+        logger.debug("==> doAuthenticate({}, {}, {})", authorization, resource, scope);
 
         AuthenticationResult token = getAccessTokenFromClientCredentials(authorization, resource, authClientID, authClientSecret);
         String               ret   = token.getAccessToken();
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== doAuthenticate({}, {}, {}): ret={}", authorization, resource, scope, ret);
-        }
+        logger.debug("<== doAuthenticate({}, {}, {}): ret={}", authorization, resource, scope, ret);
 
         return ret;
     }
@@ -111,9 +99,7 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
      * Do certificate based authentication using pfx file
      */
     public KeyVaultClient getAuthentication(String path, String certPassword) throws Exception {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getAuthentication({})", path);
-        }
+        logger.debug("==> getAuthentication({})", path);
 
         KeyVaultClient ret     = null;
         KeyCert        keyCert = null;
@@ -124,7 +110,7 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
             } catch (Exception ex) {
                 throw new Exception("Error while parsing pfx certificate. Error : " + ex);
             }
-        } else if(path.endsWith(".pem")) {
+        } else if (path.endsWith(".pem")) {
             try {
                 keyCert = readPem(path, certPassword);
             } catch (Exception ex) {
@@ -138,60 +124,48 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
             PrivateKey privateKey = certificateKey.getKey();
 
             // Do certificate based authentication
-            ret = new KeyVaultClient(
-                    new KeyVaultCredentials() {
-                        @Override
-                        public String doAuthenticate(String authorization, String resource, String scope) {
-                            if (logger.isDebugEnabled()) {
-                                logger.debug("==> getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
-                            }
+            ret = new KeyVaultClient(new KeyVaultCredentials() {
+                @Override
+                public String doAuthenticate(String authorization, String resource, String scope) {
+                    logger.debug("==> getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
 
-                            ExecutorService service = null;
+                    ExecutorService service = null;
 
-                            try {
-                                service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true)
-                                                                                                    .setNameFormat("kms-azure-akc_acquireToken_thread")
-                                                                                                    .build());
-                                AuthenticationContext   context                 = new AuthenticationContext(authorization, false, service);
-                                AsymmetricKeyCredential asymmetricKeyCredential = AsymmetricKeyCredential.create(authClientID, privateKey, certificateKey.getCertificate());
-                                AuthenticationResult    result                  = context.acquireToken(resource, asymmetricKeyCredential, null).get();
-                                String                  ret                     = result.getAccessToken();
+                    try {
+                        service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kms-azure-akc_acquireToken_thread").build());
 
-                                if (logger.isDebugEnabled()) {
-                                    logger.debug("<== getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
-                                }
+                        AuthenticationContext   context                 = new AuthenticationContext(authorization, false, service);
+                        AsymmetricKeyCredential asymmetricKeyCredential = AsymmetricKeyCredential.create(authClientID, privateKey, certificateKey.getCertificate());
+                        AuthenticationResult    result                  = context.acquireToken(resource, asymmetricKeyCredential, null).get();
+                        String                  ret                     = result.getAccessToken();
 
-                                return ret;
-                            } catch (Exception e) {
-                                throw new RuntimeException("Error while getting authenticated access token from azure key vault with certificate : " + e);
-                            } finally {
-                                if (service != null) {
-                                    service.shutdown();
-                                }
-                            }
+                        logger.debug("<== getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
+
+                        return ret;
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error while getting authenticated access token from azure key vault with certificate : " + e);
+                    } finally {
+                        if (service != null) {
+                            service.shutdown();
                         }
-                    });
+                    }
+                }
+            });
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getAuthentication({}): ret={}", path, ret);
-        }
+        logger.debug("<== getAuthentication({}): ret={}", path, ret);
 
         return ret;
     }
 
-        private static AuthenticationResult getAccessTokenFromClientCredentials(String authorization, String resource, String clientId, String clientKey) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> getAccessTokenFromClientCredentials({}, {}, {})", authorization, resource, clientId);
-        }
+    private static AuthenticationResult getAccessTokenFromClientCredentials(String authorization, String resource, String clientId, String clientKey) {
+        logger.debug("==> getAccessTokenFromClientCredentials({}, {}, {})", authorization, resource, clientId);
 
-        AuthenticationResult  result;
-        ExecutorService       service = null;
+        AuthenticationResult result;
+        ExecutorService      service = null;
 
         try {
-            service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true)
-                                                                                .setNameFormat("kms-azure-cc_acquireToken-thread")
-                                                                                .build());
+            service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("kms-azure-cc_acquireToken-thread").build());
 
             AuthenticationContext        context     = new AuthenticationContext(authorization, false, service);
             ClientCredential             credentials = new ClientCredential(clientId, clientKey);
@@ -210,20 +184,18 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
             throw new RuntimeException("authentication result was null");
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== getAccessTokenFromClientCredentials({}, {}, {})", authorization, resource, clientId);
-        }
+        logger.debug("<== getAccessTokenFromClientCredentials({}, {}, {})", authorization, resource, clientId);
 
         return result;
     }
 
     private KeyCert readPem(String path, String password) throws IOException, CertificateException, OperatorCreationException, PKCSException {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> readPem({})", path);
-        }
+        logger.debug("==> readPem({})", path);
 
         Security.addProvider(new BouncyCastleProvider());
+
         KeyCert keycert = null;
+
         try (PEMParser pemParser = new PEMParser(new FileReader(path))) {
             PrivateKey      privateKey = null;
             X509Certificate cert       = null;
@@ -248,11 +220,9 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
             }
 
             keycert = new KeyCert(cert, privateKey);
+        }
 
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== readPem({})", path);
-        }
+        logger.debug("<== readPem({})", path);
 
         return keycert;
     }
@@ -313,4 +283,3 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
         }
     }
 }
-

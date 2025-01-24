@@ -19,13 +19,6 @@
 
 package org.apache.ranger.metrics;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-
 import org.apache.ranger.metrics.source.RangerAdminMetricsSourceContextEnricher;
 import org.apache.ranger.metrics.source.RangerAdminMetricsSourceDenyConditions;
 import org.apache.ranger.metrics.source.RangerAdminMetricsSourcePolicyMasking;
@@ -39,9 +32,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 @Component
 public class RangerAdminMetricsWrapper {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAdminMetricsWrapper.class);
+
     private static final String context = "admin";
 
     private final RangerMetricsSystemWrapper rangerMetricsSystemWrapper = new RangerMetricsSystemWrapper();
@@ -70,6 +71,7 @@ public class RangerAdminMetricsWrapper {
     @PostConstruct
     public void init() {
         LOG.info("===>> RangerAdminMetricsWrapper.init()");
+
         try {
             //Source
             List<RangerMetricsSourceWrapper> sourceWrappers = new ArrayList<>();

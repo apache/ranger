@@ -27,7 +27,6 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import java.util.List;
 
 public class RolePredicateUtil extends AbstractPredicateUtil {
-
     public RolePredicateUtil() {
         super();
     }
@@ -45,41 +44,38 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForRoleName(final String roleName, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(roleName)) {
+        if (StringUtils.isEmpty(roleName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-                boolean ret = false;
+            boolean ret1 = false;
 
-                if(object instanceof RangerRole) {
-                    RangerRole role = (RangerRole) object;
+            if (object instanceof RangerRole) {
+                RangerRole role = (RangerRole) object;
 
-                    ret = StringUtils.equals(role.getName(), roleName);
+                ret1 = StringUtils.equals(role.getName(), roleName);
 
-                    if (!ret) {
-                        List<RangerRole.RoleMember> roles = role.getRoles();
+                if (!ret1) {
+                    List<RangerRole.RoleMember> roles = role.getRoles();
 
-                        for (RangerRole.RoleMember member : roles) {
-                            ret = StringUtils.equals(role.getName(), roleName);
+                    for (RangerRole.RoleMember member : roles) {
+                        ret1 = StringUtils.equals(member.getName(), roleName);
 
-                            if (ret) {
-                                break;
-                            }
+                        if (ret1) {
+                            break;
                         }
                     }
                 }
-                return ret;
             }
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -87,41 +83,38 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForPartialRoleName(final String roleNamePartial, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(roleNamePartial)) {
+        if (StringUtils.isEmpty(roleNamePartial)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-                boolean ret = false;
+            boolean ret1 = false;
 
-                if(object instanceof RangerRole) {
-                    RangerRole role = (RangerRole) object;
+            if (object instanceof RangerRole) {
+                RangerRole role = (RangerRole) object;
 
-                    ret = StringUtils.containsIgnoreCase(role.getName(), roleNamePartial);
+                ret1 = StringUtils.containsIgnoreCase(role.getName(), roleNamePartial);
 
-                    if (!ret) {
-                        List<RangerRole.RoleMember> roles = role.getRoles();
+                if (!ret1) {
+                    List<RangerRole.RoleMember> roles = role.getRoles();
 
-                        for (RangerRole.RoleMember member : roles) {
-                            ret = StringUtils.containsIgnoreCase(role.getName(), roleNamePartial);
+                    for (RangerRole.RoleMember member : roles) {
+                        ret1 = StringUtils.containsIgnoreCase(member.getName(), roleNamePartial);
 
-                            if (ret) {
-                                break;
-                            }
+                        if (ret1) {
+                            break;
                         }
                     }
                 }
-                return ret;
             }
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -129,30 +122,27 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForRoleId(final String roleId, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(roleId)) {
+        if (StringUtils.isEmpty(roleId)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
-
-                boolean ret = false;
-
-                if(object instanceof RangerRole) {
-                    RangerRole role = (RangerRole) object;
-
-                    ret = StringUtils.equals(roleId, role.getId().toString());
-                }
-
-                return ret;
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
             }
+
+            boolean ret1 = false;
+
+            if (object instanceof RangerRole) {
+                RangerRole role = (RangerRole) object;
+
+                ret1 = StringUtils.equals(roleId, role.getId().toString());
+            }
+
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -160,37 +150,34 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForGroupName(final String groupName, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(groupName)) {
+        if (StringUtils.isEmpty(groupName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-                boolean ret = false;
+            boolean ret1 = false;
 
-                if(object instanceof RangerRole) {
-                    RangerRole role = (RangerRole) object;
+            if (object instanceof RangerRole) {
+                RangerRole role = (RangerRole) object;
 
-                    List<RangerRole.RoleMember> groups = role.getGroups();
+                List<RangerRole.RoleMember> groups = role.getGroups();
 
-                    for (RangerRole.RoleMember member : groups) {
-                        ret = StringUtils.equals(member.getName(), groupName);
+                for (RangerRole.RoleMember member : groups) {
+                    ret1 = StringUtils.equals(member.getName(), groupName);
 
-                        if (ret) {
-                            break;
-                        }
+                    if (ret1) {
+                        break;
                     }
                 }
-                return ret;
             }
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -198,37 +185,34 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForPartialGroupName(final String groupNamePartial, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(groupNamePartial)) {
+        if (StringUtils.isEmpty(groupNamePartial)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-                boolean ret = false;
+            boolean ret1 = false;
 
-                if(object instanceof RangerRole) {
-                    RangerRole role = (RangerRole) object;
+            if (object instanceof RangerRole) {
+                RangerRole role = (RangerRole) object;
 
-                    List<RangerRole.RoleMember> groups = role.getGroups();
+                List<RangerRole.RoleMember> groups = role.getGroups();
 
-                    for (RangerRole.RoleMember member : groups) {
-                        ret = StringUtils.containsIgnoreCase(member.getName(), groupNamePartial);
+                for (RangerRole.RoleMember member : groups) {
+                    ret1 = StringUtils.containsIgnoreCase(member.getName(), groupNamePartial);
 
-                        if (ret) {
-                            break;
-                        }
+                    if (ret1) {
+                        break;
                     }
                 }
-                return ret;
             }
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -236,37 +220,34 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForUserName(final String userName, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(userName)) {
+        if (StringUtils.isEmpty(userName)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-                boolean ret = false;
+            boolean ret1 = false;
 
-                if(object instanceof RangerRole) {
-                    RangerRole role = (RangerRole) object;
+            if (object instanceof RangerRole) {
+                RangerRole role = (RangerRole) object;
 
-                    List<RangerRole.RoleMember> users = role.getUsers();
+                List<RangerRole.RoleMember> users = role.getUsers();
 
-                    for (RangerRole.RoleMember member : users) {
-                        ret = StringUtils.equals(member.getName(), userName);
+                for (RangerRole.RoleMember member : users) {
+                    ret1 = StringUtils.equals(member.getName(), userName);
 
-                        if (ret) {
-                            break;
-                        }
+                    if (ret1) {
+                        break;
                     }
                 }
-                return ret;
             }
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
@@ -274,42 +255,37 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForPartialUserName(final String userNamePartial, List<Predicate> predicates) {
-        if(StringUtils.isEmpty(userNamePartial)) {
+        if (StringUtils.isEmpty(userNamePartial)) {
             return null;
         }
 
-        Predicate ret = new Predicate() {
-            @Override
-            public boolean evaluate(Object object) {
-                if(object == null) {
-                    return false;
-                }
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
 
-                boolean ret = false;
+            boolean ret1 = false;
 
-                if(object instanceof RangerRole) {
-                    RangerRole role = (RangerRole) object;
+            if (object instanceof RangerRole) {
+                RangerRole role = (RangerRole) object;
 
-                    List<RangerRole.RoleMember> users = role.getUsers();
+                List<RangerRole.RoleMember> users = role.getUsers();
 
-                    for (RangerRole.RoleMember member : users) {
-                        ret = StringUtils.containsIgnoreCase(member.getName(), userNamePartial);
+                for (RangerRole.RoleMember member : users) {
+                    ret1 = StringUtils.containsIgnoreCase(member.getName(), userNamePartial);
 
-                        if (ret) {
-                            break;
-                        }
+                    if (ret1) {
+                        break;
                     }
                 }
-                return ret;
             }
+            return ret1;
         };
 
-        if(predicates != null) {
+        if (predicates != null) {
             predicates.add(ret);
         }
 
         return ret;
     }
-
 }
-
