@@ -140,7 +140,7 @@
         <jersey-server.version>1.19.4</jersey-server.version>
         <jersey-spring.version>1.19.4</jersey-spring.version>
         <jettison.version>1.5.4</jettison.version>
-        <jetty-client.version>9.4.49.v20220914</jetty-client.version>
+        <jetty-client.version>9.4.56.v20240826</jetty-client.version>
         <jline.version>0.9.94</jline.version>
         <jna-platform.version>5.7.0</jna-platform.version>
         <jna.version>5.7.0</jna.version>

@@ -28,7 +28,7 @@
     <name>Knox Security Plugin</name>
     <description>Knox Security Plugins</description>
     <properties>
-        <knox.jetty.version>9.4.55.v20240627</knox.jetty.version>
+        <knox.jetty.version>9.4.56.v20240826</knox.jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
