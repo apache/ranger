@@ -749,10 +749,10 @@ update_properties() {
 		propertyName=ranger.jpa.jdbc.url
 		if [ "${DOCKER_ENV}" == "true" ]
 		then
-      newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};trustServerCertificate=true;"
-    else
-      newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
-    fi
+  			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};trustServerCertificate=true;"
+     		else
+       			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+	  	fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
