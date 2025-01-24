@@ -606,12 +606,12 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "MSSQL" ]
 	then
 		propertyName=ranger.ks.jpa.jdbc.url
-    if [ "${DOCKER_ENV}" == "true" ]
-    then
-      newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};trustServerCertificate=true;"
-    else
-      newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
-    fi
+    		if [ "${DOCKER_ENV}" == "true" ]
+      		then
+			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};trustServerCertificate=true;"
+   		else
+     			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+		fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 		propertyName=ranger.ks.jpa.jdbc.dialect
