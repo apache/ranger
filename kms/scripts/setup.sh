@@ -609,7 +609,7 @@ update_properties() {
 		propertyName=ranger.ks.jpa.jdbc.url
     		if [ "${CONNECTION_STRING_ADDITIONAL_PARAMS}" != "" ]
       		then
-			newPropertyValue=${CONNECTION_STRING_ADDITIONAL_PARAMS}
+			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};${CONNECTION_STRING_ADDITIONAL_PARAMS}"
    		else
      			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
 		fi
