@@ -69,6 +69,7 @@ fi
 LOGFILE=$(eval echo " $(get_prop 'LOGFILE' $PROPFILE)")
 
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
+DOCKER_ENV=$(get_prop 'DOCKER_ENV' $PROPFILE)
 DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
 SQL_CONNECTOR_JAR=$(get_prop 'SQL_CONNECTOR_JAR' $PROPFILE)
 db_root_user=$(get_prop 'db_root_user' $PROPFILE)
@@ -746,7 +747,12 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "MSSQL" ]
 	then
 		propertyName=ranger.jpa.jdbc.url
-		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};trustServerCertificate=true;"
+		if [ "${DOCKER_ENV}" == "true" ]
+		then
+      newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};trustServerCertificate=true;"
+    else
+      newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+    fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect

@@ -22,6 +22,8 @@ ARG RANGER_DB_TYPE
 ARG TARGETARCH
 ARG RANGER_ADMIN_JAVA_VERSION
 
+ENV JAVA_HOME=/usr/lib/jvm/java-1.${RANGER_ADMIN_JAVA_VERSION}.0-openjdk-${TARGETARCH}
+
 RUN if [ "${OS_NAME}" = "UBUNTU" ]; then\
     update-java-alternatives --set "$JAVA_HOME";\
     fi
