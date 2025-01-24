@@ -41,10 +41,12 @@ public class GetXUserListResponse {
 		this.totalCount = totalCount;
 	}
 
+	@JsonProperty("vXUsers")
 	public List<XUserInfo> getXuserInfoList() {
 		return xuserInfoList;
 	}
 
+	@JsonProperty("vXUsers")
 	public void setXuserInfoList(List<XUserInfo> xuserInfoList) {
 		this.xuserInfoList = xuserInfoList;
 	}

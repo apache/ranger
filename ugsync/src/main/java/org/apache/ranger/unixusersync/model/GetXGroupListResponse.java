@@ -40,10 +40,12 @@ public class GetXGroupListResponse {
 		this.totalCount = totalCount;
 	}
 
+	@JsonProperty("vXGroups")
 	public List<XGroupInfo> getXgroupInfoList() {
 		return xgroupInfoList;
 	}
 
+	@JsonProperty("vXGroups")
 	public void setXgroupInfoList(List<XGroupInfo> xgroupInfoList) {
 		this.xgroupInfoList = xgroupInfoList;
 	}

@@ -52,14 +52,13 @@ public class RangerJAXBContextResolver implements ContextResolver<ObjectMapper> 
 	org.apache.ranger.view.VXAccessAuditList.class
     };
 
-    public RangerJAXBContextResolver() throws Exception {
+    public RangerJAXBContextResolver() {
 		jsonMapper = new ObjectMapper();
 		jsonMapper.registerModule(new JaxbAnnotationModule());
     }
 
     @Override
     public ObjectMapper getContext(Class<?> objectType) {
-	// return context;
 	for (Class<?> type : types) {
 	    if (type.getName().equals(objectType.getName())) {
 		return this.jsonMapper;
