@@ -165,6 +165,7 @@ jobs:
           sleep 30
           docker logs ranger-sqlserver
           docker logs ranger
+          docker logs ranger-kms
 
       - name: Check status of containers and remove them
         run: |
