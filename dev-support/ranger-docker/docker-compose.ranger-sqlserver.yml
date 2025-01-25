@@ -1,0 +1,25 @@
+services:
+  ranger-db:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-sqlserver
+      args:
+        - SQLSERVER_VERSION=${SQLSERVER_VERSION}
+    image: ranger-sqlserver
+    container_name: ranger-sqlserver
+    hostname: ranger-db.example.com
+    networks:
+      - ranger
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P rangerR0cks! -Q \"SELECT 1\" -C" # -C bypasses SSL validation
+      ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  ranger:
+    name: rangernw

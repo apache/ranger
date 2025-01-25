@@ -58,6 +58,10 @@ FROM ranger-kms AS ranger_oracle
 COPY ./downloads/ojdbc8.jar         /home/ranger/dist/
 RUN mv /home/ranger/dist/ojdbc8.jar /usr/share/java/oracle.jar
 
+FROM ranger-kms AS ranger_sqlserver
+COPY ./downloads/mssql-jdbc-12.8.1.jre8.jar            /home/ranger/dist/
+RUN mv /home/ranger/dist/mssql-jdbc-12.8.1.jre8.jar    /usr/share/java/mssql.jar
+
 FROM ranger_${RANGER_DB_TYPE}
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-kms.sh" ]
