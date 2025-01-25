@@ -105,7 +105,7 @@ jobs:
         run: |
           cp ranger-*.tar.gz dev-support/ranger-docker/dist
           cp version dev-support/ranger-docker/dist
-      
+
       - name: Cache downloaded archives
         uses: actions/cache@v4
         with:
@@ -159,8 +159,9 @@ jobs:
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml up -d
+
       - name: Check status of containers and remove them
-        run: | 
+        run: |
           sleep 60
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
