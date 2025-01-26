@@ -321,7 +321,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
 
                 for (RangerPolicy.RangerPolicyItemAccess policyItemAccess : policyItemAccesses) {
                     if (policyItemAccess.getIsAllowed()) {
-                        add(accessPerms, policyItemAccess.getType());
+                        accessPerms = add(accessPerms, policyItemAccess.getType());
                     }
                 }
 
