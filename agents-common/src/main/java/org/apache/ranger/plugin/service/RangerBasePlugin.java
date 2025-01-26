@@ -22,10 +22,12 @@ package org.apache.ranger.plugin.service;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
@@ -70,6 +72,7 @@ import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -134,6 +137,55 @@ public class RangerBasePlugin {
         setAuditExcludedUsersGroupsRoles(auditExcludeUsers, auditExcludeGroups, auditExcludeRoles);
         setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
         setServiceAdmins(serviceAdmins);
+
+        boolean initKerb = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".kerberos.initialize", false);
+
+        if (initKerb) {
+            String kerbLoginType = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".kerberos.login.type");
+
+            if (StringUtils.equalsIgnoreCase(kerbLoginType, "keytab")) {
+                String kerbPrincipal = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".keytab.principal");
+                String kerbKeytab    = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".keytab.file");
+
+                if (StringUtils.isNotBlank(kerbPrincipal) && StringUtils.isNotBlank(kerbKeytab)) {
+                    LOG.info("Kerberos login - ugi: principal={}, keytab={}", kerbPrincipal, kerbKeytab);
+
+                    try {
+                        UserGroupInformation.loginUserFromKeytab(kerbPrincipal, kerbKeytab);
+                    } catch (IOException excp) {
+                        LOG.error("Kerberos login - ugi: failed", excp);
+
+                        throw new RuntimeException(excp);
+                    }
+                } else {
+                    String msg = String.format("Kerberos login - ugi: invalid configuration: %s=%s, %s=%s", pluginConfig.getPropertyPrefix() + ".keytab.principal", kerbPrincipal, pluginConfig.getPropertyPrefix() + ".keytab.file", kerbKeytab);
+
+                    LOG.error(msg);
+
+                    throw new RuntimeException(msg);
+                }
+            } else if (StringUtils.equalsIgnoreCase(kerbLoginType, "jaas")) {
+                String appConfig = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".jaas.appconfig");
+
+                if (StringUtils.isNotBlank(appConfig)) {
+                    try {
+                        MiscUtil.setUGIFromJAASConfig(appConfig);
+                    } catch (Exception excp) {
+                        LOG.error("Kerberos login - jaas: appconfig={} failed", appConfig, excp);
+
+                        throw new RuntimeException(excp);
+                    }
+                } else {
+                    String msg = String.format("Kerberos login - jaas: invalid configuration: %s=%s", pluginConfig.getPropertyPrefix() + ".jaas.appconfig", appConfig);
+
+                    LOG.error(msg);
+
+                    throw new RuntimeException(msg);
+                }
+            } else {
+                LOG.warn("Kerberos login: invalid configuration {}={}", pluginConfig.getPropertyPrefix() + ".kerberos.login.type", kerbLoginType);
+            }
+        }
 
         RangerRequestScriptEvaluator.init(pluginConfig);
 
