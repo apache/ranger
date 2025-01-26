@@ -144,8 +144,8 @@ public class RangerBasePlugin {
             String kerbLoginType = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".kerberos.login.type");
 
             if (StringUtils.equalsIgnoreCase(kerbLoginType, "keytab")) {
-                String kerbPrincipal = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".keytab.principal");
-                String kerbKeytab    = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".keytab.file");
+                String kerbPrincipal = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".kerberos.keytab.principal");
+                String kerbKeytab    = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".kerberos.keytab.file");
 
                 if (StringUtils.isNotBlank(kerbPrincipal) && StringUtils.isNotBlank(kerbKeytab)) {
                     LOG.info("Kerberos login - ugi: principal={}, keytab={}", kerbPrincipal, kerbKeytab);
@@ -158,7 +158,7 @@ public class RangerBasePlugin {
                         throw new RuntimeException(excp);
                     }
                 } else {
-                    String msg = String.format("Kerberos login - ugi: invalid configuration: %s=%s, %s=%s", pluginConfig.getPropertyPrefix() + ".keytab.principal", kerbPrincipal, pluginConfig.getPropertyPrefix() + ".keytab.file", kerbKeytab);
+                    String msg = String.format("Kerberos login - ugi: invalid configuration: %s=%s, %s=%s", pluginConfig.getPropertyPrefix() + ".kerberos.keytab.principal", kerbPrincipal, pluginConfig.getPropertyPrefix() + ".kerberos.keytab.file", kerbKeytab);
 
                     LOG.error(msg);
 
