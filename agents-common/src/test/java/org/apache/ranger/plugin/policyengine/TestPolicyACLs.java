@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.gson.JsonDeserializationContext;
@@ -121,10 +122,7 @@ public class TestPolicyACLs {
 			RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
 			RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl(testCase.servicePolicies, pluginContext, null);
 
-			for(PolicyACLsTests.TestCase.OneTest oneTest : testCase.tests) {
-				if(oneTest == null) {
-					continue;
-				}
+			testCase.tests.parallelStream().filter(Objects::nonNull).forEach(oneTest -> {
 				RangerAccessRequestImpl request = new RangerAccessRequestImpl(oneTest.resource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
 
 				request.setResourceMatchingScope(oneTest.resourceMatchingScope);
@@ -288,7 +286,7 @@ public class TestPolicyACLs {
 				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - roleACLsMatched", roleACLsMatched);
 				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - rowFiltersMatched", rowFiltersMatched);
 				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - dataMaskingMatched", dataMaskingMatched);
-			}
+			});
 		}
 	}
 

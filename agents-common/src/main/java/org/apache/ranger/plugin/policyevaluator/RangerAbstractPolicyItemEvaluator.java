@@ -109,52 +109,56 @@ public abstract class RangerAbstractPolicyItemEvaluator implements RangerPolicyI
 	}
 
 	protected RangerPolicyItem computeWithImpliedGrants() {
+		RangerPolicyItem ret = withImpliedGrants;
 
-		final RangerPolicyItem ret;
+		if (ret == null) {
+			synchronized (this) {
+				ret = withImpliedGrants;
 
-		if (withImpliedGrants == null) {
-			if (CollectionUtils.isEmpty(policyItem.getAccesses())) {
-				ret = policyItem;
-			} else {
-				// Compute implied-accesses
-				Map<String, Collection<String>> impliedAccessGrants = options.getServiceDefHelper().getImpliedAccessGrants();
+				if (ret == null) {
+					ret = policyItem;
 
-				if (impliedAccessGrants != null && !impliedAccessGrants.isEmpty()) {
-					ret = new RangerPolicyItem(policyItem);
+					if (CollectionUtils.isNotEmpty(policyItem.getAccesses())) {
+						// Compute implied-accesses
+						Map<String, Collection<String>> impliedAccessGrants = options.getServiceDefHelper().getImpliedAccessGrants();
 
-					// Only one round of 'expansion' is done; multi-level impliedGrants (like shown below) are not handled for now
-					// multi-level impliedGrants: given admin=>write; write=>read: must imply admin=>read,write
-					for (Map.Entry<String, Collection<String>> e : impliedAccessGrants.entrySet()) {
-						String implyingAccessType = e.getKey();
-						Collection<String> impliedGrants = e.getValue();
+						if (impliedAccessGrants != null && !impliedAccessGrants.isEmpty()) {
+							ret = new RangerPolicyItem(policyItem);
 
-						RangerPolicy.RangerPolicyItemAccess access = RangerDefaultPolicyEvaluator.getAccess(ret, implyingAccessType);
+							// Only one round of 'expansion' is done; multi-level impliedGrants (like shown below) are not handled for now
+							// multi-level impliedGrants: given admin=>write; write=>read: must imply admin=>read,write
+							for (Map.Entry<String, Collection<String>> e : impliedAccessGrants.entrySet()) {
+								String             implyingAccessType = e.getKey();
+								Collection<String> impliedGrants      = e.getValue();
 
-						if (access == null) {
-							continue;
-						}
+								RangerPolicy.RangerPolicyItemAccess access = RangerDefaultPolicyEvaluator.getAccess(ret, implyingAccessType);
 
-						for (String impliedGrant : impliedGrants) {
-							RangerPolicy.RangerPolicyItemAccess impliedAccess = RangerDefaultPolicyEvaluator.getAccess(ret, impliedGrant);
+								if (access == null) {
+									continue;
+								}
 
-							if (impliedAccess == null) {
-								impliedAccess = new RangerPolicy.RangerPolicyItemAccess(impliedGrant, access.getIsAllowed());
+								for (String impliedGrant : impliedGrants) {
+									RangerPolicy.RangerPolicyItemAccess impliedAccess = RangerDefaultPolicyEvaluator.getAccess(ret, impliedGrant);
 
-								ret.addAccess(impliedAccess);
-							} else {
-								if (!impliedAccess.getIsAllowed()) {
-									impliedAccess.setIsAllowed(access.getIsAllowed());
+									if (impliedAccess == null) {
+										impliedAccess = new RangerPolicy.RangerPolicyItemAccess(impliedGrant, access.getIsAllowed());
+
+										ret.addAccess(impliedAccess);
+									} else {
+										if (!impliedAccess.getIsAllowed()) {
+											impliedAccess.setIsAllowed(access.getIsAllowed());
+										}
+									}
 								}
 							}
 						}
 					}
-				} else {
-					ret = policyItem;
+
+					withImpliedGrants = ret;
 				}
 			}
-		} else {
-			ret = withImpliedGrants;
 		}
+
 		return ret;
 	}
 
