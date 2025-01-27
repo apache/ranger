@@ -138,14 +138,15 @@ public class RangerBasePlugin {
         setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
         setServiceAdmins(serviceAdmins);
 
-        boolean initKerb = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".kerberos.initialize", false);
+        String  kerbPrefix = pluginConfig.getPropertyPrefix() + ".kerberos";
+        boolean initKerb   = pluginConfig.getBoolean(kerbPrefix + ".initialize", false);
 
         if (initKerb) {
-            String kerbLoginType = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".kerberos.login.type");
+            String kerbLoginType = pluginConfig.get(kerbPrefix + ".login.type");
 
             if (StringUtils.equalsIgnoreCase(kerbLoginType, "keytab")) {
-                String kerbPrincipal = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".kerberos.keytab.principal");
-                String kerbKeytab    = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".kerberos.keytab.file");
+                String kerbPrincipal = pluginConfig.get(kerbPrefix + ".keytab.principal");
+                String kerbKeytab    = pluginConfig.get(kerbPrefix + ".keytab.file");
 
                 if (StringUtils.isNotBlank(kerbPrincipal) && StringUtils.isNotBlank(kerbKeytab)) {
                     LOG.info("Kerberos login - ugi: principal={}, keytab={}", kerbPrincipal, kerbKeytab);
@@ -158,14 +159,14 @@ public class RangerBasePlugin {
                         throw new RuntimeException(excp);
                     }
                 } else {
-                    String msg = String.format("Kerberos login - ugi: invalid configuration: %s=%s, %s=%s", pluginConfig.getPropertyPrefix() + ".kerberos.keytab.principal", kerbPrincipal, pluginConfig.getPropertyPrefix() + ".kerberos.keytab.file", kerbKeytab);
+                    String msg = String.format("Kerberos login - ugi: invalid configuration: %s=%s, %s=%s", kerbPrefix + ".keytab.principal", kerbPrincipal, kerbPrefix + ".keytab.file", kerbKeytab);
 
                     LOG.error(msg);
 
                     throw new RuntimeException(msg);
                 }
             } else if (StringUtils.equalsIgnoreCase(kerbLoginType, "jaas")) {
-                String appConfig = pluginConfig.get(pluginConfig.getPropertyPrefix() + ".jaas.appconfig");
+                String appConfig = pluginConfig.get(kerbPrefix + ".jaas.appconfig");
 
                 if (StringUtils.isNotBlank(appConfig)) {
                     try {
@@ -176,14 +177,14 @@ public class RangerBasePlugin {
                         throw new RuntimeException(excp);
                     }
                 } else {
-                    String msg = String.format("Kerberos login - jaas: invalid configuration: %s=%s", pluginConfig.getPropertyPrefix() + ".jaas.appconfig", appConfig);
+                    String msg = String.format("Kerberos login - jaas: invalid configuration: %s=%s", kerbPrefix + ".jaas.appconfig", appConfig);
 
                     LOG.error(msg);
 
                     throw new RuntimeException(msg);
                 }
             } else {
-                LOG.warn("Kerberos login: invalid configuration {}={}", pluginConfig.getPropertyPrefix() + ".kerberos.login.type", kerbLoginType);
+                LOG.warn("Kerberos login: invalid configuration {}={}", kerbPrefix + ".login.type", kerbLoginType);
             }
         }
 
