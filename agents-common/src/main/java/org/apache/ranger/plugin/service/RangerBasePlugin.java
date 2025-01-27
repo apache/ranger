@@ -138,53 +138,55 @@ public class RangerBasePlugin {
         setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
         setServiceAdmins(serviceAdmins);
 
-        String  kerbPrefix = pluginConfig.getPropertyPrefix() + ".kerberos";
-        boolean initKerb   = pluginConfig.getBoolean(kerbPrefix + ".initialize", false);
+        String  ugiPrefix = pluginConfig.getPropertyPrefix() + ".ugi";
+        boolean initUgi   = pluginConfig.getBoolean(ugiPrefix + ".initialize", false);
 
-        if (initKerb) {
-            String kerbLoginType = pluginConfig.get(kerbPrefix + ".login.type");
+        if (initUgi) {
+            String ugiLoginType = pluginConfig.get(ugiPrefix + ".login.type");
 
-            if (StringUtils.equalsIgnoreCase(kerbLoginType, "keytab")) {
-                String kerbPrincipal = pluginConfig.get(kerbPrefix + ".keytab.principal");
-                String kerbKeytab    = pluginConfig.get(kerbPrefix + ".keytab.file");
+            if (StringUtils.equalsIgnoreCase(ugiLoginType, "keytab")) {
+                String principal = pluginConfig.get(ugiPrefix + ".keytab.principal");
+                String keytab    = pluginConfig.get(ugiPrefix + ".keytab.file");
 
-                if (StringUtils.isNotBlank(kerbPrincipal) && StringUtils.isNotBlank(kerbKeytab)) {
-                    LOG.info("Kerberos login - ugi: principal={}, keytab={}", kerbPrincipal, kerbKeytab);
+                if (StringUtils.isNotBlank(principal) && StringUtils.isNotBlank(keytab)) {
+                    LOG.info("UGI login: principal={}, keytab={}", principal, keytab);
 
                     try {
-                        UserGroupInformation.loginUserFromKeytab(kerbPrincipal, kerbKeytab);
+                        UserGroupInformation.loginUserFromKeytab(principal, keytab);
                     } catch (IOException excp) {
-                        LOG.error("Kerberos login - ugi: failed", excp);
+                        LOG.error("UGI login: failed", excp);
 
                         throw new RuntimeException(excp);
                     }
                 } else {
-                    String msg = String.format("Kerberos login - ugi: invalid configuration: %s=%s, %s=%s", kerbPrefix + ".keytab.principal", kerbPrincipal, kerbPrefix + ".keytab.file", kerbKeytab);
+                    String msg = String.format("UGI login: invalid configuration: %s=%s, %s=%s", ugiPrefix + ".keytab.principal", principal, ugiPrefix + ".keytab.file", keytab);
 
                     LOG.error(msg);
 
                     throw new RuntimeException(msg);
                 }
-            } else if (StringUtils.equalsIgnoreCase(kerbLoginType, "jaas")) {
-                String appConfig = pluginConfig.get(kerbPrefix + ".jaas.appconfig");
+            } else if (StringUtils.equalsIgnoreCase(ugiLoginType, "jaas")) {
+                String jaasAppConfig = pluginConfig.get(ugiPrefix + ".jaas.appconfig");
 
-                if (StringUtils.isNotBlank(appConfig)) {
+                if (StringUtils.isNotBlank(jaasAppConfig)) {
+                    LOG.info("UGI login: jaasAppConfig={}", jaasAppConfig);
+
                     try {
-                        MiscUtil.setUGIFromJAASConfig(appConfig);
+                        MiscUtil.setUGIFromJAASConfig(jaasAppConfig);
                     } catch (Exception excp) {
-                        LOG.error("Kerberos login - jaas: appconfig={} failed", appConfig, excp);
+                        LOG.error("UGI login: jaasAppConfig={} failed", jaasAppConfig, excp);
 
                         throw new RuntimeException(excp);
                     }
                 } else {
-                    String msg = String.format("Kerberos login - jaas: invalid configuration: %s=%s", kerbPrefix + ".jaas.appconfig", appConfig);
+                    String msg = String.format("UGI login: invalid configuration: %s=%s", ugiPrefix + ".jaas.appconfig", jaasAppConfig);
 
                     LOG.error(msg);
 
                     throw new RuntimeException(msg);
                 }
             } else {
-                LOG.warn("Kerberos login: invalid configuration {}={}", kerbPrefix + ".login.type", kerbLoginType);
+                LOG.warn("UGI login: invalid configuration {}={}", ugiPrefix + ".login.type", ugiLoginType);
             }
         }
 
