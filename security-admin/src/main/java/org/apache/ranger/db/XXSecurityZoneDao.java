@@ -145,4 +145,19 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
 
         return securityZoneList;
     }
+
+    public List<XXSecurityZone> getAllZoneIdNames() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZone.getAllZoneIdNames").getResultList();
+
+        List<XXSecurityZone> securityZoneList = new ArrayList<XXSecurityZone>(results.size());
+        for (Object[] result : results) {
+            XXSecurityZone xXSecurityZone = new XXSecurityZone();
+            xXSecurityZone.setId((Long) result[0]);
+            xXSecurityZone.setName((String) result[1]);
+            securityZoneList.add(xXSecurityZone);
+        }
+
+        return securityZoneList;
+    }
 }

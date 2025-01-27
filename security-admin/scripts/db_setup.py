@@ -203,13 +203,13 @@ class BaseDB(object):
 					#getting Java patch which needs to be run before this DB patch.
 					pre_dict = self.get_pre_post_java_patches(prefix_for_preSql_patch)
 					if pre_dict:
-						log ("[I] ruunig pre java patch:[{}]".format(pre_dict),"info")
+						log ("[I] Running Pre Java Patch:[{}]".format(pre_dict),"info")
 						self.execute_java_patches(xa_db_host, db_user, db_password, db_name, pre_dict)
 					self.import_db_patches(db_name, db_user, db_password, currentPatch)
 					#getting Java patch which needs to be run immediately after this DB patch.
 					post_dict = self.get_pre_post_java_patches(prefix_for_postSql_patch)
 					if post_dict:
-						log ("[I] ruunig post java patch:[{}]".format(post_dict),"info")
+						log ("[I] Running Post Java Patch:[{}]".format(post_dict),"info")
 						self.execute_java_patches(xa_db_host, db_user, db_password, db_name, post_dict)
 				self.update_applied_patches_status(db_name, db_user, db_password, "DB_PATCHES")
 			else:

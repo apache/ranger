@@ -104,26 +104,19 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
 	private void updatePolicyGUIDToUniqueValue() throws Exception {
 		logger.info("==> updatePolicyGUIDToUniqueValue() ");
 
-		List<XXSecurityZone> allXXZones = null;
-		List<XXService> allXXService = null;
-
-		allXXZones = daoMgr.getXXSecurityZoneDao().getAll();
-		allXXService = daoMgr.getXXService().getAll();
+		List<XXSecurityZone> allXXZones   = daoMgr.getXXSecurityZoneDao().getAllZoneIdNames();
+		List<XXService>      allXXService = daoMgr.getXXService().getAll();
 
 		if (CollectionUtils.isNotEmpty(allXXZones) && CollectionUtils.isNotEmpty(allXXService)) {
 			logger.info("Total number of zones " + allXXZones.size() +", service :" +allXXService.size());
 			for (XXSecurityZone xSecurityZone : allXXZones) {
 				for (XXService xService : allXXService) {
-					logger.info("serching duplicate guid policies for service :" + xService.getName() + " zone : "
-							+ xSecurityZone.getName());
-					List<String> duplicateGuidList = daoMgr.getXXPolicy()
-							.findDuplicateGUIDByServiceIdAndZoneId(xService.getId(), xSecurityZone.getId());
+					logger.info("searching duplicate guid policies for service :" + xService.getName() + " zone : " + xSecurityZone.getName());
+					List<String> duplicateGuidList = daoMgr.getXXPolicy().findDuplicateGUIDByServiceIdAndZoneId(xService.getId(), xSecurityZone.getId());
 					if (CollectionUtils.isNotEmpty(duplicateGuidList)) {
-						logger.info("Total number of duplicate GUIDs :" + duplicateGuidList.size() + " for service :"
-								+ xService.getName() + " and zone :" + xSecurityZone.getName());
+						logger.info("Total number of duplicate GUIDs :" + duplicateGuidList.size() + " for service :" + xService.getName() + " and zone :" + xSecurityZone.getName());
 						for (String guid : duplicateGuidList) {
-							List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceIdAndZoneId(
-									guid, xService.getId(), xSecurityZone.getId());
+							List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceIdAndZoneId(guid, xService.getId(), xSecurityZone.getId());
 							boolean isFirstElement = false;
 							if (CollectionUtils.isNotEmpty(xxPolicyList)) {
 								isFirstElement = true;
