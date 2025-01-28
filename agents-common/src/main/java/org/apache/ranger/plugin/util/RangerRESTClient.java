@@ -40,15 +40,14 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.*;
 import jakarta.ws.rs.core.Cookie;
-
 import jakarta.ws.rs.core.Response;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.hadoop.conf.Configuration;
@@ -61,7 +60,6 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -220,30 +218,20 @@ public class RangerRESTClient {
 	}
 
 	private Client buildClient() {
+		ClientConfig config = createClientConfig();
 		Client client = null;
 
 		if (mIsSSL) {
 			KeyManager[]   kmList     = getKeyManagers();
 			TrustManager[] tmList     = getTrustManagers();
 			SSLContext     sslContext = getSSLContext(kmList, tmList);
-			ClientConfig   config     = new ClientConfig();
 
-			config.register(JacksonFeature.class); // to handle List<> unmarshalling
-
-			HostnameVerifier hv = new HostnameVerifier() {
-				public boolean verify(String urlHostName, SSLSession session) {
-					return session.getPeerHost().equals(urlHostName);
-				}
-			};
+			HostnameVerifier hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
 
 			client = ClientBuilder.newBuilder().withConfig(config).sslContext(sslContext).hostnameVerifier(hv).build();
 		}
 
 		if(client == null) {
-			ClientConfig config = new ClientConfig();
-
-			config.register(JacksonFeature.class); // to handle List<> unmarshalling
-
 			client = ClientBuilder.newClient(config);
 		}
 
@@ -252,6 +240,13 @@ public class RangerRESTClient {
 		client.property(ClientProperties.READ_TIMEOUT, mRestClientReadTimeOutMs);
 
 		return client;
+	}
+
+	private ClientConfig createClientConfig() {
+		ClientConfig config = new ClientConfig();
+		config.register(JacksonFeature.class);
+
+		return config;
 	}
 
 	private void setBasicAuthFilter(String username, String password) {
