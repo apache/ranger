@@ -19,14 +19,17 @@
 
 package org.apache.ranger.plugin.service;
 
+import java.io.IOException;
 import java.util.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
@@ -110,6 +113,58 @@ public class RangerBasePlugin {
 		setAuditExcludedUsersGroupsRoles(auditExcludeUsers, auditExcludeGroups, auditExcludeRoles);
 		setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
 		setServiceAdmins(serviceAdmins);
+
+		String  ugiPrefix = pluginConfig.getPropertyPrefix() + ".ugi";
+		boolean initUgi   = pluginConfig.getBoolean(ugiPrefix + ".initialize", false);
+
+		if (initUgi) {
+			String ugiLoginType = pluginConfig.get(ugiPrefix + ".login.type");
+
+			if (StringUtils.equalsIgnoreCase(ugiLoginType, "keytab")) {
+				String principal = pluginConfig.get(ugiPrefix + ".keytab.principal");
+				String keytab    = pluginConfig.get(ugiPrefix + ".keytab.file");
+
+				if (StringUtils.isNotBlank(principal) && StringUtils.isNotBlank(keytab)) {
+					LOG.info("UGI login: principal={}, keytab={}", principal, keytab);
+
+					try {
+						UserGroupInformation.loginUserFromKeytab(principal, keytab);
+					} catch (IOException excp) {
+						LOG.error("UGI login: failed", excp);
+
+						throw new RuntimeException(excp);
+					}
+				} else {
+					String msg = String.format("UGI login: invalid configuration: %s=%s, %s=%s", ugiPrefix + ".keytab.principal", principal, ugiPrefix + ".keytab.file", keytab);
+
+					LOG.error(msg);
+
+					throw new RuntimeException(msg);
+				}
+			} else if (StringUtils.equalsIgnoreCase(ugiLoginType, "jaas")) {
+				String jaasAppConfig = pluginConfig.get(ugiPrefix + ".jaas.appconfig");
+
+				if (StringUtils.isNotBlank(jaasAppConfig)) {
+					LOG.info("UGI login: jaasAppConfig={}", jaasAppConfig);
+
+					try {
+						MiscUtil.setUGIFromJAASConfig(jaasAppConfig);
+					} catch (Exception excp) {
+						LOG.error("UGI login: jaasAppConfig={} failed", jaasAppConfig, excp);
+
+						throw new RuntimeException(excp);
+					}
+				} else {
+					String msg = String.format("UGI login: invalid configuration: %s=%s", ugiPrefix + ".jaas.appconfig", jaasAppConfig);
+
+					LOG.error(msg);
+
+					throw new RuntimeException(msg);
+				}
+			} else {
+				LOG.warn("UGI login: invalid configuration {}={}", ugiPrefix + ".login.type", ugiLoginType);
+			}
+		}
 
 		RangerRequestScriptEvaluator.init(pluginConfig);
 
