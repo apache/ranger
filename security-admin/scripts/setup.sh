@@ -188,6 +188,8 @@ audit_solr_max_shards_per_node=$(get_prop 'audit_solr_max_shards_per_node' $PROP
 audit_solr_acl_user_list_sasl=$(get_prop 'audit_solr_acl_user_list_sasl' $PROPFILE)
 audit_solr_bootstrap_enabled=$(get_prop 'audit_solr_bootstrap_enabled' $PROPFILE)
 
+xa_webapp_contextName=$(get_prop 'xa.webapp.contextName' $PROPFILE)
+
 DB_HOST="${db_host}"
 
 check_ret_status(){
@@ -608,6 +610,13 @@ update_properties() {
                 propertyName=ranger.lookup.kerberos.keytab
                 newPropertyValue="${lookup_keytab}"
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	fi
+
+	if [ "${xa_webapp_contextName}" != "" ]
+	then
+                propertyName=ranger.contextName
+                newPropertyValue="${xa_webapp_contextName}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 
 	if [ "${db_ssl_enabled}" != "" ]
