@@ -1,0 +1,90 @@
+version: '3'
+services:
+  impala-statestored:
+    image: apache/impala:${IMPALA_VERSION}-statestored
+    container_name: impala-statestored
+    hostname: impala-statestored.example.com
+    stdin_open: true
+    tty: true
+    command: ["-redirect_stdout_stderr=false", "-logtostderr", "-v=1"]
+    ports:
+      # Web debug UI
+      - "25010:25010"
+    volumes:
+      - ./config/impala:/opt/impala/conf:ro
+    networks:
+      - ranger
+    environment:
+      - IMPALA_VERSION=${IMPALA_VERSION}
+
+  impala-catalogd:
+    depends_on:
+      - impala-statestored
+      - ranger-hive
+    image: apache/impala:${IMPALA_VERSION}-catalogd
+    container_name: impala-catalogd
+    hostname: impala-catalogd.example.com
+    stdin_open: true
+    tty: true
+    command: [ "-redirect_stdout_stderr=false", "-logtostderr", "-v=1",
+               "-state_store_host=impala-statestored",
+               "-catalog_service_host=impala-catalogd",
+               "--server-name=server1",
+               "--ranger_service_type=hive",
+               "--ranger_app_id=impala",
+               "--authorization_provider=ranger",
+               "-hms_event_polling_interval_s=1", "-invalidate_tables_timeout_s=999999" ]
+    ports:
+      # Web debug UI
+      - "25020:25020"
+    volumes:
+      - ./config/impala:/opt/impala/conf:ro
+    networks:
+      - ranger
+    environment:
+      - IMPALA_VERSION=${IMPALA_VERSION}
+      - HIVE_CONF_DIR=/opt/impala
+
+  impalad:
+    build:
+      context: .
+      dockerfile: Dockerfile.impalad
+      args:
+        - IMPALA_VERSION=${IMPALA_VERSION}
+        - RANGER_VERSION=${RANGER_VERSION}
+    image: impalad-${IMPALA_VERSION}
+    container_name: impalad
+    hostname: impalad.example.com
+    stdin_open: true
+    tty: true
+    depends_on:
+      - impala-statestored
+      - impala-catalogd
+    ports:
+      # HS2 endpoint
+      - "21050:21050"
+      # Web debug UI
+      - "25000:25000"
+      # HS2 over HTTP endpoint.
+      - "28000:28000"
+    volumes:
+      - ./config/impala:/opt/impala/conf
+    command: [ "-v=1",
+               "-redirect_stdout_stderr=false", "-logtostderr",
+               "-kudu_master_hosts=kudu-master-1:7051",
+               "-mt_dop_auto_fallback=true",
+               "--server-name=server1",
+               "--ranger_service_type=hive",
+               "--ranger_app_id=impala",
+               "--authorization_provider=ranger",
+               "-default_query_options=mt_dop=4,default_file_format=parquet,default_transactional_type=insert_only",
+               "-mem_limit=4gb" ]
+    networks:
+      - ranger
+    environment:
+      - IMPALA_VERSION
+      - RANGER_VERSION
+
+networks:
+  ranger:
+    name: rangernw
