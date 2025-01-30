@@ -27,9 +27,9 @@ import org.apache.hadoop.util.HttpExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import org.apache.hadoop.shaded.javax.ws.rs.core.Response;
+import org.apache.hadoop.shaded.javax.ws.rs.ext.ExceptionMapper;
+import org.apache.hadoop.shaded.javax.ws.rs.ext.Provider;
 
 import java.io.IOException;
 
