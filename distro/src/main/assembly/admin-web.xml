@@ -590,7 +590,8 @@
         <include>changepasswordutil.py</include>
         <include>changeusernameutil.py</include>
         <include>rolebasedusersearchutil.py</include>
-	<include>updateUserAndGroupNamesInJson.py</include>
+        <include>updateUserAndGroupNamesInJson.py</include>
+        <include>ranger-admin-transaction-log-migrate.sh</include>
       </includes>
       <fileMode>544</fileMode>
     </fileSet>

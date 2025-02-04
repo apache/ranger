@@ -107,12 +107,24 @@ public class TrxLogV2MigrationUtil extends BaseLoader {
         logger.info("==> TrxLogV2MigrationUtil.execLoad()");
 
         try {
-            migrateTrxLogs();
+            if (isXTrxLogTableExists()) {
+                migrateTrxLogs();
+            }
         } catch (Exception e) {
             logger.error("Error while migrating trx logs from v1 to v2", e);
         }
 
         logger.info("<== TrxLogV2MigrationUtil.execLoad(): migration completed. Transaction counts(total: {}, migrated: {}, already-migrated: {}, failed: {})", stats.totalCount, stats.migratedCount, stats.alreadyMigratedCount, stats.failedCount);
+    }
+
+    private boolean isXTrxLogTableExists() {
+        try {
+            // This query checks whether the 'x_trx_log' table exists without retrieving any actual data.
+            return !daoMgr.getEntityManager().createNativeQuery("select count(*) from x_trx_log where 1=2").getResultList().isEmpty();
+        } catch (Exception e) {
+            logger.warn("Table 'x_trx_log' does not exist. Skipping migration.");
+            return false;
+        }
     }
 
     private void migrateTrxLogs() throws Exception {
