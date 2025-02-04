@@ -1051,28 +1051,64 @@ public class AssetMgr extends AssetMgrBase {
         final Runnable commitWork;
 
         if (httpCode == HttpServletResponse.SC_NOT_MODIFIED) {
-            if (!pluginActivityAuditLogNotModified) {
+            RangerPluginInfo dbObj    = null;
+            Long pluginActivationTime = null;
+            Long dbLastActivationTime = null;
+
+            if (StringUtils.isNotBlank(pluginInfo.getServiceName())) {
+                XXPluginInfo xObj = rangerDaoManager.getXXPluginInfo().find(pluginInfo.getServiceName(), pluginInfo.getHostName(), pluginInfo.getAppType());
+                if (xObj != null) {
+                    dbObj = pluginInfoService.populateViewObject(xObj);
+                }
+            }
+
+            // Create or update PluginInfo record after transaction is completed. If it is created in-line here
+            // then the TransactionManager will roll-back the changes because the HTTP return code is
+            // HttpServletResponse.SC_NOT_MODIFIED
+
+            switch (entityType) {
+                case RangerPluginInfo.ENTITY_TYPE_POLICIES:
+                    isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
+
+                    pluginActivationTime = pluginInfo.getPolicyActivationTime();
+                    dbLastActivationTime = dbObj != null ? dbObj.getPolicyActivationTime() : null;
+                    break;
+                case RangerPluginInfo.ENTITY_TYPE_TAGS:
+                    isTagVersionResetNeeded = false;
+
+                    pluginActivationTime = pluginInfo.getTagActivationTime();
+                    dbLastActivationTime = dbObj != null ? dbObj.getTagActivationTime() : null;
+                    break;
+                case RangerPluginInfo.ENTITY_TYPE_ROLES:
+                    isTagVersionResetNeeded = false;
+
+                    pluginActivationTime = pluginInfo.getRoleActivationTime();
+                    dbLastActivationTime = dbObj != null ? dbObj.getRoleActivationTime() : null;
+                    break;
+                case RangerPluginInfo.ENTITY_TYPE_USERSTORE:
+                    isTagVersionResetNeeded = false;
+
+                    pluginActivationTime = pluginInfo.getUserStoreActivationTime();
+                    dbLastActivationTime = dbObj != null ? dbObj.getUserStoreActivationTime() : null;
+                    break;
+                case RangerPluginInfo.ENTITY_TYPE_GDS:
+                    isTagVersionResetNeeded = false;
+
+                    pluginActivationTime = pluginInfo.getGdsActivationTime();
+                    dbLastActivationTime = dbObj != null ? dbObj.getGdsActivationTime() : null;
+                    break;
+                default:
+                    isTagVersionResetNeeded = false;
+                    break;
+            }
+
+            boolean isLastActivationTimeUpdateNeeded = pluginActivationTime != null && pluginActivationTime > 0 && (dbLastActivationTime == null || !dbLastActivationTime.equals(pluginActivationTime));
+
+            if (!pluginActivityAuditLogNotModified && !isLastActivationTimeUpdateNeeded) {
                 logger.debug("Not logging HttpServletResponse. SC_NOT_MODIFIED. To enable, set configuration: {}=true", PROP_PLUGIN_ACTIVITY_AUDIT_NOT_MODIFIED);
 
                 commitWork = null;
             } else {
-                // Create or update PluginInfo record after transaction is completed. If it is created in-line here
-                // then the TransactionManager will roll-back the changes because the HTTP return code is
-                // HttpServletResponse.SC_NOT_MODIFIED
-
-                switch (entityType) {
-                    case RangerPluginInfo.ENTITY_TYPE_POLICIES:
-                        isTagVersionResetNeeded = rangerDaoManager.getXXService().findAssociatedTagService(pluginInfo.getServiceName()) == null;
-                        break;
-                    case RangerPluginInfo.ENTITY_TYPE_TAGS:
-                    case RangerPluginInfo.ENTITY_TYPE_ROLES:
-                    case RangerPluginInfo.ENTITY_TYPE_USERSTORE:
-                    case RangerPluginInfo.ENTITY_TYPE_GDS:
-                    default:
-                        isTagVersionResetNeeded = false;
-                        break;
-                }
-
                 commitWork = () -> doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
             }
         } else if (httpCode == HttpServletResponse.SC_NOT_FOUND) {
