@@ -55,7 +55,6 @@ then
 fi
 
 JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_admin_max_heap_size} -Xms1g -Xloggc:${RANGER_ADMIN_LOG_DIR}/gc-worker.log -verbose:gc -XX:+PrintGCDetails"
-if [[ ${JAVA_OPTS} != *"-Duser.timezone"* ]] ;then  export JAVA_OPTS=" ${JAVA_OPTS} -Duser.timezone=UTC" ;fi
 
 if [ -z "${RANGER_ADMIN_LOGBACK_CONF_FILE}" ]
 then
