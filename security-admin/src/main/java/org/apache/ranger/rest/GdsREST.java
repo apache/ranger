@@ -108,14 +108,14 @@ public class GdsREST {
     private static final Logger LOG      = LoggerFactory.getLogger(GdsREST.class);
     private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.GdsREST");
 
-    public static final String GDS_POLICY_EXPR_CONDITION = "expression";
-
     private static final String            PRINCIPAL_TYPE_USER             = RangerPrincipal.PrincipalType.USER.name().toLowerCase();
     private static final String            PRINCIPAL_TYPE_GROUP            = RangerPrincipal.PrincipalType.GROUP.name().toLowerCase();
     private static final String            PRINCIPAL_TYPE_ROLE             = RangerPrincipal.PrincipalType.ROLE.name().toLowerCase();
     private static final String            DEFAULT_PRINCIPAL_TYPE          = PRINCIPAL_TYPE_USER;
     private static final RangerAdminConfig config                          = RangerAdminConfig.getInstance();
     private static final int               SHARED_RESOURCES_MAX_BATCH_SIZE = config.getInt("ranger.admin.rest.gds.shared.resources.max.batch.size", 100);
+
+    public  static final String  GDS_POLICY_VALIDITY_SCHEDULE_CONDITION    = "validitySchedule";
 
     @Autowired
     GdsDBStore gdsStore;
@@ -2134,7 +2134,7 @@ public class GdsREST {
         }
 
         if (CollectionUtils.isNotEmpty(conditions)) {
-            policyItem.setConditions(conditions.stream().map(condition -> new RangerPolicyItemCondition(GDS_POLICY_EXPR_CONDITION, Collections.singletonList(condition))).collect(Collectors.toList()));
+            policyItem.setConditions(conditions.stream().map(condition -> new RangerPolicyItemCondition(GDS_POLICY_VALIDITY_SCHEDULE_CONDITION, Collections.singletonList(condition))).collect(Collectors.toList()));
         }
 
         switch (grant.getPrincipal().getType()) {
