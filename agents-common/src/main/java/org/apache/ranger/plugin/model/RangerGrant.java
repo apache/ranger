@@ -35,15 +35,17 @@ public class RangerGrant implements java.io.Serializable {
     private RangerPrincipal principal;
     private List<String>    accessTypes;
     private List<String>    conditions;
+    private List<String>    validitySchedules;
 
     public RangerGrant() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
 
-    public RangerGrant(RangerPrincipal principal, List<String> accessTypes, List<String> conditions) {
-        this.principal   = principal;
-        this.accessTypes = accessTypes;
-        this.conditions  = conditions;
+    public RangerGrant(RangerPrincipal principal, List<String> accessTypes, List<String> conditions, List<String> validitySchedules) {
+        this.principal         = principal;
+        this.accessTypes       = accessTypes;
+        this.conditions        = conditions;
+        this.validitySchedules = validitySchedules;
     }
 
     public RangerPrincipal getPrincipal() {
@@ -70,9 +72,17 @@ public class RangerGrant implements java.io.Serializable {
         this.conditions = conditions;
     }
 
+    public List<String> getValiditySchedules() {
+        return validitySchedules;
+    }
+
+    public void setValiditySchedules(List<String> validitySchedules) {
+        this.validitySchedules = validitySchedules;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(principal, accessTypes, conditions);
+        return Objects.hash(principal, accessTypes, conditions, validitySchedules);
     }
 
     @Override
@@ -89,7 +99,8 @@ public class RangerGrant implements java.io.Serializable {
 
         return Objects.equals(principal, other.principal) &&
                 Objects.equals(accessTypes, other.accessTypes) &&
-                Objects.equals(conditions, other.conditions);
+                Objects.equals(conditions, other.conditions) &&
+                Objects.equals(validitySchedules, other.validitySchedules);
     }
 
     @Override
@@ -98,6 +109,7 @@ public class RangerGrant implements java.io.Serializable {
                 "principal='" + principal.toString() +
                 ", accessTypes=" + accessTypes +
                 ", conditions=" + conditions +
+                ", validitySchedules=" + validitySchedules +
                 '}';
     }
 }

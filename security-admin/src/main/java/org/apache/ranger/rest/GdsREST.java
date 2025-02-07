@@ -115,7 +115,8 @@ public class GdsREST {
     private static final RangerAdminConfig config                          = RangerAdminConfig.getInstance();
     private static final int               SHARED_RESOURCES_MAX_BATCH_SIZE = config.getInt("ranger.admin.rest.gds.shared.resources.max.batch.size", 100);
 
-    public  static final String  GDS_POLICY_VALIDITY_SCHEDULE_CONDITION    = "validitySchedule";
+    public static final String GDS_POLICY_EXPR_CONDITION                   = "expression";
+    public static final String GDS_POLICY_VALIDITY_SCHEDULE_CONDITION      = "validitySchedule";
 
     @Autowired
     GdsDBStore gdsStore;
@@ -1911,18 +1912,23 @@ public class GdsREST {
             List<RangerPolicyItemCondition> policyItemConditions = policyItem.getConditions();
 
             List<String> policyItemAccessTypes     = policyItemAccesses.stream().map(RangerPolicyItemAccess::getType).collect(Collectors.toList());
-            List<String> policyItemConditionValues = policyItemConditions.stream().flatMap(x -> x.getValues().stream()).collect(Collectors.toList());
+
+            List<RangerPolicy.RangerPolicyItemCondition> policyItemConditionExpressions = policyItemConditions.stream().filter(c -> c.getType().equals(GDS_POLICY_EXPR_CONDITION)).collect(Collectors.toList());
+            List<String> expressions = policyItemConditionExpressions.stream().flatMap(x -> x.getValues().stream()).collect(Collectors.toList());
+
+            List<RangerPolicy.RangerPolicyItemCondition> policyItemConditionValiditySchedules = policyItemConditions.stream().filter(c -> c.getType().equals(GDS_POLICY_VALIDITY_SCHEDULE_CONDITION)).collect(Collectors.toList());
+            List<String> validitySchedules = policyItemConditionValiditySchedules.stream().flatMap(x -> x.getValues().stream()).collect(Collectors.toList());
 
             if (CollectionUtils.isNotEmpty(policyItemUsers)) {
-                policyItemUsers.forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, x), policyItemAccessTypes, policyItemConditionValues)));
+                policyItemUsers.forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, x), policyItemAccessTypes, expressions, validitySchedules)));
             }
 
             if (CollectionUtils.isNotEmpty(policyItemGroups)) {
-                policyItemGroups.forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, x), policyItemAccessTypes, policyItemConditionValues)));
+                policyItemGroups.forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, x), policyItemAccessTypes, expressions, validitySchedules)));
             }
 
             if (CollectionUtils.isNotEmpty(policyItemRoles)) {
-                policyItemRoles.forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.ROLE, x), policyItemAccessTypes, policyItemConditionValues)));
+                policyItemRoles.forEach(x -> ret.add(new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.ROLE, x), policyItemAccessTypes, expressions, validitySchedules)));
             }
         }
 
@@ -2125,17 +2131,26 @@ public class GdsREST {
             return null;
         }
 
-        RangerPolicyItem policyItem  = new RangerPolicyItem();
-        List<String>     permissions = grant.getAccessTypes();
-        List<String>     conditions  = grant.getConditions();
+        RangerPolicyItem policyItem        = new RangerPolicyItem();
+        List<String>     permissions       = grant.getAccessTypes();
+        List<String>     conditions        = grant.getConditions();
+        List<String>     validitySchedules = grant.getValiditySchedules();
 
         if (CollectionUtils.isNotEmpty(permissions)) {
             policyItem.setAccesses(permissions.stream().map(accessType -> new RangerPolicyItemAccess(accessType, true)).collect(Collectors.toList()));
         }
 
+        List<RangerPolicyItemCondition> policyItemConditions = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(conditions)) {
-            policyItem.setConditions(conditions.stream().map(condition -> new RangerPolicyItemCondition(GDS_POLICY_VALIDITY_SCHEDULE_CONDITION, Collections.singletonList(condition))).collect(Collectors.toList()));
+            conditions.stream().map(expr -> new RangerPolicyItemCondition(GDS_POLICY_EXPR_CONDITION, Collections.singletonList(expr))).forEach(policyItemConditions::add);
         }
+
+        if (CollectionUtils.isNotEmpty(validitySchedules)) {
+            validitySchedules.stream().map(valditySchedule -> new RangerPolicyItemCondition(GDS_POLICY_VALIDITY_SCHEDULE_CONDITION, Collections.singletonList(valditySchedule))).forEach(policyItemConditions::add);
+        }
+
+        policyItem.setConditions(policyItemConditions);
+
 
         switch (grant.getPrincipal().getType()) {
             case USER:
