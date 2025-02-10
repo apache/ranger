@@ -56,6 +56,7 @@ RUN groupadd ranger && \
     mkdir -p /home/ranger/dist && \
     mkdir -p /home/ranger/scripts && \
     chown -R ranger:ranger /home/ranger && \
+    chmod +rx /home/ranger /home/ranger/dist /home/ranger/scripts && \
     mkdir -p /opt/ranger && \
     chown -R ranger:ranger /opt/ranger
 
