@@ -64,6 +64,10 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
+import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
+import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.store.AbstractGdsStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
@@ -91,10 +95,12 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -107,6 +113,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_GDS;
+import static org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator.DATE_FORMATTER;
 import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME;
 
 @Component
@@ -1786,7 +1793,70 @@ public class GdsDBStore extends AbstractGdsStore {
             }
         }
 
+        filterDatasetsByValidityExpiration(filter, datasets);
+
         return datasets;
+    }
+
+    public void filterDatasetsByValidityExpiration(SearchFilter filter, List<RangerDataset> datasets) {
+        LOG.debug("==> filterDatasetsByValidityExpiration({}, {})", filter, datasets);
+        String                         validityCheckStart           = filter.getParam(SearchFilter.VALIDITY_EXPIRY_START);
+        String                         validityCheckEnd             = filter.getParam(SearchFilter.VALIDITY_EXPIRY_END);
+        String                         validityTimeZone             = filter.getParam(SearchFilter.VALIDITY_TIME_ZONE);
+        RangerValiditySchedule         validityCheckFilter          = new RangerValiditySchedule(validityCheckStart, validityCheckEnd, validityTimeZone, null);
+        List<ValidationFailureDetails> failures                     = new ArrayList<>();
+        RangerValiditySchedule         validatedValidityCheckFilter = validateValidityCheckFilter(validityCheckFilter, failures);
+
+        if (validatedValidityCheckFilter != null) {
+            RangerValidityScheduleEvaluator validityScheduleEvaluator = new RangerValidityScheduleEvaluator(validatedValidityCheckFilter);
+            datasets.removeIf(dataset -> !isDatasetExpiring(dataset, validityScheduleEvaluator, failures));
+        }
+
+        if (CollectionUtils.isNotEmpty(failures)) {
+            throw restErrorUtil.createRESTException("Error in finding datasets expiring between '" + validityCheckStart + "' and '" + validityCheckEnd + "': " + failures);
+        }
+        LOG.debug("==> filterDatasetsByValidityExpiration({}, {})", filter, datasets);
+    }
+
+    private boolean isDatasetExpiring(RangerDataset dataset, RangerValidityScheduleEvaluator validityScheduleEvaluator, List<ValidationFailureDetails> failures) {
+        if (dataset.getValiditySchedule() == null) {
+            return false;
+        }
+        String datasetValidityScheduleEndTime = dataset.getValiditySchedule().getEndTime();
+        if (StringUtils.isEmpty(datasetValidityScheduleEndTime)) {
+            return false;
+        }
+
+        try {
+            Date datasetExpiryTime = DATE_FORMATTER.get().parse(datasetValidityScheduleEndTime);
+            return validityScheduleEvaluator.isApplicable(datasetExpiryTime.getTime());
+        } catch (ParseException pe) {
+            failures.add(new ValidationFailureDetails(0, "endTime", "", false, true, false, "Error parsing endTime:" + datasetValidityScheduleEndTime));
+        }
+        return false;
+    }
+
+    private RangerValiditySchedule validateValidityCheckFilter(RangerValiditySchedule validityCheckFilter, List<ValidationFailureDetails> failures) {
+        String startTime = validityCheckFilter.getStartTime();
+        String endTime   = validityCheckFilter.getEndTime();
+        String timeZone  = validityCheckFilter.getTimeZone();
+
+        if (StringUtils.isEmpty(startTime) && StringUtils.isEmpty(endTime)) {
+            return null;
+        }
+
+        if (StringUtils.isEmpty(startTime) || StringUtils.isEmpty(endTime)) {
+            failures.add(new ValidationFailureDetails(0, "startTime,endTime", "", true, true, false, "empty values"));
+            return null;
+        }
+
+        if (StringUtils.isEmpty(timeZone)) {
+            validityCheckFilter.setTimeZone(SearchFilter.DEFAULT_TIME_ZONE);
+        }
+
+        RangerValidityScheduleValidator validator = new RangerValidityScheduleValidator(validityCheckFilter);
+
+        return validator.validate(failures);
     }
 
     private PList<RangerDataset> applyPaginataionAndSorting(List<RangerDataset> datasets, SearchFilter filter) {
