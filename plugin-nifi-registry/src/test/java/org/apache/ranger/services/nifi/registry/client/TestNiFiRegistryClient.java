@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.services.nifi.registry.client;
 
-import com.google.common.io.Resources;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
@@ -29,8 +28,10 @@ import org.mockito.Mockito;
 
 import javax.ws.rs.core.Response;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -44,9 +45,16 @@ public class TestNiFiRegistryClient {
 
     @Before
     public void setup() throws IOException {
-        final URL    responseFile      = TestNiFiRegistryClient.class.getResource("/resources-response.json");
-        final String resourcesResponse = Resources.toString(responseFile, StandardCharsets.UTF_8);
-        registryClient = new MockNiFiRegistryClient(resourcesResponse, 200);
+        final URL responseFile = TestNiFiRegistryClient.class.getResource("/resources-response.json");
+        StringBuilder resourcesResponse = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(responseFile.openStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                resourcesResponse.append(line).append("\n");
+            }
+        }
+
+        registryClient = new MockNiFiRegistryClient(resourcesResponse.toString(), 200);
     }
 
     @Test
