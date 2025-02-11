@@ -338,15 +338,6 @@ public class PolicyEngine {
         return toString(new StringBuilder()).toString();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            cleanup();
-        } finally {
-            super.finalize();
-        }
-    }
-
     public StringBuilder toString(StringBuilder sb) {
         if (sb == null) {
             sb = new StringBuilder();

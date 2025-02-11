@@ -313,15 +313,6 @@ public class RangerPolicyRepository {
         return sb.toString();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            cleanup();
-        } finally {
-            super.finalize();
-        }
-    }
-
     public StringBuilder toString(StringBuilder sb) {
         if (sb == null) {
             sb = new StringBuilder();
