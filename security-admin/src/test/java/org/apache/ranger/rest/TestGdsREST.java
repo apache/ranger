@@ -238,7 +238,19 @@ public class TestGdsREST {
     }
 
     private List<RangerGrant> createAndGetSampleGrantData() {
-        RangerGrant grant1 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, "hive"), Collections.singletonList("_READ"), Collections.singletonList("IS_ACCESSED_BEFORE('2024/12/12')"));
+        List<RangerGrant.Condition> conditions = new ArrayList<>();
+
+        RangerGrant.Condition condition1  = new RangerGrant.Condition(null, null);
+        condition1.setType("expression");
+        condition1.setValues(Arrays.asList("IS_ACCESSED_BEFORE('2024/12/12')", "_STATE == 'CA'"));
+        conditions.add(condition1);
+
+        RangerGrant.Condition condition2  = new RangerGrant.Condition(null, null);
+        condition2.setType("validitySchedule");
+        condition2.setValues(Arrays.asList("{\"startTime\":\"1970/01/01 00:00:00\",\"endTime\":\"2025/03/08 00:35:28\",\"timeZone\":\"UTC\"}"));
+        conditions.add(condition2);
+
+        RangerGrant grant1 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, "hive"), Collections.singletonList("_READ"), conditions);
         RangerGrant grant2 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, "hdfs"), Collections.singletonList("_MANAGE"), Collections.emptyList());
 
         return Arrays.asList(grant1, grant2);
