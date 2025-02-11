@@ -242,11 +242,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>asm</groupId>
-            <artifactId>asm-all</artifactId>
-            <version>${asm.all.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${httpcomponents.httpclient.version}</version>

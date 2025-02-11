@@ -279,6 +279,10 @@
                     <groupId>javax.ws.rs</groupId>
                     <artifactId>javax.ws.rs-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.glassfish.jersey.containers</groupId>
+                    <artifactId>jersey-container-servlet-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

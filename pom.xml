@@ -78,7 +78,6 @@
         <antlr.version>3.5.2</antlr.version>
         <aopalliance.version>1.0</aopalliance.version>
         <apacheds.version>2.0.0-M22</apacheds.version>
-        <asm.all.version>3.2</asm.all.version>
         <aspectj.version>1.8.2</aspectj.version>
         <assembly.plugin.version>2.6</assembly.plugin.version>
         <atlas.version>2.2.0</atlas.version>
