@@ -16,11 +16,15 @@
  */
 package org.apache.ranger.rest;
 
+import org.apache.ranger.biz.GdsDBStore;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGrant;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPrincipal;
+import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.apache.ranger.plugin.util.SearchFilter;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,7 +35,10 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.WebApplicationException;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,6 +49,7 @@ import java.util.UUID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +60,11 @@ public class TestGdsREST {
     @Mock
     RangerSearchUtil searchUtil;
     @InjectMocks
-    private GdsREST gdsREST = new GdsREST();
+    private GdsREST gdsREST;
+    @InjectMocks
+    GdsDBStore gdsDBStore;
+    @Mock
+    RESTErrorUtil restErrorUtil;
 
     @Test
     public void testAddDataSetGrants() {
@@ -207,6 +219,116 @@ public class TestGdsREST {
         assertTrue("Grants for Principals: " + Arrays.toString(requestedPrincipals) + " and AccessTypes: " + Arrays.toString(nonexistentRequestedAccessTypes) + " should be empty", updatedPolicyItemsByAccessType.isEmpty());
     }
 
+    @Test
+    public void testSearchDataSetsByValidityPeriod() {
+        List<RangerGds.RangerDataset> rangerDatasets = new ArrayList<>();
+
+        RangerGds.RangerDataset rangerDataset1 = createRangerDataSet();
+        updateDatasetValiditySchedule(rangerDataset1, -5, -1);
+
+        RangerGds.RangerDataset rangerDataset2 = createRangerDataSet();
+        updateDatasetValiditySchedule(rangerDataset2, -5, 5);
+
+        RangerGds.RangerDataset rangerDataset3 = createRangerDataSet();
+        updateDatasetValiditySchedule(rangerDataset3, -10, 2);
+
+        RangerGds.RangerDataset rangerDataset4 = createRangerDataSet();
+        updateDatasetValiditySchedule(rangerDataset4, -2, 15);
+
+        RangerGds.RangerDataset rangerDataset5 = createRangerDataSet();
+        updateDatasetValiditySchedule(rangerDataset5, 5, 15);
+
+        RangerGds.RangerDataset rangerDataset6 = createRangerDataSet();
+        updateDatasetValiditySchedule(rangerDataset6, -15, -5);
+
+        rangerDatasets.addAll(Arrays.asList(rangerDataset1, rangerDataset2, rangerDataset3, rangerDataset4, rangerDataset5, rangerDataset6));
+        List<RangerGds.RangerDataset> actualDatasets = new ArrayList<>(rangerDatasets);
+
+        SearchFilter filter = new SearchFilter();
+        filter.setParam(SearchFilter.VALIDITY_TIME_ZONE, SearchFilter.DEFAULT_TIME_ZONE);
+
+        //ValiditySchedule Filter criteria-1
+        String startTime = getFormattedDateString(-10);
+        String endTime   = getFormattedDateString(-2);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_START, startTime);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_END, endTime);
+
+        List<RangerGds.RangerDataset> expectedDatasets = Arrays.asList(rangerDataset6);
+
+        gdsDBStore.filterDatasetsByValidityExpiration(filter, actualDatasets);
+
+        assertEquals("Datasets expiry count mismatch between " + startTime + " and " + endTime, expectedDatasets.size(), actualDatasets.size());
+
+        assertTrue("Mismatch in datasets returned for expiry between " + startTime + " and " + endTime,
+                actualDatasets.containsAll(expectedDatasets));
+
+        //ValiditySchedule Filter criteria-2
+        actualDatasets.clear();
+        actualDatasets.addAll(rangerDatasets);
+
+        startTime = getFormattedDateString(-4);
+        endTime   = getFormattedDateString(20);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_START, startTime);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_END, endTime);
+
+        expectedDatasets = Arrays.asList(rangerDataset1, rangerDataset2, rangerDataset3, rangerDataset4, rangerDataset5);
+
+        gdsDBStore.filterDatasetsByValidityExpiration(filter, actualDatasets);
+
+        assertEquals("Datasets expiry count mismatch between " + startTime + " and " + endTime, expectedDatasets.size(), actualDatasets.size());
+
+        assertTrue("Mismatch in datasets returned for expiry between " + startTime + " and " + endTime,
+                actualDatasets.containsAll(expectedDatasets));
+
+        //ValiditySchedule Filter criteria-3
+        actualDatasets.clear();
+        actualDatasets.addAll(rangerDatasets);
+
+        startTime = getFormattedDateString(-15);
+        endTime   = getFormattedDateString(0);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_START, startTime);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_END, endTime);
+
+        expectedDatasets = Arrays.asList(rangerDataset1, rangerDataset6);
+
+        gdsDBStore.filterDatasetsByValidityExpiration(filter, actualDatasets);
+
+        assertEquals("Datasets expiry count mismatch between " + startTime + " and " + endTime, expectedDatasets.size(), actualDatasets.size());
+
+        assertTrue("Mismatch in datasets returned for expiry between " + startTime + " and " + endTime,
+                actualDatasets.containsAll(expectedDatasets));
+
+        //ValiditySchedule Filter criteria-4 with invalid date
+        actualDatasets.clear();
+        actualDatasets.addAll(rangerDatasets);
+
+        startTime = getInvalidDateString(-5);
+        endTime   = getFormattedDateString(16);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_START, startTime);
+        filter.setParam(SearchFilter.VALIDITY_EXPIRY_END, endTime);
+
+        Mockito.when(restErrorUtil.createRESTException(Mockito.anyString())).thenThrow(new WebApplicationException());
+
+        assertThrows(WebApplicationException.class, () -> {
+            gdsDBStore.filterDatasetsByValidityExpiration(filter, actualDatasets);
+        });
+
+        //ValiditySchedule Filter criteria-5 without start and end time
+        actualDatasets.clear();
+        actualDatasets.addAll(rangerDatasets);
+
+        filter.removeParam(SearchFilter.VALIDITY_EXPIRY_START);
+        filter.removeParam(SearchFilter.VALIDITY_EXPIRY_END);
+
+        expectedDatasets = rangerDatasets;
+
+        gdsDBStore.filterDatasetsByValidityExpiration(filter, actualDatasets);
+
+        assertEquals("Datasets expiry count mismatch with empty start and end time", expectedDatasets.size(), actualDatasets.size());
+
+        assertTrue("Mismatch in datasets returned with empty expiry time range", actualDatasets.containsAll(expectedDatasets));
+    }
+
     private RangerGds.RangerDataset createRangerDataSet() {
         long                    id      = new Random().nextInt(100);
         RangerGds.RangerDataset dataset = new RangerGds.RangerDataset();
@@ -215,6 +337,31 @@ public class TestGdsREST {
         dataset.setGuid(UUID.randomUUID().toString());
 
         return dataset;
+    }
+
+    private RangerGds.RangerDataset updateDatasetValiditySchedule(RangerGds.RangerDataset dataset, int pastDaysToStart, int futureDaysToEnd) {
+        String start      = getFormattedDateString(pastDaysToStart);
+        String end        = getFormattedDateString(futureDaysToEnd);
+        String timezone   = SearchFilter.DEFAULT_TIME_ZONE;
+        RangerValiditySchedule validitySchedule = new RangerValiditySchedule(start, end, timezone, null);
+        dataset.setValiditySchedule(validitySchedule);
+
+        return dataset;
+    }
+
+    private String getFormattedDateString(int days) {
+        return getDateString(days, RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION);
+    }
+
+    private String getInvalidDateString(int days) {
+        return getDateString(days, "yyyy/MM/dd");
+    }
+
+    private String getDateString(int days, String pattern) {
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(pattern);
+        LocalDateTime     current       = LocalDateTime.now();
+
+        return current.plusDays(days).format(dateFormatter);
     }
 
     private RangerPolicy createPolicyForDataSet(RangerGds.RangerDataset dataset) {
@@ -238,7 +385,19 @@ public class TestGdsREST {
     }
 
     private List<RangerGrant> createAndGetSampleGrantData() {
-        RangerGrant grant1 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, "hive"), Collections.singletonList("_READ"), Collections.singletonList("IS_ACCESSED_BEFORE('2024/12/12')"));
+        List<RangerGrant.Condition> conditions = new ArrayList<>();
+
+        RangerGrant.Condition condition1  = new RangerGrant.Condition(null, null);
+        condition1.setType("expression");
+        condition1.setValues(Arrays.asList("IS_ACCESSED_BEFORE('2024/12/12')", "_STATE == 'CA'"));
+        conditions.add(condition1);
+
+        RangerGrant.Condition condition2  = new RangerGrant.Condition(null, null);
+        condition2.setType("validitySchedule");
+        condition2.setValues(Arrays.asList("{\"startTime\":\"1970/01/01 00:00:00\",\"endTime\":\"2025/03/08 00:35:28\",\"timeZone\":\"UTC\"}"));
+        conditions.add(condition2);
+
+        RangerGrant grant1 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, "hive"), Collections.singletonList("_READ"), conditions);
         RangerGrant grant2 = new RangerGrant(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, "hdfs"), Collections.singletonList("_MANAGE"), Collections.emptyList());
 
         return Arrays.asList(grant1, grant2);

@@ -42,6 +42,7 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && mkdir -p /var/run/ranger \
     && mkdir -p /var/log/ranger \
     && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
+    && chmod 755 ${RANGER_SCRIPTS}/ranger.sh \
     && mkdir -p /usr/share/java/
 
 FROM ranger AS ranger_postgres
