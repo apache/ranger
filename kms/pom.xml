@@ -61,8 +61,6 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
-<!--            <scope>system</scope>-->
-<!--            <systemPath>${shaded.dir}/hadoop-common-3.3.6-jakarta.jar</systemPath>-->
             <exclusions>
                 <exclusion>
                     <groupId>log4j</groupId>
@@ -103,6 +101,10 @@
                 <exclusion>
                     <groupId>org.apache.hadoop</groupId>
                     <artifactId>hadoop-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-server</artifactId>
                 </exclusion>
              </exclusions>
         </dependency>
