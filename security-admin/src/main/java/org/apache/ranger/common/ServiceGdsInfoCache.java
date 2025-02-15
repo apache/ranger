@@ -149,6 +149,10 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateDatasets(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerDataset dataset : datasetService.searchDatasets(filter).getList()) {
+                if (Boolean.FALSE.equals(dataset.getIsEnabled())) {
+                    continue;
+                }
+
                 ServiceGdsInfo.DatasetInfo dsInfo = new ServiceGdsInfo.DatasetInfo();
 
                 dsInfo.setId(dataset.getId());
@@ -162,6 +166,9 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateProjects(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerProject project : projectService.searchProjects(filter).getList()) {
+                if (Boolean.FALSE.equals(project.getIsEnabled())) {
+                    continue;
+                }
                 ServiceGdsInfo.ProjectInfo projInfo = new ServiceGdsInfo.ProjectInfo();
 
                 projInfo.setId(project.getId());
@@ -177,6 +184,10 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
             RangerGdsVList.RangerDataShareList dataShares = dataShareService.searchDataShares(filter);
 
             for (RangerGds.RangerDataShare dataShare : dataShares.getList()) {
+                if (Boolean.FALSE.equals(dataShare.getIsEnabled())) {
+                    continue;
+                }
+
                 ServiceGdsInfo.DataShareInfo dshInfo = new ServiceGdsInfo.DataShareInfo();
 
                 dshInfo.setId(dataShare.getId());
@@ -192,6 +203,9 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateSharedResources(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerSharedResource resource : sharedResourceService.searchSharedResources(filter).getList()) {
+                if (Boolean.FALSE.equals(resource.getIsEnabled())) {
+                    continue;
+                }
                 ServiceGdsInfo.SharedResourceInfo resourceInfo = new ServiceGdsInfo.SharedResourceInfo();
 
                 resourceInfo.setId(resource.getId());
@@ -212,7 +226,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateDataSharesInDataset(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerDataShareInDataset dshInDs : dataShareInDatasetService.searchDataShareInDatasets(filter).getList()) {
-                if (dshInDs.getStatus() != RangerGds.GdsShareStatus.ACTIVE) {
+                if (dshInDs.getStatus() != RangerGds.GdsShareStatus.ACTIVE || Boolean.FALSE.equals(dshInDs.getIsEnabled())) {
                     continue;
                 }
 
@@ -230,7 +244,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateDatasetsInProject(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerDatasetInProject dip : datasetInProjectService.searchDatasetInProjects(filter).getList()) {
-                if (dip.getStatus() != RangerGds.GdsShareStatus.ACTIVE) {
+                if (dip.getStatus() != RangerGds.GdsShareStatus.ACTIVE || Boolean.FALSE.equals(dip.getIsEnabled())) {
                     continue;
                 }
 
