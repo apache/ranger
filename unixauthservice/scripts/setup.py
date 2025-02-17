@@ -17,10 +17,7 @@
 
 from io import StringIO
 from configparser import ConfigParser
-try:
-    import commands as commands
-except ImportError:
-    import subprocess as commands
+import subprocess
 
 import re
 import xml.etree.ElementTree as ET
@@ -283,7 +280,7 @@ def convertInstallPropsToXML(props):
 
 def createUser(username, groupname):
     checkuser = "grep ^" + username + ": /etc/passwd | awk -F: '{print $1}'|head -1 "
-    (status, output) = commands.getstatusoutput(checkuser)
+    (status, output) = subprocess.getstatusoutput(checkuser)
     if len(output) < 1:
         cmd = "useradd -g %s %s -m" % (groupname, username)
         ret = os.system(cmd)
@@ -300,7 +297,7 @@ def createUser(username, groupname):
 
 def createGroup(groupname):
     checkgroup = "egrep ^" + groupname + ": /etc/group | awk -F: '{print $1}'|head -1 "
-    (status, output) = commands.getstatusoutput(checkgroup)
+    (status, output) = subprocess.getstatusoutput(checkgroup)
     if len(output) < 1:
         cmd = "groupadd %s" % (groupname)
         ret = os.system(cmd)
