@@ -108,25 +108,32 @@ public class RangerRoleCache {
                 lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
 
                 if (lockResult) {
-                    // We are getting all the Roles to be downloaded for now. Should do downloades for each service based on what roles are there in the policies.
-                    final long            startTimeMs  = System.currentTimeMillis();
-                    SearchFilter          searchFilter = null;
-                    final Set<RangerRole> rolesInDB    = new HashSet<>(roleDBStore.getRoles(searchFilter));
-                    final long            dbLoadTimeMs = System.currentTimeMillis() - startTimeMs;
-                    Date                  updateTime   = new Date();
+                    if (getRolesVersion() >= rolesVersionInDB) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Roles version has not changed, returning cached RangerRoles");
+                        }
+                        ret = getRoles();
+                    } else {
+                        // We are getting all the Roles to be downloaded for now. Should do downloades for each service based on what roles are there in the policies.
+                        final long            startTimeMs  = System.currentTimeMillis();
+                        SearchFilter          searchFilter = null;
+                        final Set<RangerRole> rolesInDB    = new HashSet<>(roleDBStore.getRoles(searchFilter));
+                        final long            dbLoadTimeMs = System.currentTimeMillis() - startTimeMs;
+                        Date                  updateTime   = new Date();
 
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("loading Roles from database and it took:{} seconds", TimeUnit.MILLISECONDS.toSeconds(dbLoadTimeMs));
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("loading Roles from database and it took:{} seconds", TimeUnit.MILLISECONDS.toSeconds(dbLoadTimeMs));
+                        }
+
+                        ret = new RangerRoles();
+
+                        ret.setRangerRoles(rolesInDB);
+                        ret.setRoleUpdateTime(updateTime);
+                        ret.setRoleVersion(rolesVersionInDB);
+
+                        roles        = ret;
+                        rolesVersion = rolesVersionInDB;
                     }
-
-                    ret = new RangerRoles();
-
-                    ret.setRangerRoles(rolesInDB);
-                    ret.setRoleUpdateTime(updateTime);
-                    ret.setRoleVersion(rolesVersionInDB);
-
-                    rolesVersion = rolesVersionInDB;
-                    roles        = ret;
                 } else {
                     LOG.debug("Could not get lock in [{}] seconds, returning cached RangerRoles", waitTimeInSeconds);
 
