@@ -201,6 +201,7 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "{id}")
+    @Produces("application/json")
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagDef(@PathParam("id") Long id) {
         LOG.debug("==> TagREST.deleteTagDef({})", id);
@@ -218,6 +219,7 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "guid/{guid}")
+    @Produces("application/json")
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagDefByGuid(@PathParam("guid") String guid) {
         LOG.debug("==> TagREST.deleteTagDefByGuid({})", guid);
