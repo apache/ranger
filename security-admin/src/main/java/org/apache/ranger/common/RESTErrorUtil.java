@@ -336,6 +336,7 @@ public class RESTErrorUtil {
 		VXResponse response = new VXResponse();
 
 		response.setMsgDesc(logMessage);
+		response.setStatusCode(responseCode);
 
 		Response errorResponse = Response
 				.status(responseCode).entity(response).build();
