@@ -122,7 +122,7 @@ def jisql_log(query, db_password):
 
 def password_validation(password):
 	if password:
-		if re.search("[\\\`'\"]",password):
+		if re.search("[\\`'\"]",password):
 			log("[E] password contains one of the unsupported special characters like \" ' \ `","error")
 			sys.exit(1)
 

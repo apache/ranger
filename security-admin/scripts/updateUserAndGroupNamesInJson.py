@@ -52,7 +52,7 @@ def log(msg,type):
 
 def username_validation(username):
 	if username:
-		if re.search("[\\\`'\"]",username):
+		if re.search("[\\`'\"]",username):
 			log("[E] username contains one of the unsupported special characters like \" ' \ `","error")
 			sys.exit(1)
 
