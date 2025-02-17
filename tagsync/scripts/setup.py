@@ -16,10 +16,7 @@
 
 from io import StringIO
 from configparser import ConfigParser
-try:
-	from urlparse import urlparse
-except ImportError:
-	from urllib.parse import urlparse
+from urllib.parse import urlparse
 import re
 import xml.etree.ElementTree as ET
 import os,errno,sys,getopt
