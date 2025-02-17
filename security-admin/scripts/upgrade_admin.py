@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function
-try:
-	from StringIO import StringIO
-except ImportError:
-	from io import StringIO
+from io import StringIO
 try:
 	from ConfigParser import ConfigParser
 except ImportError:

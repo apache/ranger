@@ -16,10 +16,7 @@ import sys
 import errno
 import logging
 import zipfile
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 try:
     from ConfigParser import ConfigParser
 except ImportError:
