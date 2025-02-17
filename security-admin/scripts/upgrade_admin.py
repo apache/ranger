@@ -15,10 +15,7 @@
 # limitations under the License.
 from __future__ import print_function
 from io import StringIO
-try:
-	from ConfigParser import ConfigParser
-except ImportError:
-	from configparser import ConfigParser
+from configparser import ConfigParser
 import xml.etree.ElementTree as ET
 import os,sys,getopt
 from os import listdir

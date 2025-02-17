@@ -17,10 +17,7 @@ import errno
 import logging
 import zipfile
 from io import StringIO
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from configparser import ConfigParser
 import subprocess
 import fileinput
 import zipfile

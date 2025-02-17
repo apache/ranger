@@ -16,10 +16,7 @@
 
 
 from io import StringIO
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from configparser import ConfigParser
 try:
     import commands as commands
 except ImportError:

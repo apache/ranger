@@ -15,10 +15,7 @@
 # limitations under the License.
 
 from io import StringIO
-try:
-	from ConfigParser import ConfigParser
-except ImportError:
-	from configparser import ConfigParser
+from configparser import ConfigParser
 try:
 	from urlparse import urlparse
 except ImportError:
