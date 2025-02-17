@@ -224,7 +224,7 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
 def password_validation(password, userType):
     if password:
         if re.search("[\\`'\"]", password):
-            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \ `")
+            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \\ `")
             sys.exit(1)
         else:
             print("[I] " + userType + " property is verified.")
