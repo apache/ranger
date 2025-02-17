@@ -15,18 +15,9 @@
 # limitations under the License.
 
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
-try:
-    import commands as commands
-except ImportError:
-    import subprocess as commands
+from io import StringIO
+from configparser import ConfigParser
+import subprocess
 
 import re
 import xml.etree.ElementTree as ET
@@ -178,7 +169,7 @@ def getPropertiesConfigMap(configFileName):
     config.seek(0, os.SEEK_SET)
     fcp = ConfigParser()
     fcp.optionxform = str
-    fcp.readfp(config)
+    fcp.read_file(config)
     for k, v in fcp.items('dummysection'):
         ret[k] = v
     return ret
@@ -192,7 +183,7 @@ def getPropertiesKeyList(configFileName):
     config.seek(0, os.SEEK_SET)
     fcp = ConfigParser()
     fcp.optionxform = str
-    fcp.readfp(config)
+    fcp.read_file(config)
     for k, v in fcp.items('dummysection'):
         ret.append(k)
     return ret
@@ -232,8 +223,8 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
 
 def password_validation(password, userType):
     if password:
-        if re.search("[\\\`'\"]", password):
-            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \ `")
+        if re.search("[\\`'\"]", password):
+            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \\ `")
             sys.exit(1)
         else:
             print("[I] " + userType + " property is verified.")
@@ -289,7 +280,7 @@ def convertInstallPropsToXML(props):
 
 def createUser(username, groupname):
     checkuser = "grep ^" + username + ": /etc/passwd | awk -F: '{print $1}'|head -1 "
-    (status, output) = commands.getstatusoutput(checkuser)
+    (status, output) = subprocess.getstatusoutput(checkuser)
     if len(output) < 1:
         cmd = "useradd -g %s %s -m" % (groupname, username)
         ret = os.system(cmd)
@@ -306,7 +297,7 @@ def createUser(username, groupname):
 
 def createGroup(groupname):
     checkgroup = "egrep ^" + groupname + ": /etc/group | awk -F: '{print $1}'|head -1 "
-    (status, output) = commands.getstatusoutput(checkgroup)
+    (status, output) = subprocess.getstatusoutput(checkgroup)
     if len(output) < 1:
         cmd = "groupadd %s" % (groupname)
         ret = os.system(cmd)

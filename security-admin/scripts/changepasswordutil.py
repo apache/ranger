@@ -52,8 +52,8 @@ def log(msg,type):
 
 def password_validation(password):
 	if password:
-		if re.search("[\\\`'\"]",password):
-			log("[E] password contains one of the unsupported special characters like \" ' \ `","error")
+		if re.search("[\\`'\"]",password):
+			log("[E] password contains one of the unsupported special characters like \" ' \\ `","error")
 			sys.exit(1)
 
 
