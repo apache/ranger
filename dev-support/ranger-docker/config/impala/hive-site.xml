@@ -20,42 +20,11 @@
 -->
 <configuration>
     <property>
-        <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://ranger-db/hive</value>
+        <name>hive.metastore.uris</name>
+        <value>thrift://ranger-hive:9083</value>
     </property>
-    <property>
-        <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>com.mysql.jdbc.Driver</value>
-    </property>
-    <property>
-        <name>javax.jdo.option.ConnectionUserName</name>
-        <value>hive</value>
-    </property>
-    <property>
-        <name>javax.jdo.option.ConnectionPassword</name>
-        <value>rangerR0cks!</value>
-    </property>
-
-    <property>
-        <name>hive.server2.enable.doAs</name>
-        <value>false</value>
-    </property>
-
-    <property>
-        <name>hive.zookeeper.quorum</name>
-        <value>ranger-zk.example.com</value>
-    </property>
-    <property>
-        <name>hive.zookeeper.client.port</name>
-        <value>2181</value>
-    </property>
-    <!-- HMS configs -->
     <property>
         <name>hive.metastore.event.db.notification.api.auth</name>
         <value>false</value>
-    </property>
-    <property>
-        <name>hive.metastore.dml.events</name>
-        <value>true</value>
     </property>
 </configuration>
