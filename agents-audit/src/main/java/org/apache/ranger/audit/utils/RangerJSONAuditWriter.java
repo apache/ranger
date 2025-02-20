@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -46,14 +47,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     protected static final String JSON_FILE_EXTENSION = ".log";
 
     /*
-     * When enableAuditFilePeriodicRollOver is enabled, Audit File in HDFS would be closed by the defined period in
-     * xasecure.audit.destination.hdfs.file.rollover.sec. By default xasecure.audit.destination.hdfs.file.rollover.sec = 86400 sec
-     * and file will be closed midnight. Custom rollover time can be set by defining file.rollover.sec to desire time in seconds.
-     */
-    private boolean enableAuditFilePeriodicRollOver;
-
-    /*
-    Time frequency of next occurrence of periodic rollover check. By Default every 60 seconds the check is done.
+    Time frequency of next occurrence of periodic rollover check. By Default every 60 seconds the check is done if enabled
     */
     private long periodicRollOverCheckTimeinSec;
 
@@ -65,7 +59,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
         super.init(props, propPrefix, auditProviderName, auditConfigs);
 
         // start AuditFilePeriodicRollOverTask if enabled.
-        enableAuditFilePeriodicRollOver = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_ENABLE_PERIODIC_ROLLOVER, false);
+        boolean enableAuditFilePeriodicRollOver = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_ENABLE_PERIODIC_ROLLOVER, false);
         if (enableAuditFilePeriodicRollOver) {
             periodicRollOverCheckTimeinSec = MiscUtil.getLongProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_PERIODIC_ROLLOVER_CHECK_TIME, 60L);
 
@@ -187,11 +181,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     }
 
     public synchronized PrintWriter getLogFileStream() throws Exception {
-        if (!enableAuditFilePeriodicRollOver) {
-            // when periodic rollover is enabled closing of file is done by the file rollover monitoring task and hence don't need to
-            // close the file inline with audit logging.
-            closeFileIfNeeded();
-        }
+        closeFileIfNeeded();
 
         // Either there are no open log file or the previous one has been rolled over
         return createWriter();
@@ -223,7 +213,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             logger.debug("==> AuditFilePeriodicRollOverTask.run()");
 
             try {
-                closeFileIfNeeded();
+                logJSON(Collections.emptyList());
             } catch (Exception excp) {
                 logger.error("AuditFilePeriodicRollOverTask Failed. Aborting..", excp);
             }
