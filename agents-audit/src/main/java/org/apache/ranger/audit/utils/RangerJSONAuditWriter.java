@@ -31,6 +31,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
@@ -38,22 +39,15 @@ import java.util.Properties;
  * Writes the Ranger audit to HDFS as JSON text
  */
 public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
-
     private static final Logger logger = LoggerFactory.getLogger(RangerJSONAuditWriter.class);
+
     public static final String PROP_HDFS_ROLLOVER_ENABLE_PERIODIC_ROLLOVER = "file.rollover.enable.periodic.rollover";
     public static final String PROP_HDFS_ROLLOVER_PERIODIC_ROLLOVER_CHECK_TIME = "file.rollover.periodic.rollover.check.sec";
 
     protected String JSON_FILE_EXTENSION = ".log";
 
     /*
-     * When enableAuditFilePeriodicRollOver is enabled, Audit File in HDFS would be closed by the defined period in
-     * xasecure.audit.destination.hdfs.file.rollover.sec. By default xasecure.audit.destination.hdfs.file.rollover.sec = 86400 sec
-     * and file will be closed midnight. Custom rollover time can be set by defining file.rollover.sec to desire time in seconds.
-     */
-    private boolean enableAuditFilePeriodicRollOver = false;
-
-    /*
-    Time frequency of next occurrence of periodic rollover check. By Default every 60 seconds the check is done.
+    Time frequency of next occurrence of periodic rollover check. By Default every 60 seconds the check is done if enabled
     */
     private long periodicRollOverCheckTimeinSec;
 
@@ -65,7 +59,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
         super.init(props, propPrefix, auditProviderName, auditConfigs);
 
         // start AuditFilePeriodicRollOverTask if enabled.
-        enableAuditFilePeriodicRollOver = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_ENABLE_PERIODIC_ROLLOVER, false);
+        boolean enableAuditFilePeriodicRollOver = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_ENABLE_PERIODIC_ROLLOVER, false);
         if (enableAuditFilePeriodicRollOver) {
             periodicRollOverCheckTimeinSec = MiscUtil.getLongProperty(props, propPrefix + "." + PROP_HDFS_ROLLOVER_PERIODIC_ROLLOVER_CHECK_TIME, 60L);
             try {
@@ -152,6 +146,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
         });
         ret = retVal.booleanValue();
         logger.info("Flushing HDFS audit File :" + file.getAbsolutePath() + file.getName());
+
         return ret;
     }
 
@@ -161,16 +156,12 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     }
 
     synchronized public PrintWriter getLogFileStream() throws Exception {
-        if (!enableAuditFilePeriodicRollOver) {
-            // when periodic rollover is enabled closing of file is done by the file rollover monitoring task and hence don't need to
-            // close the file inline with audit logging.
-            closeFileIfNeeded();
-        }
+        closeFileIfNeeded();
+
         // Either there are no open log file or the previous one has been rolled over
         PrintWriter logWriter = createWriter();
         return logWriter;
     }
-
 
     public void flush() {
         if (logger.isDebugEnabled()) {
@@ -233,7 +224,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
                 logger.debug("==> AuditFilePeriodicRollOverTask.run()");
             }
             try {
-                closeFileIfNeeded();
+                logJSON(Collections.emptyList());
             } catch (Exception excp) {
                 logger.error("AuditFilePeriodicRollOverTask Failed. Aborting..", excp);
             }

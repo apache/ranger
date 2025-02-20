@@ -225,23 +225,10 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             logWriter.flush();
             closeWriter();
             resetWriter();
+            setNextRollOverTime();
+
             currentFileName = null;
             reUseLastLogFile = false;
-
-            if (!rollOverByDuration) {
-                try {
-                    if(StringUtils.isEmpty(rolloverPeriod) ) {
-                        rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
-                    }
-                    nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
-                } catch ( Exception e) {
-                    logger.warn("Rollover by file.rollover.period failed", e);
-                    logger.warn("Using the file.rollover.sec for {} audit file rollover...", fileSystemScheme);
-                    nextRollOverTime = rollOverByDuration();
-                }
-            } else {
-                nextRollOverTime = rollOverByDuration();
-            }
         }
 
         if (logger.isDebugEnabled()) {
@@ -262,7 +249,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         if (logWriter == null) {
             boolean appendMode = false;
             // if append is supported, reuse last log file
-            if (reUseLastLogFile && fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND)) {
+            if (reUseLastLogFile && isAppendEnabled()) {
                 logger.info("Appending to last log file. auditPath = {}", fullPath);
                 try {
                     ostream = fileSystem.append(auditPath);
@@ -388,5 +375,34 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
     public void setFileExtension(String fileExtension) {
         this.fileExtension  = fileExtension;
+    }
+
+    private void setNextRollOverTime() {
+        if (!rollOverByDuration) {
+            try {
+                if (StringUtils.isEmpty(rolloverPeriod)) {
+                    rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
+                }
+
+                nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
+            } catch (Exception e) {
+                logger.warn("Rollover by file.rollover.period failed", e);
+                logger.warn("Using the file.rollover.sec for {} audit file rollover...", fileSystemScheme);
+
+                nextRollOverTime = rollOverByDuration();
+            }
+        } else {
+            nextRollOverTime = rollOverByDuration();
+        }
+    }
+
+    private boolean isAppendEnabled() {
+        try {
+            return fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND);
+        } catch (Throwable t) {
+            logger.warn("Failed to check if audit log file {} can be appended. Will create a new file.", auditPath, t);
+        }
+
+        return false;
     }
 }
