@@ -14,14 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function
-try:
-	from StringIO import StringIO
-except ImportError:
-	from io import StringIO
-try:
-	from ConfigParser import ConfigParser
-except ImportError:
-	from configparser import ConfigParser
+from io import StringIO
+from configparser import ConfigParser
 import xml.etree.ElementTree as ET
 import os,sys,getopt
 from os import listdir
@@ -151,7 +145,7 @@ def getPropertiesConfigMap(configFileName):
 	config.seek(0,os.SEEK_SET)
 	fcp = ConfigParser()
 	fcp.optionxform = str
-	fcp.readfp(config)
+	fcp.read_file(config)
 	for k,v in fcp.items('dummysection'):
 		ret[k] = v
 	return ret
@@ -164,7 +158,7 @@ def getPropertiesKeyList(configFileName):
 	config.seek(0,os.SEEK_SET)
 	fcp = ConfigParser()
 	fcp.optionxform = str
-	fcp.readfp(config)
+	fcp.read_file(config)
 	for k,v in fcp.items('dummysection'):
 		ret.append(k)
 	return ret
