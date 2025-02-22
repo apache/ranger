@@ -19,6 +19,7 @@ package org.apache.ranger.audit.utils;
  * under the License.
  */
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,17 +95,23 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             logger.debug("UGI = {}, will write to HDFS file = {}", MiscUtil.getUGILoginUser(), currentFileName);
 
             out = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<PrintWriter>) () -> {
-                PrintWriter out1 = getLogFileStream();
+                PrintWriter out1 = null;
 
-                for (String event : events) {
-                    out1.println(event);
+                if (CollectionUtils.isEmpty(events)) {
+                    closeFileIfNeeded();
+                } else {
+                    out1 = getLogFileStream();
+
+                    for (String event : events) {
+                        out1.println(event);
+                    }
                 }
 
                 return out1;
             });
 
             // flush and check the stream for errors
-            if (out.checkError()) {
+            if (out != null && out.checkError()) {
                 // In theory, this count may NOT be accurate as part of the messages may have been successfully written.
                 // However, in practice, since client does buffering, either all or none would succeed.
                 logger.error("Stream encountered errors while writing audits to HDFS!");
