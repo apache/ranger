@@ -50,7 +50,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public FileSystem		      fileSystem				       = null;
     public Map<String, String>    auditConfigs				       = null;
     public Path				      auditPath					       = null;
-    public PrintWriter            logWriter                        = null;
+    public volatile PrintWriter   logWriter                        = null;
     public RollingTimeUtil        rollingTimeUtil                  = null;
     public String			      auditProviderName			       = null;
     public String			      fullPath                         = null;
