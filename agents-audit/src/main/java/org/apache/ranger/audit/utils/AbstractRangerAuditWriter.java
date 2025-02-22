@@ -56,7 +56,6 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public FileSystem          fileSystem;
     public Map<String, String> auditConfigs;
     public Path                auditPath;
-    public PrintWriter         logWriter;
     public RollingTimeUtil     rollingTimeUtil;
     public String              auditProviderName;
     public String              fullPath;
@@ -71,6 +70,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public int                 fileRolloverSec = 24 * 60 * 60; // In seconds
     public boolean             rollOverByDuration;
 
+    public volatile PrintWriter         logWriter;
     public volatile FSDataOutputStream  ostream;   // output stream wrapped in logWriter
 
     protected boolean reUseLastLogFile;
