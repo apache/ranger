@@ -45,12 +45,13 @@ import java.util.Properties;
 public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     private static final Logger logger = LoggerFactory.getLogger(AbstractRangerAuditWriter.class);
 
-    public static final String  PROP_FILESYSTEM_DIR              = "dir";
-    public static final String  PROP_FILESYSTEM_SUBDIR           = "subdir";
-    public static final String  PROP_FILESYSTEM_FILE_NAME_FORMAT = "filename.format";
-    public static final String  PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
-    public static final String  PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
-    public static final String  PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String PROP_FILESYSTEM_DIR              = "dir";
+    public static final String PROP_FILESYSTEM_SUBDIR           = "subdir";
+    public static final String PROP_FILESYSTEM_FILE_NAME_FORMAT = "filename.format";
+    public static final String PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
+    public static final String PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
+    public static final String PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String PROP_IS_APPEND_ENABLED           = "file.append.enabled";
 
     public Configuration       conf;
     public FileSystem          fileSystem;
@@ -225,18 +226,19 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             logFileNameFormat = "%app-type%_ranger_audit_%hostname%" + fileExtension;
         }
 
-        logFolder = logFolderProp + "/" + logSubFolder;
+        reUseLastLogFile = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_IS_APPEND_ENABLED, false);
+        logFolder        = logFolderProp + "/" + logSubFolder;
 
-        logger.info("logFolder={}, destName={}", logFolder, auditProviderName);
-        logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, auditProviderName);
-        logger.info("config={}", auditConfigs);
+        logger.info("logFolder = {}, destName = {}", logFolder, auditProviderName);
+        logger.info("logFileNameFormat = {}, destName = {}", logFileNameFormat, auditProviderName);
+        logger.info("config = {}", auditConfigs);
+        logger.info("isAppendEnabled = {}", reUseLastLogFile);
 
         rolloverPeriod  = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_ROLLOVER_PERIOD);
         rollingTimeUtil = RollingTimeUtil.getInstance();
 
-        //file.rollover.period is used for rolling over. If it could compute the next roll over time using file.rollover.period
-        //it fall back to use file.rollover.sec for find next rollover time. If still couldn't find default will be 1day window
-        //for rollover.
+        //file.rollover.period is used for rolling over. If it could compute the next rollover time using file.rollover.period
+        //it fallbacks to use file.rollover.sec for find next rollover time. If still couldn't find default will be 1day window for rollover.
         if (StringUtils.isEmpty(rolloverPeriod)) {
             rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
         }
@@ -272,7 +274,8 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             setNextRollOverTime();
 
             currentFileName  = null;
-            reUseLastLogFile = false;
+            auditPath        = null;
+            fullPath         = null;
         }
 
         logger.debug("<== AbstractRangerAuditWriter.closeFileIfNeeded()");
@@ -290,13 +293,13 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         if (logWriter == null) {
             boolean appendMode = false;
 
-            // if append is supported, reuse last log file
+            // if append is supported and enabled via config param, reuse last log file
             if (reUseLastLogFile && isAppendEnabled()) {
-                logger.info("Appending to last log file. auditPath = {}", fullPath);
-
                 try {
                     ostream    = fileSystem.append(auditPath);
                     appendMode = true;
+
+                    logger.info("Appending to last log file. auditPath = {}", fullPath);
                 } catch (Exception e) {
                     logger.error("Failed to append to file {} due to {}", fullPath, e.getMessage());
                     logger.info("Falling back to create a new log file!");
