@@ -119,16 +119,12 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
                 closeWriter();
                 resetWriter();
 
-                reUseLastLogFile = true;
-
                 return false;
             }
         } catch (Exception e) {
             logger.error("Exception encountered while writing audits to HDFS!", e);
             closeWriter();
             resetWriter();
-
-            reUseLastLogFile = true;
 
             return false;
         } finally {
@@ -137,7 +133,6 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             if (out != null) {
                 out.flush();
             }
-            //closeWriter();
         }
 
         return true;
