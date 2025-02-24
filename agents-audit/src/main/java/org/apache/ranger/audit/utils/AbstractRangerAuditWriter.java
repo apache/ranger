@@ -294,7 +294,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             boolean appendMode = false;
 
             // if append is supported and enabled via config param, reuse last log file
-            if (reUseLastLogFile && isAppendEnabled()) {
+            if (auditPath != null && reUseLastLogFile && isAppendEnabled()) {
                 try {
                     ostream    = fileSystem.append(auditPath);
                     appendMode = true;
