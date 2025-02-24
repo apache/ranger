@@ -40,12 +40,14 @@ import java.util.Properties;
 public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     private static final Logger logger = LoggerFactory.getLogger(AbstractRangerAuditWriter.class);
 
-    public static final String    PROP_FILESYSTEM_DIR              = "dir";
-    public static final String    PROP_FILESYSTEM_SUBDIR           = "subdir";
-    public static final String    PROP_FILESYSTEM_FILE_NAME_FORMAT = "filename.format";
-    public static final String    PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
-    public static final String    PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
-    public static final String    PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String PROP_FILESYSTEM_DIR              = "dir";
+    public static final String PROP_FILESYSTEM_SUBDIR           = "subdir";
+    public static final String PROP_FILESYSTEM_FILE_NAME_FORMAT = "filename.format";
+    public static final String PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
+    public static final String PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
+    public static final String PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String PROP_IS_APPEND_ENABLED           = "file.append.enabled";
+
     public Configuration		  conf						       = null;
     public FileSystem		      fileSystem				       = null;
     public Map<String, String>    auditConfigs				       = null;
@@ -66,7 +68,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public boolean                rollOverByDuration               = false;
     public volatile FSDataOutputStream ostream                     = null;   // output stream wrapped in logWriter
     private boolean               isHFlushCapableStream            = false;
-    protected boolean               reUseLastLogFile               = false;
+    protected boolean             reUseLastLogFile                 = false;
 
     @Override
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
@@ -136,8 +138,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         return conf;
     }
 
-    public void createParents(Path pathLogfile, FileSystem fileSystem)
-            throws Exception {
+    public void createParents(Path pathLogfile, FileSystem fileSystem) throws Exception {
         logger.info("Creating parent folder for " + pathLogfile);
         Path parentPath = pathLogfile != null ? pathLogfile.getParent() : null;
 
@@ -178,11 +179,13 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             logFileNameFormat = "%app-type%_ranger_audit_%hostname%" + fileExtension;
         }
 
+        reUseLastLogFile = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_IS_APPEND_ENABLED, false);
         logFolder = logFolderProp + "/" + logSubFolder;
 
-        logger.info("logFolder=" + logFolder + ", destName=" + auditProviderName);
-        logger.info("logFileNameFormat=" + logFileNameFormat + ", destName="+ auditProviderName);
-        logger.info("config=" + auditConfigs.toString());
+        logger.info("logFolder={}, destName={}", logFolder, auditProviderName);
+        logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, auditProviderName);
+        logger.info("config={}", auditConfigs.toString());
+        logger.info("isAppendEnabled = {}", reUseLastLogFile);
 
         rolloverPeriod  = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_ROLLOVER_PERIOD);
         rollingTimeUtil = RollingTimeUtil.getInstance();
@@ -228,7 +231,8 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             setNextRollOverTime();
 
             currentFileName = null;
-            reUseLastLogFile = false;
+            auditPath        = null;
+            fullPath         = null;
         }
 
         if (logger.isDebugEnabled()) {
@@ -248,12 +252,14 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
         if (logWriter == null) {
             boolean appendMode = false;
-            // if append is supported, reuse last log file
-            if (reUseLastLogFile && isAppendEnabled()) {
-                logger.info("Appending to last log file. auditPath = {}", fullPath);
+
+            // if append is supported and enabled via config param, reuse last log file
+            if (auditPath != null && reUseLastLogFile && isAppendEnabled()) {
                 try {
                     ostream = fileSystem.append(auditPath);
                     appendMode = true;
+
+                    logger.info("Appending to last log file. auditPath = {}", fullPath);
                 } catch (Exception e){
                     logger.error("Failed to append to file {} due to {}", fullPath, e.getMessage());
                     logger.info("Falling back to create a new log file!");
