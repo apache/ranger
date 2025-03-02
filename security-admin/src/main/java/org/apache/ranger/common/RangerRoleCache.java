@@ -43,7 +43,7 @@ public class RangerRoleCache {
     private final int           waitTimeInSeconds;
     private final ReentrantLock lock = new ReentrantLock();
 
-    RangerRoleCacheWrapper roleCacheWrapper;
+    private final RangerRoleCacheWrapper roleCacheWrapper;
 
     private RangerRoleCache() {
         roleCacheWrapper         = new RangerRoleCacheWrapper();
