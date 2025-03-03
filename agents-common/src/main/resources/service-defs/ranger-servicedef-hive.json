@@ -354,26 +354,23 @@
 			{
 				"name": "database",
 				"matcherOptions": {
-					"wildCard": "false"
+					"wildCard": "true"
 				},
-				"lookupSupported": true,
-				"uiHint":"{ \"singleValue\":true }"
+				"lookupSupported": true
 			},
 			{
 				"name": "table",
 				"matcherOptions": {
-					"wildCard": "false"
+					"wildCard": "true"
 				},
-				"lookupSupported": true,
-				"uiHint":"{ \"singleValue\":true }"
+				"lookupSupported": true
 			},
 			{
 				"name": "column",
 				"matcherOptions": {
-					"wildCard": "false"
+					"wildCard": "true"
 				},
-				"lookupSupported": true,
-				"uiHint":"{ \"singleValue\":true }"
+				"lookupSupported": true
 			}
 		],
 		"maskTypes": [
@@ -391,14 +388,14 @@
 				"name": "MASK_SHOW_LAST_4",
 				"label": "Partial mask: show last 4",
 				"description": "Show last 4 characters; replace rest with 'x'",
-				"transformer": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+				"transformer": "mask_show_last_n({col}, 4, 'x', 'x', 'x', 'x', 1)"
 			},
 			{
 				"itemId": 3,
 				"name": "MASK_SHOW_FIRST_4",
 				"label": "Partial mask: show first 4",
 				"description": "Show first 4 characters; replace rest with 'x'",
-				"transformer": "mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')"
+				"transformer": "mask_show_first_n({col}, 4, 'x', 'x', 'x', 'x', 1)"
 			},
 			{
 				"itemId": 4,
@@ -444,20 +441,18 @@
 			{
 				"name": "database",
 				"matcherOptions": {
-					"wildCard": "false"
+					"wildCard": "true"
 				},
 				"lookupSupported": true,
-				"mandatory": true,
-				"uiHint": "{ \"singleValue\":true }"
+				"mandatory": true
 			},
 			{
 				"name": "table",
 				"matcherOptions": {
-					"wildCard": "false"
+					"wildCard": "true"
 				},
 				"lookupSupported": true,
-				"mandatory": true,
-				"uiHint": "{ \"singleValue\":true }"
+				"mandatory": true
 			}
 		]
 	}
