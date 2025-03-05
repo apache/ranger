@@ -17,22 +17,20 @@
  * under the License.
  */
 
- package org.apache.ranger.kms.dao;
+package org.apache.ranger.kms.dao;
 
-
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class BaseDao<T> {
     private static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
@@ -63,11 +61,11 @@ public abstract class BaseDao<T> {
 
         EntityManager em = getEntityManager();
 
-        if(em != null) {
+        if (em != null) {
             EntityTransaction et = em.getTransaction();
 
             // check the transaction is not already active
-            if(et != null && !et.isActive()) {
+            if (et != null && !et.isActive()) {
                 et.begin();
 
                 ret = true;
@@ -80,12 +78,12 @@ public abstract class BaseDao<T> {
     public void commitTransaction() {
         EntityManager em = getEntityManager();
 
-        if(em != null) {
+        if (em != null) {
             em.flush();
 
             EntityTransaction et = em.getTransaction();
 
-            if(et != null) {
+            if (et != null) {
                 et.commit();
             }
         }
@@ -94,10 +92,10 @@ public abstract class BaseDao<T> {
     public void rollbackTransaction() {
         EntityManager em = getEntityManager();
 
-        if(em != null) {
+        if (em != null) {
             EntityTransaction et = em.getTransaction();
 
-            if(et != null) {
+            if (et != null) {
                 et.rollback();
             }
         }
@@ -110,12 +108,12 @@ public abstract class BaseDao<T> {
         try {
             getEntityManager().persist(obj);
 
-            if(trxBegan) {
+            if (trxBegan) {
                 commitTransaction();
             }
 
             ret = obj;
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.error("create({}) failed", tClass.getSimpleName(), e);
 
             rollbackTransaction();
@@ -129,7 +127,7 @@ public abstract class BaseDao<T> {
 
         getEntityManager().merge(obj);
 
-        if(trxBegan) {
+        if (trxBegan) {
             commitTransaction();
         }
 
@@ -149,7 +147,7 @@ public abstract class BaseDao<T> {
 
         getEntityManager().remove(obj);
 
-        if(trxBegan) {
+        if (trxBegan) {
             commitTransaction();
         }
 
@@ -232,8 +230,8 @@ public abstract class BaseDao<T> {
     public T findByAlias(String namedQuery, String alias) {
         try {
             return getEntityManager().createNamedQuery(namedQuery, tClass)
-                                     .setParameter("alias", alias)
-                                     .getSingleResult();
+                    .setParameter("alias", alias)
+                    .getSingleResult();
         } catch (NoResultException e) {
             // ignore
         }
@@ -247,9 +245,9 @@ public abstract class BaseDao<T> {
 
         try {
             ret = getEntityManager().createNamedQuery(namedQuery, tClass)
-                                    .setParameter("alias", alias).executeUpdate();
+                    .setParameter("alias", alias).executeUpdate();
 
-            if(trxBegan) {
+            if (trxBegan) {
                 commitTransaction();
             }
         } catch (NoResultException e) {

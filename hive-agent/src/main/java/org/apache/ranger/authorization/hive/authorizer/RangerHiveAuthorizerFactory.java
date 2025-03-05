@@ -17,23 +17,23 @@
  * under the License.
  */
 
- package org.apache.ranger.authorization.hive.authorizer;
+package org.apache.ranger.authorization.hive.authorizer;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthorizerFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClientFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClientFactory;
 
 public class RangerHiveAuthorizerFactory implements HiveAuthorizerFactory {
-	@Override
-	public HiveAuthorizer createHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
-											   HiveConf                   conf,
-											   HiveAuthenticationProvider hiveAuthenticator,
-											   HiveAuthzSessionContext    sessionContext)
-													   throws HiveAuthzPluginException {
-		return new RangerHiveAuthorizer(metastoreClientFactory, conf, hiveAuthenticator, sessionContext);
-	}
+    @Override
+    public HiveAuthorizer createHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
+            HiveConf conf,
+            HiveAuthenticationProvider hiveAuthenticator,
+            HiveAuthzSessionContext sessionContext)
+            throws HiveAuthzPluginException {
+        return new RangerHiveAuthorizer(metastoreClientFactory, conf, hiveAuthenticator, sessionContext);
+    }
 }

@@ -22,48 +22,51 @@ import org.apache.ranger.entity.XXPolicyItemRowFilterInfo;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class XXPolicyItemRowFilterInfoDao extends BaseDao<XXPolicyItemRowFilterInfo> {
+    public XXPolicyItemRowFilterInfoDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXPolicyItemRowFilterInfoDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public List<XXPolicyItemRowFilterInfo> findByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return new ArrayList<>();
+        }
 
-	public List<XXPolicyItemRowFilterInfo> findByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return new ArrayList<XXPolicyItemRowFilterInfo>();
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyItemRowFilterInfo.findByPolicyId", tClass)
-					.setParameter("policyId", policyId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyItemRowFilterInfo>();
-		}
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPolicyItemRowFilterInfo.findByPolicyId", tClass)
+                    .setParameter("policyId", policyId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 
-	public List<XXPolicyItemRowFilterInfo> findByServiceId(Long serviceId) {
-		if(serviceId == null) {
-			return new ArrayList<XXPolicyItemRowFilterInfo>();
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyItemRowFilterInfo.findByServiceId", tClass)
-					.setParameter("serviceId", serviceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXPolicyItemRowFilterInfo>();
-		}
-	}
+    public List<XXPolicyItemRowFilterInfo> findByServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return new ArrayList<>();
+        }
 
-	public void deleteByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return;
-		}
-		getEntityManager()
-			.createNamedQuery("XXPolicyItemRowFilterInfo.deleteByPolicyId", tClass)
-			.setParameter("policyId", policyId).executeUpdate();
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPolicyItemRowFilterInfo.findByServiceId", tClass)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public void deleteByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return;
+        }
+
+        getEntityManager()
+                .createNamedQuery("XXPolicyItemRowFilterInfo.deleteByPolicyId", tClass)
+                .setParameter("policyId", policyId).executeUpdate();
+    }
 }

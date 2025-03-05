@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.biz;
+package org.apache.ranger.biz;
 
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -33,83 +33,79 @@ import org.apache.ranger.view.VXPolicyExportAuditList;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class AssetMgrBase {
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
+    @Autowired
+    XResourceService xResourceService;
 
-	@Autowired
-	XResourceService xResourceService;
+    @Autowired
+    XCredentialStoreService xCredentialStoreService;
 
-	@Autowired
-	XCredentialStoreService xCredentialStoreService;
+    @Autowired
+    XPolicyExportAuditService xPolicyExportAuditService;
 
-	@Autowired
-	XPolicyExportAuditService xPolicyExportAuditService;
+    public VXCredentialStore getXCredentialStore(Long id) {
+        return xCredentialStoreService.readResource(id);
+    }
 
-	public VXCredentialStore getXCredentialStore(Long id){
-		return (VXCredentialStore)xCredentialStoreService.readResource(id);
-	}
+    public VXCredentialStore createXCredentialStore(VXCredentialStore vXCredentialStore) {
+        vXCredentialStore = xCredentialStoreService.createResource(vXCredentialStore);
 
-	public VXCredentialStore createXCredentialStore(VXCredentialStore vXCredentialStore){
-		vXCredentialStore =  (VXCredentialStore)xCredentialStoreService.createResource(vXCredentialStore);
-		return vXCredentialStore;
-	}
+        return vXCredentialStore;
+    }
 
-	public VXCredentialStore updateXCredentialStore(VXCredentialStore vXCredentialStore) {
-		vXCredentialStore =  (VXCredentialStore)xCredentialStoreService.updateResource(vXCredentialStore);
-		return vXCredentialStore;
-	}
+    public VXCredentialStore updateXCredentialStore(VXCredentialStore vXCredentialStore) {
+        vXCredentialStore = xCredentialStoreService.updateResource(vXCredentialStore);
 
-	public void deleteXCredentialStore(Long id, boolean force) {
-		 if (force) {
-			 xCredentialStoreService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+        return vXCredentialStore;
+    }
 
-	public VXCredentialStoreList searchXCredentialStores(SearchCriteria searchCriteria) {
-		return xCredentialStoreService.searchXCredentialStores(searchCriteria);
-	}
+    public void deleteXCredentialStore(Long id, boolean force) {
+        if (force) {
+            xCredentialStoreService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
 
-	public VXLong getXCredentialStoreSearchCount(SearchCriteria searchCriteria) {
-		return xCredentialStoreService.getSearchCount(searchCriteria,
-				xCredentialStoreService.searchFields);
-	}
+    public VXCredentialStoreList searchXCredentialStores(SearchCriteria searchCriteria) {
+        return xCredentialStoreService.searchXCredentialStores(searchCriteria);
+    }
 
-	public VXPolicyExportAudit getXPolicyExportAudit(Long id){
-		return (VXPolicyExportAudit)xPolicyExportAuditService.readResource(id);
-	}
+    public VXLong getXCredentialStoreSearchCount(SearchCriteria searchCriteria) {
+        return xCredentialStoreService.getSearchCount(searchCriteria, xCredentialStoreService.searchFields);
+    }
 
-	public VXPolicyExportAudit createXPolicyExportAudit(VXPolicyExportAudit vXPolicyExportAudit){
-		vXPolicyExportAudit =  (VXPolicyExportAudit)xPolicyExportAuditService.createResource(vXPolicyExportAudit);
-		return vXPolicyExportAudit;
-	}
+    public VXPolicyExportAudit getXPolicyExportAudit(Long id) {
+        return xPolicyExportAuditService.readResource(id);
+    }
 
-	public VXPolicyExportAudit updateXPolicyExportAudit(VXPolicyExportAudit vXPolicyExportAudit) {
-		vXPolicyExportAudit =  (VXPolicyExportAudit)xPolicyExportAuditService.updateResource(vXPolicyExportAudit);
-		return vXPolicyExportAudit;
-	}
+    public VXPolicyExportAudit createXPolicyExportAudit(VXPolicyExportAudit vXPolicyExportAudit) {
+        vXPolicyExportAudit = xPolicyExportAuditService.createResource(vXPolicyExportAudit);
 
-	public void deleteXPolicyExportAudit(Long id, boolean force) {
-		 if (force) {
-			 xPolicyExportAuditService.deleteResource(id);
-		 } else {
-			 throw restErrorUtil.createRESTException(
-				"serverMsg.modelMgrBaseDeleteModel",
-				MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
-		 }
-	}
+        return vXPolicyExportAudit;
+    }
 
-	public VXPolicyExportAuditList searchXPolicyExportAudits(SearchCriteria searchCriteria) {
-		return xPolicyExportAuditService.searchXPolicyExportAudits(searchCriteria);
-	}
+    public VXPolicyExportAudit updateXPolicyExportAudit(VXPolicyExportAudit vXPolicyExportAudit) {
+        vXPolicyExportAudit = xPolicyExportAuditService.updateResource(vXPolicyExportAudit);
 
-	public VXLong getXPolicyExportAuditSearchCount(SearchCriteria searchCriteria) {
-		return xPolicyExportAuditService.getSearchCount(searchCriteria,
-				xPolicyExportAuditService.searchFields);
-	}
+        return vXPolicyExportAudit;
+    }
 
+    public void deleteXPolicyExportAudit(Long id, boolean force) {
+        if (force) {
+            xPolicyExportAuditService.deleteResource(id);
+        } else {
+            throw restErrorUtil.createRESTException("serverMsg.modelMgrBaseDeleteModel", MessageEnums.OPER_NOT_ALLOWED_FOR_ENTITY);
+        }
+    }
+
+    public VXPolicyExportAuditList searchXPolicyExportAudits(SearchCriteria searchCriteria) {
+        return xPolicyExportAuditService.searchXPolicyExportAudits(searchCriteria);
+    }
+
+    public VXLong getXPolicyExportAuditSearchCount(SearchCriteria searchCriteria) {
+        return xPolicyExportAuditService.getSearchCount(searchCriteria, xPolicyExportAuditService.searchFields);
+    }
 }

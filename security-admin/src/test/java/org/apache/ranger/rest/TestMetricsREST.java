@@ -19,8 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.apache.ranger.util.RangerMetricsUtil;
 import org.junit.Assert;
@@ -33,6 +31,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestMetricsREST {
@@ -42,9 +43,8 @@ public class TestMetricsREST {
     @Mock
     RangerMetricsUtil jvmMetricUtil;
 
-
     @Test
-    public void testGetStatus() throws Exception {
+    public void testGetStatus() {
         Map<String, Object> rangerMetricsValues = getRangerMetricsValues();
 
         Mockito.when(jvmMetricUtil.getValues()).thenReturn(rangerMetricsValues);
@@ -55,7 +55,7 @@ public class TestMetricsREST {
         Assert.assertNotNull(rangerMetrics.getData());
         Assert.assertNotNull(rangerMetrics.getData().get("jvm"));
 
-        Map<String, Object> jvmMetricsMap = (Map<String, Object>)rangerMetrics.getData().get("jvm");
+        Map<String, Object> jvmMetricsMap = (Map<String, Object>) rangerMetrics.getData().get("jvm");
 
         Assert.assertNotNull(jvmMetricsMap.get("JVM Machine Actual Name"));
         Assert.assertNotNull(jvmMetricsMap.get("version"));
@@ -64,19 +64,18 @@ public class TestMetricsREST {
         Assert.assertEquals("8", jvmMetricsMap.get("os.vcpus"));
         Assert.assertNotNull(jvmMetricsMap.get("memory"));
 
-        Map<String, Object> memoryDetailsMap = (Map<String, Object>)jvmMetricsMap.get("memory");
+        Map<String, Object> memoryDetailsMap = (Map<String, Object>) jvmMetricsMap.get("memory");
 
         Assert.assertEquals("7635730432", memoryDetailsMap.get("heapMax"));
         Assert.assertEquals("40424768", memoryDetailsMap.get("heapUsed"));
     }
 
-
     private Map<String, Object> getRangerMetricsValues() {
-        Map<String, Object>  rangerMetricsMap = new LinkedHashMap<>();
+        Map<String, Object> rangerMetricsMap = new LinkedHashMap<>();
         rangerMetricsMap.put("os.spec", "Mac OS X, x86_64, 12.6.3");
         rangerMetricsMap.put("os.vcpus", "8");
 
-        Map<String, Object> memoryDetailsMap  = new LinkedHashMap<>();
+        Map<String, Object> memoryDetailsMap = new LinkedHashMap<>();
         memoryDetailsMap.put("heapMax", String.valueOf(7635730432L));
         memoryDetailsMap.put("heapCommitted", String.valueOf(514850816L));
         memoryDetailsMap.put("heapUsed", String.valueOf(40424768L));

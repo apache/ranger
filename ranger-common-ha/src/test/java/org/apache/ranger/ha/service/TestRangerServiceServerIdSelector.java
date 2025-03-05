@@ -29,12 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestRangerServiceServerIdSelector {
-
     private static final Logger LOG = LoggerFactory.getLogger(TestRangerServiceServerIdSelector.class);
-    private static Configuration conf = new Configuration();
+
+    private static final Configuration conf = new Configuration();
 
     @BeforeAll
-    public static void initialize(){
+    public static void initialize() {
         conf.addResource(Resources.getResource("ranger-tagsync-site.xml"), true);
     }
 
@@ -43,12 +43,12 @@ public class TestRangerServiceServerIdSelector {
         String serverId = null;
         try {
             LOG.info("test started");
+
             serverId = RangerServiceServerIdSelector.selectServerId(conf);
+
             Assertions.assertEquals("id1", serverId);
-        }catch(Exception e){
+        } catch (Exception e) {
             LOG.error(e.getMessage());
-
-            }
+        }
     }
-
 }

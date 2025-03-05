@@ -18,54 +18,56 @@
  */
 package org.apache.ranger.ha.service;
 
-import java.util.List;
+import org.apache.ranger.ha.annotation.HAService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.ranger.ha.annotation.HAService;
+
+import java.util.List;
 
 @HAService
 public class ServiceManager {
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceManager.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(ServiceManager.class);
-	private final List<HARangerService> services;
+    private final List<HARangerService> services;
 
-	public ServiceManager(List<HARangerService> services) {
-		this.services = services;
-		start();
-		LOG.info("ServiceManager started with {} services", (services != null ? services.size() : 0));
-	}
+    public ServiceManager(List<HARangerService> services) {
+        this.services = services;
 
-	@PostConstruct
-	public void start() {
-		LOG.info("ServiceManager.start() Starting services with service size :{} ", services.size());
-		try {
-			for (HARangerService svc : services) {
+        start();
 
-				LOG.info("Starting service {}", svc.getClass().getName());
+        LOG.info("ServiceManager started with {} services", (services != null ? services.size() : 0));
+    }
 
-				svc.start();
-			}
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @PostConstruct
+    public void start() {
+        LOG.info("ServiceManager.start() Starting services with service size :{} ", services.size());
 
-	@PreDestroy
-	public void stop() {
-		for (int idx = services.size() - 1; idx >= 0; idx--) {
-			HARangerService svc = services.get(idx);
-			try {
+        try {
+            for (HARangerService svc : services) {
+                LOG.info("Starting service {}", svc.getClass().getName());
 
-				LOG.info("Stopping service {}", svc.getClass().getName());
+                svc.start();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-				svc.stop();
-			} catch (Throwable e) {
-				LOG.warn("Error stopping service {}", svc.getClass().getName(), e);
-			}
-		}
-	}
+    @PreDestroy
+    public void stop() {
+        for (int idx = services.size() - 1; idx >= 0; idx--) {
+            HARangerService svc = services.get(idx);
 
+            try {
+                LOG.info("Stopping service {}", svc.getClass().getName());
+
+                svc.stop();
+            } catch (Throwable e) {
+                LOG.warn("Error stopping service {}", svc.getClass().getName(), e);
+            }
+        }
+    }
 }

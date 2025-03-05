@@ -17,55 +17,54 @@
  * under the License.
  */
 
- package org.apache.ranger.common;
+package org.apache.ranger.common;
+
+import com.sun.jersey.api.json.JSONConfiguration;
+import com.sun.jersey.api.json.JSONJAXBContext;
 
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 
-import com.sun.jersey.api.json.JSONConfiguration;
-import com.sun.jersey.api.json.JSONJAXBContext;
-
 /**
- *
  *
  */
 @Provider
 public class RangerJAXBContextResolver implements ContextResolver<JAXBContext> {
-
-    private JAXBContext context;
-    private Class<?>[] types = {
-	org.apache.ranger.view.VXAuthSessionList.class,
-	org.apache.ranger.view.VXResponse.class,
-	org.apache.ranger.view.VXStringList.class,
-	org.apache.ranger.view.VXPortalUserList.class,
-	org.apache.ranger.view.VXAssetList.class,
-	org.apache.ranger.view.VXResourceList.class,
-	org.apache.ranger.view.VXCredentialStoreList.class,
-	org.apache.ranger.view.VXGroupList.class,
-	org.apache.ranger.view.VXUserList.class,
-	org.apache.ranger.view.VXGroupUserList.class,
-	org.apache.ranger.view.VXGroupGroupList.class,
-	org.apache.ranger.view.VXPermMapList.class,
-	org.apache.ranger.view.VXAuditMapList.class,
-	org.apache.ranger.view.VXPolicyExportAuditList.class,
-	org.apache.ranger.view.VXAccessAuditList.class
+    private final JAXBContext context;
+    private final Class<?>[]  types = {
+            org.apache.ranger.view.VXAuthSessionList.class,
+            org.apache.ranger.view.VXResponse.class,
+            org.apache.ranger.view.VXStringList.class,
+            org.apache.ranger.view.VXPortalUserList.class,
+            org.apache.ranger.view.VXAssetList.class,
+            org.apache.ranger.view.VXResourceList.class,
+            org.apache.ranger.view.VXCredentialStoreList.class,
+            org.apache.ranger.view.VXGroupList.class,
+            org.apache.ranger.view.VXUserList.class,
+            org.apache.ranger.view.VXGroupUserList.class,
+            org.apache.ranger.view.VXGroupGroupList.class,
+            org.apache.ranger.view.VXPermMapList.class,
+            org.apache.ranger.view.VXAuditMapList.class,
+            org.apache.ranger.view.VXPolicyExportAuditList.class,
+            org.apache.ranger.view.VXAccessAuditList.class
     };
 
     public RangerJAXBContextResolver() throws Exception {
-	JSONConfiguration config = JSONConfiguration.natural().build();
-	context = new JSONJAXBContext(config, types);
+        JSONConfiguration config = JSONConfiguration.natural().build();
+
+        context = new JSONJAXBContext(config, types);
     }
 
     @Override
     public JAXBContext getContext(Class<?> objectType) {
-	// return context;
-	for (Class<?> type : types) {
-	    if (type.getName().equals(objectType.getName())) {
-		return context;
-	    }
-	}
-	return null;
+        // return context;
+        for (Class<?> type : types) {
+            if (type.getName().equals(objectType.getName())) {
+                return context;
+            }
+        }
+
+        return null;
     }
 }
-

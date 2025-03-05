@@ -62,8 +62,8 @@ export default function ResourceSelectComp(props) {
         )
           ? selectedFormValues[`value-${m}`]?.map?.(({ value }) => value) || []
           : selectedFormValues[`value-${m}`] != undefined
-          ? [selectedFormValues[`value-${m}`].value]
-          : [];
+            ? [selectedFormValues[`value-${m}`].value]
+            : [];
       });
     }
     let data = {
@@ -187,8 +187,8 @@ export default function ResourceSelectComp(props) {
               meta.error
                 ? "isError"
                 : isMultiResources
-                ? `${name}.value-${levelKey}`
-                : `value-${levelKey}`
+                  ? `${name}.value-${levelKey}`
+                  : `value-${levelKey}`
             }
             isMulti={supportMultipleVal(formValues[`resourceName-${levelKey}`])}
             isClearable

@@ -45,14 +45,13 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.anyString;
 
 @ExtendWith(MockitoExtension.class)
 public class TestRangerClient {
-    private static final RangerClient.API GET_TEST_API  = new RangerClient.API("/relative/path/test", HttpMethod.GET, Response.Status.OK);
-
+    private static final RangerClient.API GET_TEST_API = new RangerClient.API("/relative/path/test", HttpMethod.GET, Response.Status.OK);
 
     @BeforeMethod
     public void setup() {
@@ -75,7 +74,7 @@ public class TestRangerClient {
 
             Assertions.assertNotNull(ret);
             Assertions.assertEquals(ret.getName(), service.getName());
-        } catch(RangerServiceException excp){
+        } catch (RangerServiceException excp) {
             Assertions.fail("Not expected to fail! Found exception: " + excp);
         }
     }
@@ -93,8 +92,8 @@ public class TestRangerClient {
             RangerService ret = client.getService(1L);
 
             Assertions.fail("Expected to fail with SERVICE_UNAVAILABLE");
-        } catch(RangerServiceException excp){
-            Assertions.assertEquals(ClientResponse.Status.SERVICE_UNAVAILABLE,  excp.getStatus(), "Expected to fail with status SERVICE_UNAVAILABLE");
+        } catch (RangerServiceException excp) {
+            Assertions.assertEquals(ClientResponse.Status.SERVICE_UNAVAILABLE, excp.getStatus(), "Expected to fail with status SERVICE_UNAVAILABLE");
         }
     }
 
@@ -111,7 +110,7 @@ public class TestRangerClient {
             client.getService(1L);
 
             Assertions.fail("supposed to fail with RangerServiceException");
-        } catch(RangerServiceException excp) {
+        } catch (RangerServiceException excp) {
             Assertions.assertTrue(excp.getMessage().contains("statusCode=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getStatusCode()));
             Assertions.assertTrue(excp.getMessage().contains("status=" + ClientResponse.Status.INTERNAL_SERVER_ERROR.getReasonPhrase()));
         }
@@ -128,7 +127,7 @@ public class TestRangerClient {
             client.getService(1L);
 
             Assertions.fail("supposed to fail with RangerServiceException");
-        } catch(RangerServiceException excp) {
+        } catch (RangerServiceException excp) {
             Assertions.assertTrue(excp.getMessage().contains("statusCode=null"));
             Assertions.assertTrue(excp.getMessage().contains("status=null"));
         }
@@ -137,9 +136,9 @@ public class TestRangerClient {
     @Test
     public void api_UrlMissingFormat() {
         try {
-            new RangerClient.API("%dtest%dpath%d", HttpMethod.GET, Response.Status.OK).applyUrlFormat(1,1);
+            new RangerClient.API("%dtest%dpath%d", HttpMethod.GET, Response.Status.OK).applyUrlFormat(1, 1);
             Assertions.fail("supposed to fail with RangerServiceException");
-        } catch(RangerServiceException exp){
+        } catch (RangerServiceException exp) {
             Assertions.assertTrue(exp.getMessage().contains("MissingFormatArgumentException"));
         }
     }
@@ -149,23 +148,23 @@ public class TestRangerClient {
         try {
             new RangerClient.API("testpath%d", HttpMethod.GET, Response.Status.OK).applyUrlFormat("1");
             Assertions.fail("supposed to fail with RangerServiceException");
-        } catch(RangerServiceException exp){
+        } catch (RangerServiceException exp) {
             Assertions.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
         }
 
         try {
             new RangerClient.API("testpath%f", HttpMethod.GET, Response.Status.OK).applyUrlFormat(1);
             Assertions.fail("supposed to fail with RangerServiceException");
-        } catch(RangerServiceException exp){
+        } catch (RangerServiceException exp) {
             Assertions.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
         }
     }
 
     @Test
     public void testGetSecurityZoneHeaders() throws Exception {
-        RangerRESTClient    restClient = mock(RangerRESTClient.class);
-        ClientResponse      response   = mock(ClientResponse.class);
-        RangerClient        client     = new RangerClient(restClient);
+        RangerRESTClient restClient = mock(RangerRESTClient.class);
+        ClientResponse   response   = mock(ClientResponse.class);
+        RangerClient     client     = new RangerClient(restClient);
 
         List<RangerSecurityZoneHeaderInfo> expected = new ArrayList<>();
 
@@ -188,9 +187,9 @@ public class TestRangerClient {
 
     @Test
     public void testGetSecurityZoneServiceHeaders() throws Exception {
-        RangerRESTClient    restClient = mock(RangerRESTClient.class);
-        ClientResponse      response   = mock(ClientResponse.class);
-        RangerClient        client     = new RangerClient(restClient);
+        RangerRESTClient restClient = mock(RangerRESTClient.class);
+        ClientResponse   response   = mock(ClientResponse.class);
+        RangerClient     client     = new RangerClient(restClient);
 
         List<RangerServiceHeaderInfo> expected = new ArrayList<>();
 
@@ -215,12 +214,12 @@ public class TestRangerClient {
 
     @Test
     public void testGetSecurityZoneNamesForResource() throws RangerServiceException {
-        RangerClient        client      = Mockito.mock(RangerClient.class);
-        String              serviceName = "dev_hive";
-        Map<String, String> resource    = new HashMap<String, String>() {{
-                                                put("database", "testdb");
-                                                put("table", "testtbl1");
-                                            }};
+        RangerClient client      = Mockito.mock(RangerClient.class);
+        String       serviceName = "dev_hive";
+        Map<String, String> resource = new HashMap<String, String>() {{
+                put("database", "testdb");
+                put("table", "testtbl1");
+            }};
 
         when(client.getSecurityZoneNamesForResource(serviceName, resource)).thenReturn(Collections.emptySet());
 

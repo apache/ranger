@@ -17,8 +17,6 @@
 
 package org.apache.ranger.authorization.elasticsearch.plugin.action.filter;
 
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.elasticsearch.authorizer.RangerElasticsearchAuthorizer;
 import org.apache.ranger.authorization.elasticsearch.plugin.authc.user.UsernamePasswordToken;
@@ -36,61 +34,59 @@ import org.elasticsearch.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 public class RangerSecurityActionFilter extends AbstractLifecycleComponent implements ActionFilter {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityActionFilter.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityActionFilter.class);
+    private final ThreadContext                 threadContext;
+    private final RangerElasticsearchAuthorizer rangerElasticsearchAuthorizer = new RangerElasticsearchAuthorizer();
 
-	private final ThreadContext threadContext;
+    public RangerSecurityActionFilter(ThreadContext threadContext) {
+        super();
 
-	private final RangerElasticsearchAuthorizer rangerElasticsearchAuthorizer = new RangerElasticsearchAuthorizer();
+        this.threadContext = threadContext;
+    }
 
-	public RangerSecurityActionFilter(ThreadContext threadContext) {
-		super();
-		this.threadContext = threadContext;
-	}
+    @Override
+    public int order() {
+        return 0;
+    }
 
-	@Override
-	public int order() {
-		return 0;
-	}
+    @Override
+    public <Request extends ActionRequest, Response extends ActionResponse> void apply(Task task, String action, Request request, ActionListener<Response> listener, ActionFilterChain<Request, Response> chain) {
+        String user = threadContext.getTransient(UsernamePasswordToken.USERNAME);
 
-	@Override
-	public <Request extends ActionRequest, Response extends ActionResponse> void apply(Task task, String action,
-			Request request, ActionListener<Response> listener, ActionFilterChain<Request, Response> chain) {
-		String user = threadContext.getTransient(UsernamePasswordToken.USERNAME);
-		// If user is not null, then should check permission of the outside caller.
-		if (StringUtils.isNotEmpty(user)) {
-			List<String> indexs = RequestUtils.getIndexFromRequest(request);
-			String clientIPAddress = threadContext.getTransient(RequestUtils.CLIENT_IP_ADDRESS);
-			for (String index : indexs) {
-				boolean result = rangerElasticsearchAuthorizer.checkPermission(user, null, index, action,
-						clientIPAddress);
-				if (!result) {
-					String errorMsg = "Error: User[{}] could not do action[{}] on index[{}]";
-					throw new ElasticsearchStatusException(errorMsg, RestStatus.FORBIDDEN, user, action, index);
-				}
-			}
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("User is null, no check permission for elasticsearch do action[{}] with request[{}]", action,
-						request);
-			}
-		}
-		chain.proceed(task, action, request, listener);
-	}
+        // If user is not null, then should check permission of the outside caller.
+        if (StringUtils.isNotEmpty(user)) {
+            List<String> indexs          = RequestUtils.getIndexFromRequest(request);
+            String       clientIPAddress = threadContext.getTransient(RequestUtils.CLIENT_IP_ADDRESS);
+
+            for (String index : indexs) {
+                boolean result = rangerElasticsearchAuthorizer.checkPermission(user, null, index, action, clientIPAddress);
+
+                if (!result) {
+                    String errorMsg = "Error: User[{}] could not do action[{}] on index[{}]";
+
+                    throw new ElasticsearchStatusException(errorMsg, RestStatus.FORBIDDEN, user, action, index);
+                }
+            }
+        } else {
+            LOG.debug("User is null, no check permission for elasticsearch do action[{}] with request[{}]", action, request);
+        }
+
+        chain.proceed(task, action, request, listener);
+    }
 
     @Override
     protected void doStart() {
-
     }
 
     @Override
     protected void doStop() {
-
     }
 
     @Override
     protected void doClose() {
-
     }
 }

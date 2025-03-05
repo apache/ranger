@@ -17,40 +17,39 @@
 
 package org.apache.ranger.services.sqoop.client.json.model;
 
-
 public class SqoopConnectorResponse {
-	private Long id;
+    private Long id;
 
-	private String name;
+    private String name;
 
-	private String version;
+    private String version;
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getVersion() {
-		return version;
-	}
+    public String getVersion() {
+        return version;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-	@Override
-	public String toString() {
-		return "SqoopConnectorResponse [id=" + id + ", name=" + name + ", version=" + version + "]";
-	}
+    @Override
+    public String toString() {
+        return "SqoopConnectorResponse [id=" + id + ", name=" + name + ", version=" + version + "]";
+    }
 }

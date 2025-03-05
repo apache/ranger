@@ -16,14 +16,8 @@ import sys
 import errno
 import logging
 import zipfile
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from io import StringIO
+from configparser import ConfigParser
 import subprocess
 import fileinput
 import zipfile
@@ -58,8 +52,8 @@ def log(msg,type):
 
 def password_validation(password, userType):
 	if password:
-		if re.search("[\\\`'\"]",password):
-			log("[E] "+userType+" user password contains one of the unsupported special characters like \" ' \ `","error")
+		if re.search("[\\`'\"]",password):
+			log("[E] "+userType+" user password contains one of the unsupported special characters like \" ' \\ `","error")
 			sys.exit(1)
 		else:
 			log("[I] "+userType+" user password validated","info")

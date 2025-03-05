@@ -19,16 +19,46 @@ under the License.
 
 # Ranger React
 
-## Build Ranger Admin using react code base
+## Building Ranger Admin UI Package
 
-Maven command :
-
+To build the Ranger Admin UI package, run the following Maven command:
 ```
-mvn clean compile package -DskipTests -Psecurity-admin-react
+mvn clean compile package -DskipTests -DskipJSTests=true
+```
 
-## Contributors
+## Updating React JS Code to Comply with Checkstyle Requirements
 
-- Dhaval Rajpara
-- Nikunj Pansuriya
-- Mugdha Varadkar
-- Brijesh Bhalala
+#### Option 1: Using Visual Studio Code
+
+1. Install the **Prettier - Code Formatter** extension from the Visual Studio Code Extensions panel.
+2. Go to **Settings > User > Text Editor** and set **Change Default Formatter** to **Prettier - Code Formatter**.
+3. Set `prettier.configPath` to the full path of the  [.prettierrc](https://github.com/apache/ranger/blob/master/security-admin/src/main/webapp/react-webapp/.prettierrc ".prettierrc") file in your Ranger project directory. Example:
+   ```bash
+   /home/user/Workspace/apache/ranger/security-admin/src/main/webapp/react-webapp/.prettierrc
+   ```
+4. Similarly set `prettier.ignorePath` to the full path of the [.prettierignore](https://github.com/apache/ranger/blob/master/security-admin/src/main/webapp/react-webapp/.prettierignore ".prettierignore") file to ignore specific files and directories from formatting.
+Example:
+   ```bash
+   /home/user/Workspace/apache/ranger/security-admin/src/main/webapp/react-webapp/.prettierignore
+   ```
+5. Enable **Format On Save** in the editor settings.
+
+#### Option 2: Using Prettier npm Command
+
+1. Go to react-webapp directory
+   ```bash
+   cd security-admin/src/main/webapp/react-webapp
+   ```
+2. Install Prettier
+   ```bash
+   npm install --save-dev prettier
+   ```
+3. To format a specific file, run:
+   ```bash
+   npx prettier --write src/App.jsx
+   ```
+4. To format all files in a directory, run:
+   ```bash
+   npx prettier --write src/
+   ```
+5. After running the command `npm install --save-dev prettier` and manually formatting the changed files, please ensure that you do not push the `package.json` and `package-lock.json` files.

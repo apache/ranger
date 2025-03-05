@@ -406,6 +406,10 @@
 		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId and obj.zoneId = :zoneId order by obj.id</query>
 	</named-query>
 
+	<named-query name="XXPolicy.getMetaAttributesForPolicies">
+		<query>SELECT obj.id, obj.createTime, obj.updateTime FROM XXPolicy obj WHERE obj.id IN :policyIds</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findByServiceId">
 		<query>select obj from XXPolicy obj where obj.service = :serviceId order by obj.id</query>
 	</named-query>
@@ -1717,6 +1721,12 @@
 	<named-query name="XXSecurityZone.findByTagServiceName">
 		<query>
 			select obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefTagService ref where ref.tagServiceName = :tagServiceName)
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.getAllZoneIdNames">
+		<query>
+			select obj.id, obj.name from XXSecurityZone obj
 		</query>
 	</named-query>
 

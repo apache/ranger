@@ -70,6 +70,8 @@ under the License.
 	    <item name="Security Advisories" href="https://cwiki.apache.org/confluence/display/RANGER/Vulnerabilities+found+in+Ranger" target="_blank" />
     </menu>
     <menu name="Releases">
+        <item name="2.6.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.6.0+-+Release+Notes" target="_blank" />
+        <item name="2.5.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.5.0+-+Release+Notes" target="_blank" />
         <item name="2.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.4.0+-+Release+Notes" target="_blank" />
         <item name="2.3.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.3.0+-+Release+Notes" target="_blank" />
         <item name="2.2.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.2.0+-+Release+Notes" target="_blank" />

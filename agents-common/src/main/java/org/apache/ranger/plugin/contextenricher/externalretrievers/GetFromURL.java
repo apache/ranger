@@ -53,19 +53,17 @@ public class GetFromURL {
     private static final Logger LOG = LoggerFactory.getLogger(GetFromURL.class);
 
     public Map<String, Map<String, String>> getFromURL(String url, String configFile) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getFromURL(url={}, configFile={})", url, configFile);
-        }
+        LOG.debug("==> getFromURL(url={}, configFile={})", url, configFile);
 
-        String         token   = getBearerToken(configFile);
+        String token = getBearerToken(configFile);
         HttpUriRequest request = RequestBuilder.get().setUri(url)
-                                                     .setHeader(HttpHeaders.AUTHORIZATION, token)
-                                                     .setHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
-                                                     .build();
+                .setHeader(HttpHeaders.AUTHORIZATION, token)
+                .setHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
+                .build();
         Map<String, Map<String, String>> ret;
 
-        try (CloseableHttpClient   httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response   = httpClient.execute(request)) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+                CloseableHttpResponse response = httpClient.execute(request)) {
             if (response == null) {
                 throw new IOException("getFromURL(" + url + ") failed: null response");
             }
@@ -87,22 +85,20 @@ public class GetFromURL {
             EntityUtils.consume(httpEntity);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getFromURL(url={}, configFile={}): ret={}", url, configFile, ret);
-        }
+        LOG.debug("<== getFromURL(url={}, configFile={}): ret={}", url, configFile, ret);
 
         return ret;
     }
 
     private String getBearerToken(String configFile) throws Exception {
-        String   secrets    = getSecretsFromFile(configFile);
-        JsonNode jsonObject = JsonUtils.getMapper().readTree(secrets);
-        String   tokenURL   = jsonObject.get("tokenUrl").asText();
-        List<Map<String, String>> headers = JsonUtils.getMapper().convertValue(jsonObject.get("headers"), new TypeReference<List<Map<String, String>>>(){});
-        List<Map<String, String>> params = JsonUtils.getMapper().convertValue(jsonObject.get("params"), new TypeReference<List<Map<String, String>>>(){});
+        String                    secrets    = getSecretsFromFile(configFile);
+        JsonNode                  jsonObject = JsonUtils.getMapper().readTree(secrets);
+        String                    tokenURL   = jsonObject.get("tokenUrl").asText();
+        List<Map<String, String>> headers    = JsonUtils.getMapper().convertValue(jsonObject.get("headers"), new TypeReference<List<Map<String, String>>>() {});
+        List<Map<String, String>> params     = JsonUtils.getMapper().convertValue(jsonObject.get("params"), new TypeReference<List<Map<String, String>>>() {});
 
-        List<NameValuePair>       nvPairs    = new ArrayList<>();
-        HttpPost                  httpPost   = new HttpPost(tokenURL);
+        List<NameValuePair> nvPairs  = new ArrayList<>();
+        HttpPost            httpPost = new HttpPost(tokenURL);
 
         // add headers to httpPost object:
         for (Map<String, String> header : headers) {
@@ -123,8 +119,8 @@ public class GetFromURL {
         String ret;
 
         // execute httpPost:
-        try (CloseableHttpClient   httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response   = httpClient.execute(httpPost)) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+                CloseableHttpResponse response = httpClient.execute(httpPost)) {
             if (response == null) {
                 throw new IOException("getBearerToken(" + configFile + ") failed: null response");
             }
@@ -149,10 +145,8 @@ public class GetFromURL {
         return ret;
     }
 
-    private Map<String, Map<String, String>> toUserAttributes(Map<String, Map<String, List<String>>> userAttrValues){
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> toUserAttributes(userAttrValues={})", userAttrValues);
-        }
+    private Map<String, Map<String, String>> toUserAttributes(Map<String, Map<String, List<String>>> userAttrValues) {
+        LOG.debug("==> toUserAttributes(userAttrValues={})", userAttrValues);
 
         Map<String, Map<String, String>> ret = new HashMap<>();
 
@@ -171,9 +165,7 @@ public class GetFromURL {
             ret.put(user, userAttrs);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== toUserAttributes(userAttrValues={}): ret={}", userAttrValues, ret);
-        }
+        LOG.debug("<== toUserAttributes(userAttrValues={}): ret={}", userAttrValues, ret);
 
         return ret;
     }
@@ -191,8 +183,8 @@ public class GetFromURL {
     }
 
     private void verifyToken(String secrets) throws IOException {
-        String     errorMessage = "";
-        JsonNode jsonObject = JsonUtils.getMapper().readTree(secrets);
+        String   errorMessage = "";
+        JsonNode jsonObject   = JsonUtils.getMapper().readTree(secrets);
 
         // verify all necessary items are there
         if (jsonObject.get("tokenUrl") == null) {
@@ -215,10 +207,8 @@ public class GetFromURL {
             errorMessage += "params must be specified in the config file; ";
         }
 
-        if (!errorMessage.equals("")) {
+        if (!errorMessage.isEmpty()) {
             throw new IOException(errorMessage);
         }
     }
 }
-
-

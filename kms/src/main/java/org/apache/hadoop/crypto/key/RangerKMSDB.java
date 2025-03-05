@@ -17,6 +17,16 @@
 
 package org.apache.hadoop.crypto.key;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.kms.dao.DaoManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,31 +34,27 @@ import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.ranger.kms.dao.DaoManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RangerKMSDB {
     private static final Logger logger = LoggerFactory.getLogger(RangerKMSDB.class);
 
-    private static final String PROPERTY_PREFIX = "ranger.ks.";
-    private static final String DB_DIALECT      = "jpa.jdbc.dialect";
-    private static final String DB_DRIVER       = "jpa.jdbc.driver";
-    private static final String DB_URL          = "jpa.jdbc.url";
-    private static final String DB_USER         = "jpa.jdbc.user";
-    private static final String DB_PASSWORD     = "jpa.jdbc.password";
+    public static final int DB_FLAVOR_UNKNOWN     = 0;
+    public static final int DB_FLAVOR_MYSQL       = 1;
+    public static final int DB_FLAVOR_ORACLE      = 2;
+    public static final int DB_FLAVOR_POSTGRES    = 3;
+    public static final int DB_FLAVOR_SQLSERVER   = 4;
+    public static final int DB_FLAVOR_SQLANYWHERE = 5;
 
-    private static final String JPA_DB_DIALECT  = "javax.persistence.jdbc.dialect";
-    private static final String JPA_DB_DRIVER   = "javax.persistence.jdbc.driver";
-    private static final String JPA_DB_URL      = "javax.persistence.jdbc.url";
-    private static final String JPA_DB_USER     = "javax.persistence.jdbc.user";
-    private static final String JPA_DB_PASSWORD = "javax.persistence.jdbc.password";
-
+    private static final String PROPERTY_PREFIX                = "ranger.ks.";
+    private static final String DB_DIALECT                     = "jpa.jdbc.dialect";
+    private static final String DB_DRIVER                      = "jpa.jdbc.driver";
+    private static final String DB_URL                         = "jpa.jdbc.url";
+    private static final String DB_USER                        = "jpa.jdbc.user";
+    private static final String DB_PASSWORD                    = "jpa.jdbc.password";
+    private static final String JPA_DB_DIALECT                 = "javax.persistence.jdbc.dialect";
+    private static final String JPA_DB_DRIVER                  = "javax.persistence.jdbc.driver";
+    private static final String JPA_DB_URL                     = "javax.persistence.jdbc.url";
+    private static final String JPA_DB_USER                    = "javax.persistence.jdbc.user";
+    private static final String JPA_DB_PASSWORD                = "javax.persistence.jdbc.password";
     private static final String DB_SSL_ENABLED                 = "db.ssl.enabled";
     private static final String DB_SSL_REQUIRED                = "db.ssl.required";
     private static final String DB_SSL_VerifyServerCertificate = "db.ssl.verifyServerCertificate";
@@ -59,17 +65,9 @@ public class RangerKMSDB {
     private static final String DB_SSL_TRUSTSTORE_PASSWORD     = "truststore.password";
     private static final String DB_SSL_CERTIFICATE_FILE        = "db.ssl.certificateFile";
 
-    public static final int DB_FLAVOR_UNKNOWN     = 0;
-    public static final int DB_FLAVOR_MYSQL       = 1;
-    public static final int DB_FLAVOR_ORACLE      = 2;
-    public static final int DB_FLAVOR_POSTGRES    = 3;
-    public static final int DB_FLAVOR_SQLSERVER   = 4;
-    public static final int DB_FLAVOR_SQLANYWHERE = 5;
-
     private final Configuration       conf;
     private final Map<String, String> jpaProperties = new HashMap<>();
     private final DaoManager          daoManager;
-
 
     public RangerKMSDB(Configuration conf) {
         this.conf = conf;
@@ -77,11 +75,11 @@ public class RangerKMSDB {
         DaoManager daoManager = null;
 
         try {
-            jpaProperties.put(JPA_DB_DIALECT, conf.get(PROPERTY_PREFIX+DB_DIALECT));
-            jpaProperties.put(JPA_DB_DRIVER, conf.get(PROPERTY_PREFIX+DB_DRIVER));
-            jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
-            jpaProperties.put(JPA_DB_USER, conf.get(PROPERTY_PREFIX+DB_USER));
-            jpaProperties.put(JPA_DB_PASSWORD, conf.get(PROPERTY_PREFIX+DB_PASSWORD));
+            jpaProperties.put(JPA_DB_DIALECT, conf.get(PROPERTY_PREFIX + DB_DIALECT));
+            jpaProperties.put(JPA_DB_DRIVER, conf.get(PROPERTY_PREFIX + DB_DRIVER));
+            jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX + DB_URL));
+            jpaProperties.put(JPA_DB_USER, conf.get(PROPERTY_PREFIX + DB_USER));
+            jpaProperties.put(JPA_DB_PASSWORD, conf.get(PROPERTY_PREFIX + DB_PASSWORD));
 
             int dbFlavor = getDBFlavor(conf);
 
@@ -95,15 +93,15 @@ public class RangerKMSDB {
 
             daoManager.getEntityManager(); // this forces the connection to be made to DB
 
-            logger.info("Connected to DB : "+isDbConnected());
-        } catch(Exception excp) {
+            logger.info("Connected to DB : {}", isDbConnected());
+        } catch (Exception excp) {
             logger.error("initDBConnectivity() failed", excp);
         } finally {
             this.daoManager = daoManager;
         }
     }
 
-    public DaoManager getDaoManager(){
+    public DaoManager getDaoManager() {
         return daoManager;
     }
 
@@ -119,7 +117,7 @@ public class RangerKMSDB {
         if (daoMgr != null) {
             try {
                 return daoMgr.getEntityManager();
-            } catch(Exception excp) {
+            } catch (Exception excp) {
                 logger.error("getEntityManager() failed", excp);
             }
         }
@@ -128,15 +126,12 @@ public class RangerKMSDB {
     }
 
     private int getDBFlavor(Configuration newConfig) {
-        String[] propertyNames = new String[] { PROPERTY_PREFIX + DB_DIALECT,
-                                                PROPERTY_PREFIX + DB_DRIVER,
-                                                PROPERTY_PREFIX + DB_URL
-                                              };
+        String[] propertyNames = new String[] {PROPERTY_PREFIX + DB_DIALECT, PROPERTY_PREFIX + DB_DRIVER, PROPERTY_PREFIX + DB_URL };
 
-        for(String propertyName : propertyNames) {
+        for (String propertyName : propertyNames) {
             String propertyValue = newConfig.get(propertyName);
 
-            if(StringUtils.isBlank(propertyValue)) {
+            if (StringUtils.isBlank(propertyValue)) {
                 continue;
             }
 
@@ -155,9 +150,7 @@ public class RangerKMSDB {
             } else if (StringUtils.containsIgnoreCase(propertyValue, "sqla")) {
                 return DB_FLAVOR_SQLANYWHERE;
             } else {
-                if(logger.isDebugEnabled()) {
-                    logger.debug("DB Flavor could not be determined from property - " + propertyName + "=" + propertyValue);
-                }
+                logger.debug("DB Flavor could not be determined from property - {} = {}", propertyName, propertyValue);
             }
         }
 
@@ -168,54 +161,54 @@ public class RangerKMSDB {
 
     private void updateDBSSLURL() {
         if (conf != null && conf.get(PROPERTY_PREFIX + DB_SSL_ENABLED) != null) {
-            final String db_ssl_enabled = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_ENABLED));
+            final String dbSslEnabled = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_ENABLED));
 
-            if ("true".equalsIgnoreCase(db_ssl_enabled)) {
-                final String db_ssl_required                = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_REQUIRED));
-                final String db_ssl_verifyServerCertificate = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_VerifyServerCertificate));
-                final String db_ssl_auth_type               = conf.get(PROPERTY_PREFIX + DB_SSL_AUTH_TYPE, "2-way");
+            if ("true".equalsIgnoreCase(dbSslEnabled)) {
+                final String dbSslRequired                = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_REQUIRED));
+                final String dbSslVerifyServerCertificate = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_VerifyServerCertificate));
+                final String dbSslAuthType                = conf.get(PROPERTY_PREFIX + DB_SSL_AUTH_TYPE, "2-way");
 
-                conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, db_ssl_enabled);
-                conf.set(PROPERTY_PREFIX + DB_SSL_REQUIRED, db_ssl_required);
-                conf.set(PROPERTY_PREFIX + DB_SSL_VerifyServerCertificate, db_ssl_verifyServerCertificate);
-                conf.set(PROPERTY_PREFIX + DB_SSL_AUTH_TYPE, db_ssl_auth_type);
+                conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, dbSslEnabled);
+                conf.set(PROPERTY_PREFIX + DB_SSL_REQUIRED, dbSslRequired);
+                conf.set(PROPERTY_PREFIX + DB_SSL_VerifyServerCertificate, dbSslVerifyServerCertificate);
+                conf.set(PROPERTY_PREFIX + DB_SSL_AUTH_TYPE, dbSslAuthType);
 
-                String ranger_jpa_jdbc_url = conf.get(PROPERTY_PREFIX+DB_URL);
+                String rangerJpaJdbcUrl = conf.get(PROPERTY_PREFIX + DB_URL);
 
-                if (StringUtils.isNotEmpty(ranger_jpa_jdbc_url) && !ranger_jpa_jdbc_url.contains("?")) {
-                    StringBuilder ranger_jpa_jdbc_url_ssl = new StringBuilder(ranger_jpa_jdbc_url);
+                if (StringUtils.isNotEmpty(rangerJpaJdbcUrl) && !rangerJpaJdbcUrl.contains("?")) {
+                    StringBuilder rangerJpaJdbcUrlSsl = new StringBuilder(rangerJpaJdbcUrl);
 
                     int dbFlavor = getDBFlavor(conf);
 
                     if (dbFlavor == DB_FLAVOR_MYSQL) {
-                        ranger_jpa_jdbc_url_ssl.append("?useSSL=").append(db_ssl_enabled)
-                                               .append("&requireSSL=").append(db_ssl_required)
-                                               .append("&verifyServerCertificate=").append(db_ssl_verifyServerCertificate);
+                        rangerJpaJdbcUrlSsl.append("?useSSL=").append(dbSslEnabled)
+                                .append("&requireSSL=").append(dbSslRequired)
+                                .append("&verifyServerCertificate=").append(dbSslVerifyServerCertificate);
                     } else if (dbFlavor == DB_FLAVOR_POSTGRES) {
-                        String db_ssl_certificate_file = conf.get(PROPERTY_PREFIX + DB_SSL_CERTIFICATE_FILE);
+                        String dbSslCertificateFile = conf.get(PROPERTY_PREFIX + DB_SSL_CERTIFICATE_FILE);
 
-                        if (StringUtils.isNotEmpty(db_ssl_certificate_file)) {
-                            ranger_jpa_jdbc_url_ssl.append("?ssl=").append(db_ssl_enabled)
-                                                   .append("&sslmode=verify-full")
-                                                   .append("&sslrootcert=").append(db_ssl_certificate_file);
-                        } else if ("true".equalsIgnoreCase(db_ssl_verifyServerCertificate) || "true".equalsIgnoreCase(db_ssl_required)) {
-                            ranger_jpa_jdbc_url_ssl.append("?ssl=").append(db_ssl_enabled)
-                                                   .append("&sslmode=verify-full")
-                                                   .append("&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory");
+                        if (StringUtils.isNotEmpty(dbSslCertificateFile)) {
+                            rangerJpaJdbcUrlSsl.append("?ssl=").append(dbSslEnabled)
+                                    .append("&sslmode=verify-full")
+                                    .append("&sslrootcert=").append(dbSslCertificateFile);
+                        } else if ("true".equalsIgnoreCase(dbSslVerifyServerCertificate) || "true".equalsIgnoreCase(dbSslRequired)) {
+                            rangerJpaJdbcUrlSsl.append("?ssl=").append(dbSslEnabled)
+                                    .append("&sslmode=verify-full")
+                                    .append("&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory");
                         } else {
-                            ranger_jpa_jdbc_url_ssl.append("?ssl=").append(db_ssl_enabled);
+                            rangerJpaJdbcUrlSsl.append("?ssl=").append(dbSslEnabled);
                         }
                     }
 
-                    conf.set(PROPERTY_PREFIX + DB_URL, ranger_jpa_jdbc_url_ssl.toString());
+                    conf.set(PROPERTY_PREFIX + DB_URL, rangerJpaJdbcUrlSsl.toString());
                 }
 
                 jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX + DB_URL));
 
-                logger.info(PROPERTY_PREFIX + DB_URL + "=" + conf.get(PROPERTY_PREFIX + DB_URL));
+                logger.info("{}{}={}", PROPERTY_PREFIX, DB_URL, conf.get(PROPERTY_PREFIX + DB_URL));
 
-                if ("true".equalsIgnoreCase(db_ssl_verifyServerCertificate) || "true".equalsIgnoreCase(db_ssl_required)) {
-                    if (!"1-way".equalsIgnoreCase((db_ssl_auth_type))) {
+                if ("true".equalsIgnoreCase(dbSslVerifyServerCertificate) || "true".equalsIgnoreCase(dbSslRequired)) {
+                    if (!"1-way".equalsIgnoreCase((dbSslAuthType))) {
                         // update system key store path with custom key store.
                         String keystore = conf.get(PROPERTY_PREFIX + DB_SSL_KEYSTORE);
 
@@ -256,7 +249,7 @@ public class RangerKMSDB {
     }
 
     private String normalize(String booleanFlag) {
-        if (StringUtils.isEmpty(booleanFlag)|| !"true".equalsIgnoreCase(booleanFlag)) {
+        if (StringUtils.isEmpty(booleanFlag) || !"true".equalsIgnoreCase(booleanFlag)) {
             return "false";
         } else {
             return booleanFlag.toLowerCase();

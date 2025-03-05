@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
+public class PatchSetAccessTypeCategory_J10061 extends BaseLoader {
     private static final Logger logger = LoggerFactory.getLogger(PatchSetAccessTypeCategory_J10061.class);
 
     @Autowired
@@ -72,6 +72,11 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
     }
 
     @Override
+    public void printStats() {
+        logger.info("PatchSetAccessTypeCategory_J10061");
+    }
+
+    @Override
     public void execLoad() {
         logger.info("==> PatchSetAccessTypeCategory_J10061.execLoad()");
 
@@ -84,11 +89,6 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
         logger.info("<== PatchSetAccessTypeCategory_J10061.execLoad()");
     }
 
-    @Override
-    public void printStats() {
-        logger.info("PatchSetAccessTypeCategory_J10061");
-    }
-
     private void updateAllServiceDef() throws Exception {
         logger.info("==> PatchSetAccessTypeCategory_J10061.updateAllServiceDef()");
 
@@ -96,31 +96,30 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
         Map<String, Map<String, AccessTypeCategory>> embeddedCategories = new HashMap<>();
 
         for (RangerServiceDef serviceDef : serviceDefs) {
-            if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) ||
-                StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+            if (StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) || StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
                 continue;
             }
 
-            logger.info("Updating access-type categories for service-def:[" + serviceDef.getName() + "]");
+            logger.info("Updating access-type categories for service-def:[{}]", serviceDef.getName());
 
             if (CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
-                logger.info("No access-types found in service-def:[" + serviceDef.getName() + "]");
+                logger.info("No access-types found in service-def:[{}}]", serviceDef.getName());
 
                 continue;
             }
 
-            RangerServiceDef embeddedServiceDef = null;
+            RangerServiceDef embeddedServiceDef;
 
             try {
                 embeddedServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceDef.getName());
 
                 if (embeddedServiceDef == null) {
-                    logger.info("No embedded service-def found for:[" + serviceDef.getName() + "]. Access type category will not be updated");
+                    logger.info("No embedded service-def found for:[{}]. Access type category will not be updated", serviceDef.getName());
 
                     continue;
                 }
             } catch (Exception e) {
-                logger.info("Failed to load embedded service-def for:[" + serviceDef.getName() + "]. Access type category will not be updated", e);
+                logger.info("Failed to load embedded service-def for:[{}]. Access type category will not be updated", serviceDef.getName(), e);
 
                 continue;
             }
@@ -137,7 +136,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
                 AccessTypeCategory category = accessTypeCategories.get(accessTypeDef.getName());
 
                 if (category == null) {
-                    logger.info("Category not found for access-type:[" + accessTypeDef.getName() + "] in embedded service-def:[" + serviceDef.getName() + "]. Will not be updated");
+                    logger.info("Category not found for access-type:[{}] in embedded service-def:[{}]. Will not be updated", accessTypeDef.getName(), serviceDef.getName());
 
                     continue;
                 }
@@ -147,13 +146,13 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
 
             svcStore.updateServiceDef(serviceDef);
 
-            logger.info("Updated access-type categories for service-def:[" + serviceDef.getName() + "]");
+            logger.info("Updated access-type categories for service-def:[{}]", serviceDef.getName());
         }
 
         RangerServiceDef tagServiceDef = svcStore.getServiceDefByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
         if (tagServiceDef != null && CollectionUtils.isNotEmpty(tagServiceDef.getAccessTypes())) {
-            logger.info("Updating access-type categories for service-def:[" + tagServiceDef.getName() + "]");
+            logger.info("Updating access-type categories for service-def:[{}]", tagServiceDef.getName());
 
             for (RangerAccessTypeDef accessTypeDef : tagServiceDef.getAccessTypes()) {
                 String[] svcDefAccType  = accessTypeDef.getName().split(":");
@@ -161,7 +160,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
                 String   accessTypeName = svcDefAccType.length > 1 ? svcDefAccType[1] : null;
 
                 if (StringUtils.isBlank(serviceDefName) || StringUtils.isBlank(accessTypeName)) {
-                    logger.warn("Invalid access-type:[" + accessTypeDef.getName() + "] found in tag service-def. Access type category will not be updated");
+                    logger.warn("Invalid access-type:[{}] found in tag service-def. Access type category will not be updated", accessTypeDef.getName());
 
                     continue;
                 }
@@ -169,7 +168,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
                 Map<String, AccessTypeCategory> accessTypeCategories = embeddedCategories.get(serviceDefName);
 
                 if (accessTypeCategories == null) {
-                    logger.warn("No embedded service-def found for:[" + serviceDefName + "]. Access type category will not be updated in tag service-def");
+                    logger.warn("No embedded service-def found for:[{}]. Access type category will not be updated in tag service-def", serviceDefName);
 
                     continue;
                 }
@@ -177,7 +176,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
                 AccessTypeCategory category = accessTypeCategories.get(accessTypeName);
 
                 if (category == null) {
-                    logger.warn("Category not found for access-type:[" + accessTypeName + "] in embedded service-def:[" + serviceDefName + "]. Access type category will not be updated in tag service-def");
+                    logger.warn("Category not found for access-type:[{}] in embedded service-def:[{}]. Access type category will not be updated in tag service-def", accessTypeName, serviceDefName);
 
                     continue;
                 }
@@ -187,7 +186,7 @@ public class PatchSetAccessTypeCategory_J10061 extends BaseLoader{
 
             svcStore.updateServiceDef(tagServiceDef);
 
-            logger.info("Updated access-type categories for service-def:[" + tagServiceDef.getName() + "]");
+            logger.info("Updated access-type categories for service-def:[{}]", tagServiceDef.getName());
         }
 
         logger.info("<== PatchSetAccessTypeCategory_J10061.updateAllServiceDef()");

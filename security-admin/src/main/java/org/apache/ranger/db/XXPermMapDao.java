@@ -17,12 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
+package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPermMap;
@@ -30,29 +25,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class XXPermMapDao extends BaseDao<XXPermMap> {
-	private static final Logger logger = LoggerFactory.getLogger(XXResourceDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(XXPermMapDao.class);
 
-    public XXPermMapDao( RangerDaoManagerBase daoManager ) {
-		super(daoManager);
+    public XXPermMapDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
     }
 
-	public List<XXPermMap> findByResourceId(Long resourceId) {
-		if (resourceId != null) {
-			try {
-				return getEntityManager()
-						.createNamedQuery("XXPermMap.findByResourceId", XXPermMap.class)
-						.setParameter("resourceId", resourceId)
-						.getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ResourceId not provided.");
-			return new ArrayList<XXPermMap>();
-		}
-		return null;
-	}
-}
+    public List<XXPermMap> findByResourceId(Long resourceId) {
+        if (resourceId != null) {
+            try {
+                return getEntityManager()
+                        .createNamedQuery("XXPermMap.findByResourceId", XXPermMap.class)
+                        .setParameter("resourceId", resourceId)
+                        .getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ResourceId not provided.");
 
+            return new ArrayList<>();
+        }
+
+        return null;
+    }
+}

@@ -23,27 +23,28 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
+@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerGrant implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     private RangerPrincipal principal;
     private List<String>    accessTypes;
-    private List<String>    conditions;
+    private List<Condition> conditions;
 
     public RangerGrant() {
         this(null, null, null);
     }
 
-    public RangerGrant(RangerPrincipal principal, List<String> accessTypes, List<String> conditions) {
-        this.principal   = principal;
-        this.accessTypes = accessTypes;
-        this.conditions  = conditions;
+    public RangerGrant(RangerPrincipal principal, List<String> accessTypes, List<Condition> conditions) {
+        setPrincipal(principal);
+        setAccessTypes(accessTypes);
+        setConditions(conditions);
     }
 
     public RangerPrincipal getPrincipal() {
@@ -59,15 +60,39 @@ public class RangerGrant implements java.io.Serializable {
     }
 
     public void setAccessTypes(List<String> accessTypes) {
-        this.accessTypes = accessTypes;
+        if (this.accessTypes == null) {
+            this.accessTypes = new ArrayList<>();
+        }
+
+        if (this.accessTypes == accessTypes) {
+            return;
+        }
+
+        this.accessTypes.clear();
+
+        if (accessTypes != null) {
+            this.accessTypes.addAll(accessTypes);
+        }
     }
 
-    public List<String> getConditions() {
+    public List<Condition> getConditions() {
         return conditions;
     }
 
-    public void setConditions(List<String> conditions) {
-        this.conditions = conditions;
+    public void setConditions(List<Condition> conditions) {
+        if (this.conditions == null) {
+            this.conditions = new ArrayList<>();
+        }
+
+        if (this.conditions == conditions) {
+            return;
+        }
+
+        this.conditions.clear();
+
+        if (conditions != null) {
+            this.conditions.addAll(conditions);
+        }
     }
 
     @Override
@@ -99,5 +124,77 @@ public class RangerGrant implements java.io.Serializable {
                 ", accessTypes=" + accessTypes +
                 ", conditions=" + conditions +
                 '}';
+    }
+
+    @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Condition implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String       type;
+        private List<String> values;
+
+        public Condition() {
+            this(null, null);
+        }
+
+        public Condition(String type, List<String> values) {
+            setType(type);
+            setValues(values);
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public List<String> getValues() {
+            return values;
+        }
+
+        public void setValues(List<String> values) {
+            if (this.values == null) {
+                this.values = new ArrayList<>();
+            }
+
+            if (this.values == values) {
+                return;
+            }
+
+            this.values.clear();
+
+            if (values != null) {
+                this.values.addAll(values);
+            }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Condition that = (Condition) o;
+            return Objects.equals(type, that.type) && Objects.equals(values, that.values);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, values);
+        }
+
+        @Override
+        public String toString() {
+            return "Conditions{" +
+                    "type='" + type + '\'' +
+                    ", values=" + values +
+                    '}';
+        }
     }
 }

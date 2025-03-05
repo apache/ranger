@@ -17,145 +17,138 @@
  * under the License.
  */
 
- package org.apache.ranger.common;
+package org.apache.ranger.common;
 
 import java.io.Serializable;
 
 public class RequestContext implements Serializable {
-	private static final long serialVersionUID = -7083383106845193385L;
-	private String ipAddress = null;
-	private String userAgent = null;
-	private String requestURL = null;
-	private int deviceType = RangerCommonEnums.DEVICE_UNKNOWN;
-	private String serverRequestId = null;
-	private boolean isSync = true;
-	private long startTime = System.currentTimeMillis();
-	private int clientTimeOffsetInMinute = 0;
+    private static final long serialVersionUID = -7083383106845193385L;
 
-	/**
-	 * @return the ipAddress
-	 */
-	public String getIpAddress() {
-		return ipAddress;
-	}
+    private String  ipAddress;
+    private String  userAgent;
+    private String  requestURL;
+    private String  serverRequestId;
+    private int     deviceType               = RangerCommonEnums.DEVICE_UNKNOWN;
+    private boolean isSync                   = true;
+    private long    startTime                = System.currentTimeMillis();
+    private int     clientTimeOffsetInMinute;
 
-	/**
-	 * @param ipAddress
-	 *            the ipAddress to set
-	 */
-	public void setIpAddress(String ipAddress) {
-		this.ipAddress = ipAddress;
-	}
+    /**
+     * @return the ipAddress
+     */
+    public String getIpAddress() {
+        return ipAddress;
+    }
 
-	/**
-	 * @return the userAgent
-	 */
-	public String getUserAgent() {
-		return userAgent;
-	}
+    /**
+     * @param ipAddress the ipAddress to set
+     */
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
 
-	/**
-	 * @param userAgent
-	 *            the userAgent to set
-	 */
-	public void setUserAgent(String userAgent) {
-		this.userAgent = userAgent;
-	}
+    /**
+     * @return the userAgent
+     */
+    public String getUserAgent() {
+        return userAgent;
+    }
 
-	/**
-	 * @return the deviceType
-	 */
-	public int getDeviceType() {
-		return deviceType;
-	}
+    /**
+     * @param userAgent the userAgent to set
+     */
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
 
-	/**
-	 * @param deviceType
-	 *            the deviceType to set
-	 */
-	public void setDeviceType(int deviceType) {
-		this.deviceType = deviceType;
-	}
+    /**
+     * @return the deviceType
+     */
+    public int getDeviceType() {
+        return deviceType;
+    }
 
-	/**
-	 * @return the serverRequestId
-	 */
-	public String getServerRequestId() {
-		return serverRequestId;
-	}
+    /**
+     * @param deviceType the deviceType to set
+     */
+    public void setDeviceType(int deviceType) {
+        this.deviceType = deviceType;
+    }
 
-	/**
-	 * @param serverRequestId
-	 *            the serverRequestId to set
-	 */
-	public void setServerRequestId(String serverRequestId) {
-		this.serverRequestId = serverRequestId;
-	}
+    /**
+     * @return the serverRequestId
+     */
+    public String getServerRequestId() {
+        return serverRequestId;
+    }
 
-	/**
-	 * @return the isSync
-	 */
-	public boolean isSync() {
-		return isSync;
-	}
+    /**
+     * @param serverRequestId the serverRequestId to set
+     */
+    public void setServerRequestId(String serverRequestId) {
+        this.serverRequestId = serverRequestId;
+    }
 
-	/**
-	 * @param isSync
-	 *            the isSync to set
-	 */
-	public void setSync(boolean isSync) {
-		this.isSync = isSync;
-	}
+    /**
+     * @return the isSync
+     */
+    public boolean isSync() {
+        return isSync;
+    }
 
-	/**
-	 * @return the requestURL
-	 */
-	public String getRequestURL() {
-		return requestURL;
-	}
+    /**
+     * @param isSync the isSync to set
+     */
+    public void setSync(boolean isSync) {
+        this.isSync = isSync;
+    }
 
-	/**
-	 * @param requestURL
-	 *            the requestURL to set
-	 */
-	public void setRequestURL(String requestURL) {
-		this.requestURL = requestURL;
-	}
+    /**
+     * @return the requestURL
+     */
+    public String getRequestURL() {
+        return requestURL;
+    }
 
-	/**
-	 * @return the startTime
-	 */
-	public long getStartTime() {
-		return startTime;
-	}
+    /**
+     * @param requestURL the requestURL to set
+     */
+    public void setRequestURL(String requestURL) {
+        this.requestURL = requestURL;
+    }
 
-	/**
-	 * @param startTime
-	 *            the startTime to set
-	 */
-	public void setStartTime(long startTime) {
-		this.startTime = startTime;
-	}
+    /**
+     * @return the startTime
+     */
+    public long getStartTime() {
+        return startTime;
+    }
 
-	public int getClientTimeOffsetInMinute() {
-		return clientTimeOffsetInMinute;
-	}
+    /**
+     * @param startTime the startTime to set
+     */
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
 
-	public void setClientTimeOffsetInMinute(int clientTimeOffset) {
-		this.clientTimeOffsetInMinute = clientTimeOffset;
-	}
+    public int getClientTimeOffsetInMinute() {
+        return clientTimeOffsetInMinute;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "RequestContext [ipAddress=" + ipAddress + ", userAgent="
-				+ userAgent + ", requestURL=" + requestURL + ", deviceType="
-				+ deviceType + ", serverRequestId=" + serverRequestId
-				+ ", isSync=" + isSync + ", startTime=" + startTime + "]";
-	}
+    public void setClientTimeOffsetInMinute(int clientTimeOffset) {
+        this.clientTimeOffsetInMinute = clientTimeOffset;
+    }
 
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "RequestContext [ipAddress=" + ipAddress + ", userAgent="
+                + userAgent + ", requestURL=" + requestURL + ", deviceType="
+                + deviceType + ", serverRequestId=" + serverRequestId
+                + ", isSync=" + isSync + ", startTime=" + startTime + "]";
+    }
 }

@@ -22,7 +22,12 @@ package org.apache.ranger.plugin.policyengine.gds;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
@@ -39,7 +44,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GdsProjectEvaluator {
-    private static final Logger LOG = LoggerFactory.getLogger(GdsDatasetEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GdsProjectEvaluator.class);
 
     public static final GdsProjectEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsProjectEvalOrderComparator();
 
@@ -52,9 +57,9 @@ public class GdsProjectEvaluator {
     public GdsProjectEvaluator(ProjectInfo project, RangerServiceDef gdsServiceDef, RangerPolicyEngineOptions options) {
         LOG.debug("==> GdsProjectEvaluator({})", project);
 
-        this.project            = project;
-        this.gdsServiceDef      = gdsServiceDef;
-        this.name               = StringUtils.isBlank(project.getName()) ? StringUtils.EMPTY : project.getName();
+        this.project       = project;
+        this.gdsServiceDef = gdsServiceDef;
+        this.name          = StringUtils.isBlank(project.getName()) ? StringUtils.EMPTY : project.getName();
 
         if (project.getValiditySchedule() != null) {
             scheduleEvaluator = new RangerValidityScheduleEvaluator(project.getValiditySchedule());
@@ -159,7 +164,6 @@ public class GdsProjectEvaluator {
 
         return ret;
     }
-
 
     private static class GdsProjectAccessRequest extends RangerAccessRequestImpl {
         public GdsProjectAccessRequest(Long projectId, RangerServiceDef gdsServiceDef, RangerAccessRequest request) {

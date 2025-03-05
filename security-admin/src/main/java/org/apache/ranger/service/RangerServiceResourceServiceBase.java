@@ -19,11 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -38,58 +33,83 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public abstract class RangerServiceResourceServiceBase<T extends XXServiceResource, V extends RangerServiceResource> extends RangerBaseModelService<T, V> {
+    @Autowired
+    GUIDUtil guidUtil;
 
-	@Autowired
-	GUIDUtil guidUtil;
+    public PList<V> searchServiceResources(SearchFilter searchFilter) {
+        PList<V> retList       = new PList<>();
+        List<V>  resourceList  = new ArrayList<>();
+        List<T>  xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
+        for (T xResource : xResourceList) {
+            V taggedRes = populateViewBean(xResource);
 
-		xObj.setGuid(guid);
-		xObj.setVersion(vObj.getVersion());
-		xObj.setIsEnabled(vObj.getIsEnabled());
-		xObj.setResourceSignature(vObj.getResourceSignature());
+            resourceList.add(taggedRes);
+        }
 
-		XXService xService = daoMgr.getXXService().findByName(vObj.getServiceName());
-		if (xService == null) {
-			throw restErrorUtil.createRESTException("Error Populating XXServiceResource. No Service found with name: " + vObj.getServiceName(), MessageEnums.INVALID_INPUT_DATA);
-		}
+        retList.setList(resourceList);
+        retList.setResultSize(resourceList.size());
+        retList.setPageSize(searchFilter.getMaxRows());
+        retList.setStartIndex(searchFilter.getStartIndex());
+        retList.setSortType(searchFilter.getSortType());
+        retList.setSortBy(searchFilter.getSortBy());
 
-		xObj.setServiceId(xService.getId());
+        return retList;
+    }
 
-		return xObj;
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
+        String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T xObj) {
-		vObj.setGuid(xObj.getGuid());
-		vObj.setVersion(xObj.getVersion());
-		vObj.setIsEnabled(xObj.getIsEnabled());
-		vObj.setResourceSignature(xObj.getResourceSignature());
+        xObj.setGuid(guid);
+        xObj.setVersion(vObj.getVersion());
+        xObj.setIsEnabled(vObj.getIsEnabled());
+        xObj.setResourceSignature(vObj.getResourceSignature());
 
-		XXService xService = daoMgr.getXXService().getById(xObj.getServiceId());
+        XXService xService = daoMgr.getXXService().findByName(vObj.getServiceName());
 
-		vObj.setServiceName(xService.getName());
+        if (xService == null) {
+            throw restErrorUtil.createRESTException("Error Populating XXServiceResource. No Service found with name: " + vObj.getServiceName(), MessageEnums.INVALID_INPUT_DATA);
+        }
 
-		Map<String, RangerPolicy.RangerPolicyResource> resourceElements = getServiceResourceElements(xObj);
+        xObj.setServiceId(xService.getId());
 
-		vObj.setResourceElements(resourceElements);
+        return xObj;
+    }
 
-		return vObj;
-	}
+    @Override
+    protected V mapEntityToViewBean(V vObj, T xObj) {
+        vObj.setGuid(xObj.getGuid());
+        vObj.setVersion(xObj.getVersion());
+        vObj.setIsEnabled(xObj.getIsEnabled());
+        vObj.setResourceSignature(xObj.getResourceSignature());
 
-	Map<String, RangerPolicyResource> getServiceResourceElements(T xObj) {
-        List<XXServiceResourceElement> resElementList = daoMgr.getXXServiceResourceElement().findByResourceId(xObj.getId());
-        Map<String, RangerPolicy.RangerPolicyResource> resourceElements = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+        XXService xService = daoMgr.getXXService().getById(xObj.getServiceId());
+
+        vObj.setServiceName(xService.getName());
+
+        Map<String, RangerPolicy.RangerPolicyResource> resourceElements = getServiceResourceElements(xObj);
+
+        vObj.setResourceElements(resourceElements);
+
+        return vObj;
+    }
+
+    Map<String, RangerPolicyResource> getServiceResourceElements(T xObj) {
+        List<XXServiceResourceElement>                 resElementList   = daoMgr.getXXServiceResourceElement().findByResourceId(xObj.getId());
+        Map<String, RangerPolicy.RangerPolicyResource> resourceElements = new HashMap<>();
 
         for (XXServiceResourceElement resElement : resElementList) {
-            List<String> resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
+            List<String>         resValueMapList = daoMgr.getXXServiceResourceElementValue().findValuesByResElementId(resElement.getId());
+            XXResourceDef        xResDef         = daoMgr.getXXResourceDef().getById(resElement.getResDefId());
+            RangerPolicyResource policyRes       = new RangerPolicyResource();
 
-            XXResourceDef xResDef = daoMgr.getXXResourceDef().getById(resElement.getResDefId());
-
-            RangerPolicyResource policyRes = new RangerPolicyResource();
             policyRes.setIsExcludes(resElement.getIsExcludes());
             policyRes.setIsRecursive(resElement.getIsRecursive());
             policyRes.setValues(resValueMapList);
@@ -98,25 +118,4 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
         }
         return resourceElements;
     }
-
-	public PList<V> searchServiceResources(SearchFilter searchFilter) {
-		PList<V> retList = new PList<V>();
-		List<V> resourceList = new ArrayList<V>();
-
-		List<T> xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
-
-		for (T xResource : xResourceList) {
-			V taggedRes = populateViewBean(xResource);
-			resourceList.add(taggedRes);
-		}
-		retList.setList(resourceList);
-		retList.setResultSize(resourceList.size());
-		retList.setPageSize(searchFilter.getMaxRows());
-		retList.setStartIndex(searchFilter.getStartIndex());
-		retList.setSortType(searchFilter.getSortType());
-		retList.setSortBy(searchFilter.getSortBy());
-
-		return retList;
-	}
-
 }

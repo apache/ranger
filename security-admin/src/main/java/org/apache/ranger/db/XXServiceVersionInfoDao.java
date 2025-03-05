@@ -17,10 +17,6 @@
 
 package org.apache.ranger.db;
 
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.db.BaseDao;
@@ -30,137 +26,148 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.List;
+
 /**
+ *
  */
 @Service
 public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
+    private static final Logger LOG = LoggerFactory.getLogger(XXServiceVersionInfoDao.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(XXServiceVersionInfoDao.class);
+    /**
+     * Default Constructor
+     */
+    public XXServiceVersionInfoDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	/**
-	 * Default Constructor
-	 */
-	public XXServiceVersionInfoDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXServiceVersionInfo findByServiceName(String serviceName) {
+        if (serviceName == null) {
+            return null;
+        }
 
-	public XXServiceVersionInfo findByServiceName(String serviceName) {
-		if (serviceName == null) {
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXServiceVersionInfo.findByServiceName", tClass)
-					.setParameter("serviceName", serviceName).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXServiceVersionInfo.findByServiceName", tClass)
+                    .setParameter("serviceName", serviceName).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	public XXServiceVersionInfo findByServiceId(Long serviceId) {
-		if (serviceId == null) {
-			return null;
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceId", tClass)
-					.setParameter("serviceId", serviceId).getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+    public XXServiceVersionInfo findByServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return null;
+        }
 
-	@SuppressWarnings("unchecked")
-	public List<Object[]> getAllWithServiceNames(){
-		return getEntityManager()
-				.createNamedQuery("XXServiceVersionInfo.getAllWithServiceNames")
-				.getResultList();
-	}
+        try {
+            return getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceId", tClass)
+                    .setParameter("serviceId", serviceId).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 
-	public void updateServiceVersionInfoForTagResourceMapCreate(Long resourceId, Long tagId) {
-		if (resourceId == null || tagId == null) {
-			LOG.warn("Unexpected null value for resourceId and/or tagId");
-			return;
-		}
+    public List<Object[]> getAllWithServiceNames() {
+        return getEntityManager()
+                .createNamedQuery("XXServiceVersionInfo.getAllWithServiceNames", Object[].class)
+                .getResultList();
+    }
 
-		try {
-			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
+    public void updateServiceVersionInfoForTagResourceMapCreate(Long resourceId, Long tagId) {
+        if (resourceId == null || tagId == null) {
+            LOG.warn("Unexpected null value for resourceId and/or tagId");
 
-			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
-		} catch (NoResultException e) {
-		}
-	}
+            return;
+        }
 
-	public void updateServiceVersionInfoForTagResourceMapDelete(Long resourceId, Long tagId) {
-		if (resourceId == null || tagId == null) {
-			LOG.warn("Unexpected null value for resourceId and/or tagId");
-			return;
-		}
+        try {
+            List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
 
-		try {
-			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
+            updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
+        } catch (NoResultException e) {
+            // ignore
+        }
+    }
 
-			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
-		} catch (NoResultException e) {
-		}
-	}
-	public void updateServiceVersionInfoForServiceResourceUpdate(Long resourceId) {
-		if (resourceId == null) {
-			LOG.warn("Unexpected null value for resourceId");
-			return;
-		}
+    public void updateServiceVersionInfoForTagResourceMapDelete(Long resourceId, Long tagId) {
+        if (resourceId == null || tagId == null) {
+            LOG.warn("Unexpected null value for resourceId and/or tagId");
 
-		Long tagId = null;
+            return;
+        }
 
-		try {
-			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
+        try {
+            List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
 
-			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
-		} catch (NoResultException e) {
-		}
-	}
+            updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
+        } catch (NoResultException e) {
+            // ignore
+        }
+    }
 
-	public void updateServiceVersionInfoForTagUpdate(Long tagId) {
-		if (tagId == null) {
-			LOG.warn("Unexpected null value for tagId");
-			return;
-		}
+    public void updateServiceVersionInfoForServiceResourceUpdate(Long resourceId) {
+        if (resourceId == null) {
+            LOG.warn("Unexpected null value for resourceId");
 
-		Long resourceId = null;
-		try {
-			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByTagId", tClass).setParameter("tagId", tagId).getResultList();
+            return;
+        }
 
-			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
-		} catch (NoResultException e) {
-		}
-	}
+        Long tagId = null;
 
-	private void updateTagVersionAndTagUpdateTime(List<XXServiceVersionInfo> serviceVersionInfos, Long resourceId, Long tagId) {
+        try {
+            List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
 
-		if (resourceId != null || tagId != null) {
-			if (CollectionUtils.isNotEmpty(serviceVersionInfos)) {
+            updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
+        } catch (NoResultException e) {
+            // ignore
+        }
+    }
 
-				final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
-				final ServiceTags.TagsChangeType tagChangeType;
+    public void updateServiceVersionInfoForTagUpdate(Long tagId) {
+        if (tagId == null) {
+            LOG.warn("Unexpected null value for tagId");
 
-				if (tagId == null) {
-					tagChangeType = ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE;
-				} else if (resourceId == null) {
-					tagChangeType = ServiceTags.TagsChangeType.TAG_UPDATE;
-				} else {
-					tagChangeType = ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE;
-				}
+            return;
+        }
 
-				for (XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
+        Long resourceId = null;
 
-					final Long serviceId = serviceVersionInfo.getServiceId();
-					final Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, serviceId, versionType, tagChangeType, resourceId, tagId);
+        try {
+            List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByTagId", tClass).setParameter("tagId", tagId).getResultList();
 
-					daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
-				}
-			}
-		} else {
-			LOG.warn("Both resourceId and tagId are null! Should not have come here!");
-		}
+            updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
+        } catch (NoResultException e) {
+            // ignore
+        }
+    }
 
-	}
+    private void updateTagVersionAndTagUpdateTime(List<XXServiceVersionInfo> serviceVersionInfos, Long resourceId, Long tagId) {
+        if (resourceId != null || tagId != null) {
+            if (CollectionUtils.isNotEmpty(serviceVersionInfos)) {
+                final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
+                final ServiceTags.TagsChangeType  tagChangeType;
+
+                if (tagId == null) {
+                    tagChangeType = ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE;
+                } else if (resourceId == null) {
+                    tagChangeType = ServiceTags.TagsChangeType.TAG_UPDATE;
+                } else {
+                    tagChangeType = ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE;
+                }
+
+                for (XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
+                    final Long     serviceId             = serviceVersionInfo.getServiceId();
+                    final Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, serviceId, versionType, tagChangeType, resourceId, tagId);
+
+                    daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+                }
+            }
+        } else {
+            LOG.warn("Both resourceId and tagId are null! Should not have come here!");
+        }
+    }
 }

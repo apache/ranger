@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 public class RangerValidityScheduleConditionEvaluator extends RangerAbstractConditionEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(RangerValidityScheduleConditionEvaluator.class);
 
@@ -38,9 +37,7 @@ public class RangerValidityScheduleConditionEvaluator extends RangerAbstractCond
 
     @Override
     public void init() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerValidityScheduleConditionEvaluator.init({})", condition);
-        }
+        LOG.debug("==> RangerValidityScheduleConditionEvaluator.init({})", condition);
 
         super.init();
 
@@ -57,20 +54,15 @@ public class RangerValidityScheduleConditionEvaluator extends RangerAbstractCond
                 } catch (Exception excp) {
                     LOG.error("RangerValidityScheduleConditionEvaluator.init({}): failed to initialize schedule {}", condition, scheduleStr, excp);
                 }
-
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerValidityScheduleConditionEvaluator.init({}): evaluator={}", condition, evaluators);
-        }
+        LOG.debug("<== RangerValidityScheduleConditionEvaluator.init({}): evaluator={}", condition, evaluators);
     }
 
     @Override
     public boolean isMatched(RangerAccessRequest request) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerValidityScheduleConditionEvaluator.isMatched({})", request);
-        }
+        LOG.debug("==> RangerValidityScheduleConditionEvaluator.isMatched({})", request);
 
         final boolean ret;
 
@@ -82,9 +74,7 @@ public class RangerValidityScheduleConditionEvaluator extends RangerAbstractCond
             ret = evaluators.stream().filter(evaluator -> evaluator.isApplicable(accessTime)).findFirst().orElse(null) != null;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerValidityScheduleConditionEvaluator.isMatched({}): condition={}, ret={}", request, condition, ret);
-        }
+        LOG.debug("<== RangerValidityScheduleConditionEvaluator.isMatched({}): condition={}, ret={}", request, condition, ret);
 
         return ret;
     }

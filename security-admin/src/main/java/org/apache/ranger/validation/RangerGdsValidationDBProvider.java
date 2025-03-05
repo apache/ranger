@@ -25,7 +25,14 @@ import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RangerRoleCache;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.entity.XXGdsDataShare;
+import org.apache.ranger.entity.XXGdsDataset;
+import org.apache.ranger.entity.XXGdsProject;
+import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXRole;
+import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
@@ -47,8 +54,8 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_ROLE;
 
@@ -86,7 +93,6 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
     RangerBizUtil bizUtil;
 
     RangerRolesUtil rolesUtil;
-
 
     public RangerGdsValidationDBProvider() {
     }
@@ -152,7 +158,6 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
         RangerService service  = xService != null ? svcService.getPopulatedViewObject(xService) : null;
 
         return service != null && bizUtil.isUserServiceAdmin(service, bizUtil.getCurrentUserLoginId());
-
     }
 
     public boolean isZoneAdmin(String zoneName) {
@@ -201,9 +206,8 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
 
     public Set<String> getMaskTypes(String serviceName) {
         List<String> maskTypes = daoMgr.getXXDataMaskTypeDef().getNamesByServiceName(serviceName);
-        Set<String>  ret       = new HashSet<>(maskTypes);
 
-        return ret;
+        return new HashSet<>(maskTypes);
     }
 
     public RangerDataset getDataset(Long id) {
@@ -253,15 +257,11 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
     }
 
     public Long getSharedResourceId(Long dataShareId, String name) {
-        Long ret = daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndName(dataShareId, name);
-
-        return ret;
+        return daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndName(dataShareId, name);
     }
 
     public Long getSharedResourceId(Long dataShareId, RangerPolicyResourceSignature signature) {
-		Long ret = daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndResourceSignature(dataShareId, signature.getSignature());
-
-		return ret;
+        return daoMgr.getXXGdsSharedResource().getIdByDataShareIdAndResourceSignature(dataShareId, signature.getSignature());
     }
 
     private RangerRolesUtil initGetRolesUtil() {
@@ -279,7 +279,8 @@ public class RangerGdsValidationDBProvider extends RangerGdsValidationDataProvid
                         RangerRoles roles = RangerRoleCache.getInstance().getLatestRangerRoleOrCached(SERVICE_NAME_FOR_ROLES, rolesStore, lastKnownVersion, currentVersion);
 
                         if (roles != null) {
-                            this.rolesUtil = ret = new RangerRolesUtil(roles);
+                            ret = new RangerRolesUtil(roles);
+                            this.rolesUtil = new RangerRolesUtil(roles);
                         }
                     } catch (Exception excp) {
                         LOG.warn("failed to get roles from store", excp);

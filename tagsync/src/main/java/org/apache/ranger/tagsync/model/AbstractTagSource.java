@@ -25,61 +25,56 @@ import org.apache.ranger.tagsync.process.TagSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract  class AbstractTagSource implements TagSource {
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractTagSource.class);
-	private TagSink tagSink;
-	private String name;
+public abstract class AbstractTagSource implements TagSource {
+    private static final Logger  LOG = LoggerFactory.getLogger(AbstractTagSource.class);
+    private              TagSink tagSink;
+    private              String  name;
 
-	@Override
-	public void setTagSink(TagSink sink) {
-		if (sink == null) {
-			LOG.error("Sink is null!!!");
-		} else {
-			this.tagSink = sink;
-		}
-	}
+    @Override
+    public void setTagSink(TagSink sink) {
+        if (sink == null) {
+            LOG.error("Sink is null!!!");
+        } else {
+            this.tagSink = sink;
+        }
+    }
 
-	@Override
-	public void setName(String name) {
-		this.name = name;
-	}
+    @Override
+    public String getName() {
+        return name;
+    }
 
-	@Override
-	public String getName() {
-		return name;
-	}
+    @Override
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	@Override
-	public String toString( ) {
-		return this.name;
-	}
+    @Override
+    public String toString() {
+        return this.name;
+    }
 
-	protected void updateSink(final ServiceTags toUpload) throws Exception {
-		try {
-			if (toUpload == null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No ServiceTags to upload");
-				}
-			} else {
-				if (!TagSyncConfig.isTagSyncServiceActive()) {
-					LOG.error("This TagSync server is not in active state. Cannot commit transaction!");
-					throw new RuntimeException("This TagSync server is not in active state. Cannot commit transaction!");
-				}
-				if (LOG.isDebugEnabled()) {
-					String toUploadJSON = JsonUtils.objectToJson(toUpload);
-					LOG.debug("Uploading serviceTags=" + toUploadJSON);
-				}
-				ServiceTags uploaded = tagSink.upload(toUpload);
-				if (LOG.isDebugEnabled()) {
-					String uploadedJSON = JsonUtils.objectToJson(uploaded);
-					LOG.debug("Uploaded serviceTags=" + uploadedJSON);
-				}
-			}
-		} catch (Exception exception) {
-				LOG.error("Failed to upload serviceTags: " + JsonUtils.objectToJson(toUpload));
-				LOG.error("Exception : ", exception);
-				throw exception;
-			}
-	}
-
+    protected void updateSink(final ServiceTags toUpload) throws Exception {
+        try {
+            if (toUpload == null) {
+                LOG.debug("No ServiceTags to upload");
+            } else {
+                if (!TagSyncConfig.isTagSyncServiceActive()) {
+                    LOG.error("This TagSync server is not in active state. Cannot commit transaction!");
+                    throw new RuntimeException("This TagSync server is not in active state. Cannot commit transaction!");
+                }
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Uploading serviceTags={}", JsonUtils.objectToJson(toUpload));
+                }
+                ServiceTags uploaded = tagSink.upload(toUpload);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Uploaded serviceTags={}", JsonUtils.objectToJson(uploaded));
+                }
+            }
+        } catch (Exception exception) {
+            LOG.error("Failed to upload serviceTags: {}", JsonUtils.objectToJson(toUpload));
+            LOG.error("Exception : ", exception);
+            throw exception;
+        }
+    }
 }

@@ -66,8 +66,10 @@ get_prop_or_default() {
 }
 
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
+
 DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
 SQL_CONNECTOR_JAR=$(get_prop 'SQL_CONNECTOR_JAR' $PROPFILE)
+CONNECTION_STRING_ADDITIONAL_PARAMS=$(get_prop 'CONNECTION_STRING_ADDITIONAL_PARAMS' $PROPFILE)
 db_root_user=$(get_prop 'db_root_user' $PROPFILE)
 db_root_password=$(get_prop 'db_root_password' $PROPFILE)
 db_host=$(get_prop 'db_host' $PROPFILE)
@@ -605,7 +607,12 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "MSSQL" ]
 	then
 		propertyName=ranger.ks.jpa.jdbc.url
-		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+    		if [ "${CONNECTION_STRING_ADDITIONAL_PARAMS}" != "" ]
+      		then
+			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};${CONNECTION_STRING_ADDITIONAL_PARAMS}"
+   		else
+     			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+		fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 		propertyName=ranger.ks.jpa.jdbc.dialect

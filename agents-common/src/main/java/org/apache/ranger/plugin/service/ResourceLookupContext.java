@@ -19,66 +19,69 @@
 
 package org.apache.ranger.plugin.service;
 
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+import java.util.List;
+import java.util.Map;
+
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceLookupContext {
-	private String                    userInput;
-	private String                    resourceName;
-	private Map<String, List<String>> resources;
+    private String                    userInput;
+    private String                    resourceName;
+    private Map<String, List<String>> resources;
 
+    public ResourceLookupContext() {
+    }
 
-	public ResourceLookupContext() {
-		
-	}
+    /**
+     * @return the userInput
+     */
+    public String getUserInput() {
+        return userInput;
+    }
 
-	/**
-	 * @return the userInput
-	 */
-	public String getUserInput() {
-		return userInput;
-	}
-	/**
-	 * @param userInput the userInput to set
-	 */
-	public void setUserInput(String userInput) {
-		this.userInput = userInput;
-	}
-	/**
-	 * @return the resourceName
-	 */
-	public String getResourceName() {
-		return resourceName;
-	}
-	/**
-	 * @param resourceName the resourceName to set
-	 */
-	public void setResourceName(String resourceName) {
-		this.resourceName = resourceName;
-	}
-	/**
-	 * @return the resources
-	 */
-	public Map<String, List<String>> getResources() {
-		return resources;
-	}
-	/**
-	 * @param resources the resources to set
-	 */
-	public void setResources(Map<String, List<String>> resources) {
-		this.resources = resources;
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("ResourceLookupContext={resourceName=%s,userInput=%s,resources=%s}", resourceName, userInput, resources);
-	}
+    /**
+     * @param userInput the userInput to set
+     */
+    public void setUserInput(String userInput) {
+        this.userInput = userInput;
+    }
+
+    /**
+     * @return the resourceName
+     */
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    /**
+     * @param resourceName the resourceName to set
+     */
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    /**
+     * @return the resources
+     */
+    public Map<String, List<String>> getResources() {
+        return resources;
+    }
+
+    /**
+     * @param resources the resources to set
+     */
+    public void setResources(Map<String, List<String>> resources) {
+        this.resources = resources;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("ResourceLookupContext={resourceName=%s,userInput=%s,resources=%s}", resourceName, userInput, resources);
+    }
 }

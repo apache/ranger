@@ -27,77 +27,77 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.Collections;
 import java.util.List;
 
-
 @Service
 public class XXGdsDatasetInProjectDao extends BaseDao<XXGdsDatasetInProject> {
-	private static final Logger LOG = LoggerFactory.getLogger(XXGdsDatasetInProjectDao.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XXGdsDatasetInProjectDao.class);
 
-	public XXGdsDatasetInProjectDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXGdsDatasetInProjectDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXGdsDatasetInProject findByGuid(String guid) {
-		XXGdsDatasetInProject ret = null;
+    public XXGdsDatasetInProject findByGuid(String guid) {
+        XXGdsDatasetInProject ret = null;
 
-		if (StringUtils.isNotBlank(guid)) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByGuid", tClass)
-						                .setParameter("guid", guid).getSingleResult();
-			} catch (NoResultException e) {
-				LOG.debug("findByGuid({}): ", guid, e);
-			}
-		}
+        if (StringUtils.isNotBlank(guid)) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByGuid", tClass)
+                        .setParameter("guid", guid).getSingleResult();
+            } catch (NoResultException e) {
+                LOG.debug("findByGuid({}): ", guid, e);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public XXGdsDatasetInProject findByDatasetIdAndProjectId(Long datasetId, Long projectId) {
-		XXGdsDatasetInProject ret = null;
+    public XXGdsDatasetInProject findByDatasetIdAndProjectId(Long datasetId, Long projectId) {
+        XXGdsDatasetInProject ret = null;
 
-		if (datasetId != null && projectId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByDatasetIdAndProjectId", tClass)
-						                .setParameter("datasetId", datasetId)
-						                .setParameter("projectId", projectId)
-						                .getSingleResult();
-			} catch (NoResultException e) {
-				LOG.debug("findByDatasetIdAndProjectId({}): ", datasetId, e);
-			}
-		}
+        if (datasetId != null && projectId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByDatasetIdAndProjectId", tClass)
+                        .setParameter("datasetId", datasetId)
+                        .setParameter("projectId", projectId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                LOG.debug("findByDatasetIdAndProjectId({}): ", datasetId, e);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<XXGdsDatasetInProject> findByDatasetId(Long datasetId) {
-		List<XXGdsDatasetInProject> ret = null;
+    public List<XXGdsDatasetInProject> findByDatasetId(Long datasetId) {
+        List<XXGdsDatasetInProject> ret = null;
 
-		if (datasetId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByDatasetId", tClass)
-						                .setParameter("datasetId", datasetId).getResultList();
-			} catch (NoResultException e) {
-				LOG.debug("findByDatasetId({}): ", datasetId, e);
-			}
-		}
+        if (datasetId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByDatasetId", tClass)
+                        .setParameter("datasetId", datasetId).getResultList();
+            } catch (NoResultException e) {
+                LOG.debug("findByDatasetId({}): ", datasetId, e);
+            }
+        }
 
-		return ret != null ? ret : Collections.emptyList();
-	}
+        return ret != null ? ret : Collections.emptyList();
+    }
 
-	public List<XXGdsDatasetInProject> findByProjectId(Long projectId) {
-		List<XXGdsDatasetInProject> ret = null;
+    public List<XXGdsDatasetInProject> findByProjectId(Long projectId) {
+        List<XXGdsDatasetInProject> ret = null;
 
-		if (projectId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByProjectId", tClass)
-						                .setParameter("projectId", projectId).getResultList();
-			} catch (NoResultException e) {
-				LOG.debug("findByProjectId({}): ", projectId, e);
-			}
-		}
+        if (projectId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetInProject.findByProjectId", tClass)
+                        .setParameter("projectId", projectId).getResultList();
+            } catch (NoResultException e) {
+                LOG.debug("findByProjectId({}): ", projectId, e);
+            }
+        }
 
-		return ret != null ? ret : Collections.emptyList();
-	}
+        return ret != null ? ret : Collections.emptyList();
+    }
 }

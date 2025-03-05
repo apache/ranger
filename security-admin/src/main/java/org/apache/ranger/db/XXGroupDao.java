@@ -19,12 +19,6 @@
 
 package org.apache.ranger.db;
 
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -37,113 +31,116 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__IS_INTERNAL;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__SYNC_SOURCE;
 
 @Service
 public class XXGroupDao extends BaseDao<XXGroup> {
-	private static final Logger logger = LoggerFactory.getLogger(XXGroupDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(XXGroupDao.class);
 
-	public XXGroupDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXGroupDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	@SuppressWarnings("unchecked")
-	public List<XXGroup> findByUserId(Long userId) {
-		if (userId == null) {
-			return new ArrayList<XXGroup>();
-		}
+    public List<XXGroup> findByUserId(Long userId) {
+        if (userId == null) {
+            return new ArrayList<>();
+        }
 
-		List<XXGroup> groupList = (List<XXGroup>) getEntityManager()
-				.createNamedQuery("XXGroup.findByUserId")
-				.setParameter("userId", userId).getResultList();
+        List<XXGroup> groupList = (List<XXGroup>) getEntityManager()
+                .createNamedQuery("XXGroup.findByUserId", tClass)
+                .setParameter("userId", userId).getResultList();
 
-		if (groupList == null) {
-			groupList = new ArrayList<XXGroup>();
-		}
+        if (groupList == null) {
+            groupList = new ArrayList<>();
+        }
 
-		return groupList;
-	}
+        return groupList;
+    }
 
-	public XXGroup findByGroupName(String groupName) {
-		if (groupName == null) {
-			return null;
-		}
-		try {
+    public XXGroup findByGroupName(String groupName) {
+        if (groupName == null) {
+            return null;
+        }
 
-			return (XXGroup) getEntityManager()
-					.createNamedQuery("XXGroup.findByGroupName")
-					.setParameter("name", groupName)
-					.getSingleResult();
-		} catch (Exception e) {
+        try {
+            return (XXGroup) getEntityManager()
+                    .createNamedQuery("XXGroup.findByGroupName")
+                    .setParameter("name", groupName)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-		}
-		return null;
-	}
+    public Map<Long, String> getAllGroupIdNames() {
+        Map<Long, String> groups = new HashMap<>();
 
-	public Map<Long, String> getAllGroupIdNames() {
-		Map<Long, String> groups = new HashMap<Long, String>();
-		try {
-			List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXGroup.getAllGroupIdNames").getResultList();
-			if (rows != null) {
-				for (Object[] row : rows) {
-					groups.put((Long)row[0], (String)row[1]);
-				}
-			}
-		} catch (Exception ex) {
-		}
-		return groups;
-	}
+        try {
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXGroup.getAllGroupIdNames", Object[].class).getResultList();
 
+            if (rows != null) {
+                for (Object[] row : rows) {
+                    groups.put((Long) row[0], (String) row[1]);
+                }
+            }
+        } catch (Exception ex) {
+            return new HashMap<>();
+        }
 
-	public List<GroupInfo> getAllGroupsInfo() {
-		List<GroupInfo> ret = new ArrayList<>();
+        return groups;
+    }
 
-		try {
-			List<Object[]> rows = getEntityManager().createNamedQuery("XXGroup.getAllGroupsInfo", Object[].class).getResultList();
+    public List<GroupInfo> getAllGroupsInfo() {
+        List<GroupInfo> ret = new ArrayList<>();
 
-			if (rows != null) {
-				for (Object[] row : rows) {
+        try {
+            List<Object[]> rows = getEntityManager().createNamedQuery("XXGroup.getAllGroupsInfo", Object[].class).getResultList();
 
-					ret.add(toGroupInfo(row));
-				}
-			}
-		} catch (NoResultException excp) {
-			if (logger.isDebugEnabled()) {
-				logger.debug(excp.getMessage());
-			}
-		}
+            if (rows != null) {
+                for (Object[] row : rows) {
+                    ret.add(toGroupInfo(row));
+                }
+            }
+        } catch (NoResultException excp) {
+            logger.debug(excp.getMessage());
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private GroupInfo toGroupInfo(Object[] row) {
-		String              name        = (String) row[0];
-		String              description = (String) row[1];
-		String              attributes  = (String) row[2];
-		String              syncSource  = (String) row[3];
-		Number              groupSource = (Number) row[4];
-		Boolean             isInternal  = groupSource != null && groupSource.equals(RangerCommonEnums.GROUP_INTERNAL);
-		Map<String, String> attrMap     = null;
+    private GroupInfo toGroupInfo(Object[] row) {
+        String              name        = (String) row[0];
+        String              description = (String) row[1];
+        String              attributes  = (String) row[2];
+        String              syncSource  = (String) row[3];
+        Number              groupSource = (Number) row[4];
+        boolean             isInternal  = groupSource != null && groupSource.equals(RangerCommonEnums.GROUP_INTERNAL);
+        Map<String, String> attrMap     = null;
 
-		if (StringUtils.isNotBlank(attributes)) {
-			try {
+        if (StringUtils.isNotBlank(attributes)) {
+            try {
                 attrMap = JsonUtils.jsonToMapStringString(attributes);
-			} catch (Exception excp) {
-				// ignore
-			}
-		}
+            } catch (Exception excp) {
+                // ignore
+            }
+        }
 
-		if (attrMap == null) {
-			attrMap = new HashMap<>();
-		}
+        if (attrMap == null) {
+            attrMap = new HashMap<>();
+        }
 
-		if (StringUtils.isNotBlank(syncSource)) {
-			attrMap.put(SCRIPT_FIELD__SYNC_SOURCE, syncSource);
-		}
+        if (StringUtils.isNotBlank(syncSource)) {
+            attrMap.put(SCRIPT_FIELD__SYNC_SOURCE, syncSource);
+        }
 
-		attrMap.put(SCRIPT_FIELD__IS_INTERNAL, isInternal.toString());
+        attrMap.put(SCRIPT_FIELD__IS_INTERNAL, Boolean.toString(isInternal));
 
-		return new GroupInfo(name, description, attrMap);
-	}
+        return new GroupInfo(name, description, attrMap);
+    }
 }

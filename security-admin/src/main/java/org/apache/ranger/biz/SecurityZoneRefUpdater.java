@@ -19,10 +19,6 @@
 
 package org.apache.ranger.biz;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
@@ -60,246 +56,237 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 @Component
 public class SecurityZoneRefUpdater {
-	private static final Logger LOG = LoggerFactory.getLogger(SecurityZoneRefUpdater.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityZoneRefUpdater.class);
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	RangerAuditFields<?> rangerAuditFields;
+    @Autowired
+    RangerAuditFields<?> rangerAuditFields;
 
-	@Autowired
-	RangerServiceService svcService;
+    @Autowired
+    RangerServiceService svcService;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	ServiceDBStore svcStore;
+    @Autowired
+    ServiceDBStore svcStore;
 
-	@Autowired
-	RangerPolicyService policyService;
+    @Autowired
+    RangerPolicyService policyService;
 
-	public void createNewZoneMappingForRefTable(RangerSecurityZone rangerSecurityZone) throws Exception {
+    public void createNewZoneMappingForRefTable(RangerSecurityZone rangerSecurityZone) {
+        if (rangerSecurityZone == null) {
+            return;
+        }
 
-		if(rangerSecurityZone == null) {
-			return;
-		}
+        cleanupRefTables(rangerSecurityZone);
 
-		cleanupRefTables(rangerSecurityZone);
+        final Long                                   zoneId       = rangerSecurityZone.getId();
+        final Map<String, RangerSecurityZoneService> zoneServices = rangerSecurityZone.getServices();
 
-		final Long zoneId = rangerSecurityZone == null ? null : rangerSecurityZone.getId();
-		final Map<String, RangerSecurityZoneService> zoneServices = rangerSecurityZone.getServices();
+        final Set<String> users       = new HashSet<>(rangerSecurityZone.getAdminUsers());
+        final Set<String> userGroups  = new HashSet<>(rangerSecurityZone.getAdminUserGroups());
+        final Set<String> roles       = new HashSet<>(rangerSecurityZone.getAdminRoles());
+        final Set<String> tagServices = new HashSet<>(rangerSecurityZone.getTagServices());
 
-		final Set<String> users = new HashSet<>();
-		final Set<String> userGroups = new HashSet<>();
-		final Set<String> roles = new HashSet<>();
-		final Set<String> tagServices = new HashSet<>();
+        users.addAll(rangerSecurityZone.getAuditUsers());
+        userGroups.addAll(rangerSecurityZone.getAuditUserGroups());
+        roles.addAll(rangerSecurityZone.getAuditRoles());
 
-		users.addAll(rangerSecurityZone.getAdminUsers());
-		userGroups.addAll(rangerSecurityZone.getAdminUserGroups());
-		roles.addAll(rangerSecurityZone.getAdminRoles());
-		users.addAll(rangerSecurityZone.getAuditUsers());
-		userGroups.addAll(rangerSecurityZone.getAuditUserGroups());
-		roles.addAll(rangerSecurityZone.getAuditRoles());
-		tagServices.addAll(rangerSecurityZone.getTagServices());
+        for (Map.Entry<String, RangerSecurityZoneService> service : zoneServices.entrySet()) {
+            String serviceName = service.getKey();
 
-		for(Map.Entry<String, RangerSecurityZoneService> service : zoneServices.entrySet()) {
-			String serviceName = service.getKey();
+            if (StringUtils.isBlank(serviceName)) {
+                continue;
+            }
 
-			if (StringUtils.isBlank(serviceName)) {
-				continue;
-			}
+            XXService                xService     = daoMgr.getXXService().findByName(serviceName);
+            RangerService            rService     = svcService.getPopulatedViewObject(xService);
+            XXServiceDef             xServiceDef  = daoMgr.getXXServiceDef().findByName(rService.getType());
+            XXSecurityZoneRefService xZoneService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefService());
 
-			XXService xService = daoMgr.getXXService().findByName(serviceName);
-			RangerService rService = svcService.getPopulatedViewObject(xService);
-			XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(rService.getType());
-			XXSecurityZoneRefService xZoneService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefService());
+            xZoneService.setZoneId(zoneId);
+            xZoneService.setServiceId(xService.getId());
+            xZoneService.setServiceName(serviceName);
 
-			xZoneService.setZoneId(zoneId);
-			xZoneService.setServiceId(xService.getId());
-			xZoneService.setServiceName(serviceName);
+            daoMgr.getXXSecurityZoneRefService().create(xZoneService);
 
-			daoMgr.getXXSecurityZoneRefService().create(xZoneService);
+            Set<String> resourceDefNames = new HashSet<>();
 
-			Set<String> resourceDefNames = new HashSet<>();
+            for (Map<String, List<String>> resourceMap : service.getValue().getResources()) { //add all resourcedefs in pre defined set
+                for (Map.Entry<String, List<String>> resource : resourceMap.entrySet()) {
+                    String resourceName = resource.getKey();
 
-			for(Map<String, List<String>> resourceMap:service.getValue().getResources()){//add all resourcedefs in pre defined set
-				for(Map.Entry<String, List<String>> resource : resourceMap.entrySet()) {
-					String resourceName = resource.getKey();
-					if (StringUtils.isBlank(resourceName)) {
-						continue;
-					}
+                    if (StringUtils.isBlank(resourceName)) {
+                        continue;
+                    }
 
-					resourceDefNames.add(resourceName);
-				}
-			}
+                    resourceDefNames.add(resourceName);
+                }
+            }
 
-			for (String resourceName : resourceDefNames) {
-				XXResourceDef xResourceDef = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
+            for (String resourceName : resourceDefNames) {
+                XXResourceDef             xResourceDef  = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
+                XXSecurityZoneRefResource xZoneResource = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefResource());
 
-				XXSecurityZoneRefResource xZoneResource = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefResource());
+                xZoneResource.setZoneId(zoneId);
+                xZoneResource.setResourceDefId(xResourceDef.getId());
+                xZoneResource.setResourceName(resourceName);
 
-				xZoneResource.setZoneId(zoneId);
-				xZoneResource.setResourceDefId(xResourceDef.getId());
-				xZoneResource.setResourceName(resourceName);
+                daoMgr.getXXSecurityZoneRefResource().create(xZoneResource);
+            }
+        }
 
-				daoMgr.getXXSecurityZoneRefResource().create(xZoneResource);
-			}
-		}
-
-                if(CollectionUtils.isNotEmpty(tagServices)) {
-                        for(String tagService : tagServices) {
-
-                                if (StringUtils.isBlank(tagService)) {
-                                        continue;
-                                }
-
-                                XXService xService = daoMgr.getXXService().findByName(tagService);
-                                if (xService == null || xService.getType() != RangerConstants.TAG_SERVICE_TYPE) {
-                                        throw restErrorUtil.createRESTException("Tag Service named: " + tagService + " does not exist ",
-                                                        MessageEnums.INVALID_INPUT_DATA);
-                                }
-
-                                XXSecurityZoneRefTagService xZoneTagService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefTagService());
-
-                                xZoneTagService.setZoneId(zoneId);
-                                xZoneTagService.setTagServiceId(xService.getId());
-                                xZoneTagService.setTagServiceName(xService.getName());
-
-                                daoMgr.getXXSecurityZoneRefTagService().create(xZoneTagService);
-                        }
+        if (CollectionUtils.isNotEmpty(tagServices)) {
+            for (String tagService : tagServices) {
+                if (StringUtils.isBlank(tagService)) {
+                    continue;
                 }
 
-		if(CollectionUtils.isNotEmpty(users)) {
-			for(String user : users) {
+                XXService xService = daoMgr.getXXService().findByName(tagService);
 
-				if (StringUtils.isBlank(user)) {
-					continue;
-				}
+                if (xService == null || xService.getType() != RangerConstants.TAG_SERVICE_TYPE) {
+                    throw restErrorUtil.createRESTException("Tag Service named: " + tagService + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+                }
 
-				XXUser xUser = daoMgr.getXXUser().findByUserName(user);
+                XXSecurityZoneRefTagService xZoneTagService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefTagService());
 
-				if (xUser == null) {
-					throw restErrorUtil.createRESTException("user with name: " + user + " does not exist ",
-							MessageEnums.INVALID_INPUT_DATA);
-				}
+                xZoneTagService.setZoneId(zoneId);
+                xZoneTagService.setTagServiceId(xService.getId());
+                xZoneTagService.setTagServiceName(xService.getName());
 
-				XXSecurityZoneRefUser xZoneUser = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefUser());
+                daoMgr.getXXSecurityZoneRefTagService().create(xZoneTagService);
+            }
+        }
 
-				xZoneUser.setZoneId(zoneId);
-				xZoneUser.setUserId(xUser.getId());
-				xZoneUser.setUserName(user);
-				xZoneUser.setUserType(1);
+        if (CollectionUtils.isNotEmpty(users)) {
+            for (String user : users) {
+                if (StringUtils.isBlank(user)) {
+                    continue;
+                }
 
-				daoMgr.getXXSecurityZoneRefUser().create(xZoneUser);
-			}
-		}
+                XXUser xUser = daoMgr.getXXUser().findByUserName(user);
 
-		if(CollectionUtils.isNotEmpty(userGroups)) {
-			for(String userGroup : userGroups) {
+                if (xUser == null) {
+                    throw restErrorUtil.createRESTException("user with name: " + user + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+                }
 
-				if (StringUtils.isBlank(userGroup)) {
-					continue;
-				}
+                XXSecurityZoneRefUser xZoneUser = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefUser());
 
-				XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(userGroup);
+                xZoneUser.setZoneId(zoneId);
+                xZoneUser.setUserId(xUser.getId());
+                xZoneUser.setUserName(user);
+                xZoneUser.setUserType(1);
 
-				if (xGroup == null) {
-					throw restErrorUtil.createRESTException("group with name: " + userGroup + " does not exist ",
-							MessageEnums.INVALID_INPUT_DATA);
-				}
+                daoMgr.getXXSecurityZoneRefUser().create(xZoneUser);
+            }
+        }
 
-				XXSecurityZoneRefGroup xZoneGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefGroup());
+        if (CollectionUtils.isNotEmpty(userGroups)) {
+            for (String userGroup : userGroups) {
+                if (StringUtils.isBlank(userGroup)) {
+                    continue;
+                }
 
-				xZoneGroup.setZoneId(zoneId);
-				xZoneGroup.setGroupId(xGroup.getId());
-				xZoneGroup.setGroupName(userGroup);
-				xZoneGroup.setGroupType(1);
+                XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(userGroup);
 
-				daoMgr.getXXSecurityZoneRefGroup().create(xZoneGroup);
-			}
-		}
+                if (xGroup == null) {
+                    throw restErrorUtil.createRESTException("group with name: " + userGroup + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+                }
 
-		if(CollectionUtils.isNotEmpty(roles)) {
-			for(String role : roles) {
-				if (StringUtils.isBlank(role)) {
-					continue;
-				}
+                XXSecurityZoneRefGroup xZoneGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefGroup());
 
-				XXRole xRole = daoMgr.getXXRole().findByRoleName(role);
+                xZoneGroup.setZoneId(zoneId);
+                xZoneGroup.setGroupId(xGroup.getId());
+                xZoneGroup.setGroupName(userGroup);
+                xZoneGroup.setGroupType(1);
 
-				if (xRole == null) {
-					throw restErrorUtil.createRESTException("role with name: " + role + " does not exist ",
-							MessageEnums.INVALID_INPUT_DATA);
-				}
+                daoMgr.getXXSecurityZoneRefGroup().create(xZoneGroup);
+            }
+        }
 
-				XXSecurityZoneRefRole xZoneRole = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefRole());
+        if (CollectionUtils.isNotEmpty(roles)) {
+            for (String role : roles) {
+                if (StringUtils.isBlank(role)) {
+                    continue;
+                }
 
-				xZoneRole.setZoneId(zoneId);
-				xZoneRole.setRoleId(xRole.getId());
-				xZoneRole.setRoleName(role);
+                XXRole xRole = daoMgr.getXXRole().findByRoleName(role);
 
-				daoMgr.getXXSecurityZoneRefRole().create(xZoneRole);
-			}
-		}
-	}
+                if (xRole == null) {
+                    throw restErrorUtil.createRESTException("role with name: " + role + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+                }
 
+                XXSecurityZoneRefRole xZoneRole = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefRole());
 
-	public Boolean cleanupRefTables(RangerSecurityZone rangerSecurityZone) {
-		final Long zoneId = rangerSecurityZone == null ? null : rangerSecurityZone.getId();
+                xZoneRole.setZoneId(zoneId);
+                xZoneRole.setRoleId(xRole.getId());
+                xZoneRole.setRoleName(role);
 
-		if (zoneId == null) {
-			return false;
-		}
+                daoMgr.getXXSecurityZoneRefRole().create(xZoneRole);
+            }
+        }
+    }
 
-		XXSecurityZoneRefServiceDao    xZoneServiceDao    = daoMgr.getXXSecurityZoneRefService();
-		XXSecurityZoneRefTagServiceDao xZoneTagServiceDao = daoMgr.getXXSecurityZoneRefTagService();
-		XXSecurityZoneRefResourceDao   xZoneResourceDao   = daoMgr.getXXSecurityZoneRefResource();
-		XXSecurityZoneRefUserDao       xZoneUserDao       = daoMgr.getXXSecurityZoneRefUser();
-		XXSecurityZoneRefGroupDao      xZoneGroupDao      = daoMgr.getXXSecurityZoneRefGroup();
-		XXSecurityZoneRefRoleDao       xZoneRoleDao      = daoMgr.getXXSecurityZoneRefRole();
+    public Boolean cleanupRefTables(RangerSecurityZone rangerSecurityZone) {
+        final Long zoneId = rangerSecurityZone == null ? null : rangerSecurityZone.getId();
 
-		for (XXSecurityZoneRefService service : xZoneServiceDao.findByZoneId(zoneId)) {
-			xZoneServiceDao.remove(service);
-		}
+        if (zoneId == null) {
+            return false;
+        }
 
-		for (XXSecurityZoneRefTagService service : xZoneTagServiceDao.findByZoneId(zoneId)) {
-			xZoneTagServiceDao.remove(service);
-		}
+        XXSecurityZoneRefServiceDao    xZoneServiceDao    = daoMgr.getXXSecurityZoneRefService();
+        XXSecurityZoneRefTagServiceDao xZoneTagServiceDao = daoMgr.getXXSecurityZoneRefTagService();
+        XXSecurityZoneRefResourceDao   xZoneResourceDao   = daoMgr.getXXSecurityZoneRefResource();
+        XXSecurityZoneRefUserDao       xZoneUserDao       = daoMgr.getXXSecurityZoneRefUser();
+        XXSecurityZoneRefGroupDao      xZoneGroupDao      = daoMgr.getXXSecurityZoneRefGroup();
+        XXSecurityZoneRefRoleDao       xZoneRoleDao       = daoMgr.getXXSecurityZoneRefRole();
 
-		for(XXSecurityZoneRefResource resource : xZoneResourceDao.findByZoneId(zoneId)) {
-			xZoneResourceDao.remove(resource);
-		}
+        for (XXSecurityZoneRefService service : xZoneServiceDao.findByZoneId(zoneId)) {
+            xZoneServiceDao.remove(service);
+        }
 
-		for(XXSecurityZoneRefUser user : xZoneUserDao.findByZoneId(zoneId)) {
-			xZoneUserDao.remove(user);
-		}
+        for (XXSecurityZoneRefTagService service : xZoneTagServiceDao.findByZoneId(zoneId)) {
+            xZoneTagServiceDao.remove(service);
+        }
 
-		for(XXSecurityZoneRefGroup group : xZoneGroupDao.findByZoneId(zoneId)) {
-			xZoneGroupDao.remove(group);
-		}
+        for (XXSecurityZoneRefResource resource : xZoneResourceDao.findByZoneId(zoneId)) {
+            xZoneResourceDao.remove(resource);
+        }
 
-		for(XXSecurityZoneRefRole role : xZoneRoleDao.findByZoneId(zoneId)) {
-			xZoneRoleDao.remove(role);
-		}
+        for (XXSecurityZoneRefUser user : xZoneUserDao.findByZoneId(zoneId)) {
+            xZoneUserDao.remove(user);
+        }
 
-		return true;
-	}
+        for (XXSecurityZoneRefGroup group : xZoneGroupDao.findByZoneId(zoneId)) {
+            xZoneGroupDao.remove(group);
+        }
 
+        for (XXSecurityZoneRefRole role : xZoneRoleDao.findByZoneId(zoneId)) {
+            xZoneRoleDao.remove(role);
+        }
 
-	public void updateResourceSignatureWithZoneName(RangerSecurityZone updatedSecurityZone) {
-		List<XXPolicy> policyList = daoMgr.getXXPolicy().findByZoneId(updatedSecurityZone.getId());
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> SecurityZoneRefUpdater.updateResourceSignatureWithZoneName() Count of policies with zone id : " +updatedSecurityZone.getId()+ " are : "+ policyList.size());
-		}
+        return true;
+    }
 
-		for (XXPolicy policy : policyList) {
-			RangerPolicy policyToUpdate = policyService.getPopulatedViewObject(policy);
-			svcStore.updatePolicySignature(policyToUpdate);
-			policyService.update(policyToUpdate);
-		}
-	}
+    public void updateResourceSignatureWithZoneName(RangerSecurityZone updatedSecurityZone) {
+        List<XXPolicy> policyList = daoMgr.getXXPolicy().findByZoneId(updatedSecurityZone.getId());
+
+        LOG.debug("==> SecurityZoneRefUpdater.updateResourceSignatureWithZoneName() Count of policies with zone id : {} are : {}", updatedSecurityZone.getId(), policyList.size());
+
+        for (XXPolicy policy : policyList) {
+            RangerPolicy policyToUpdate = policyService.getPopulatedViewObject(policy);
+            svcStore.updatePolicySignature(policyToUpdate);
+            policyService.update(policyToUpdate);
+        }
+    }
 }

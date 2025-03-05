@@ -22,9 +22,10 @@ package org.apache.ranger.services.yarn.client;
 import java.util.Map;
 
 public class YarnConnectionMgr {
-
-	public static YarnClient getYarnClient(String serviceName, Map<String, String> configs) {
-        return  new YarnClient(serviceName, configs);
+    private YarnConnectionMgr(){
     }
 
+    public static YarnClient getYarnClient(String serviceName, Map<String, String> configs) {
+        return new YarnClient(serviceName, configs);
+    }
 }

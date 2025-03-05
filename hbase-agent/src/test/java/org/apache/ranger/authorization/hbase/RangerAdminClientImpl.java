@@ -17,31 +17,30 @@
 
 package org.apache.ranger.authorization.hbase;
 
+import org.apache.ranger.admin.client.AbstractRangerAdminClient;
+import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.ServiceTags;
+
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.List;
 
-import org.apache.ranger.admin.client.AbstractRangerAdminClient;
-import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.plugin.util.ServiceTags;
-
 /**
  * A test implementation of the RangerAdminClient interface that just reads policies in from a file and returns them
  */
 public class RangerAdminClientImpl extends AbstractRangerAdminClient {
-    private final static String cacheFilename = "hbase-policies.json";
-    private final static String tagFilename = "hbase-policies-tag.json";
+    private static final String cacheFilename = "hbase-policies.json";
+    private static final String tagFilename   = "hbase-policies-tag.json";
 
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
 
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/target/test-classes/" + cacheFilename);
-        byte[] cacheBytes = Files.readAllBytes(cachePath);
+        java.nio.file.Path cachePath  = FileSystems.getDefault().getPath(basedir, "/target/test-classes/" + cacheFilename);
+        byte[]             cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
     }
@@ -52,8 +51,8 @@ public class RangerAdminClientImpl extends AbstractRangerAdminClient {
             basedir = new File(".").getCanonicalPath();
         }
 
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + tagFilename);
-        byte[] cacheBytes = Files.readAllBytes(cachePath);
+        java.nio.file.Path cachePath  = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + tagFilename);
+        byte[]             cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServiceTags.class);
     }
@@ -61,6 +60,4 @@ public class RangerAdminClientImpl extends AbstractRangerAdminClient {
     public List<String> getTagTypes(String tagTypePattern) throws Exception {
         return null;
     }
-
-    
 }

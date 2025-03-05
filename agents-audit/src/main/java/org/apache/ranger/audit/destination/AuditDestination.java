@@ -19,63 +19,57 @@
 
 package org.apache.ranger.audit.destination;
 
-import java.util.Properties;
-
 import org.apache.ranger.audit.provider.BaseAuditHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Properties;
 
 /**
  * This class needs to be extended by anyone who wants to build custom
  * destination
  */
 public abstract class AuditDestination extends BaseAuditHandler {
-	private static final Logger logger = LoggerFactory.getLogger(AuditDestination.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuditDestination.class);
 
-	public AuditDestination() {
-		logger.info("AuditDestination() enter");
-	}
+    public AuditDestination() {
+        logger.info("AuditDestination() enter");
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties,
-	 * java.lang.String)
-	 */
-	@Override
-	public void init(Properties prop, String basePropertyName) {
-		super.init(prop, basePropertyName);
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.apache.ranger.audit.provider.AuditProvider#init(java.util.Properties,
+     * java.lang.String)
+     */
+    @Override
+    public void init(Properties prop, String basePropertyName) {
+        super.init(prop, basePropertyName);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.apache.ranger.audit.provider.AuditProvider#flush()
-	 */
-	@Override
-	public void flush() {
+    @Override
+    public void start() {
+    }
 
-	}
+    @Override
+    public void stop() {
+    }
 
-	@Override
-	public void start() {
-		
-	}
+    @Override
+    public void waitToComplete() {
+    }
 
-	@Override
-	public void stop() {
-		
-	}
+    @Override
+    public void waitToComplete(long timeout) {
+    }
 
-	@Override
-	public void waitToComplete() {
-		
-	}
-
-	@Override
-	public void waitToComplete(long timeout) {
-		
-	}
-	
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.ranger.audit.provider.AuditProvider#flush()
+     */
+    @Override
+    public void flush() {
+    }
 }

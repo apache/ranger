@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *	 http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,8 +16,6 @@
  */
 
 package org.apache.ranger.patch;
-
-import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -36,153 +34,161 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import java.util.List;
+
 /**
  * This patch will regenerate new GUID and update policies which has duplicate GUID for every service.
- *
  */
 @Component
 public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
-	private static final Logger logger = LoggerFactory.getLogger(PatchPreSql_057_ForUpdateToUniqueGUID_J10052.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchPreSql_057_ForUpdateToUniqueGUID_J10052.class);
 
-	@Autowired
-	RangerDaoManager daoMgr;
+    @Autowired
+    RangerDaoManager daoMgr;
 
-	@Autowired
-	ServiceDBStore svcStore;
+    @Autowired
+    ServiceDBStore svcStore;
 
-	@Autowired
-	GUIDUtil guidUtil;
+    @Autowired
+    GUIDUtil guidUtil;
 
-	@Autowired
-	@Qualifier(value = "transactionManager")
-	PlatformTransactionManager txManager;
+    @Autowired
+    @Qualifier(value = "transactionManager")
+    PlatformTransactionManager txManager;
 
+    public static void main(String[] args) {
+        logger.info("main()");
 
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchPreSql_057_ForUpdateToUniqueGUID_J10052 loader = (PatchPreSql_057_ForUpdateToUniqueGUID_J10052) CLIUtil.getBean(PatchPreSql_057_ForUpdateToUniqueGUID_J10052.class);
+        try {
+            PatchPreSql_057_ForUpdateToUniqueGUID_J10052 loader = (PatchPreSql_057_ForUpdateToUniqueGUID_J10052) CLIUtil.getBean(PatchPreSql_057_ForUpdateToUniqueGUID_J10052.class);
 
-			loader.init();
+            loader.init();
 
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
 
-			logger.info("Load complete. Exiting!!!");
+            logger.info("Load complete. Exiting!!!");
 
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
 
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
+            System.exit(1);
+        }
+    }
 
-	@Override
-	public void execLoad() {
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-		try {
-			logger.info("==> updatePolicyGUIDToUniqueValue()");
-			updatePolicyGUIDToUniqueValue();
-		} catch (Exception e) {
-			logger.error("Error while updatePolicyGUIDToUniqueValue()", e);
-			System.exit(1);
-		}
+    @Override
+    public void printStats() {
+        logger.info("runnig updatePolicyGUIDToUniqueValue ");
+    }
 
-		logger.info("<== updatePolicyGUIDToUniqueValue.execLoad()");
-	}
+    @Override
+    public void execLoad() {
+        logger.info("==> updatePolicyGUIDToUniqueValue()");
 
-	@Override
-	public void printStats() {
-		logger.info("runnig updatePolicyGUIDToUniqueValue ");
-	}
+        try {
+            updatePolicyGUIDToUniqueValue();
+        } catch (Exception e) {
+            logger.error("Error while updatePolicyGUIDToUniqueValue()", e);
 
-	private void updatePolicyGUIDToUniqueValue() throws Exception {
-		logger.info("==> updatePolicyGUIDToUniqueValue() ");
+            System.exit(1);
+        }
 
-		List<XXSecurityZone> allXXZones = null;
-		List<XXService> allXXService = null;
+        logger.info("<== updatePolicyGUIDToUniqueValue.execLoad()");
+    }
 
-		allXXZones = daoMgr.getXXSecurityZoneDao().getAll();
-		allXXService = daoMgr.getXXService().getAll();
+    private void updatePolicyGUIDToUniqueValue() {
+        logger.info("==> updatePolicyGUIDToUniqueValue() ");
 
-		if (CollectionUtils.isNotEmpty(allXXZones) && CollectionUtils.isNotEmpty(allXXService)) {
-			logger.info("Total number of zones " + allXXZones.size() +", service :" +allXXService.size());
-			for (XXSecurityZone xSecurityZone : allXXZones) {
-				for (XXService xService : allXXService) {
-					logger.info("serching duplicate guid policies for service :" + xService.getName() + " zone : "
-							+ xSecurityZone.getName());
-					List<String> duplicateGuidList = daoMgr.getXXPolicy()
-							.findDuplicateGUIDByServiceIdAndZoneId(xService.getId(), xSecurityZone.getId());
-					if (CollectionUtils.isNotEmpty(duplicateGuidList)) {
-						logger.info("Total number of duplicate GUIDs :" + duplicateGuidList.size() + " for service :"
-								+ xService.getName() + " and zone :" + xSecurityZone.getName());
-						for (String guid : duplicateGuidList) {
-							List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceIdAndZoneId(
-									guid, xService.getId(), xSecurityZone.getId());
-							boolean isFirstElement = false;
-							if (CollectionUtils.isNotEmpty(xxPolicyList)) {
-								isFirstElement = true;
-								for (XXPolicy xxPolicy : xxPolicyList) {
-									if (isFirstElement) {
-										isFirstElement = false;
-										continue;
-									}
-									RangerPolicy policy = getPolicy(xxPolicy);
-									if (policy != null) {
-										guid = guidUtil.genGUID();
-										xxPolicy.setGuid(guid);
-										policy.setGuid(guid);
-										xxPolicy.setPolicyText(JsonUtils.objectToJson(policy));
+        List<XXSecurityZone> allXXZones   = daoMgr.getXXSecurityZoneDao().getAllZoneIdNames();
+        List<XXService>      allXXService = daoMgr.getXXService().getAll();
 
-										daoMgr.getXXPolicy().update(xxPolicy);
-									}
-								}
-							} else {
-								logger.info("No policy found with guid:" + guid);
-							}
-						}
-					} else {
-						logger.info("No duplicate GUID found in policy for Service :" + xService.getName() + ", Zone : "
-								+ xSecurityZone.getName());
-					}
-				}
-			}
-		} else {
-			logger.info("No zone or service found");
-		}
-	}
+        if (CollectionUtils.isNotEmpty(allXXZones) && CollectionUtils.isNotEmpty(allXXService)) {
+            logger.info("Total number of zones {}, services :{}", allXXZones.size(), allXXService.size());
 
-	private RangerPolicy getPolicy(final XXPolicy xPolicy) {
-		final RangerPolicy ret;
+            for (XXSecurityZone xSecurityZone : allXXZones) {
+                for (XXService xService : allXXService) {
+                    logger.info("serching duplicate guid policies for service :{} zone:{}", xService.getName(), xSecurityZone.getName());
 
-		if (xPolicy != null) {
-			String policyText = xPolicy.getPolicyText();
-			if (logger.isDebugEnabled()) {
-				logger.debug("Ranger Policy text:[" + policyText + "]");
-			}
-			ret = JsonUtils.jsonToObject(policyText, RangerPolicy.class);
+                    List<String> duplicateGuidList = daoMgr.getXXPolicy().findDuplicateGUIDByServiceIdAndZoneId(xService.getId(), xSecurityZone.getId());
 
-			if (ret != null) {
-				ret.setId(xPolicy.getId());
-				ret.setGuid(xPolicy.getGuid());
-				ret.setCreateTime(xPolicy.getCreateTime());
-				ret.setUpdateTime(xPolicy.getUpdateTime());
-				ret.setVersion(xPolicy.getVersion());
-				ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
-				XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(xPolicy.getZoneId());
-				if (xSecurityZone != null) {
-					ret.setZoneName(xSecurityZone.getName());
-				}
-			}
-		} else {
-			ret = null;
-		}
-		return ret;
-	}
+                    if (CollectionUtils.isNotEmpty(duplicateGuidList)) {
+                        logger.info("Total number of duplicate GUIDs:{} for service:{} and zone:{}", duplicateGuidList.size(), xService.getName(), xSecurityZone.getName());
+
+                        for (String guid : duplicateGuidList) {
+                            List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceIdAndZoneId(guid, xService.getId(), xSecurityZone.getId());
+
+                            if (CollectionUtils.isNotEmpty(xxPolicyList)) {
+                                boolean isFirstElement = true;
+
+                                for (XXPolicy xxPolicy : xxPolicyList) {
+                                    if (isFirstElement) {
+                                        isFirstElement = false;
+                                        continue;
+                                    }
+
+                                    RangerPolicy policy = getPolicy(xxPolicy);
+
+                                    if (policy != null) {
+                                        guid = guidUtil.genGUID();
+
+                                        xxPolicy.setGuid(guid);
+
+                                        policy.setGuid(guid);
+
+                                        xxPolicy.setPolicyText(JsonUtils.objectToJson(policy));
+
+                                        daoMgr.getXXPolicy().update(xxPolicy);
+                                    }
+                                }
+                            } else {
+                                logger.info("No policy found with guid:{}", guid);
+                            }
+                        }
+                    } else {
+                        logger.info("No duplicate GUID found in policy for Service :{}, Zone:{}", xService.getName(), xSecurityZone.getName());
+                    }
+                }
+            }
+        } else {
+            logger.info("No zone or service found");
+        }
+    }
+
+    private RangerPolicy getPolicy(final XXPolicy xPolicy) {
+        final RangerPolicy ret;
+
+        if (xPolicy != null) {
+            String policyText = xPolicy.getPolicyText();
+
+            logger.debug("Ranger Policy text:[{}]", policyText);
+
+            ret = JsonUtils.jsonToObject(policyText, RangerPolicy.class);
+
+            if (ret != null) {
+                ret.setId(xPolicy.getId());
+                ret.setGuid(xPolicy.getGuid());
+                ret.setCreateTime(xPolicy.getCreateTime());
+                ret.setUpdateTime(xPolicy.getUpdateTime());
+                ret.setVersion(xPolicy.getVersion());
+                ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
+
+                XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(xPolicy.getZoneId());
+
+                if (xSecurityZone != null) {
+                    ret.setZoneName(xSecurityZone.getName());
+                }
+            }
+        } else {
+            ret = null;
+        }
+
+        return ret;
+    }
 }

@@ -21,14 +21,23 @@ package org.apache.ranger.entity;
 
 import org.apache.ranger.common.AppConstants;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
 @Cacheable
-@Table(name="x_gds_data_share_in_dataset")
+@Table(name = "x_gds_data_share_in_dataset")
 @XmlRootElement
 public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -76,62 +85,116 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
     @Column(name = "approver_id")
     protected Long approverId;
 
-    @Override
-    public void setId(Long id) { this.id = id; }
+    public String getGuid() {
+        return guid;
+    }
+
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public Boolean getIsEnabled() {
+        return isEnabled;
+    }
+
+    public void setIsEnabled(Boolean isEnabled) {
+        this.isEnabled = isEnabled;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Long getDataShareId() {
+        return dataShareId;
+    }
+
+    public void setDataShareId(Long dataShareId) {
+        this.dataShareId = dataShareId;
+    }
+
+    public Long getDatasetId() {
+        return datasetId;
+    }
+
+    public void setDatasetId(Long datasetId) {
+        this.datasetId = datasetId;
+    }
+
+    public Short getStatus() {
+        return status;
+    }
+
+    public void setStatus(Short status) {
+        this.status = status;
+    }
+
+    public String getValidityPeriod() {
+        return validityPeriod;
+    }
+
+    public void setValidityPeriod(String validityPeriod) {
+        this.validityPeriod = validityPeriod;
+    }
+
+    public String getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(String profiles) {
+        this.profiles = profiles;
+    }
+
+    public String getOptions() {
+        return options;
+    }
+
+    public void setOptions(String options) {
+        this.options = options;
+    }
+
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
+
+    public Long getApproverId() {
+        return approverId;
+    }
+
+    public void setApproverId(Long approverId) {
+        this.approverId = approverId;
+    }
 
     @Override
-    public Long getId() { return id; }
-
-    public String getGuid() { return guid; }
-
-    public void setGuid(String guid) { this.guid = guid; }
-
-    public Long getVersion() { return version; }
-
-    public void setVersion(Long version) { this.version = version; }
-
-    public Boolean getIsEnabled() { return isEnabled; }
-
-    public void setIsEnabled(Boolean isEnabled) { this.isEnabled = isEnabled; }
-
-    public String getDescription() { return description; }
-
-    public void setDescription(String description) { this.description = description; }
-
-    public Long getDataShareId() { return dataShareId; }
-
-    public void setDataShareId(Long dataShareId) { this.dataShareId = dataShareId; }
-
-    public Long getDatasetId() { return datasetId; }
-
-    public void setDatasetId(Long datasetId) { this.datasetId = datasetId; }
-
-    public Short getStatus() { return status; }
-
-    public void setStatus(Short status) { this.status = status; }
-
-    public String getValidityPeriod() { return validityPeriod; }
-
-    public void setValidityPeriod(String validityPeriod) { this.validityPeriod = validityPeriod; }
-
-    public String getProfiles() { return profiles; }
-
-    public void setProfiles(String profiles) { this.profiles = profiles; }
-
-    public String getOptions() { return options; }
-
-    public void setOptions(String options) { this.options = options; }
-
-    public String getAdditionalInfo() { return additionalInfo; }
-
-    public void setAdditionalInfo(String additionalInfo) { this.additionalInfo = additionalInfo; }
-
-    public Long getApproverId() { return approverId; }
-
-    public void setApproverId(Long approverId) { this.approverId = approverId; }
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET;
+    }
 
     @Override
-    public int getMyClassType() { return AppConstants.CLASS_TYPE_GDS_DATA_SHARE_IN_DATASET; }
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     @Override
     public int hashCode() {
@@ -142,8 +205,6 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (getClass() != obj.getClass()) {
-            return false;
         } else if (!super.equals(obj)) {
             return false;
         }
@@ -151,17 +212,17 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
         XXGdsDataShareInDataset other = (XXGdsDataShareInDataset) obj;
 
         return Objects.equals(id, other.id) &&
-               Objects.equals(guid, other.guid) &&
-               Objects.equals(version, other.version) &&
-               Objects.equals(isEnabled, other.isEnabled) &&
-               Objects.equals(dataShareId, other.dataShareId) &&
-               Objects.equals(datasetId, other.datasetId) &&
-               Objects.equals(status, other.status) &&
-               Objects.equals(validityPeriod, other.validityPeriod) &&
-               Objects.equals(profiles, other.profiles) &&
-               Objects.equals(options, other.options) &&
-               Objects.equals(additionalInfo, other.additionalInfo) &&
-               Objects.equals(approverId, other.approverId);
+                Objects.equals(guid, other.guid) &&
+                Objects.equals(version, other.version) &&
+                Objects.equals(isEnabled, other.isEnabled) &&
+                Objects.equals(dataShareId, other.dataShareId) &&
+                Objects.equals(datasetId, other.datasetId) &&
+                Objects.equals(status, other.status) &&
+                Objects.equals(validityPeriod, other.validityPeriod) &&
+                Objects.equals(profiles, other.profiles) &&
+                Objects.equals(options, other.options) &&
+                Objects.equals(additionalInfo, other.additionalInfo) &&
+                Objects.equals(approverId, other.approverId);
     }
 
     @Override
@@ -171,22 +232,21 @@ public class XXGdsDataShareInDataset extends XXDBBase implements Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("XXDataShareInDataset={ ")
-          .append(super.toString() + "} ")
-          .append("id={").append(id).append("} ")
-          .append("guid={").append(guid).append("} ")
-          .append("version={").append(version).append("} ")
-          .append("isEnabled={").append(isEnabled).append("} ")
-          .append("dataShareId={").append(dataShareId).append("} ")
-          .append("datasetId={").append(datasetId).append("} ")
-          .append("status={").append(status).append("} ")
-          .append("validityPeriod={").append(validityPeriod).append("} ")
-          .append("profiles={").append(profiles).append("} ")
-          .append("options={").append(options).append("} ")
-          .append("additionalInfo={").append(additionalInfo).append("} ")
-          .append("approverId={").append(approverId).append("} ")
-          .append(" }");
+                .append(super.toString() + "} ")
+                .append("id={").append(id).append("} ")
+                .append("guid={").append(guid).append("} ")
+                .append("version={").append(version).append("} ")
+                .append("isEnabled={").append(isEnabled).append("} ")
+                .append("dataShareId={").append(dataShareId).append("} ")
+                .append("datasetId={").append(datasetId).append("} ")
+                .append("status={").append(status).append("} ")
+                .append("validityPeriod={").append(validityPeriod).append("} ")
+                .append("profiles={").append(profiles).append("} ")
+                .append("options={").append(options).append("} ")
+                .append("additionalInfo={").append(additionalInfo).append("} ")
+                .append("approverId={").append(approverId).append("} ")
+                .append(" }");
 
         return sb;
     }
-
 }

@@ -27,6 +27,7 @@
     <name>Security Admin Web Application</name>
     <description>security-admin-tool java web application</description>
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <skipJSTests>false</skipJSTests>
     </properties>
     <dependencies>
@@ -1130,6 +1131,9 @@
                         </goals>
                         <phase>test</phase>
                         <configuration>
+                            <environmentVariables>
+                                <OPENSSL_CONF>/etc/ssl/</OPENSSL_CONF>
+                            </environmentVariables>
                             <skip>${skipJSTests}</skip>
                             <workingDirectory>${project.build.directory}/jstest</workingDirectory>
                             <karmaConfPath>../../src/test/javascript/karma-dev.conf.js</karmaConfPath>
@@ -1144,6 +1148,7 @@
                         <configuration>
                             <environmentVariables>
                                 <buildDir>${project.build.finalName}</buildDir>
+                                <OPENSSL_CONF>/etc/ssl/</OPENSSL_CONF>
                             </environmentVariables>
                             <skip>${skipJSTests}</skip>
                             <workingDirectory>${project.build.directory}/jstest</workingDirectory>
@@ -1208,7 +1213,7 @@
                             <rules>
                                 <evaluateBeanshell>
                                     <message>Looks like there are multiple SQL files with same version number prefix. Update prefix and build again.</message>
-                                    <condition>List sqlFilePaths = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/db"), "**/*.sql", null, false);
+                                    <condition>List sqlFilePaths = org.codehaus.plexus.util.FileUtils.getFileNames(new File("${project.basedir}/db"), "**/*.sql", null, false);
                                         Map sqlFileMap    = new HashMap();
                                         Boolean noDupPrfx = true;
 
@@ -1255,7 +1260,7 @@
                             <rules>
                                 <evaluateBeanshell>
                                     <message>Looks like there are multiple JAVA files with same version number suffix. Update suffix and build again.</message>
-                                    <condition>List javaFilePaths  = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/src/main/java/org/apache/ranger/patch"), "**/*.java", null, false);
+                                    <condition>List javaFilePaths  = org.codehaus.plexus.util.FileUtils.getFileNames(new File("${project.basedir}/src/main/java/org/apache/ranger/patch"), "**/*.java", null, false);
                                         Map javaFileMap     = new HashMap();
                                         Boolean noDupSuffix = true;
 

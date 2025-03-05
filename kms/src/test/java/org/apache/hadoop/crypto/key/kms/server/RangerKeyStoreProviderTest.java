@@ -17,75 +17,56 @@
 
 package org.apache.hadoop.crypto.key.kms.server;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
+import org.apache.hadoop.crypto.key.KeyProvider.Options;
+import org.apache.hadoop.crypto.key.RangerKeyStoreProvider;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
-import org.apache.hadoop.crypto.key.KeyProvider.Options;
-import org.apache.hadoop.crypto.key.RangerKeyStoreProvider;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 
 /**
  * A test for the RangerKeyStoreProvider, which is an implementation of the Hadoop KeyProvider interface, which stores keys in a database.
  * Apache Derby is used to create the relevant tables to store the keys in for this test.
  */
 public class RangerKeyStoreProviderTest {
-	private static final boolean UNRESTRICTED_POLICIES_INSTALLED;
-    static {
-        boolean ok = false;
-        try {
-            byte[] data = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
-
-            SecretKey key192 = new SecretKeySpec(
-                new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-                            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17},
-                            "AES");
-            Cipher c = Cipher.getInstance("AES");
-            c.init(Cipher.ENCRYPT_MODE, key192);
-            c.doFinal(data);
-            ok = true;
-        } catch (Exception e) {
-            //
-        }
-        UNRESTRICTED_POLICIES_INSTALLED = ok;
-    }
+    private static final boolean UNRESTRICTED_POLICIES_INSTALLED;
 
     @BeforeAll
     public static void startServers() throws Exception {
-    	if (!UNRESTRICTED_POLICIES_INSTALLED) {
-    		return;
-    	}
+        if (!UNRESTRICTED_POLICIES_INSTALLED) {
+            return;
+        }
         DerbyTestUtils.startDerby();
     }
 
     @AfterAll
     public static void stopServers() throws Exception {
-    	if (UNRESTRICTED_POLICIES_INSTALLED) {
-    		DerbyTestUtils.stopDerby();
-    	}
+        if (UNRESTRICTED_POLICIES_INSTALLED) {
+            DerbyTestUtils.stopDerby();
+        }
     }
 
     @Test
     public void testCreateDeleteKey() throws Throwable {
-    	if (!UNRESTRICTED_POLICIES_INSTALLED) {
-    		return;
-    	}
-    	
+        if (!UNRESTRICTED_POLICIES_INSTALLED) {
+            return;
+        }
+
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
 
-        Configuration conf = new Configuration();
+        Configuration          conf        = new Configuration();
         RangerKeyStoreProvider keyProvider = new RangerKeyStoreProvider(conf);
 
         // Create a key
@@ -115,14 +96,14 @@ public class RangerKeyStoreProviderTest {
 
     @Test
     public void testRolloverKey() throws Throwable {
-    	if (!UNRESTRICTED_POLICIES_INSTALLED) {
-    		return;
-    	}
-    	
+        if (!UNRESTRICTED_POLICIES_INSTALLED) {
+            return;
+        }
+
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
 
-        Configuration conf = new Configuration();
+        Configuration          conf        = new Configuration();
         RangerKeyStoreProvider keyProvider = new RangerKeyStoreProvider(conf);
 
         // Create a key
@@ -148,7 +129,25 @@ public class RangerKeyStoreProviderTest {
 
         keyProvider.flush();
         Assertions.assertEquals(0, keyProvider.getKeys().size());
-
     }
 
+    static {
+        boolean ok = false;
+        try {
+            byte[] data = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+
+            SecretKey key192 = new SecretKeySpec(
+                    new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17},
+                    "AES");
+            Cipher c = Cipher.getInstance("AES");
+            c.init(Cipher.ENCRYPT_MODE, key192);
+            c.doFinal(data);
+            ok = true;
+        } catch (Exception e) {
+            //
+        }
+        UNRESTRICTED_POLICIES_INSTALLED = ok;
+    }
 }

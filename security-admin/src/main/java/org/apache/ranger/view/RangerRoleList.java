@@ -17,22 +17,21 @@
 
 package org.apache.ranger.view;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.ranger.common.view.VList;
-import org.apache.ranger.plugin.model.RangerRole;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.common.view.VList;
+import org.apache.ranger.plugin.model.RangerRole;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RangerRoleList extends VList{
-
+public class RangerRoleList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<RangerRole> roles = new ArrayList<RangerRole>();
+    List<RangerRole> roles = new ArrayList<>();
 
     public RangerRoleList() {
         super();
@@ -67,6 +66,4 @@ public class RangerRoleList extends VList{
     public List<?> getList() {
         return roles;
     }
-
 }
-

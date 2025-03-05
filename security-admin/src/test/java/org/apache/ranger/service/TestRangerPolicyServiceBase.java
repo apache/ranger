@@ -16,12 +16,6 @@
  */
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.ws.rs.WebApplicationException;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -53,195 +47,174 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import javax.ws.rs.WebApplicationException;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerPolicyServiceBase {
+    private static final Long              Id     = 8L;
+    @Rule
+    public               ExpectedException thrown = ExpectedException.none();
+    @InjectMocks
+    RangerPolicyService policyService = new RangerPolicyService();
+    @Mock
+    RangerDaoManager daoManager;
+    @Mock
+    RESTErrorUtil restErrorUtil;
+    @Mock
+    ContextUtil contextUtil;
+    @Mock
+    RangerBizUtil rangerBizUtil;
+    @Mock
+    RangerSearchUtil searchUtil;
 
-	private static Long Id = 8L;
+    public void setup() {
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(true);
+    }
 
-	@InjectMocks
-	RangerPolicyService policyService = new RangerPolicyService();
+    @Test
+    public void test1mapViewToEntityBean() {
+        XXServiceDao    xServiceDao       = Mockito.mock(XXServiceDao.class);
+        XXService       xService          = Mockito.mock(XXService.class);
+        XXServiceDefDao xServiceDefDao    = Mockito.mock(XXServiceDefDao.class);
+        XXServiceDef    xServiceDef       = Mockito.mock(XXServiceDef.class);
+        RangerPolicy    rangerPolicy      = rangerPolicy();
+        XXPolicy        policy            = policy();
+        int             operationContext = 0;
 
-	@Mock
-	RangerDaoManager daoManager;
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByName(rangerPolicy.getService())).thenReturn(xService);
+        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
 
-	@Mock
-	RESTErrorUtil restErrorUtil;
+        XXPolicy dbPolicy = policyService.mapViewToEntityBean(rangerPolicy, policy, operationContext);
+        Assert.assertNotNull(dbPolicy);
+        Assert.assertEquals(dbPolicy.getId(), policy.getId());
+        Assert.assertEquals(dbPolicy.getGuid(), policy.getGuid());
+        Assert.assertEquals(dbPolicy.getName(), policy.getName());
+        Assert.assertEquals(dbPolicy.getAddedByUserId(), policy.getAddedByUserId());
+        Assert.assertEquals(dbPolicy.getIsEnabled(), policy.getIsEnabled());
+        Assert.assertEquals(dbPolicy.getVersion(), policy.getVersion());
+        Assert.assertEquals(dbPolicy.getDescription(), policy.getDescription());
 
-	@Mock
-	ContextUtil contextUtil;
+        Mockito.verify(daoManager).getXXService();
+    }
 
-	@Mock
-	RangerBizUtil rangerBizUtil;
+    @Test
+    public void test2mapViewToEntityBeanNullValue() {
+        XXServiceDao xServiceDao       = Mockito.mock(XXServiceDao.class);
+        RangerPolicy rangerPolicy      = rangerPolicy();
+        XXPolicy     policy            = policy();
+        int          operationContext  = 0;
 
-	@Mock
-	RangerSearchUtil searchUtil;
+        Mockito.when(restErrorUtil.createRESTException("No corresponding service found for policyName: " + rangerPolicy.getName() + "Service Not Found : " + rangerPolicy.getName(), MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
 
-	@Rule
-	public ExpectedException thrown = ExpectedException.none();
+        thrown.expect(WebApplicationException.class);
 
-	public void setup() {
-		RangerSecurityContext context = new RangerSecurityContext();
-		context.setUserSession(new UserSessionBase());
-		RangerContextHolder.setSecurityContext(context);
-		UserSessionBase currentUserSession = ContextUtil
-				.getCurrentUserSession();
-		currentUserSession.setUserAdmin(true);
-	}
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByName(rangerPolicy.getService())).thenReturn(null);
 
-	private RangerPolicy rangerPolicy() {
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
-		List<String> users = new ArrayList<String>();
-		List<String> groups = new ArrayList<String>();
-		List<RangerPolicyItemCondition> conditions = new ArrayList<RangerPolicyItemCondition>();
-		List<RangerPolicyItem> policyItems = new ArrayList<RangerPolicyItem>();
-		RangerPolicyItem rangerPolicyItem = new RangerPolicyItem();
-		rangerPolicyItem.setAccesses(accesses);
-		rangerPolicyItem.setConditions(conditions);
-		rangerPolicyItem.setGroups(groups);
-		rangerPolicyItem.setUsers(users);
-		rangerPolicyItem.setDelegateAdmin(false);
+        XXPolicy dbPolicy = policyService.mapViewToEntityBean(rangerPolicy, policy, operationContext);
+        Assert.assertNotNull(dbPolicy);
+        Assert.assertEquals(dbPolicy.getId(), policy.getId());
+        Assert.assertEquals(dbPolicy.getGuid(), policy.getGuid());
+        Assert.assertEquals(dbPolicy.getName(), policy.getName());
+        Assert.assertEquals(dbPolicy.getAddedByUserId(), policy.getAddedByUserId());
+        Assert.assertEquals(dbPolicy.getIsEnabled(), policy.getIsEnabled());
+        Assert.assertEquals(dbPolicy.getVersion(), policy.getVersion());
+        Assert.assertEquals(dbPolicy.getDescription(), policy.getDescription());
 
-		policyItems.add(rangerPolicyItem);
+        Mockito.verify(daoManager).getXXService();
+    }
 
-		Map<String, RangerPolicyResource> policyResource = new HashMap<String, RangerPolicyResource>();
-		RangerPolicyResource rangerPolicyResource = new RangerPolicyResource();
-		rangerPolicyResource.setIsExcludes(true);
-		rangerPolicyResource.setIsRecursive(true);
-		rangerPolicyResource.setValue("1");
-		rangerPolicyResource.setValues(users);
-		RangerPolicy policy = new RangerPolicy();
-		policy.setId(Id);
-		policy.setCreateTime(new Date());
-		policy.setDescription("policy");
-		policy.setGuid("policyguid");
-		policy.setIsEnabled(true);
-		policy.setName("HDFS_1-1-20150316062453");
-		policy.setUpdatedBy("Admin");
-		policy.setUpdateTime(new Date());
-		policy.setService("HDFS_1-1-20150316062453");
-		policy.setIsAuditEnabled(true);
-		policy.setPolicyItems(policyItems);
-		policy.setResources(policyResource);
-		policy.setZoneName("");
+    @Test
+    public void test3mapEntityToViewBean() {
+        XXServiceDao    xServiceDao    = Mockito.mock(XXServiceDao.class);
+        XXService       xService       = Mockito.mock(XXService.class);
+        XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+        XXServiceDef    xServiceDef    = Mockito.mock(XXServiceDef.class);
+        RangerPolicy    rangerPolicy   = rangerPolicy();
+        XXPolicy        policy         = policy();
 
-		return policy;
-	}
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.getById(policy.getService())).thenReturn(xService);
+        Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+        Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+        RangerPolicy dbRangerPolicy = policyService.mapEntityToViewBean(rangerPolicy, policy);
 
-	private XXPolicy policy() {
-		XXPolicy xxPolicy = new XXPolicy();
-		xxPolicy.setId(Id);
-		xxPolicy.setName("HDFS_1-1-20150316062453");
-		xxPolicy.setAddedByUserId(Id);
-		xxPolicy.setCreateTime(new Date());
-		xxPolicy.setDescription("test");
-		xxPolicy.setIsAuditEnabled(false);
-		xxPolicy.setIsEnabled(false);
-		xxPolicy.setService(1L);
-		xxPolicy.setUpdatedByUserId(Id);
-		xxPolicy.setUpdateTime(new Date());
-		xxPolicy.setZoneId(1L);
-		return xxPolicy;
-	}
+        Assert.assertNotNull(dbRangerPolicy);
+        Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
+        Assert.assertEquals(dbRangerPolicy.getGuid(), rangerPolicy.getGuid());
+        Assert.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
+        Assert.assertEquals(dbRangerPolicy.getIsEnabled(), rangerPolicy.getIsEnabled());
+        Assert.assertEquals(dbRangerPolicy.getVersion(), rangerPolicy.getVersion());
+        Assert.assertEquals(dbRangerPolicy.getDescription(), rangerPolicy.getDescription());
 
-	@Test
-	public void test1mapViewToEntityBean() {
-		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-		XXService xService = Mockito.mock(XXService.class);
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
-		RangerPolicy rangerPolicy = rangerPolicy();
-		XXPolicy policy = policy();
-		int OPERATION_CONTEXT = 0;
+        Mockito.verify(daoManager).getXXService();
+    }
 
-		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
-		Mockito.when(xServiceDao.findByName(rangerPolicy.getService()))
-				.thenReturn(xService);
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
+    private RangerPolicy rangerPolicy() {
+        List<RangerPolicyItemAccess>    accesses         = new ArrayList<>();
+        List<String>                    users            = new ArrayList<>();
+        List<String>                    groups           = new ArrayList<>();
+        List<RangerPolicyItemCondition> conditions       = new ArrayList<>();
+        List<RangerPolicyItem>          policyItems      = new ArrayList<>();
+        RangerPolicyItem                rangerPolicyItem = new RangerPolicyItem();
+        rangerPolicyItem.setAccesses(accesses);
+        rangerPolicyItem.setConditions(conditions);
+        rangerPolicyItem.setGroups(groups);
+        rangerPolicyItem.setUsers(users);
+        rangerPolicyItem.setDelegateAdmin(false);
 
-		XXPolicy dbPolicy = policyService.mapViewToEntityBean(rangerPolicy,
-				policy, OPERATION_CONTEXT);
-		Assert.assertNotNull(dbPolicy);
-		Assert.assertEquals(dbPolicy.getId(), policy.getId());
-		Assert.assertEquals(dbPolicy.getGuid(), policy.getGuid());
-		Assert.assertEquals(dbPolicy.getName(), policy.getName());
-		Assert.assertEquals(dbPolicy.getAddedByUserId(),
-				policy.getAddedByUserId());
-		Assert.assertEquals(dbPolicy.getIsEnabled(), policy.getIsEnabled());
-		Assert.assertEquals(dbPolicy.getVersion(), policy.getVersion());
-		Assert.assertEquals(dbPolicy.getDescription(), policy.getDescription());
+        policyItems.add(rangerPolicyItem);
 
-		Mockito.verify(daoManager).getXXService();
-	}
+        Map<String, RangerPolicyResource> policyResource       = new HashMap<>();
+        RangerPolicyResource              rangerPolicyResource = new RangerPolicyResource();
+        rangerPolicyResource.setIsExcludes(true);
+        rangerPolicyResource.setIsRecursive(true);
+        rangerPolicyResource.setValue("1");
+        rangerPolicyResource.setValues(users);
+        RangerPolicy policy = new RangerPolicy();
+        policy.setId(Id);
+        policy.setCreateTime(new Date());
+        policy.setDescription("policy");
+        policy.setGuid("policyguid");
+        policy.setIsEnabled(true);
+        policy.setName("HDFS_1-1-20150316062453");
+        policy.setUpdatedBy("Admin");
+        policy.setUpdateTime(new Date());
+        policy.setService("HDFS_1-1-20150316062453");
+        policy.setIsAuditEnabled(true);
+        policy.setPolicyItems(policyItems);
+        policy.setResources(policyResource);
+        policy.setZoneName("");
 
-	@Test
-	public void test2mapViewToEntityBeanNullValue() {
-		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-		RangerPolicy rangerPolicy = rangerPolicy();
-		XXPolicy policy = policy();
-		int OPERATION_CONTEXT = 0;
+        return policy;
+    }
 
-		Mockito.when(
-				restErrorUtil.createRESTException(
-						"No corresponding service found for policyName: "
-								+ rangerPolicy.getName()
-								+ "Service Not Found : "
-								+ rangerPolicy.getName(),
-						MessageEnums.INVALID_INPUT_DATA)).thenThrow(
-				new WebApplicationException());
-
-		thrown.expect(WebApplicationException.class);
-
-		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
-		Mockito.when(xServiceDao.findByName(rangerPolicy.getService()))
-				.thenReturn(null);
-
-		XXPolicy dbPolicy = policyService.mapViewToEntityBean(rangerPolicy,
-				policy, OPERATION_CONTEXT);
-		Assert.assertNotNull(dbPolicy);
-		Assert.assertEquals(dbPolicy.getId(), policy.getId());
-		Assert.assertEquals(dbPolicy.getGuid(), policy.getGuid());
-		Assert.assertEquals(dbPolicy.getName(), policy.getName());
-		Assert.assertEquals(dbPolicy.getAddedByUserId(),
-				policy.getAddedByUserId());
-		Assert.assertEquals(dbPolicy.getIsEnabled(), policy.getIsEnabled());
-		Assert.assertEquals(dbPolicy.getVersion(), policy.getVersion());
-		Assert.assertEquals(dbPolicy.getDescription(), policy.getDescription());
-
-		Mockito.verify(daoManager).getXXService();
-	}
-
-	@Test
-	public void test3mapEntityToViewBean() {
-		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
-		XXService xService = Mockito.mock(XXService.class);
-		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
-		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
-		RangerPolicy rangerPolicy = rangerPolicy();
-		XXPolicy policy = policy();
-
-		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
-		Mockito.when(xServiceDao.getById(policy.getService())).thenReturn(
-				xService);
-		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
-		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(
-				xServiceDef);
-		RangerPolicy dbRangerPolicy = policyService.mapEntityToViewBean(
-				rangerPolicy, policy);
-
-		Assert.assertNotNull(dbRangerPolicy);
-		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
-		Assert.assertEquals(dbRangerPolicy.getGuid(), rangerPolicy.getGuid());
-		Assert.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
-		Assert.assertEquals(dbRangerPolicy.getIsEnabled(),
-				rangerPolicy.getIsEnabled());
-		Assert.assertEquals(dbRangerPolicy.getVersion(),
-				rangerPolicy.getVersion());
-		Assert.assertEquals(dbRangerPolicy.getDescription(),
-				rangerPolicy.getDescription());
-
-		Mockito.verify(daoManager).getXXService();
-	}
-
+    private XXPolicy policy() {
+        XXPolicy xxPolicy = new XXPolicy();
+        xxPolicy.setId(Id);
+        xxPolicy.setName("HDFS_1-1-20150316062453");
+        xxPolicy.setAddedByUserId(Id);
+        xxPolicy.setCreateTime(new Date());
+        xxPolicy.setDescription("test");
+        xxPolicy.setIsAuditEnabled(false);
+        xxPolicy.setIsEnabled(false);
+        xxPolicy.setService(1L);
+        xxPolicy.setUpdatedByUserId(Id);
+        xxPolicy.setUpdateTime(new Date());
+        xxPolicy.setZoneId(1L);
+        return xxPolicy;
+    }
 }

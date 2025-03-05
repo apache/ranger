@@ -24,76 +24,79 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerGeolocationDatabase {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerGeolocationDatabase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerGeolocationDatabase.class);
 
-	private BinarySearchTree<RangerGeolocationData, Long> data = new BinarySearchTree<>();
+    private BinarySearchTree<RangerGeolocationData, Long> data     = new BinarySearchTree<>();
+    private GeolocationMetadata                           metadata = new GeolocationMetadata();
 
-	private GeolocationMetadata metadata = new GeolocationMetadata();
+    public String getValue(final RangerGeolocationData geolocationData, final String attributeName) {
+        String value = null;
 
-	public String getValue(final RangerGeolocationData geolocationData, final String attributeName) {
-		String value = null;
-		int index = -1;
+        if (geolocationData != null && StringUtils.isNotBlank(attributeName)) {
+            int index = getMetadata().getDataItemNameIndex(attributeName);
 
-		if (geolocationData != null && StringUtils.isNotBlank(attributeName)) {
-			if ((index = getMetadata().getDataItemNameIndex(attributeName)) != -1) {
-				String[] attrValues = geolocationData.getLocationData();
-				if (index < attrValues.length) {
-					value = attrValues[index];
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("RangerGeolocationDatabase.getValue() - No value specified attribute-name:" + attributeName);
-					}
-				}
-			} else {
-				LOG.error("RangerGeolocationDatabase.getValue() - RangerGeolocationDatabase not initialized or Invalid attribute-name:" + attributeName);
-			}
-		}
+            if (index != -1) {
+                String[] attrValues = geolocationData.getLocationData();
 
-		return value;
-	}
+                if (index < attrValues.length) {
+                    value = attrValues[index];
+                } else {
+                    LOG.debug("RangerGeolocationDatabase.getValue() - No value specified attribute-name:{}", attributeName);
+                }
+            } else {
+                LOG.error("RangerGeolocationDatabase.getValue() - RangerGeolocationDatabase not initialized or Invalid attribute-name:{}", attributeName);
+            }
+        }
 
-	public RangerGeolocationData find(final String ipAddressStr) {
-		RangerGeolocationData ret = null;
+        return value;
+    }
 
-		if (StringUtils.isNotBlank(ipAddressStr) && RangerGeolocationData.validateAsIP(ipAddressStr, true)) {
-			ret = data.find(RangerGeolocationData.ipAddressToLong(ipAddressStr));
-		}
-		return ret;
-	}
+    public RangerGeolocationData find(final String ipAddressStr) {
+        RangerGeolocationData ret = null;
 
-	public void optimize() {
-		long start = 0L, end = 0L;
+        if (StringUtils.isNotBlank(ipAddressStr) && RangerGeolocationData.validateAsIP(ipAddressStr, true)) {
+            ret = data.find(RangerGeolocationData.ipAddressToLong(ipAddressStr));
+        }
 
-		start = System.currentTimeMillis();
-		data.rebalance();
-		end = System.currentTimeMillis();
+        return ret;
+    }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerGeolocationDatabase.optimize() - Time taken for optimizing database = " + (end - start) + " milliseconds");
-		}
-	}
+    public void optimize() {
+        long start = System.currentTimeMillis();
+        data.rebalance();
+        long end = System.currentTimeMillis();
 
-	public void setData(final BinarySearchTree<RangerGeolocationData, Long> dataArg) { data = dataArg != null ? dataArg : new BinarySearchTree<RangerGeolocationData, Long>();}
+        LOG.debug("RangerGeolocationDatabase.optimize() - Time taken for optimizing database = {} milliseconds", (end - start));
+    }
 
-	public void setMetadata(final GeolocationMetadata metadataArg) { metadata = metadataArg != null ? metadataArg : new GeolocationMetadata();}
+    public GeolocationMetadata getMetadata() {
+        return metadata;
+    }
 
-	public GeolocationMetadata getMetadata() { return metadata; }
+    public void setMetadata(final GeolocationMetadata metadataArg) {
+        metadata = metadataArg != null ? metadataArg : new GeolocationMetadata();
+    }
 
-	public BinarySearchTree<RangerGeolocationData, Long> getData() { return data; }
+    public BinarySearchTree<RangerGeolocationData, Long> getData() {
+        return data;
+    }
 
-	public void dump(ValuePrinter<RangerGeolocationData> processor) {
+    public void setData(final BinarySearchTree<RangerGeolocationData, Long> dataArg) {
+        data = dataArg != null ? dataArg : new BinarySearchTree<>();
+    }
 
-		BinarySearchTree<RangerGeolocationData, Long> geoDatabase = getData();
-		GeolocationMetadata metadata = getMetadata();
-		processor.build();
+    public void dump(ValuePrinter<RangerGeolocationData> processor) {
+        BinarySearchTree<RangerGeolocationData, Long> geoDatabase = getData();
+        GeolocationMetadata                           metadata    = getMetadata();
+        processor.build();
 
-		processor.print("#================== Geolocation metadata ==================");
-		processor.print(metadata.toString());
+        processor.print("#================== Geolocation metadata ==================");
+        processor.print(metadata.toString());
 
-		processor.print("#================== Dump of geoDatabase - START ==================");
-		geoDatabase.preOrderTraverseTree(processor);
-		processor.print("#================== Dump of geoDatabase - END   ==================");
+        processor.print("#================== Dump of geoDatabase - START ==================");
+        geoDatabase.preOrderTraverseTree(processor);
+        processor.print("#================== Dump of geoDatabase - END   ==================");
 
-		processor.close();
-	}
+        processor.close();
+    }
 }

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.entity;
 
-import java.util.Objects;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,65 +28,51 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import java.util.Objects;
+
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_group")
-public class XXSecurityZoneRefGroup extends XXDBBase implements java.io.Serializable{
-	private static final long serialVersionUID = 1L;
-  	@Id
+public class XXSecurityZoneRefGroup extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Id
     @SequenceGenerator(name = "x_sec_zone_ref_group_SEQ", sequenceName = "x_sec_zone_ref_group_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_sec_zone_ref_group_SEQ")
     @Column(name = "id")
     protected Long id;
 
-  	/**
-	 * zoneId of the XXSecurityZoneRefGroup
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "zone_id")
-	protected Long zoneId;
+    /**
+     * zoneId of the XXSecurityZoneRefGroup
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "zone_id")
+    protected Long zoneId;
 
-  	/**
-	 * groupId of the XXSecurityZoneRefGroup
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "group_id")
-	protected Long groupId;
+    /**
+     * groupId of the XXSecurityZoneRefGroup
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "group_id")
+    protected Long groupId;
 
-	/**
-	 * groupName of the XXSecurityZoneRefGroup
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "group_name")
-	protected String groupName;
+    /**
+     * groupName of the XXSecurityZoneRefGroup
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "group_name")
+    protected String groupName;
 
-	/**
-	 * groupType of the XXSecurityZoneRefGroup , 1 for admin,0 for audit user.
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "group_type")
-	protected Integer groupType;
-
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-
-    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
+    /**
+     * groupType of the XXSecurityZoneRefGroup , 1 for admin,0 for audit user.
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "group_type")
+    protected Integer groupType;
 
     @Override
     public Long getId() {
@@ -95,120 +80,125 @@ public class XXSecurityZoneRefGroup extends XXDBBase implements java.io.Serializ
     }
 
     /**
-	 * This method sets the value to the member attribute <b> zoneId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param zoneId
-	 *            Value to set member attribute <b> zoneId</b>
-	 */
-	public void setZoneId(Long zoneId) {
-		this.zoneId = zoneId;
-	}
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
 
-	/**
-	 * Returns the value for the member attribute <b>zoneId</b>
-	 *
-	 * @return Date - value of member attribute <b>zoneId</b> .
-	 */
-	public Long getZoneId() {
-		return this.zoneId;
-	}
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> groupId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param groupId
-	 *            Value to set member attribute <b> groupId</b>
-	 */
-	public void setGroupId(Long groupId) {
-		this.groupId = groupId;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, zoneId, groupId, groupName, groupType);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>groupId</b>
-	 *
-	 * @return Date - value of member attribute <b>groupId</b> .
-	 */
-	public Long getGroupId() {
-		return groupId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * This method sets the value to the member attribute <b> groupName</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param groupName
-	 *            Value to set member attribute <b> groupName</b>
-	 */
-	public void setGroupName(String groupName) {
-		this.groupName = groupName;
-	}
+        XXSecurityZoneRefGroup other = (XXSecurityZoneRefGroup) obj;
 
-	/**
-	 * Returns the value for the member attribute <b>groupName</b>
-	 *
-	 * @return Date - value of member attribute <b>groupName</b> .
-	 */
-	public String getGroupName() {
-		return groupName;
-	}
+        return Objects.equals(id, other.id) &&
+                Objects.equals(zoneId, other.zoneId) &&
+                Objects.equals(groupId, other.groupId) &&
+                Objects.equals(groupName, other.groupName) &&
+                Objects.equals(groupType, other.groupType);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> groupType</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param groupType
-	 *            Value to set member attribute <b> groupType</b>
-	 */
-	public void setGroupType(Integer groupType) {
-		this.groupType = groupType;
-	}
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXSecurityZoneRefGroup [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", groupId=" + groupId + ", groupName=" + groupName + ", groupType=" + groupType + "]";
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>groupType</b>
-	 *
-	 * @return Date - value of member attribute <b>groupType</b> .
-	 */
-	public Integer getUserType() {
-		return groupType;
-	}
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), id, zoneId, groupId, groupName, groupType);
-	}
+    /**
+     * Returns the value for the member attribute <b>zoneId</b>
+     *
+     * @return Date - value of member attribute <b>zoneId</b> .
+     */
+    public Long getZoneId() {
+        return this.zoneId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
+    /**
+     * This method sets the value to the member attribute <b> zoneId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param zoneId Value to set member attribute <b> zoneId</b>
+     */
+    public void setZoneId(Long zoneId) {
+        this.zoneId = zoneId;
+    }
 
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
+    /**
+     * Returns the value for the member attribute <b>groupId</b>
+     *
+     * @return Date - value of member attribute <b>groupId</b> .
+     */
+    public Long getGroupId() {
+        return groupId;
+    }
 
-		XXSecurityZoneRefGroup other = (XXSecurityZoneRefGroup) obj;
+    /**
+     * This method sets the value to the member attribute <b> groupId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param groupId Value to set member attribute <b> groupId</b>
+     */
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
 
-		return super.equals(obj) &&
-			   Objects.equals(id, other.id) &&
-			   Objects.equals(zoneId, other.zoneId) &&
-			   Objects.equals(groupId, other.groupId) &&
-			   Objects.equals(groupName, other.groupName) &&
-			   Objects.equals(groupType, other.groupType);
-	}
+    /**
+     * Returns the value for the member attribute <b>groupName</b>
+     *
+     * @return Date - value of member attribute <b>groupName</b> .
+     */
+    public String getGroupName() {
+        return groupName;
+    }
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXSecurityZoneRefGroup [" + super.toString() + " id=" + id + ", zoneId=" + zoneId + ", groupId="
-				+ groupId + ", groupName=" + groupName +", groupType=" + groupType +  "]";
-	}
+    /**
+     * This method sets the value to the member attribute <b> groupName</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param groupName Value to set member attribute <b> groupName</b>
+     */
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> groupType</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param groupType Value to set member attribute <b> groupType</b>
+     */
+    public void setGroupType(Integer groupType) {
+        this.groupType = groupType;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>groupType</b>
+     *
+     * @return Date - value of member attribute <b>groupType</b> .
+     */
+    public Integer getUserType() {
+        return groupType;
+    }
 }

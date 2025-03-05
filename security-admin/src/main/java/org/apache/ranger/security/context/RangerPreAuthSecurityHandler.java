@@ -19,11 +19,6 @@
 
 package org.apache.ranger.security.context;
 
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.ContextUtil;
@@ -36,102 +31,126 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.http.HttpServletResponse;
+
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+
 @Component("rangerPreAuthSecurityHandler")
 public class RangerPreAuthSecurityHandler {
-	Logger logger = LoggerFactory.getLogger(RangerPreAuthSecurityHandler.class);
+    Logger logger = LoggerFactory.getLogger(RangerPreAuthSecurityHandler.class);
 
-	@Autowired
-	RangerDaoManager daoManager;
+    @Autowired
+    RangerDaoManager daoManager;
 
-	@Autowired
-	RESTErrorUtil restErrorUtil;
+    @Autowired
+    RESTErrorUtil restErrorUtil;
 
-	@Autowired
-	RangerAPIMapping rangerAPIMapping;
-	
-	@Autowired
-	SessionMgr sessionMgr;
+    @Autowired
+    RangerAPIMapping rangerAPIMapping;
 
-	public boolean isAPIAccessible(String methodName) throws Exception {
+    @Autowired
+    SessionMgr sessionMgr;
 
-		if (methodName == null) {
-			return false;
-		}
+    public boolean isAPIAccessible(String methodName) {
+        if (methodName == null) {
+            return false;
+        }
 
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession == null) {
-			logger.warn("WARNING: UserSession found null. Some non-authorized user might be trying to access the API.");
-			return false;
-		}
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 
-		if (userSession.isUserAdmin()) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("WARNING: Logged in user is System Admin, System Admin is allowed to access all the tabs except Key Manager."
-						+ "Reason for returning true is, In few cases system admin needs to have access on Key Manager tabs as well.");
-			}
-			return true;
-		}
+        if (userSession == null) {
+            logger.warn("WARNING: UserSession found null. Some non-authorized user might be trying to access the API.");
 
-		Set<String> associatedTabs = rangerAPIMapping.getAssociatedTabsWithAPI(methodName);
-		if (CollectionUtils.isEmpty(associatedTabs)) {
-			return true;
-		}
-                if(associatedTabs.contains(RangerAPIMapping.TAB_PERMISSIONS) && userSession.isAuditUserAdmin()){
-                        return true;
+            return false;
+        }
+
+        if (userSession.isUserAdmin()) {
+            logger.debug("WARNING: Logged in user is System Admin, System Admin is allowed to access all the tabs except Key Manager. Reason for returning true is, In few cases system admin needs to have access on Key Manager tabs as well.");
+
+            return true;
+        }
+
+        Set<String> associatedTabs = rangerAPIMapping.getAssociatedTabsWithAPI(methodName);
+
+        if (CollectionUtils.isEmpty(associatedTabs)) {
+            return true;
+        }
+
+        if (associatedTabs.contains(RangerAPIMapping.TAB_PERMISSIONS) && userSession.isAuditUserAdmin()) {
+            return true;
+        }
+
+        return isAPIAccessible(associatedTabs);
+    }
+
+    public boolean isAPIAccessible(Set<String> associatedTabs) {
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        if (userSession != null) {
+            sessionMgr.refreshPermissionsIfNeeded(userSession);
+
+            if (userSession.getRangerUserPermission() != null) {
+                CopyOnWriteArraySet<String> accessibleModules = userSession.getRangerUserPermission().getUserPermissions();
+
+                if (CollectionUtils.containsAny(accessibleModules, associatedTabs)) {
+                    return true;
                 }
-		return isAPIAccessible(associatedTabs);
-	}
+            }
+        }
 
-	public boolean isAPIAccessible(Set<String> associatedTabs) throws Exception {
-
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession != null) {
-			sessionMgr.refreshPermissionsIfNeeded(userSession);
-			if (userSession.getRangerUserPermission() != null) {
-				CopyOnWriteArraySet<String> accessibleModules = userSession.getRangerUserPermission().getUserPermissions();
-				if (CollectionUtils.containsAny(accessibleModules, associatedTabs)) {
-					return true;
-				}
-			}
-		}
-		VXResponse gjResponse = new VXResponse();
-        gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
-        gjResponse.setMsgDesc("User is not allowed to access the API");
-        throw restErrorUtil.generateRESTException(gjResponse);
-	}
-
-	public boolean isAPISpnegoAccessible(){
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-                if (userSession != null && (userSession.isSpnegoEnabled() || userSession.isUserAdmin() || userSession.isAuditUserAdmin())) {
-			return true;
-                }else if(userSession != null && (userSession.isUserAdmin() || userSession.isKeyAdmin() || userSession.isAuditKeyAdmin())){
-			return true;
-		}
         VXResponse gjResponse = new VXResponse();
+
         gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
         gjResponse.setMsgDesc("User is not allowed to access the API");
+
         throw restErrorUtil.generateRESTException(gjResponse);
-	}
-	
-	public boolean isAdminOrKeyAdminRole(){
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession != null && (userSession.isKeyAdmin() || userSession.isUserAdmin())) {
-			return true;
-		}
-		VXResponse gjResponse = new VXResponse();
+    }
+
+    public boolean isAPISpnegoAccessible() {
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        if (userSession != null && (userSession.isSpnegoEnabled() || userSession.isUserAdmin() || userSession.isAuditUserAdmin())) {
+            return true;
+        } else if (userSession != null && (userSession.isUserAdmin() || userSession.isKeyAdmin() || userSession.isAuditKeyAdmin())) {
+            return true;
+        }
+
+        VXResponse gjResponse = new VXResponse();
+
+        gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+        gjResponse.setMsgDesc("User is not allowed to access the API");
+
+        throw restErrorUtil.generateRESTException(gjResponse);
+    }
+
+    public boolean isAdminOrKeyAdminRole() {
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        if (userSession != null && (userSession.isKeyAdmin() || userSession.isUserAdmin())) {
+            return true;
+        }
+
+        VXResponse gjResponse = new VXResponse();
+
         gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN); // assert user is authenticated.
         gjResponse.setMsgDesc("User is not allowed to access the API");
-        throw restErrorUtil.generateRESTException(gjResponse);
-	}
 
-	public boolean isAdminRole(){
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
-		if (userSession != null && userSession.isUserAdmin()) {
-			return true;
-		}
-		VXResponse gjResponse = new VXResponse();
-		gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN); // assert user is authenticated.
-		gjResponse.setMsgDesc("User is not allowed to access the API");
-		throw restErrorUtil.generateRESTException(gjResponse);
-	}
+        throw restErrorUtil.generateRESTException(gjResponse);
+    }
+
+    public boolean isAdminRole() {
+        UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+
+        if (userSession != null && userSession.isUserAdmin()) {
+            return true;
+        }
+
+        VXResponse gjResponse = new VXResponse();
+
+        gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN); // assert user is authenticated.
+        gjResponse.setMsgDesc("User is not allowed to access the API");
+
+        throw restErrorUtil.generateRESTException(gjResponse);
+    }
 }
