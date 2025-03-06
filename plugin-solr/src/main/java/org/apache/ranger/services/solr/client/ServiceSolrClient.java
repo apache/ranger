@@ -66,14 +66,14 @@ import java.util.concurrent.TimeUnit;
 public class ServiceSolrClient {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceSolrClient.class);
 
-    private final String     url;
-    private final String     username;
-    private final String     password;
-    private final String     serviceName;
-    private final String     authType;
-    private final boolean    isKerberosAuth;
+    private final String  url;
+    private final String  username;
+    private final String  password;
+    private final String  serviceName;
+    private final String  authType;
+    private final boolean isKerberosAuth;
+    private final boolean isSolrCloud;
 
-    private boolean    isSolrCloud;
     private Subject    loginSubject;
     private SolrClient solrClient;
 
@@ -161,44 +161,41 @@ public class ServiceSolrClient {
 
                 if (lookupResource == RangerSolrConstants.ResourceType.COLLECTION) {
                     // get the collection list for given Input
-                    callableObj = new Callable<List<String>>() {
-                        @Override
-                        public List<String> call() {
-                            List<String> retList = new ArrayList<>();
+                    callableObj = () -> {
+                        List<String> retList = new ArrayList<>();
 
-                            try {
-                                List<String> list = null;
+                        try {
+                            List<String> list;
 
-                                if (isKerberosAuth) {
-                                    list = Subject.doAs(loginSubject, (PrivilegedAction<List<String>>) () -> {
-                                        List<String> ret = null;
+                            if (isKerberosAuth) {
+                                list = Subject.doAs(loginSubject, (PrivilegedAction<List<String>>) () -> {
+                                    List<String> ret = null;
 
-                                        try {
-                                            ret = getCollectionList(finalCollectionList);
-                                        } catch (Exception e) {
-                                            LOG.error("Unable to get collections, Error : {}", e.getMessage(), new Throwable(e));
-                                        }
-                                        return ret;
-                                    });
-                                } else {
-                                    list = getCollectionList(finalCollectionList);
-                                }
-
-                                if (userInputFinal != null && !userInputFinal.isEmpty()) {
-                                    for (String value : list) {
-                                        if (value.startsWith(userInputFinal)) {
-                                            retList.add(value);
-                                        }
+                                    try {
+                                        ret = getCollectionList(finalCollectionList);
+                                    } catch (Exception e) {
+                                        LOG.error("Unable to get collections, Error : {}", e.getMessage(), new Throwable(e));
                                     }
-                                } else {
-                                    retList.addAll(list);
-                                }
-                            } catch (Exception ex) {
-                                LOG.error("Error getting collections.", ex);
+                                    return ret;
+                                });
+                            } else {
+                                list = getCollectionList(finalCollectionList);
                             }
 
-                            return retList;
+                            if (userInputFinal != null && !userInputFinal.isEmpty()) {
+                                for (String value : list) {
+                                    if (value.startsWith(userInputFinal)) {
+                                        retList.add(value);
+                                    }
+                                }
+                            } else {
+                                retList.addAll(list);
+                            }
+                        } catch (Exception ex) {
+                            LOG.error("Error getting collections.", ex);
                         }
+
+                        return retList;
                     };
                 } else if (lookupResource == RangerSolrConstants.ResourceType.FIELD) {
                     callableObj = () -> {
@@ -221,6 +218,7 @@ public class ServiceSolrClient {
                             } else {
                                 list = getFieldList(finalCollectionList, finalFieldList);
                             }
+
                             if (userInputFinal != null && !userInputFinal.isEmpty()) {
                                 for (String value : list) {
                                     if (value.startsWith(userInputFinal)) {
@@ -295,42 +293,40 @@ public class ServiceSolrClient {
                     resultList = retList;
                 } else if (lookupResource == RangerSolrConstants.ResourceType.SCHEMA) {
                     // get the collection list for given Input, since there is no way of getting a list of the available schemas
-                    callableObj = new Callable<List<String>>() {
-                        @Override
-                        public List<String> call() {
-                            List<String> retList = new ArrayList<>();
+                    callableObj = () -> {
+                        List<String> retList = new ArrayList<>();
 
-                            try {
-                                List<String> list;
+                        try {
+                            List<String> list;
 
-                                if (isKerberosAuth) {
-                                    list = Subject.doAs(loginSubject, (PrivilegedAction<List<String>>) () -> {
-                                        List<String> ret = null;
+                            if (isKerberosAuth) {
+                                list = Subject.doAs(loginSubject, (PrivilegedAction<List<String>>) () -> {
+                                    List<String> ret = null;
 
-                                        try {
-                                            ret = getSchemaList(finalSchemaList);
-                                        } catch (Exception e) {
-                                            LOG.error("Unable to get collections for schema listing, Error : {}", e.getMessage(), new Throwable(e));
-                                        }
-                                        return ret;
-                                    });
-                                } else {
-                                    list = getSchemaList(finalSchemaList);
-                                }
-                                if (userInputFinal != null && !userInputFinal.isEmpty()) {
-                                    for (String value : list) {
-                                        if (value.startsWith(userInputFinal)) {
-                                            retList.add(value);
-                                        }
+                                    try {
+                                        ret = getSchemaList(finalSchemaList);
+                                    } catch (Exception e) {
+                                        LOG.error("Unable to get collections for schema listing, Error : {}", e.getMessage(), new Throwable(e));
                                     }
-                                } else {
-                                    retList.addAll(list);
-                                }
-                            } catch (Exception ex) {
-                                LOG.error("Error getting collections for schema listing.", ex);
+                                    return ret;
+                                });
+                            } else {
+                                list = getSchemaList(finalSchemaList);
                             }
-                            return retList;
+                            if (userInputFinal != null && !userInputFinal.isEmpty()) {
+                                for (String value : list) {
+                                    if (value.startsWith(userInputFinal)) {
+                                        retList.add(value);
+                                    }
+                                }
+                            } else {
+                                retList.addAll(list);
+                            }
+                        } catch (Exception ex) {
+                            LOG.error("Error getting collections for schema listing.", ex);
                         }
+
+                        return retList;
                     };
                 }
 
