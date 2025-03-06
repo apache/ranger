@@ -327,7 +327,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                         logger.info("Calling solrPlugin.init()");
 
                         me.init();
-                        me.setResultProcessor(new RangerSolrAuditHandler(solrPlugin.getConfig()));
+                        me.setResultProcessor(new RangerSolrAuditHandler(me.getConfig()));
 
                         solrPlugin = me;
                     }
@@ -736,7 +736,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                 .append(" set_value=\"").append(Joiner.on(',').join(roles.iterator())).append("\"")
                 .append(" count_field=\"").append(tokenCountField).append("\"");
 
-        if (allRolesToken != null && !allRolesToken.equals("")) {
+        if (allRolesToken != null && !allRolesToken.isEmpty()) {
             filterQuery.append(" wildcard_token=\"").append(allRolesToken).append("\"");
         }
 
@@ -878,7 +878,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         }
 
         if (extraOpts != null && !extraOpts.isEmpty()) {
-            s.append(extraOpts + " ");
+            s.append(extraOpts).append(" ");
         }
 
         s.deleteCharAt(s.length() - 1);
@@ -904,7 +904,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         }
 
         if (extraOpts != null && !extraOpts.isEmpty()) {
-            s.append(" " + extraOpts);
+            s.append(" ").append(extraOpts);
         }
 
         s.append("}");
@@ -917,7 +917,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
         if (attributeValues.size() == 1) {
             value = attributeValues.iterator().next();
-        } else if (allUsersValue != null && !allUsersValue.equals("")) {
+        } else if (allUsersValue != null && !allUsersValue.isEmpty()) {
             value = allUsersValue;
         } else {
             throw new IllegalArgumentException("Greater Than Filter Query cannot be built for field " + fieldName);
@@ -929,7 +929,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             extraClause.append(" (*:* AND -").append(fieldName).append(":*)");
         }
 
-        if (extraOpts != null && !extraOpts.equals("")) {
+        if (extraOpts != null && !extraOpts.isEmpty()) {
             extraClause.append(" ").append(extraOpts);
         }
 
@@ -941,7 +941,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
         if (attributeValues.size() == 1) {
             value = attributeValues.iterator().next();
-        } else if (allUsersValue != null && !allUsersValue.equals("")) {
+        } else if (allUsersValue != null && !allUsersValue.isEmpty()) {
             value = allUsersValue;
         } else {
             throw new IllegalArgumentException("Less Than Filter Query cannot be built for field " + fieldName);
@@ -953,7 +953,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
             extraClause.append(" (*:* AND -").append(fieldName).append(":*)");
         }
 
-        if (extraOpts != null && !extraOpts.equals("")) {
+        if (extraOpts != null && !extraOpts.isEmpty()) {
             extraClause.append(" ").append(extraOpts);
         }
 
