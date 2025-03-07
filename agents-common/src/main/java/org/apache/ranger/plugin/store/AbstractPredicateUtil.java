@@ -190,6 +190,7 @@ public class AbstractPredicateUtil {
         addPredicateForPolicyPriority(filter.getParam(SearchFilter.POLICY_PRIORITY), predicates);
         addPredicateForPartialPolicyLabels(filter.getParam(SearchFilter.POLICY_LABELS_PARTIAL), predicates);
         addPredicateForZoneName(filter.getParam(SearchFilter.ZONE_NAME), predicates);
+        addPredicateForPrefixPolicyName(filter.getParam(SearchFilter.POLICY_NAME_PREFIX), predicates);
         // addPredicateForZoneId(filter.getParam(SearchFilter.ZONE_ID), predicates); // not supported
     }
 
@@ -341,6 +342,36 @@ public class AbstractPredicateUtil {
                 RangerPolicy policy = (RangerPolicy) object;
 
                 ret1 = StringUtils.equals(policyName, policy.getName());
+            } else {
+                ret1 = true;
+            }
+
+            return ret1;
+        };
+
+        if (predicates != null) {
+            predicates.add(ret);
+        }
+
+        return ret;
+    }
+
+    private Predicate addPredicateForPrefixPolicyName(final String policyNamePrefix, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(policyNamePrefix)) {
+            return null;
+        }
+
+        Predicate ret = object -> {
+            if (object == null) {
+                return false;
+            }
+
+            boolean ret1;
+
+            if (object instanceof RangerPolicy) {
+                RangerPolicy policy = (RangerPolicy) object;
+
+                ret1 = StringUtils.startsWithIgnoreCase(policy.getName(), policyNamePrefix);
             } else {
                 ret1 = true;
             }

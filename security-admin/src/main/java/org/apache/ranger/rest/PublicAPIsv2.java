@@ -67,6 +67,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Path("public/v2")
@@ -684,6 +685,25 @@ public class PublicAPIsv2 {
         serviceREST.deletePolicy(policy.getId());
 
         logger.debug("<== PublicAPIsv2.deletePolicyByName({}, {})", serviceName, policyName);
+    }
+
+    @DELETE
+    @Path("/api/policies/bulk")
+    @Produces("application/json")
+    public List<Long> deletePolicies(@Context HttpServletRequest request, @QueryParam("serviceName") String serviceName) {
+        logger.debug("==> PublicAPIsv2.deletePolicies()");
+
+        if (StringUtils.isBlank(serviceName)) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Invalid service name", true);
+        }
+
+        List<Long> ret = serviceREST.deleteBulkPolicies(serviceName, request);
+
+        Collections.sort(ret);
+
+        logger.debug("<== PublicAPIsv2.deletePolicies()");
+
+        return ret;
     }
 
     @DELETE

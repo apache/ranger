@@ -72,6 +72,7 @@ public class SearchFilter {
     public static final String USER_NAME_PARTIAL        = "userNamePartial";      // search
     public static final String SERVICE_NAME_PREFIX      = "serviceNamePrefix";    // search
     public static final String ZONE_NAME_PREFIX         = "zoneNamePrefix";       // search
+    public static final String POLICY_NAME_PREFIX       = "policyNamePrefix";
 
     public static final String TAG_DEF_ID                = "tagDefId";            // search
     public static final String TAG_DEF_GUID              = "tagDefGuid";          // search

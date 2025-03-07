@@ -130,6 +130,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1515,6 +1516,234 @@ public class TestServiceDBStore {
         Assert.assertEquals(dbRangerPolicy.getService(), rangerPolicy.getService());
         Assert.assertEquals(dbRangerPolicy.getIsEnabled(), rangerPolicy.getIsEnabled());
         Assert.assertEquals(dbRangerPolicy.getVersion(), rangerPolicy.getVersion());
+    }
+
+    @Test
+    public void test29deletePolicies() throws Exception {
+        setup();
+        XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
+        XXService xService = Mockito.mock(XXService.class);
+        XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
+
+        RangerService rangerService = rangerService();
+        RangerPolicy rangerPolicy1 = rangerPolicy();
+        RangerPolicy rangerPolicy2 = rangerPolicy();
+        rangerPolicy2.setName("HDFS_1-2-20150316062453");
+        rangerPolicy2.setId(Id + 1L);
+        rangerPolicy2.setGuid("policyguid2");
+        String name = "HDFS_1-1-20150316062453";
+
+        List<XXPolicyItem> policyItemList = new ArrayList<XXPolicyItem>();
+        XXPolicyItem policyItem1 = new XXPolicyItem();
+        policyItem1.setAddedByUserId(Id);
+        policyItem1.setCreateTime(new Date());
+        policyItem1.setDelegateAdmin(false);
+        policyItem1.setId(Id);
+        policyItem1.setOrder(1);
+        policyItem1.setPolicyId(Id);
+        policyItem1.setUpdatedByUserId(Id);
+        policyItem1.setUpdateTime(new Date());
+        policyItemList.add(policyItem1);
+
+        XXPolicyItem policyItem2 = new XXPolicyItem();
+        policyItem2.setAddedByUserId(Id);
+        policyItem2.setCreateTime(new Date());
+        policyItem2.setDelegateAdmin(false);
+        policyItem2.setId(Id + 1L);
+        policyItem2.setOrder(2);
+        policyItem2.setPolicyId(Id + 1L);
+        policyItem2.setUpdatedByUserId(Id);
+        policyItem2.setUpdateTime(new Date());
+        policyItemList.add(policyItem2);
+
+        List<XXPolicyItemCondition> policyItemConditionList = new ArrayList<XXPolicyItemCondition>();
+        XXPolicyItemCondition policyItemCondition1 = new XXPolicyItemCondition();
+        policyItemCondition1.setAddedByUserId(Id);
+        policyItemCondition1.setCreateTime(new Date());
+        policyItemCondition1.setType(1L);
+        policyItemCondition1.setId(Id);
+        policyItemCondition1.setOrder(1);
+        policyItemCondition1.setPolicyItemId(Id);
+        policyItemCondition1.setUpdatedByUserId(Id);
+        policyItemCondition1.setUpdateTime(new Date());
+        policyItemConditionList.add(policyItemCondition1);
+
+        XXPolicyItemCondition policyItemCondition2 = new XXPolicyItemCondition();
+        policyItemCondition2.setAddedByUserId(Id);
+        policyItemCondition2.setCreateTime(new Date());
+        policyItemCondition2.setType(1L);
+        policyItemCondition2.setId(Id + 1L);
+        policyItemCondition2.setOrder(2);
+        policyItemCondition2.setPolicyItemId(Id + 1L);
+        policyItemCondition2.setUpdatedByUserId(Id);
+        policyItemCondition2.setUpdateTime(new Date());
+        policyItemConditionList.add(policyItemCondition2);
+
+        List<XXPolicyItemGroupPerm> policyItemGroupPermList = new ArrayList<XXPolicyItemGroupPerm>();
+        XXPolicyItemGroupPerm policyItemGroupPerm1 = new XXPolicyItemGroupPerm();
+        policyItemGroupPerm1.setAddedByUserId(Id);
+        policyItemGroupPerm1.setCreateTime(new Date());
+        policyItemGroupPerm1.setGroupId(Id);
+
+        XXPolicyItemGroupPerm policyItemGroupPerm2 = new XXPolicyItemGroupPerm();
+        policyItemGroupPerm2.setAddedByUserId(Id);
+        policyItemGroupPerm2.setCreateTime(new Date());
+        policyItemGroupPerm2.setGroupId(Id);
+
+        List<XXServiceConfigMap> xConfMapList = new ArrayList<XXServiceConfigMap>();
+        XXServiceConfigMap xConfMap1 = new XXServiceConfigMap();
+        xConfMap1.setAddedByUserId(null);
+        xConfMap1.setConfigkey(name);
+        xConfMap1.setConfigvalue(name);
+        xConfMap1.setCreateTime(new Date());
+        xConfMap1.setServiceId(null);
+        xConfMap1.setId(Id);
+        xConfMap1.setUpdatedByUserId(null);
+        xConfMap1.setUpdateTime(new Date());
+        xConfMapList.add(xConfMap1);
+
+        XXServiceConfigMap xConfMap2 = new XXServiceConfigMap();
+        xConfMap2.setAddedByUserId(null);
+        xConfMap2.setConfigkey(name);
+        xConfMap2.setConfigvalue(name);
+        xConfMap2.setCreateTime(new Date());
+        xConfMap2.setServiceId(null);
+        xConfMap2.setId(Id + 1L);
+        xConfMap2.setUpdatedByUserId(null);
+        xConfMap2.setUpdateTime(new Date());
+        xConfMapList.add(xConfMap2);
+
+        policyItemGroupPerm1.setId(Id);
+        policyItemGroupPerm1.setOrder(1);
+        policyItemGroupPerm1.setPolicyItemId(Id);
+        policyItemGroupPerm1.setUpdatedByUserId(Id);
+        policyItemGroupPerm1.setUpdateTime(new Date());
+        policyItemGroupPermList.add(policyItemGroupPerm1);
+
+        policyItemGroupPerm2.setId(Id + 1L);
+        policyItemGroupPerm2.setOrder(2);
+        policyItemGroupPerm2.setPolicyItemId(Id + 1L);
+        policyItemGroupPerm2.setUpdatedByUserId(Id);
+        policyItemGroupPerm2.setUpdateTime(new Date());
+        policyItemGroupPermList.add(policyItemGroupPerm2);
+
+        List<XXPolicyItemUserPerm> policyItemUserPermList = new ArrayList<XXPolicyItemUserPerm>();
+        XXPolicyItemUserPerm policyItemUserPerm1 = new XXPolicyItemUserPerm();
+        policyItemUserPerm1.setAddedByUserId(Id);
+        policyItemUserPerm1.setCreateTime(new Date());
+        policyItemUserPerm1.setPolicyItemId(Id);
+        policyItemUserPerm1.setId(Id);
+        policyItemUserPerm1.setOrder(1);
+        policyItemUserPerm1.setUpdatedByUserId(Id);
+        policyItemUserPerm1.setUpdateTime(new Date());
+        policyItemUserPermList.add(policyItemUserPerm1);
+
+        XXPolicyItemUserPerm policyItemUserPerm2 = new XXPolicyItemUserPerm();
+        policyItemUserPerm2.setAddedByUserId(Id);
+        policyItemUserPerm2.setCreateTime(new Date());
+        policyItemUserPerm2.setPolicyItemId(Id + 1L);
+        policyItemUserPerm2.setId(Id + 1L);
+        policyItemUserPerm2.setOrder(2);
+        policyItemUserPerm2.setUpdatedByUserId(Id);
+        policyItemUserPerm2.setUpdateTime(new Date());
+        policyItemUserPermList.add(policyItemUserPerm2);
+
+        List<XXPolicyItemAccess> policyItemAccessList = new ArrayList<XXPolicyItemAccess>();
+        XXPolicyItemAccess policyItemAccess1 = new XXPolicyItemAccess();
+        policyItemAccess1.setAddedByUserId(Id);
+        policyItemAccess1.setCreateTime(new Date());
+        policyItemAccess1.setPolicyitemid(Id);
+        policyItemAccess1.setId(Id);
+        policyItemAccess1.setOrder(1);
+        policyItemAccess1.setUpdatedByUserId(Id);
+        policyItemAccess1.setUpdateTime(new Date());
+        policyItemAccessList.add(policyItemAccess1);
+
+        XXPolicyItemAccess policyItemAccess2 = new XXPolicyItemAccess();
+        policyItemAccess2.setAddedByUserId(Id);
+        policyItemAccess2.setCreateTime(new Date());
+        policyItemAccess2.setPolicyitemid(Id + 1L);
+        policyItemAccess2.setId(Id + 1L);
+        policyItemAccess2.setOrder(2);
+        policyItemAccess2.setUpdatedByUserId(Id);
+        policyItemAccess2.setUpdateTime(new Date());
+        policyItemAccessList.add(policyItemAccess2);
+
+        List<XXPolicyResource> policyResourceList = new ArrayList<XXPolicyResource>();
+        XXPolicyResource policyResource1 = new XXPolicyResource();
+        policyResource1.setId(Id);
+        policyResource1.setCreateTime(new Date());
+        policyResource1.setAddedByUserId(Id);
+        policyResource1.setIsExcludes(false);
+        policyResource1.setIsRecursive(false);
+        policyResource1.setPolicyId(Id);
+        policyResource1.setResDefId(Id);
+        policyResource1.setUpdatedByUserId(Id);
+        policyResource1.setUpdateTime(new Date());
+        policyResourceList.add(policyResource1);
+
+        XXPolicyResource policyResource2 = new XXPolicyResource();
+        policyResource2.setId(Id + 1L);
+        policyResource2.setCreateTime(new Date());
+        policyResource2.setAddedByUserId(Id);
+        policyResource2.setIsExcludes(false);
+        policyResource2.setIsRecursive(false);
+        policyResource2.setPolicyId(Id + 1L);
+        policyResource2.setResDefId(Id);
+        policyResource2.setUpdatedByUserId(Id);
+        policyResource2.setUpdateTime(new Date());
+        policyResourceList.add(policyResource2);
+
+        XXPolicyResourceMap policyResourceMap1 = new XXPolicyResourceMap();
+        policyResourceMap1.setAddedByUserId(Id);
+        policyResourceMap1.setCreateTime(new Date());
+        policyResourceMap1.setId(Id);
+        policyResourceMap1.setOrder(1);
+        policyResourceMap1.setResourceId(Id);
+        policyResourceMap1.setUpdatedByUserId(Id);
+        policyResourceMap1.setUpdateTime(new Date());
+        policyResourceMap1.setValue("1L");
+
+        XXPolicyResourceMap policyResourceMap2 = new XXPolicyResourceMap();
+        policyResourceMap2.setAddedByUserId(Id);
+        policyResourceMap2.setCreateTime(new Date());
+        policyResourceMap2.setId(Id + 1L);
+        policyResourceMap2.setOrder(2);
+        policyResourceMap2.setResourceId(Id);
+        policyResourceMap2.setUpdatedByUserId(Id);
+        policyResourceMap2.setUpdateTime(new Date());
+        policyResourceMap2.setValue("2L");
+
+        List<XXServiceConfigDef> xServiceConfigDefList = new ArrayList<XXServiceConfigDef>();
+        XXServiceConfigDef serviceConfigDefObj = new XXServiceConfigDef();
+        serviceConfigDefObj.setId(Id);
+        xServiceConfigDefList.add(serviceConfigDefObj);
+
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
+        Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
+                rangerService);
+
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.getById(Id)).thenReturn(xService);
+
+        Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
+        Mockito.when(xServiceDao.getById(rangerService.getId())).thenReturn(
+                xService);
+        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+        Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy1.getId())).thenReturn(ListUtils.EMPTY_LIST);
+
+        Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
+        Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy2.getId())).thenReturn(ListUtils.EMPTY_LIST);
+
+        Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
+        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy1)).thenReturn(true);
+        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy2)).thenReturn(true);
+
+        serviceDBStore.deletePolicies(new HashSet<>(Arrays.asList(rangerPolicy1, rangerPolicy2)), name, new ArrayList<>());
+        Mockito.verify(policyService, Mockito.times(1)).delete(rangerPolicy1);
+        Mockito.verify(policyService, Mockito.times(1)).delete(rangerPolicy2);
+        Mockito.verify(bizUtil, Mockito.atLeast(1)).bulkModeOnlyFlushAndClear();
     }
 
     @Test

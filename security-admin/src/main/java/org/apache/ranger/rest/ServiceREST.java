@@ -3089,6 +3089,30 @@ public class ServiceREST {
         return ret;
     }
 
+    public List<Long> deleteBulkPolicies(String serviceName, HttpServletRequest request) {
+        LOG.debug("==> ServiceREST.deleteBulkPolicies({})", serviceName);
+
+        Set<RangerPolicy> policies = new HashSet<>(getBulkPolicies(serviceName, request));
+
+        ensureAdminAccessForServicePolicies(serviceName, policies);
+
+        List<Long> ret = new ArrayList<>();
+
+        try {
+            svcStore.deletePolicies(policies, serviceName, ret);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("deleteBulkPolicies(): failed after deleting {} of {} policies", ret.size(), policies.size(), excp);
+
+            throw restErrorUtil.createRESTException("Failed after deleting " + ret.size() + " of " + policies.size() + " policies. Error " + excp);
+        }
+
+        LOG.debug("<== ServiceREST.deleteBulkPolicies(): count={}", ret.size());
+
+        return ret;
+    }
+
     public RangerPolicyResource getPolicyResource(Object resourceName, GrantRevokeRequest grantRequest) {
         RangerPolicyResource ret;
 
@@ -3175,6 +3199,46 @@ public class ServiceREST {
 
     void ensureAdminAndAuditAccess(RangerPolicy policy) {
         ensureAdminAndAuditAccess(policy, new HashMap<>());
+    }
+
+    void ensureAdminAccessForPolicies(Set<RangerPolicy> policies, XXService xxService, String serviceName) {
+        LOG.debug("==> ServiceREST.ensureAdminAccessForPolicies({})", serviceName);
+
+        boolean isAdmin    = bizUtil.isAdmin();
+        boolean isKeyAdmin = bizUtil.isKeyAdmin();
+        String  userName   = bizUtil.getCurrentUserLoginId();
+
+        XXServiceDef        xServiceDef = daoManager.getXXServiceDef().getById(xxService.getType());
+        Set<String>         userGroups  = userMgr.getGroupsForUser(userName);
+        RangerPolicyAdmin   policyAdmin = getPolicyAdminForDelegatedAdmin(serviceName);
+        Set<String>         roles       = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
+        Map<String, Object> evalContext = new HashMap<>();
+        boolean             isKmsService = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname());
+
+        RangerAccessRequestUtil.setCurrentUserInContext(evalContext, userName);
+
+        Map<String, Boolean> serviceToIsAdminUserMap = new HashMap<>();
+        Map<String, Boolean> zoneToIsAdminMap        = new HashMap<>();
+
+        policies.forEach(policy -> {
+            boolean isServiceAdminUser = serviceToIsAdminUserMap.computeIfAbsent(policy.getService(), svcName -> svcStore.isServiceAdminUser(svcName, userName));
+            boolean isZoneAdmin        = !StringUtils.isEmpty(policy.getZoneName()) && zoneToIsAdminMap.computeIfAbsent(policy.getZoneName(), serviceMgr::isZoneAdmin);
+            boolean isSvcAdmin          = isAdmin || isServiceAdminUser || isZoneAdmin;
+
+            if (!isAdmin && !isKeyAdmin && !isSvcAdmin) {
+                boolean isAllowed = policyAdmin.isDelegatedAdminAccessAllowedForModify(policy, userName, userGroups, roles, evalContext);
+
+                if (!isAllowed) {
+                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User '" + userName + "' does not have delegated-admin privilege for policy id=" + policy.getId(), true);
+                }
+            } else {
+                if ((isAdmin && isKmsService) || (isKeyAdmin && !isKmsService)) {
+                    throw restErrorUtil.createRESTException(xServiceDef.getName() + " policies are not accessible for user '" + userName + "'.", MessageEnums.OPER_NO_PERMISSION);
+                }
+            }
+        });
+
+        LOG.debug("<== ServiceREST.ensureAdminAccessForPolicies({})", serviceName);
     }
 
     void ensureAdminAndAuditAccess(RangerPolicy policy, Map<String, String> mapServiceTypeAndImplClass) {
@@ -4360,6 +4424,57 @@ public class ServiceREST {
         }
 
         return ret;
+    }
+
+    private List<RangerPolicy> getBulkPolicies(String serviceName, HttpServletRequest request) {
+        LOG.debug("==> ServiceREST.getBulkPolicies({})", serviceName);
+
+        List<RangerPolicy> ret;
+        RangerPerfTracer   perf = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getBulkPolicies()");
+            }
+
+            SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
+
+            filter.setStartIndex(0);
+            filter.setMaxRows(Integer.MAX_VALUE);
+            filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+
+            ret = svcStore.getPolicies(filter);
+
+            ret = applyAdminAccessFilter(ret);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getBulkPolicies() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        LOG.debug("<== ServiceREST.getBulkPolicies({}): count={}", serviceName, ret.size());
+
+        return ret;
+    }
+
+    private void ensureAdminAccessForServicePolicies(String serviceName, Set<RangerPolicy> policies) {
+        LOG.debug("==> ServiceREST.ensureAdminAccessForServicePolicies({})", serviceName);
+
+        if (!policies.isEmpty()) {
+            XXService xxService = daoManager.getXXService().findByName(serviceName);
+
+            if (xxService == null) {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, serviceName + ": service does not exist", true);
+            }
+
+            ensureAdminAccessForPolicies(policies, xxService, serviceName);
+        }
+
+        LOG.debug("<== ServiceREST.ensureAdminAccessForServicePolicies({})", serviceName);
     }
 
     private RangerPolicy createPolicyUnconditionally(RangerPolicy policy) throws Exception {

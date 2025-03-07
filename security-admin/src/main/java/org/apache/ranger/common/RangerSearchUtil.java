@@ -113,6 +113,7 @@ public class RangerSearchUtil extends SearchUtil {
         ret.setParam(SearchFilter.TAG_ID, request.getParameter(SearchFilter.TAG_ID));
         ret.setParam(SearchFilter.CREATED_BY, request.getParameter(SearchFilter.CREATED_BY));
         ret.setParam(SearchFilter.APPROVER, request.getParameter(SearchFilter.APPROVER));
+        ret.setParam(SearchFilter.POLICY_NAME_PREFIX, request.getParameter(SearchFilter.POLICY_NAME_PREFIX));
         ret.setParam(SearchFilter.SHARE_STATUS, request.getParameter(SearchFilter.SHARE_STATUS));
 
         for (Map.Entry<String, String[]> e : request.getParameterMap().entrySet()) {
