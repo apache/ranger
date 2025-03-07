@@ -6741,15 +6741,28 @@ public class ServiceDBStore extends AbstractServiceStore {
             getOrCreateLabel();
         }
 
+        private boolean doesPolicyExist(XXPolicy xPolicy) {
+            XXPolicy     xxExisting = daoMgr.getXXPolicy().getById(xPolicy.getId());
+            LOG.info("Found existing policy {}", xxExisting);
+            RangerPolicy existing   = policyService.getPopulatedViewObject(xxExisting);
+
+            return existing != null;
+        }
+
         private void getOrCreateLabel() {
             LOG.debug("==> AssociatePolicyLabel.getOrCreateLabel(policyId={}, label={})", xPolicy.getId(), policyLabel);
 
+            LOG.debug("Doing a findByName for policyLabel: {}", policyLabel);
             XXPolicyLabel xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
+            LOG.debug("Found policyLabel: {}", xxPolicyLabel);
 
             if (xxPolicyLabel == null) {
+                LOG.debug("Doing a findByName for policyLabel second time: {}", policyLabel);
                 xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
+                LOG.debug("Found policyLabel: {}", xxPolicyLabel);
 
                 if (xxPolicyLabel == null) {
+                    LOG.debug("Creating policyLabel: {}", policyLabel);
                     xxPolicyLabel = new XXPolicyLabel();
 
                     xxPolicyLabel.setPolicyLabel(policyLabel);
@@ -6760,14 +6773,25 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
 
             if (xxPolicyLabel != null) {
-                XXPolicyLabelMap xxPolicyLabelMap = new XXPolicyLabelMap();
+                // doing a find to check if the label is already associated with the policy (may happen in concurrent sessions)
+                List<XXPolicyLabelMap> xxPolicyLabelMapList = daoMgr.getXXPolicyLabelMap().findByPolicyIdAndLabelId(xPolicy.getId(), xxPolicyLabel.getId());
+                if (xxPolicyLabelMapList != null && !xxPolicyLabelMapList.isEmpty()) {
+                    LOG.info("Policy with id {} already linked to label with id = {}", xPolicy.getId(), xxPolicyLabel.getId());
+                } else {
+                    XXPolicyLabelMap xxPolicyLabelMap = new XXPolicyLabelMap();
 
-                xxPolicyLabelMap.setPolicyId(xPolicy.getId());
-                xxPolicyLabelMap.setPolicyLabelId(xxPolicyLabel.getId());
+                    xxPolicyLabelMap.setPolicyId(xPolicy.getId());
+                    xxPolicyLabelMap.setPolicyLabelId(xxPolicyLabel.getId());
 
-                xxPolicyLabelMap = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
+                    xxPolicyLabelMap = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
 
-                daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
+                    if (doesPolicyExist(xPolicy)) {
+                        LOG.debug("Creating a mapping for policyId = {} and labelId = {}", xPolicy.getId(), xxPolicyLabel.getId());
+                        daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
+                    } else {
+                        LOG.info("Policy with id = {} does not exist, skipping to link label to the policy", xPolicy.getId());
+                    }
+                }
             }
 
             LOG.debug("<== AssociatePolicyLabel.getOrCreateLabel(policyId={}, label={})", xPolicy.getId(), policyLabel);
