@@ -27,6 +27,7 @@ COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz /home/ranger/dist/
 COPY ./downloads/apache-hive-${HIVE_VERSION}-bin.tar.gz      /home/ranger/dist/
 COPY ./downloads/hadoop-${HIVE_HADOOP_VERSION}.tar.gz        /home/ranger/dist/
+COPY ./downloads/postgresql-42.2.16.jre7.jar                 /home/ranger/dist/
 COPY ./downloads/mysql-connector-java-8.0.28.jar             /home/ranger/dist/
 COPY ./downloads/ojdbc8.jar                                  /home/ranger/dist/
 
@@ -38,6 +39,7 @@ COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hiv
 RUN tar xvfz /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
     rm -f /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
+    mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /opt/hive/lib/ && \
     mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /opt/hive/lib/ && \
     mv /home/ranger/dist/ojdbc8.jar /opt/hive/lib/ && \
     tar xvfz /home/ranger/dist/hadoop-${HIVE_HADOOP_VERSION}.tar.gz --directory=/opt/ && \
