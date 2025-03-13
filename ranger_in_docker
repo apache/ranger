@@ -61,14 +61,11 @@ ENABLED_RANGER_SERVICE_FILE=${HOME}/.ranger_docker_services
 
    export ENABLE_DB_MOUNT
 
+CORE_SERVICES="ranger-base,ranger,ranger-usersync"
 if [ "${ENABLE_DB_MOUNT}" = "true" ];
 then
-    DB_SERVICE_NAME="ranger-${RANGER_DB_TYPE}-mounted"
-else
-    DB_SERVICE_NAME="ranger-${RANGER_DB_TYPE}"
+    CORE_SERVICES="ranger-base,ranger,ranger-db-mounted,ranger-usersync"
 fi
-
-CORE_SERVICES="ranger-base,ranger,${DB_SERVICE_NAME},ranger-usersync"
 
 if [ -z "${ENABLED_RANGER_SERVICES}" ]
 then
