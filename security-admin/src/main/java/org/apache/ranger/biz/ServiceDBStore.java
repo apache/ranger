@@ -2689,6 +2689,48 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return policiesList;
 	}
 
+	public void deletePolicies(Set<RangerPolicy> policies, String serviceName, List<Long> deletedPolicyIds) throws Exception {
+		LOG.debug("==> ServiceDBStore.deletePolicies()");
+
+		if (policies == null) {
+			policies = Collections.emptySet();
+		}
+
+		RangerService service = getServiceByName(serviceName);
+
+		if (service == null) {
+			throw new Exception(serviceName + ": service does not exist" + serviceName);
+		}
+
+		boolean isBulkMode = RangerBizUtil.isBulkMode();
+
+		if (!isBulkMode) {
+			RangerBizUtil.setBulkMode(true);
+		}
+
+		try {
+			for (RangerPolicy policy : policies) {
+				deletePolicy(policy, service);
+
+				deletedPolicyIds.add(policy.getId());
+
+				// it's a bulk policy delete call flush and clear
+				if (deletedPolicyIds.size() % RangerBizUtil.POLICY_BATCH_SIZE == 0) {
+					bizUtil.bulkModeOnlyFlushAndClear();
+				}
+			}
+		} finally {
+			// Flush and Clear remaining
+			bizUtil.bulkModeOnlyFlushAndClear();
+
+			if (!isBulkMode) {
+				RangerBizUtil.setBulkMode(false);
+			}
+		}
+
+		LOG.debug("<== ServiceDBStore.deletePolicies(policyCount={}): deletedCount={}", policies.size(), deletedPolicyIds.size());
+	}
+
 	private List<RangerPolicy> getServicePolicies(XXService service, SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies()");
