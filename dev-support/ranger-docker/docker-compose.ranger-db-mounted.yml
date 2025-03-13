@@ -1,0 +1,11 @@
+services:
+  ranger-db:
+    extends:
+      service: ${RANGER_DB_TYPE}
+      file: docker-compose.ranger-db.yml
+    volumes:
+      - ./postgres-db-mount:/var/lib/postgresql/data
+
+networks:
+  ranger:
+    name: rangernw
