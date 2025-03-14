@@ -8,6 +8,8 @@ services:
     image: ranger-sqlserver
     container_name: ranger-sqlserver
     hostname: ranger-db.example.com
+    ports:
+      - "1433:1433"
     networks:
       - ranger
     healthcheck:

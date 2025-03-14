@@ -8,6 +8,8 @@ services:
     image: ranger-oracle
     container_name: ranger-oracle
     hostname: ranger-db.example.com
+    ports:
+      - "1521:1521"
     networks:
       - ranger
     healthcheck:
