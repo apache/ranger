@@ -9,6 +9,8 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     container_name: ranger-mysql
     hostname: ranger-db.example.com
+    ports:
+      - "3306:3306"
     networks:
       - ranger
     healthcheck:
