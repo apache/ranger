@@ -8,6 +8,8 @@ services:
     image: ranger-postgres
     container_name: ranger-postgres
     hostname: ranger-db.example.com
+    ports:
+      - "5432:5432"
     networks:
       - ranger
     volumes:
