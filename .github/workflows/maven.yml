@@ -128,7 +128,7 @@ jobs:
           docker compose -f docker-compose.ranger-base.yml build
           export DOCKER_BUILDKIT=1
           export COMPOSE_DOCKER_CLI_BUILD=1
-          export RANGER_DB_TYPE=postgres
+          export RANGER_DB_TYPE=sqlserver
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
           -f docker-compose.ranger.yml \
@@ -146,7 +146,7 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           ./scripts/ozone-plugin-docker-setup.sh
-          export RANGER_DB_TYPE=postgres
+          export RANGER_DB_TYPE=sqlserver
           docker compose \
           -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
           -f docker-compose.ranger.yml \
@@ -173,6 +173,10 @@ jobs:
                   echo "Container $container is NOT running!";
               fi
           done
+
+          nc -zv 127.0.0.1 1433
+
+          echo $?
           
           if [[ $flag == true ]]; then
               echo "All required containers are up and running";
