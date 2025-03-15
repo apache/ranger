@@ -226,6 +226,9 @@
         <trino.version>451</trino.version>
         <velocity.version>2.3</velocity.version>
         <zookeeper.version>3.9.2</zookeeper.version>
+
+        <!-- openmetadata deps-->
+        <openmetadata.version>1.6.4</openmetadata.version>
     </properties>
     <dependencyManagement>
         <dependencies>
