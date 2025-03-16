@@ -16,8 +16,6 @@ import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 import org.openmetadata.client.model.TagLabel;
-import org.apache.ranger.tagsync.source.atlas.EntityNotificationWrapper;
-import org.apache.ranger.tagsync.source.openmetadatarest.OpenmetadataRESTTagSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
