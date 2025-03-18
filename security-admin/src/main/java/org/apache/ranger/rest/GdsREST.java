@@ -2053,7 +2053,7 @@ public class GdsREST {
 
             rangerDataShareInDataset.setDataShareId(rangerDataShare.getId());
             rangerDataShareInDataset.setDatasetId(rangerDataset.getId());
-            rangerDataShareInDataset.setStatus(RangerGds.GdsShareStatus.REQUESTED);
+            rangerDataShareInDataset.setStatus(RangerGds.GdsShareStatus.ACTIVE);
             rangerDataShareInDatasets.add(rangerDataShareInDataset);
 
             addDataSharesInDataset(rangerDataset.getId(), rangerDataShareInDatasets);
