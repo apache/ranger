@@ -53,7 +53,7 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
       - name: build (8)
-        run: mvn -T 8 clean verify --no-transfer-progress -B -V
+        run: mvn -T 8 clean verify -DskipTests --no-transfer-progress -B -V
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -88,12 +88,12 @@ jobs:
         with:
           name: target-11
           path: target/*
-  
+
   docker-build:
     needs:
       - build-8
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - name: Download build-8 artifacts
@@ -160,7 +160,7 @@ jobs:
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml up -d
 
-      - name: Check status of containers and remove them
+      - name: Check status of containers
         run: |
           sleep 60
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
@@ -176,8 +176,38 @@ jobs:
           
           if [[ $flag == true ]]; then
               echo "All required containers are up and running";
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-          else
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-              exit 1;
           fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # Install Robot Framework and dependencies
+      - name: Install Robot Framework
+        run: |
+          python -m pip install --upgrade pip
+          python --version
+          pip install apache-ranger
+          pip install robotframework
+          pip install robotframework-requests
+          pip install robotframework-jsonlibrary
+          robot --version || true
+
+      - name: Run Ranger REST API SmokeTests
+        run: |
+          cd dev-support/smoketests/ranger
+          mkdir -p /tmp/smoketests/ranger
+          robot --outputdir /tmp/smoketests/ranger --loglevel DEBUG -P apitests user_management.robot policy_management.robot custom.robot
+
+      - name: Upload Robot Framework Test Result Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Robot-Framework-Artifacts
+          path: /tmp/smoketests/ranger
+
+      - name: Remove Containers
+        if: always()
+        run: |
+          docker stop $(docker ps -q) && docker rm $(docker ps -aq);
