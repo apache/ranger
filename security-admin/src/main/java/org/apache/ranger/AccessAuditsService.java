@@ -81,6 +81,7 @@ public class AccessAuditsService {
         searchFields.add(new SearchField("tags", "tags", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("cluster", "cluster", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("zoneName", "zoneName", SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("datasets", "datasets", SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("agentHost", "agentHost", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
 
         sortFields.add(new SortField("eventTime", "evtTime", true, SortField.SORT_ORDER.DESC));

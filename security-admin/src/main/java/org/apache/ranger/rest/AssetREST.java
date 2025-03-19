@@ -558,6 +558,7 @@ public class AssetREST {
         searchUtil.extractStringList(request, searchCriteria, "zoneName", "Zone Name List", "zoneName", null, null);
         searchUtil.extractString(request, searchCriteria, "agentHost", "Agent Host Name", StringUtil.VALIDATION_TEXT);
         searchUtil.extractString(request, searchCriteria, "eventId", "Event Id", null);
+        searchUtil.extractString(request, searchCriteria, "datasets", "DataSets", null);
 
         boolean      isKeyAdmin      = msBizUtil.isKeyAdmin();
         boolean      isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
