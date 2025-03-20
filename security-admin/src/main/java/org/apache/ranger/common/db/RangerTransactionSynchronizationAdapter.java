@@ -155,15 +155,7 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
             LOG.debug("Executing {{}} runnables", runnables.size());
 
             for (Runnable runnable : runnables) {
-                boolean isThisTransactionCommitted = false;
-
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-
-                int count = 0;
+                boolean isThisTransactionCommitted;
 
                 do {
                     Object result = null;
@@ -211,12 +203,11 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                     if (isParentTransactionCommitted) {
                         if (!isThisTransactionCommitted) {
                             LOG.info("Failed to commit runnable:[{}]. Will retry!", runnable);
-                            count ++;
                         } else {
                             LOG.debug("Committed runnable:[{}].", runnable);
                         }
                     }
-                } while (isParentTransactionCommitted && !isThisTransactionCommitted && count < 5);
+                } while (isParentTransactionCommitted && !isThisTransactionCommitted);
             }
         } else {
             LOG.debug("No runnables to execute");

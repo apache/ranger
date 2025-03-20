@@ -111,7 +111,7 @@
         </named-query>
 
         <named-query name="XXPolicyLabelMap.findByPolicyLabelId">
-                <query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.id = :policyLabelId
+                <query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.policyLabelId = :policyLabelId
                         </query>
         </named-query>
 
@@ -121,7 +121,7 @@
                         </query>
         </named-query>
 		<named-query name="XXPolicyLabelMap.findByPolicyIdAndLabelId">
-			<query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.id = :policyLabelId AND obj.policyId = :policyId
+			<query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.policyLabelId = :policyLabelId AND obj.policyId = :policyId
 			</query>
 		</named-query>
 

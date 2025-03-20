@@ -6742,24 +6742,20 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         private boolean doesPolicyExist(XXPolicy xPolicy) {
-            XXPolicy     xxExisting = daoMgr.getXXPolicy().getById(xPolicy.getId());
-            LOG.info("Found existing policy {}", xxExisting);
-            RangerPolicy existing   = policyService.getPopulatedViewObject(xxExisting);
-
-            return existing != null;
+            return daoMgr.getXXPolicy().getById(xPolicy.getId()) != null;
         }
 
         private void getOrCreateLabel() {
             LOG.debug("==> AssociatePolicyLabel.getOrCreateLabel(policyId={}, label={})", xPolicy.getId(), policyLabel);
 
-            LOG.debug("Doing a findByName for policyLabel: {}", policyLabel);
+            LOG.debug("Searching for policyLabel: {}", policyLabel);
             XXPolicyLabel xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
-            LOG.debug("Found policyLabel: {}", xxPolicyLabel);
+            LOG.debug("Search returned: {}", xxPolicyLabel);
 
             if (xxPolicyLabel == null) {
-                LOG.debug("Doing a findByName for policyLabel second time: {}", policyLabel);
+                LOG.debug("Searching again for policyLabel: {}", policyLabel);
                 xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
-                LOG.debug("Found policyLabel: {}", xxPolicyLabel);
+                LOG.debug("Search returned: {}", xxPolicyLabel);
 
                 if (xxPolicyLabel == null) {
                     LOG.debug("Creating policyLabel: {}", policyLabel);
@@ -6786,7 +6782,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                     xxPolicyLabelMap = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
 
                     if (doesPolicyExist(xPolicy)) {
-                        LOG.debug("Creating a mapping for policyId = {} and labelId = {}", xPolicy.getId(), xxPolicyLabel.getId());
+                        LOG.debug("Policy with policy Id {} exists, creating a link to labelId = {}", xPolicy.getId(), xxPolicyLabel.getId());
                         daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
                     } else {
                         LOG.info("Policy with id = {} does not exist, skipping to link label to the policy", xPolicy.getId());
