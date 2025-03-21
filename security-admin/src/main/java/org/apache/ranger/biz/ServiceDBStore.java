@@ -6754,19 +6754,13 @@ public class ServiceDBStore extends AbstractServiceStore {
                 LOG.debug("Search returned: {}", xxPolicyLabel);
 
                 if (xxPolicyLabel == null) {
-                    LOG.debug("Searching again for policyLabel: {}", policyLabel);
-                    xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
-                    LOG.debug("Another Search returned: {}", xxPolicyLabel);
+                    LOG.debug("Creating policyLabel: {}", policyLabel);
+                    xxPolicyLabel = new XXPolicyLabel();
 
-                    if (xxPolicyLabel == null) {
-                        LOG.debug("Creating policyLabel: {}", policyLabel);
-                        xxPolicyLabel = new XXPolicyLabel();
+                    xxPolicyLabel.setPolicyLabel(policyLabel);
 
-                        xxPolicyLabel.setPolicyLabel(policyLabel);
-
-                        xxPolicyLabel = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabel);
-                        xxPolicyLabel = daoMgr.getXXPolicyLabels().create(xxPolicyLabel);
-                    }
+                    xxPolicyLabel = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabel);
+                    xxPolicyLabel = daoMgr.getXXPolicyLabels().create(xxPolicyLabel);
                 }
 
                 // doing a find to check if the label is already associated with the policy (may happen in concurrent sessions)
