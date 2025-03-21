@@ -31,16 +31,6 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.open-metadata</groupId>
-            <artifactId>openmetadata-spec</artifactId>
-            <version>${openmetadata.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.open-metadata</groupId>
-            <artifactId>openmetadata-java-client</artifactId>
-            <version>${openmetadata.version}</version>
-        </dependency>
-        <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
@@ -300,6 +290,16 @@
             <groupId>org.codehaus.jettison</groupId>
             <artifactId>jettison</artifactId>
             <version>${jettison.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.open-metadata</groupId>
+            <artifactId>openmetadata-java-client</artifactId>
+            <version>${openmetadata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.open-metadata</groupId>
+            <artifactId>openmetadata-spec</artifactId>
+            <version>${openmetadata.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scala-lang</groupId>

@@ -174,6 +174,9 @@
         <netty-all.version>4.1.100.Final</netty-all.version>
         <nimbus-jose-jwt.version>10.0.1</nimbus-jose-jwt.version>
         <noggit.version>0.8</noggit.version>
+
+        <!-- openmetadata deps-->
+        <openmetadata.version>1.6.4</openmetadata.version>
         <orc.core.version>1.6.7</orc.core.version>
         <orc.version>1.5.8</orc.version>
         <org.bouncycastle.bcpkix-jdk15on>1.70</org.bouncycastle.bcpkix-jdk15on>
@@ -226,9 +229,6 @@
         <trino.version>451</trino.version>
         <velocity.version>2.3</velocity.version>
         <zookeeper.version>3.9.2</zookeeper.version>
-
-        <!-- openmetadata deps-->
-        <openmetadata.version>1.6.4</openmetadata.version>
     </properties>
     <dependencyManagement>
         <dependencies>
