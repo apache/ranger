@@ -173,14 +173,15 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                 LOG.debug("Executing {" + runnables.size() + "} runnables");
             }
             for (Runnable runnable : runnables) {
-                boolean isThisTransactionCommitted = false;
+                boolean isThisTransactionCommitted;
                 do {
+                    Object result = null;
                     try {
-                        //Create new  transaction
+                        //Create new transaction
                         TransactionTemplate txTemplate = new TransactionTemplate(txManager);
                         txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-                        Object result = txTemplate.execute(new TransactionCallback<Object>() {
+                        result = txTemplate.execute(new TransactionCallback<Object>() {
                             public Object doInTransaction(TransactionStatus status) {
                                 Object result = null;
                                 if (LOG.isDebugEnabled()) {
@@ -194,7 +195,7 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                                     }
                                 } catch (OptimisticLockException optimisticLockException) {
                                     if (LOG.isDebugEnabled()) {
-                                        LOG.debug("Failed to execute runnable " + runnable + "because of OpmimisticLockException");
+                                        LOG.debug("Failed to execute runnable " + runnable + "because of OptimisticLockException");
                                     }
                                 } catch (Throwable e) {
                                     if (LOG.isDebugEnabled()) {
@@ -204,18 +205,6 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                                 return result;
                             }
                         });
-
-                        isThisTransactionCommitted = result == runnable;
-                        if (isParentTransactionCommitted) {
-                            if (!isThisTransactionCommitted) {
-                                LOG.info("Failed to commit runnable:[" + runnable + "]. Will retry!");
-                            } else {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Committed runnable:[" + runnable + "].");
-                                }
-                            }
-                        }
-
                     } catch (OptimisticLockException optimisticLockException) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Failed to commit TransactionService transaction for runnable:[" + runnable + "]");
@@ -227,6 +216,17 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                     } catch (Throwable e){
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Failed to commit TransactionService transaction, throwable:[" + e + "]");
+                        }
+                    }
+
+                    isThisTransactionCommitted = result == runnable;
+                    if (isParentTransactionCommitted) {
+                        if (!isThisTransactionCommitted) {
+                            LOG.info("Failed to commit runnable:[" + runnable + "]. Will retry!");
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Committed runnable:[" + runnable + "].");
+                            }
                         }
                     }
                 } while (isParentTransactionCommitted && !isThisTransactionCommitted);

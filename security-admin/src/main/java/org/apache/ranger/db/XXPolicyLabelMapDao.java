@@ -45,13 +45,27 @@ public class XXPolicyLabelMapDao extends BaseDao<XXPolicyLabelMap> {
                 }
         }
 
-        public XXPolicyLabelMap findByPolicyLabelId(Long policyLabelId) {
+        public List<XXPolicyLabelMap> findByPolicyLabelId(Long policyLabelId) {
                 if (policyLabelId == null) {
                         return null;
                 }
                 try {
-                        return (XXPolicyLabelMap) getEntityManager().createNamedQuery("XXPolicyLabelMap.findByPolicyLabelId", tClass)
+                        return getEntityManager().createNamedQuery("XXPolicyLabelMap.findByPolicyLabelId", tClass)
                                         .setParameter("policyLabelId", policyLabelId).getResultList();
+                } catch (NoResultException e) {
+                        return null;
+                }
+        }
+
+        public List<XXPolicyLabelMap> findByPolicyIdAndLabelId(Long policyId, Long policyLabelId) {
+                if (policyId == null || policyLabelId == null) {
+                        return null;
+                }
+
+                try {
+                        return getEntityManager().createNamedQuery("XXPolicyLabelMap.findByPolicyIdAndLabelId", tClass)
+                                .setParameter("policyId", policyId)
+                                .setParameter("policyLabelId", policyLabelId).getResultList();
                 } catch (NoResultException e) {
                         return null;
                 }
