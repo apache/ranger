@@ -102,7 +102,7 @@
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop-shaded-guava.version>1.1.1</hadoop-shaded-guava.version>
-        <hadoop.version>3.3.6</hadoop.version>
+        <hadoop.version>3.4.0</hadoop.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hbase-shaded-miscellaneous>4.1.7</hbase-shaded-miscellaneous>
         <hbase-shaded-netty>4.1.7</hbase-shaded-netty>
