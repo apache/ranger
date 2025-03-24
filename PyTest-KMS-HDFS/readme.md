@@ -17,10 +17,13 @@ PyTest-KMS-HDFS/
   ├── test_keyOps.py         # Key operations: Roll-over, generate DEK, Decrypt EDEK
   ├── conftest.py            # Reusable fixtures and setup
   ├── utils.py               # Utility methods
+  ├── readme.md              
 ├── test_hdfs/               # Tests on HDFS encryption cycle
   ├── test_encryption.py     # Full HDFS encryption cycle testing
-  ├── pytest.ini             # Registers custom pytest markers
-  ├── README.md              # This file
+  ├── readme.md
+  ├── utils.py               # Utility methods
+├── pytest.ini               # Registers custom pytest markers
+├── readme.md                # Current file
 ```
 
 ## ⚙️ Setup Instructions
