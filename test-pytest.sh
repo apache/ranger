@@ -4,7 +4,7 @@
 docker rm -f $(docker ps -aq)
 
 RANGER_DOCKER_PATH="dev-support/ranger-docker"
-TESTS_PATH="$HOME/Desktop/PyTest-KMS-EP"
+TESTS_PATH="PyTest-KMS-HDFS"
 cd "$RANGER_DOCKER_PATH"
 
 # Download archives
