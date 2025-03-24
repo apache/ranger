@@ -10,7 +10,7 @@ This test suite validates REST API endpoints for KMS (Key Management Service) an
 ## 📂 Directory Structure
 
 ```
-test_directory/
+PyTest-KMS-HDFS/
 ├── test_kms/                # Tests on KMS API
   ├── test_keys.py           # Key creation and key name validation
   ├── test_keyDetails.py     # getKeyName, getKeyMetadata, getKeyVersion checks
@@ -26,11 +26,12 @@ test_directory/
 ## ⚙️ Setup Instructions
 Bring up KMS container and any dependent containers using Docker.
 Create a virtual environment and install the necessary packages: requests pytest docker
-or simply use existing myenv in dierctory > source myenv/bin/activate
 
 Further Environment setup  done in test suite itself no need to add extra things
 
 ## Run test cases
+
+**Navigate to PyTest-KMS-HDFS directory**
 
 **to run tests in test_kms folder**
 > pytest -vs test_kms/
