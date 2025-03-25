@@ -38,9 +38,8 @@
                         <outputDirectory>ews/webapp/WEB-INF/lib/</outputDirectory>
                         <unpack>false</unpack>
                         <includes>
-                    <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
@@ -69,7 +68,6 @@
                     <include>org.apache.commons:commons-math3</include>
                     <include>commons-net:commons-net:jar:${commons.net.version}</include>
                     <include>org.apache.curator:curator-recipes</include>
-                    <include>org.apache.hadoop:hadoop-annotations</include>
                     <include>org.apache.httpcomponents:httpcore</include>
                     <include>javax.xml.bind:jaxb-api</include>
                     <include>com.sun.xml.bind:jaxb-impl</include>
@@ -85,7 +83,6 @@
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
-                    <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>org.apache.kerby:kerb-core:jar:${kerby.version}</include>
@@ -209,9 +206,8 @@
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
-                    <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>org.apache.ranger:ranger-plugins-common</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
@@ -236,7 +232,6 @@
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
-                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -343,9 +338,8 @@
                             <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                             <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-                            <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                            <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-                            <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+                            <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                            <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                             <include>org.codehaus.woodstox:stax2-api</include>
                             <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                         </includes>
@@ -387,13 +381,12 @@
                     <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging</include>
                     <include>org.slf4j:slf4j-api</include>
-                    <include>org.apache.hadoop:hadoop-common</include>
-                    <include>org.apache.hadoop:hadoop-auth</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-lang3</include>
-                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                 </includes>
             </binaries>
         </moduleSet>

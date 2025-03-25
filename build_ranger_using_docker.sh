@@ -56,13 +56,13 @@ if [ $build_image -eq 1 ]; then
     docker rmi -f $image_name
 
 docker build -t $image_name - <<Dockerfile
-FROM centos
+FROM rockylinux:8
 
 RUN mkdir /tools
 WORKDIR /tools
 
 #Install default services
-#RUN yum clean all
+RUN yum clean all
 RUN yum install -y wget
 RUN yum install -y git
 RUN yum install -y gcc
@@ -84,8 +84,8 @@ ENV PATH $JAVA_HOME/bin:$PATH
 #ENV  PATH $JAVA_HOME/bin:$PATH
 
 
-ADD https://www.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz.sha512 /tools
-ADD http://www-us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
+ADD https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz.sha512 /tools
+ADD https://archive.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
 RUN sha512sum  apache-maven-3.6.3-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
 
 RUN cat apache-maven-3.6.3-bin.tar.gz.sha512 | cut -f 1 -d " " > tmp.sha1.download
@@ -99,12 +99,11 @@ ENV  PATH /tools/maven/bin:$PATH
 ENV MAVEN_OPTS "-Xmx2048m -XX:MaxPermSize=512m"
 
 # Setup gosu for easier command execution
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-    && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
-    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64.asc" \
+RUN gpg --keyserver hkps://keys.openpgp.org --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+    && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.16/gosu-amd64" \
+    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.16/gosu-amd64.asc" \
     && gpg --verify /usr/local/bin/gosu.asc \
     && rm /usr/local/bin/gosu.asc \
-    && rm -r /root/.gnupg/ \
     && chmod +x /usr/local/bin/gosu
 
 RUN useradd -ms /bin/bash builder
