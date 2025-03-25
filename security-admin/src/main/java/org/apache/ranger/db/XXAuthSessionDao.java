@@ -102,9 +102,9 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 		long ret = getEntityManager().createNamedQuery("XXAuthSession.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
 		LOG.info("Deleted " + ret + " x_auth_sess records");
 
-		LOG.info("Updating x_trx_log.sess_id with null which are older than " + olderThanInDays + " days, that is, older than " + since);
-		long updated = getEntityManager().createNamedQuery("XXTrxLog.updateSessIdWithNull").setParameter("olderThan", since).executeUpdate();
-		LOG.info("Updated " + updated + " x_trx_log records");
+		LOG.info("Updating x_trx_log_v2.sess_id with null which are older than " + olderThanInDays + " days, that is, older than " + since);
+		long updated = getEntityManager().createNamedQuery("XXTrxLogV2.updateSessIdWithNull").setParameter("olderThan", since).executeUpdate();
+		LOG.info("Updated " + updated + " x_trx_log_v2 records");
 		return ret;
 	}
 }

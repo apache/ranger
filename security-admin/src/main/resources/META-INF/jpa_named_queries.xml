@@ -1605,8 +1605,8 @@
 	<named-query name="XXTrxLog.deleteOlderThan">
 		<query>delete from XXTrxLog obj where obj.createTime &lt; :olderThan</query>
 	</named-query>
-	<named-query name="XXTrxLog.updateSessIdWithNull">
-		<query>UPDATE XXTrxLog obj SET obj.sessionId = null WHERE obj.createTime &lt; :olderThan</query>
+	<named-query name="XXTrxLogV2.updateSessIdWithNull">
+		<query>UPDATE XXTrxLogV2 obj SET obj.sessionId = null WHERE obj.createTime &lt; :olderThan</query>
 	</named-query>
 
 	<named-query name="XXAuthSession.getAuthSessionByUserId">
