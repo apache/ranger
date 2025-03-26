@@ -51,6 +51,6 @@ or
 
 With report >pytest -vs test_hdfs/ --html=hdfs-report.html
 
-📌 Notes
+📌 Note
 Ensure Docker containers for KMS and HDFS are running before executing tests.
 Reports generated using --html can be viewed in any browser for detailed test results.
