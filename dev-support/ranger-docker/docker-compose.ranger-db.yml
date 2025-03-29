@@ -1,0 +1,86 @@
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-postgres
+      args:
+        - POSTGRES_VERSION=${POSTGRES_VERSION}
+    image: ranger-postgres
+    container_name: ranger-postgres
+    hostname: ranger-db.example.com
+    ports:
+      - "5432:5432"
+    networks:
+      - ranger
+    healthcheck:
+      test: 'su -c "pg_isready -q" postgres'
+      interval: 10s
+      timeout: 2s
+      retries: 30
+
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-mysql
+      args:
+        - MARIADB_VERSION=${MARIADB_VERSION}
+    image: ranger-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: ranger-mysql
+    hostname: ranger-db.example.com
+    ports:
+      - "3306:3306"
+    networks:
+      - ranger
+    healthcheck:
+      # Double dollar($$) is required to expand the env variable
+      test: "mysql -u root -p$$MYSQL_ROOT_PASSWORD ranger -e 'select 1' > /dev/null"
+      interval: 10s
+      timeout: 2s
+      retries: 30
+
+  oracle:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-oracle
+      args:
+        - ORACLE_VERSION=${ORACLE_VERSION}
+    image: ranger-oracle
+    container_name: ranger-oracle
+    hostname: ranger-db.example.com
+    ports:
+      - "1521:1521"
+    networks:
+      - ranger
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 2s
+      retries: 30
+
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-sqlserver
+      args:
+        - SQLSERVER_VERSION=${SQLSERVER_VERSION}
+    image: ranger-sqlserver
+    container_name: ranger-sqlserver
+    hostname: ranger-db.example.com
+    ports:
+      - "1433:1433"
+    networks:
+      - ranger
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P rangerR0cks! -Q \"SELECT 1\" -C" # -C bypasses SSL validation
+      ]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  ranger:
+    name: rangernw
