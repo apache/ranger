@@ -130,7 +130,6 @@ jobs:
           export COMPOSE_DOCKER_CLI_BUILD=1
           export RANGER_DB_TYPE=postgres
           docker compose \
-          -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
           -f docker-compose.ranger.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \
@@ -148,7 +147,6 @@ jobs:
           ./scripts/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=postgres
           docker compose \
-          -f docker-compose.ranger-${RANGER_DB_TYPE}.yml \
           -f docker-compose.ranger.yml \
           -f docker-compose.ranger-usersync.yml \
           -f docker-compose.ranger-tagsync.yml \

@@ -83,33 +83,33 @@ docker-compose -f docker-compose.ranger-base-ubi.yml build --no-cache
 
 # valid values for RANGER_DB_TYPE: mysql/postgres/oracle
 
-docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml up -d
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml up -d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
 ~~~
 #### Bring up hive container
 ~~~
-docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hive.yml up -d
 ~~~
 #### Bring up hbase container
 ~~~
-docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml up -d
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml up -d
 ~~~
 #### Bring up ozone containers
 ~~~
 ./scripts/ozone-plugin-docker-setup.sh
-docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-ozone.yml up -d
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
 #### Bring up trino container (requires docker build with jdk 11):
 ~~~
-docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-trino.yml up -d
+docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-trino.yml up -d
 ~~~
 Similarly, check the `depends` section of the `docker-compose.ranger-service.yaml` file and add docker-compose files for these services when trying to bring up the `service` container.
 
 #### Bring up all containers
 ~~~
 ./scripts/ozone-plugin-docker-setup.sh
-docker compose -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
           
 #### To rebuild specific images and start containers with the new image:
