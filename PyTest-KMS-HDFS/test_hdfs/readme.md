@@ -4,7 +4,10 @@
 ```
 test_hdfs/
 ├── test_encryption.py
-├── utils.py              #Utility methods
+├── test_config.py        #stores all constants and HDFS commands
+├── conftest.py           #sets up the environment
+├── utils.py              #utility methods
+
 ```
 
 ---
@@ -16,19 +19,9 @@ test_hdfs/
 
 ---
 
-## `test_encryption.py`
-
-Handles the **full HDFS encryption cycle**, including setup, positive and negative test scenarios, and cleanup.
-
-### Main Highlights:
-- Encryption Zone (EZ) creation in HDFS.
-- Granting permissions to specific users for read/write operations within the EZ.
-- Validating read/write attempts by unauthorized users inside the EZ.
-
----
-
 ### `setup_environment`
 
+Handled in `Conftest.py` file
 Before running the test cases, some environment configurations are needed:
 - HDFS must communicate with KMS to fetch key details.
 - Specific KMS properties are added to the `core-site.xml` file.
@@ -46,17 +39,30 @@ Before running the test cases, some environment configurations are needed:
 
 ---
 
+## `test_encryption.py`
+
+Handles the **full HDFS encryption cycle**, including setup, positive and negative test scenarios, and cleanup.
+
+### Main Highlights:
+- Encryption Zone (EZ) creation in HDFS.
+- Granting permissions to specific users for read/write operations within the EZ.
+- Validating read/write attempts by unauthorized users inside the EZ.
+
+
 ## Test Cases
 
 ### ✅ Positive Test Cases
 
-1. **test_create_encryption_zone:**  
+1. **test_create_key:**  
+   Creates an Encryption Zone (EZ) Key which is required to create an EZ.
+   
+2. **test_create_encryption_zone:**  
    Creates an Encryption Zone (EZ) using an existing EZ key.
 
-2. **test_grant_permissions:**  
+3. **test_grant_permissions:**  
    Grants read-write permissions to a specific user (e.g., HIVE) within the EZ.
 
-3. **test_hive_user_write_read:**  
+4. **test_hive_user_write_read:**  
    Performs write and read operations inside the EZ using the authorized HIVE user.
 
 ---
@@ -74,7 +80,8 @@ Before running the test cases, some environment configurations are needed:
 ### 🧹 Cleanup
 
 - **test_cleanup:**  
-  Cleans up the Encryption Zone and all files created during testing.  
+  Cleans up the Encryption Zone and all files created during testing.
+  Deletes the EZ key created earlier.  
   Ensures the test environment is reset for clean re-runs.
 
 ---
@@ -82,8 +89,3 @@ Before running the test cases, some environment configurations are needed:
 ## Summary
 
 This test suite ensures that **HDFS encryption and access control mechanisms** function as expected, validating both authorized and unauthorized access scenarios while maintaining a clean and reusable test environment.
-
-
-
-
-
