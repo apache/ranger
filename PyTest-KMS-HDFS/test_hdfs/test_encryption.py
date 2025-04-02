@@ -7,7 +7,7 @@ from test_config import (HDFS_USER,HIVE_USER,KEY_ADMIN,HEADERS,PARAMS,BASE_URL,
                          CLEANUP_COMMANDS)
                         
 
-#EZ key creation before creating an EZ
+#Zone key creation before creating an EZ
 def test_create_key(hadoop_container):
 
     # Run the command as keyadmin user
