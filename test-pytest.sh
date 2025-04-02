@@ -57,7 +57,7 @@ if [[ $flag == true ]]; then
   source myenv/bin/activate  # Activate it
   pip install -r requirements.txt  # Install dependencies
 
-  pytest -vs test_kms/ --html=report_kms.html   # Runs all tests in the tests directory with report generation
+  pytest -vs test_kms/ --html=report_kms.html   # Runs all tests in the tests directory with report generation included
   pytest -vs test_hdfs/ --html=report_hdfs.html
 else
   echo "⚠️ Some containers failed to start. Exiting..."
