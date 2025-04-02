@@ -52,9 +52,13 @@ done
 if [[ $flag == true ]]; then
   echo "🚀 All required containers are up. Running test cases..."
   cd "$TESTS_PATH"  # Switch to the tests directory
-source ./myenv/bin/activate
-  pytest -vs test_kms/   # Runs all tests in the tests directory
-  pytest -vs test_hdfs/
+
+  python -m venv myenv  # Create a new environment
+  source myenv/bin/activate  # Activate it
+  pip install -r requirements.txt  # Install dependencies
+
+  pytest -vs test_kms/ --html=report_kms.html   # Runs all tests in the tests directory with report generation
+  pytest -vs test_hdfs/ --html=report_hdfs.html
 else
   echo "⚠️ Some containers failed to start. Exiting..."
   docker stop $(docker ps -q) && docker rm $(docker ps -aq)
@@ -64,6 +68,15 @@ fi
 echo "🧹 Cleaning up containers..."
 docker stop $(docker ps -q) && docker rm $(docker ps -aq)
 
+# Open the generated reports
+echo " Opening test reports..."
+if command -v xdg-open &> /dev/null; then
+  xdg-open report_kms.html  # Opens the test_kms report
+  xdg-open report_hdfs.html # Opens the test_hdfs report
+elif command -v open &> /dev/null; then
+  open report_kms.html  # macOS command
+  open report_hdfs.html # macOS command
+fi
+
 echo "✅ Test execution complete and environment cleaned up!"
 exit  0
-
