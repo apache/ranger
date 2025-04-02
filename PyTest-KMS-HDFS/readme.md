@@ -10,27 +10,27 @@ This test suite validates REST API endpoints for KMS (Key Management Service) an
 ## 📂 Directory Structure
 
 ```
-PyTest-KMS-HDFS/
+test_directory/
 ├── test_kms/                # Tests on KMS API
   ├── test_keys.py           # Key creation and key name validation
   ├── test_keyDetails.py     # getKeyName, getKeyMetadata, getKeyVersion checks
   ├── test_keyOps.py         # Key operations: Roll-over, generate DEK, Decrypt EDEK
   ├── conftest.py            # Reusable fixtures and setup
   ├── utils.py               # Utility methods
-  ├── readme.md              
+  ├── readme.md
 ├── test_hdfs/               # Tests on HDFS encryption cycle
   ├── test_encryption.py     # Full HDFS encryption cycle testing
+  ├── test_config.py         # stores all constants and HDFS commands
+  ├── conftest.py            # sets up the environment
   ├── readme.md
-  ├── utils.py               # Utility methods
 ├── pytest.ini               # Registers custom pytest markers
-├── readme.md                # Current file
+├── requirements.txt
+├── README.md                # This file
 ```
 
 ## ⚙️ Setup Instructions
 Bring up KMS container and any dependent containers using Docker.
 Create a virtual environment and install the necessary packages: requests pytest docker
-
-Further Environment setup  done in test suite itself no need to add extra things
 
 ## Run test cases
 
@@ -49,9 +49,11 @@ to run with report included
 or
 >pytest -vs test_hdfs/
 
-With report >pytest -vs test_hdfs/ --html=hdfs-report.html
+to run with report included
+>pytest -vs test_hdfs/ --html=hdfs-report.html
 
 📌 Notes
 
 Ensure Docker containers for KMS and HDFS are running before executing tests.
+
 Reports generated using --html can be viewed in any browser for detailed test results.
