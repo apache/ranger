@@ -365,41 +365,41 @@ public class RoleRefUpdater {
             if (doesPrincipalExist(name, type)) {
                 switch (type) {
                     case USER: {
-                            XXRoleRefUser xRoleRefUser = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefUser());
+                        XXRoleRefUser xRoleRefUser = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefUser());
 
-                            xRoleRefUser.setRoleId(roleId);
-                            xRoleRefUser.setUserId(id);
-                            xRoleRefUser.setUserName(name);
-                            xRoleRefUser.setUserType(0);
+                        xRoleRefUser.setRoleId(roleId);
+                        xRoleRefUser.setUserId(id);
+                        xRoleRefUser.setUserName(name);
+                        xRoleRefUser.setUserType(0);
 
-                            daoMgr.getXXRoleRefUser().create(xRoleRefUser);
-                        }
-                        break;
-                        case GROUP: {
-                            XXRoleRefGroup xRoleRefGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefGroup());
-
-                            xRoleRefGroup.setRoleId(roleId);
-                            xRoleRefGroup.setGroupId(id);
-                            xRoleRefGroup.setGroupName(name);
-                            xRoleRefGroup.setGroupType(0);
-
-                            daoMgr.getXXRoleRefGroup().create(xRoleRefGroup);
-                        }
-                        break;
-                        case ROLE: {
-                            XXRoleRefRole xRoleRefRole = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefRole());
-
-                            xRoleRefRole.setRoleId(roleId);
-                            xRoleRefRole.setSubRoleId(id);
-                            xRoleRefRole.setSubRoleName(name);
-                            xRoleRefRole.setSubRoleType(0);
-
-                            daoMgr.getXXRoleRefRole().create(xRoleRefRole);
-                        }
-                        break;
-                        default:
-                            break;
+                        daoMgr.getXXRoleRefUser().create(xRoleRefUser);
                     }
+                    break;
+                    case GROUP: {
+                        XXRoleRefGroup xRoleRefGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefGroup());
+
+                        xRoleRefGroup.setRoleId(roleId);
+                        xRoleRefGroup.setGroupId(id);
+                        xRoleRefGroup.setGroupName(name);
+                        xRoleRefGroup.setGroupType(0);
+
+                        daoMgr.getXXRoleRefGroup().create(xRoleRefGroup);
+                    }
+                    break;
+                    case ROLE: {
+                        XXRoleRefRole xRoleRefRole = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefRole());
+
+                        xRoleRefRole.setRoleId(roleId);
+                        xRoleRefRole.setSubRoleId(id);
+                        xRoleRefRole.setSubRoleName(name);
+                        xRoleRefRole.setSubRoleType(0);
+
+                        daoMgr.getXXRoleRefRole().create(xRoleRefRole);
+                    }
+                    break;
+                    default:
+                        break;
+                }
             } else {
                 LOG.info("Principal with type = {}, name = {} does not exist, skipping role association!", type.name(), name);
             }
