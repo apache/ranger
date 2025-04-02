@@ -30,7 +30,8 @@ test_directory/
 
 ## ⚙️ Setup Instructions
 Bring up KMS container and any dependent containers using Docker.
-Create a virtual environment and install the necessary packages: requests pytest docker
+
+Create a virtual environment and install the necessary packages through requirements.txt
 
 ## Run test cases
 
