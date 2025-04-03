@@ -251,6 +251,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		vXPortalUser.setPassword(actualPassword);
 		vXPortalUser.setUserRoleList(vXUser.getUserRoleList());
+		vXPortalUser.setUserSource(vXUser.getUserSource());
 		vXPortalUser = userMgr.createDefaultAccountUser(vXPortalUser);
 
 		VXUser createdXUser = xUserService.createResource(vXUser);
