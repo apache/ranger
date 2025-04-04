@@ -17,11 +17,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXPortalUser;
@@ -30,78 +25,84 @@ import org.apache.ranger.view.VXModuleDef;
 import org.apache.ranger.view.VXUserPermission;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 @Scope("singleton")
-public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPermission, VXUserPermission>{
+public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPermission, VXUserPermission> {
+    public XUserPermissionService() {
+        searchFields.add(new SearchField("id", "obj.id", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
-	public XUserPermissionService() {
-		searchFields.add(new SearchField("id", "obj.id",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("userPermissionList", "obj.userId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL, "XXModuleDef xXModuleDef", "xXModuleDef.id = obj.userId "));
+    }
 
-		searchFields.add(new SearchField("userPermissionList", "obj.userId",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
-				"XXModuleDef xXModuleDef", "xXModuleDef.id = obj.userId "));
-	}
+    public List<VXUserPermission> getPopulatedVXUserPermissionList(List<XXUserPermission> xuserPermissionList, Map<Long, Object[]> xXPortalUserIdXXUserMap, VXModuleDef vModuleDef) {
+        List<VXUserPermission> vXUserPermissionList = new ArrayList<>();
 
-	@Override
-	protected void validateForCreate(VXUserPermission vObj) {
+        for (XXUserPermission xuserPermission : xuserPermissionList) {
+            if (xXPortalUserIdXXUserMap.containsKey(xuserPermission.getUserId())) {
+                Object[]         xXUser     = xXPortalUserIdXXUserMap.get(xuserPermission.getUserId());
+                VXUserPermission vXUserPerm = new VXUserPermission();
 
-	}
+                vXUserPerm.setId(xuserPermission.getId());
+                vXUserPerm.setUserId((Long) xXUser[1]);
+                vXUserPerm.setModuleId(xuserPermission.getModuleId());
+                vXUserPerm.setIsAllowed(xuserPermission.getIsAllowed());
+                vXUserPerm.setCreateDate(xuserPermission.getCreateTime());
+                vXUserPerm.setUpdateDate(xuserPermission.getUpdateTime());
+                vXUserPerm.setModuleName(vModuleDef.getModule());
+                vXUserPerm.setLoginId((String) xXUser[2]);
+                vXUserPerm.setUserName((String) xXUser[2]);
 
-	@Override
-	protected void validateForUpdate(VXUserPermission vObj, XXUserPermission mObj) {
+                vXUserPermissionList.add(vXUserPerm);
+            }
+        }
 
-	}
+        return vXUserPermissionList;
+    }
 
-	@Override
-	public VXUserPermission populateViewBean(XXUserPermission xObj) {
-		VXUserPermission vObj = super.populateViewBean(xObj);
+    @Override
+    public VXUserPermission populateViewBean(XXUserPermission xObj) {
+        VXUserPermission vObj        = super.populateViewBean(xObj);
+        XXPortalUser     xPortalUser = daoManager.getXXPortalUser().getById(xObj.getUserId());
 
-		XXPortalUser xPortalUser = daoManager.getXXPortalUser().getById(xObj.getUserId());
-		if (xPortalUser != null) {
-			vObj.setUserName(xPortalUser.getLoginId());
-		}
+        if (xPortalUser != null) {
+            vObj.setUserName(xPortalUser.getLoginId());
+        }
 
-		XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(xObj.getModuleId());
-		if (xModuleDef != null) {
-			vObj.setModuleName(xModuleDef.getModule());
-		}
+        XXModuleDef xModuleDef = daoManager.getXXModuleDef().getById(xObj.getModuleId());
 
-		return vObj;
-	}
+        if (xModuleDef != null) {
+            vObj.setModuleName(xModuleDef.getModule());
+        }
 
-	public List<VXUserPermission> getPopulatedVXUserPermissionList(List<XXUserPermission> xuserPermissionList,
-			Map<Long, Object[]> xXPortalUserIdXXUserMap, VXModuleDef vModuleDef) {
-		List<VXUserPermission> vXUserPermissionList = new ArrayList<VXUserPermission>();
-		Object[] xXUser = null;
-		for (XXUserPermission xuserPermission : xuserPermissionList) {
-			if (xXPortalUserIdXXUserMap.containsKey(xuserPermission.getUserId())) {
-				xXUser = xXPortalUserIdXXUserMap.get(xuserPermission.getUserId());
-				VXUserPermission vXUserPerm = new VXUserPermission();
-				vXUserPerm.setId(xuserPermission.getId());
-				vXUserPerm.setUserId((Long) xXUser[1]);
-				vXUserPerm.setModuleId(xuserPermission.getModuleId());
-				vXUserPerm.setIsAllowed(xuserPermission.getIsAllowed());
-				vXUserPerm.setCreateDate(xuserPermission.getCreateTime());
-				vXUserPerm.setUpdateDate(xuserPermission.getUpdateTime());
-				vXUserPerm.setModuleName(vModuleDef.getModule());
-				vXUserPerm.setLoginId((String) xXUser[2]);
-				vXUserPerm.setUserName((String) xXUser[2]);
-				vXUserPermissionList.add(vXUserPerm);
-			}
-		}
-		return vXUserPermissionList;
-	}
+        return vObj;
+    }
 
-	@Override
-	public Map<Long, VXUserPermission> convertVListToVMap(List<VXUserPermission> vObjList) {
-		Map<Long,VXUserPermission> ret = new HashMap<Long,VXUserPermission>();
-		if (vObjList == null) {
-			return ret;
-		}
-		for (VXUserPermission vObj : vObjList) {
-			ret.put(vObj.getUserId(), vObj);
-		}
-		return ret;
-	}
+    @Override
+    public Map<Long, VXUserPermission> convertVListToVMap(List<VXUserPermission> vObjList) {
+        Map<Long, VXUserPermission> ret = new HashMap<>();
+
+        if (vObjList == null) {
+            return ret;
+        }
+
+        for (VXUserPermission vObj : vObjList) {
+            ret.put(vObj.getUserId(), vObj);
+        }
+
+        return ret;
+    }
+
+    @Override
+    protected void validateForCreate(VXUserPermission vObj) {
+    }
+
+    @Override
+    protected void validateForUpdate(VXUserPermission vObj, XXUserPermission mObj) {
+    }
 }

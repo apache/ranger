@@ -19,11 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -31,8 +26,8 @@ import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerConfigUtil;
-import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTag;
+import org.apache.ranger.entity.XXTagAttribute;
 import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
@@ -40,113 +35,116 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag> extends
-		RangerBaseModelService<T, V> {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-	@Autowired
-	GUIDUtil guidUtil;
+public abstract class RangerTagServiceBase<T extends XXTag, V extends RangerTag> extends RangerBaseModelService<T, V> {
+    @Autowired
+    GUIDUtil guidUtil;
 
-	@Autowired
-	RangerAuditFields rangerAuditFields;
-	
-	@Autowired
-	RangerConfigUtil configUtil;
+    @Autowired
+    RangerAuditFields<T> rangerAuditFields;
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
+    @Autowired
+    RangerConfigUtil configUtil;
 
-		XXTagDef xTagDef = daoMgr.getXXTagDef().findByName(vObj.getType());
-		if(xTagDef == null) {
-			throw restErrorUtil.createRESTException(
-					"No TagDefinition found with name :" + vObj.getType(),
-					MessageEnums.INVALID_INPUT_DATA);
-		}
+    public Map<String, String> getAttributesForTag(XXTag xtag) {
+        List<XXTagAttribute> tagAttrList = daoMgr.getXXTagAttribute().findByTagId(xtag.getId());
+        Map<String, String>  ret         = new HashMap<>();
 
-		xObj.setGuid(guid);
-		xObj.setType(xTagDef.getId());
-		xObj.setOwner(vObj.getOwner());
+        if (CollectionUtils.isNotEmpty(tagAttrList)) {
+            for (XXTagAttribute tagAttr : tagAttrList) {
+                ret.put(tagAttr.getName(), tagAttr.getValue());
+            }
+        }
 
-		String              validityPeriods = JsonUtils.listToJson(vObj.getValidityPeriods());
-		Map<String, Object> options         = vObj.getOptions();
+        return ret;
+    }
 
-		if (options == null) {
-			options = new HashMap<>();
-		}
+    public PList<V> searchRangerTags(SearchFilter searchFilter) {
+        PList<V> retList  = new PList<>();
+        List<V>  tagList  = new ArrayList<>();
+        List<T>  xTagList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-		if (StringUtils.isNotBlank(validityPeriods)) {
-			options.put(RangerTag.OPTION_TAG_VALIDITY_PERIODS, validityPeriods);
-		} else {
-			options.remove(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
-		}
+        for (T xTag : xTagList) {
+            V tag = populateViewBean(xTag);
 
-		xObj.setOptions(JsonUtils.mapToJson(options));
-		return xObj;
-	}
+            tagList.add(tag);
+        }
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T xObj) {
-		XXTagDef xTagDef = daoMgr.getXXTagDef().getById(xObj.getType());
-		if(xTagDef == null) {
-			throw restErrorUtil.createRESTException(
-					"No TagDefinition found with name :" + xObj.getType(),
-					MessageEnums.INVALID_INPUT_DATA);
-		}
+        retList.setList(tagList);
+        retList.setResultSize(tagList.size());
+        retList.setPageSize(searchFilter.getMaxRows());
+        retList.setStartIndex(searchFilter.getStartIndex());
+        retList.setSortType(searchFilter.getSortType());
+        retList.setSortBy(searchFilter.getSortBy());
 
-		vObj.setGuid(xObj.getGuid());
-		vObj.setType(xTagDef.getName());
-		vObj.setOwner(xObj.getOwner());
+        return retList;
+    }
 
-		Map<String, Object> options = JsonUtils.jsonToObject(xObj.getOptions(), Map.class);
+    @Override
+    protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
+        String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
-		if (MapUtils.isNotEmpty(options)) {
-			String optionTagValidityPeriod = (String)options.remove(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
+        XXTagDef xTagDef = daoMgr.getXXTagDef().findByName(vObj.getType());
+        if (xTagDef == null) {
+            throw restErrorUtil.createRESTException("No TagDefinition found with name :" + vObj.getType(), MessageEnums.INVALID_INPUT_DATA);
+        }
 
-			if (StringUtils.isNotBlank(optionTagValidityPeriod)) {
-				List<RangerValiditySchedule> validityPeriods = JsonUtils.jsonToRangerValiditySchedule(optionTagValidityPeriod);
+        xObj.setGuid(guid);
+        xObj.setType(xTagDef.getId());
+        xObj.setOwner(vObj.getOwner());
 
-				vObj.setValidityPeriods(validityPeriods);
-			}
-		}
+        String              validityPeriods = JsonUtils.listToJson(vObj.getValidityPeriods());
+        Map<String, Object> options         = vObj.getOptions();
 
-		vObj.setOptions(options);
+        if (options == null) {
+            options = new HashMap<>();
+        }
 
-		Map<String, String> attributes = getAttributesForTag(xObj);
-		vObj.setAttributes(attributes);
+        if (StringUtils.isNotBlank(validityPeriods)) {
+            options.put(RangerTag.OPTION_TAG_VALIDITY_PERIODS, validityPeriods);
+        } else {
+            options.remove(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
+        }
 
-		return vObj;
-	}
+        xObj.setOptions(JsonUtils.mapToJson(options));
 
-	public Map<String, String> getAttributesForTag(XXTag xtag) {
-		List<XXTagAttribute> tagAttrList = daoMgr.getXXTagAttribute().findByTagId(xtag.getId());
-		Map<String, String>  ret         = new HashMap<String, String>();
+        return xObj;
+    }
 
-		if(CollectionUtils.isNotEmpty(tagAttrList)) {
-			for (XXTagAttribute tagAttr : tagAttrList) {
-				ret.put(tagAttr.getName(), tagAttr.getValue());
-			}
-		}
+    @Override
+    protected V mapEntityToViewBean(V vObj, T xObj) {
+        XXTagDef xTagDef = daoMgr.getXXTagDef().getById(xObj.getType());
 
-		return ret;
-	}
+        if (xTagDef == null) {
+            throw restErrorUtil.createRESTException("No TagDefinition found with name :" + xObj.getType(), MessageEnums.INVALID_INPUT_DATA);
+        }
 
-	public PList<V> searchRangerTags(SearchFilter searchFilter) {
-		PList<V> retList = new PList<V>();
-		List<V> tagList = new ArrayList<V>();
+        vObj.setGuid(xObj.getGuid());
+        vObj.setType(xTagDef.getName());
+        vObj.setOwner(xObj.getOwner());
 
-		List<T> xTagList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
+        Map<String, Object> options = JsonUtils.jsonToObject(xObj.getOptions(), Map.class);
 
-		for (T xTag : xTagList) {
-			V tag = populateViewBean(xTag);
-			tagList.add(tag);
-		}
+        if (MapUtils.isNotEmpty(options)) {
+            String optionTagValidityPeriod = (String) options.remove(RangerTag.OPTION_TAG_VALIDITY_PERIODS);
 
-		retList.setList(tagList);
-		retList.setResultSize(tagList.size());
-		retList.setPageSize(searchFilter.getMaxRows());
-		retList.setStartIndex(searchFilter.getStartIndex());
-		retList.setSortType(searchFilter.getSortType());
-		retList.setSortBy(searchFilter.getSortBy());
-		return retList;
-	}
+            if (StringUtils.isNotBlank(optionTagValidityPeriod)) {
+                List<RangerValiditySchedule> validityPeriods = JsonUtils.jsonToRangerValiditySchedule(optionTagValidityPeriod);
+
+                vObj.setValidityPeriods(validityPeriods);
+            }
+        }
+
+        vObj.setOptions(options);
+
+        Map<String, String> attributes = getAttributesForTag(xObj);
+
+        vObj.setAttributes(attributes);
+
+        return vObj;
+    }
 }

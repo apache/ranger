@@ -28,6 +28,9 @@
     <packaging>jar</packaging>
     <name>Ranger HA Common Library</name>
     <description>Ranger HA Common Library</description>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <dependencies>
         <dependency>

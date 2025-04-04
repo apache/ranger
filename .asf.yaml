@@ -25,15 +25,18 @@ github:
     - java
     - python
     - docker
+  autolink_jira:
+    - RANGER
   enabled_merge_buttons:
     squash:  true
     merge:   false
     rebase:  false
-  notifications:
-    commits: commits@ranger.apache.org
-    issues: dev@ranger.apache.org
-    pullrequests: dev@ranger.apache.org
-    pullrequests_comment: dev@ranger.apache.org
-    jira_options: worklog link label
   protected_branches:
     master: {}
+
+notifications:
+  commits: commits@ranger.apache.org
+  issues: dev@ranger.apache.org
+  pullrequests: dev@ranger.apache.org
+  pullrequests_comment: dev@ranger.apache.org
+  jira_options: worklog link label

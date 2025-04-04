@@ -19,17 +19,12 @@
 
 package org.apache.ranger.biz;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXService;
@@ -45,341 +40,350 @@ import org.apache.ranger.service.RangerServiceResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
 public class RangerTagDBRetriever {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerTagDBRetriever.class);
-	private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
-
-	public static final TypeReference subsumedDataType = new TypeReference<List<RangerTagDef.RangerTagAttributeDef>>() {};
-
-	private final RangerDaoManager daoMgr;
-	private final LookupCache lookupCache;
-
-	private List<RangerServiceResource> serviceResources;
-	private Map<Long, RangerTagDef> tagDefs;
-
-	RangerTagDBRetriever(final RangerDaoManager daoMgr, final PlatformTransactionManager txManager, final XXService xService) {
-
-		this.daoMgr = daoMgr;
-
-		final TransactionTemplate txTemplate;
-
-		if (txManager != null) {
-			txTemplate = new TransactionTemplate(txManager);
-			txTemplate.setReadOnly(true);
-		} else {
-			txTemplate = null;
-		}
-		this.lookupCache = new LookupCache();
-
-
-		if (this.daoMgr != null && xService != null) {
-
-			RangerPerfTracer perf = null;
-
-			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBRetriever.RangerTagDBRetriever(serviceName=" + xService.getName() + ")");
-			}
-
-			if (txTemplate == null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Load Tags in the same thread and using an existing transaction");
-				}
-				if (!initializeTagCache(xService)) {
-					LOG.error("Failed to get tags for service:[" + xService.getName() + "] in the same thread and using an existing transaction");
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Load Tags in a separate thread and using a new transaction");
-				}
-
-				TagLoaderThread t = new TagLoaderThread(txTemplate, xService);
-				t.setDaemon(true);
-				t.start();
-				try {
-					t.join();
-				} catch (InterruptedException ie) {
-					LOG.error("Failed to get Tags in a separate thread and using a new transaction", ie);
-				}
-			}
-
-			RangerPerfTracer.log(perf);
-
-		}
-	}
-
-
-	List<RangerServiceResource> getServiceResources() {
-		return serviceResources;
-	}
-
-	Map<Long, RangerTagDef> getTagDefs() {
-		return tagDefs;
-	}
-
-	Map<Long, RangerTag> getTags() {
-
-		Map<Long, RangerTag> ret = new HashMap<>();
-
-		if (CollectionUtils.isNotEmpty(serviceResources)) {
-			for (RangerServiceResource serviceResource : serviceResources) {
-				List<RangerTag> tags = lookupCache.serviceResourceToTags.get(serviceResource.getId());
-				if (CollectionUtils.isNotEmpty(tags)) {
-					for (RangerTag tag : tags) {
-						ret.put(tag.getId(), tag);
-					}
-				}
-			}
-		}
-
-		return ret;
-	}
-
-	Map<Long, List<Long>> getResourceToTagIds() {
-		Map<Long, List<Long>> ret = new HashMap<>();
-
-		if (CollectionUtils.isNotEmpty(serviceResources)) {
-			for (RangerServiceResource serviceResource : serviceResources) {
-				List<RangerTag> tags = lookupCache.serviceResourceToTags.get(serviceResource.getId());
-				if (CollectionUtils.isNotEmpty(tags)) {
-					List<Long> tagIds = new ArrayList<>();
-					ret.put(serviceResource.getId(), tagIds);
-					for (RangerTag tag : tags) {
-						tagIds.add(tag.getId());
-					}
-				}
-			}
-		}
-		return ret;
-	}
-
-	private boolean initializeTagCache(XXService xService) {
-		boolean ret;
-		try {
-			serviceResources = new TagRetrieverServiceResourceContext(xService).getAllServiceResources();
-			tagDefs          = new TagRetrieverTagDefContext(xService).getAllTagDefs();
-
-			ret = true;
-		} catch (Exception ex) {
-			LOG.error("Failed to get tags for service:[" + xService.getName() + "]", ex);
-			serviceResources    = null;
-			tagDefs             = null;
-			ret = false;
-		}
-		return ret;
-	}
-
-	private class LookupCache {
-		final Map<Long, String> userScreenNames = new HashMap<>();
-		final Map<Long, List<RangerTag>> serviceResourceToTags = new HashMap<>();
-
-		String getUserScreenName(Long userId) {
-			String ret = null;
-
-			if (userId != null) {
-				ret = userScreenNames.get(userId);
-
-				if (ret == null) {
-					XXPortalUser user = daoMgr.getXXPortalUser().getById(userId);
-
-					if (user != null) {
-						ret = user.getPublicScreenName();
-
-						if (StringUtil.isEmpty(ret)) {
-							ret = user.getFirstName();
-
-							if (StringUtil.isEmpty(ret)) {
-								ret = user.getLoginId();
-							} else {
-								if (!StringUtil.isEmpty(user.getLastName())) {
-									ret += (" " + user.getLastName());
-								}
-							}
-						}
-
-						if (ret != null) {
-							userScreenNames.put(userId, ret);
-						}
-					}
-				}
-			}
-
-			return ret;
-		}
-
-	}
-
-	private class TagLoaderThread extends Thread {
-		final TransactionTemplate txTemplate;
-		final XXService           xService;
-
-		TagLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
-			this.txTemplate = txTemplate;
-			this.xService   = xService;
-		}
-
-		@Override
-		public void run() {
-			try {
-				txTemplate.setReadOnly(true);
-				Boolean result = txTemplate.execute(new TransactionCallback<Boolean>() {
-					@Override
-					public Boolean doInTransaction(TransactionStatus status) {
-						boolean ret = initializeTagCache(xService);
-						if (!ret) {
-							status.setRollbackOnly();
-							LOG.error("Failed to get tags for service:[" + xService.getName() + "] in a new transaction");
-						}
-						return ret;
-					}
-				});
-				 if (LOG.isDebugEnabled()) {
-				 	LOG.debug("transaction result:[" + result +"]");
-				 }
-			} catch (Throwable ex) {
-				LOG.error("Failed to get tags for service:[" + xService.getName() + "] in a new transaction", ex);
-			}
-		}
-	}
-
-	private class TagRetrieverServiceResourceContext {
-
-		final XXService service;
-		final ListIterator<XXServiceResource> iterServiceResource;
-
-		TagRetrieverServiceResourceContext(XXService xService) {
-			Long serviceId = xService == null ? null : xService.getId();
-			this.service = xService;
-
-			List<XXServiceResource> xServiceResources = daoMgr.getXXServiceResource().findTaggedResourcesInServiceId(serviceId);
-
-			this.iterServiceResource = xServiceResources.listIterator();
-
-		}
-
-		List<RangerServiceResource> getAllServiceResources() {
-			List<RangerServiceResource> ret = new ArrayList<>();
-
-			while (iterServiceResource.hasNext()) {
-				RangerServiceResource serviceResource = getNextServiceResource();
-
-				if (serviceResource != null) {
-					ret.add(serviceResource);
-				}
-			}
-			return ret;
-		}
-
-		RangerServiceResource getNextServiceResource() {
-			RangerServiceResource ret = null;
-
-			if (iterServiceResource.hasNext()) {
-				XXServiceResource xServiceResource = iterServiceResource.next();
-
-				iterServiceResource.remove();
-
-				if (xServiceResource != null && StringUtils.isNotEmpty(xServiceResource.getTags())) {
-					ret = new RangerServiceResource();
-
-					ret.setId(xServiceResource.getId());
-					ret.setGuid(xServiceResource.getGuid());
-					ret.setIsEnabled(xServiceResource.getIsEnabled());
-					ret.setCreatedBy(lookupCache.getUserScreenName(xServiceResource.getAddedByUserId()));
-					ret.setUpdatedBy(lookupCache.getUserScreenName(xServiceResource.getUpdatedByUserId()));
-					ret.setCreateTime(xServiceResource.getCreateTime());
-					ret.setUpdateTime(xServiceResource.getUpdateTime());
-					ret.setVersion(xServiceResource.getVersion());
-					ret.setResourceSignature(xServiceResource.getResourceSignature());
-					if (StringUtils.isNotEmpty(xServiceResource.getServiceResourceElements())) {
-						try {
-							Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements = (Map<String, RangerPolicy.RangerPolicyResource>) JsonUtils.jsonToObject(xServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
-							ret.setResourceElements(serviceResourceElements);
-						} catch (JsonProcessingException e) {
-							LOG.error("Error occurred while processing JSON  ", e);
-						}
-					}
-					try {
-						List<RangerTag> tags = (List<RangerTag>) JsonUtils.jsonToObject(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
-						if (CollectionUtils.isNotEmpty(tags)) {
-							for (RangerTag tag : tags) {
-								RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
-							}
-						}
-						lookupCache.serviceResourceToTags.put(xServiceResource.getId(), tags);
-					} catch (JsonProcessingException e) {
-						LOG.error("Error occurred while processing JSON  ", e);
-					}
-				}
-			}
-			return ret;
-		}
-	}
-
-	private class TagRetrieverTagDefContext {
-
-		final XXService service;
-		final ListIterator<XXTagDef> iterTagDef;
-
-		TagRetrieverTagDefContext(XXService xService) {
-			Long serviceId = xService == null ? null : xService.getId();
-
-			List<XXTagDef> xTagDefs = daoMgr.getXXTagDef().findByServiceId(serviceId);
-
-			this.service = xService;
-			this.iterTagDef = xTagDefs.listIterator();
-		}
-
-		Map<Long, RangerTagDef> getAllTagDefs() {
-			Map<Long, RangerTagDef> ret = new HashMap<>();
-
-			while (iterTagDef.hasNext()) {
-				RangerTagDef tagDef = getNextTagDef();
-
-				if (tagDef != null) {
-					ret.put(tagDef.getId(), tagDef);
-				}
-			}
-			return ret;
-		}
-
-		RangerTagDef getNextTagDef() {
-			RangerTagDef ret = null;
-
-			if (iterTagDef.hasNext()) {
-				XXTagDef xTagDef = iterTagDef.next();
-
-				iterTagDef.remove();
-
-				if (xTagDef != null) {
-					ret = new RangerTagDef();
-
-					ret.setId(xTagDef.getId());
-					ret.setGuid(xTagDef.getGuid());
-					ret.setIsEnabled(xTagDef.getIsEnabled());
-					ret.setCreatedBy(lookupCache.getUserScreenName(xTagDef.getAddedByUserId()));
-					ret.setUpdatedBy(lookupCache.getUserScreenName(xTagDef.getUpdatedByUserId()));
-					ret.setCreateTime(xTagDef.getCreateTime());
-					ret.setUpdateTime(xTagDef.getUpdateTime());
-					ret.setVersion(xTagDef.getVersion());
-					ret.setName(xTagDef.getName());
-					ret.setSource(xTagDef.getSource());
-					if(StringUtils.isNotEmpty(xTagDef.getTagAttrDefs())) {
-						try {
-							List<RangerTagDef.RangerTagAttributeDef> attributeDefs = (List<RangerTagDef.RangerTagAttributeDef>) JsonUtils.jsonToObject(xTagDef.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
-							ret.setAttributeDefs(attributeDefs);
-						} catch (JsonProcessingException e) {
-							LOG.error("Error occurred while processing JSON  ", e);
-						}
-					}
-				}
-			}
-
-			return ret;
-		}
-
-	}
+    private static final Logger LOG      = LoggerFactory.getLogger(RangerTagDBRetriever.class);
+    private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
 
+    public static final TypeReference<List<RangerTagDef.RangerTagAttributeDef>> subsumedDataType = new TypeReference<List<RangerTagDef.RangerTagAttributeDef>>() {};
+
+    private final RangerDaoManager daoMgr;
+    private final LookupCache      lookupCache;
+
+    private List<RangerServiceResource> serviceResources;
+    private Map<Long, RangerTagDef>     tagDefs;
+
+    RangerTagDBRetriever(final RangerDaoManager daoMgr, final PlatformTransactionManager txManager, final XXService xService) {
+        this.daoMgr = daoMgr;
+
+        final TransactionTemplate txTemplate;
+
+        if (txManager != null) {
+            txTemplate = new TransactionTemplate(txManager);
+
+            txTemplate.setReadOnly(true);
+        } else {
+            txTemplate = null;
+        }
+
+        this.lookupCache = new LookupCache();
+
+        if (this.daoMgr != null && xService != null) {
+            RangerPerfTracer perf = null;
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBRetriever.RangerTagDBRetriever(serviceName=" + xService.getName() + ")");
+            }
+
+            if (txTemplate == null) {
+                LOG.debug("Load Tags in the same thread and using an existing transaction");
+
+                if (!initializeTagCache(xService)) {
+                    LOG.error("Failed to get tags for service:[{}] in the same thread and using an existing transaction", xService.getName());
+                }
+            } else {
+                LOG.debug("Load Tags in a separate thread and using a new transaction");
+
+                TagLoaderThread t = new TagLoaderThread(txTemplate, xService);
+
+                t.setDaemon(true);
+                t.start();
+
+                try {
+                    t.join();
+                } catch (InterruptedException ie) {
+                    LOG.error("Failed to get Tags in a separate thread and using a new transaction", ie);
+                }
+            }
+
+            RangerPerfTracer.log(perf);
+        }
+    }
+
+    List<RangerServiceResource> getServiceResources() {
+        return serviceResources;
+    }
+
+    Map<Long, RangerTagDef> getTagDefs() {
+        return tagDefs;
+    }
+
+    Map<Long, RangerTag> getTags() {
+        Map<Long, RangerTag> ret = new HashMap<>();
+
+        if (CollectionUtils.isNotEmpty(serviceResources)) {
+            for (RangerServiceResource serviceResource : serviceResources) {
+                List<RangerTag> tags = lookupCache.serviceResourceToTags.get(serviceResource.getId());
+
+                if (CollectionUtils.isNotEmpty(tags)) {
+                    for (RangerTag tag : tags) {
+                        ret.put(tag.getId(), tag);
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    Map<Long, List<Long>> getResourceToTagIds() {
+        Map<Long, List<Long>> ret = new HashMap<>();
+
+        if (CollectionUtils.isNotEmpty(serviceResources)) {
+            for (RangerServiceResource serviceResource : serviceResources) {
+                List<RangerTag> tags = lookupCache.serviceResourceToTags.get(serviceResource.getId());
+
+                if (CollectionUtils.isNotEmpty(tags)) {
+                    List<Long> tagIds = new ArrayList<>();
+
+                    ret.put(serviceResource.getId(), tagIds);
+
+                    for (RangerTag tag : tags) {
+                        tagIds.add(tag.getId());
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private boolean initializeTagCache(XXService xService) {
+        boolean ret;
+        try {
+            serviceResources = new TagRetrieverServiceResourceContext(xService).getAllServiceResources();
+            tagDefs          = new TagRetrieverTagDefContext(xService).getAllTagDefs();
+
+            ret = true;
+        } catch (Exception ex) {
+            LOG.error("Failed to get tags for service:[{}]", xService.getName(), ex);
+
+            serviceResources = null;
+            tagDefs          = null;
+            ret              = false;
+        }
+
+        return ret;
+    }
+
+    private class LookupCache {
+        final Map<Long, String>          userScreenNames       = new HashMap<>();
+        final Map<Long, List<RangerTag>> serviceResourceToTags = new HashMap<>();
+
+        String getUserScreenName(Long userId) {
+            String ret = null;
+
+            if (userId != null) {
+                ret = userScreenNames.get(userId);
+
+                if (ret == null) {
+                    XXPortalUser user = daoMgr.getXXPortalUser().getById(userId);
+
+                    if (user != null) {
+                        ret = user.getPublicScreenName();
+
+                        if (StringUtil.isEmpty(ret)) {
+                            ret = user.getFirstName();
+
+                            if (StringUtil.isEmpty(ret)) {
+                                ret = user.getLoginId();
+                            } else {
+                                if (!StringUtil.isEmpty(user.getLastName())) {
+                                    ret += (" " + user.getLastName());
+                                }
+                            }
+                        }
+
+                        if (ret != null) {
+                            userScreenNames.put(userId, ret);
+                        }
+                    }
+                }
+            }
+
+            return ret;
+        }
+    }
+
+    private class TagLoaderThread extends Thread {
+        final TransactionTemplate txTemplate;
+        final XXService           xService;
+
+        TagLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
+            this.txTemplate = txTemplate;
+            this.xService   = xService;
+        }
+
+        @Override
+        public void run() {
+            try {
+                txTemplate.setReadOnly(true);
+                Boolean result = txTemplate.execute(status -> {
+                    boolean ret = initializeTagCache(xService);
+
+                    if (!ret) {
+                        status.setRollbackOnly();
+
+                        LOG.error("Failed to get tags for service:[{}] in a new transaction", xService.getName());
+                    }
+
+                    return ret;
+                });
+
+                LOG.debug("transaction result:[{}]", result);
+            } catch (Throwable ex) {
+                LOG.error("Failed to get tags for service:[{}] in a new transaction", xService.getName(), ex);
+            }
+        }
+    }
+
+    private class TagRetrieverServiceResourceContext {
+        final XXService                       service;
+        final ListIterator<XXServiceResource> iterServiceResource;
+
+        TagRetrieverServiceResourceContext(XXService xService) {
+            Long serviceId = xService == null ? null : xService.getId();
+
+            this.service = xService;
+
+            List<XXServiceResource> xServiceResources = daoMgr.getXXServiceResource().findTaggedResourcesInServiceId(serviceId);
+
+            this.iterServiceResource = xServiceResources.listIterator();
+        }
+
+        List<RangerServiceResource> getAllServiceResources() {
+            List<RangerServiceResource> ret = new ArrayList<>();
+
+            while (iterServiceResource.hasNext()) {
+                RangerServiceResource serviceResource = getNextServiceResource();
+
+                if (serviceResource != null) {
+                    ret.add(serviceResource);
+                }
+            }
+
+            return ret;
+        }
+
+        RangerServiceResource getNextServiceResource() {
+            RangerServiceResource ret = null;
+
+            if (iterServiceResource.hasNext()) {
+                XXServiceResource xServiceResource = iterServiceResource.next();
+
+                iterServiceResource.remove();
+
+                if (xServiceResource != null && StringUtils.isNotEmpty(xServiceResource.getTags())) {
+                    ret = new RangerServiceResource();
+
+                    ret.setId(xServiceResource.getId());
+                    ret.setGuid(xServiceResource.getGuid());
+                    ret.setIsEnabled(xServiceResource.getIsEnabled());
+                    ret.setCreatedBy(lookupCache.getUserScreenName(xServiceResource.getAddedByUserId()));
+                    ret.setUpdatedBy(lookupCache.getUserScreenName(xServiceResource.getUpdatedByUserId()));
+                    ret.setCreateTime(xServiceResource.getCreateTime());
+                    ret.setUpdateTime(xServiceResource.getUpdateTime());
+                    ret.setVersion(xServiceResource.getVersion());
+                    ret.setResourceSignature(xServiceResource.getResourceSignature());
+
+                    if (StringUtils.isNotEmpty(xServiceResource.getServiceResourceElements())) {
+                        try {
+                            Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements = JsonUtils.jsonToObject(xServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+
+                            ret.setResourceElements(serviceResourceElements);
+                        } catch (JsonProcessingException e) {
+                            LOG.error("Error occurred while processing JSON  ", e);
+                        }
+                    }
+
+                    try {
+                        List<RangerTag> tags = JsonUtils.jsonToObject(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
+
+                        if (CollectionUtils.isNotEmpty(tags)) {
+                            for (RangerTag tag : tags) {
+                                RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+                            }
+                        }
+
+                        lookupCache.serviceResourceToTags.put(xServiceResource.getId(), tags);
+                    } catch (JsonProcessingException e) {
+                        LOG.error("Error occurred while processing JSON  ", e);
+                    }
+                }
+            }
+
+            return ret;
+        }
+    }
+
+    private class TagRetrieverTagDefContext {
+        final XXService              service;
+        final ListIterator<XXTagDef> iterTagDef;
+
+        TagRetrieverTagDefContext(XXService xService) {
+            Long           serviceId = xService == null ? null : xService.getId();
+            List<XXTagDef> xTagDefs  = daoMgr.getXXTagDef().findByServiceId(serviceId);
+
+            this.service    = xService;
+            this.iterTagDef = xTagDefs.listIterator();
+        }
+
+        Map<Long, RangerTagDef> getAllTagDefs() {
+            Map<Long, RangerTagDef> ret = new HashMap<>();
+
+            while (iterTagDef.hasNext()) {
+                RangerTagDef tagDef = getNextTagDef();
+
+                if (tagDef != null) {
+                    ret.put(tagDef.getId(), tagDef);
+                }
+            }
+
+            return ret;
+        }
+
+        RangerTagDef getNextTagDef() {
+            RangerTagDef ret = null;
+
+            if (iterTagDef.hasNext()) {
+                XXTagDef xTagDef = iterTagDef.next();
+
+                iterTagDef.remove();
+
+                if (xTagDef != null) {
+                    ret = new RangerTagDef();
+
+                    ret.setId(xTagDef.getId());
+                    ret.setGuid(xTagDef.getGuid());
+                    ret.setIsEnabled(xTagDef.getIsEnabled());
+                    ret.setCreatedBy(lookupCache.getUserScreenName(xTagDef.getAddedByUserId()));
+                    ret.setUpdatedBy(lookupCache.getUserScreenName(xTagDef.getUpdatedByUserId()));
+                    ret.setCreateTime(xTagDef.getCreateTime());
+                    ret.setUpdateTime(xTagDef.getUpdateTime());
+                    ret.setVersion(xTagDef.getVersion());
+                    ret.setName(xTagDef.getName());
+                    ret.setSource(xTagDef.getSource());
+
+                    if (StringUtils.isNotEmpty(xTagDef.getTagAttrDefs())) {
+                        try {
+                            List<RangerTagDef.RangerTagAttributeDef> attributeDefs = JsonUtils.jsonToObject(xTagDef.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
+
+                            ret.setAttributeDefs(attributeDefs);
+                        } catch (JsonProcessingException e) {
+                            LOG.error("Error occurred while processing JSON  ", e);
+                        }
+                    }
+                }
+            }
+
+            return ret;
+        }
+    }
 }

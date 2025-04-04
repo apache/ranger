@@ -18,15 +18,14 @@ import io.prestosql.spi.security.SystemAccessControlFactory;
 
 import java.util.ArrayList;
 
-public class PrestoRangerPlugin
-        implements Plugin
-{
+public class PrestoRangerPlugin implements Plugin {
     @Override
-    public Iterable<SystemAccessControlFactory> getSystemAccessControlFactories()
-    {
-        ArrayList<SystemAccessControlFactory> list = new ArrayList<>();
-        SystemAccessControlFactory factory = new RangerSystemAccessControlFactory();
+    public Iterable<SystemAccessControlFactory> getSystemAccessControlFactories() {
+        ArrayList<SystemAccessControlFactory> list    = new ArrayList<>();
+        SystemAccessControlFactory            factory = new RangerSystemAccessControlFactory();
+
         list.add(factory);
+
         return list;
     }
 }

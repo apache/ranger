@@ -50,7 +50,7 @@ public class RangerValidityScheduleEvaluator {
 
     private static final TimeZone defaultTZ = TimeZone.getDefault();
 
-    private static final ThreadLocal<DateFormat> DATE_FORMATTER = ThreadLocal.withInitial(() -> new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION));
+    public static final ThreadLocal<DateFormat> DATE_FORMATTER = ThreadLocal.withInitial(() -> new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION));
 
     private final Date                            startTime;
     private final Date                            endTime;

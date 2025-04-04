@@ -21,33 +21,31 @@ package org.apache.ranger.services.atlas.json.model;
 import java.util.List;
 
 public class ResourceTypeResponse {
+    private List<String> results;
+    private String       count;
+    private String       requestId;
 
-	private List<String> results;
-	private String count;
-	private String requestId;
+    public String getCount() {
+        return count;
+    }
 
-	public String getCount() {
-		return count;
-	}
+    public void setCount(String count) {
+        this.count = count;
+    }
 
-	public void setCount(String count) {
-		this.count = count;
-	}
+    public String getRequestId() {
+        return requestId;
+    }
 
-	public String getRequestId() {
-		return requestId;
-	}
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
-	public void setRequestId(String requestId) {
-		this.requestId = requestId;
-	}
+    public List<String> getResults() {
+        return results;
+    }
 
-	public List<String> getResults() {
-		return results;
-	}
-
-	public void setResults(List<String> results) {
-		this.results = results;
-	}
-
+    public void setResults(List<String> results) {
+        this.results = results;
+    }
 }

@@ -19,15 +19,14 @@
 
 package org.apache.ranger.metrics.source;
 
-import java.util.Map;
-
 import org.apache.ranger.metrics.RangerMetricsFetcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 public class RangerAdminMetricsSourceService extends RangerAdminMetricsSourceBase {
-
     @Autowired
     private RangerMetricsFetcher rangerMetricsFetcher;
 
@@ -38,6 +37,7 @@ public class RangerAdminMetricsSourceService extends RangerAdminMetricsSourceBas
     @Override
     protected void refresh() {
         Map<String, Long> serviceMetrics = rangerMetricsFetcher.getRangerServiceMetrics();
+
         addMetricEntries("ServiceCount", serviceMetrics);
     }
 }

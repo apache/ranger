@@ -72,7 +72,7 @@ public class GraalScriptEngineCreator implements ScriptEngineCreator {
         ScriptEngine ret = null;
 
         if (clsLoader == null) {
-            clsLoader = Thread.currentThread().getContextClassLoader();
+            clsLoader = getDefaultClassLoader();
         }
 
         try {

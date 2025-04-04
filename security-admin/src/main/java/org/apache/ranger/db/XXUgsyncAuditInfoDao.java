@@ -25,51 +25,48 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
-import java.util.List;
 
-/**
- */
+import java.util.List;
 
 @Service
 public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
-	protected static final Logger logger = LoggerFactory
-			.getLogger(XXUgsyncAuditInfoDao.class);
-	/**
-	 * Default Constructor
-	 */
-	public XXUgsyncAuditInfoDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    protected static final Logger logger = LoggerFactory.getLogger(XXUgsyncAuditInfoDao.class);
 
-	@Override
-	public XXUgsyncAuditInfo create(XXUgsyncAuditInfo obj) {
-		obj.setEventTime(DateUtil.getUTCDate());
-		return super.create(obj);
-	}
+    /**
+     * Default Constructor
+     */
+    public XXUgsyncAuditInfoDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXUgsyncAuditInfo findBySessionId(String sessionId) {
-		if (sessionId == null) {
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXUgsyncAuditInfo.findBySessionId", tClass)
-					.setParameter("sessionId", sessionId)
-					.getSingleResult();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
-	public List<XXUgsyncAuditInfo> findBySyncSource(String syncSource) {
-		if (syncSource == null) {
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXUgsyncAuditInfo.findBySyncSource", tClass)
-					.setParameter("syncSource", syncSource).getResultList();
-		} catch (NoResultException e) {
-			return null;
-		}
-	}
+    @Override
+    public XXUgsyncAuditInfo create(XXUgsyncAuditInfo obj) {
+        obj.setEventTime(DateUtil.getUTCDate());
+
+        return super.create(obj);
+    }
+
+    public XXUgsyncAuditInfo findBySessionId(String sessionId) {
+        if (sessionId == null) {
+            return null;
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXUgsyncAuditInfo.findBySessionId", tClass).setParameter("sessionId", sessionId).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<XXUgsyncAuditInfo> findBySyncSource(String syncSource) {
+        if (syncSource == null) {
+            return null;
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXUgsyncAuditInfo.findBySyncSource", tClass).setParameter("syncSource", syncSource).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }

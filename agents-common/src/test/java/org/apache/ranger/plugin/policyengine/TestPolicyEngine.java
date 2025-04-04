@@ -817,10 +817,8 @@ public class TestPolicyEngine {
     }
 
     private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
-        RangerAccessRequest request = null;
-
-        for (TestData test : tests) {
-            request = test.request;
+        tests.parallelStream().forEach(test -> {
+            RangerAccessRequest request = test.request;
 
             if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
                     request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
@@ -949,7 +947,7 @@ public class TestPolicyEngine {
                 assertEquals("deniedUsers mismatched! - " + test.name, expected.getDeniedUsers(), result.getDeniedUsers());
                 assertEquals("deniedGroups mismatched! - " + test.name, expected.getDeniedGroups(), result.getDeniedGroups());
             }
-        }
+        });
     }
 
     private void setPluginConfig(RangerPluginConfig conf, String suffix, Set<String> value) {

@@ -19,85 +19,73 @@
 
 package org.apache.ranger.services.elasticsearch.client;
 
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Map;
+
 public class ElasticsearchResourceMgr {
+    private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchResourceMgr.class);
 
-	public static final String INDEX = "index";
+    public static final String INDEX = "index";
 
-	private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchResourceMgr.class);
+    private ElasticsearchResourceMgr() {
+        // to block instantiation
+    }
 
-	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-		Map<String, Object> ret = null;
+    public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) {
+        Map<String, Object> ret;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ElasticsearchResourceMgr.validateConfig() serviceName: " + serviceName + ", configs: "
-					+ configs);
-		}
+        LOG.debug("==> ElasticsearchResourceMgr.validateConfig() serviceName: {}, configs: {}", serviceName, configs);
 
-		try {
-			ret = ElasticsearchClient.connectionTest(serviceName, configs);
-		} catch (Exception e) {
-			LOG.error("<== ElasticsearchResourceMgr.validateConfig() error: " + e);
-			throw e;
-		}
+        try {
+            ret = ElasticsearchClient.connectionTest(serviceName, configs);
+        } catch (Exception e) {
+            LOG.error("<== ElasticsearchResourceMgr.validateConfig() error: {}", String.valueOf(e));
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ElasticsearchResourceMgr.validateConfig() result: " + ret);
-		}
-		return ret;
-	}
+            throw e;
+        }
 
-	public static List<String> getElasticsearchResources(String serviceName, Map<String, String> configs,
-			ResourceLookupContext context) {
-		String userInput = context.getUserInput();
-		String resource = context.getResourceName();
-		Map<String, List<String>> resourceMap = context.getResources();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ElasticsearchResourceMgr.getElasticsearchResources()  userInput: " + userInput
-					+ ", resource: " + resource + ", resourceMap: " + resourceMap);
-		}
+        LOG.debug("<== ElasticsearchResourceMgr.validateConfig() result: {}", ret);
 
-		if (MapUtils.isEmpty(configs)) {
-			LOG.error("Connection config is empty!");
-			return null;
-		}
+        return ret;
+    }
 
-		if (StringUtils.isEmpty(userInput)) {
-			LOG.warn("User input is empty, set default value : *");
-			userInput = "*";
-		}
+    public static List<String> getElasticsearchResources(String serviceName, Map<String, String> configs, ResourceLookupContext context) {
+        String                    userInput   = context.getUserInput();
+        String                    resource    = context.getResourceName();
+        Map<String, List<String>> resourceMap = context.getResources();
 
-		final ElasticsearchClient elasticsearchClient = ElasticsearchClient.getElasticsearchClient(serviceName, configs);
-		if (elasticsearchClient == null) {
-			LOG.error("Failed to getElasticsearchResources!");
-			return null;
-		}
+        LOG.debug("==> ElasticsearchResourceMgr.getElasticsearchResources()  userInput: {}, resource: {}, resourceMap: {}", userInput, resource, resourceMap);
 
-		List<String> resultList = null;
+        if (MapUtils.isEmpty(configs)) {
+            LOG.error("Connection config is empty!");
 
-		if (StringUtils.isNotEmpty(resource)) {
-			switch (resource) {
-			case INDEX:
-				List<String> existingConnectors = resourceMap.get(INDEX);
-				resultList = elasticsearchClient.getIndexList(userInput, existingConnectors);
-				break;
-			default:
-				break;
-			}
-		}
+            return null;
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ElasticsearchResourceMgr.getElasticsearchResources() result: " + resultList);
-		}
-		return resultList;
-	}
+        if (StringUtils.isEmpty(userInput)) {
+            LOG.warn("User input is empty, set default value : *");
 
+            userInput = "*";
+        }
+
+        List<String> resultList = null;
+
+        if (StringUtils.isNotEmpty(resource)) {
+            if (resource.equals(INDEX)) {
+                List<String> existingConnectors = resourceMap.get(INDEX);
+
+                resultList = ElasticsearchClient.getElasticsearchClient(serviceName, configs).getIndexList(userInput, existingConnectors);
+            }
+        }
+
+        LOG.debug("<== ElasticsearchResourceMgr.getElasticsearchResources() result: {}", resultList);
+
+        return resultList;
+    }
 }

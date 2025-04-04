@@ -27,6 +27,9 @@
     <packaging>jar</packaging>
     <name>Installer Support Component</name>
     <description>Security Plugins Installer</description>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>commons-cli</groupId>

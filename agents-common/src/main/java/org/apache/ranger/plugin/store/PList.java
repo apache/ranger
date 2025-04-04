@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.store;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PList<T> implements java.io.Serializable {
@@ -73,6 +75,26 @@ public class PList<T> implements java.io.Serializable {
         this.resultSize = resultSize;
         this.sortType   = sortType;
         this.sortBy     = sortBy;
+    }
+
+    public PList(PList<T> other) {
+        if (other != null) {
+            this.list       = other.getList() != null ? new ArrayList<>(other.getList()) : Collections.emptyList();
+            this.startIndex = other.getStartIndex();
+            this.pageSize   = other.getPageSize();
+            this.totalCount = other.getTotalCount();
+            this.resultSize = other.getResultSize();
+            this.sortType   = other.getSortType();
+            this.sortBy     = other.getSortBy();
+        } else {
+            this.list       = Collections.emptyList();
+            this.startIndex = 0;
+            this.pageSize   = 0;
+            this.totalCount = 0;
+            this.resultSize = 0;
+            this.sortType   = null;
+            this.sortBy     = null;
+        }
     }
 
     public int getListSize() {

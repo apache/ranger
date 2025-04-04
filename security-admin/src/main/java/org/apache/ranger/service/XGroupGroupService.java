@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
+package org.apache.ranger.service;
 
 import org.apache.ranger.entity.XXGroupGroup;
 import org.apache.ranger.view.VXGroupGroup;
@@ -27,17 +27,13 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class XGroupGroupService extends XGroupGroupServiceBase<XXGroupGroup, VXGroupGroup> {
+    @Override
+    protected void validateForCreate(VXGroupGroup vObj) {
+        // TODO Auto-generated method stub
+    }
 
-	@Override
-	protected void validateForCreate(VXGroupGroup vObj) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	protected void validateForUpdate(VXGroupGroup vObj, XXGroupGroup mObj) {
-		// TODO Auto-generated method stub
-
-	}
-
+    @Override
+    protected void validateForUpdate(VXGroupGroup vObj, XXGroupGroup mObj) {
+        // TODO Auto-generated method stub
+    }
 }

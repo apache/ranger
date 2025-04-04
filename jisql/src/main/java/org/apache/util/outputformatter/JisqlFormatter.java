@@ -18,51 +18,44 @@
  */
 package org.apache.util.outputformatter;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
-
 /**
  * This is the definition of what a JisqlFormatter does.
- *
  */
 public interface JisqlFormatter {
-
-	/**
+    /**
      * Sets a the option list for this formatter.
      *
      * @param parser - the OptionParser to use.
      */
-    void setSupportedOptions( OptionParser parser );
+    void setSupportedOptions(OptionParser parser);
 
     /**
      * Consumes any options that were specified on the command line.
      *
      * @param options the OptionSet that the main driver is using.  Implementing
-     *                classes should add their supported parameters to the list.
-     *
+     * classes should add their supported parameters to the list.
      * @throws Exception if there is a problem parsing the command line arguments.
-     *                   Note that Jisql includes jopt-simple so you can use that
-     *                   to parse your command line.  See
-     *                   <a href="http://jopt-simple.sourceforge.net/">http://jopt-simple.sourceforge.net/</a>
-     *                   for more information.
-     *
+     * Note that Jisql includes jopt-simple so you can use that
+     * to parse your command line.  See
+     * <a href="http://jopt-simple.sourceforge.net/">http://jopt-simple.sourceforge.net/</a>
+     * for more information.
      */
-    void consumeOptions( OptionSet options ) throws Exception;
+    void consumeOptions(OptionSet options) throws Exception;
 
     /**
      * Called to output a usage message to the command line window.  This
      * message should contain information on how to call the formatter.
      *
      * @param out where to put the usage message.
-     *
      */
-    void usage( PrintStream out );
-
+    void usage(PrintStream out);
 
     /**
      * Outputs a header for a query.  This is called before any data is
@@ -70,9 +63,8 @@ public interface JisqlFormatter {
      *
      * @param out where to put header output.
      * @param metaData the ResultSetMetaData for the output.
-     *
      */
-    void formatHeader( PrintStream out, ResultSetMetaData metaData ) throws Exception;
+    void formatHeader(PrintStream out, ResultSetMetaData metaData) throws Exception;
 
     /**
      * Called to output the data.
@@ -80,9 +72,8 @@ public interface JisqlFormatter {
      * @param out where to put output data.
      * @param resultSet the ResultSet for the row.
      * @param metaData the ResultSetMetaData for the row.
-     *
      */
-    void formatData( PrintStream out, ResultSet resultSet, ResultSetMetaData metaData ) throws Exception;
+    void formatData(PrintStream out, ResultSet resultSet, ResultSetMetaData metaData) throws Exception;
 
     /**
      * Outputs a footer for a query.  This is called after all data has been
@@ -90,7 +81,6 @@ public interface JisqlFormatter {
      *
      * @param out where to put footer output.
      * @param metaData the ResultSetMetaData for the output.
-     *
      */
-    void formatFooter( PrintStream out, ResultSetMetaData metaData ) throws Exception;
+    void formatFooter(PrintStream out, ResultSetMetaData metaData) throws Exception;
 }

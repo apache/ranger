@@ -29,8 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class RangerPluginConfig extends RangerConfiguration {
@@ -56,11 +58,15 @@ public class RangerPluginConfig extends RangerConfiguration {
     private       Set<String>               auditExcludedUsers  = Collections.emptySet();
     private       Set<String>               auditExcludedGroups = Collections.emptySet();
     private       Set<String>               auditExcludedRoles  = Collections.emptySet();
-    private       Set<String>               superUsers          = Collections.emptySet();
+    private       Set<String>               superUsers          = new HashSet<>();
     private       Set<String>               superGroups         = Collections.emptySet();
     private       Set<String>               serviceAdmins       = Collections.emptySet();
 
     public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, RangerPolicyEngineOptions policyEngineOptions) {
+        this(serviceType, serviceName, appId, clusterName, clusterType, null, policyEngineOptions);
+    }
+
+    public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, List<File> additionalConfigFiles, RangerPolicyEngineOptions policyEngineOptions) {
         super();
 
         addResourcesForServiceType(serviceType);
@@ -71,6 +77,16 @@ public class RangerPluginConfig extends RangerConfiguration {
         this.serviceName    = StringUtils.isEmpty(serviceName) ? this.get(propertyPrefix + ".service.name") : serviceName;
 
         addResourcesForServiceName(this.serviceType, this.serviceName);
+
+        if (additionalConfigFiles != null) {
+            for (File configFile : additionalConfigFiles) {
+                try {
+                    addResource(configFile.toURI().toURL());
+                } catch (Throwable t) {
+                    LOG.warn("failed to load configurations from {}", configFile, t);
+                }
+            }
+        }
 
         String trustedProxyAddressString = this.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 
@@ -224,7 +240,7 @@ public class RangerPluginConfig extends RangerConfiguration {
     }
 
     public void setSuperUsersGroups(Set<String> users, Set<String> groups) {
-        superUsers  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
+        superUsers  = CollectionUtils.isEmpty(users) ? new HashSet<>() : new HashSet<>(users);
         superGroups = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(groups);
 
         LOG.debug("superUsers={}, superGroups={}", superUsers, superGroups);
@@ -256,6 +272,12 @@ public class RangerPluginConfig extends RangerConfiguration {
 
     public boolean isServiceAdmin(String userName) {
         return serviceAdmins.contains(userName);
+    }
+
+    public void addSuperUsers(Collection<String> users) {
+        if (users != null) {
+            superUsers.addAll(users);
+        }
     }
 
     private void addResourcesForServiceType(String serviceType) {

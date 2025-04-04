@@ -19,42 +19,40 @@
 package org.apache.ranger.services.atlas.json.model;
 
 public class ResourceEntityResponse {
+    private String href;
+    private String name;
+    private String id;
+    private String type;
 
-	private String href;
-	private String name;
-	private String id;
-	private String type;
+    public String getHref() {
+        return href;
+    }
 
-	public String getHref() {
-		return href;
-	}
+    public void setHref(String href) {
+        this.href = href;
+    }
 
-	public void setHref(String href) {
-		this.href = href;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getId() {
-		return id;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
-
+    public void setType(String type) {
+        this.type = type;
+    }
 }

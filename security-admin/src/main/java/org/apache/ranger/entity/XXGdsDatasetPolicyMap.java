@@ -21,14 +21,22 @@ package org.apache.ranger.entity;
 
 import org.apache.ranger.common.AppConstants;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
 @Cacheable
-@Table(name="x_gds_dataset_policy_map")
+@Table(name = "x_gds_dataset_policy_map")
 @XmlRootElement
 public class XXGdsDatasetPolicyMap implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -45,26 +53,40 @@ public class XXGdsDatasetPolicyMap implements Serializable {
     @Column(name = "policy_id")
     protected Long policyId;
 
-    public XXGdsDatasetPolicyMap() { }
+    public XXGdsDatasetPolicyMap() {}
 
     public XXGdsDatasetPolicyMap(Long datasetId, Long policyId) {
         setDatasetId(datasetId);
         setPolicyId(policyId);
     }
 
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getId() { return id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getDatasetId() { return datasetId; }
+    public Long getDatasetId() {
+        return datasetId;
+    }
 
-    public void setDatasetId(Long datasetId) { this.datasetId = datasetId; }
+    public void setDatasetId(Long datasetId) {
+        this.datasetId = datasetId;
+    }
 
-    public Long getPolicyId() { return policyId; }
+    public Long getPolicyId() {
+        return policyId;
+    }
 
-    public void setPolicyId(Long policyId) { this.policyId = policyId; }
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-    public int getMyClassType() { return AppConstants.CLASS_TYPE_GDS_DATASET_POLICY_MAP; }
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_GDS_DATASET_POLICY_MAP;
+    }
 
     @Override
     public int hashCode() {
@@ -75,8 +97,6 @@ public class XXGdsDatasetPolicyMap implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (getClass() != obj.getClass()) {
-            return false;
         } else if (!super.equals(obj)) {
             return false;
         }
@@ -84,8 +104,8 @@ public class XXGdsDatasetPolicyMap implements Serializable {
         XXGdsDatasetPolicyMap other = (XXGdsDatasetPolicyMap) obj;
 
         return Objects.equals(id, other.id) &&
-               Objects.equals(datasetId, other.datasetId) &&
-               Objects.equals(policyId, other.policyId);
+                Objects.equals(datasetId, other.datasetId) &&
+                Objects.equals(policyId, other.policyId);
     }
 
     @Override
@@ -95,11 +115,11 @@ public class XXGdsDatasetPolicyMap implements Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("XXGdsDatasetPolicyMap={ ")
-          .append(super.toString() + "} ")
-          .append("id={").append(id).append("} ")
-          .append("datasetId={").append(datasetId).append("} ")
-          .append("policyId={").append(policyId).append("} ")
-          .append(" }");
+                .append(super.toString() + "} ")
+                .append("id={").append(id).append("} ")
+                .append("datasetId={").append(datasetId).append("} ")
+                .append("policyId={").append(policyId).append("} ")
+                .append(" }");
 
         return sb;
     }

@@ -20,51 +20,49 @@ package org.apache.ranger.services.sqoop.client.json.model;
 import com.google.gson.annotations.SerializedName;
 
 public class SqoopLinkResponse {
-	private Long id;
+    private Long   id;
+    private String name;
 
-	private String name;
+    @SerializedName("connector-name")
+    private String connectorName;
 
-	@SerializedName("connector-name")
-	private String connectorName;
+    @SerializedName("creation-user")
+    private String creationUser;
 
-	@SerializedName("creation-user")
-	private String creationUser;
+    public Long getId() {
+        return id;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getConnectorName() {
+        return connectorName;
+    }
 
-	public String getConnectorName() {
-		return connectorName;
-	}
+    public void setConnectorName(String connectorName) {
+        this.connectorName = connectorName;
+    }
 
-	public void setConnectorName(String connectorName) {
-		this.connectorName = connectorName;
-	}
+    public String getCreationUser() {
+        return creationUser;
+    }
 
-	public String getCreationUser() {
-		return creationUser;
-	}
+    public void setCreationUser(String creationUser) {
+        this.creationUser = creationUser;
+    }
 
-	public void setCreationUser(String creationUser) {
-		this.creationUser = creationUser;
-	}
-
-	@Override
-	public String toString() {
-		return "SqoopLinkResponse [id=" + id + ", name=" + name + ", connectorName=" + connectorName
-				+ ", creationUser=" + creationUser + "]";
-	}
+    @Override
+    public String toString() {
+        return "SqoopLinkResponse [id=" + id + ", name=" + name + ", connectorName=" + connectorName + ", creationUser=" + creationUser + "]";
+    }
 }

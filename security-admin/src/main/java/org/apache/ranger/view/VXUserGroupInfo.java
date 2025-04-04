@@ -17,47 +17,44 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * UserGroupInfo
- *
  */
-
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
+import java.util.List;
+
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
-public class VXUserGroupInfo extends VXDataObject implements java.io.Serializable  {
-	
-	private static final long serialVersionUID = 1L;
-	
-	VXUser xuserInfo;
-	List<VXGroup> xgroupInfo;
-	
-	public VXUserGroupInfo ( ) {
-	}
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class VXUserGroupInfo extends VXDataObject implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	public VXUser getXuserInfo() {
-		return xuserInfo;
-	}
+    VXUser        xuserInfo;
+    List<VXGroup> xgroupInfo;
 
-	public void setXuserInfo(VXUser xuserInfo) {
-		this.xuserInfo = xuserInfo;
-	}
+    public VXUserGroupInfo() {
+    }
 
-	public List<VXGroup> getXgroupInfo() {
-		return xgroupInfo;
-	}
+    public VXUser getXuserInfo() {
+        return xuserInfo;
+    }
 
-	public void setXgroupInfo(List<VXGroup> xgroupInfo) {
-		this.xgroupInfo = xgroupInfo;
-	}
+    public void setXuserInfo(VXUser xuserInfo) {
+        this.xuserInfo = xuserInfo;
+    }
 
+    public List<VXGroup> getXgroupInfo() {
+        return xgroupInfo;
+    }
+
+    public void setXgroupInfo(List<VXGroup> xgroupInfo) {
+        this.xgroupInfo = xgroupInfo;
+    }
 }

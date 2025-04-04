@@ -19,88 +19,92 @@
 
 package org.apache.ranger.db;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyRefDataMaskType;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 @Service
-public class XXPolicyRefDataMaskTypeDao extends BaseDao<XXPolicyRefDataMaskType>{
+public class XXPolicyRefDataMaskTypeDao extends BaseDao<XXPolicyRefDataMaskType> {
+    public XXPolicyRefDataMaskTypeDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXPolicyRefDataMaskTypeDao(RangerDaoManagerBase daoManager)  {
-		super(daoManager);
-	}
+    public List<XXPolicyRefDataMaskType> findByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return Collections.emptyList();
+        }
 
-	public List<XXPolicyRefDataMaskType> findByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return Collections.EMPTY_LIST;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXPolicyRefDataMaskType.findByPolicyId", tClass)
-					.setParameter("policyId", policyId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.EMPTY_LIST;
-		}
-	}
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPolicyRefDataMaskType.findByPolicyId", tClass)
+                    .setParameter("policyId", policyId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
 
-	@SuppressWarnings("unchecked")
     public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedDataMaskNamesByPolicy(Long policyId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
+
         if (policyId != null) {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXPolicyRefDataMaskType.findUpdatedDataMaskNamesByPolicy")
+            List<Object[]> rows = getEntityManager()
+                    .createNamedQuery("XXPolicyRefDataMaskType.findUpdatedDataMaskNamesByPolicy", Object[].class)
                     .setParameter("policy", policyId)
                     .getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
+
         return ret;
     }
 
-	@SuppressWarnings("unchecked")
-	public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedDataMaskNamesByService(Long serviceId) {
+    public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedDataMaskNamesByService(Long serviceId) {
         List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();
+
         if (serviceId != null) {
-            List<Object[]> rows = (List<Object[]>) getEntityManager()
-                    .createNamedQuery("XXPolicyRefDataMaskType.findUpdatedDataMaskNamesByService")
+            List<Object[]> rows = getEntityManager()
+                    .createNamedQuery("XXPolicyRefDataMaskType.findUpdatedDataMaskNamesByService", Object[].class)
                     .setParameter("service", serviceId)
                     .getResultList();
+
             if (rows != null) {
                 for (Object[] row : rows) {
-                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long)row[0], (String)row[1], (String)row[2]));
+                    ret.add(new RangerPolicyRetriever.PolicyTextNameMap((Long) row[0], (String) row[1], (String) row[2]));
                 }
             }
         }
+
         return ret;
     }
 
-	public void deleteByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return;
-		}
+    public void deleteByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return;
+        }
 
-		// First select ids according to policyId, then delete records according to ids
-		// The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
-		List<Long> ids = getEntityManager()
-				.createNamedQuery("XXPolicyRefDataMaskType.findIdsByPolicyId", Long.class)
-				.setParameter("policyId", policyId)
-				.getResultList();
+        // First select ids according to policyId, then delete records according to ids
+        // The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
+        List<Long> ids = getEntityManager()
+                .createNamedQuery("XXPolicyRefDataMaskType.findIdsByPolicyId", Long.class)
+                .setParameter("policyId", policyId)
+                .getResultList();
 
-		if (CollectionUtils.isEmpty(ids)) {
-			return;
-		}
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
 
-		batchDeleteByIds("XXPolicyRefDataMaskType.deleteByIds", ids, "ids");
-	}
+        batchDeleteByIds("XXPolicyRefDataMaskType.deleteByIds", ids, "ids");
+    }
 }

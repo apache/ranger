@@ -17,58 +17,64 @@
  * under the License.
  */
 
- package org.apache.ranger.common;
+package org.apache.ranger.common;
+
+import org.apache.ranger.entity.XXAuthSession;
+import org.apache.ranger.entity.XXPortalUser;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.apache.ranger.entity.XXAuthSession;
-import org.apache.ranger.entity.XXPortalUser;
-
 public class UserSessionBase implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    XXPortalUser                 xXPortalUser;
+    XXAuthSession                xXAuthSession;
+    int                          clientTimeOffsetInMinute;
+    private boolean              userAdmin;
+    private boolean              userAuditAdmin;
+    private boolean              auditKeyAdmin;
+    private boolean              keyAdmin;
+    private int                  authProvider   = RangerConstants.USER_APP;
+    private List<String>         userRoleList   = new ArrayList<>();
+    private RangerUserPermission rangerUserPermission;
+    private Boolean              isSSOEnabled;
+    private Boolean              isSpnegoEnabled = Boolean.FALSE;
 
-	XXPortalUser xXPortalUser;
-	XXAuthSession xXAuthSession;
-	private boolean userAdmin;
-    private boolean userAuditAdmin = false;
-    private boolean auditKeyAdmin = false;
-	private boolean keyAdmin = false;
-	private int authProvider = RangerConstants.USER_APP;
-	private List<String> userRoleList = new ArrayList<String>();
-	private RangerUserPermission rangerUserPermission;
-	int clientTimeOffsetInMinute = 0;
-	private Boolean isSSOEnabled;
-	private Boolean isSpnegoEnabled = false;
+    public Long getUserId() {
+        if (xXPortalUser != null) {
+            return xXPortalUser.getId();
+        }
 
-	public Long getUserId() {
-		if (xXPortalUser != null) {
-			return xXPortalUser.getId();
-		}
-		return null;
-	}
+        return null;
+    }
 
-	public String getLoginId() {
-		if (xXPortalUser != null) {
-			return xXPortalUser.getLoginId();
-		}
-		return null;
-	}
+    public String getLoginId() {
+        if (xXPortalUser != null) {
+            return xXPortalUser.getLoginId();
+        }
 
-	public Long getSessionId() {
-		if (xXAuthSession != null) {
-			return xXAuthSession.getId();
-		}
-		return null;
-	}
+        return null;
+    }
 
-	public boolean isUserAdmin() {
-		return userAdmin;
-	}
-	
+    public Long getSessionId() {
+        if (xXAuthSession != null) {
+            return xXAuthSession.getId();
+        }
+
+        return null;
+    }
+
+    public boolean isUserAdmin() {
+        return userAdmin;
+    }
+
+    public void setUserAdmin(boolean userAdmin) {
+        this.userAdmin = userAdmin;
+    }
+
     public boolean isAuditUserAdmin() {
         return userAuditAdmin;
     }
@@ -77,52 +83,49 @@ public class UserSessionBase implements Serializable {
         this.userAuditAdmin = userAuditAdmin;
     }
 
-	public void setUserAdmin(boolean userAdmin) {
-		this.userAdmin = userAdmin;
-	}
+    public XXPortalUser getXXPortalUser() {
+        return xXPortalUser;
+    }
 
-	public XXPortalUser getXXPortalUser() {
-		return xXPortalUser;
-	}
+    public void setXXPortalUser(XXPortalUser gjUser) {
+        this.xXPortalUser = gjUser;
+    }
 
-	public void setXXAuthSession(XXAuthSession gjAuthSession) {
-		this.xXAuthSession = gjAuthSession;
-	}
+    public void setXXAuthSession(XXAuthSession gjAuthSession) {
+        this.xXAuthSession = gjAuthSession;
+    }
 
-	public void setXXPortalUser(XXPortalUser gjUser) {
-		this.xXPortalUser = gjUser;
-	}
+    public List<String> getUserRoleList() {
+        return this.userRoleList;
+    }
 
-	public void setAuthProvider(int userSource) {
-		this.authProvider = userSource;
-	}
+    public void setUserRoleList(List<String> strRoleList) {
+        this.userRoleList = strRoleList;
+    }
 
-	public void setUserRoleList(List<String> strRoleList) {
-		this.userRoleList = strRoleList;
-	}
-	public List<String> getUserRoleList() {
-		return this.userRoleList;
-	}
+    public int getAuthProvider() {
+        return this.authProvider;
+    }
 
-	public int getAuthProvider() {
-		return this.authProvider;
-	}
+    public void setAuthProvider(int userSource) {
+        this.authProvider = userSource;
+    }
 
-	public int getClientTimeOffsetInMinute() {
-		return clientTimeOffsetInMinute;
-	}
+    public int getClientTimeOffsetInMinute() {
+        return clientTimeOffsetInMinute;
+    }
 
-	public void setClientTimeOffsetInMinute(int clientTimeOffsetInMinute) {
-		this.clientTimeOffsetInMinute = clientTimeOffsetInMinute;
-	}
+    public void setClientTimeOffsetInMinute(int clientTimeOffsetInMinute) {
+        this.clientTimeOffsetInMinute = clientTimeOffsetInMinute;
+    }
 
-	public boolean isKeyAdmin() {
-		return keyAdmin;
-	}
+    public boolean isKeyAdmin() {
+        return keyAdmin;
+    }
 
-	public void setKeyAdmin(boolean keyAdmin) {
-		this.keyAdmin = keyAdmin;
-	}
+    public void setKeyAdmin(boolean keyAdmin) {
+        this.keyAdmin = keyAdmin;
+    }
 
     public boolean isAuditKeyAdmin() {
         return auditKeyAdmin;
@@ -131,69 +134,69 @@ public class UserSessionBase implements Serializable {
     public void setAuditKeyAdmin(boolean auditKeyAdmin) {
         this.auditKeyAdmin = auditKeyAdmin;
     }
-	/**
-	 * @return the rangerUserPermission
-	 */
-	public RangerUserPermission getRangerUserPermission() {
-		return rangerUserPermission;
-	}
 
-	/**
-	 * @param rangerUserPermission the rangerUserPermission to set
-	 */
-	public void setRangerUserPermission(RangerUserPermission rangerUserPermission) {
-		this.rangerUserPermission = rangerUserPermission;
-	}
+    /**
+     * @return the rangerUserPermission
+     */
+    public RangerUserPermission getRangerUserPermission() {
+        return rangerUserPermission;
+    }
 
+    /**
+     * @param rangerUserPermission the rangerUserPermission to set
+     */
+    public void setRangerUserPermission(RangerUserPermission rangerUserPermission) {
+        this.rangerUserPermission = rangerUserPermission;
+    }
 
+    public Boolean isSSOEnabled() {
+        return isSSOEnabled;
+    }
 
-	public Boolean isSSOEnabled() {
-		return isSSOEnabled;
-	}
+    public void setSSOEnabled(Boolean isSSOEnabled) {
+        this.isSSOEnabled = isSSOEnabled;
+    }
 
-	public void setSSOEnabled(Boolean isSSOEnabled) {
-		this.isSSOEnabled = isSSOEnabled;
-	}
+    public Boolean isSpnegoEnabled() {
+        return isSpnegoEnabled;
+    }
 
-	public Boolean isSpnegoEnabled() {
-		return isSpnegoEnabled;
-	}
+    public void setSpnegoEnabled(Boolean isSpnegoEnabled) {
+        this.isSpnegoEnabled = isSpnegoEnabled;
+    }
 
-	public void setSpnegoEnabled(Boolean isSpnegoEnabled) {
-		this.isSpnegoEnabled = isSpnegoEnabled;
-	}
+    public static class RangerUserPermission implements Serializable {
+        private static final long serialVersionUID = 1L;
 
-	public static class RangerUserPermission implements Serializable {
-		private static final long serialVersionUID = 1L;
+        protected CopyOnWriteArraySet<String> userPermissions;
+        protected Long                        lastUpdatedTime;
 
-		protected CopyOnWriteArraySet<String> userPermissions;
-		protected Long lastUpdatedTime;
+        /**
+         * @return the userPermissions
+         */
+        public CopyOnWriteArraySet<String> getUserPermissions() {
+            return userPermissions;
+        }
 
-		/**
-		 * @return the userPermissions
-		 */
-		public CopyOnWriteArraySet<String> getUserPermissions() {
-			return userPermissions;
-		}
-		/**
-		 * @param userPermissions the userPermissions to set
-		 */
-		public void setUserPermissions(CopyOnWriteArraySet<String> userPermissions) {
-			this.userPermissions = userPermissions;
-		}
-		/**
-		 * @return the lastUpdatedTime
-		 */
-		public Long getLastUpdatedTime() {
-			return lastUpdatedTime;
-		}
-		/**
-		 * @param lastUpdatedTime the lastUpdatedTime to set
-		 */
-		public void setLastUpdatedTime(Long lastUpdatedTime) {
-			this.lastUpdatedTime = lastUpdatedTime;
-		}
+        /**
+         * @param userPermissions the userPermissions to set
+         */
+        public void setUserPermissions(CopyOnWriteArraySet<String> userPermissions) {
+            this.userPermissions = userPermissions;
+        }
 
-	}
+        /**
+         * @return the lastUpdatedTime
+         */
+        public Long getLastUpdatedTime() {
+            return lastUpdatedTime;
+        }
 
+        /**
+         * @param lastUpdatedTime the lastUpdatedTime to set
+         */
+        public void setLastUpdatedTime(Long lastUpdatedTime) {
+            this.lastUpdatedTime = lastUpdatedTime;
+        }
+    }
 }

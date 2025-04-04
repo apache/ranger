@@ -27,6 +27,7 @@
     <name>Security Admin Web Application</name>
     <description>security-admin-tool java web application</description>
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <skipJSTests>false</skipJSTests>
     </properties>
     <dependencies>
@@ -1130,6 +1131,9 @@
                         </goals>
                         <phase>test</phase>
                         <configuration>
+                            <environmentVariables>
+                                <OPENSSL_CONF>/etc/ssl/</OPENSSL_CONF>
+                            </environmentVariables>
                             <skip>${skipJSTests}</skip>
                             <workingDirectory>${project.build.directory}/jstest</workingDirectory>
                             <karmaConfPath>../../src/test/javascript/karma-dev.conf.js</karmaConfPath>
@@ -1144,6 +1148,7 @@
                         <configuration>
                             <environmentVariables>
                                 <buildDir>${project.build.finalName}</buildDir>
+                                <OPENSSL_CONF>/etc/ssl/</OPENSSL_CONF>
                             </environmentVariables>
                             <skip>${skipJSTests}</skip>
                             <workingDirectory>${project.build.directory}/jstest</workingDirectory>

@@ -16,145 +16,177 @@
  */
 package org.apache.hadoop.crypto.key.kms.server;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 public class KMSMetricUtil {
-	private static final Logger logger = LoggerFactory.getLogger(KMSMetricUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(KMSMetricUtil.class);
 
-	private static final String HSM_ENABLED = "ranger.ks.hsm.enabled";
-	private static String metricType;
-	
-	public static void main(String[] args) {
-		/* LOG4J2: TODO
-		Logger.getRootLogger().setLevel(Level.OFF);
-		 */
-		logger.info("KMSMetricUtil : main()");
-		if(args.length != 2){
-			System.out.println("type: Incorrect Arguments usage : For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm");
-		}
-		else
-		{
-			if(!(args[0].equalsIgnoreCase("-type")) || !(args[1].equalsIgnoreCase("hsmenabled") || args[1].equalsIgnoreCase("encryptedkey") || args[1].equalsIgnoreCase("encryptedkeybyalgorithm"))){
-				System.out.println("type: Incorrect Arguments usage : For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm");	
-			}
-			else {
-				metricType = args[1];
-				if(logger.isDebugEnabled()){
-					logger.debug("KMSMetric Type : " + metricType);
-				}
-			}
-		}
-		KMSMetricUtil kmsmetricutil = new KMSMetricUtil();
-		kmsmetricutil.getKMSMetricCalculation(metricType);
-	}
+    private static final String HSM_ENABLED = "ranger.ks.hsm.enabled";
+    private static       String metricType;
 
-	
-	@SuppressWarnings("static-access")
-	private void getKMSMetricCalculation(String caseValue) {
-		logger.info("Metric Type : " + caseValue);
-		try {
-			switch (caseValue.toLowerCase()) {
-			case "hsmenabled":
-				try {
-					KMSConfiguration kmsConfig = new KMSConfiguration();
-					String jsonHSMEnabled;
-					if (kmsConfig != null && kmsConfig.getACLsConf() != null) {
-						String hsmEnabledValue = kmsConfig.getACLsConf().get(HSM_ENABLED);
-						Map<String, String> hsmEnabledMap = new HashMap<String, String>();
-						if (hsmEnabledValue != null) {
-							hsmEnabledMap.put("hsmEnabled", hsmEnabledValue);
-							Gson gson = new GsonBuilder().create();
-							jsonHSMEnabled = gson.toJson(hsmEnabledMap);
-						} else {
-							hsmEnabledMap.put("hsmEnabled", "");
-							Gson gson = new GsonBuilder().create();
-							jsonHSMEnabled = gson.toJson(hsmEnabledMap);
-						}
-						logger.info("HSM Enabled : " + jsonHSMEnabled);
-					}
-				} catch (Exception e) {
-					logger.error("Error calculating KMSMetric for HSM enabled : " + e.getMessage());
-				}
-				break;
-			case "encryptedkey":
-				try {
-					KMSWebApp kmsWebAppEncryptedKey = new KMSWebApp();
-					String jsonEncKeycount;
-					if (kmsWebAppEncryptedKey != null) {
-						kmsWebAppEncryptedKey.contextInitialized(null);
-						KeyProviderCryptoExtension keyProvider = kmsWebAppEncryptedKey.getKeyProvider();
-						if (keyProvider != null && keyProvider.getKeys() != null) {
-							Integer encryptedKeyCount = keyProvider.getKeys().size();
-							Map<String, Integer> encryptedKeyCountValueMap = new HashMap<String, Integer>();
-							encryptedKeyCountValueMap.put("encryptedKeyCount", encryptedKeyCount);
-							Gson gson = new GsonBuilder().create();
-							jsonEncKeycount = gson.toJson(encryptedKeyCountValueMap);
-						} else {
-							Map<String, String> encryptedKeyCountValueMap = new HashMap<String, String>();
-							encryptedKeyCountValueMap.put("encryptedKeyCount", "");
-							Gson gson = new GsonBuilder().create();
-							jsonEncKeycount = gson.toJson(encryptedKeyCountValueMap);
-						}
-						logger.info("Encrypted Key Count : " + jsonEncKeycount);
-						kmsWebAppEncryptedKey.contextDestroyed(null);
-					}
-				} catch (Exception e) {
-					logger.error("Error calculating KMSMetric for encrypted key count: " + e.getMessage());
-				}
-				break;
-			case "encryptedkeybyalgorithm":
-				try {
-					KMSWebApp kmsWebApp = new KMSWebApp();
-					if (kmsWebApp != null) {
-						kmsWebApp.contextInitialized(null);
-						KeyProviderCryptoExtension keyProvider = kmsWebApp.getKeyProvider();
-						Map<String, Integer> encryptedKeyByAlgorithmCountMap = new HashMap<String, Integer>();
-						int count = 0;
-						String jsonEncKeyByAlgo = null;
-						if (keyProvider != null && keyProvider.getKeys() != null && keyProvider.getKeys().size() > 0) {
-							List<String> keyList = new ArrayList<String>();
-							keyList.addAll(keyProvider.getKeys());
-							if (keyList != null) {								
-								for (String key : keyList) {
-									String algorithmName = keyProvider.getMetadata(key).getCipher();
-									if (encryptedKeyByAlgorithmCountMap.containsKey(algorithmName)) {
-										count = encryptedKeyByAlgorithmCountMap.get(algorithmName);
-										count += 1;
-										encryptedKeyByAlgorithmCountMap.put(algorithmName, count);
-									} else {
-										encryptedKeyByAlgorithmCountMap.put(algorithmName, 1);
-									}
-								}
-								Gson gson = new GsonBuilder().create();
-								jsonEncKeyByAlgo = gson.toJson(encryptedKeyByAlgorithmCountMap);
-							}							
-						} else {
-							encryptedKeyByAlgorithmCountMap.put("encryptedKeyByAlgorithm", count);
-							Gson gson = new GsonBuilder().create();
-							jsonEncKeyByAlgo = gson.toJson(encryptedKeyByAlgorithmCountMap);
-						}
-						logger.info("Key Encryption Algorithm : " + jsonEncKeyByAlgo);
-						kmsWebApp.contextDestroyed(null);
-					}
-				} catch (IOException e) {
-					logger.error("Error calculating KMSMetric for encrypted key by algorithm : " + e.getMessage());
-				}
-				break;
-			default:
-				System.out.println("type: Incorrect Arguments usage : For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm");
-				break;
-			}
-		} catch (Exception e) {
-			logger.error("Error calculating KMSMetric : " + e.getMessage());
-		}
-	}
+    public static void main(String[] args) {
+        // ToDo: LOG4J2 : Logger.getRootLogger().setLevel(Level.OFF);
+        logger.info("KMSMetricUtil : main()");
+
+        if (args.length != 2) {
+            System.out.println("type: Incorrect Arguments usage : For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm");
+        } else {
+            if (!(args[0].equalsIgnoreCase("-type")) || !(args[1].equalsIgnoreCase("hsmenabled") || args[1].equalsIgnoreCase("encryptedkey") || args[1].equalsIgnoreCase("encryptedkeybyalgorithm"))) {
+                System.out.println("type: Incorrect Arguments usage : For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm");
+            } else {
+                metricType = args[1];
+
+                logger.debug("KMSMetric Type : {}", metricType);
+            }
+        }
+
+        KMSMetricUtil kmsmetricutil = new KMSMetricUtil();
+
+        kmsmetricutil.getKMSMetricCalculation(metricType);
+    }
+
+    @SuppressWarnings("static-access")
+    private void getKMSMetricCalculation(String caseValue) {
+        logger.info("Metric Type : {}", caseValue);
+
+        try {
+            switch (caseValue.toLowerCase()) {
+                case "hsmenabled":
+                    try {
+                        //KMSConfiguration kmsConfig = new KMSConfiguration();
+                        String jsonHSMEnabled;
+
+                        if (KMSConfiguration.getACLsConf() != null) {
+                            String              hsmEnabledValue = KMSConfiguration.getACLsConf().get(HSM_ENABLED);
+                            Map<String, String> hsmEnabledMap   = new HashMap<>();
+
+                            if (hsmEnabledValue != null) {
+                                hsmEnabledMap.put("hsmEnabled", hsmEnabledValue);
+
+                                Gson gson = new GsonBuilder().create();
+
+                                jsonHSMEnabled = gson.toJson(hsmEnabledMap);
+                            } else {
+                                hsmEnabledMap.put("hsmEnabled", "");
+
+                                Gson gson = new GsonBuilder().create();
+
+                                jsonHSMEnabled = gson.toJson(hsmEnabledMap);
+                            }
+
+                            logger.info("HSM Enabled : {}", jsonHSMEnabled);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error calculating KMSMetric for HSM enabled : {}", e.getMessage());
+                    }
+                    break;
+
+                case "encryptedkey":
+                    try {
+                        KMSWebApp kmsWebAppEncryptedKey = new KMSWebApp();
+                        String    jsonEncKeycount;
+
+                        if (kmsWebAppEncryptedKey != null) {
+                            kmsWebAppEncryptedKey.contextInitialized(null);
+
+                            KeyProviderCryptoExtension keyProvider = kmsWebAppEncryptedKey.getKeyProvider();
+
+                            if (keyProvider != null && keyProvider.getKeys() != null) {
+                                Integer              encryptedKeyCount         = keyProvider.getKeys().size();
+                                Map<String, Integer> encryptedKeyCountValueMap = new HashMap<>();
+
+                                encryptedKeyCountValueMap.put("encryptedKeyCount", encryptedKeyCount);
+
+                                Gson gson = new GsonBuilder().create();
+
+                                jsonEncKeycount = gson.toJson(encryptedKeyCountValueMap);
+                            } else {
+                                Map<String, String> encryptedKeyCountValueMap = new HashMap<>();
+
+                                encryptedKeyCountValueMap.put("encryptedKeyCount", "");
+
+                                Gson gson = new GsonBuilder().create();
+
+                                jsonEncKeycount = gson.toJson(encryptedKeyCountValueMap);
+                            }
+
+                            logger.info("Encrypted Key Count : {}", jsonEncKeycount);
+
+                            kmsWebAppEncryptedKey.contextDestroyed(null);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error calculating KMSMetric for encrypted key count: {}", e.getMessage());
+                    }
+                    break;
+
+                case "encryptedkeybyalgorithm":
+                    try {
+                        KMSWebApp kmsWebApp = new KMSWebApp();
+
+                        if (kmsWebApp != null) {
+                            kmsWebApp.contextInitialized(null);
+
+                            KeyProviderCryptoExtension keyProvider                     = kmsWebApp.getKeyProvider();
+                            Map<String, Integer>       encryptedKeyByAlgorithmCountMap = new HashMap<>();
+                            int                        count                           = 0;
+                            String                     jsonEncKeyByAlgo                = null;
+
+                            if (keyProvider != null && keyProvider.getKeys() != null && keyProvider.getKeys().size() > 0) {
+                                List<String> keyList = new ArrayList<>();
+
+                                keyList.addAll(keyProvider.getKeys());
+
+                                if (keyList != null) {
+                                    for (String key : keyList) {
+                                        String algorithmName = keyProvider.getMetadata(key).getCipher();
+
+                                        if (encryptedKeyByAlgorithmCountMap.containsKey(algorithmName)) {
+                                            count = encryptedKeyByAlgorithmCountMap.get(algorithmName);
+                                            count += 1;
+
+                                            encryptedKeyByAlgorithmCountMap.put(algorithmName, count);
+                                        } else {
+                                            encryptedKeyByAlgorithmCountMap.put(algorithmName, 1);
+                                        }
+                                    }
+
+                                    Gson gson = new GsonBuilder().create();
+
+                                    jsonEncKeyByAlgo = gson.toJson(encryptedKeyByAlgorithmCountMap);
+                                }
+                            } else {
+                                encryptedKeyByAlgorithmCountMap.put("encryptedKeyByAlgorithm", count);
+
+                                Gson gson = new GsonBuilder().create();
+
+                                jsonEncKeyByAlgo = gson.toJson(encryptedKeyByAlgorithmCountMap);
+                            }
+
+                            logger.info("Key Encryption Algorithm : {}", jsonEncKeyByAlgo);
+
+                            kmsWebApp.contextDestroyed(null);
+                        }
+                    } catch (IOException e) {
+                        logger.error("Error calculating KMSMetric for encrypted key by algorithm : {}", e.getMessage());
+                    }
+                    break;
+
+                default:
+                    System.out.println("type: Incorrect Arguments usage : For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm");
+                    break;
+            }
+        } catch (Exception e) {
+            logger.error("Error calculating KMSMetric : {}", e.getMessage());
+        }
+    }
 }

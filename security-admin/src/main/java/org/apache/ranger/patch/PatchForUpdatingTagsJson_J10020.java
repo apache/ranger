@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *	 http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,12 +24,6 @@
  */
 
 package org.apache.ranger.patch;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -69,13 +63,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
 @Component
 public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
-
     private static final Logger logger = LoggerFactory.getLogger(PatchForUpdatingTagsJson_J10020.class);
 
     @Autowired
@@ -102,9 +99,9 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
 
     public static void main(String[] args) {
         logger.info("main()");
+
         try {
-            PatchForUpdatingTagsJson_J10020 loader = (PatchForUpdatingTagsJson_J10020) CLIUtil
-                    .getBean(PatchForUpdatingTagsJson_J10020.class);
+            PatchForUpdatingTagsJson_J10020 loader = (PatchForUpdatingTagsJson_J10020) CLIUtil.getBean(PatchForUpdatingTagsJson_J10020.class);
 
             loader.init();
 
@@ -117,6 +114,7 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
             System.exit(0);
         } catch (Exception e) {
             logger.error("Error loading", e);
+
             System.exit(1);
         }
     }
@@ -127,6 +125,11 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
     }
 
     @Override
+    public void printStats() {
+        logger.info("Update Ranger Tags Tables with Json data ");
+    }
+
+    @Override
     public void execLoad() {
         logger.info("==> PatchForUpdatingTagsJson.execLoad()");
 
@@ -134,15 +137,11 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
             updateRangerTagsTablesWithTagsJson();
         } catch (Exception e) {
             logger.error("Error while UpdateRangerTagsTablesWithTagsJson()", e);
+
             System.exit(1);
         }
 
         logger.info("<== PatchForUpdatingTagsJson.execLoad()");
-    }
-
-    @Override
-    public void printStats() {
-        logger.info("Update Ranger Tags Tables with Json data ");
     }
 
     private void updateRangerTagsTablesWithTagsJson() throws Exception {
@@ -165,16 +164,16 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 XXServiceResourceDao serviceResourceDao = daoMgr.getXXServiceResource();
 
                 if (MapUtils.isNotEmpty(tagDefs)) {
-                    logger.info("==> Port " + tagDefs.size() + " Tag Definitions for service(name=" + dbService.getName() + ")");
+                    logger.info("==> Port {} Tag Definitions for service(name={})", tagDefs.size(), dbService.getName());
 
                     for (Map.Entry<Long, RangerTagDef> entry : tagDefs.entrySet()) {
-                        RangerTagDef tagDef = entry.getValue();
-                        XXTagDef xTagDef = tagDefDao.getById(tagDef.getId());
+                        RangerTagDef tagDef  = entry.getValue();
+                        XXTagDef     xTagDef = tagDefDao.getById(tagDef.getId());
 
                         if (xTagDef != null && StringUtils.isEmpty(xTagDef.getTagAttrDefs())) {
-
                             TagsUpdaterThread updaterThread = new TagsUpdaterThread(txTemplate, null, null, tagDef);
-                            String errorMsg = runThread(updaterThread);
+                            String            errorMsg      = runThread(updaterThread);
+
                             if (StringUtils.isNotEmpty(errorMsg)) {
                                 throw new Exception(errorMsg);
                             }
@@ -183,15 +182,16 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 }
 
                 if (MapUtils.isNotEmpty(tags)) {
-                    logger.info("==> Port " + tags.size() + " Tags for service(name=" + dbService.getName() + ")");
+                    logger.info("==> Port {} Tags for service(name={})", tags.size(), dbService.getName());
 
                     for (Map.Entry<Long, RangerTag> entry : tags.entrySet()) {
-                        RangerTag tag = entry.getValue();
-                        XXTag xTag = tagDao.getById(tag.getId());
+                        RangerTag tag  = entry.getValue();
+                        XXTag     xTag = tagDao.getById(tag.getId());
 
                         if (xTag != null && StringUtils.isEmpty(xTag.getTagAttrs())) {
                             TagsUpdaterThread updaterThread = new TagsUpdaterThread(txTemplate, null, tag, null);
-                            String errorMsg = runThread(updaterThread);
+                            String            errorMsg      = runThread(updaterThread);
+
                             if (StringUtils.isNotEmpty(errorMsg)) {
                                 throw new Exception(errorMsg);
                             }
@@ -200,15 +200,15 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 }
 
                 if (CollectionUtils.isNotEmpty(serviceResources)) {
-                    logger.info("==> Port " + serviceResources.size() + " Service Resources for service(name=" + dbService.getName() + ")");
+                    logger.info("==> Port {} Service Resources for service(name={})", serviceResources.size(), dbService.getName());
 
                     for (RangerServiceResource serviceResource : serviceResources) {
-
                         XXServiceResource xServiceResource = serviceResourceDao.getById(serviceResource.getId());
 
                         if (xServiceResource != null && StringUtils.isEmpty(xServiceResource.getServiceResourceElements())) {
                             TagsUpdaterThread updaterThread = new TagsUpdaterThread(txTemplate, serviceResource, null, null);
-                            String errorMsg = runThread(updaterThread);
+                            String            errorMsg      = runThread(updaterThread);
+
                             if (StringUtils.isNotEmpty(errorMsg)) {
                                 throw new Exception(errorMsg);
                             }
@@ -225,53 +225,10 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
         updaterThread.setDaemon(true);
         updaterThread.start();
         updaterThread.join();
+
         return updaterThread.getErrorMsg();
     }
 
-    private class TagsUpdaterThread extends Thread {
-        final TransactionTemplate   txTemplate;
-        final RangerServiceResource serviceResource;
-        final RangerTag             tag;
-        final RangerTagDef          tagDef;
-        String                      errorMsg;
-
-        TagsUpdaterThread(TransactionTemplate txTemplate, final RangerServiceResource serviceResource, final RangerTag tag, final RangerTagDef tagDef) {
-            this.txTemplate        = txTemplate;
-            this.serviceResource   = serviceResource;
-            this.tag               = tag;
-            this.tagDef            = tagDef;
-            this.errorMsg          = null;
-        }
-
-        public String getErrorMsg() {
-            return errorMsg;
-        }
-
-        @Override
-        public void run() {
-            errorMsg = txTemplate.execute(new TransactionCallback<String>() {
-                @Override
-                public String doInTransaction(TransactionStatus status) {
-                    String ret = null;
-                    try {
-                        if (serviceResource != null) {
-                            portServiceResource(serviceResource);
-                        }
-                        if (tag != null) {
-                            portTag(tag);
-                        }
-                        if (tagDef != null) {
-                            portTagDef(tagDef);
-                        }
-                    } catch (Throwable e) {
-                        logger.error("Port failed :[serviceResource=" + serviceResource + ", tag=" + tag + ", tagDef=" + tagDef +"]", e);
-                        ret = e.toString();
-                    }
-                    return ret;
-                }
-            });
-        }
-    }
     private void portTagDef(RangerTagDef tagDef) {
         tagDefService.update(tagDef);
     }
@@ -282,17 +239,63 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
 
     private void portServiceResource(RangerServiceResource serviceResource) throws Exception {
         serviceResourceService.update(serviceResource);
+
         tagStore.refreshServiceResource(serviceResource.getId());
     }
 
-    private class RangerTagDBRetriever {
-        final Logger LOG = LoggerFactory.getLogger(RangerTagDBRetriever.class);
+    private class TagsUpdaterThread extends Thread {
+        final TransactionTemplate   txTemplate;
+        final RangerServiceResource serviceResource;
+        final RangerTag             tag;
+        final RangerTagDef          tagDef;
+        String errorMsg;
+
+        TagsUpdaterThread(TransactionTemplate txTemplate, final RangerServiceResource serviceResource, final RangerTag tag, final RangerTagDef tagDef) {
+            this.txTemplate      = txTemplate;
+            this.serviceResource = serviceResource;
+            this.tag             = tag;
+            this.tagDef          = tagDef;
+            this.errorMsg        = null;
+        }
+
+        public String getErrorMsg() {
+            return errorMsg;
+        }
+
+        @Override
+        public void run() {
+            errorMsg = txTemplate.execute(status -> {
+                String ret = null;
+
+                try {
+                    if (serviceResource != null) {
+                        portServiceResource(serviceResource);
+                    }
+
+                    if (tag != null) {
+                        portTag(tag);
+                    }
+
+                    if (tagDef != null) {
+                        portTagDef(tagDef);
+                    }
+                } catch (Throwable e) {
+                    logger.error("Port failed :[serviceResource={}, tag={}, tagDef={}]", serviceResource, tag, tagDef, e);
+
+                    ret = e.toString();
+                }
+
+                return ret;
+            });
+        }
+    }
+
+    private static class RangerTagDBRetriever {
+        Logger logger = LoggerFactory.getLogger(RangerTagDBRetriever.class);
 
         private final RangerDaoManager                 daoMgr;
         private final XXService                        xService;
         private final RangerTagDBRetriever.LookupCache lookupCache;
-        private final PlatformTransactionManager       txManager;
-        private final TransactionTemplate              txTemplate;
         private       List<RangerServiceResource>      serviceResources;
         private       Map<Long, RangerTagDef>          tagDefs;
         private       Map<Long, RangerTag>             tags;
@@ -301,35 +304,31 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
             this.daoMgr      = daoMgr;
             this.xService    = xService;
             this.lookupCache = new RangerTagDBRetriever.LookupCache();
-            this.txManager   = txManager;
 
-            if (this.txManager != null) {
-                this.txTemplate = new TransactionTemplate(this.txManager);
-                this.txTemplate.setReadOnly(true);
+            TransactionTemplate txTemplate;
+
+            if (txManager != null) {
+                txTemplate = new TransactionTemplate(txManager);
+                txTemplate.setReadOnly(true);
             } else {
-                this.txTemplate = null;
+                txTemplate = null;
             }
 
             if (this.daoMgr != null && this.xService != null) {
-                if (this.txTemplate == null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Load Tags in the same thread and using an existing transaction");
-                    }
+                if (txTemplate == null) {
+                    logger.debug("Load Tags in the same thread and using an existing transaction");
 
                     if (!initializeTagCache(xService)) {
-                        LOG.error("Failed to get tags for service:[" + xService.getName() + "] in the same thread and using an existing transaction");
+                        logger.error("Failed to get tags for service:[{}}] in the same thread and using an existing transaction", xService.getName());
                     }
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Load Tags in a separate thread and using a new transaction");
-                    }
+                    logger.debug("Load Tags in a separate thread and using a new transaction");
 
                     RangerTagDBRetriever.TagLoaderThread t = new RangerTagDBRetriever.TagLoaderThread(txTemplate, xService);
                     t.setDaemon(true);
                     t.start();
                     t.join();
                 }
-
             }
         }
 
@@ -346,17 +345,15 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
         }
 
         private boolean initializeTagCache(XXService xService) {
-            boolean ret;
-            RangerTagDBRetriever.TagRetrieverServiceResourceContext serviceResourceContext  = new RangerTagDBRetriever.TagRetrieverServiceResourceContext(xService);
-            RangerTagDBRetriever.TagRetrieverTagDefContext          tagDefContext           = new RangerTagDBRetriever.TagRetrieverTagDefContext(xService);
-            RangerTagDBRetriever.TagRetrieverTagContext             tagContext              = new RangerTagDBRetriever.TagRetrieverTagContext(xService);
+            RangerTagDBRetriever.TagRetrieverServiceResourceContext serviceResourceContext = new RangerTagDBRetriever.TagRetrieverServiceResourceContext(xService);
+            RangerTagDBRetriever.TagRetrieverTagDefContext          tagDefContext          = new RangerTagDBRetriever.TagRetrieverTagDefContext(xService);
+            RangerTagDBRetriever.TagRetrieverTagContext             tagContext             = new RangerTagDBRetriever.TagRetrieverTagContext(xService);
 
             serviceResources = serviceResourceContext.getAllServiceResources();
             tagDefs          = tagDefContext.getAllTagDefs();
             tags             = tagContext.getAllTags();
 
-            ret = true;
-            return ret;
+            return true;
         }
 
         private <T> List<T> asList(T obj) {
@@ -440,22 +437,17 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
             @Override
             public void run() {
                 txTemplate.setReadOnly(true);
-                Boolean result = txTemplate.execute(new TransactionCallback<Boolean>() {
-                    @Override
-                    public Boolean doInTransaction(TransactionStatus status) {
-                        boolean ret = initializeTagCache(xService);
+                Boolean result = txTemplate.execute(status -> {
+                    boolean ret = initializeTagCache(xService);
 
-                        if (!ret) {
-                            status.setRollbackOnly();
-                            LOG.error("Failed to get tags for service:[" + xService.getName() + "] in a new transaction");
-                        }
-                        return ret;
+                    if (!ret) {
+                        status.setRollbackOnly();
+                        logger.error("Failed to get tags for service:[{}] in a new transaction", xService.getName());
                     }
+                    return ret;
                 });
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("transaction result:[" + result +"]");
-                }
+                logger.debug("transaction result:[{}]", result);
             }
         }
 
@@ -475,7 +467,6 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 this.iterServiceResource             = xServiceResources.listIterator();
                 this.iterServiceResourceElement      = xServiceResourceElements.listIterator();
                 this.iterServiceResourceElementValue = xServiceResourceElementValues.listIterator();
-
             }
 
             TagRetrieverServiceResourceContext(XXServiceResource xServiceResource, XXService xService) {
@@ -502,7 +493,7 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 }
 
                 if (!hasProcessedAll()) {
-                    LOG.warn("getAllServiceResources(): perhaps one or more serviceResources got updated during retrieval. Using fallback ... ");
+                    logger.warn("getAllServiceResources(): perhaps one or more serviceResources got updated during retrieval. Using fallback ... ");
 
                     ret = getServiceResourcesBySecondary();
                 }
@@ -573,9 +564,7 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
             }
 
             boolean hasProcessedAll() {
-                boolean moreToProcess = iterServiceResource.hasNext()
-                        || iterServiceResourceElement.hasNext()
-                        || iterServiceResourceElementValue.hasNext();
+                boolean moreToProcess = iterServiceResource.hasNext() || iterServiceResourceElement.hasNext() || iterServiceResourceElementValue.hasNext();
 
                 return !moreToProcess;
             }
@@ -609,7 +598,6 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
             final ListIterator<XXTagDef>          iterTagDef;
             final ListIterator<XXTagAttributeDef> iterTagAttributeDef;
 
-
             TagRetrieverTagDefContext(XXService xService) {
                 Long                    serviceId         = xService == null ? null : xService.getId();
                 List<XXTagDef>          xTagDefs          = daoMgr.getXXTagDef().findByServiceId(serviceId);
@@ -642,7 +630,7 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 }
 
                 if (!hasProcessedAllTagDefs()) {
-                    LOG.warn("getAllTagDefs(): perhaps one or more tag-definitions got updated during retrieval.  Using fallback ... ");
+                    logger.warn("getAllTagDefs(): perhaps one or more tag-definitions got updated during retrieval.  Using fallback ... ");
 
                     ret = getTagDefsBySecondary();
                 }
@@ -732,7 +720,6 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
             final ListIterator<XXTag>          iterTag;
             final ListIterator<XXTagAttribute> iterTagAttribute;
 
-
             TagRetrieverTagContext(XXService xService) {
                 Long                 serviceId      = xService == null ? null : xService.getId();
                 List<XXTag>          xTags          = daoMgr.getXXTag().findByServiceId(serviceId);
@@ -741,7 +728,6 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 this.service          = xService;
                 this.iterTag          = xTags.listIterator();
                 this.iterTagAttribute = xTagAttributes.listIterator();
-
             }
 
             TagRetrieverTagContext(XXTag xTag, XXService xService) {
@@ -753,7 +739,6 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 this.iterTag          = xTags.listIterator();
                 this.iterTagAttribute = xTagAttributes.listIterator();
             }
-
 
             Map<Long, RangerTag> getAllTags() {
                 Map<Long, RangerTag> ret = new HashMap<>();
@@ -767,7 +752,7 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                 }
 
                 if (!hasProcessedAllTags()) {
-                    LOG.warn("getAllTags(): perhaps one or more tags got updated during retrieval. Using fallback ... ");
+                    logger.warn("getAllTags(): perhaps one or more tags got updated during retrieval. Using fallback ... ");
 
                     ret = getTagsBySecondary();
                 }
@@ -825,7 +810,7 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                     XXTagAttribute xTagAttribute = iterTagAttribute.next();
 
                     if (xTagAttribute.getTagId().equals(tag.getId())) {
-                        String attributeName = xTagAttribute.getName();
+                        String attributeName  = xTagAttribute.getName();
                         String attributeValue = xTagAttribute.getValue();
 
                         if (tag.getAttributes() == null) {
@@ -873,4 +858,3 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
         }
     }
 }
-

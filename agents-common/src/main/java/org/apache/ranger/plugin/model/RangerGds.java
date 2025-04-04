@@ -26,11 +26,13 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
+import org.apache.ranger.plugin.store.PList;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -167,8 +169,8 @@ public class RangerGds {
                     .append("acl={").append(acl).append("} ")
                     .append("validitySchedule={").append(validitySchedule).append("} ")
                     .append("termsOfUse={").append(termsOfUse).append("} ")
-                    .append("labels={").append(validitySchedule).append("} ")
-                    .append("keywords={").append(termsOfUse).append("} ")
+                    .append("labels={").append(labels).append("} ")
+                    .append("keywords={").append(keywords).append("} ")
                     .append("}");
 
             return sb;
@@ -860,9 +862,48 @@ public class RangerGds {
                     .append("aclPrincipalsCount={").append(aclPrincipalsCount).append("} ")
                     .append("totalResourceCount={").append(totalResourceCount).append("} ")
                     .append("dataShares={").append(dataShares).append("} ")
-                    .append("validitySchedule={").append(totalResourceCount).append("} ")
-                    .append("labels={").append(totalResourceCount).append("} ")
-                    .append("keywords={").append(totalResourceCount).append("} ")
+                    .append("validitySchedule={").append(validitySchedule).append("} ")
+                    .append("labels={").append(labels).append("} ")
+                    .append("keywords={").append(keywords).append("} ")
+                    .append("}");
+
+            return sb;
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class DatasetsSummary extends PList<DatasetSummary> {
+        private static final long serialVersionUID = 1L;
+        private Map<String, Map<String, Integer>> additionalInfo;
+
+        public DatasetsSummary() {
+            super();
+        }
+
+        public DatasetsSummary(PList<DatasetSummary> datasetSummary, Map<String, Map<String, Integer>> additionalInfo) {
+            super(datasetSummary);
+            this.additionalInfo = (additionalInfo != null) ? additionalInfo : Collections.emptyMap();
+        }
+
+        public Map<String, Map<String, Integer>> getAdditionalInfo() {
+            return additionalInfo;
+        }
+
+        public void setAdditionalInfo(Map<String, Map<String, Integer>> additionalInfo) {
+            this.additionalInfo = additionalInfo;
+        }
+
+        @Override
+        public String toString() {
+            return toString(new StringBuilder()).toString();
+        }
+
+        public StringBuilder toString(StringBuilder sb) {
+            sb.append("DatasetsSummary={")
+                    .append("list={").append(this.list).append("} ")
+                    .append("additionalInfo={").append(additionalInfo).append("} ")
                     .append("}");
 
             return sb;

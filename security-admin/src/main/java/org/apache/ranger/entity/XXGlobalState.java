@@ -25,6 +25,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+
 import java.util.Objects;
 
 @Entity
@@ -36,12 +37,7 @@ public class XXGlobalState extends XXGlobalStateBase implements java.io.Serializ
     @SequenceGenerator(name = "x_ranger_global_state_SEQ", sequenceName = "x_ranger_global_state_SEQ", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_ranger_global_state_SEQ")
     @Column(name = "id")
-    protected Long id;
-
-    @Override
-    public void setId(Long id) {
-        this.id = id;
-    }
+    protected            Long id;
 
     @Override
     public Long getId() {
@@ -49,17 +45,8 @@ public class XXGlobalState extends XXGlobalStateBase implements java.io.Serializ
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (getClass() != obj.getClass())
-            return false;
-        if (!super.equals(obj))
-            return false;
-
-        XXGlobalState other = (XXGlobalState) obj;
-
-        return Objects.equals(id, other.id);
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Override
@@ -68,8 +55,20 @@ public class XXGlobalState extends XXGlobalStateBase implements java.io.Serializ
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
+
+        XXGlobalState other = (XXGlobalState) obj;
+
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
     public String toString() {
         return "GlobalState [id=" + id + "]";
     }
 }
-

@@ -483,7 +483,7 @@ public class RangerClient {
             isSecureMode = true;
             MiscUtil.loginWithKeyTab(password, username, null);
             UserGroupInformation ugi = MiscUtil.getUGILoginUser();
-            LOG.info("RangerClient.authInit() UGI user: " + ugi.getUserName() + " principal: " + username);
+            LOG.info("RangerClient.authInit() UGI user: {} principal: {}", ugi.getUserName(), username);
         } else {
             restClient.setBasicAuthInfo(username, password);
         }
@@ -510,7 +510,7 @@ public class RangerClient {
                     break;
 
                 default:
-                    LOG.error(api.getMethod() + ": unsupported HTTP method");
+                    LOG.error("{}: unsupported HTTP method", api.getMethod());
 
                     clientResponse = null;
             }

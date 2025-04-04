@@ -19,26 +19,24 @@
 
 package org.apache.ranger.policyengine;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 /**
  * Unit test for simple App.
  */
 public class PerfTesterTest {
-
     /**
      * Rigourous Test :-)
      */
     @Test
     public void testMain() {
-
         String[] args = readCommandLine();
 
         if (args != null) {
@@ -52,7 +50,7 @@ public class PerfTesterTest {
 
         if (args != null) {
             CommandLineParser commandLineParser = new CommandLineParser();
-            PerfTestOptions parseResult = commandLineParser.parse(args);
+            PerfTestOptions   parseResult       = commandLineParser.parse(args);
             Assert.assertNotNull(parseResult);
         }
     }
@@ -64,28 +62,23 @@ public class PerfTesterTest {
 
         URL commandLineFileURL = CommandLineParser.getInputFileURL("/commandline");
         if (commandLineFileURL != null) {
-            try (
-                    InputStream inStream = commandLineFileURL.openStream();
+            try (InputStream inStream = commandLineFileURL.openStream();
                     InputStreamReader reader = new InputStreamReader(inStream, Charset.forName("UTF-8"));
-                    BufferedReader br = new BufferedReader(reader);
-            ) {
-
-
-                String line;
-
-                while ((line = br.readLine()) != null) {
+                    BufferedReader br = new BufferedReader(reader)) {
+                for (String line = br.readLine(); line != null; line = br.readLine()) {
                     line = line.trim();
+
                     if (!line.isEmpty() && !line.startsWith("#")) {
                         ret = line.split(" ");
+
                         break;
                     }
                 }
-
             } catch (Exception exception) {
                 System.out.println("Error reading arguments:" + exception);
             }
         }
+
         return ret;
     }
-
 }

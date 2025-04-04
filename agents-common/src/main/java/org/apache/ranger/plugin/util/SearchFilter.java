@@ -72,6 +72,7 @@ public class SearchFilter {
     public static final String USER_NAME_PARTIAL        = "userNamePartial";      // search
     public static final String SERVICE_NAME_PREFIX      = "serviceNamePrefix";    // search
     public static final String ZONE_NAME_PREFIX         = "zoneNamePrefix";       // search
+    public static final String POLICY_NAME_PREFIX       = "policyNamePrefix";
 
     public static final String TAG_DEF_ID                = "tagDefId";            // search
     public static final String TAG_DEF_GUID              = "tagDefGuid";          // search
@@ -140,6 +141,10 @@ public class SearchFilter {
     public static final String IS_DISTINCT                  = "isDistinct";           // search, sort
     public static final String RETRIEVE_ALL_PAGES           = "retrieveAllPages";     // search
     public static final String SHARED_WITH_ME               = "sharedWithMe";         // search
+    public static final String VALIDITY_EXPIRY_START        = "validityExpiryStart";   // search
+    public static final String VALIDITY_EXPIRY_END          = "validityExpiryEnd";    // search
+    public static final String VALIDITY_TIME_ZONE           = "timeZone";
+    public static final String DEFAULT_TIME_ZONE            = "GMT";
 
     private Map<String, String>   params;
     private Map<String, Object[]> multiValueParams;

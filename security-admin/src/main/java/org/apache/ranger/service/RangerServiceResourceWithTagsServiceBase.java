@@ -19,9 +19,6 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceResource;
@@ -29,39 +26,41 @@ import org.apache.ranger.plugin.model.RangerServiceResourceWithTags;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class RangerServiceResourceWithTagsServiceBase<T extends XXServiceResource, V extends RangerServiceResourceWithTags> extends RangerBaseModelService<T, V> {
+    public PList<V> searchServiceResources(SearchFilter searchFilter) {
+        PList<V> retList       = new PList<>();
+        List<V>  resourceList  = new ArrayList<>();
+        List<T>  xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T xObj) {
-		XXService xService = daoMgr.getXXService().getById(xObj.getServiceId());
+        for (T xResource : xResourceList) {
+            V taggedRes = populateViewBean(xResource);
 
-		vObj.setGuid(xObj.getGuid());
-		vObj.setVersion(xObj.getVersion());
-		vObj.setIsEnabled(xObj.getIsEnabled());
-		vObj.setServiceName(xService.getName());
-		vObj.setAssociatedTags(JsonUtils.jsonToRangerTagList(xObj.getTags()));
+            resourceList.add(taggedRes);
+        }
 
-		return vObj;
-	}
+        retList.setList(resourceList);
+        retList.setResultSize(resourceList.size());
+        retList.setPageSize(searchFilter.getMaxRows());
+        retList.setStartIndex(searchFilter.getStartIndex());
+        retList.setSortType(searchFilter.getSortType());
+        retList.setSortBy(searchFilter.getSortBy());
 
-	public PList<V> searchServiceResources(SearchFilter searchFilter) {
-		PList<V> retList       = new PList<V>();
-		List<V>  resourceList  = new ArrayList<V>();
-		List<T>  xResourceList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
+        return retList;
+    }
 
-		for (T xResource : xResourceList) {
-			V taggedRes = populateViewBean(xResource);
+    @Override
+    protected V mapEntityToViewBean(V vObj, T xObj) {
+        XXService xService = daoMgr.getXXService().getById(xObj.getServiceId());
 
-			resourceList.add(taggedRes);
-		}
+        vObj.setGuid(xObj.getGuid());
+        vObj.setVersion(xObj.getVersion());
+        vObj.setIsEnabled(xObj.getIsEnabled());
+        vObj.setServiceName(xService.getName());
+        vObj.setAssociatedTags(JsonUtils.jsonToRangerTagList(xObj.getTags()));
 
-		retList.setList(resourceList);
-		retList.setResultSize(resourceList.size());
-		retList.setPageSize(searchFilter.getMaxRows());
-		retList.setStartIndex(searchFilter.getStartIndex());
-		retList.setSortType(searchFilter.getSortType());
-		retList.setSortBy(searchFilter.getSortBy());
-
-		return retList;
-	}
+        return vObj;
+    }
 }

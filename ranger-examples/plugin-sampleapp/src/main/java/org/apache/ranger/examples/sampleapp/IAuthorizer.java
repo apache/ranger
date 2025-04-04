@@ -22,7 +22,7 @@ package org.apache.ranger.examples.sampleapp;
 import java.util.Set;
 
 interface IAuthorizer {
-	void init();
+    void init();
 
-	boolean authorize(String fileName, String accessType, String user, Set<String> userGroups);
+    boolean authorize(String fileName, String accessType, String user, Set<String> userGroups);
 }

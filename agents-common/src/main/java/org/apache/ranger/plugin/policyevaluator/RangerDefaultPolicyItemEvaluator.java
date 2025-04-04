@@ -85,9 +85,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
                         ret = true;
                     }
                 } else {
-                    if (withImpliedGrants == null) {
-                        withImpliedGrants = computeWithImpliedGrants();
-                    }
+                    RangerPolicyItem withImpliedGrants = computeWithImpliedGrants();
 
                     if (withImpliedGrants != null && CollectionUtils.isNotEmpty(withImpliedGrants.getAccesses())) {
                         boolean isAccessTypeMatched = false;
@@ -155,9 +153,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
             if (isAdminAccess) {
                 ret = policyItem.getDelegateAdmin();
             } else {
-                if (withImpliedGrants == null) {
-                    withImpliedGrants = computeWithImpliedGrants();
-                }
+                RangerPolicyItem withImpliedGrants = computeWithImpliedGrants();
 
                 if (CollectionUtils.isNotEmpty(withImpliedGrants.getAccesses())) {
                     boolean isAnyAccess = StringUtils.equals(accessType, RangerPolicyEngine.ANY_ACCESS);

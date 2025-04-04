@@ -45,18 +45,18 @@ import java.util.Properties;
 public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     private static final Logger logger = LoggerFactory.getLogger(AbstractRangerAuditWriter.class);
 
-    public static final String  PROP_FILESYSTEM_DIR              = "dir";
-    public static final String  PROP_FILESYSTEM_SUBDIR           = "subdir";
-    public static final String  PROP_FILESYSTEM_FILE_NAME_FORMAT = "filename.format";
-    public static final String  PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
-    public static final String  PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
-    public static final String  PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String PROP_FILESYSTEM_DIR              = "dir";
+    public static final String PROP_FILESYSTEM_SUBDIR           = "subdir";
+    public static final String PROP_FILESYSTEM_FILE_NAME_FORMAT = "filename.format";
+    public static final String PROP_FILESYSTEM_FILE_ROLLOVER    = "file.rollover.sec";
+    public static final String PROP_FILESYSTEM_ROLLOVER_PERIOD  = "file.rollover.period";
+    public static final String PROP_FILESYSTEM_FILE_EXTENSION   = ".log";
+    public static final String PROP_IS_APPEND_ENABLED           = "file.append.enabled";
 
     public Configuration       conf;
     public FileSystem          fileSystem;
     public Map<String, String> auditConfigs;
     public Path                auditPath;
-    public PrintWriter         logWriter;
     public RollingTimeUtil     rollingTimeUtil;
     public String              auditProviderName;
     public String              fullPath;
@@ -71,6 +71,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public int                 fileRolloverSec = 24 * 60 * 60; // In seconds
     public boolean             rollOverByDuration;
 
+    public volatile PrintWriter         logWriter;
     public volatile FSDataOutputStream  ostream;   // output stream wrapped in logWriter
 
     protected boolean reUseLastLogFile;
@@ -225,18 +226,19 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             logFileNameFormat = "%app-type%_ranger_audit_%hostname%" + fileExtension;
         }
 
-        logFolder = logFolderProp + "/" + logSubFolder;
+        reUseLastLogFile = MiscUtil.getBooleanProperty(props, propPrefix + "." + PROP_IS_APPEND_ENABLED, false);
+        logFolder        = logFolderProp + "/" + logSubFolder;
 
-        logger.info("logFolder={}, destName={}", logFolder, auditProviderName);
-        logger.info("logFileNameFormat={}, destName={}", logFileNameFormat, auditProviderName);
-        logger.info("config={}", auditConfigs);
+        logger.info("logFolder = {}, destName = {}", logFolder, auditProviderName);
+        logger.info("logFileNameFormat = {}, destName = {}", logFileNameFormat, auditProviderName);
+        logger.info("config = {}", auditConfigs);
+        logger.info("isAppendEnabled = {}", reUseLastLogFile);
 
         rolloverPeriod  = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_FILESYSTEM_ROLLOVER_PERIOD);
         rollingTimeUtil = RollingTimeUtil.getInstance();
 
-        //file.rollover.period is used for rolling over. If it could compute the next roll over time using file.rollover.period
-        //it fall back to use file.rollover.sec for find next rollover time. If still couldn't find default will be 1day window
-        //for rollover.
+        //file.rollover.period is used for rolling over. If it could compute the next rollover time using file.rollover.period
+        //it fallbacks to use file.rollover.sec for find next rollover time. If still couldn't find default will be 1day window for rollover.
         if (StringUtils.isEmpty(rolloverPeriod)) {
             rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
         }
@@ -269,26 +271,11 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
             closeWriter();
             resetWriter();
+            setNextRollOverTime();
 
             currentFileName  = null;
-            reUseLastLogFile = false;
-
-            if (!rollOverByDuration) {
-                try {
-                    if (StringUtils.isEmpty(rolloverPeriod)) {
-                        rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
-                    }
-
-                    nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
-                } catch (Exception e) {
-                    logger.warn("Rollover by file.rollover.period failed", e);
-                    logger.warn("Using the file.rollover.sec for {} audit file rollover...", fileSystemScheme);
-
-                    nextRollOverTime = rollOverByDuration();
-                }
-            } else {
-                nextRollOverTime = rollOverByDuration();
-            }
+            auditPath        = null;
+            fullPath         = null;
         }
 
         logger.debug("<== AbstractRangerAuditWriter.closeFileIfNeeded()");
@@ -306,13 +293,13 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         if (logWriter == null) {
             boolean appendMode = false;
 
-            // if append is supported, reuse last log file
-            if (reUseLastLogFile && fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND)) {
-                logger.info("Appending to last log file. auditPath = {}", fullPath);
-
+            // if append is supported and enabled via config param, reuse last log file
+            if (auditPath != null && reUseLastLogFile && isAppendEnabled()) {
                 try {
                     ostream    = fileSystem.append(auditPath);
                     appendMode = true;
+
+                    logger.info("Appending to last log file. auditPath = {}", fullPath);
                 } catch (Exception e) {
                     logger.error("Failed to append to file {} due to {}", fullPath, e.getMessage());
                     logger.info("Falling back to create a new log file!");
@@ -393,5 +380,34 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
     public void setFileExtension(String fileExtension) {
         this.fileExtension = fileExtension;
+    }
+
+    private void setNextRollOverTime() {
+        if (!rollOverByDuration) {
+            try {
+                if (StringUtils.isEmpty(rolloverPeriod)) {
+                    rolloverPeriod = rollingTimeUtil.convertRolloverSecondsToRolloverPeriod(fileRolloverSec);
+                }
+
+                nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
+            } catch (Exception e) {
+                logger.warn("Rollover by file.rollover.period failed", e);
+                logger.warn("Using the file.rollover.sec for {} audit file rollover...", fileSystemScheme);
+
+                nextRollOverTime = rollOverByDuration();
+            }
+        } else {
+            nextRollOverTime = rollOverByDuration();
+        }
+    }
+
+    private boolean isAppendEnabled() {
+        try {
+            return fileSystem.hasPathCapability(auditPath, CommonPathCapabilities.FS_APPEND);
+        } catch (Throwable t) {
+            logger.warn("Failed to check if audit log file {} can be appended. Will create a new file.", auditPath, t);
+        }
+
+        return false;
     }
 }

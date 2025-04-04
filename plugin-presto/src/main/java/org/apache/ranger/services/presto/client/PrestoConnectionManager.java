@@ -29,66 +29,67 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 public class PrestoConnectionManager {
-  private static final Logger LOG = LoggerFactory.getLogger(PrestoConnectionManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PrestoConnectionManager.class);
 
-  protected ConcurrentMap<String, PrestoClient> prestoConnectionCache;
-  protected ConcurrentMap<String, Boolean> repoConnectStatusMap;
+    protected ConcurrentMap<String, PrestoClient> prestoConnectionCache;
+    protected ConcurrentMap<String, Boolean>      repoConnectStatusMap;
 
-  public PrestoConnectionManager() {
-    prestoConnectionCache = new ConcurrentHashMap<>();
-    repoConnectStatusMap = new ConcurrentHashMap<>();
-  }
-
-  public PrestoClient getPrestoConnection(final String serviceName, final String serviceType, final Map<String, String> configs) {
-    PrestoClient prestoClient = null;
-
-    if (serviceType != null) {
-      prestoClient = prestoConnectionCache.get(serviceName);
-      if (prestoClient == null) {
-        if (configs != null) {
-          final Callable<PrestoClient> connectPresto = new Callable<PrestoClient>() {
-            @Override
-            public PrestoClient call() throws Exception {
-              return new PrestoClient(serviceName, configs);
-            }
-          };
-          try {
-            prestoClient = TimedEventUtil.timedTask(connectPresto, 5, TimeUnit.SECONDS);
-          } catch (Exception e) {
-            LOG.error("Error connecting to Presto repository: " +
-            serviceName + " using config: " + configs, e);
-          }
-
-          PrestoClient oldClient = null;
-          if (prestoClient != null) {
-            oldClient = prestoConnectionCache.putIfAbsent(serviceName, prestoClient);
-          } else {
-            oldClient = prestoConnectionCache.get(serviceName);
-          }
-
-          if (oldClient != null) {
-            if (prestoClient != null) {
-              prestoClient.close();
-            }
-            prestoClient = oldClient;
-          }
-          repoConnectStatusMap.put(serviceName, true);
-        } else {
-          LOG.error("Connection Config not defined for asset :"
-            + serviceName, new Throwable());
-        }
-      } else {
-        try {
-          prestoClient.getCatalogList("*", null);
-        } catch (Exception e) {
-          prestoConnectionCache.remove(serviceName);
-          prestoClient.close();
-          prestoClient = getPrestoConnection(serviceName, serviceType, configs);
-        }
-      }
-    } else {
-      LOG.error("Asset not found with name " + serviceName, new Throwable());
+    public PrestoConnectionManager() {
+        prestoConnectionCache = new ConcurrentHashMap<>();
+        repoConnectStatusMap  = new ConcurrentHashMap<>();
     }
-    return prestoClient;
-  }
+
+    public PrestoClient getPrestoConnection(final String serviceName, final String serviceType, final Map<String, String> configs) {
+        PrestoClient prestoClient = null;
+
+        if (serviceType != null) {
+            prestoClient = prestoConnectionCache.get(serviceName);
+
+            if (prestoClient == null) {
+                if (configs != null) {
+                    final Callable<PrestoClient> connectPresto = () -> new PrestoClient(serviceName, configs);
+
+                    try {
+                        prestoClient = TimedEventUtil.timedTask(connectPresto, 5, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        LOG.error("Error connecting to Presto repository: {} using config: {}", serviceName, configs, e);
+                    }
+
+                    PrestoClient oldClient;
+
+                    if (prestoClient != null) {
+                        oldClient = prestoConnectionCache.putIfAbsent(serviceName, prestoClient);
+                    } else {
+                        oldClient = prestoConnectionCache.get(serviceName);
+                    }
+
+                    if (oldClient != null) {
+                        if (prestoClient != null) {
+                            prestoClient.close();
+                        }
+
+                        prestoClient = oldClient;
+                    }
+
+                    repoConnectStatusMap.put(serviceName, true);
+                } else {
+                    LOG.error("Connection Config not defined for asset :{}", serviceName, new Throwable());
+                }
+            } else {
+                try {
+                    prestoClient.getCatalogList("*", null);
+                } catch (Exception e) {
+                    prestoConnectionCache.remove(serviceName);
+
+                    prestoClient.close();
+
+                    prestoClient = getPrestoConnection(serviceName, serviceType, configs);
+                }
+            }
+        } else {
+            LOG.error("Asset not found with name {}", serviceName, new Throwable());
+        }
+
+        return prestoClient;
+    }
 }

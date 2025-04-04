@@ -50,6 +50,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ldapconfigcheck</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-atlas-plugin</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -62,6 +68,18 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-authn</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-common-ha</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-elasticsearch-plugin</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -69,6 +87,12 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-elasticsearch-plugin-shim</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-examples-distro</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -128,6 +152,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-kms</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-kms-plugin</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -165,6 +195,12 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-kylin-plugin-shim</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-metrics</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

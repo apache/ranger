@@ -25,7 +25,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TestRangerTransactionSynchronizationAdapter {
-
     @Test
     public void testNestedRunnableAfterCompletion() {
         TransactionSynchronizationManager.initSynchronization();
@@ -42,6 +41,5 @@ public class TestRangerTransactionSynchronizationAdapter {
         } finally {
             TransactionSynchronizationManager.clear();
         }
-
     }
 }

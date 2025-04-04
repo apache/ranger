@@ -17,24 +17,21 @@
  * under the License.
  */
 
- package org.apache.ranger.authentication.unix.jaas;
+package org.apache.ranger.authentication.unix.jaas;
+
+import org.springframework.security.authentication.jaas.AuthorityGranter;
 
 import java.security.Principal;
 import java.util.Collections;
 import java.util.Set;
 
-import org.springframework.security.authentication.jaas.AuthorityGranter;
-
 public class RoleUserAuthorityGranter implements AuthorityGranter {
-
-	@Override
-	public Set<String> grant(Principal principal) {
-		if (principal instanceof UnixGroupPrincipal) {
-			Collections.singleton(principal.getName());
-		}
-		else {
-			Collections.singleton("ROLE_USER");
-		}
-		return null;
-	}
+    @Override
+    public Set<String> grant(Principal principal) {
+        if (principal instanceof UnixGroupPrincipal) {
+            return Collections.singleton(principal.getName());
+        } else {
+            return Collections.singleton("ROLE_USER");
+        }
+    }
 }

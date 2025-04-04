@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GdsProjectEvaluator {
-    private static final Logger LOG = LoggerFactory.getLogger(GdsDatasetEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GdsProjectEvaluator.class);
 
     public static final GdsProjectEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsProjectEvalOrderComparator();
 
