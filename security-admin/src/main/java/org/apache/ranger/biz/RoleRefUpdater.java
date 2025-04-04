@@ -345,7 +345,7 @@ public class RoleRefUpdater {
             return ret;
         }
 
-        private boolean doesRoleExist(){
+        private boolean doesRoleExist() {
             return roleId != null && daoMgr.getXXRole().findByRoleId(roleId) != null;
         }
 
