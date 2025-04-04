@@ -611,7 +611,7 @@ public class RangerBasePlugin {
             } else {
                 LOG.warn("Leaving current policy engine as-is");
                 LOG.warn("Policies are not saved to cache. policyVersion in the policy-cache may be different than in Ranger-admin, even though the policies are the same!");
-                LOG.warn("Ranger-PolicyVersion:[{}], Cached-PolicyVersion:[{}]", policies != null ? policies.getPolicyVersion() : -1L, this.policyEngine != null ? this.policyEngine.getPolicyVersion() : -1L);
+                LOG.warn("Ranger-PolicyVersion:[{}], Cached-PolicyVersion:[{}]", policies != null ? policies.getPolicyVersion() : -1L, getPoliciesVersion());
             }
         } catch (Exception e) {
             LOG.error("setPolicies: policy engine initialization failed!  Leaving current policy engine as-is. Exception : ", e);
@@ -883,14 +883,11 @@ public class RangerBasePlugin {
     }
 
     public Set<RangerRole> getRangerRoleForPrincipal(String principal, String type) {
-        Set<RangerRole>          ret         = new HashSet<>();
-        Set<RangerRole>          rangerRoles = null;
+        Set<RangerRole>          ret          = new HashSet<>();
+        RangerPolicyEngine       policyEngine = this.policyEngine;
+        RangerRoles              roles        = policyEngine != null ? policyEngine.getRangerRoles() : null;
+        Set<RangerRole>          rangerRoles  = roles != null ? roles.getRangerRoles() : null;
         Map<String, Set<String>> roleMapping = null;
-        RangerRoles              roles       = getRangerRoles();
-
-        if (roles != null) {
-            rangerRoles = roles.getRangerRoles();
-        }
 
         if (rangerRoles != null) {
             RangerPluginContext rangerPluginContext = policyEngine.getPluginContext();
@@ -930,6 +927,7 @@ public class RangerBasePlugin {
                 }
             }
         }
+
         return ret;
     }
 
@@ -1063,18 +1061,14 @@ public class RangerBasePlugin {
         LOG.debug("==> refreshPoliciesAndTags()");
 
         try {
-            RangerPolicyEngine policyEngine = this.policyEngine;
+            long oldPolicyVersion = getPoliciesVersion();
 
             // Synch-up policies
-            long oldPolicyVersion = policyEngine.getPolicyVersion();
-
             if (refresher != null) {
                 refresher.syncPoliciesWithAdmin(accessTrigger);
             }
 
-            policyEngine = this.policyEngine; // might be updated in syncPoliciesWithAdmin()
-
-            long newPolicyVersion = policyEngine.getPolicyVersion();
+            long newPolicyVersion = getPoliciesVersion();
 
             if (oldPolicyVersion == newPolicyVersion) {
                 // Synch-up tags
@@ -1196,7 +1190,9 @@ public class RangerBasePlugin {
     }
 
     public Long getPolicyVersion() {
-        return this.policyEngine == null ? -1L : this.policyEngine.getPolicyVersion();
+        RangerPolicyEngine policyEngine = this.policyEngine;
+
+        return policyEngine == null ? -1L : policyEngine.getPolicyVersion();
     }
 
     protected RangerPolicyEngine getPolicyEngine() {
