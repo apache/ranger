@@ -345,24 +345,14 @@ public class RoleRefUpdater {
             return ret;
         }
 
-        private boolean doesPrincipalExist(String name, PolicyRefUpdater.PRINCIPAL_TYPE type) {
-            switch (type) {
-                case USER:
-                    return daoMgr.getXXUser().findByUserName(name) != null;
-                case GROUP:
-                    return daoMgr.getXXGroup().findByGroupName(name) != null;
-                case ROLE:
-                    return daoMgr.getXXRole().findByRoleName(name) != null;
-                default:
-                    break;
-            }
-            return false;
+        private boolean doesRoleExist(){
+            return roleId != null && daoMgr.getXXRole().findByRoleId(roleId) != null;
         }
 
         private void createRoleAssociation(Long id, String name) {
             LOG.debug("===> RolePrincipalAssociator.createRoleAssociation(roleId={}, type={}, name={}, id={})", roleId, type.name(), name, id);
 
-            if (doesPrincipalExist(name, type)) {
+            if (doesRoleExist()) {
                 switch (type) {
                     case USER: {
                         XXRoleRefUser xRoleRefUser = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefUser());
@@ -401,7 +391,7 @@ public class RoleRefUpdater {
                         break;
                 }
             } else {
-                LOG.info("Principal with type = {}, name = {} does not exist, skipping role association!", type.name(), name);
+                LOG.info("Role with id = {} does not exist, skipping role association!", roleId);
             }
 
             LOG.debug("<=== RolePrincipalAssociator.createRoleAssociation(roleId={}, type={}, name={}, id={})", roleId, type.name(), name, id);
