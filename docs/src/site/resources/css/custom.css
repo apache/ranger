@@ -112,7 +112,7 @@ body
     background-color: #67BE9C;
     border-radius: 0 0 50% 75%/0 0 100% 100%;
     transform: scaleX(1.5);
-    background-image: url(/background_design.png);
+    background-image: url(./../background_design.png);
     background-repeat: no-repeat;
     background-position: 300px -94px;
     background-size: 80%;
