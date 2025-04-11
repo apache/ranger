@@ -15,33 +15,40 @@ EXT_URL_REF_FILE=/tmp/ext_ref_list.$$
 if [ -d target ]
 then
     cd target
-    [ -d ${EXT_DIR} ] && rm -rf ${EXT_DIR}
-    grep 'https://' *.html | grep -v '.apache.org' | grep '="https://' | awk -F'"' '{ print $2 }' | sort -u > ${EXT_URL_REF_FILE}
+    #[ -d ${EXT_DIR} ] && rm -rf ${EXT_DIR}
+    grep 'https://' `find . -name '*.html' -print` | grep -v '.apache.org' | grep '="https://' | awk -F'"' '{ 
+        for(i = 1 ; i <= NF ; i++) {
+            if ($i ~ "^https://") {
+                print $i
+            }
+        }
+    }' | sort -u > ${EXT_URL_REF_FILE}
     for url in `cat ${EXT_URL_REF_FILE}`
     do
+        #echo "+ URL: [${url}] ..."
         newname=`echo $url | sed -e "s@https://@${EXT_DIR}/@"`
+        #echo "$url => ./${newname}"
         dn=`dirname ${newname}`
         fn=`basename ${newname}`
         ext=`echo ${fn} | awk -F"." '{ if (NF > 1) { print $NF } }'`
-        if [ ! -z "${ext}" ]
+        if [ -n "${ext}" ]
         then
             #echo "+ mkdir -p ${dn}"
             mkdir -p ${dn}
             #echo "+ curl -o ${newname} ${url}"
             curl -s -o ${newname} ${url}
             #echo "$url => ./${newname}"
-            for f in *.html
+            for f in `find . -name '*.html' -print`
             do
-                cat ${f} | sed -e "s@${url}@./${newname}@g" > ${f}.$$ 
-                #echo "+ diff ${f}.$$ ${f}"
-                #echo "+ ===================="
-                #diff ${f}.$$ ${f}
-                #echo "+ ===================="
-                mv ${f}.$$ ${f}
+                grep "${url}" ${f} > /dev/null 
+                if [ $? -eq 0 ]
+                then
+                    cat ${f} | sed -e "s|${url}|./${newname}|g" > ${f}.$$  && mv ${f}.$$ ${f}
+                fi
             done
         fi
     done
-    rm -f ${EXT_URL_REF_FILE}
+    #rm -f ${EXT_URL_REF_FILE}
 else
     echo "ERROR: Unable to locate the target folder - Run 'mvn site' command before kicking off this script"
     exit 1
