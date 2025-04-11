@@ -43,7 +43,21 @@ then
                 grep "${url}" ${f} > /dev/null 
                 if [ $? -eq 0 ]
                 then
-                    cat ${f} | sed -e "s|${url}|./${newname}|g" > ${f}.$$  && mv ${f}.$$ ${f}
+                    prefix="`echo ${f} | awk -F/ '{ 
+                        c = (NF-2) ;
+                        if (c <= 0) {
+                            print "./" ;
+                        }
+                        else {
+                            s = "./"
+                            for(i = 1 ; i <= c ; i++){
+                                s = s  "../"
+                            }
+                            print s
+                        }
+                    }'`"
+                    #echo "[${f}][${url}]=>[${prefix}${newname}]"
+                    cat ${f} | sed -e "s|${url}|${prefix}${newname}|g" > ${f}.$$  && mv ${f}.$$ ${f}
                 fi
             done
         fi
