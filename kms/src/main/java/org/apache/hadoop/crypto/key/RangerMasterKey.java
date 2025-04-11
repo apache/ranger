@@ -74,11 +74,12 @@ public class RangerMasterKey implements RangerKMSMKI {
     private final RangerMasterKeyDao masterKeyDao;
 
     public RangerMasterKey() {
-        this.masterKeyDao = null;
+        this(null);
     }
 
     public RangerMasterKey(DaoManager daoManager) {
         this.masterKeyDao = daoManager != null ? daoManager.getRangerMasterKeyDao() : null;
+        init();
     }
 
     protected static String getConfig(String key, String defaultValue) {
@@ -232,7 +233,6 @@ public class RangerMasterKey implements RangerKMSMKI {
             logger.debug("==> RangerMasterKey.generateMKFromHSMMK()");
         }
 
-        init();
         if( ! checkMKExistence(this.masterKeyDao)) {
             logger.info("Master Key doesn't exist in DB, Generating the Master Key");
             String encryptedMasterKey = encryptMasterKey(password, key);
@@ -305,7 +305,6 @@ public class RangerMasterKey implements RangerKMSMKI {
             logger.debug("==> RangerMasterKey.generateMKFromKeySecureMK()");
         }
 
-        init();
         if( ! checkMKExistence(this.masterKeyDao)) {
             logger.info("Master Key doesn't exist in DB, Generating the Master Key");
             String encryptedMasterKey = encryptMasterKey(password, key);
