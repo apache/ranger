@@ -184,6 +184,7 @@ export class AccessMoreLess extends Component {
     );
   }
 }
+
 export const AuditFilterEntries = (props) => {
   const { entries, refreshTable } = props;
   const refreshTables = () => {
@@ -491,7 +492,29 @@ export const scrollToError = (selector) => {
   );
 };
 
-export const selectCustomStyles = {
+export const selectInputCustomStyles = {
+  option: (base) => ({
+    ...base,
+    textOverflow: "unset",
+    whiteSpace: "break-spaces",
+    wordBreak: "break-all"
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    textOverflow: "unset",
+    whiteSpace: "break-spaces",
+    wordBreak: "break-all"
+  }),
+  singleValue: (base) => ({
+    ...base,
+    textOverflow: "unset",
+    whiteSpace: "break-spaces",
+    wordBreak: "break-all"
+  })
+};
+
+export const selectInputCustomErrorStyles = {
+  ...selectInputCustomStyles,
   control: () => {
     return {
       border: "4px solid red",

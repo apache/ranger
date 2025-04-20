@@ -25,10 +25,11 @@ import Select from "react-select";
 import AsyncSelect from "react-select/async";
 import Editable from "Components/Editable";
 import CreatableField from "Components/CreatableField";
-import ModalResourceComp from "../Resources/ModalResourceComp";
+import ModalResourceComp from "Views/Resources/ModalResourceComp";
 import { uniq, map, join, isEmpty, isArray } from "lodash";
-import TagBasePermissionItem from "../PolicyListing/TagBasePermissionItem";
-import { dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
+import TagBasePermissionItem from "Views/PolicyListing/TagBasePermissionItem";
+import { dragStart, dragEnter, drop, dragOver } from "Utils/XAUtils";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 export default function ServiceAuditFilter(props) {
   const {
@@ -265,7 +266,7 @@ export default function ServiceAuditFilter(props) {
                             name={`${name}.accessResult`}
                           >
                             {({ input }) => (
-                              <div style={{ minWidth: "195px" }}>
+                              <div style={{ minWidth: "220px" }}>
                                 <Select
                                   {...input}
                                   menuPortalTarget={document.body}
@@ -426,6 +427,7 @@ export default function ServiceAuditFilter(props) {
                                   menuPlacement="auto"
                                   cacheOptions
                                   isMulti
+                                  styles={selectInputCustomStyles}
                                 />
                               </div>
                             )}
@@ -458,12 +460,13 @@ export default function ServiceAuditFilter(props) {
                                   }}
                                   defaultOptions={defaultGroupOptions}
                                   isClearable={false}
-                                  menuPlacement="auto"
                                   noOptionsMessage={() =>
                                     groupLoading ? "Loading..." : "No options"
                                   }
+                                  menuPlacement="auto"
                                   cacheOptions
                                   isMulti
+                                  styles={selectInputCustomStyles}
                                 />
                               </div>
                             )}
@@ -486,7 +489,6 @@ export default function ServiceAuditFilter(props) {
                               >
                                 <AsyncSelect
                                   {...input}
-                                  key={input.name}
                                   menuPortalTarget={document.body}
                                   components={{
                                     IndicatorSeparator: () => null
@@ -497,12 +499,13 @@ export default function ServiceAuditFilter(props) {
                                   }}
                                   defaultOptions={defaultUserOptions}
                                   isClearable={false}
-                                  menuPlacement="auto"
-                                  cacheOptions
                                   noOptionsMessage={() =>
                                     userLoading ? "Loading..." : "No options"
                                   }
+                                  menuPlacement="auto"
+                                  cacheOptions
                                   isMulti
+                                  styles={selectInputCustomStyles}
                                 />
                               </div>
                             )}

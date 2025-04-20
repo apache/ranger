@@ -20,19 +20,23 @@
 import React, { useEffect, useReducer } from "react";
 import { Button, Form as BForm, Col, Row, Table } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
-import { scrollToError } from "Components/CommonComponents";
+import {
+  scrollToError,
+  BlockUi,
+  Loader,
+  CustomTooltip,
+  selectInputCustomStyles
+} from "Components/CommonComponents";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
 import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
 import { findIndex, isEmpty, filter } from "lodash";
-import { commonBreadcrumb, serverError } from "../../../utils/XAUtils";
-import { Loader, CustomTooltip } from "Components/CommonComponents";
+import { commonBreadcrumb, serverError } from "Utils/XAUtils";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { fetchApi } from "Utils/fetchAPI";
 import usePrompt from "Hooks/usePrompt";
-import { RegexValidation } from "../../../utils/XAEnums";
-import { BlockUi } from "../../../components/CommonComponents";
+import { RegexValidation } from "Utils/XAEnums";
 
 const initialState = {
   loader: true,
@@ -617,6 +621,7 @@ function RoleForm() {
                             isMulti
                             data-name="usersSelect"
                             data-cy="usersSelect"
+                            styles={selectInputCustomStyles}
                           />
                         </div>
                         <div className="col-sm-3">
@@ -723,6 +728,7 @@ function RoleForm() {
                             isMulti
                             data-name="groupsSelect"
                             data-cy="groupsSelect"
+                            styles={selectInputCustomStyles}
                           />
                         </div>
                         <div className="col-sm-3">
@@ -829,6 +835,7 @@ function RoleForm() {
                             isMulti
                             data-name="rolesSelect"
                             data-cy="rolesSelect"
+                            styles={selectInputCustomStyles}
                           />
                         </div>
                         <div className="col-sm-3">
