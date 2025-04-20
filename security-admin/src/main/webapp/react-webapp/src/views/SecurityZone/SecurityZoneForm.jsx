@@ -38,18 +38,19 @@ import {
 import { Table } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
-import ModalResourceComp from "../Resources/ModalResourceComp";
+import ModalResourceComp from "Views/Resources/ModalResourceComp";
 import { RegexValidation } from "Utils/XAEnums";
 import { toast } from "react-toastify";
-import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
+import { commonBreadcrumb, serverError } from "Utils/XAUtils";
 import {
   BlockUi,
   Loader,
   scrollToError,
-  selectCustomStyles
-} from "../../components/CommonComponents";
+  selectInputCustomStyles,
+  selectInputCustomErrorStyles
+} from "Components/CommonComponents";
 import usePrompt from "Hooks/usePrompt";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 
 const noneOptions = {
   label: "None",
@@ -847,8 +848,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -888,17 +889,17 @@ const SecurityZoneForm = () => {
                           </Col>
                           <Col xs={4}>
                             <AsyncSelect
+                              {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
                                   ? "isError"
                                   : "adminUserGroups"
                               }
-                              {...input}
                               cacheOptions
                               loadOptions={fetchGroupsData}
                               onFocus={() => {
@@ -935,8 +936,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -984,8 +985,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -1028,8 +1029,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -1072,8 +1073,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -1136,6 +1137,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Tag Services"
+                              styles={selectInputCustomStyles}
                             />
                           </Col>
                         </Row>
@@ -1172,6 +1174,7 @@ const SecurityZoneForm = () => {
                               isClearable={false}
                               isSearchable={true}
                               placeholder="Select Service Name"
+                              styles={selectInputCustomStyles}
                             />
                           </Col>
                         </Row>

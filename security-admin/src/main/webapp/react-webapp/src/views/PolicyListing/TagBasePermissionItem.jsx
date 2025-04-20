@@ -36,7 +36,8 @@ import {
   cloneDeep
 } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 export default function TagBasePermissionItem(props) {
   const serviceDefs = cloneDeep(getServiceDef());
@@ -53,6 +54,14 @@ export default function TagBasePermissionItem(props) {
   const msgStyles = {
     background: "white",
     color: "black"
+  };
+
+  const customStyles = {
+    ...selectInputCustomStyles,
+    noOptionsMessage: (base) => ({
+      ...base,
+      ...msgStyles
+    })
   };
 
   const noOptionMsg = (inputValue) => {
@@ -356,12 +365,7 @@ export default function TagBasePermissionItem(props) {
                         noOptionsMessage={({ inputValue }) =>
                           noOptionMsg(inputValue)
                         }
-                        styles={{
-                          noOptionsMessage: (base) => ({
-                            ...base,
-                            ...msgStyles
-                          })
-                        }}
+                        styles={customStyles}
                         components={{
                           DropdownIndicator: () => null,
                           IndicatorSeparator: () => null

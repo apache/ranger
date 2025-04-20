@@ -23,6 +23,7 @@ import CreatableSelect from "react-select/creatable";
 import { debounce, isArray } from "lodash";
 import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 const noneOptions = {
   label: "None",
@@ -36,8 +37,7 @@ export default function ResourceSelectComp(props) {
     levelKey,
     serviceDetails,
     name,
-    isMultiResources,
-    changePolicyItemPermissions
+    isMultiResources
   } = props;
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -215,6 +215,7 @@ export default function ResourceSelectComp(props) {
             }}
             filterOption={customFilterOptions}
             isLoading={isLoading}
+            styles={selectInputCustomStyles}
           />
           {formValues &&
             formValues[`resourceName-${levelKey}`]?.mandatory &&

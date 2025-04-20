@@ -49,7 +49,12 @@ import {
   cloneDeep
 } from "lodash";
 import { toast } from "react-toastify";
-import { Loader, scrollToError } from "Components/CommonComponents";
+import {
+  BlockUi,
+  Loader,
+  scrollToError,
+  selectInputCustomStyles
+} from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType, getEnumElementByValue } from "Utils/XAEnums";
 import ResourceComp from "../Resources/ResourceComp";
@@ -64,14 +69,13 @@ import {
   commonBreadcrumb,
   isPolicyExpired,
   getResourcesDefVal
-} from "../../utils/XAUtils";
+} from "Utils/XAUtils";
 import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
 import usePrompt from "Hooks/usePrompt";
-import { RegexMessage } from "../../utils/XAMessages";
+import { RegexMessage } from "Utils/XAMessages";
 import { policyInfo } from "Utils/XAUtils";
-import { BlockUi } from "../../components/CommonComponents";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 import { FieldArray } from "react-final-form-arrays";
 
 const noneOptions = {
@@ -1384,6 +1388,7 @@ export default function AddUpdatePolicyForm() {
                                     onFocusPolicyLabel();
                                   }}
                                   defaultOptions={defaultPolicyLabelOptions}
+                                  styles={selectInputCustomStyles}
                                 />
                               </Col>
                             </FormB.Group>

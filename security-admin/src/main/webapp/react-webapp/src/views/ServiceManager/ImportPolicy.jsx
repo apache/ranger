@@ -35,7 +35,8 @@ import {
   uniq
 } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
-import { serverError } from "../../utils/XAUtils";
+import { serverError } from "Utils/XAUtils";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 class ImportPolicy extends Component {
   constructor(props) {
@@ -286,6 +287,7 @@ class ImportPolicy extends Component {
       label: service.name
     }));
   };
+
   Theme = (theme) => {
     return {
       ...theme,
@@ -295,7 +297,9 @@ class ImportPolicy extends Component {
       }
     };
   };
+
   CustomStyles = {
+    ...selectInputCustomStyles,
     option: (provided, state) => ({
       ...provided,
       color: state.isSelected ? "white" : "black"

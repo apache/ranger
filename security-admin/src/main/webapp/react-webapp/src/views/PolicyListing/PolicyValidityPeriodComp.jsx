@@ -26,7 +26,10 @@ import Datetime from "react-datetime";
 import { getAllTimeZoneList } from "Utils/XAUtils";
 import { isEmpty } from "lodash";
 import moment from "moment-timezone";
-import { CustomTooltip } from "../../components/CommonComponents";
+import {
+  CustomTooltip,
+  selectInputCustomStyles
+} from "Components/CommonComponents";
 
 export default function PolicyValidityPeriodComp(props) {
   const { addPolicyItem } = props;
@@ -37,7 +40,7 @@ export default function PolicyValidityPeriodComp(props) {
     setModal(true);
   };
 
-  const RenderInput = (props, openCalendar, closeCalendar) => {
+  const RenderInput = (props) => {
     function clear() {
       props.dateProps.onChange({ target: { value: "" } });
     }
@@ -115,7 +118,7 @@ export default function PolicyValidityPeriodComp(props) {
             </thead>
             <tbody>
               <FieldArray name="validitySchedules">
-                {({ fields, ...arg }) =>
+                {({ fields }) =>
                   fields.map((name, index) => (
                     <tr key={name}>
                       <td className="text-center">
@@ -133,7 +136,7 @@ export default function PolicyValidityPeriodComp(props) {
                                 dateFormat="MM-DD-YYYY"
                                 timeFormat="HH:mm:ss"
                                 closeOnSelect
-                                isValidDate={(currentDate, selectedDate) =>
+                                isValidDate={(currentDate) =>
                                   calEndDate(fields.value[index], currentDate)
                                 }
                               />
@@ -158,7 +161,7 @@ export default function PolicyValidityPeriodComp(props) {
                                 dateFormat="MM-DD-YYYY"
                                 timeFormat="HH:mm:ss"
                                 closeOnSelect
-                                isValidDate={(currentDate, selectedDate) =>
+                                isValidDate={(currentDate) =>
                                   calStartDate(fields.value[index], currentDate)
                                 }
                               />
@@ -187,6 +190,7 @@ export default function PolicyValidityPeriodComp(props) {
                                     ? true
                                     : false
                                 }
+                                styles={selectInputCustomStyles}
                               />
                               {meta.touched && meta.error && (
                                 <span>{meta.error}</span>
