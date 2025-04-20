@@ -47,12 +47,12 @@ import {
 } from "lodash";
 import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
-import { useQuery } from "../../components/CommonComponents";
+import { useQuery, selectInputCustomStyles } from "Components/CommonComponents";
 import SearchPolicyTable from "./SearchPolicyTable";
-import { isAuditor, isKeyAdmin, isKMSAuditor } from "../../utils/XAUtils";
-import CustomBreadcrumb from "../CustomBreadcrumb";
+import { isAuditor, isKeyAdmin, isKMSAuditor } from "Utils/XAUtils";
+import CustomBreadcrumb from "Views/CustomBreadcrumb";
 import moment from "moment-timezone";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 
 function UserAccessLayout() {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
@@ -557,8 +557,9 @@ function UserAccessLayout() {
                                   isMulti
                                   isClearable={false}
                                   options={serviceDefOpts}
-                                  placeholder="Select Component Type"
                                   menuPlacement="auto"
+                                  placeholder="Select Component Type"
+                                  styles={selectInputCustomStyles}
                                 />
                               )}
                             </Field>
@@ -596,6 +597,7 @@ function UserAccessLayout() {
                                   isClearable={true}
                                   loadOptions={fetchPolicyLabels}
                                   placeholder="Select Policy Label"
+                                  styles={selectInputCustomStyles}
                                 />
                               )}
                             </Field>
@@ -616,6 +618,7 @@ function UserAccessLayout() {
                                       options={zoneNameOpts}
                                       menuPlacement="auto"
                                       placeholder="Select Zone Name"
+                                      styles={selectInputCustomStyles}
                                     />
                                   )}
                                 </Field>

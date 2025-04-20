@@ -28,7 +28,11 @@ import {
 } from "react-bootstrap";
 import React, { useEffect, useReducer, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Loader } from "Components/CommonComponents";
+import {
+  Loader,
+  BlockUi,
+  selectInputCustomStyles
+} from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
@@ -38,8 +42,7 @@ import {
   CustomInfinteScroll,
   commonBreadcrumb,
   serverError
-} from "../../utils/XAUtils";
-import { BlockUi } from "../../components/CommonComponents";
+} from "Utils/XAUtils";
 
 const initialState = {
   loader: true,
@@ -397,7 +400,6 @@ const EditPermission = () => {
                                   name="selectGroups"
                                   render={({ input }) => (
                                     <div>
-                                      {" "}
                                       <AsyncSelect
                                         {...input}
                                         className="edit-perm-select"
@@ -410,8 +412,8 @@ const EditPermission = () => {
                                         }}
                                         isClearable={false}
                                         placeholder="Select Groups"
-                                        width="500px"
                                         isMulti
+                                        styles={selectInputCustomStyles}
                                       />
                                       <Button
                                         size="sm"
@@ -451,14 +453,14 @@ const EditPermission = () => {
                                         defaultOptions
                                         filterOption={filterUsrOp}
                                         loadOptions={fetchUsers}
-                                        isMulti
-                                        width="500px"
                                         components={{
                                           DropdownIndicator: () => null,
                                           IndicatorSeparator: () => null
                                         }}
                                         isClearable={false}
                                         placeholder="Select Users"
+                                        isMulti
+                                        styles={selectInputCustomStyles}
                                       />
 
                                       <Button

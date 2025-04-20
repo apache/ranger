@@ -34,14 +34,15 @@ import {
   navigateTo,
   serverError,
   updateTagActive
-} from "../../utils/XAUtils";
+} from "Utils/XAUtils";
 import {
   BlockUi,
   Condition,
   CustomPopover,
   Loader,
-  scrollToError
-} from "../../components/CommonComponents";
+  scrollToError,
+  selectInputCustomStyles
+} from "Components/CommonComponents";
 import {
   difference,
   flatMap,
@@ -57,12 +58,11 @@ import {
   split,
   without,
   maxBy,
-  isArray,
   cloneDeep
 } from "lodash";
 import withRouter from "Hooks/withRouter";
-import { RangerPolicyType } from "../../utils/XAEnums";
-import { getServiceDef } from "../../utils/appState";
+import { RangerPolicyType } from "Utils/XAEnums";
+import { getServiceDef } from "Utils/appState";
 
 class ServiceForm extends Component {
   constructor(props) {
@@ -1178,6 +1178,7 @@ class ServiceForm extends Component {
                                   isLoading={this.state.loadingOptions}
                                   isClearable={true}
                                   cacheOptions
+                                  styles={selectInputCustomStyles}
                                 />
                               </Col>
                             </Row>

@@ -26,7 +26,8 @@ import { filter, groupBy, some } from "lodash";
 import { toast } from "react-toastify";
 import { udfResourceWarning } from "../../utils/XAMessages";
 import ResourceSelectComp from "./ResourceSelectComp";
-import { getResourcesDefVal } from "../../utils/XAUtils";
+import { getResourcesDefVal } from "Utils/XAUtils";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 const noneOptions = {
   label: "None",
@@ -207,6 +208,7 @@ export default function ResourceComp(props) {
                           handleResourceChange(value, input, index)
                         }
                         isSearchable={false}
+                        styles={selectInputCustomStyles}
                       />
                     </span>
                     <RenderValidateField name={`resourceName-${levelKey}`} />

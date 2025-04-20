@@ -713,10 +713,6 @@ header {
   background-color: #e4e4e4;
   margin: 3px 3px;
   float: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
 }
 
 .formHeader {
