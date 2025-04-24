@@ -20,7 +20,11 @@
 import React, { useReducer, useState } from "react";
 import { Button, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
-import { scrollToError } from "Components/CommonComponents";
+import {
+  BlockUi,
+  scrollToError,
+  selectInputCustomStyles
+} from "Components/CommonComponents";
 import AsyncSelect from "react-select/async";
 import Select from "react-select";
 import { fetchApi } from "Utils/fetchAPI";
@@ -31,13 +35,11 @@ import {
   UserTypes
 } from "Utils/XAEnums";
 import { toast } from "react-toastify";
-import { getUserAccessRoleList, serverError } from "Utils/XAUtils";
+import { InfoIcon, getUserAccessRoleList, serverError } from "Utils/XAUtils";
 import { getUserProfile, setUserProfile } from "Utils/appState";
 import { cloneDeep, has, isEmpty, isUndefined } from "lodash";
-import { SyncSourceDetails } from "../SyncSourceDetails";
-import { BlockUi } from "../../../components/CommonComponents";
-import { InfoIcon } from "../../../utils/XAUtils";
-import { RegexMessage, roleChngWarning } from "../../../utils/XAMessages";
+import { SyncSourceDetails } from "Views/UserGroupRoleListing/SyncSourceDetails";
+import { RegexMessage, roleChngWarning } from "Utils/XAMessages";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 
@@ -220,6 +222,7 @@ function UserFormComp(props) {
         isDisabled={
           isEditView && userInfo && isExternalOrFederatedUser ? true : false
         }
+        styles={selectInputCustomStyles}
       />
     );
   };

@@ -73,9 +73,7 @@ public class CachedResourceEvaluators {
         if (ret == null) {
             ret = RangerResourceEvaluatorsRetriever.getEvaluators(serviceResourceTrie, resource.getAsMap(), request.getResourceElementMatchingScopes(), predicate);
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Found [{}] service-resource-matchers for service-resource [{}]", ret.size(), resource.getAsString());
-            }
+            LOG.debug("Found [{}] service-resource-matchers for service-resource [{}]", (ret == null ? null : ret.size()), resource.getAsString());
 
             if (predicate != null) {
                 cache.cacheEvaluators(resource.getCacheKey(), request.getResourceElementMatchingScopes(), ret);

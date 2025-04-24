@@ -31,8 +31,9 @@ import { find, findIndex, isArray, isEmpty, sortBy } from "lodash";
 import { isObject } from "Utils/XAUtils";
 import CreatableSelect from "react-select/creatable";
 import Select from "react-select";
-import { InfoIcon } from "../utils/XAUtils";
-import { RegexMessage } from "../utils/XAMessages";
+import { InfoIcon } from "Utils/XAUtils";
+import { RegexMessage } from "Utils/XAMessages";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 const esprima = require("esprima");
 const TYPE_SELECT = "select";
@@ -298,9 +299,10 @@ const CustomCondition = (props) => {
                         selectedInputVal == "" ? null : selectedInputVal
                       }
                       onChange={(e) => handleChange(e, m.name)}
-                      placeholder="enter expression"
+                      placeholder=""
                       width="500px"
                       isClearable={false}
+                      styles={selectInputCustomStyles}
                     />
                   </Form.Group>
                 </div>
@@ -404,7 +406,7 @@ const Editable = (props) => {
     const policyConditionDisplayValue = () => {
       let ipRangVal, uiHintVal;
       if (selectVal) {
-        return sortBy(Object.keys(selectVal)).map((property, index) => {
+        return sortBy(Object.keys(selectVal)).map((property) => {
           let conditionObj = find(conditionDefVal, function (m) {
             if (m.name == property) {
               return m;
@@ -647,7 +649,7 @@ const Editable = (props) => {
       : (selectValRef.current = editableValue);
   }, [editableValue]);
 
-  const handleApply = (e) => {
+  const handleApply = () => {
     let errors, uiHintVal;
     if (selectValRef?.current) {
       sortBy(Object.keys(selectValRef.current)).map((property) => {
@@ -664,9 +666,7 @@ const Editable = (props) => {
             selectValRef.current[conditionObj.name] != undefined
           ) {
             try {
-              let t = esprima.parseScript(
-                selectValRef.current[conditionObj.name]
-              );
+              esprima.parseScript(selectValRef.current[conditionObj.name]);
             } catch (e) {
               errors = e.message;
             }

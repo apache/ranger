@@ -23,7 +23,8 @@ import Select from "react-select";
 import { map, toString, isEmpty } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
-import { getBaseUrl, serverError } from "../../utils/XAUtils";
+import { getBaseUrl, serverError } from "Utils/XAUtils";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 class ExportPolicy extends Component {
   constructor(props) {
@@ -85,10 +86,6 @@ class ExportPolicy extends Component {
   };
 
   handleServiceChange = (value) => {
-    let difference = this.state.selectedServices.filter(
-      (service) => !value.includes(service)
-    );
-
     this.setState({ selectedServices: value });
   };
 
@@ -185,6 +182,7 @@ class ExportPolicy extends Component {
                     defaultValue={this.serviceDefOptions}
                     menuPlacement="auto"
                     placeholder="Select Service Type"
+                    styles={selectInputCustomStyles}
                   />
                 </div>
               )}
@@ -205,6 +203,7 @@ class ExportPolicy extends Component {
                   value={selectedServices}
                   menuPlacement="auto"
                   placeholder="Select Service Name"
+                  styles={selectInputCustomStyles}
                 />
               </div>
             </Modal.Body>
