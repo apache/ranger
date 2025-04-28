@@ -171,6 +171,9 @@ jobs:
                   echo "Container $container is NOT running!";
               fi
           done
+
+          echo "Fetching logs from ranger-hbase container for debug"
+          docker logs ranger-hbase
           
           if [[ $flag == true ]]; then
               echo "All required containers are up and running";
