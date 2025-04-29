@@ -6,6 +6,7 @@ on:
       - beta
       - master
       - build2.2
+      - betamultiarch
 
 jobs:
   build:
@@ -41,6 +42,14 @@ jobs:
         run: echo "##[set-output name=version;]$(echo `git ls-remote https://${{ secrets.my_pat }}@github.com/atlanhq/${REPOSITORY_NAME}.git ${{ steps.get_branch.outputs.branch }} | awk '{ print $1}' | cut -c1-7`)abcd"
         id: get_version
 
+      # QEMU is required to build arm from a non-arm build machine
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:qemu-v7.0.0-28
+          platforms: arm64
+
       - name: Set up Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
@@ -56,6 +65,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
+          platforms: linux/amd64,linux/arm64
           context: .
           file: ./Dockerfile
           push: true
@@ -63,27 +73,30 @@ jobs:
             ghcr.io/atlanhq/${{ github.event.repository.name }}-${{ steps.get_branch.outputs.branch }}:latest
             ghcr.io/atlanhq/${{ github.event.repository.name }}-${{ steps.get_branch.outputs.branch }}:${{ steps.get_version.outputs.version }}
 
-      - name: Check out into atlan repo
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ steps.get_branch.outputs.branch }}
-          repository: atlanhq/atlan
-          token: ${{ secrets.my_pat }}
+      - name: Check Image Manifest
+        run: docker buildx imagetools inspect --raw ghcr.io/atlanhq/${{ github.event.repository.name }}-${{ steps.get_branch.outputs.branch }}:${{ steps.get_version.outputs.version }}
 
-      - name: Add Changelog
-        run: |
-          mkdir -p gitlog
-          echo "- ${{ github.event.head_commit.message }}">>gitlog/${{ github.event.repository.name }}.txt
-          chmod +x ./scripts/create_changelog.sh
-          ./scripts/create_changelog.sh
+      # - name: Check out into atlan repo
+      #   uses: actions/checkout@v2
+      #   with:
+      #     ref: ${{ steps.get_branch.outputs.branch }}
+      #     repository: atlanhq/atlan
+      #     token: ${{ secrets.my_pat }}
 
-      - name: Commit changes
-        uses: EndBug/add-and-commit@v7
-        with:
-          branch: ${{ steps.get_branch.outputs.branch }}
-          author_name: atlan-ci
-          author_email: it@atlan.com
-          message: '${{ github.event.repository.name }}'
-          default_author: user_info
-          push: origin ${{ steps.get_branch.outputs.branch }}
+      # - name: Add Changelog
+      #   run: |
+      #     mkdir -p gitlog
+      #     echo "- ${{ github.event.head_commit.message }}">>gitlog/${{ github.event.repository.name }}.txt
+      #     chmod +x ./scripts/create_changelog.sh
+      #     ./scripts/create_changelog.sh
+
+      # - name: Commit changes
+      #   uses: EndBug/add-and-commit@v7
+      #   with:
+      #     branch: ${{ steps.get_branch.outputs.branch }}
+      #     author_name: atlan-ci
+      #     author_email: it@atlan.com
+      #     message: '${{ github.event.repository.name }}'
+      #     default_author: user_info
+      #     push: origin ${{ steps.get_branch.outputs.branch }}
 
