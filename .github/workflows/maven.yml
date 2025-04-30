@@ -174,6 +174,12 @@ jobs:
 
           echo "Fetching logs from ranger-hbase container for debug"
           docker logs ranger-hbase
+
+          # copy logs from hbase and print it out
+          echo "Copying logs from HBASE container"
+          docker cp ranger-hbase:/opt/hbase/logs/hbase-hbase-master-ranger-hbase.example.com.out /tmp/hbase-master.log
+          echo "Log Hbase logs to Console"
+          cat /tmp/hbase-master.log
           
           if [[ $flag == true ]]; then
               echo "All required containers are up and running";
