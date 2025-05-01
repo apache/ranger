@@ -28,6 +28,9 @@
     <packaging>pom</packaging>
     <name>ranger</name>
     <description>Security for Enforcing Enterprise Policies</description>
+    <modules>
+        <module>liquibase-database-upgrade</module>
+    </modules>
     <properties>
         <HikariCP.version>4.0.3</HikariCP.version>
         <aircompressor.version>0.27</aircompressor.version>
@@ -133,6 +136,7 @@
         <javax.validation>2.0.1.Final</javax.validation>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jaxb.api.version>2.3.1</jaxb.api.version>
+        <jcommander.version>1.82</jcommander.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.4</jersey-bundle.version>
         <jersey-client.version>2.35</jersey-client.version>
@@ -158,6 +162,7 @@
         <kylin.version>4.0.4</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <libthrift.version>0.14.0</libthrift.version>
+        <liquibase.version>4.29.0</liquibase.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j2.version>2.17.2</log4j2.version>
         <logback.version>1.3.14</logback.version>
@@ -168,7 +173,7 @@
         <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
         <maven.version.required>3.6.3</maven.version.required>
         <metrics.core.version>3.0.2</metrics.core.version>
-        <mockito.version>3.0.0</mockito.version>
+        <mockito.version>3.12.4</mockito.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <netty-all.version>4.1.100.Final</netty-all.version>
