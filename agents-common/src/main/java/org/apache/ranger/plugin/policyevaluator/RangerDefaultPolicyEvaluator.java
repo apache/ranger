@@ -259,10 +259,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                     final ResourceMatchingScope resourceMatchingScope = request.getResourceMatchingScope() != null ? request.getResourceMatchingScope() : ResourceMatchingScope.SELF;
                     final boolean               isMatched;
 
-                    if (request.isAccessTypeAny()) {
+                    if (request.isAccessTypeAny() || resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
                         isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT || (matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR && request instanceof RangerTagAccessRequest);
-                    } else if (resourceMatchingScope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-                        isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || matchType == RangerPolicyResourceMatcher.MatchType.DESCENDANT;
                     } else {
                         isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS || (matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR && request instanceof RangerTagAccessRequest);
                     }
