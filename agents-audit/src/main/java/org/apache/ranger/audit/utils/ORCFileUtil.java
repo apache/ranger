@@ -359,6 +359,9 @@ public class ORCFileUtil {
             } else if (object instanceof Date) {
                 ret = (getDateString((Date) object));
             }
+            else if (object instanceof Short) {
+                ret = ((Short) object).toString();
+            }
         } catch (Exception e) {
             logger.error("Error while writing into ORC File:", e);
         }
