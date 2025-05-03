@@ -49,4 +49,13 @@
         <name>hive.zookeeper.client.port</name>
         <value>2181</value>
     </property>
+    <!-- HMS configs -->
+    <property>
+        <name>hive.metastore.event.db.notification.api.auth</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>hive.metastore.dml.events</name>
+        <value>true</value>
+    </property>
 </configuration>
