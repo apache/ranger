@@ -123,7 +123,7 @@ public class UserGroupSyncConfig {
     private static final String  DEFAULT_GROUP_CLOUDID_ATTRIBUTE_DATATYPE                            = "byte[]";
     private static final String  DEFAULT_OTHER_GROUP_ATTRIBUTES                                      = "displayname,";
     private static final String  DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE                      = UGSYNC_NONE_CASE_CONVERSION_VALUE;
-    private static final String  DEFAULT_LGSYNC_REFERRAL                                             = "ignore";
+    private static final String  DEFAULT_LGSYNC_REFERRAL                                             = "follow";
     private static final int     DEFAULT_LGSYNC_GROUP_HIERARCHY_LEVELS                               = 0;
     private static final int     DEFAULT_LGSYNC_PAGED_RESULTS_SIZE                                   = 500;
     private static final boolean DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED                               = false;
