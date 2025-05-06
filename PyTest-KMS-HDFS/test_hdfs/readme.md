@@ -4,6 +4,8 @@
 ```
 test_hdfs/
 ├── test_encryption.py
+├── test_encryption02.py  
+├── test_encryption03.py
 ├── test_config.py        #stores all constants and HDFS commands
 ├── conftest.py           #sets up the environment
 ├── utils.py              #utility methods
@@ -85,6 +87,20 @@ Handles the **full HDFS encryption cycle**, including setup, positive and negati
   Ensures the test environment is reset for clean re-runs.
 
 ---
+
+## `test_encryption02.py`
+
+Handles the **Check if after key roll over old files can be read or not**
+            **Check if after key roll over new files can be written and read too**
+            **Check read operation on file after key deletion**
+         
+---
+
+## `test_encryption03.py`
+
+Handles the **Test case on cross Encryption zone operations**
+
+
 
 ## Summary
 
