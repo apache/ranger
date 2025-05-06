@@ -818,6 +818,12 @@
         <!-- Test -->
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-hdfs</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-orc-util</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
