@@ -516,42 +516,50 @@ public class PolicyRefUpdater {
             return ret;
         }
 
+        private boolean doesPolicyExist(XXPolicy xPolicy) {
+            return daoMgr.getXXPolicy().getById(xPolicy.getId()) != null;
+        }
+
         private void createPolicyAssociation(Long id, String name) {
             LOG.debug("===> PolicyPrincipalAssociator.createPolicyAssociation(policyId={}, type={}, name={}, id={})", xPolicy.getId(), type.name(), name, id);
 
-            switch (type) {
-                case USER: {
-                    XXPolicyRefUser xPolUser = rangerAuditFields.populateAuditFields(new XXPolicyRefUser(), xPolicy);
+            if (doesPolicyExist(xPolicy)) {
+                switch (type) {
+                    case USER: {
+                        XXPolicyRefUser xPolUser = rangerAuditFields.populateAuditFields(new XXPolicyRefUser(), xPolicy);
 
-                    xPolUser.setPolicyId(xPolicy.getId());
-                    xPolUser.setUserId(id);
-                    xPolUser.setUserName(name);
+                        xPolUser.setPolicyId(xPolicy.getId());
+                        xPolUser.setUserId(id);
+                        xPolUser.setUserName(name);
 
-                    daoMgr.getXXPolicyRefUser().create(xPolUser);
-                }
-                break;
-                case GROUP: {
-                    XXPolicyRefGroup xPolGroup = rangerAuditFields.populateAuditFields(new XXPolicyRefGroup(), xPolicy);
-
-                    xPolGroup.setPolicyId(xPolicy.getId());
-                    xPolGroup.setGroupId(id);
-                    xPolGroup.setGroupName(name);
-
-                    daoMgr.getXXPolicyRefGroup().create(xPolGroup);
-                }
-                break;
-                case ROLE: {
-                    XXPolicyRefRole xPolRole = rangerAuditFields.populateAuditFields(new XXPolicyRefRole(), xPolicy);
-
-                    xPolRole.setPolicyId(xPolicy.getId());
-                    xPolRole.setRoleId(id);
-                    xPolRole.setRoleName(name);
-
-                    daoMgr.getXXPolicyRefRole().create(xPolRole);
-                }
-                break;
-                default:
+                        daoMgr.getXXPolicyRefUser().create(xPolUser);
+                    }
                     break;
+                    case GROUP: {
+                        XXPolicyRefGroup xPolGroup = rangerAuditFields.populateAuditFields(new XXPolicyRefGroup(), xPolicy);
+
+                        xPolGroup.setPolicyId(xPolicy.getId());
+                        xPolGroup.setGroupId(id);
+                        xPolGroup.setGroupName(name);
+
+                        daoMgr.getXXPolicyRefGroup().create(xPolGroup);
+                    }
+                    break;
+                    case ROLE: {
+                        XXPolicyRefRole xPolRole = rangerAuditFields.populateAuditFields(new XXPolicyRefRole(), xPolicy);
+
+                        xPolRole.setPolicyId(xPolicy.getId());
+                        xPolRole.setRoleId(id);
+                        xPolRole.setRoleName(name);
+
+                        daoMgr.getXXPolicyRefRole().create(xPolRole);
+                    }
+                    break;
+                    default:
+                        break;
+                }
+            } else {
+                LOG.info("Policy with id = {} does not exist, skipping policy association!", xPolicy.getId());
             }
 
             LOG.debug("<=== PolicyPrincipalAssociator.createPolicyAssociation(policyId={}, type={}, name={}, id={})", xPolicy.getId(), type.name(), name, id);
