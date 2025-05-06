@@ -3,9 +3,11 @@
 ## Structure
 ```
 test_kms/
-├── test_keys.py       
+├── test_keys.py 
+├── test_keys_02.py 
 ├── test_keyDetails.py 
-├── test_keyOps.py    
+├── test_keyOps.py  
+├── test_keyOps_policy.py   
 ├── conftest.py       
 ├── utils.py
 ```
@@ -46,7 +48,16 @@ Contains a class `TestKeyManagement` with two methods:
 2. **test_key_name_validation:**  
    Validates creation of a key with different valid and invalid name formats.
 
+3. **test_duplicate_key_creation:**  
+   Checks for creation of duplicate EZ key and checks if it's failing or not.
+
 > Similarly, other validations can be implemented on keys.
+
+---
+
+## `test_keys_02.py`
+
+Handles **Bulk key opeartions and other extra cases**.  
 
 ---
 
@@ -84,4 +95,11 @@ Contains a class `TestKeyOperations` with four methods:
    - Generation of data key from EZ key and checks for presence of EDEK and DEK.  
    - Decryption of EDEK to get back DEK.
 
-               
+---
+
+## `test_keyOps_policy.py`
+
+Handles **operations on keys based on policy enforcement**.  
+Checks Key operation by giving incremental access to each opeartion one by one
+i.e `create, rollover, getKeyVersion, getMetadata, generateeek, decrypteek, delete`
+
