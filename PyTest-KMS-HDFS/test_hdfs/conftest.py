@@ -11,6 +11,23 @@ def hadoop_container():
     container = client.containers.get(HADOOP_CONTAINER)      #to get hadoop container instance
     return container
 
+# polling method to wait until container gets restarted
+def wait_for_hdfs(container, user='hdfs', timeout=30, interval=2):
+
+    print("Waiting for HDFS to become available...")
+    start_time = time.time()
+    
+    while time.time() - start_time < timeout:
+        exit_code, _ = container.exec_run("hdfs dfs -ls /", user=user)
+        if exit_code == 0:
+            print("HDFS is ready.")
+            return True
+        else:
+            print("⏳ HDFS not ready yet, retrying...")
+            time.sleep(interval)
+
+    raise TimeoutError("HDFS did not become ready within the timeout period.")
+
 
 def configure_kms_property(hadoop_container):
     # Check if KMS property already exists
@@ -31,12 +48,18 @@ def configure_kms_property(hadoop_container):
         # Restart the container to apply the config changes
         print("Restarting Hadoop container to apply changes...")
         hadoop_container.restart()
-        time.sleep(10)  # Wait for container to fully restart
+        wait_for_hdfs(hadoop_container, user=HDFS_USER)  # Wait for container to fully restart
+        # time.sleep(10)
         print("Hadoop container restarted and ready.")
 
     else:
         print("KMS provider already present. No need to update config.")
 
+    # # Leave safe mode if active
+    # print("Exiting safe mode (if active)...")
+    # leave_safe_mode_cmd = "hdfs dfsadmin -safemode leave"
+    # exit_code, output = hadoop_container.exec_run(leave_safe_mode_cmd, user=HDFS_USER)
+    # print(output.decode())  # For debugging
 
 
 def ensure_user_exists(hadoop_container, username):
