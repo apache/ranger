@@ -406,9 +406,9 @@ public class AuditProviderFactory {
 
                 if (handlerClass.isAssignableFrom(AuditQueue.class)) {
                     // Queue class needs consumer
-                    handlerClass.getDeclaredConstructor(AuditHandler.class).newInstance(consumer);
+                    provider = (AuditHandler) handlerClass.getDeclaredConstructor(AuditHandler.class).newInstance(consumer);
                 } else {
-                    provider = (AuditHandler) Class.forName(className).newInstance();
+                    provider = (AuditHandler) handlerClass.newInstance();
                 }
             } catch (Exception e) {
                 LOG.error("Can't instantiate audit class for providerName={}, className={}, propertyPrefix={}", providerName, className, propPrefix, e);
