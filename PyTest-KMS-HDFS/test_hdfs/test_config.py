@@ -1,5 +1,10 @@
+
+##Contains all constant values regarding USER, PATH, HDFS Commands----------------------
+
+
 HDFS_USER = "hdfs"
 HIVE_USER = "hive"
+HBASE_USER= "hbase"
 KEY_ADMIN="keyadmin"
 HEADERS={"Content-Type": "application/json","Accept":"application/json"}
 PARAMS={"user.name":"keyadmin"}
@@ -17,41 +22,58 @@ CORE_SITE_XML_PATH = "/opt/hadoop/etc/hadoop/core-site.xml"
 SET_PATH_CMD="echo 'export PATH=/opt/hadoop/bin:$PATH' >> /etc/profile && export PATH=/opt/hadoop/bin:$PATH"
 
 HADOOP_NAMENODE_LOG_PATH="/opt/hadoop/logs/hadoop-hdfs-namenode-ranger-hadoop.example.com.log"
+
 KMS_LOG_PATH="/var/log/ranger/kms/ranger-kms-ranger-kms.example.com-root.log"
 
 
 # HDFS Commands----------------------------------------------------
-CREATE_KEY_COMMAND = "hadoop key create my_key -size 128 -provider kms://http@host.docker.internal:9292/kms"
+CREATE_KEY_COMMAND = "hadoop key create {key_name} -size 128 -provider kms://http@host.docker.internal:9292/kms"
 
 VALIDATE_KEY_COMMAND = "hadoop key list -provider kms://http@host.docker.internal:9292/kms"
 
 CREATE_EZ_COMMANDS = [
-    "hdfs dfs -mkdir /secure_zone2",
-    "hdfs crypto -createZone -keyName my_key -path /secure_zone2",
+    "hdfs dfs -mkdir /{ez_name}",
+    "hdfs crypto -createZone -keyName {key_name} -path /{ez_name}",
     "hdfs crypto -listZones"
 ]
 
 GRANT_PERMISSIONS_COMMANDS = [
-    "hdfs dfs -chmod 700 /secure_zone2",
-    "hdfs dfs -chown hive:hive /secure_zone2"
+    "hdfs dfs -chmod -R 700 /{ez_name}",
+    "hdfs dfs -chown -R {user}:{user} /{ez_name}"
 ]
 
-HIVE_CREATE_FILE_COMMAND = 'bash -c \'echo "Hello, this is a third file!" > /home/hive/testfile2.txt && ls -l /home/hive/testfile2.txt\''
+CREATE_FILE_COMMAND = [ 'echo "{filecontent}" > /home/{user}/{filename}.txt && ls -l /home/{user}/{filename}.txt' ]
 
-HIVE_ACTIONS_COMMANDS = [
-    "hdfs dfs -put /home/hive/testfile2.txt /secure_zone2/",
-    "hdfs dfs -ls /secure_zone2/",
-    "hdfs dfs -cat /secure_zone2/testfile2.txt"
+ACTIONS_COMMANDS = [
+    "hdfs dfs -put /home/{user}/{filename}.txt /{ez_name}/",
+    "hdfs dfs -ls /{ez_name}/",
+    "hdfs dfs -cat /{ez_name}/{filename}.txt"
 ]
 
-UNAUTHORIZED_WRITE_COMMAND = 'hdfs dfs -put /home/hbase/hack.txt /secure_zone2/'
+CROSS_EZ_ACTION_COMMANDS = [
+    "hdfs dfs -put /home/{user}/{filename}.txt /{ez_name}/{dirname}/",
+    "hdfs dfs -ls /{ez_name}/",
+    "hdfs dfs -cat /{ez_name}/{dirname}/{filename}.txt"
+]
 
-UNAUTHORIZED_READ_COMMAND = "hdfs dfs -cat /secure_zone2/testfile2.txt"
+READ_EZ_FILE=[
+    "hdfs dfs -cat /{ez_name}/{filename}.txt"
+]
+
+UNAUTHORIZED_WRITE_COMMAND = 'hdfs dfs -put /home/{user}/{filename}.txt /{ez_name}/'
+
+UNAUTHORIZED_READ_COMMAND = "hdfs dfs -cat /{ez_name}/{filename}.txt"
 
 CLEANUP_COMMANDS = [
-    "hdfs dfs -rm /secure_zone2/testfile2.txt",
-    "hdfs dfs -rm -R /secure_zone2"
+    "hdfs dfs -rm /{ez_name}/{filename}.txt",
+    "hdfs dfs -rm -R /{ez_name}"
 ]
-KEY_DELETION_CMD = "bash -c \"echo 'Y' | hadoop key delete my_key -provider kms://http@host.docker.internal:9292/kms\""
+CLEANUP_EZ = [
+    "hdfs dfs -rm -R /{ez_name}"
+]
+CLEANUP_EZ_FILE = [
+    "hdfs dfs -rm /{ez_name}/{filename}.txt"
+]
+KEY_DELETION_CMD = "bash -c \"echo 'Y' | hadoop key delete {key_name} -provider kms://http@host.docker.internal:9292/kms\""
 
 
