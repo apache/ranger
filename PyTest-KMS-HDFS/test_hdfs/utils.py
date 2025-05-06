@@ -6,11 +6,11 @@ from test_config import (KMS_CONTAINER,HADOOP_NAMENODE_LOG_PATH,KMS_LOG_PATH)
 client = docker.from_env()
 
 #to run all HDFS commands
-def run_command(container, cmd, user):
+def run_command(container, cmd, user, fail_on_error=True,return_exit_code=False):
         exit_code, output = container.exec_run(cmd, user=user)
         output_response = output.decode()
 
-        if exit_code != 0:
+        if exit_code != 0 and fail_on_error:
             kms_container = client.containers.get(KMS_CONTAINER)
             hadoop_logs, kms_logs = get_error_logs(container, kms_container)
 
@@ -27,6 +27,9 @@ def run_command(container, cmd, user):
             KMS Container Logs:
             {kms_logs}
             """)
+        if return_exit_code:
+          return output_response, exit_code
+        
         return output_response
 
 
