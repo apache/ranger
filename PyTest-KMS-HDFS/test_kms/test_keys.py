@@ -49,5 +49,27 @@ class TestKeyManagement:
         if expected_status == 201:
          requests.delete(f"{BASE_URL}/key/{name}", params=PARAMS)
 
+    # Negative test----duplicate key creation test ----------------------------------------------
+    def test_duplicate_key_creation(self, headers):
+        key_name = "duplicate-key"
+        key_data = {
+            "name": key_name,
+            "cipher": "AES/CTR/NoPadding",
+            "length": 128,
+            "description": "Testing duplicate key creation"
+        }
+
+        response1 = requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
+        assert response1.status_code == 201, f"Initial key creation failed: {response1.text}"
+
+        # creating the same key again
+        response2 = requests.post(f"{BASE_URL}/keys", headers=headers, json=key_data, params=PARAMS)
+
+        assert response2.status_code == 500, f"Duplicate key got created, expected to fail"
+    
+        # Cleanup
+        requests.delete(f"{BASE_URL}/key/{key_name}", params=PARAMS)
+
+
     
     
