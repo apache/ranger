@@ -7,8 +7,9 @@ PARAMS = {"user.name": "keyadmin"}
 
 @pytest.mark.usefixtures("create_test_key")
 class TestKeyOperations:
-    
-    def test_temp_key(self, headers):             #temporary key for testing roll over 
+
+    # Temporary key for testing roll over
+    def test_temp_key(self, headers):            
         data = {
             "name": "rollover-key",
             "cipher": "AES/CTR/NoPadding",
@@ -22,7 +23,9 @@ class TestKeyOperations:
             pytest.fail(f"Create key operation failed. API Response: {key_creation_response.text}\nLogs:\n{logs}")
        
 
-
+    # ***********************************************************************************
+    #  Parametrized Roll over of key
+    # ***********************************************************************************
     @pytest.mark.parametrize("key_name, expected_status", [
         ("rollover-key", 200),             # Valid key rollover
         ("non-existent-key", 500)          # Rollover on a non-existent key
@@ -38,7 +41,10 @@ class TestKeyOperations:
         # Cleanup after test
         requests.delete(f"{BASE_URL}/key/rollover-key", params=PARAMS)
 
-    #test for checking roll overed key has new material-----------------------------
+    
+    # ***********************************************************************************
+    # Test for checking roll overed key has new material
+    # ***********************************************************************************
     def test_roll_over_new_material(self, headers):
         old_metadata = requests.get(f"{BASE_URL}/key/key1/_metadata", headers=headers, params=PARAMS)
         print("Old Metadata:", old_metadata.json())
@@ -50,7 +56,10 @@ class TestKeyOperations:
 
         assert old_metadata.json() != new_metadata.json(), "Key rollover should create new key material."
 
-    #data key generation and decrypting EDEK to get DEK---------------------------------
+    
+    # ***********************************************************************************
+    #  Data key generation and decrypting EDEK to get DEK
+    # ***********************************************************************************
     def test_generate_data_key_and_decrypt(self, headers, create_test_key):
         # Generate Data Key
         key_name=create_test_key["name"]
