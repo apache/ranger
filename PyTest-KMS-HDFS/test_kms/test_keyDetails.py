@@ -11,6 +11,9 @@ class TestKeyDetails:
     def setup_class(self, create_test_key):
         self.test_key = create_test_key
 
+    # ***********************************************************************************
+    #  Get key names 
+    # ***********************************************************************************
     def test_get_key_names(self):
         response = requests.get(f"{BASE_URL}/keys/names",params=PARAMS)
         
@@ -22,7 +25,9 @@ class TestKeyDetails:
         assert self.test_key["name"] in response.json()
 
 
-
+    # ***********************************************************************************
+    #  Parametrized Get key metadata check for existent and non existent key
+    # ***********************************************************************************
     @pytest.mark.parametrize("key_name, expected_status, expected_response", [
     ("my_key", 200, "valid"),                   # Key exists, should return valid metadata
     ("non-existent-key", 200, "invalid"),       # Key does not exist but returns 200 with [] should give 404
@@ -40,7 +45,9 @@ class TestKeyDetails:
 
         print(response.json())
 
-
+    # ***********************************************************************************
+    #  Parametrized Get Key version for existent and non existent key
+    # ***********************************************************************************
     @pytest.mark.parametrize("key_name, expected_status, expected_response", [
         ("my_key", 200, "valid"),             # Key exists
         ("non-existent-key", 200,"invalid"),  # Misleading response for non-existent key gives 200 should've given 404
