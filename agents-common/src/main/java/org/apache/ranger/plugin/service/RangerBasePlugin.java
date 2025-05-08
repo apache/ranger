@@ -563,7 +563,7 @@ public class RangerBasePlugin {
                                 LOG.debug("Applied policyDeltas={})", Arrays.toString(policies.getPolicyDeltas().toArray()));
                             }
 
-                            isPolicyEngineShared = true;
+                            isPolicyEngineShared = newPolicyEngine == oldPolicyEngine;
                         } else {
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug("Failed to apply policyDeltas={}), Creating engine from policies", Arrays.toString(policies.getPolicyDeltas().toArray()));
