@@ -181,4 +181,38 @@
 		<name>ranger-tagsync.server.ha.https.port</name>
 		<value></value>
 	</property>
+
+	<!--openmetadata properties-->
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.class</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.token</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.endpoint</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.openmetadata.trino.instance.defaulttrinoingestionservice.ranger.service</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.download.interval.millis</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.entities.batch.size</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.ssl.config.filename</name>
+		<value></value>
+	</property>
 </configuration>
