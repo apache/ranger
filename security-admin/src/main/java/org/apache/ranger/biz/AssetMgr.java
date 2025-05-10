@@ -67,6 +67,7 @@ import org.apache.ranger.view.VXTrxLogList;
 import org.apache.ranger.view.VXTrxLogV2;
 import org.apache.ranger.view.VXTrxLogV2.AttributeChangeInfo;
 import org.apache.ranger.view.VXTrxLogV2.ObjectChangeInfo;
+import org.apache.ranger.view.VXTrxLogV2List;
 import org.apache.ranger.view.VXUgsyncAuditInfoList;
 import org.apache.ranger.view.VXUser;
 import org.slf4j.Logger;
@@ -84,6 +85,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -606,6 +608,46 @@ public class AssetMgr extends AssetMgrBase {
     }
 
     public VXTrxLogList getReportLogs(SearchCriteria searchCriteria) {
+        VXTrxLogList      ret;
+        PList<VXTrxLogV2> vXTrxLogsV2 = getVXTrxLogsV2(searchCriteria);
+        List<VXTrxLog>    vxTrxLogs   = vXTrxLogsV2.getList().stream().map(VXTrxLogV2::toVXTrxLog).collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(vxTrxLogs)) {
+            ret = new VXTrxLogList(Collections.emptyList());
+        } else {
+            ret = new VXTrxLogList(validateXXTrxLogList(vxTrxLogs));
+
+            ret.setStartIndex(vXTrxLogsV2.getStartIndex());
+            ret.setPageSize(vXTrxLogsV2.getPageSize());
+            ret.setTotalCount(vXTrxLogsV2.getTotalCount());
+            ret.setResultSize(vXTrxLogsV2.getResultSize());
+            ret.setSortBy(vXTrxLogsV2.getSortBy());
+            ret.setSortType(vXTrxLogsV2.getSortType());
+        }
+
+        return ret;
+    }
+
+    public VXTrxLogV2List getReportLogsV2(SearchCriteria searchCriteria) {
+        VXTrxLogV2List    ret;
+        PList<VXTrxLogV2> vXTrxLogsV2 = getVXTrxLogsV2(searchCriteria);
+
+        if (vXTrxLogsV2 == null || CollectionUtils.isEmpty(vXTrxLogsV2.getList())) {
+            ret = new VXTrxLogV2List(Collections.emptyList());
+        } else {
+            ret = new VXTrxLogV2List(validateXXTrxLogV2List(vXTrxLogsV2.getList()));
+
+            ret.setStartIndex(vXTrxLogsV2.getStartIndex());
+            ret.setPageSize(vXTrxLogsV2.getPageSize());
+            ret.setTotalCount(vXTrxLogsV2.getTotalCount());
+            ret.setResultSize(vXTrxLogsV2.getResultSize());
+            ret.setSortBy(vXTrxLogsV2.getSortBy());
+            ret.setSortType(vXTrxLogsV2.getSortType());
+        }
+        return ret;
+    }
+
+    public PList<VXTrxLogV2> getVXTrxLogsV2(SearchCriteria searchCriteria) {
         if (xaBizUtil.isAdmin() || xaBizUtil.isKeyAdmin() || xaBizUtil.isAuditAdmin() || xaBizUtil.isAuditKeyAdmin()) {
             if (searchCriteria == null) {
                 searchCriteria = new SearchCriteria();
@@ -646,18 +688,7 @@ public class AssetMgr extends AssetMgrBase {
 
             searchCriteria.setGetCount(true);
 
-            PList<VXTrxLogV2> vXTrxLogsV2 = xTrxLogService.searchTrxLogs(searchCriteria);
-            List<VXTrxLog>    vxTrxLogs   = vXTrxLogsV2.getList().stream().map(VXTrxLogV2::toVXTrxLog).collect(Collectors.toList());
-            VXTrxLogList      ret         = new VXTrxLogList(validateXXTrxLogList(vxTrxLogs));
-
-            ret.setStartIndex(vXTrxLogsV2.getStartIndex());
-            ret.setPageSize(vXTrxLogsV2.getPageSize());
-            ret.setTotalCount(vXTrxLogsV2.getTotalCount());
-            ret.setResultSize(vXTrxLogsV2.getResultSize());
-            ret.setSortBy(vXTrxLogsV2.getSortBy());
-            ret.setSortType(vXTrxLogsV2.getSortType());
-
-            return ret;
+            return xTrxLogService.searchTrxLogs(searchCriteria);
         } else {
             throw restErrorUtil.create403RESTException("Permission Denied !");
         }
@@ -833,6 +864,84 @@ public class AssetMgr extends AssetMgrBase {
         }
 
         return vXTrxLogs;
+    }
+
+    public VXTrxLogV2List getTransactionReportV2(String transactionId) {
+        List<VXTrxLogV2> trxLogsV2 = xTrxLogService.findByTransactionId(transactionId);
+
+        return new VXTrxLogV2List(validateXXTrxLogV2List(trxLogsV2));
+    }
+
+    public List<VXTrxLogV2> validateXXTrxLogV2List(List<VXTrxLogV2> xTrxLogV2List) {
+        List<VXTrxLogV2> vXTrxLogV2s = new ArrayList<>();
+
+        for (VXTrxLogV2 vXTrxLogV2 : xTrxLogV2List) {
+            ObjectChangeInfo          objectChangeInfo = vXTrxLogV2.getChangeInfo();
+            List<AttributeChangeInfo> attrChanges      = (objectChangeInfo == null || objectChangeInfo.getAttributes() == null) ? Collections.emptyList() : objectChangeInfo.getAttributes();
+
+            for (AttributeChangeInfo attrChangeInfo : attrChanges) {
+                if (attrChangeInfo.getOldValue() == null || "null".equalsIgnoreCase(attrChangeInfo.getOldValue())) {
+                    attrChangeInfo.setOldValue("");
+                }
+
+                if (attrChangeInfo.getNewValue() == null || "null".equalsIgnoreCase(attrChangeInfo.getNewValue())) {
+                    attrChangeInfo.setNewValue("");
+                }
+
+                if ("Password".equalsIgnoreCase(attrChangeInfo.getAttributeName())) {
+                    attrChangeInfo.setOldValue("*********");
+                    attrChangeInfo.setNewValue("***********");
+                }
+
+                if ("Connection Configurations".equalsIgnoreCase(attrChangeInfo.getAttributeName())) {
+                    if (attrChangeInfo.getOldValue() != null && attrChangeInfo.getOldValue().contains("password")) {
+                        String   tempPreviousStr = attrChangeInfo.getOldValue();
+                        String[] tempPreviousArr = attrChangeInfo.getOldValue().split(",");
+
+                        for (String tempPrevious : tempPreviousArr) {
+                            if (tempPrevious.contains("{\"password") && tempPrevious.contains("}")) {
+                                attrChangeInfo.setOldValue(tempPreviousStr.replace(tempPrevious, "{\"password\":\"*****\"}"));
+                                break;
+                            } else if (tempPrevious.contains("{\"password")) {
+                                attrChangeInfo.setOldValue(tempPreviousStr.replace(tempPrevious, "{\"password\":\"*****\""));
+                                break;
+                            } else if (tempPrevious.contains("\"password") && tempPrevious.contains("}")) {
+                                attrChangeInfo.setOldValue(tempPreviousStr.replace(tempPrevious, "\"password\":\"******\"}"));
+                                break;
+                            } else if (tempPrevious.contains("\"password")) {
+                                attrChangeInfo.setOldValue(tempPreviousStr.replace(tempPrevious, "\"password\":\"******\""));
+                                break;
+                            }
+                        }
+                    }
+
+                    if (attrChangeInfo.getNewValue() != null && attrChangeInfo.getNewValue().contains("password")) {
+                        String   tempNewStr = attrChangeInfo.getNewValue();
+                        String[] tempNewArr = attrChangeInfo.getNewValue().split(",");
+
+                        for (String tempNew : tempNewArr) {
+                            if (tempNew.contains("{\"password") && tempNew.contains("}")) {
+                                attrChangeInfo.setNewValue(tempNewStr.replace(tempNew, "{\"password\":\"*****\"}"));
+                                break;
+                            } else if (tempNew.contains("{\"password")) {
+                                attrChangeInfo.setNewValue(tempNewStr.replace(tempNew, "{\"password\":\"*****\""));
+                                break;
+                            } else if (tempNew.contains("\"password") && tempNew.contains("}")) {
+                                attrChangeInfo.setNewValue(tempNewStr.replace(tempNew, "\"password\":\"******\"}"));
+                                break;
+                            } else if (tempNew.contains("\"password")) {
+                                attrChangeInfo.setNewValue(tempNewStr.replace(tempNew, "\"password\":\"******\""));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            vXTrxLogV2s.add(vXTrxLogV2);
+        }
+
+        return vXTrxLogV2s;
     }
 
     /*

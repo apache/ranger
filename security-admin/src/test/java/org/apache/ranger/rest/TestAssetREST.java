@@ -59,6 +59,8 @@ import org.apache.ranger.view.VXResourceList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
+import org.apache.ranger.view.VXTrxLogV2;
+import org.apache.ranger.view.VXTrxLogV2List;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -508,6 +510,41 @@ public class TestAssetREST {
         VXTrxLogList expectedVXTrxLogListt = assetREST.getTransactionReport(request, transactionId);
         Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(assetMgr).getTransactionReport(transactionId);
+    }
+
+    @Test
+    public void testGetReportLogsV2() {
+        SearchCriteria   searchCriteria = new SearchCriteria();
+        List<SortField>  sortFields     = xTrxLogService.getSortFields();
+        VXTrxLogV2List   vXTrxLogV2List = new VXTrxLogV2List(new ArrayList<>());
+
+        Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
+        Mockito.when(searchUtil.extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn("test");
+        Mockito.when(searchUtil.extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(8);
+        Mockito.when(searchUtil.extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(new Date());
+        Mockito.when(assetMgr.getReportLogsV2(searchCriteria)).thenReturn(vXTrxLogV2List);
+
+        VXTrxLogV2List expectedVXTrxLogV2List = assetREST.getReportLogsV2(request);
+
+        Assert.assertEquals(vXTrxLogV2List, expectedVXTrxLogV2List);
+        Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(assetMgr).getReportLogsV2(searchCriteria);
+        Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
+    }
+
+    @Test
+    public void testGetTransactionReportV2() {
+        VXTrxLogV2List   vXTrxLogV2List = new VXTrxLogV2List(new ArrayList<>());
+        String           transactionId  = "123456";
+
+        Mockito.when(assetMgr.getTransactionReportV2(transactionId)).thenReturn(vXTrxLogV2List);
+
+        VXTrxLogV2List expectedVXTrxLogList = assetREST.getTransactionReportV2(request, transactionId);
+
+        Assert.assertEquals(vXTrxLogV2List, expectedVXTrxLogList);
+        Mockito.verify(assetMgr).getTransactionReportV2(transactionId);
     }
 
     @Test

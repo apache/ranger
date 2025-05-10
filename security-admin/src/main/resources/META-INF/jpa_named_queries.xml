@@ -2211,6 +2211,14 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGdsDataset.findDatasetsWithDataShareInStatus">
+		<query>select obj from XXGdsDataset obj, XXGdsDataShareInDataset dsid
+			where dsid.dataShareId = :dataShareId
+			  and dsid.datasetId   = obj.id
+			  and dsid.status      = :status
+		</query>
+	</named-query>
+
 	<named-query name="XXGdsDataset.findByProjectId">
 		<query>select obj from XXGdsDataset obj, XXGdsDatasetInProject dip
 		        where dip.projectId = :projectId
@@ -2242,6 +2250,22 @@
 		<query>select obj from XXGdsProject obj, XXGdsDatasetInProject dip
 		        where dip.datasetId = :datasetId
 		          and dip.projectId = obj.id</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findProjectsWithDatasetInStatus">
+		<query>SELECT obj FROM XXGdsProject obj, XXGdsDatasetInProject dip
+			WHERE dip.datasetId = :datasetId
+			  AND dip.projectId = obj.id
+			  AND dip.status    = :status</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findProjectsWithDataShareInStatus">
+		<query>SELECT DISTINCT obj FROM XXGdsProject obj, XXGdsDatasetInProject dip, XXGdsDataShareInDataset dshid
+			WHERE dshid.dataShareId = :dataShareId
+			  AND dshid.status      = :status
+			  AND dip.datasetId     = dshid.datasetId
+			  AND dip.projectId     = obj.id
+			  AND dip.status        = :status</query>
 	</named-query>
 
 	<named-query name="XXGdsProject.findServiceIds">
@@ -2387,6 +2411,10 @@
 		<query>SELECT obj.policyId FROM XXGdsDatasetPolicyMap obj WHERE obj.datasetId = :datasetId</query>
 	</named-query>
 
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetIdForPolicy">
+		<query>SELECT obj.datasetId FROM XXGdsDatasetPolicyMap obj WHERE obj.policyId = :policyId</query>
+	</named-query>
+
 	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyMap">
 		<query>SELECT obj FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId AND obj.policyId = :policyId</query>
 	</named-query>
@@ -2397,5 +2425,9 @@
 
 	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyIds">
 		<query>SELECT obj.policyId FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectIdForPolicy">
+		<query>SELECT obj.projectId FROM XXGdsProjectPolicyMap obj WHERE obj.policyId = :policyId</query>
 	</named-query>
 </entity-mappings>

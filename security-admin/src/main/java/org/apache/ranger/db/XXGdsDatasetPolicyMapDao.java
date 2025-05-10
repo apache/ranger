@@ -82,4 +82,20 @@ public class XXGdsDatasetPolicyMapDao extends BaseDao<XXGdsDatasetPolicyMap> {
 
         return ret;
     }
+
+    public Long getDatasetIdForPolicy(Long policyId) {
+        Long ret = null;
+
+        if (policyId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetIdForPolicy", Long.class)
+                        .setParameter("policyId", policyId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+
+        return ret;
+    }
 }

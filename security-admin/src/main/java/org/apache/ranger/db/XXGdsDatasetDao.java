@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGdsDataset;
+import org.apache.ranger.plugin.model.RangerGds.GdsShareStatus;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +83,22 @@ public class XXGdsDatasetDao extends BaseDao<XXGdsDataset> {
                         .setParameter("dataShareId", dataShareId).getResultList();
             } catch (NoResultException e) {
                 LOG.debug("findByDataShareId({}): ", dataShareId, e);
+            }
+        }
+
+        return ret != null ? ret : Collections.emptyList();
+    }
+
+    public List<XXGdsDataset> findDatasetsWithDataShareInStatus(Long dataShareId, GdsShareStatus shareStatus) {
+        List<XXGdsDataset> ret = null;
+
+        if (dataShareId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDataset.findDatasetsWithDataShareInStatus", tClass)
+                        .setParameter("dataShareId", dataShareId)
+                        .setParameter("status", shareStatus.ordinal()).getResultList();
+            } catch (NoResultException e) {
+                LOG.debug("findDatasetsWithActiveDataShare({}): ", dataShareId, e);
             }
         }
 
