@@ -17,12 +17,24 @@
 
 package org.apache.ranger.service;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.entity.XXGdsDataset;
+import org.apache.ranger.entity.XXGdsProject;
 import org.apache.ranger.entity.XXTrxLogV2;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
+import org.apache.ranger.plugin.model.RangerGds;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
+import org.apache.ranger.plugin.model.RangerGds.RangerProject;
+import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXTrxLogV2.ObjectChangeInfo;
@@ -50,6 +62,15 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
 
     @Autowired
     RangerDataHistService dataHistService;
+
+    @Autowired
+    RangerGdsDatasetService datasetService;
+
+    @Autowired
+    RangerGdsDataShareService dataShareService;
+
+    @Autowired
+    RangerGdsProjectService projectService;
 
     @Autowired
     RangerEnumUtil xaEnumUtil;
@@ -124,10 +145,10 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
     }
 
     public void createTransactionLog(V obj, V oldObj, int action) {
-        List<XXTrxLogV2> trxLogs = getTransactionLogs(obj, oldObj, action);
+        List<List<XXTrxLogV2>> trxLogs = getTransactionLogs(obj, oldObj, action);
 
-        if (trxLogs != null) {
-            bizUtil.createTrxLog(trxLogs);
+        for (List<XXTrxLogV2> trxLog : trxLogs) {
+            bizUtil.createTrxLog(trxLog);
         }
     }
 
@@ -151,12 +172,12 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
         return trxLogAttr.getAttrValue(obj, xaEnumUtil);
     }
 
-    private List<XXTrxLogV2> getTransactionLogs(V obj, V oldObj, int action) {
+    private List<List<XXTrxLogV2>> getTransactionLogs(V obj, V oldObj, int action) {
         if (obj == null || (action == OPERATION_UPDATE_CONTEXT && oldObj == null)) {
-            return null;
+            return Collections.emptyList();
         }
 
-        List<XXTrxLogV2> ret = new ArrayList<>();
+        List<List<XXTrxLogV2>> ret = new ArrayList<>();
 
         try {
             ObjectChangeInfo objChangeInfo = new ObjectChangeInfo();
@@ -165,9 +186,11 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
                 processFieldToCreateTrxLog(trxLog, obj, oldObj, action, objChangeInfo);
             }
 
-            if (objChangeInfo.getAttributes() != null && !objChangeInfo.getAttributes().isEmpty()) {
-                ret.add(new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo)));
+            if (CollectionUtils.isNotEmpty(objChangeInfo.getAttributes())) {
+                addXXTrxLogV2(obj, oldObj, action, objChangeInfo, ret);
             }
+
+            addTransactionLogsOnImpactedObjects(obj, oldObj, action, objChangeInfo, ret);
         } catch (Exception excp) {
             LOG.warn("failed to get transaction log for object: type={}, id={}", obj.getClass().getName(), obj.getId(), excp);
         }
@@ -245,5 +268,118 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
         }
 
         return "unknown";
+    }
+
+    protected void addXXTrxLogV2(V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo, List<List<XXTrxLogV2>> ret) {
+        try {
+            if (obj != null) {
+                XXTrxLogV2 trxLog = new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo));
+
+                ret.add(Collections.singletonList(trxLog));
+            }
+        } catch (Exception excp) {
+            LOG.warn("failed to get transaction log for object: type={}, id={}", obj.getClass().getName(), obj.getId(), excp);
+        }
+    }
+
+    private void addTransactionLogsOnImpactedObjects(V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo, List<List<XXTrxLogV2>> ret) {
+        V auditedObj = (action == OPERATION_DELETE_CONTEXT || action == OPERATION_IMPORT_DELETE_CONTEXT) ? oldObj : obj;
+
+        if (auditedObj != null) {
+            ObjectChangeInfo changeSourceInfo = getChangeSourceInfo(auditedObj, action, objChangeInfo);
+
+            if (auditedObj instanceof RangerSharedResource) {
+                Long            dataShareId = ((RangerSharedResource) auditedObj).getDataShareId();
+                RangerDataShare dataShare   = dataShareService.read(dataShareId);
+
+                dataShareService.addXXTrxLogV2(dataShare, dataShare, OPERATION_UPDATE_CONTEXT, changeSourceInfo, ret);
+
+                List<XXGdsDataset> datasets = daoMgr.getXXGdsDataset().findDatasetsWithDataShareInStatus(dataShareId, RangerGds.GdsShareStatus.ACTIVE);
+
+                if (CollectionUtils.isNotEmpty(datasets)) {
+                    List<XXGdsProject> projects = daoMgr.getXXGdsProject().findProjectsWithDataShareInStatus(dataShareId, RangerGds.GdsShareStatus.ACTIVE);
+
+                    logImpactedDatasets(datasets, changeSourceInfo, ret);
+                    logImpactedProjects(projects, changeSourceInfo, ret);
+                }
+            } else if (auditedObj instanceof RangerDataShare) {
+                Long               dataShareId = auditedObj.getId();
+                List<XXGdsDataset> datasets    = daoMgr.getXXGdsDataset().findDatasetsWithDataShareInStatus(dataShareId, RangerGds.GdsShareStatus.ACTIVE);
+
+                if (CollectionUtils.isNotEmpty(datasets)) {
+                    List<XXGdsProject> projects = daoMgr.getXXGdsProject().findProjectsWithDataShareInStatus(dataShareId, RangerGds.GdsShareStatus.ACTIVE);
+
+                    logImpactedDatasets(datasets, changeSourceInfo, ret);
+                    logImpactedProjects(projects, changeSourceInfo, ret);
+                }
+            } else if (auditedObj instanceof RangerDataShareInDataset) {
+                Long          datasetId = ((RangerDataShareInDataset) auditedObj).getDatasetId();
+                RangerDataset dataset   = datasetService.read(datasetId);
+
+                datasetService.addXXTrxLogV2(dataset, dataset, OPERATION_UPDATE_CONTEXT, changeSourceInfo, ret);
+
+                List<XXGdsProject> projects = daoMgr.getXXGdsProject().findProjectsWithDatasetInStatus(datasetId, RangerGds.GdsShareStatus.ACTIVE);
+
+                logImpactedProjects(projects, changeSourceInfo, ret);
+            } else if (auditedObj instanceof RangerDataset) {
+                Long datasetId = auditedObj.getId();
+
+                List<XXGdsProject> projects = daoMgr.getXXGdsProject().findProjectsWithDatasetInStatus(datasetId, RangerGds.GdsShareStatus.ACTIVE);
+
+                logImpactedProjects(projects, changeSourceInfo, ret);
+            } else if (auditedObj instanceof RangerDatasetInProject) {
+                Long          projectId = ((RangerDatasetInProject) auditedObj).getProjectId();
+                RangerProject project   = projectService.read(projectId);
+
+                projectService.addXXTrxLogV2(project, project, OPERATION_UPDATE_CONTEXT, changeSourceInfo, ret);
+            } else if (auditedObj instanceof RangerPolicy) {
+                Long datasetId = daoMgr.getXXGdsDatasetPolicyMap().getDatasetIdForPolicy(auditedObj.getId());
+
+                if (datasetId != null) {
+                    RangerDataset dataset = datasetService.read(datasetId);
+
+                    datasetService.addXXTrxLogV2(dataset, dataset, OPERATION_UPDATE_CONTEXT, changeSourceInfo, ret);
+                } else {
+                    Long projectId = daoMgr.getXXGdsProjectPolicyMap().getProjectIdForPolicy(auditedObj.getId());
+
+                    if (projectId != null) {
+                        RangerProject project = projectService.read(projectId);
+
+                        projectService.addXXTrxLogV2(project, project, OPERATION_UPDATE_CONTEXT, changeSourceInfo, ret);
+                    }
+                }
+            }
+        }
+    }
+
+    private ObjectChangeInfo getChangeSourceInfo(V sourceObj, int action, ObjectChangeInfo objChangeInfo) {
+        ObjectChangeInfo ret = new ObjectChangeInfo();
+
+        ret.addAttribute("_objectId", null, String.valueOf(sourceObj.getId()));
+        ret.addAttribute("_objectClassType", null, String.valueOf(classType));
+        ret.addAttribute("_objectClassName", null, sourceObj.getClass().getSimpleName());
+        ret.addAttribute("_changeType", null, toActionString(action));
+
+        if (objChangeInfo.getAttributes() != null) {
+            ret.getAttributes().addAll(objChangeInfo.getAttributes());
+        }
+
+        return ret;
+    }
+
+    private void logImpactedDatasets(List<XXGdsDataset> xxDatasets, ObjectChangeInfo changedObjInfo, List<List<XXTrxLogV2>> ret) {
+        for (XXGdsDataset xxDataset : xxDatasets) {
+            RangerDataset dataset = datasetService.getPopulatedViewObject(xxDataset);
+
+            datasetService.addXXTrxLogV2(dataset, dataset, OPERATION_UPDATE_CONTEXT, changedObjInfo, ret);
+        }
+    }
+
+    private void logImpactedProjects(List<XXGdsProject> xxProjects, ObjectChangeInfo changedObjInfo, List<List<XXTrxLogV2>> ret) {
+        for (XXGdsProject xxProject : xxProjects) {
+            RangerProject project = projectService.getPopulatedViewObject(xxProject);
+
+            projectService.addXXTrxLogV2(project, project, OPERATION_UPDATE_CONTEXT, changedObjInfo, ret);
+        }
     }
 }

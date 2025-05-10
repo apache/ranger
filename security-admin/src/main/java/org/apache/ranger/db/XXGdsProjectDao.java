@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGdsProject;
+import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +84,34 @@ public class XXGdsProjectDao extends BaseDao<XXGdsProject> {
             } catch (NoResultException e) {
                 LOG.debug("findByDatasetId({}): ", datasetId, e);
             }
+        }
+
+        return ret != null ? ret : Collections.emptyList();
+    }
+
+    public List<XXGdsProject> findProjectsWithDatasetInStatus(Long datasetId, RangerGds.GdsShareStatus shareStatus) {
+        List<XXGdsProject> ret = null;
+
+        try {
+            ret = getEntityManager().createNamedQuery("XXGdsProject.findProjectsWithDatasetInStatus", tClass)
+                    .setParameter("datasetId", datasetId)
+                    .setParameter("status", shareStatus.ordinal()).getResultList();
+        } catch (NoResultException e) {
+            LOG.debug("findProjectsWithDatasetInStatus({}): ", datasetId, e);
+        }
+
+        return ret != null ? ret : Collections.emptyList();
+    }
+
+    public List<XXGdsProject> findProjectsWithDataShareInStatus(Long dataShareId, RangerGds.GdsShareStatus shareStatus) {
+        List<XXGdsProject> ret = null;
+
+        try {
+            ret = getEntityManager().createNamedQuery("XXGdsProject.findProjectsWithDataShareInStatus", tClass)
+                    .setParameter("dataShareId", dataShareId)
+                    .setParameter("status", shareStatus.ordinal()).getResultList();
+        } catch (NoResultException e) {
+            LOG.debug("findProjectsWithDataShareInStatus({}): ", dataShareId, e);
         }
 
         return ret != null ? ret : Collections.emptyList();

@@ -58,6 +58,7 @@ import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResourceList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXTrxLogList;
+import org.apache.ranger.view.VXTrxLogV2List;
 import org.apache.ranger.view.VXUgsyncAuditInfoList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -504,18 +505,19 @@ public class AssetREST {
     @Produces("application/json")
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_REPORT_LOGS + "\")")
     public VXTrxLogList getReportLogs(@Context HttpServletRequest request) {
-        SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xTrxLogService.getSortFields());
-
-        searchUtil.extractInt(request, searchCriteria, "objectClassType", "audit type.");
-        searchUtil.extractInt(request, searchCriteria, "objectId", "Object ID");
-        searchUtil.extractString(request, searchCriteria, "attributeName", "Attribute Name", StringUtil.VALIDATION_TEXT);
-        searchUtil.extractString(request, searchCriteria, "action", "CRUD Action Type", StringUtil.VALIDATION_TEXT);
-        searchUtil.extractString(request, searchCriteria, "sessionId", "Session Id", StringUtil.VALIDATION_TEXT);
-        searchUtil.extractString(request, searchCriteria, "owner", "Owner", StringUtil.VALIDATION_TEXT);
-        searchUtil.extractDate(request, searchCriteria, "startDate", "Trasaction date since", "MM/dd/yyyy");
-        searchUtil.extractDate(request, searchCriteria, "endDate", "Trasaction date till", "MM/dd/yyyy");
+        SearchCriteria searchCriteria = extractSearchCriteriaFrom(request);
 
         return assetMgr.getReportLogs(searchCriteria);
+    }
+
+    @GET
+    @Path("/v2/report")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_REPORT_LOGS + "\")")
+    public VXTrxLogV2List getReportLogsV2(@Context HttpServletRequest request) {
+        SearchCriteria searchCriteria = extractSearchCriteriaFrom(request);
+
+        return assetMgr.getReportLogsV2(searchCriteria);
     }
 
     @GET
@@ -524,6 +526,14 @@ public class AssetREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_TRANSACTION_REPORT + "\")")
     public VXTrxLogList getTransactionReport(@Context HttpServletRequest request, @PathParam("transactionId") String transactionId) {
         return assetMgr.getTransactionReport(transactionId);
+    }
+
+    @GET
+    @Path("/v2/report/{transactionId}")
+    @Produces("application/json")
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_TRANSACTION_REPORT + "\")")
+    public VXTrxLogV2List getTransactionReportV2(@Context HttpServletRequest request, @PathParam("transactionId") String transactionId) {
+        return assetMgr.getTransactionReportV2(transactionId);
     }
 
     @GET
@@ -682,5 +692,20 @@ public class AssetREST {
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_UGSYNC_AUDITS_BY_SYNCSOURCE + "\")")
     public VXUgsyncAuditInfoList getUgsyncAuditsBySyncSource(@PathParam("syncSource") String syncSource) {
         return assetMgr.getUgsyncAuditsBySyncSource(syncSource);
+    }
+
+    private SearchCriteria extractSearchCriteriaFrom(HttpServletRequest request) {
+        SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xTrxLogService.getSortFields());
+
+        searchUtil.extractInt(request, searchCriteria, "objectClassType", "audit type.");
+        searchUtil.extractInt(request, searchCriteria, "objectId", "Object ID");
+        searchUtil.extractString(request, searchCriteria, "attributeName", "Attribute Name", StringUtil.VALIDATION_TEXT);
+        searchUtil.extractString(request, searchCriteria, "action", "CRUD Action Type", StringUtil.VALIDATION_TEXT);
+        searchUtil.extractString(request, searchCriteria, "sessionId", "Session Id", StringUtil.VALIDATION_TEXT);
+        searchUtil.extractString(request, searchCriteria, "owner", "Owner", StringUtil.VALIDATION_TEXT);
+        searchUtil.extractDate(request, searchCriteria, "startDate", "Trasaction date since", "MM/dd/yyyy");
+        searchUtil.extractDate(request, searchCriteria, "endDate", "Trasaction date till", "MM/dd/yyyy");
+
+        return searchCriteria;
     }
 }
