@@ -59,7 +59,6 @@ import org.apache.ranger.view.VXResourceList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
-import org.apache.ranger.view.VXTrxLogV2;
 import org.apache.ranger.view.VXTrxLogV2List;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
