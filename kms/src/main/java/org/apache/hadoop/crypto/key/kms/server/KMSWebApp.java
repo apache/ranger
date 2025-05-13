@@ -78,6 +78,7 @@ public class KMSWebApp implements ServletContextListener {
     private static KeyProviderCryptoExtension keyProviderCryptoExtension;
     private static KMSMetricsCollector        kmsMetricsCollector;
 
+    private static boolean isMetricsCollectionThreadsafe;
     private JmxReporter jmxReporter;
 
     public static Configuration getConfiguration() {
@@ -133,7 +134,7 @@ public class KMSWebApp implements ServletContextListener {
     }
 
     public static boolean isMetricCollectionThreadSafe() {
-        return Boolean.parseBoolean(KMSWebApp.getConfiguration().get(HADOOP_KMS_METRIC_COLLECTION_THREADSAFE, "false"));
+        return isMetricsCollectionThreadsafe;
     }
 
     public static KMSMetricsCollector getKmsMetricsCollector() {
@@ -181,6 +182,7 @@ public class KMSWebApp implements ServletContextListener {
 
             kmsAudit = new KMSAudit(kmsConf);
 
+            isMetricsCollectionThreadsafe = Boolean.valueOf(kmsConf.get(HADOOP_KMS_METRIC_COLLECTION_THREADSAFE, "false"));
             KMSMetricWrapper kmsMetricWrapper = KMSMetricWrapper.getInstance(isMetricCollectionThreadSafe());
 
             kmsMetricsCollector = kmsMetricWrapper.getKmsMetricsCollector();
