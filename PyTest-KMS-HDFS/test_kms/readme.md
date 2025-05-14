@@ -7,7 +7,8 @@ test_kms/
 ├── test_keys_02.py 
 ├── test_keyDetails.py 
 ├── test_keyOps.py  
-├── test_keyOps_policy.py   
+├── test_keyOps_policy.py
+├── test_blacklisting.py
 ├── conftest.py       
 ├── utils.py
 ```
