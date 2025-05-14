@@ -6,6 +6,7 @@ test_hdfs/
 ├── test_encryption.py
 ├── test_encryption02.py  
 ├── test_encryption03.py
+├── test_AuditSpooling.py
 ├── test_config.py        #stores all constants and HDFS commands
 ├── conftest.py           #sets up the environment
 ├── utils.py              #utility methods
@@ -100,7 +101,9 @@ Handles the **Check if after key roll over old files can be read or not**
 
 Handles the **Test case on cross Encryption zone operations**
 
+## `test_AuditSpooling.py`
 
+Handles the **Test case on audit spooling operations**
 
 ## Summary
 
