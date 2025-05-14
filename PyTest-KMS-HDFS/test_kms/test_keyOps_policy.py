@@ -29,6 +29,7 @@ def create_initial_kms_policy():
 
     # Create policy
     response = requests.post(BASE_URL_RANGER, auth=RANGER_AUTH, json=policy_data)
+    time.sleep(30)
     if response.status_code != 200 and response.status_code != 201:
         raise Exception(f"Failed to create initial policy: {response.text}")
 
@@ -64,7 +65,7 @@ def update_kms_policy(policy_id, username, accesses):
 
     # Update the policy
     response = requests.put(update_url, auth=RANGER_AUTH, json=policy_data)
-    time.sleep(30)  # Reduced wait time; increase only if propagation is slow
+    time.sleep(60)  # Reduced wait time; increase only if propagation is slow
     if response.status_code != 200:
         raise Exception(f"Failed to update policy: {response.text}")
 
