@@ -103,3 +103,11 @@ Handles **operations on keys based on policy enforcement**.
 Checks Key operation by giving incremental access to each opeartion one by one
 i.e `create, rollover, getKeyVersion, getMetadata, generateeek, decrypteek, delete`
 
+## `test_blacklisting.py`
+
+Handles **operations on keys before and after blacklisting a user**.  
+Checks Key operation by blacklisting a specific user and checks again after unblacklisting
+i.e `create, rollover,delete` key operation
+
+
+
