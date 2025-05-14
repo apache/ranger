@@ -17,6 +17,7 @@ test_directory/
   ├── test_keyDetails.py     # getKeyName, getKeyMetadata, getKeyVersion checks
   ├── test_keyOps.py         # Key operations: Roll-over, generate DEK, Decrypt EDEK
   ├── test_keyOps_policy.py  # validate key operation based on policy enforcement
+  ├── test_blacklisting.py   # check key operation through blacklisted user
   ├── conftest.py            # Reusable fixtures and setup
   ├── utils.py               # Utility methods
   ├── readme.md
@@ -24,6 +25,7 @@ test_directory/
   ├── test_encryption.py     # test file 1
   ├── test_encryption02.py   # test file 2
   ├── test_encryption03.py   # test file 3
+  ├── test_AuditSpooling.py  # test to check audit spooling operation
   ├── test_config.py         # stores all constants and HDFS commands
   ├── conftest.py            # sets up the environment
   ├── readme.md
