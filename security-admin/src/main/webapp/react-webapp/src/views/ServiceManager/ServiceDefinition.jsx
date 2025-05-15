@@ -84,7 +84,7 @@ class ServiceDefinition extends Component {
     let configs = {};
     let customConfigs = {};
 
-    let serviceDefConfigs = serviceDef.configs.filter(
+    let serviceDefConfigs = serviceDef?.configs?.filter(
       (config) => config.name !== "ranger.plugin.audit.filters"
     );
 
@@ -94,7 +94,7 @@ class ServiceDefinition extends Component {
     let serviceDefConfigsKey = map(serviceDefConfigs, "name");
     let customConfigsKey = difference(serviceConfigsKey, serviceDefConfigsKey);
 
-    serviceDefConfigs.map(
+    serviceDefConfigs?.map(
       (config) =>
         (configs[config.label !== undefined ? config.label : config.name] =
           serviceConfigs[config.name])
