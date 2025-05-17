@@ -59,17 +59,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 public class RangerBasePluginTest {
-    private static final String RANGER_SERVICE_TYPE = "hbase";
-    private static final String RANGER_APP_ID = "hbase";
-    private static final String RANGER_DEFAULT_SERVICE_NAME = "cm_hbase";
-    private static final String TEST_JSON = "/policyengine/test_base_plugin_hbase.json";
-    private static final String RANGER_DEFAULT_SECURITY_CONF = "/target/test-classes/policyengine/ranger-hbase-security.xml";
-    private static final String RANGER_DEFAULT_AUDIT_CONF = "/target/test-classes/policyengine/ranger-trino-audit.xml";
+    private static final String RANGER_SERVICE_TYPE                = "hbase";
+    private static final String RANGER_APP_ID                      = "hbase";
+    private static final String RANGER_DEFAULT_SERVICE_NAME        = "cm_hbase";
+    private static final String TEST_JSON                          = "/policyengine/test_base_plugin_hbase.json";
+    private static final String RANGER_DEFAULT_SECURITY_CONF       = "/target/test-classes/policyengine/ranger-hbase-security.xml";
+    private static final String RANGER_DEFAULT_AUDIT_CONF          = "/target/test-classes/policyengine/ranger-trino-audit.xml";
     private static final String RANGER_DEFAULT_POLICY_MGR_SSL_CONF = "/target/test-classes/policyengine/ranger-policymgr-ssl.xml";
-    private static final String MESSAGE = "The failed count being zero suggests one of two possibilities: " +
+    private static final String MESSAGE                            = "The failed count being zero suggests one of two possibilities: " +
             "1. The PolicyRefresher might not be starting correctly. 2. There might be a race condition in our code, preventing the policy engine modifications from being reflected in RangerBasePlugin.";
 
-    private static Gson gsonBuilder;
+    private static Gson             gsonBuilder;
     private static RangerBasePlugin rangerBasePlugin;
 
     @BeforeClass
@@ -81,9 +81,10 @@ public class RangerBasePluginTest {
                 .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
                 .create();
 
-        RangerPolicyEngineOptions peOptions = new RangerPolicyEngineOptions();
-        RangerPluginConfig pluginConfig = new RangerPluginConfig(RANGER_SERVICE_TYPE, RANGER_DEFAULT_SERVICE_NAME, RANGER_APP_ID, "cl1", "on-perm", peOptions);
-        String basedir = new File(".").getCanonicalPath();
+        RangerPolicyEngineOptions peOptions    = new RangerPolicyEngineOptions();
+        RangerPluginConfig        pluginConfig = new RangerPluginConfig(RANGER_SERVICE_TYPE, RANGER_DEFAULT_SERVICE_NAME, RANGER_APP_ID, "cl1", "on-perm", peOptions);
+        String                    basedir      = new File(".").getCanonicalPath();
+
         pluginConfig.addResourceIfReadable(FileSystems.getDefault().getPath(basedir, RANGER_DEFAULT_AUDIT_CONF).toString());
         pluginConfig.addResourceIfReadable(FileSystems.getDefault().getPath(basedir, RANGER_DEFAULT_SECURITY_CONF).toString());
         pluginConfig.addResourceIfReadable(FileSystems.getDefault().getPath(basedir, RANGER_DEFAULT_POLICY_MGR_SSL_CONF).toString());
@@ -91,6 +92,7 @@ public class RangerBasePluginTest {
         pluginConfig.getProperties().put("ranger.plugin.hbase.supports.policy.deltas", "true");
 
         rangerBasePlugin = new RangerBasePlugin(pluginConfig);
+
         rangerBasePlugin.init();
     }
 
@@ -101,8 +103,9 @@ public class RangerBasePluginTest {
     }
 
     private void runTestsFromResourceFile() throws Exception {
-        InputStream inStream = this.getClass().getResourceAsStream(TEST_JSON);
-        InputStreamReader reader = new InputStreamReader(inStream);
+        InputStream       inStream = this.getClass().getResourceAsStream(TEST_JSON);
+        InputStreamReader reader   = new InputStreamReader(inStream);
+
         runTests(reader);
     }
 
@@ -117,14 +120,16 @@ public class RangerBasePluginTest {
         assertNotNull("testCase.gdsInfo was null", testCase.gdsInfo);
         assertNotNull("testCase.tests was null", testCase.tests);
 
-        int count = 0;
         int failedCount = 0;
-        while (count < 10000) {
+
+        for (int count = 0; count < 10000; count++) {
             for (TestData test : testCase.tests) {
                 RangerAccessRequest request = test.request;
+
                 try {
                     if (test.result != null) {
                         RangerAccessResult result = rangerBasePlugin.isAccessAllowed(request);
+
                         assertNotNull("result was null! - " + test.name, result);
                         assertEquals("isAllowed mismatched! - " + test.name, test.result.getIsAllowed(), result.getIsAllowed());
                         assertEquals("isAccessDetermined mismatched! - " + test.name, test.result.getIsAccessDetermined(), result.getIsAccessDetermined());
@@ -139,12 +144,14 @@ public class RangerBasePluginTest {
                     }
                 }
             }
+
             Thread.sleep(20);
-            count++;
+
             if (failedCount >= 30) {
                 break;
             }
         }
+
         if (failedCount == 0) {
             fail(MESSAGE);
         }
@@ -155,29 +162,36 @@ public class RangerBasePluginTest {
 
         if (StringUtils.isNotBlank(testCase.policiesFilename)) {
             InputStream inStream = this.getClass().getResourceAsStream(testCase.policiesFilename);
+
             testCase.policies = gsonBuilder.fromJson(new InputStreamReader(inStream), ServicePolicies.class);
         }
 
         if (StringUtils.isNotBlank(testCase.tagsFilename)) {
             InputStream inStream = this.getClass().getResourceAsStream(testCase.tagsFilename);
+
             testCase.tags = gsonBuilder.fromJson(new InputStreamReader(inStream), ServiceTags.class);
         }
 
         if (StringUtils.isNotBlank(testCase.rolesFilename)) {
             InputStream inStream = this.getClass().getResourceAsStream(testCase.rolesFilename);
+
             testCase.roles = gsonBuilder.fromJson(new InputStreamReader(inStream), RangerRoles.class);
         }
 
         if (StringUtils.isNotBlank(testCase.userStoreFilename)) {
             InputStream inStream = this.getClass().getResourceAsStream(testCase.userStoreFilename);
+
             testCase.userStore = gsonBuilder.fromJson(new InputStreamReader(inStream), RangerUserStore.class);
         }
 
         if (StringUtils.isNotBlank(testCase.gdsInfoFilename)) {
             InputStream inStream = this.getClass().getResourceAsStream(testCase.gdsInfoFilename);
+
             testCase.gdsInfo = gsonBuilder.fromJson(new InputStreamReader(inStream), ServiceGdsInfo.class);
+
             if (testCase.gdsInfo != null && testCase.gdsInfo.getGdsServiceDef() == null) {
                 RangerServiceDef gdsServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+
                 testCase.gdsInfo.setGdsServiceDef(gdsServiceDef);
             }
         }
@@ -191,51 +205,56 @@ public class RangerBasePluginTest {
 
     static class RangerBasePluginTestCase {
         public ServicePolicies policies;
-        public ServiceTags tags;
-        public RangerRoles roles;
+        public ServiceTags     tags;
+        public RangerRoles     roles;
         public RangerUserStore userStore;
-        public ServiceGdsInfo gdsInfo;
-        public String policiesFilename;
-        public String tagsFilename;
-        public String rolesFilename;
-        public String userStoreFilename;
-        public String gdsInfoFilename;
-        public List<RangerBasePluginTest.TestData> tests;
+        public ServiceGdsInfo  gdsInfo;
+        public String          policiesFilename;
+        public String          tagsFilename;
+        public String          rolesFilename;
+        public String          userStoreFilename;
+        public String          gdsInfoFilename;
+        public List<TestData>  tests;
     }
 
     static class TestData {
-        public String name;
+        public String              name;
         public RangerAccessRequest request;
-        public RangerAccessResult result;
-        public RangerResourceACLs acls;
+        public RangerAccessResult  result;
+        public RangerResourceACLs  acls;
     }
 
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
         @Override
-        public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
-                                               JsonDeserializationContext context) throws JsonParseException {
+        public RangerAccessRequest deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
             RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
 
             ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
+
             if (ret.getAccessTime() == null) {
                 ret.setAccessTime(new Date());
             }
-            Map<String, Object> reqContext = ret.getContext();
-            Object accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
+
+            Map<String, Object> reqContext  = ret.getContext();
+            Object              accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
+
             if (accessTypes != null) {
                 Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
-                Set<String> requestedAccesses = new TreeSet<>(accessTypesCollection);
+                Set<String>        requestedAccesses     = new TreeSet<>(accessTypesCollection);
+
                 ret.getContext().put(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES, requestedAccesses);
             }
 
             Object accessTypeGroups = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
-            if (accessTypeGroups != null) {
-                Set<Set<String>> setOfAccessTypeGroups = new HashSet<>();
 
-                List<Object> listOfAccessTypeGroups = (List<Object>) accessTypeGroups;
+            if (accessTypeGroups != null) {
+                Set<Set<String>> setOfAccessTypeGroups  = new HashSet<>();
+                List<Object>     listOfAccessTypeGroups = (List<Object>) accessTypeGroups;
+
                 for (Object accessTypeGroup : listOfAccessTypeGroups) {
-                    List<String> accesses = (List<String>) accessTypeGroup;
+                    List<String> accesses     = (List<String>) accessTypeGroup;
                     Set<String> setOfAccesses = new TreeSet<>(accesses);
+
                     setOfAccessTypeGroups.add(setOfAccesses);
                 }
 
@@ -248,8 +267,7 @@ public class RangerBasePluginTest {
 
     static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
         @Override
-        public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-                                                JsonDeserializationContext context) throws JsonParseException {
+        public RangerAccessResource deserialize(JsonElement jsonObj, Type type, JsonDeserializationContext context) throws JsonParseException {
             return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
         }
     }
