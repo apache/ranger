@@ -61,6 +61,8 @@ public class AuditProviderFactory {
     public static final String AUDIT_LOG4J_IS_ASYNC_PROP                = "xasecure.audit.log4j.is.async";
     public static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP          = "xasecure.audit.log4j.async.max.queue.size";
     public static final String AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP      = "xasecure.audit.log4j.async.max.flush.interval.ms";
+    public static final String AUDIT_KAFKA_IS_ASYNC_PROP                = "xasecure.audit.kafka.is.async";
+    public static final String AUDIT_SOLR_IS_ASYNC_PROP                 = "xasecure.audit.solr.is.async";
 
     public static final String FILE_QUEUE_TYPE                          = "filequeue";
     public static final String DEFAULT_QUEUE_TYPE                       = "memoryqueue";
@@ -307,11 +309,10 @@ public class AuditProviderFactory {
             if (isAuditToHdfsEnabled) {
                 LOG.info("HdfsAuditProvider is enabled");
 
-                AuditDestination hdfsProvider = createDestination("org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider");
+                AuditHandler hdfsProvider = createAuditHandler("org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider");
+                boolean      isAuditAsync = MiscUtil.getBooleanProperty(props, AUDIT_HDFS_IS_ASYNC_PROP, false);
 
-                boolean isAuditToHdfsAsync = MiscUtil.getBooleanProperty(props, AUDIT_HDFS_IS_ASYNC_PROP, false);
-
-                if (isAuditToHdfsAsync) {
+                if (isAuditAsync) {
                     int maxQueueSize     = MiscUtil.getIntProperty(props, AUDIT_HDFS_MAX_QUEUE_SIZE_PROP, AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
                     int maxFlushInterval = MiscUtil.getIntProperty(props, AUDIT_HDFS_MAX_FLUSH_INTERVAL_PROP, AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
 
@@ -327,32 +328,37 @@ public class AuditProviderFactory {
                 LOG.info("KafkaAuditProvider is enabled");
 
                 AuditDestination kafkaProvider = createDestination("org.apache.ranger.audit.provider.kafka.KafkaAuditProvider");
+                boolean          isAuditAsync  = MiscUtil.getBooleanProperty(props, AUDIT_KAFKA_IS_ASYNC_PROP, false);
 
-                kafkaProvider.init(props);
+                if (isAuditAsync) {
+                    AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MyKafkaAuditProvider", 1000, 1000, kafkaProvider);
 
-                AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MyKafkaAuditProvider", 1000, 1000, kafkaProvider);
-
-                providers.add(asyncProvider);
+                    providers.add(asyncProvider);
+                } else {
+                    providers.add(kafkaProvider);
+                }
             }
 
             if (isAuditToSolrEnabled) {
                 LOG.info("SolrAuditProvider is enabled");
 
                 AuditDestination solrProvider = createDestination("org.apache.ranger.audit.provider.solr.SolrAuditProvider");
+                boolean          isAuditAsync = MiscUtil.getBooleanProperty(props, AUDIT_SOLR_IS_ASYNC_PROP, false);
 
-                solrProvider.init(props);
+                if (isAuditAsync) {
+                    AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MySolrAuditProvider", 1000, 1000, solrProvider);
 
-                AsyncAuditProvider asyncProvider = new AsyncAuditProvider("MySolrAuditProvider", 1000, 1000, solrProvider);
-
-                providers.add(asyncProvider);
+                    providers.add(asyncProvider);
+                } else {
+                    providers.add(solrProvider);
+                }
             }
 
             if (isAuditToLog4jEnabled) {
                 AuditDestination log4jProvider = createDestination("org.apache.ranger.audit.provider.Log4jAuditProvider");
+                boolean          isAuditAsync  = MiscUtil.getBooleanProperty(props, AUDIT_LOG4J_IS_ASYNC_PROP, false);
 
-                boolean isAuditToLog4jAsync = MiscUtil.getBooleanProperty(props, AUDIT_LOG4J_IS_ASYNC_PROP, false);
-
-                if (isAuditToLog4jAsync) {
+                if (isAuditAsync) {
                     int maxQueueSize     = MiscUtil.getIntProperty(props, AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP, AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
                     int maxFlushInterval = MiscUtil.getIntProperty(props, AUDIT_LOG4J_MAX_FLUSH_INTERVAL_PROP, AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
 
@@ -383,17 +389,23 @@ public class AuditProviderFactory {
     }
 
     private AuditDestination createDestination(String destinationClass) {
-        AuditDestination ret = null;
+        try {
+            return (AuditDestination) Class.forName(destinationClass).newInstance();
+        } catch (Exception e) {
+            LOG.error("Failed to instantiate audit destination {}", destinationClass, e);
 
-        if (StringUtils.isNotBlank(destinationClass)) {
-            try {
-                ret = (AuditDestination) Class.forName(destinationClass).newInstance();
-            } catch (Exception e) {
-                LOG.error("Failed to instantiate audit destination {}", destinationClass, e);
-            }
+            throw new RuntimeException("Failed to create AuditDestination for class: " + destinationClass, e);
         }
+    }
 
-        return ret;
+    private AuditHandler createAuditHandler(String providerClass) {
+        try {
+            return (AuditHandler) Class.forName(providerClass).newInstance();
+        } catch (Exception e) {
+            LOG.error("Failed to instantiate audit provider {}", providerClass, e);
+
+            throw new RuntimeException("Failed to create AuditHandler for class: " + providerClass, e);
+        }
     }
 
     private AuditHandler getProviderFromConfig(Properties props, String propPrefix, String providerName, AuditHandler consumer) {
