@@ -18,7 +18,6 @@
 
 package org.apache.ranger.audit.provider;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
