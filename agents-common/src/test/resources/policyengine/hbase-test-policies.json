@@ -4,268 +4,87 @@
   "policyVersion": 7141,
   "policies": [
     {
-      "id": 4,
-      "guid": "b681681f-498f-4a37-8fc3-8e371252af1b",
-      "isEnabled": true,
-      "version": 9,
-      "service": "cm_hbase",
-      "name": "all - table, column-family, column",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "Policy for all - table, column-family, column",
-      "isAuditEnabled": true,
+      "id": 4, "guid": "b681681f-498f-4a37-8fc3-8e371252af1b", "isEnabled": true, "version": 9, "service": "cm_hbase", "name": "all - table, column-family, column",
+      "policyType": 0, "policyPriority": 0, "description": "Policy for all - table, column-family, column", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "prospects", "invoices" ], "isExcludes": false, "isRecursive": false } },
+      "conditions": [],
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true } ],
+          "users": [ "hbase", "hive" ], "groups": [ "pr00_xbgdta" ], "roles": [], "conditions": [], "delegateAdmin": true
         },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, {"type": "create", "isAllowed": true } ],
+          "users": [ "rangerlookup" ], "groups": [], "roles": [], "conditions": [], "delegateAdmin": false
         },
-        "table": {
-          "values": [
-            "prospects", "invoices"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "execute", "isAllowed": true } ],
+          "users": [], "groups": [ "qqsens", "fb00_xbgdta" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
+      ],
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
+    },
+    {
+      "id": 5, "guid": "b8710bf9-73f9-441f-904c-60a271482824", "isEnabled": true, "version": 2, "service": "cm_hbase", "name": "ATLAS_HBASE_TABLES",
+      "policyType": 0, "policyPriority": 0, "description": "Policy for ATLAS_HBASE_TABLES", "isAuditEnabled": false,
+      "resources": {
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "atlas_janus", "ATLAS_ENTITY_AUDIT_EVENTS" ], "isExcludes": false, "isRecursive": false } },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true }, { "type": "admin", "isAllowed": true } ],
+          "users": [ "atlas" ], "groups": [], "roles": [], "conditions": [], "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
+    },
+    {
+      "id": 42, "guid": "01edc12a-19b6-458f-bc1b-38c01b25f735", "isEnabled": true, "version": 4, "service": "cm_hbase", "name": "grant-1621581642482",
+      "policyType": 0, "policyPriority": 0, "description": "created by grant", "isAuditEnabled": false,
+      "resources": {
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "atlas_janus" ], "isExcludes": false, "isRecursive": false }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true } ],
+          "users": [ "atlas" ], "groups": [], "roles": [], "conditions": [], "delegateAdmin": true
+        }
+      ],
+      "denyPolicyItems": [], "allowExceptions": [],
+      "denyExceptions": [
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, {"type": "execute", "isAllowed": true } ],
+          "users": [ "atlas" ], "groups": [], "roles": [], "conditions": [], "delegateAdmin": true
+        }
+      ],
+      "dataMaskPolicyItems": [], "rowFilterPolicyItems": [], "serviceType": "hbase", "options": {},
+      "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
+    },
+    {
+      "id": 43, "guid": "c7ccc9b2-0a0c-475b-bd87-31a901d9a8d3", "isEnabled": true, "version": 6, "service": "cm_hbase",
+      "name": "grant-1621581643256", "policyType": 0, "policyPriority": 0, "description": "created by grant", "isAuditEnabled": false,
+      "resources": {
+        "column-family": {"values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "ATLAS_ENTITY_AUDIT_EVENTS" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [
-            "hbase",
-            "hive"
-          ],
-          "groups": [
-            "pr00_xbgdta"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": true
-        },
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            }
-          ],
-          "users": [
-            "rangerlookup"
-          ],
-          "groups": [],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        },
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "qqsens",
-            "fb00_xbgdta"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        }
-      ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
-    },
-    {
-      "id": 5,
-      "guid": "b8710bf9-73f9-441f-904c-60a271482824",
-      "isEnabled": true,
-      "version": 2,
-      "service": "cm_hbase",
-      "name": "ATLAS_HBASE_TABLES",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "Policy for ATLAS_HBASE_TABLES",
-      "isAuditEnabled": false,
-      "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "atlas_janus",
-            "ATLAS_ENTITY_AUDIT_EVENTS"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
-      },
-      "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            }
-          ],
-          "users": [
-            "atlas"
-          ],
-          "groups": [],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        }
-      ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
-    },
-    {
-      "id": 42,
-      "guid": "01edc12a-19b6-458f-bc1b-38c01b25f735",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "grant-1621581642482",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "created by grant",
-      "isAuditEnabled": false,
-      "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "atlas_janus"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
-      },
-      "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [
-            "atlas"
-          ],
-          "groups": [],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": true
+          "accesses": [ {"type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true } ],
+          "users": [ "atlas" ], "groups": [], "roles": [], "conditions": [], "delegateAdmin": true
         }
       ],
       "denyPolicyItems": [],
@@ -273,1617 +92,386 @@
       "denyExceptions": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [
-            "atlas"
-          ],
-          "groups": [],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": true
+          "users": [ "atlas" ], "groups": [], "roles": [], "conditions": [], "delegateAdmin": true
         }
       ],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "dataMaskPolicyItems": [], "rowFilterPolicyItems": [], "serviceType": "hbase", "options": {},
+      "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 43,
-      "guid": "c7ccc9b2-0a0c-475b-bd87-31a901d9a8d3",
-      "isEnabled": true,
-      "version": 6,
-      "service": "cm_hbase",
-      "name": "grant-1621581643256",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "created by grant",
-      "isAuditEnabled": false,
+      "id": 782, "guid": "0f2c0436-e529-47d3-89f5-51d554ac38f3", "isEnabled": true, "version": 9, "service": "cm_hbase",
+      "name": "SYSTEM", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "ATLAS_ENTITY_AUDIT_EVENTS"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "SYSTEM:*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true },
+            { "type": "create", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [
-            "atlas"
-          ],
-          "groups": [],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": true
+          "users": [ "{USER}" ], "groups": [], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [
-            "atlas"
-          ],
-          "groups": [],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": true
-        }
-      ],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 782,
-      "guid": "0f2c0436-e529-47d3-89f5-51d554ac38f3",
-      "isEnabled": true,
-      "version": 9,
-      "service": "cm_hbase",
-      "name": "SYSTEM",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 821, "guid": "eccf07c9-57c3-45a4-9b0a-2ef7040f2e4e", "isEnabled": true, "createdBy": "almo3160", "updatedBy": "Admin",
+      "version": 21, "service": "cm_hbase", "name": "fb00_xda017", "policyType": 0, "policyPriority": 0, "description": "Added by Dinesh test",
+      "resourceSignature": "03c9ec8778dc92f98350073685d72755d01802f0e655d59f1e8e7569d069f838", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "SYSTEM:*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da017*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [
-            "{USER}"
-          ],
-          "groups": [],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda017", "xagcla" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 821,
-      "guid": "eccf07c9-57c3-45a4-9b0a-2ef7040f2e4e",
-      "isEnabled": true,
-      "createdBy": "almo3160",
-      "updatedBy": "Admin",
-      "version": 21,
-      "service": "cm_hbase",
-      "name": "fb00_xda017",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "Added by Dinesh test",
-      "resourceSignature": "03c9ec8778dc92f98350073685d72755d01802f0e655d59f1e8e7569d069f838",
-      "isAuditEnabled": true,
+      "id": 822, "guid": "4c30e67e-d8c7-4068-8e08-e06fb987c9fb", "isEnabled": true, "version": 6, "service": "cm_hbase",
+      "name": "fb00_xda029", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da017*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da029*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, {"type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda017",
-            "xagcla"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda029" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 822,
-      "guid": "4c30e67e-d8c7-4068-8e08-e06fb987c9fb",
-      "isEnabled": true,
-      "version": 6,
-      "service": "cm_hbase",
-      "name": "fb00_xda029",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 823, "guid": "f627f4c6-bdd4-4056-8d6e-fe7a30ff9d63", "isEnabled": true, "version": 4, "service": "cm_hbase",
+      "name": "fb00_xda034", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da034*" ], "isExcludes": false, "isRecursive": false }
+      },
+      "conditions": [],
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, {"type": "write", "isAllowed": true }, {"type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, {"type": "execute", "isAllowed": true }
           ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da029*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
+          "users": [], "groups": [ "fb00_xda034" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
+      ],
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
+    },
+    {
+      "id": 824, "guid": "2db56367-c3e1-4413-9a4c-0ebd5a7e220c", "isEnabled": true, "version": 4, "service": "cm_hbase",
+      "name": "fb00_xda035", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
+      "resources": {
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da035*" ], "isExcludes": false, "isRecursive": false }
+      },
+      "conditions": [],
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, {"type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
+          ],
+          "users": [], "groups": [ "fb00_xda035" ], "roles": [], "conditions": [], "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
+    },
+    {
+      "id": 825, "guid": "b0cdcf93-bc4f-44c6-9ae1-4f9a0dfecf3e", "isEnabled": true, "version": 4, "service": "cm_hbase", "name": "fb00_xda041",
+      "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
+      "resources": {
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da041*" ], "isExcludes": false, "isRecursive": false }
+      },
+      "conditions": [],
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true },
+            { "type": "create", "isAllowed": true }, { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
+          ],
+          "users": [], "groups": [ "fb00_xda041" ], "roles": [], "conditions": [], "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
+    },
+    {
+      "id": 826, "guid": "e3dccde1-314f-4887-a409-7a5716d4f144", "isEnabled": true, "version": 4, "service": "cm_hbase",
+      "name": "fb00_xda043", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
+      "resources": {
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da043*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
           "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+            { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, {"type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda029"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda043" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 823,
-      "guid": "f627f4c6-bdd4-4056-8d6e-fe7a30ff9d63",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda034",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 827, "guid": "cc7c7051-1b58-4246-8a2a-d8128cc99916", "isEnabled": true, "version": 4, "service": "cm_hbase",
+      "name": "fb00_xda052", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da034*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da052*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda034"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda052" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 824,
-      "guid": "2db56367-c3e1-4413-9a4c-0ebd5a7e220c",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda035",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 828, "guid": "12b2d511-0ff5-46d9-afe1-ed92c5528eff", "isEnabled": true, "version": 4, "service": "cm_hbase", "name": "fb00_xda060",
+      "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da035*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da060*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, {"type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda035"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda060" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 825,
-      "guid": "b0cdcf93-bc4f-44c6-9ae1-4f9a0dfecf3e",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda041",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 829, "guid": "2095ca6a-ba9f-4641-83ee-883127ccfd19", "isEnabled": true, "version": 4, "service": "cm_hbase", "name": "fb00_xda066",
+      "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da041*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ],  "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da066*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda041"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda066" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 826,
-      "guid": "e3dccde1-314f-4887-a409-7a5716d4f144",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda043",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 830, "guid": "be2b684f-fbb1-40ac-ae17-d73cf1a0bc0a", "isEnabled": true, "version": 4, "service": "cm_hbase", "name": "fb00_xda085",
+      "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da043*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da085*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, {"type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda043"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda085" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 827,
-      "guid": "cc7c7051-1b58-4246-8a2a-d8128cc99916",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda052",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 831, "guid": "7e2a7fab-f9ae-4aee-882a-dc8b2376e93c", "isEnabled": true, "version": 4, "service": "cm_hbase",
+      "name": "fb00_xda092", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da052*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false},
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false},
+        "table": { "values": [ "fb00_*da092*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, {"type": "write", "isAllowed": true }, {"type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, {"type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda052"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda092" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 828,
-      "guid": "12b2d511-0ff5-46d9-afe1-ed92c5528eff",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda060",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 832, "guid": "c7a7d7cc-d7c5-4292-ac34-6c652b0bebb7", "isEnabled": true, "version": 5, "service": "cm_hbase",
+      "name": "fb00_xda126", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da060*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": {"values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*da126*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true}
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda060"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xda126" ], "roles": [], "conditions": [], "delegateAdmin": false
+        },
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "execute", "isAllowed": true } ],
+          "users": [], "groups": [ "fb00_xda085" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 829,
-      "guid": "2095ca6a-ba9f-4641-83ee-883127ccfd19",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda066",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 833, "guid": "135697e6-42d3-499a-8e84-44e55449e828", "isEnabled": true, "version": 4, "service": "cm_hbase",
+      "name": "fb00_xds020", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da066*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*ds020*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda066"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xds020" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 830,
-      "guid": "be2b684f-fbb1-40ac-ae17-d73cf1a0bc0a",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda085",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 834, "guid": "aa3bca72-9aaa-4632-ba99-1aaa1422f31a", "isEnabled": true, "version": 25, "service": "cm_hbase",
+      "name": "fb00_xoi022", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da085*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*oi022*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
+          ],
+          "users": [], "groups": [ "fb00_xoi022" ], "roles": [], "conditions": [], "delegateAdmin": false
+        },
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "execute", "isAllowed": true }
+          ],
+          "users": [], "groups": [ "fb00_braff", "fb00_bbrut" ], "roles": [], "conditions": [], "delegateAdmin": false
+        },
+        {
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
           "users": [],
           "groups": [
-            "fb00_xda085"
+            "fb00_xoi099", "fb00_xoi098", "fb00_xoi097", "sd00_xlx001", "fb00_xda085", "fb00_xda126", "fb00_xda017", "qqsens", "fb00_xda062",
+            "fb00_xpr203", "fb00_xda144", "fb00_xda143", "fb00_xda108", "fb00_xoi033", "fb00_xda042", "fb00_xpx091", "fb00_xda107"
           ],
           "roles": [],
           "conditions": [],
           "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 831,
-      "guid": "7e2a7fab-f9ae-4aee-882a-dc8b2376e93c",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xda092",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 835, "guid": "eb444351-f17e-4042-915d-33acad9b2538", "isEnabled": true, "version": 4, "service": "cm_hbase",
+      "name": "fb00_xoi025", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da092*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*oi025*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true }, {"type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda092"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xoi025" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     },
     {
-      "id": 832,
-      "guid": "c7a7d7cc-d7c5-4292-ac34-6c652b0bebb7",
-      "isEnabled": true,
-      "version": 5,
-      "service": "cm_hbase",
-      "name": "fb00_xda126",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
+      "id": 836, "guid": "15e16150-9ace-4fbb-a824-32c849172444", "isEnabled": true, "version": 5, "service": "cm_hbase",
+      "name": "fb00_xoi033", "policyType": 0, "policyPriority": 0, "description": "", "isAuditEnabled": true,
       "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*da126*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
+        "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
+        "table": { "values": [ "fb00_*oi033*" ], "isExcludes": false, "isRecursive": false }
       },
       "conditions": [],
       "policyItems": [
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, {"type": "write", "isAllowed": true }, { "type": "create", "isAllowed": true },
+            { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda126"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xoi033" ], "roles": [], "conditions": [], "delegateAdmin": false
         },
         {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
+          "accesses": [ { "type": "read", "isAllowed": true }, { "type": "execute", "isAllowed": true }
           ],
-          "users": [],
-          "groups": [
-            "fb00_xda085"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
+          "users": [], "groups": [ "fb00_xpr203" ], "roles": [], "conditions": [], "delegateAdmin": false
         }
       ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
-    },
-    {
-      "id": 833,
-      "guid": "135697e6-42d3-499a-8e84-44e55449e828",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xds020",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
-      "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*ds020*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
-      },
-      "conditions": [],
-      "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "fb00_xds020"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        }
-      ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
-    },
-    {
-      "id": 834,
-      "guid": "aa3bca72-9aaa-4632-ba99-1aaa1422f31a",
-      "isEnabled": true,
-      "version": 25,
-      "service": "cm_hbase",
-      "name": "fb00_xoi022",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
-      "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*oi022*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
-      },
-      "conditions": [],
-      "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "fb00_xoi022"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        },
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "fb00_braff",
-            "fb00_bbrut"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        },
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "fb00_xoi099",
-            "fb00_xoi098",
-            "fb00_xoi097",
-            "sd00_xlx001",
-            "fb00_xda085",
-            "fb00_xda126",
-            "fb00_xda017",
-            "qqsens",
-            "fb00_xda062",
-            "fb00_xpr203",
-            "fb00_xda144",
-            "fb00_xda143",
-            "fb00_xda108",
-            "fb00_xoi033",
-            "fb00_xda042",
-            "fb00_xpx091",
-            "fb00_xda107"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        }
-      ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
-    },
-    {
-      "id": 835,
-      "guid": "eb444351-f17e-4042-915d-33acad9b2538",
-      "isEnabled": true,
-      "version": 4,
-      "service": "cm_hbase",
-      "name": "fb00_xoi025",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
-      "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*oi025*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
-      },
-      "conditions": [],
-      "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "fb00_xoi025"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        }
-      ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
-    },
-    {
-      "id": 836,
-      "guid": "15e16150-9ace-4fbb-a824-32c849172444",
-      "isEnabled": true,
-      "version": 5,
-      "service": "cm_hbase",
-      "name": "fb00_xoi033",
-      "policyType": 0,
-      "policyPriority": 0,
-      "description": "",
-      "isAuditEnabled": true,
-      "resources": {
-        "column-family": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "column": {
-          "values": [
-            "*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        },
-        "table": {
-          "values": [
-            "fb00_*oi033*"
-          ],
-          "isExcludes": false,
-          "isRecursive": false
-        }
-      },
-      "conditions": [],
-      "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "write",
-              "isAllowed": true
-            },
-            {
-              "type": "create",
-              "isAllowed": true
-            },
-            {
-              "type": "admin",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "fb00_xoi033"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        },
-        {
-          "accesses": [
-            {
-              "type": "read",
-              "isAllowed": true
-            },
-            {
-              "type": "execute",
-              "isAllowed": true
-            }
-          ],
-          "users": [],
-          "groups": [
-            "fb00_xpr203"
-          ],
-          "roles": [],
-          "conditions": [],
-          "delegateAdmin": false
-        }
-      ],
-      "denyPolicyItems": [],
-      "allowExceptions": [],
-      "denyExceptions": [],
-      "dataMaskPolicyItems": [],
-      "rowFilterPolicyItems": [],
-      "serviceType": "hbase",
-      "options": {},
-      "validitySchedules": [],
-      "policyLabels": [],
-      "zoneName": "",
-      "isDenyAllElse": false
+      "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
+      "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
     }
   ],
   "serviceDef": {
@@ -2728,393 +1316,6 @@
         "policyLabels": [],
         "zoneName": "",
         "isDenyAllElse": false
-      },
-      {
-        "id": 781,
-        "guid": "aa72635a-824c-4576-a06e-2e60a0f8651b",
-        "isEnabled": true,
-        "version": 8,
-        "service": "cm_tag",
-        "name": "secu_rgpd_test",
-        "policyType": 1,
-        "policyPriority": 0,
-        "description": "",
-        "isAuditEnabled": false,
-        "resources": {
-          "tag": {
-            "values": [
-              "secu_rgpd_test"
-            ],
-            "isExcludes": false,
-            "isRecursive": false
-          }
-        },
-        "conditions": [],
-        "policyItems": [],
-        "denyPolicyItems": [],
-        "allowExceptions": [],
-        "denyExceptions": [],
-        "dataMaskPolicyItems": [
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [],
-            "groups": [
-              "ambari_admin",
-              "valdata"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:MASK_NONE"
-            }
-          },
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [
-              "{USER}"
-            ],
-            "groups": [],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:CUSTOM",
-              "valueExpr": "default.pe_mask_udf({col})"
-            }
-          }
-        ],
-        "rowFilterPolicyItems": [],
-        "serviceType": "tag",
-        "options": {},
-        "validitySchedules": [],
-        "policyLabels": [
-          "test"
-        ],
-        "zoneName": "",
-        "isDenyAllElse": false
-      },
-      {
-        "id": 1025,
-        "guid": "50aa1393-d159-4ab8-aa29-4f1701e59aeb",
-        "isEnabled": true,
-        "version": 18,
-        "service": "cm_tag",
-        "name": "secu_rgpd_dcpc",
-        "policyType": 1,
-        "policyPriority": 0,
-        "description": "PE secu_rgpd_dcpc",
-        "isAuditEnabled": false,
-        "resources": {
-          "tag": {
-            "values": [
-              "secu_rgpd_dcpc"
-            ],
-            "isExcludes": false,
-            "isRecursive": false
-          }
-        },
-        "conditions": [],
-        "policyItems": [],
-        "denyPolicyItems": [],
-        "allowExceptions": [],
-        "denyExceptions": [],
-        "dataMaskPolicyItems": [
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [
-              "hive",
-              "impala"
-            ],
-            "groups": [
-              "secu_rgpd_dcpc",
-              "fb00_xbraff"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:MASK_NONE"
-            }
-          },
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [],
-            "groups": [
-              "public"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:CUSTOM",
-              "valueExpr": "\"secu_rgpd_dcpc\""
-            }
-          }
-        ],
-        "rowFilterPolicyItems": [],
-        "serviceType": "tag",
-        "options": {},
-        "validitySchedules": [],
-        "policyLabels": [
-          "rgpd"
-        ],
-        "zoneName": "",
-        "isDenyAllElse": false
-      },
-      {
-        "id": 1026,
-        "guid": "639322ad-dee7-47ec-9fec-bfebe4205f08",
-        "isEnabled": true,
-        "version": 16,
-        "service": "cm_tag",
-        "name": "secu_rgpd_dcpi",
-        "policyType": 1,
-        "policyPriority": 0,
-        "description": "PE secu_rgpd_dcpi",
-        "isAuditEnabled": false,
-        "resources": {
-          "tag": {
-            "values": [
-              "secu_rgpd_dcpi"
-            ],
-            "isExcludes": false,
-            "isRecursive": false
-          }
-        },
-        "conditions": [],
-        "policyItems": [],
-        "denyPolicyItems": [],
-        "allowExceptions": [],
-        "denyExceptions": [],
-        "dataMaskPolicyItems": [
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [
-              "hive",
-              "impala"
-            ],
-            "groups": [
-              "secu_rgpd_dcpi",
-              "fb00_xbraff"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:MASK_NONE"
-            }
-          },
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [],
-            "groups": [
-              "public"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:CUSTOM",
-              "valueExpr": "\"secu_rgpd_dcpi\""
-            }
-          }
-        ],
-        "rowFilterPolicyItems": [],
-        "serviceType": "tag",
-        "options": {},
-        "validitySchedules": [],
-        "policyLabels": [
-          "rgpd"
-        ],
-        "zoneName": "",
-        "isDenyAllElse": false
-      },
-      {
-        "id": 1027,
-        "guid": "656123f6-f91d-4c7e-a57a-561c1e73ac80",
-        "isEnabled": true,
-        "version": 11,
-        "service": "cm_tag",
-        "name": "secu_rgpd_dcpspe",
-        "policyType": 1,
-        "policyPriority": 0,
-        "description": "PE secu_rgpd_dcpspe",
-        "isAuditEnabled": false,
-        "resources": {
-          "tag": {
-            "values": [
-              "secu_rgpd_dcpspe"
-            ],
-            "isExcludes": false,
-            "isRecursive": false
-          }
-        },
-        "conditions": [],
-        "policyItems": [],
-        "denyPolicyItems": [],
-        "allowExceptions": [],
-        "denyExceptions": [],
-        "dataMaskPolicyItems": [
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [
-              "hive",
-              "impala"
-            ],
-            "groups": [
-              "secu_rgpd_dcpspe",
-              "fb00_xbraff"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:MASK_NONE"
-            }
-          },
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [],
-            "groups": [
-              "public"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:CUSTOM",
-              "valueExpr": "\"secu_rgpd_dcpspe\""
-            }
-          }
-        ],
-        "rowFilterPolicyItems": [],
-        "serviceType": "tag",
-        "options": {},
-        "validitySchedules": [],
-        "policyLabels": [
-          "rgpd"
-        ],
-        "zoneName": "",
-        "isDenyAllElse": false
-      },
-      {
-        "id": 1028,
-        "guid": "9710e20b-067d-4212-bec4-fbcc5c28afbb",
-        "isEnabled": true,
-        "version": 15,
-        "service": "cm_tag",
-        "name": "secu_rgpd_dcp",
-        "policyType": 1,
-        "policyPriority": 0,
-        "description": "PE secu_rgpd_dcp",
-        "isAuditEnabled": false,
-        "resources": {
-          "tag": {
-            "values": [
-              "secu_rgpd_dcp"
-            ],
-            "isExcludes": false,
-            "isRecursive": false
-          }
-        },
-        "conditions": [],
-        "policyItems": [],
-        "denyPolicyItems": [],
-        "allowExceptions": [],
-        "denyExceptions": [],
-        "dataMaskPolicyItems": [
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [
-              "hive",
-              "impala"
-            ],
-            "groups": [
-              "secu_rgpd_dcp",
-              "fb00_xbraff"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:MASK_NONE"
-            }
-          },
-          {
-            "accesses": [
-              {
-                "type": "hive:select",
-                "isAllowed": true
-              }
-            ],
-            "users": [],
-            "groups": [
-              "public"
-            ],
-            "roles": [],
-            "conditions": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "hive:CUSTOM",
-              "valueExpr": "\"secu_rgpd_dcp\""
-            }
-          }
-        ],
-        "rowFilterPolicyItems": [],
-        "serviceType": "tag",
-        "options": {},
-        "validitySchedules": [],
-        "policyLabels": [
-          "rgpd"
-        ],
-        "zoneName": "",
-        "isDenyAllElse": false
       }
     ],
     "serviceDef": {
@@ -3177,110 +1378,6 @@
           "impliedGrants": []
         },
         {
-          "itemId": 104106,
-          "name": "adls:add",
-          "label": "Add",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 104107,
-          "name": "adls:create",
-          "label": "Create",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 104108,
-          "name": "adls:write",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 104109,
-          "name": "adls:delete",
-          "label": "Delete",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 104110,
-          "name": "adls:list",
-          "label": "List",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 104111,
-          "name": "adls:move",
-          "label": "Move",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 104112,
-          "name": "adls:superuser",
-          "label": "Superuser",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 105106,
-          "name": "kudu:select",
-          "label": "SELECT",
-          "impliedGrants": [
-            "kudu:metadata"
-          ]
-        },
-        {
-          "itemId": 105107,
-          "name": "kudu:insert",
-          "label": "INSERT",
-          "impliedGrants": [
-            "kudu:metadata"
-          ]
-        },
-        {
-          "itemId": 105108,
-          "name": "kudu:update",
-          "label": "UPDATE",
-          "impliedGrants": [
-            "kudu:metadata"
-          ]
-        },
-        {
-          "itemId": 105109,
-          "name": "kudu:delete",
-          "label": "DELETE",
-          "impliedGrants": [
-            "kudu:metadata"
-          ]
-        },
-        {
-          "itemId": 105110,
-          "name": "kudu:alter",
-          "label": "ALTER",
-          "impliedGrants": [
-            "kudu:metadata"
-          ]
-        },
-        {
-          "itemId": 105111,
-          "name": "kudu:create",
-          "label": "CREATE",
-          "impliedGrants": [
-            "kudu:metadata"
-          ]
-        },
-        {
-          "itemId": 105112,
-          "name": "kudu:drop",
-          "label": "DROP",
-          "impliedGrants": [
-            "kudu:metadata"
-          ]
-        },
-        {
-          "itemId": 105113,
-          "name": "kudu:metadata",
-          "label": "METADATA",
-          "impliedGrants": []
-        },
-        {
           "itemId": 105114,
           "name": "kudu:all",
           "label": "ALL",
@@ -3294,647 +1391,6 @@
             "kudu:metadata",
             "kudu:drop"
           ]
-        },
-        {
-          "itemId": 1002,
-          "name": "hdfs:read",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 1003,
-          "name": "hdfs:write",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 1004,
-          "name": "hdfs:execute",
-          "label": "Execute",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 2003,
-          "name": "hbase:read",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 2004,
-          "name": "hbase:write",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 2005,
-          "name": "hbase:create",
-          "label": "Create",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 2006,
-          "name": "hbase:admin",
-          "label": "Admin",
-          "impliedGrants": [
-            "hbase:write",
-            "hbase:read",
-            "hbase:create"
-          ]
-        },
-        {
-          "itemId": 2007,
-          "name": "hbase:execute",
-          "label": "Execute",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3004,
-          "name": "hive:select",
-          "label": "select",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3005,
-          "name": "hive:update",
-          "label": "update",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3006,
-          "name": "hive:create",
-          "label": "Create",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3007,
-          "name": "hive:drop",
-          "label": "Drop",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3008,
-          "name": "hive:alter",
-          "label": "Alter",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3009,
-          "name": "hive:index",
-          "label": "Index",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3010,
-          "name": "hive:lock",
-          "label": "Lock",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3011,
-          "name": "hive:all",
-          "label": "All",
-          "impliedGrants": [
-            "hive:alter",
-            "hive:drop",
-            "hive:select",
-            "hive:update",
-            "hive:create",
-            "hive:refresh",
-            "hive:repladmin",
-            "hive:write",
-            "hive:read",
-            "hive:lock",
-            "hive:index",
-            "hive:serviceadmin"
-          ]
-        },
-        {
-          "itemId": 3012,
-          "name": "hive:read",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3013,
-          "name": "hive:write",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3014,
-          "name": "hive:repladmin",
-          "label": "ReplAdmin",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3015,
-          "name": "hive:serviceadmin",
-          "label": "Service Admin",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3016,
-          "name": "hive:tempudfadmin",
-          "label": "Temporary UDF Admin",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3017,
-          "name": "hive:refresh",
-          "label": "Refresh",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7008,
-          "name": "kms:create",
-          "label": "Create",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7009,
-          "name": "kms:delete",
-          "label": "Delete",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7010,
-          "name": "kms:rollover",
-          "label": "Rollover",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7011,
-          "name": "kms:setkeymaterial",
-          "label": "Set Key Material",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7012,
-          "name": "kms:get",
-          "label": "Get",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7013,
-          "name": "kms:getkeys",
-          "label": "Get Keys",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7014,
-          "name": "kms:getmetadata",
-          "label": "Get Metadata",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7015,
-          "name": "kms:generateeek",
-          "label": "Generate EEK",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 7016,
-          "name": "kms:decrypteek",
-          "label": "Decrypt EEK",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 5006,
-          "name": "knox:allow",
-          "label": "Allow",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 4005,
-          "name": "yarn:submit-app",
-          "label": "submit-app",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 4006,
-          "name": "yarn:admin-queue",
-          "label": "admin-queue",
-          "impliedGrants": [
-            "yarn:submit-app"
-          ]
-        },
-        {
-          "itemId": 9010,
-          "name": "kafka:publish",
-          "label": "Publish",
-          "impliedGrants": [
-            "kafka:describe"
-          ]
-        },
-        {
-          "itemId": 9011,
-          "name": "kafka:consume",
-          "label": "Consume",
-          "impliedGrants": [
-            "kafka:describe"
-          ]
-        },
-        {
-          "itemId": 9014,
-          "name": "kafka:configure",
-          "label": "Configure",
-          "impliedGrants": [
-            "kafka:describe"
-          ]
-        },
-        {
-          "itemId": 9015,
-          "name": "kafka:describe",
-          "label": "Describe",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 9016,
-          "name": "kafka:kafka_admin",
-          "label": "Kafka Admin",
-          "impliedGrants": [
-            "kafka:delete",
-            "kafka:describe",
-            "kafka:create",
-            "kafka:describe_configs",
-            "kafka:alter_configs",
-            "kafka:alter",
-            "kafka:idempotent_write",
-            "kafka:cluster_action",
-            "kafka:publish",
-            "kafka:consume",
-            "kafka:configure"
-          ]
-        },
-        {
-          "itemId": 9017,
-          "name": "kafka:create",
-          "label": "Create",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 9018,
-          "name": "kafka:delete",
-          "label": "Delete",
-          "impliedGrants": [
-            "kafka:describe"
-          ]
-        },
-        {
-          "itemId": 9019,
-          "name": "kafka:idempotent_write",
-          "label": "Idempotent Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 9020,
-          "name": "kafka:describe_configs",
-          "label": "Describe Configs",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 9021,
-          "name": "kafka:alter_configs",
-          "label": "Alter Configs",
-          "impliedGrants": [
-            "kafka:describe_configs"
-          ]
-        },
-        {
-          "itemId": 9022,
-          "name": "kafka:cluster_action",
-          "label": "Cluster Action",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 9023,
-          "name": "kafka:alter",
-          "label": "Alter",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 8108,
-          "name": "solr:query",
-          "label": "Query",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 8208,
-          "name": "solr:update",
-          "label": "Update",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 202203,
-          "name": "schema-registry:create",
-          "label": "Create",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 202204,
-          "name": "schema-registry:read",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 202205,
-          "name": "schema-registry:update",
-          "label": "Update",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 202206,
-          "name": "schema-registry:delete",
-          "label": "Delete",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 10110,
-          "name": "nifi:READ",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 10210,
-          "name": "nifi:WRITE",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 13113,
-          "name": "nifi-registry:READ",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 13213,
-          "name": "nifi-registry:WRITE",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 13313,
-          "name": "nifi-registry:DELETE",
-          "label": "Delete",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15016,
-          "name": "atlas:type-create",
-          "label": "Create Type",
-          "impliedGrants": [
-            "atlas:type-read"
-          ]
-        },
-        {
-          "itemId": 15017,
-          "name": "atlas:type-update",
-          "label": "Update Type",
-          "impliedGrants": [
-            "atlas:type-read"
-          ]
-        },
-        {
-          "itemId": 15018,
-          "name": "atlas:type-delete",
-          "label": "Delete Type",
-          "impliedGrants": [
-            "atlas:type-read"
-          ]
-        },
-        {
-          "itemId": 15019,
-          "name": "atlas:entity-read",
-          "label": "Read Entity",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15020,
-          "name": "atlas:entity-create",
-          "label": "Create Entity",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15021,
-          "name": "atlas:entity-update",
-          "label": "Update Entity",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15022,
-          "name": "atlas:entity-delete",
-          "label": "Delete Entity",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15023,
-          "name": "atlas:entity-add-classification",
-          "label": "Add Classification",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15024,
-          "name": "atlas:entity-update-classification",
-          "label": "Update Classification",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15025,
-          "name": "atlas:entity-remove-classification",
-          "label": "Remove Classification",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15026,
-          "name": "atlas:admin-export",
-          "label": "Admin Export",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15027,
-          "name": "atlas:admin-import",
-          "label": "Admin Import",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15028,
-          "name": "atlas:add-relationship",
-          "label": "Add Relationship",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15029,
-          "name": "atlas:update-relationship",
-          "label": "Update Relationship",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15030,
-          "name": "atlas:remove-relationship",
-          "label": "Remove Relationship",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15031,
-          "name": "atlas:admin-purge",
-          "label": "Admin Purge",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15032,
-          "name": "atlas:entity-add-label",
-          "label": "Add Label",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15033,
-          "name": "atlas:entity-remove-label",
-          "label": "Remove Label",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15034,
-          "name": "atlas:entity-update-business-metadata",
-          "label": "Update Business Metadata",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15035,
-          "name": "atlas:type-read",
-          "label": "Read Type",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 15036,
-          "name": "atlas:admin-audits",
-          "label": "Admin Audits",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 201209,
-          "name": "ozone:all",
-          "label": "All",
-          "impliedGrants": [
-            "ozone:create",
-            "ozone:list",
-            "ozone:delete",
-            "ozone:read_acl",
-            "ozone:write_acl",
-            "ozone:write",
-            "ozone:read"
-          ]
-        },
-        {
-          "itemId": 201202,
-          "name": "ozone:read",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 201203,
-          "name": "ozone:write",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 201204,
-          "name": "ozone:create",
-          "label": "Create",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 201205,
-          "name": "ozone:list",
-          "label": "List",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 201206,
-          "name": "ozone:delete",
-          "label": "Delete",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 201207,
-          "name": "ozone:read_acl",
-          "label": "Read_ACL",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 201208,
-          "name": "ozone:write_acl",
-          "label": "Write_ACL",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 3018,
-          "name": "hive:rwstorage",
-          "label": "RW Storage",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 1001001,
-          "name": "s3:read",
-          "label": "Read",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 1001002,
-          "name": "s3:write",
-          "label": "Write",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 203204,
-          "name": "kafka-connect:view",
-          "label": "View",
-          "impliedGrants": []
-        },
-        {
-          "itemId": 203205,
-          "name": "kafka-connect:manage",
-          "label": "Manage",
-          "impliedGrants": [
-            "kafka-connect:view"
-          ]
-        },
-        {
-          "itemId": 203206,
-          "name": "kafka-connect:edit",
-          "label": "Edit",
-          "impliedGrants": [
-            "kafka-connect:view"
-          ]
-        },
-        {
-          "itemId": 203207,
-          "name": "kafka-connect:create",
-          "label": "Create",
-          "impliedGrants": [
-            "kafka-connect:view"
-          ]
-        },
-        {
-          "itemId": 203208,
-          "name": "kafka-connect:delete",
-          "label": "Delete",
-          "impliedGrants": [
-            "kafka-connect:view"
-          ]
-        },
-        {
-          "itemId": 203209,
-          "name": "kafka-connect:validate",
-          "label": "Validate",
-          "impliedGrants": [
-            "kafka-connect:view"
-          ]
-        },
-        {
-          "itemId": 5605601,
-          "name": "gs:read",
-          "label": "Read",
-          "impliedGrants": []
         },
         {
           "itemId": 5605602,

@@ -36,7 +36,7 @@ public class RangerAdminClientImpl
     private String serviceName;
     @SuppressWarnings("unused")
     private String appId;
-    private volatile boolean isPolicyModified;
+    private volatile boolean isLoadPolicyDelta;
 
     @Override
     public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
@@ -57,7 +57,7 @@ public class RangerAdminClientImpl
             resourceBasePath = ".";
         }
         byte[] policiesBytes;
-        if (!isPolicyModified) {
+        if (!isLoadPolicyDelta) {
             policiesBytes = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, policiesFilepath));
         } else {
             policiesBytes = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, updatedPoliciesFilepath));
@@ -72,8 +72,8 @@ public class RangerAdminClientImpl
             ret.setTagPolicies(new ServicePolicies.TagPolicies());
         }
         ret.getTagPolicies().setServiceDef(tagServiceDef);
-        if (!isPolicyModified) {
-            isPolicyModified = true;
+        if (!isLoadPolicyDelta) {
+            isLoadPolicyDelta = true;
         }
         return ret;
     }

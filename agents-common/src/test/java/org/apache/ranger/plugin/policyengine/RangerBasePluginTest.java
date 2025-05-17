@@ -109,23 +109,22 @@ public class RangerBasePluginTest {
     private void runTests(Reader reader) throws Exception {
         RangerBasePluginTestCase testCase = readTestCase(reader);
 
-        assertNotNull("invalid input: " + TEST_JSON, testCase);
-        assertNotNull("invalid input: " + TEST_JSON, testCase.policies);
-        assertNotNull("invalid input: " + TEST_JSON, testCase.tags);
-        assertNotNull("invalid input: " + TEST_JSON, testCase.roles);
-        assertNotNull("invalid input: " + TEST_JSON, testCase.userStore);
-        assertNotNull("invalid input: " + TEST_JSON, testCase.gdsInfo);
-        assertNotNull("invalid input: " + TEST_JSON, testCase.tests);
+        assertNotNull("testCase was null",  testCase);
+        assertNotNull("testCase.policies was null",  testCase.policies);
+        assertNotNull("testCase.tags was null", testCase.tags);
+        assertNotNull("testCase.roles was null", testCase.roles);
+        assertNotNull("testCase.userStore was null", testCase.userStore);
+        assertNotNull("testCase.gdsInfo was null", testCase.gdsInfo);
+        assertNotNull("testCase.tests was null", testCase.tests);
 
         int count = 0;
         int failedCount = 0;
         while (count < 10000) {
-            RangerAccessResult result;
             for (TestData test : testCase.tests) {
                 RangerAccessRequest request = test.request;
                 try {
                     if (test.result != null) {
-                        result = rangerBasePlugin.isAccessAllowed(request);
+                        RangerAccessResult result = rangerBasePlugin.isAccessAllowed(request);
                         assertNotNull("result was null! - " + test.name, result);
                         assertEquals("isAllowed mismatched! - " + test.name, test.result.getIsAllowed(), result.getIsAllowed());
                         assertEquals("isAccessDetermined mismatched! - " + test.name, test.result.getIsAccessDetermined(), result.getIsAccessDetermined());
