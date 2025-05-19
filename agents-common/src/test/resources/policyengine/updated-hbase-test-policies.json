@@ -1,482 +1,165 @@
 {
-    "serviceName": "cm_hbase",
-    "serviceId": 3,
+    "serviceName":   "cm_hbase",
+    "serviceId":     3,
     "policyVersion": 7141,
+    "auditMode":    "audit-default",
     "serviceDef": {
-        "id": 2,
-        "guid": "d6cea1f0-2509-4791-8fc1-7b092399ba3b",
-        "isEnabled": true,
-        "version": 1,
-        "name": "hbase",
-        "displayName": "hbase",
+        "id":        2,
+        "name":      "hbase",
         "implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
-        "label": "HBase",
-        "description": "HBase",
-        "options": {
-            "enableDenyAndExceptionsInPolicies": "true"
-        },
+        "options":   { "enableDenyAndExceptionsInPolicies": "true" },
         "configs": [
-            {
-                "itemId": 1,
-                "name": "username",
-                "type": "string",
-                "subType": "",
-                "mandatory": true,
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": "",
-                "label": "Username"
-            },
-            {
-                "itemId": 2,
-                "name": "password",
-                "type": "password",
-                "subType": "",
-                "mandatory": true,
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": "",
-                "label": "Password"
-            },
-            {
-                "itemId": 3,
-                "name": "hadoop.security.authentication",
-                "type": "enum",
-                "subType": "authnType",
-                "mandatory": true,
-                "defaultValue": "simple",
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": ""
-            },
-            {
-                "itemId": 4,
-                "name": "hbase.master.kerberos.principal",
-                "type": "string",
-                "subType": "",
-                "mandatory": false,
-                "defaultValue": ""
-            },
-            {
-                "itemId": 5,
-                "name": "hbase.security.authentication",
-                "type": "enum",
-                "subType": "authnType",
-                "mandatory": true,
-                "defaultValue": "simple",
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": ""
-            },
-            {
-                "itemId": 6,
-                "name": "hbase.zookeeper.property.clientPort",
-                "type": "int",
-                "subType": "",
-                "mandatory": true,
-                "defaultValue": "2181",
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": ""
-            },
-            {
-                "itemId": 7,
-                "name": "hbase.zookeeper.quorum",
-                "type": "string",
-                "subType": "",
-                "mandatory": true,
-                "defaultValue": "",
-                "validationRegEx": "",
-                "validationMessage": ""
-            },
-            {
-                "itemId": 8,
-                "name": "zookeeper.znode.parent",
-                "type": "string",
-                "subType": "",
-                "mandatory": true,
-                "defaultValue": "/hbase",
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": ""
-            },
-            {
-                "itemId": 9,
-                "name": "commonNameForCertificate",
-                "type": "string",
-                "subType": "",
-                "mandatory": false,
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": "",
-                "label": "Common Name for Certificate"
-            },
-            {
-                "itemId": 10,
-                "name": "ranger.plugin.audit.filters",
-                "type": "string",
-                "subType": "",
-                "mandatory": false,
-                "defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*', '*_acl_*', 'hbase:meta', 'hbase:acl', 'default', 'hbase']}}, 'users':['hbase'], 'isAudited': false }, {'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS']},'column-family':{'values':['*']},'column':{'values':['*']}},'users':['atlas', 'hbase'],'isAudited':false},{'users':['hbase'], 'actions':['balance'],'isAudited':false}]",
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": "",
-                "label": "Ranger Default Audit Filters"
+            { "itemId": 1, "name": "username",                            "type": "string",   "mandatory": true, "label": "Username" },
+            { "itemId": 2, "name": "password",                            "type": "password", "mandatory": true, "label": "Password" },
+            { "itemId": 3, "name": "hadoop.security.authentication",      "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+            { "itemId": 4, "name": "hbase.master.kerberos.principal",     "type": "string",   "mandatory": false, "defaultValue": "" },
+            { "itemId": 5, "name": "hbase.security.authentication",       "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+            { "itemId": 6, "name": "hbase.zookeeper.property.clientPort", "type": "int",      "mandatory": true, "defaultValue": "2181" },
+            { "itemId": 7, "name": "hbase.zookeeper.quorum",              "type": "string",   "mandatory": true },
+            { "itemId": 8, "name": "zookeeper.znode.parent",              "type": "string",   "mandatory": true, "defaultValue": "/hbase" },
+            { "itemId": 9, "name": "commonNameForCertificate",            "type": "string",   "mandatory": false, "label": "Common Name for Certificate" },
+            { "itemId": 10, "name": "ranger.plugin.audit.filters",        "type": "string",   "mandatory": false, "defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*', '*_acl_*', 'hbase:meta', 'hbase:acl', 'default', 'hbase']}}, 'users':['hbase'], 'isAudited': false }, {'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS']},'column-family':{'values':['*']},'column':{'values':['*']}},'users':['atlas', 'hbase'],'isAudited':false},{'users':['hbase'], 'actions':['balance'],'isAudited':false}]", "label": "Ranger Default Audit Filters"
             }
         ],
         "resources": [
             {
-                "itemId": 1,
-                "name": "table",
-                "type": "string",
-                "level": 10,
-                "mandatory": true,
-                "lookupSupported": true,
+                "itemId":             1,
+                "name":               "table",
+                "type":               "string",
+                "level":              10,
+                "mandatory":          true,
+                "lookupSupported":    true,
                 "recursiveSupported": false,
-                "excludesSupported": true,
-                "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-                "matcherOptions": {
-                    "wildCard": "true",
-                    "ignoreCase": "false"
-                },
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": "",
-                "label": "HBase Table",
-                "description": "HBase Table",
-                "accessTypeRestrictions": [],
-                "isValidLeaf": false
+                "excludesSupported":  true,
+                "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+                "label":              "HBase Table",
+                "description":        "HBase Table",
+                "isValidLeaf":        false
             },
             {
-                "itemId": 2,
-                "name": "column-family",
-                "type": "string",
-                "level": 20,
-                "parent": "table",
-                "mandatory": true,
-                "lookupSupported": true,
+                "itemId":             2,
+                "name":               "column-family",
+                "type":               "string",
+                "level":              20,
+                "parent":             "table",
+                "mandatory":          true,
+                "lookupSupported":    true,
                 "recursiveSupported": false,
-                "excludesSupported": true,
-                "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-                "matcherOptions": {
-                    "wildCard": "true",
-                    "ignoreCase": "false"
-                },
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": "",
-                "label": "HBase Column-family",
-                "description": "HBase Column-family",
-                "accessTypeRestrictions": [],
-                "isValidLeaf": false
+                "excludesSupported":  true,
+                "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+                "label":              "HBase Column-family",
+                "description":        "HBase Column-family",
+                "isValidLeaf":        false
             },
             {
-                "itemId": 3,
-                "name": "column",
-                "type": "string",
-                "level": 30,
-                "parent": "column-family",
-                "mandatory": true,
-                "lookupSupported": false,
+                "itemId":             3,
+                "name":               "column",
+                "type":               "string",
+                "level":              30,
+                "parent":             "column-family",
+                "mandatory":          true,
+                "lookupSupported":    false,
                 "recursiveSupported": false,
-                "excludesSupported": true,
-                "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-                "matcherOptions": {
-                    "wildCard": "true",
-                    "ignoreCase": "false"
-                },
-                "validationRegEx": "",
-                "validationMessage": "",
-                "uiHint": "",
-                "label": "HBase Column",
-                "description": "HBase Column",
-                "accessTypeRestrictions": [],
-                "isValidLeaf": true
+                "excludesSupported":  true,
+                "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+                "label":              "HBase Column",
+                "description":        "HBase Column",
+                "isValidLeaf":        true
             }
         ],
         "accessTypes": [
-            {
-                "itemId": 1,
-                "name": "read",
-                "label": "Read",
-                "impliedGrants": []
-            },
-            {
-                "itemId": 2,
-                "name": "write",
-                "label": "Write",
-                "impliedGrants": []
-            },
-            {
-                "itemId": 3,
-                "name": "create",
-                "label": "Create",
-                "impliedGrants": []
-            },
-            {
-                "itemId": 4,
-                "name": "admin",
-                "label": "Admin",
-                "impliedGrants": [
-                    "read",
-                    "write",
-                    "create"
-                ]
-            },
-            {
-                "itemId": 5,
-                "name": "execute",
-                "label": "Execute",
-                "impliedGrants": []
-            }
+            { "itemId": 1, "name": "read",    "label": "Read" },
+            { "itemId": 2, "name": "write",   "label": "Write" },
+            { "itemId": 3, "name": "create",  "label": "Create" },
+            { "itemId": 4, "name": "admin",   "label": "Admin", "impliedGrants": [ "read", "write", "create" ] },
+            { "itemId": 5, "name": "execute", "label": "Execute" }
         ],
-        "policyConditions": [],
-        "contextEnrichers": [],
         "enums": [
             {
-                "itemId": 1,
-                "name": "authnType",
+                "itemId":       1,
+                "name":         "authnType",
+                "defaultIndex": 0,
                 "elements": [
-                    {
-                        "itemId": 1,
-                        "name": "simple",
-                        "label": "Simple"
-                    },
-                    {
-                        "itemId": 2,
-                        "name": "kerberos",
-                        "label": "Kerberos"
-                    }
-                ],
-                "defaultIndex": 0
+                    { "itemId": 1, "name": "simple",   "label": "Simple" },
+                    { "itemId": 2, "name": "kerberos", "label": "Kerberos" }
+                ]
             }
-        ],
-        "dataMaskDef": {
-            "maskTypes": [],
-            "accessTypes": [],
-            "resources": []
-        },
-        "rowFilterDef": {
-            "accessTypes": [],
-            "resources": []
-        }
+        ]
     },
-    "auditMode": "audit-default",
     "tagPolicies": {
         "serviceName": "cm_tag",
-        "serviceId": 2,
+        "serviceId":   2,
         "serviceDef": {
-            "id": 100,
-            "guid": "0d047248-baff-4cf9-8e9e-d5d377284b2e",
-            "isEnabled": true,
-            "version": 29,
-            "name": "tag",
-            "displayName": "tag",
+            "id":        100,
+            "name":      "tag",
             "implClass": "org.apache.ranger.services.tag.RangerServiceTag",
-            "label": "TAG",
-            "description": "TAG Service Definition",
-            "options": {
-                "enableDenyAndExceptionsInPolicies": "true",
-                "ui.pages": "tag-based-policies"
-            },
+            "options":   { "enableDenyAndExceptionsInPolicies": "true", "ui.pages": "tag-based-policies" },
             "configs": [
                 {
-                    "itemId": 1,
-                    "name": "ranger.plugin.audit.filters",
-                    "type": "string",
-                    "subType": "",
-                    "mandatory": false,
+                    "itemId":       1,
+                    "name":         "ranger.plugin.audit.filters",
+                    "type":         "string",
+                    "mandatory":    false,
                     "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]",
-                    "validationRegEx": "",
-                    "validationMessage": "",
-                    "uiHint": "",
-                    "label": "Ranger Default Audit Filters"
+                    "label":        "Ranger Default Audit Filters"
                 }
             ],
             "resources": [
                 {
-                    "itemId": 1,
-                    "name": "tag",
-                    "type": "string",
-                    "level": 1,
-                    "mandatory": true,
-                    "lookupSupported": true,
+                    "itemId":             1,
+                    "name":               "tag",
+                    "type":               "string",
+                    "level":              1,
+                    "mandatory":          true,
+                    "lookupSupported":    true,
                     "recursiveSupported": false,
-                    "excludesSupported": false,
-                    "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-                    "matcherOptions": {
-                        "wildCard": "false",
-                        "ignoreCase": "false"
-                    },
-                    "validationRegEx": "",
-                    "validationMessage": "",
-                    "uiHint": "{ \"singleValue\":true }",
-                    "label": "TAG",
-                    "description": "TAG",
-                    "accessTypeRestrictions": [],
-                    "isValidLeaf": true
+                    "excludesSupported":  false,
+                    "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                    "matcherOptions":     { "wildCard": "false", "ignoreCase": "false" },
+                    "uiHint":             "{ \"singleValue\":true }",
+                    "label":              "TAG",
+                    "description":        "TAG",
+                    "isValidLeaf":        true
                 }
             ],
             "accessTypes": [
-                {
-                    "itemId": 104105,
-                    "name": "adls:read",
-                    "label": "Read",
-                    "impliedGrants": []
-                },
-                {
-                    "itemId": 104106,
-                    "name": "adls:add",
-                    "label": "Add",
-                    "impliedGrants": []
-                },
-                {
-                    "itemId": 5605602,
-                    "name": "gs:write",
-                    "label": "Write",
-                    "impliedGrants": []
-                }
+	        { "itemId": 104105, "name": "hbase:read",    "label": "Read" },
+                { "itemId": 104106, "name": "hbase:write",   "label": "Write" },
+                { "itemId": 104107, "name": "hbase:execute", "label": "Execute" },
+                { "itemId": 104108, "name": "hbase:create",  "label": "Create" },
+                { "itemId": 104109, "name": "hbase:admin",   "label": "Admin" }
             ],
             "policyConditions": [
                 {
-                    "itemId": 1,
-                    "name": "accessed-after-expiry",
-                    "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
-                    "evaluatorOptions": {
-                        "scriptTemplate": "ctx.isAccessedAfter('expiry_date');"
-                    },
-                    "uiHint": "{ \"singleValue\":true }",
-                    "label": "Accessed after expiry_date (yes/no)?",
-                    "description": "Accessed after expiry_date? (yes/no)"
+                    "itemId":           1,
+                    "name":             "accessed-after-expiry",
+                    "evaluator":        "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
+                    "evaluatorOptions": { "scriptTemplate": "ctx.isAccessedAfter('expiry_date');" },
+                    "uiHint":           "{ \"singleValue\":true }",
+                    "label":            "Accessed after expiry_date (yes/no)?",
+                    "description":      "Accessed after expiry_date? (yes/no)"
                 },
                 {
-                    "itemId": 2,
-                    "name": "expression",
-                    "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
-                    "evaluatorOptions": {
-                        "engineName": "JavaScript",
-                        "ui.isMultiline": "true"
-                    },
-                    "uiHint": "{ \"isMultiline\":true }",
-                    "label": "Enter boolean expression",
-                    "description": "Boolean expression"
+                    "itemId":           2,
+                    "name":             "expression",
+                    "evaluator":        "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+                    "evaluatorOptions": { "engineName": "JavaScript", "ui.isMultiline": "true" },
+                    "uiHint":           "{ \"isMultiline\":true }",
+                    "label":            "Enter boolean expression",
+                    "description":      "Boolean expression"
                 }
             ],
             "contextEnrichers": [
                 {
-                    "itemId": 1,
-                    "name": "TagEnricher",
-                    "enricher": "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
-                    "enricherOptions": {
-                        "tagRetrieverClassName": "org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever",
-                        "tagRefresherPollingInterval": "60000"
-                    }
+                    "itemId":          1,
+                    "name":            "TagEnricher",
+                    "enricher":        "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
+                    "enricherOptions": { "tagRetrieverClassName": "org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever", "tagRefresherPollingInterval": "60000" }
                 }
-            ],
-            "enums": [],
-            "dataMaskDef": {
-                "maskTypes": [
-                    {
-                        "itemId": 3004,
-                        "name": "hive:MASK",
-                        "label": "Redact",
-                        "description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'",
-                        "transformer": "mask({col})",
-                        "dataMaskOptions": {}
-                    },
-                    {
-                        "itemId": 3005,
-                        "name": "hive:MASK_SHOW_LAST_4",
-                        "label": "Partial mask: show last 4",
-                        "description": "Show last 4 characters; replace rest with 'x'",
-                        "transformer": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')",
-                        "dataMaskOptions": {}
-                    },
-                    {
-                        "itemId": 3006,
-                        "name": "hive:MASK_SHOW_FIRST_4",
-                        "label": "Partial mask: show first 4",
-                        "description": "Show first 4 characters; replace rest with 'x'",
-                        "transformer": "mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')",
-                        "dataMaskOptions": {}
-                    },
-                    {
-                        "itemId": 3007,
-                        "name": "hive:MASK_HASH",
-                        "label": "Hash",
-                        "description": "Hash the value",
-                        "transformer": "mask_hash({col})",
-                        "dataMaskOptions": {}
-                    },
-                    {
-                        "itemId": 3008,
-                        "name": "hive:MASK_NULL",
-                        "label": "Nullify",
-                        "description": "Replace with NULL",
-                        "dataMaskOptions": {}
-                    },
-                    {
-                        "itemId": 3009,
-                        "name": "hive:MASK_NONE",
-                        "label": "Unmasked (retain original value)",
-                        "description": "No masking",
-                        "dataMaskOptions": {}
-                    },
-                    {
-                        "itemId": 3015,
-                        "name": "hive:MASK_DATE_SHOW_YEAR",
-                        "label": "Date: show only year",
-                        "description": "Date: show only year",
-                        "transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)",
-                        "dataMaskOptions": {}
-                    },
-                    {
-                        "itemId": 3016,
-                        "name": "hive:CUSTOM",
-                        "label": "Custom",
-                        "description": "Custom",
-                        "dataMaskOptions": {}
-                    }
-                ],
-                "accessTypes": [
-                    {
-                        "itemId": 3004,
-                        "name": "hive:select",
-                        "label": "select",
-                        "impliedGrants": []
-                    }
-                ],
-                "resources": [
-                    {
-                        "itemId": 1,
-                        "name": "tag",
-                        "type": "string",
-                        "level": 1,
-                        "mandatory": true,
-                        "lookupSupported": true,
-                        "recursiveSupported": false,
-                        "excludesSupported": false,
-                        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-                        "matcherOptions": {
-                            "__isValidLeaf": "true",
-                            "wildCard": "false",
-                            "__accessTypeRestrictions": "[]",
-                            "ignoreCase": "false"
-                        },
-                        "validationRegEx": "",
-                        "validationMessage": "",
-                        "uiHint": "{ \"singleValue\":true }",
-                        "label": "TAG",
-                        "description": "TAG",
-                        "accessTypeRestrictions": [],
-                        "isValidLeaf": true
-                    }
-                ]
-            },
-            "rowFilterDef": {
-                "accessTypes": [],
-                "resources": []
-            }
+            ]
         },
         "auditMode": "audit-default",
         "serviceConfig": {
@@ -485,35 +168,22 @@
     },
     "policyDeltas": [
         {
-            "id": 80343,
-            "changeType": 1,
+            "id":              80343,
+            "changeType":      1,
             "policiesVersion": 7141,
             "policy": {
-                "id": 821, "guid": "eccf07c9-57c3-45a4-9b0a-2ef7040f2e4e", "isEnabled": true, "createdBy": "almo3160",
-                "updatedBy": "Admin", "version": 21, "service": "cm_hbase", "name": "fb00_xda017", "policyType": 0, "policyPriority": 0,
-                "description": "Added by Vyom for testing",
-                "resourceSignature": "03c9ec8778dc92f98350073685d72755d01802f0e655d59f1e8e7569d069f838",
-                "isAuditEnabled": true,
+                "id": 821, "name": "fb00_xda017", "serviceType": "hbase", "isEnabled": true, "isAuditEnabled": true,
                 "resources": {
-                    "column-family": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
-                    "column": { "values": [ "*" ], "isExcludes": false, "isRecursive": false },
-                    "table": { "values": [ "vfb00_*vda0171*" ], "isExcludes": false, "isRecursive": false }
+                    "table":         { "values": [ "vfb00_*vda0171*" ] },
+                    "column-family": { "values": [ "*" ] },
+                    "column":        { "values": [ "*" ] }
                 },
-                "conditions": [],
                 "policyItems": [
                     {
-                        "accesses": [ { "type": "read", "isAllowed": true }, { "type": "write", "isAllowed": true },
-                            { "type": "create", "isAllowed": true }, { "type": "admin", "isAllowed": true }, { "type": "execute", "isAllowed": true }
-                        ],
-                        "users": [],
-                        "groups": [ "vfb00_vxda017", "xagcla" ],
-                        "roles": [],
-                        "conditions": [],
-                        "delegateAdmin": false
+                        "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+                        "groups":   [ "vfb00_vxda017", "xagcla" ]
                     }
-                ],
-                "denyPolicyItems": [], "allowExceptions": [], "denyExceptions": [], "dataMaskPolicyItems": [], "rowFilterPolicyItems": [],
-                "serviceType": "hbase", "options": {}, "validitySchedules": [], "policyLabels": [], "zoneName": "", "isDenyAllElse": false
+                ]
             }
         }
     ],
