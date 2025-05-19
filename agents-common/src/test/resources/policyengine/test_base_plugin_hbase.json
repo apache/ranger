@@ -91,7 +91,7 @@
         "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
         "accessType": "read", "user": "atlas", "userGroups": []
       },
-      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 43 }
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
     },
     {
       "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: atlas, access: write",
@@ -99,7 +99,7 @@
         "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
         "accessType": "write", "user": "atlas", "userGroups": []
       },
-      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 43 }
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
     },
     {
       "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: atlas, access: create",
@@ -107,7 +107,7 @@
         "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
         "accessType": "create", "user": "atlas", "userGroups": []
       },
-      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 43 }
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
     },
     {
       "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: atlas, access: admin",
@@ -115,7 +115,7 @@
         "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
         "accessType": "admin", "user": "atlas", "userGroups": []
       },
-      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 43 }
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
     },
     {
       "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: no-user, access: read",
