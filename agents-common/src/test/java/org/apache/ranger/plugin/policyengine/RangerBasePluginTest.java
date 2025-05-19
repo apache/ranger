@@ -67,14 +67,14 @@ public class RangerBasePluginTest {
     private static final String RANGER_DEFAULT_AUDIT_CONF          = "/target/test-classes/policyengine/ranger-trino-audit.xml";
     private static final String RANGER_DEFAULT_POLICY_MGR_SSL_CONF = "/target/test-classes/policyengine/ranger-policymgr-ssl.xml";
     private static final String MESSAGE                            = "The failed count being zero suggests one of two possibilities: " +
-            "1. The PolicyRefresher might not be starting correctly. 2. There might be a race condition in our code, preventing the policy engine modifications from being reflected in RangerBasePlugin.";
+            "1. The PolicyRefresher might not be starting correctly. " +
+            "2. There might be a race condition in our code, preventing the policy engine modifications from being reflected in RangerBasePlugin.";
 
     private static Gson             gsonBuilder;
     private static RangerBasePlugin rangerBasePlugin;
 
     @BeforeClass
-    public static void setUpBeforeClass()
-            throws Exception {
+    public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
                 .setPrettyPrinting()
                 .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
@@ -145,11 +145,11 @@ public class RangerBasePluginTest {
                 }
             }
 
-            Thread.sleep(20);
-
             if (failedCount >= 30) {
                 break;
             }
+
+            Thread.sleep(20);
         }
 
         if (failedCount == 0) {

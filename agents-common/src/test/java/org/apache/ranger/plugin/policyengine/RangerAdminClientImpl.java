@@ -23,14 +23,12 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 
-public class RangerAdminClientImpl
-        extends AbstractRangerAdminClient {
-    private static final String RANGER_TEST_BASEDIR     = "RANGER_TEST_BASEDIR";
-    private static final String RANGER_RESOURCE_BASE    = "RANGER_RESOURCE_BASE";
-    private static final String policiesFilepath        = "/src/test/resources/policyengine/hbase-test-policies.json";
-    private static final String updatedPoliciesFilepath = "/src/test/resources/policyengine/updated-hbase-test-policies.json";
-    private static final String serviceDefFilename      = "/src/test/resources/policyengine/ranger-servicedef-hbase.json";
-    private static final String tagServiceDefFilename   = "/src/test/resources/policyengine/ranger-servicedef-tag.json";
+public class RangerAdminClientImpl extends AbstractRangerAdminClient {
+    private static final String RANGER_TEST_BASEDIR       = "RANGER_TEST_BASEDIR";
+    private static final String POLICIES_FILEPATH         = "/src/test/resources/policyengine/hbase-test-policies.json";
+    private static final String UPDATED_POLICIES_FILEPATH = "/src/test/resources/policyengine/updated-hbase-test-policies.json";
+    private static final String SERVICE_DEF_FILENAME      = "/src/test/resources/policyengine/ranger-servicedef-hbase.json";
+    private static final String TAG_SERVICE_DEF_FILENAME  = "/src/test/resources/policyengine/ranger-servicedef-tag.json";
 
     @SuppressWarnings("unused")
     private String serviceName;
@@ -49,17 +47,16 @@ public class RangerAdminClientImpl
     }
 
     @Override
-    public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis)
-            throws Exception {
+    public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         String basedir = System.getProperty(RANGER_TEST_BASEDIR);
 
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
 
-        byte[]           policiesBytes      = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, isLoadPolicyDelta ? updatedPoliciesFilepath : policiesFilepath));
-        byte[]           serviceDefBytes    = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, serviceDefFilename));
-        byte[]           tagServiceDefBytes = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, tagServiceDefFilename));
+        byte[]           policiesBytes      = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, isLoadPolicyDelta ? UPDATED_POLICIES_FILEPATH : POLICIES_FILEPATH));
+        byte[]           serviceDefBytes    = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, SERVICE_DEF_FILENAME));
+        byte[]           tagServiceDefBytes = Files.readAllBytes(FileSystems.getDefault().getPath(basedir, TAG_SERVICE_DEF_FILENAME));
         ServicePolicies  ret                = gson.fromJson(new String(policiesBytes, Charset.defaultCharset()), ServicePolicies.class);
         RangerServiceDef serviceDef         = gson.fromJson(new String(serviceDefBytes, Charset.defaultCharset()), RangerServiceDef.class);
         RangerServiceDef tagServiceDef      = gson.fromJson(new String(tagServiceDefBytes, Charset.defaultCharset()), RangerServiceDef.class);
