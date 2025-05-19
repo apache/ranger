@@ -1,0 +1,1445 @@
+{
+  "policiesFilename":  "/plugin/hive_policies.json",
+  "tagsFilename":      "/plugin/hive_tags.json",
+  "rolesFilename":     "/plugin/hive_roles.json",
+  "userStoreFilename": "/plugin/hive_user_store.json",
+  "gdsInfoFilename":   "/policyengine/gds/gds_info_hive_access.json",
+  "tests": [
+    {
+      "name": "table: prospects, user: hbase, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "read", "user": "hbase", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 4 }
+    },
+    {
+      "name": "table: prospects, user: hbase, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "write", "user": "hbase", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 4 }
+    },
+    {
+      "name": "table: prospects, user: hbase, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "create", "user": "hbase", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 4 }
+    },
+    {
+      "name": "table: prospects, user: hbase, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "admin", "user": "hbase", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 4 }
+    },
+    {
+      "name": "table: prospects, user: hbase, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "execute", "user": "hbase", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 4 }
+    },
+    {
+      "name": "table: sales.prospects, user: proj-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "read", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: sales.prospects, user: no-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "write", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: sales.prospects, user: no-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "prospects" } },
+        "accessType": "create", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: invoices, user: no-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "invoices" } },
+        "accessType": "admin", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: invoices, user: no-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "invoices" } },
+        "accessType": "execute", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: atlas, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "read", "user": "atlas", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: atlas, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "write", "user": "atlas", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: atlas, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "create", "user": "atlas", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: atlas, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "admin", "user": "atlas", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 5 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: no-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "read", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: no-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "write", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: no-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "create", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: ATLAS_ENTITY_AUDIT_EVENTS, user: no-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "ATLAS_ENTITY_AUDIT_EVENTS" } },
+        "accessType": "admin", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: SYSTEM:invoices, user: proj1-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "SYSTEM:invoices" } },
+        "accessType": "read", "user": "proj1-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 782 }
+    },
+    {
+      "name": "table: SYSTEM:invoices, user: no-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "SYSTEM:invoices" } },
+        "accessType": "write", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 782 }
+    },
+
+    {
+      "name": "table: SYSTEM:invoices, user: res-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "SYSTEM:invoices" } },
+        "accessType": "create", "user": "res-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 782 }
+    },
+    {
+      "name": "table: SYSTEM:invoices, user: tag-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "SYSTEM:invoices" } },
+        "accessType": "execute", "user": "tag-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 782 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda017"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 821 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda017"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 821 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda017"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 821 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda017"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 821 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda017"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 821 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0171"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0171"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0171"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0171"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda017shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda017shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda0171"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda029"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 822 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda029"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 822 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda029"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 822 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda029"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 822 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda029"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 822 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0291"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0291"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0291"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0291"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda029shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda029shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda0171"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda034"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 823 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda034"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 823 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda034"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 823 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda034"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 823 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda034"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 823 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0341"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0341"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0341"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda034shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda034shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0341"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda035"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 824 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda035"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 824 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda035"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 824 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda035"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 824 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda035"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 824 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0351"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0351"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0351"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda035shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda035shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0351"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda041"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 825 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda041"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 825 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda041"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 825 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda041"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 825 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda041"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 825 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0411"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0411"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0411"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda041shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda041shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0411"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda043"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 826 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda043"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 826 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda043"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 826 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda043"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 826 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda043"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 826 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0431"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0431"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0431"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda043shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda043shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0431"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda052"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 827 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda052"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 827 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda052"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 827 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda052"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 827 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda052"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 827 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0521"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0521"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0521"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda052shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda052shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0521"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda060"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 828 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda060"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 828 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda060"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 828 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda060"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 828 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda060"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 828 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0601"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0601"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0601"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda060shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda060shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0601"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda066"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 829 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda066"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 829 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda066"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 829 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda066"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 829 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda066"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 829 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0661"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0661"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0661"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda066shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda066shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0661"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda085"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 830 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda085"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 830 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda085"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 830 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda085"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 830 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda085"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 830 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0851"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0851"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0851"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda085shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda085shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0851"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda092"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 831 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda092"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 831 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda092"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 831 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda092"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 831 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda092"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 831 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda0921"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda0921"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda0921"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda092shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda092shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda0921"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda126"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 832 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda126"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 832 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda126"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 832 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda126"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 832 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xda126"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 832 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xda1261"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xda1261"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xda1261"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda126shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qda126shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xda1261"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qda020shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xds020"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 833 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xds020"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 833 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xds020"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 833 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xds020"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 833 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xds020"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 833 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xds0201"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xds0201"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xds0201"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qds020shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qds020shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xds0201"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xoi022"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 834 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xoi022"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 834 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xoi022"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 834 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xoi022"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 834 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xoi022"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 834 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xoi0221"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xoi0221"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xoi0221"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi022shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi022shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["ffb00_xoi0221"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xoi025"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 835 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xoi025"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 835 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xoi025"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 835 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xoi025"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 835 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xoi025"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 835 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xoi0251"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xoi0251"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xoi0251"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi025shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi025shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["ffb00_xoi0251"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xoi033"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 836 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xoi033"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 836 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xoi033"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 836 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["fb00_xoi033"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 836 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: execute",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "execute", "user": "ds-user", "userGroups": ["fb00_xoi033"]
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 836 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: read",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "read", "user": "ds-user", "userGroups": ["fb00_xoi0331"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: write",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "write", "user": "ds-user", "userGroups": ["fb00_xoi0331"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: create",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "create", "user": "ds-user", "userGroups": ["fb00_xoi0331"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: fb00_qoi033shipments, user: ds-user, access: admin",
+      "request": {
+        "resource":   { "elements": { "table": "fb00_qoi033shipments" } },
+        "accessType": "admin", "user": "ds-user", "userGroups": ["ffb00_xoi0331"]
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+
+    {
+      "name": "ACLs: table: sales.prospects",
+      "request": {
+        "resource": { "elements": { "database": "sales", "table": "prospects" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "read": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
+          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } }
+        },
+        "datasets": [ "dataset-1" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: table: finance.invoices",
+      "request": {
+        "resource": { "elements": { "database": "finance", "table": "invoices" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
+          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
+          "ds2-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2002 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } }
+        },
+        "datasets": [ "dataset-1", "dataset-2" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: table: shipping.shipments",
+      "request": {
+        "resource": { "elements": { "database": "shipping", "table": "shipments" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
+          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2002 } } },
+          "ds2-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2002 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } }
+        },
+        "datasets": [ "dataset-2" ],
+        "projects": [ "project-1" ]
+      }
+    },
+    {
+      "name": "ACLs: table: customers.contact_info",
+      "request": {
+        "resource": { "elements": { "database": "customers", "table": "contact_info" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 131 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 203 } } },
+          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2003 } } },
+          "ds3-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2003 } } },
+          "ds6-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2006 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3002 } } },
+          "proj2-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3002 } } },
+          "proj4-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3004 } } }
+        },
+        "datasets": [ "dataset-3", "dataset-6" ],
+        "projects": [ "project-2", "project-4" ]
+      }
+    },
+    {
+      "name": "ACLs: table: operations.facilities",
+      "request": {
+        "resource": { "elements": { "database": "operations", "table": "facilities" } }
+      },
+      "acls": {
+        "userACLs": {
+          "res-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 141 } } },
+          "tag-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 204 } } },
+          "ds-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2004 } } },
+          "ds4-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 2004 } } }
+        },
+        "datasets": [ "dataset-4" ]
+      }
+    }
+  ]
+}

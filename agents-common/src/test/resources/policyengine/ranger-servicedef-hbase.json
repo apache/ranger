@@ -1,0 +1,83 @@
+{
+  "id":        2,
+  "name":      "hbase",
+  "implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
+  "options":   { "enableDenyAndExceptionsInPolicies": "true" },
+  "configs": [
+    { "itemId": 1, "name": "username",                            "type": "string",   "mandatory": true, "label": "Username" },
+    { "itemId": 2, "name": "password",                            "type": "password", "mandatory": true, "label": "Password" },
+    { "itemId": 3, "name": "hadoop.security.authentication",      "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+    { "itemId": 4, "name": "hbase.master.kerberos.principal",     "type": "string",   "mandatory": false, "defaultValue": "" },
+    { "itemId": 5, "name": "hbase.security.authentication",       "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+    { "itemId": 6, "name": "hbase.zookeeper.property.clientPort", "type": "int",      "mandatory": true, "defaultValue": "2181" },
+    { "itemId": 7, "name": "hbase.zookeeper.quorum",              "type": "string",   "mandatory": true, "defaultValue": "" },
+    { "itemId": 8, "name": "zookeeper.znode.parent",              "type": "string",   "mandatory": true, "defaultValue": "/hbase" },
+    { "itemId": 9, "name": "commonNameForCertificate",            "type": "string",   "mandatory": false, "label": "Common Name for Certificate" },
+    { "itemId": 10, "name": "ranger.plugin.audit.filters",        "type": "string",   "mandatory": false, "defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*', '*_acl_*', 'hbase:meta', 'hbase:acl', 'default', 'hbase']}}, 'users':['hbase'], 'isAudited': false }, {'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS']},'column-family':{'values':['*']},'column':{'values':['*']}},'users':['atlas', 'hbase'],'isAudited':false},{'users':['hbase'], 'actions':['balance'],'isAudited':false}]", "label": "Ranger Default Audit Filters" }
+  ],
+  "resources": [
+    {
+      "itemId":             1,
+      "name":               "table",
+      "type":               "string",
+      "level":              10,
+      "mandatory":          true,
+      "lookupSupported":    true,
+      "recursiveSupported": false,
+      "excludesSupported":  true,
+      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":     { "wildCard": "true",  "ignoreCase": "false" },
+      "label":              "HBase Table",
+      "description":        "HBase Table",
+      "isValidLeaf":        false
+    },
+    {
+      "itemId":             2,
+      "name":               "column-family",
+      "type":               "string",
+      "level":              20,
+      "parent":             "table",
+      "mandatory":          true,
+      "lookupSupported":    true,
+      "recursiveSupported": false,
+      "excludesSupported":  true,
+      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":     { "wildCard": "true",  "ignoreCase": "false" },
+      "label":              "HBase Column-family",
+      "description":        "HBase Column-family",
+      "isValidLeaf":        false
+    },
+    {
+      "itemId":              3,
+      "name":               "column",
+      "type":               "string",
+      "level":              30,
+      "parent":             "column-family",
+      "mandatory":          true,
+      "lookupSupported":    false,
+      "recursiveSupported": false,
+      "excludesSupported":  true,
+      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":     { "wildCard": "true",  "ignoreCase": "false" },
+      "label":              "HBase Column",
+      "description":        "HBase Column",
+      "isValidLeaf":        true
+    }
+  ],
+  "accessTypes": [
+    { "itemId": 1, "name": "read",     "label": "Read" },
+    { "itemId": 2, "name": "write",    "label": "Write" },
+    { "itemId": 3, "name": "create",   "label": "Create" },
+    { "itemId": 4, "name": "admin",    "label": "Admin", "impliedGrants": [ "read", "write", "create" ] },
+    { "itemId": 5, "name": "execute",  "label": "Execute" }
+  ],
+  "enums": [
+    {
+      "itemId": 1, "name": "authnType", "defaultIndex": 0,
+      "elements": [
+        { "itemId": 1, "name": "simple",   "label": "Simple" },
+        { "itemId": 2, "name": "kerberos", "label": "Kerberos" }
+      ]
+    }
+  ]
+}

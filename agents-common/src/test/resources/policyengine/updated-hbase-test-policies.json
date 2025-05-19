@@ -1,0 +1,193 @@
+{
+    "serviceName":   "cm_hbase",
+    "serviceId":     3,
+    "policyVersion": 7141,
+    "auditMode":    "audit-default",
+    "serviceDef": {
+        "id":        2,
+        "name":      "hbase",
+        "implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
+        "options":   { "enableDenyAndExceptionsInPolicies": "true" },
+        "configs": [
+            { "itemId": 1, "name": "username",                            "type": "string",   "mandatory": true, "label": "Username" },
+            { "itemId": 2, "name": "password",                            "type": "password", "mandatory": true, "label": "Password" },
+            { "itemId": 3, "name": "hadoop.security.authentication",      "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+            { "itemId": 4, "name": "hbase.master.kerberos.principal",     "type": "string",   "mandatory": false, "defaultValue": "" },
+            { "itemId": 5, "name": "hbase.security.authentication",       "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+            { "itemId": 6, "name": "hbase.zookeeper.property.clientPort", "type": "int",      "mandatory": true, "defaultValue": "2181" },
+            { "itemId": 7, "name": "hbase.zookeeper.quorum",              "type": "string",   "mandatory": true },
+            { "itemId": 8, "name": "zookeeper.znode.parent",              "type": "string",   "mandatory": true, "defaultValue": "/hbase" },
+            { "itemId": 9, "name": "commonNameForCertificate",            "type": "string",   "mandatory": false, "label": "Common Name for Certificate" },
+            { "itemId": 10, "name": "ranger.plugin.audit.filters",        "type": "string",   "mandatory": false, "defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*', '*_acl_*', 'hbase:meta', 'hbase:acl', 'default', 'hbase']}}, 'users':['hbase'], 'isAudited': false }, {'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS']},'column-family':{'values':['*']},'column':{'values':['*']}},'users':['atlas', 'hbase'],'isAudited':false},{'users':['hbase'], 'actions':['balance'],'isAudited':false}]", "label": "Ranger Default Audit Filters"
+            }
+        ],
+        "resources": [
+            {
+                "itemId":             1,
+                "name":               "table",
+                "type":               "string",
+                "level":              10,
+                "mandatory":          true,
+                "lookupSupported":    true,
+                "recursiveSupported": false,
+                "excludesSupported":  true,
+                "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+                "label":              "HBase Table",
+                "description":        "HBase Table",
+                "isValidLeaf":        false
+            },
+            {
+                "itemId":             2,
+                "name":               "column-family",
+                "type":               "string",
+                "level":              20,
+                "parent":             "table",
+                "mandatory":          true,
+                "lookupSupported":    true,
+                "recursiveSupported": false,
+                "excludesSupported":  true,
+                "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+                "label":              "HBase Column-family",
+                "description":        "HBase Column-family",
+                "isValidLeaf":        false
+            },
+            {
+                "itemId":             3,
+                "name":               "column",
+                "type":               "string",
+                "level":              30,
+                "parent":             "column-family",
+                "mandatory":          true,
+                "lookupSupported":    false,
+                "recursiveSupported": false,
+                "excludesSupported":  true,
+                "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+                "label":              "HBase Column",
+                "description":        "HBase Column",
+                "isValidLeaf":        true
+            }
+        ],
+        "accessTypes": [
+            { "itemId": 1, "name": "read",    "label": "Read" },
+            { "itemId": 2, "name": "write",   "label": "Write" },
+            { "itemId": 3, "name": "create",  "label": "Create" },
+            { "itemId": 4, "name": "admin",   "label": "Admin", "impliedGrants": [ "read", "write", "create" ] },
+            { "itemId": 5, "name": "execute", "label": "Execute" }
+        ],
+        "enums": [
+            {
+                "itemId":       1,
+                "name":         "authnType",
+                "defaultIndex": 0,
+                "elements": [
+                    { "itemId": 1, "name": "simple",   "label": "Simple" },
+                    { "itemId": 2, "name": "kerberos", "label": "Kerberos" }
+                ]
+            }
+        ]
+    },
+    "tagPolicies": {
+        "serviceName": "cm_tag",
+        "serviceId":   2,
+        "serviceDef": {
+            "id":        100,
+            "name":      "tag",
+            "implClass": "org.apache.ranger.services.tag.RangerServiceTag",
+            "options":   { "enableDenyAndExceptionsInPolicies": "true", "ui.pages": "tag-based-policies" },
+            "configs": [
+                {
+                    "itemId":       1,
+                    "name":         "ranger.plugin.audit.filters",
+                    "type":         "string",
+                    "mandatory":    false,
+                    "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]",
+                    "label":        "Ranger Default Audit Filters"
+                }
+            ],
+            "resources": [
+                {
+                    "itemId":             1,
+                    "name":               "tag",
+                    "type":               "string",
+                    "level":              1,
+                    "mandatory":          true,
+                    "lookupSupported":    true,
+                    "recursiveSupported": false,
+                    "excludesSupported":  false,
+                    "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+                    "matcherOptions":     { "wildCard": "false", "ignoreCase": "false" },
+                    "uiHint":             "{ \"singleValue\":true }",
+                    "label":              "TAG",
+                    "description":        "TAG",
+                    "isValidLeaf":        true
+                }
+            ],
+            "accessTypes": [
+	        { "itemId": 104105, "name": "hbase:read",    "label": "Read" },
+                { "itemId": 104106, "name": "hbase:write",   "label": "Write" },
+                { "itemId": 104107, "name": "hbase:execute", "label": "Execute" },
+                { "itemId": 104108, "name": "hbase:create",  "label": "Create" },
+                { "itemId": 104109, "name": "hbase:admin",   "label": "Admin" }
+            ],
+            "policyConditions": [
+                {
+                    "itemId":           1,
+                    "name":             "accessed-after-expiry",
+                    "evaluator":        "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
+                    "evaluatorOptions": { "scriptTemplate": "ctx.isAccessedAfter('expiry_date');" },
+                    "uiHint":           "{ \"singleValue\":true }",
+                    "label":            "Accessed after expiry_date (yes/no)?",
+                    "description":      "Accessed after expiry_date? (yes/no)"
+                },
+                {
+                    "itemId":           2,
+                    "name":             "expression",
+                    "evaluator":        "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+                    "evaluatorOptions": { "engineName": "JavaScript", "ui.isMultiline": "true" },
+                    "uiHint":           "{ \"isMultiline\":true }",
+                    "label":            "Enter boolean expression",
+                    "description":      "Boolean expression"
+                }
+            ],
+            "contextEnrichers": [
+                {
+                    "itemId":          1,
+                    "name":            "TagEnricher",
+                    "enricher":        "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
+                    "enricherOptions": { "tagRetrieverClassName": "org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever", "tagRefresherPollingInterval": "60000" }
+                }
+            ]
+        },
+        "auditMode": "audit-default",
+        "serviceConfig": {
+            "ranger.plugin.audit.filters": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
+        }
+    },
+    "policyDeltas": [
+        {
+            "id":              80343,
+            "changeType":      1,
+            "policiesVersion": 7141,
+            "policy": {
+                "id": 821, "name": "fb00_xda017", "serviceType": "hbase", "isEnabled": true, "isAuditEnabled": true,
+                "resources": {
+                    "table":         { "values": [ "vfb00_*vda0171*" ] },
+                    "column-family": { "values": [ "*" ] },
+                    "column":        { "values": [ "*" ] }
+                },
+                "policyItems": [
+                    {
+                        "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+                        "groups":   [ "vfb00_vxda017", "xagcla" ]
+                    }
+                ]
+            }
+        }
+    ],
+    "serviceConfig": {
+        "ranger.plugin.audit.filters": "[{'accessResult':'DENIED','isAudited':true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*','*_acl_*','hbase:meta','hbase:acl','default','hbase'],'isExcludes':true}},'users':['hbase'],'isAudited':false},{'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS'],'isExcludes':true},'column-family':{'values':['*'],'isExcludes':true},'column':{'values':['*'],'isExcludes':true}},'users':['atlas','hbase'],'isAudited':false},{'users':['hbase'],'actions':['balance'],'isAudited':false}]"
+    }
+}
