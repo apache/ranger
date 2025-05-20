@@ -40,7 +40,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Scope("singleton")
@@ -71,6 +76,7 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         searchFields.add(new SearchField(SearchFilter.CREATED_BY, "obj.addedByUserId", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.DATASET_LABEL, "obj.labels", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField(SearchFilter.DATASET_KEYWORD, "obj.keywords", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", SearchField.DATA_TYPE.BOOLEAN, SearchField.SEARCH_TYPE.FULL));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
@@ -214,13 +220,45 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         List<XXGdsDataset> datasets = super.searchResources(filter, searchFields, sortFields, ret);
 
         if (datasets != null) {
+            Set<String> searchLabels     = extractFilterValues(SearchFilter.DATASET_LABEL, filter);
+            Set<String> searchKeywords   = extractFilterValues(SearchFilter.DATASET_KEYWORD, filter);
+            String      labelMatchType   = filter.getParam(SearchFilter.DATASET_LABEL_MATCH_TYPE);
+            String      keywordMatchType = filter.getParam(SearchFilter.DATASET_KEYWORD_MATCH_TYPE);
             for (XXGdsDataset dataset : datasets) {
-                ret.getList().add(getPopulatedViewObject(dataset));
+                boolean isLabelOrKeywordMatch = CollectionUtils.isEmpty(searchLabels) && CollectionUtils.isEmpty(searchKeywords);
+                if (!isLabelOrKeywordMatch) {
+                    isLabelOrKeywordMatch = isAnyMatch(labelMatchType, JsonUtils.jsonToSetString(dataset.getLabels()), searchLabels);
+                }
+
+                if (!isLabelOrKeywordMatch) {
+                    isLabelOrKeywordMatch = isAnyMatch(keywordMatchType, JsonUtils.jsonToSetString(dataset.getKeywords()), searchKeywords);
+                }
+
+                if (isLabelOrKeywordMatch) {
+                    ret.getList().add(getPopulatedViewObject(dataset));
+                }
             }
         }
 
         LOG.debug("<== searchDatasets({}): ret={}", filter, ret);
 
         return ret;
+    }
+
+    private Set<String> extractFilterValues(String key, SearchFilter filter) {
+        Object[] multiVal = filter.getMultiValueParam(key);
+
+        return multiVal != null ? Arrays.stream(multiVal).filter(Objects::nonNull).map(Object::toString).collect(Collectors.toSet()) : Collections.emptySet();
+    }
+
+    private boolean isAnyMatch(String matchType, Set<String> values, Set<String> searchValues) {
+        if (CollectionUtils.isNotEmpty(searchValues) && CollectionUtils.isNotEmpty(values)) {
+            if (SearchField.SEARCH_TYPE.FULL.name().equalsIgnoreCase(matchType)) {
+                return searchValues.stream().anyMatch(searchValue -> values.stream().anyMatch(value -> value.equalsIgnoreCase(searchValue)));
+            } else {
+                return searchValues.stream().anyMatch(searchValue -> values.stream().anyMatch(value -> StringUtils.containsIgnoreCase(value, searchValue)));
+            }
+        }
+        return false;
     }
 }

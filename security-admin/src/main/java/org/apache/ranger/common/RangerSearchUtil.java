@@ -154,6 +154,8 @@ public class RangerSearchUtil extends SearchUtil {
         ret.setParam(SearchFilter.VALIDITY_EXPIRY_START, request.getParameter(SearchFilter.VALIDITY_EXPIRY_START));
         ret.setParam(SearchFilter.VALIDITY_EXPIRY_END, request.getParameter(SearchFilter.VALIDITY_EXPIRY_END));
         ret.setParam(SearchFilter.VALIDITY_TIME_ZONE, request.getParameter(SearchFilter.VALIDITY_TIME_ZONE));
+        ret.setParam(SearchFilter.DATASET_LABEL_MATCH_TYPE, request.getParameter(SearchFilter.DATASET_LABEL_MATCH_TYPE));
+        ret.setParam(SearchFilter.DATASET_KEYWORD_MATCH_TYPE, request.getParameter(SearchFilter.DATASET_KEYWORD_MATCH_TYPE));
 
         extractCommonCriteriasForFilter(request, ret, sortFields);
 

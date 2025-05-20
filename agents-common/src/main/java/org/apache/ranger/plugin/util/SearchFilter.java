@@ -145,6 +145,8 @@ public class SearchFilter {
     public static final String VALIDITY_EXPIRY_END          = "validityExpiryEnd";    // search
     public static final String VALIDITY_TIME_ZONE           = "timeZone";
     public static final String DEFAULT_TIME_ZONE            = "GMT";
+    public static final String DATASET_LABEL_MATCH_TYPE     = "datasetLabelMatchType";
+    public static final String DATASET_KEYWORD_MATCH_TYPE   = "datasetKeywordMatchType";
 
     private Map<String, String>   params;
     private Map<String, Object[]> multiValueParams;
