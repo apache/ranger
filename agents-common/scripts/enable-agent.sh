@@ -231,6 +231,8 @@ elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
         echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
         mkdir -p ${HCOMPONENT_LIB_DIR}
     fi
+elif [ "${HCOMPONENT_NAME}" = "seatunnel" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/lib
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -266,6 +268,8 @@ elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     if [ "${INSTALL_ENV}" = "docker" ];then
         HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}
     fi
+elif [ "${HCOMPONENT_NAME}" = "seatunnel" ]; then
+    HCOMPONENT_CONF_DIR="/etc/seatunnel-web/conf"
 fi
 
 HCOMPONENT_ARCHIVE_CONF_DIR=${HCOMPONENT_CONF_DIR}/.archive
@@ -859,6 +863,28 @@ then
 	echo "Linking config files"
 	cd ${HCOMPONENT_LIB_DIR}/ranger-trino-plugin-impl/
 	ln -sf ${HCOMPONENT_CONF_DIR} conf
+fi
+if [ "${HCOMPONENT_NAME}" = "seatunnel" ]
+then
+	if [ "${action}" = "enable" ]
+	then
+		authName="org.apache.ranger.authorization.seatunnel.authorizer.RangerSeatunnelAuthorizer"
+	else
+		authName="org.apache.seatunnel.app.permission.SeatunnelAccessControllerDefaultImpl"
+	fi
+
+	dt=`date '+%Y%m%d%H%M%S'`
+	fn=`ls ${HCOMPONENT_CONF_DIR}/application.yml 2> /dev/null`
+    if [ -f "${fn}" ]
+    then
+        dn=`dirname ${fn}`
+        bn=`basename ${fn}`
+        bf=${dn}/.${bn}.${dt}
+        echo "backup of ${fn} to ${bf} ..."
+        cp ${fn} ${bf}
+        echo "Updating properties file: [${fn}] ... "
+        sed -i "s|access-controller-class: .*|access-controller-class: $authName|g" "${fn}"
+    fi
 fi
 
 #
