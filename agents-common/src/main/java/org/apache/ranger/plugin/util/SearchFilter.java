@@ -74,6 +74,8 @@ public class SearchFilter {
     public static final String ZONE_NAME_PREFIX         = "zoneNamePrefix";       // search
     public static final String POLICY_NAME_PREFIX       = "policyNamePrefix";
 
+    public static final String ASSOCIATED_ROLE_NAME_PARTIAL = "associatedRoleNamePartial";   // search
+
     public static final String TAG_DEF_ID                = "tagDefId";            // search
     public static final String TAG_DEF_GUID              = "tagDefGuid";          // search
     public static final String TAG_NAMES                 = "tagNames";            // search

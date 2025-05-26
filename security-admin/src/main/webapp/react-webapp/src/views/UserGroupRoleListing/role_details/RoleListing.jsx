@@ -326,6 +326,12 @@ function Roles() {
       label: "User Name",
       urlLabel: "userName",
       type: "text"
+    },
+    {
+      category: "associatedRoleNamePartial",
+      label: "Associated Role Name",
+      urlLabel: "associatedRoleName",
+      type: "text"
     }
   ];
 
