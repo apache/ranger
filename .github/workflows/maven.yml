@@ -139,6 +139,7 @@ jobs:
           -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
+          -f docker-compose.ranger-impala.yml \
           -f docker-compose.ranger-ozone.yml build
 
       - name: Bring up containers
@@ -156,12 +157,13 @@ jobs:
           -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
+          -f docker-compose.ranger-impala.yml \
           -f docker-compose.ranger-ozone.yml up -d
 
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode impalad impala-statestored impala-catalogd);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
@@ -179,3 +181,8 @@ jobs:
               docker stop $(docker ps -q) && docker rm $(docker ps -aq);
               exit 1;
           fi
+          
+      - name: Check impalad logs - testing # to be removed
+        run: |
+          sleep 60
+          docker logs impalad
