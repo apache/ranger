@@ -1,0 +1,181 @@
+{
+  "serviceName": "dev_atlas", "serviceId": 8, "policyVersion": 19,
+  "policies": [
+    {
+      "id": 1, "name": "Default: all type-category, type",
+      "resources": {
+        "type-category": { "values":  [ "*" ] },
+        "type":          { "values":  [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "type-read" }],
+          "groups": [ "public" ]
+        },
+        {
+          "accesses":  [ { "type": "type-create" }, { "type": "type-update" }, { "type":  "type-delete"} ],
+          "groups": [ "admins" ]
+        }
+      ]
+    },
+    {
+      "id": 2, "name": "Default: all entity-type, entity-classification, entity",
+      "resources": {
+        "entity-type":           { "values": [ "*" ] },
+        "entity-classification": { "values": [ "*" ] },
+        "entity":                { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "entity-read" } ],
+          "groups": [ "stewards" ]
+        },
+        {
+          "accesses":  [ { "type": "entity-read" }, { "type": "entity-create" }, { "type": "entity-update" }, { "type": "entity-delete"} ],
+          "groups": [ "admins" ]
+        }
+      ]
+    },
+    {
+      "id": 3, "name": "Default: all entity-type, entity-classification, entity, classification",
+      "resources": {
+        "entity-type":           { "values": [ "*" ] },
+        "entity-classification": { "values": [ "*" ] },
+        "entity":                { "values": [ "*" ] },
+        "classification":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "entity-add-classification" }, { "type": "entity-update-classification" }, { "type": "entity-remove-classification"} ],
+          "groups": [ "stewards" ]
+        }
+      ]
+    },
+    {
+      "id": 4, "name": "Default: all entity-type, entity-classification, entity, label",
+      "resources": {
+        "entity-type":           { "values": [ "*" ] },
+        "entity-classification": { "values": [ "*" ] },
+        "entity":                { "values": [ "*" ] },
+        "entity-label":          { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "entity-add-label" }, { "type": "entity-update-label" }, { "type": "entity-remove-label"} ],
+          "groups": [ "stewards" ]
+        }
+      ]
+    },
+    {
+      "id": 5, "name": "Default: all entity-type, entity-classification, entity, business-metadata",
+      "resources": {
+        "entity-type":              { "values": [ "*" ] },
+        "entity-classification":    { "values": [ "*" ] },
+        "entity":                   { "values": [ "*" ] },
+        "entity-business-metadata": { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "entity-update-business-metadata" } ],
+          "groups": [ "stewards" ]
+        }
+      ]
+    },
+    {
+      "id": 6, "name": "Default: all relationship-type, end-one-entity-type, end-one-entity-classification, end-one-entity, end-two-entity-type, end-two-entity-classification, end-two-entity",
+      "resources": {
+        "relationship-type":             { "values": [ "*" ] },
+        "end-one-entity-type":           { "values": [ "*" ] },
+        "end-one-entity-classification": { "values": [ "*" ] },
+        "end-one-entity":                { "values": [ "*" ] },
+        "end-two-entity-type":           { "values": [ "*" ] },
+        "end-two-entity-classification": { "values": [ "*" ] },
+        "end-two-entity":                { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "add-relationship" }, { "type": "update-relationship" }, { "type": "remove-relationship" } ],
+          "groups": [ "stewards" ]
+        }
+      ]
+    },
+    {
+      "id": 7, "name": "Default: all atlas-service",
+      "resources": {
+        "atlas-service": { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "admin-import" }, { "type": "admin-export" }, { "type": "admin-purge" }, { "type": "admin-audits" } ],
+          "groups": [ "admins" ]
+        }
+      ]
+    },
+    {
+      "id": 8, "name": "Entities having FINANCE classification", "isDenyAllElse": true,
+      "resources": {
+        "entity-type":           { "values": [ "*" ] },
+        "entity-classification": { "values": [ "FINANCE" ] },
+        "entity":                { "values": [ "*" ] },
+        "classification":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses":  [ { "type": "entity-add-classification" }, { "type": "entity-update-classification" }, { "type": "entity-remove-classification"} ],
+          "groups": [ "finance-stewards" ]
+        }
+      ]
+    }
+  ],
+  "serviceDef": {
+    "id": 3, "name": "atlas", "implClass": "org.apache.ranger.services.atlas.RangerServiceAtlas",
+    "resources": [
+      { "itemId": 1,  "name": "type-category",                 "level": 10 },
+      { "itemId": 2,  "name": "type",                          "level": 20, "parent": "type-category",         "accessTypeRestrictions": [ "type-read", "type-create", "type-update", "type-delete" ] },
+      { "itemId": 3,  "name": "entity-type",                   "level": 10 },
+      { "itemId": 4,  "name": "entity-classification",         "level": 20, "parent": "entity-type" },
+      { "itemId": 5,  "name": "entity",                        "level": 30, "parent": "entity-classification", "accessTypeRestrictions": [ "entity-read", "entity-create", "entity-update", "entity-delete" ] },
+      { "itemId": 6,  "name": "entity-label",                  "level": 40, "parent": "entity",                "accessTypeRestrictions": [ "entity-add-label", "entity-remove-label" ] },
+      { "itemId": 7,  "name": "entity-business-metadata",      "level": 40, "parent": "entity",                "accessTypeRestrictions": [ "entity-update-business-metadata" ] },
+      { "itemId": 8,  "name": "classification",                "level": 20, "parent": "entity",                "accessTypeRestrictions": [ "entity-add-classification", "entity-update-classification", "entity-remove-classification" ] },
+      { "itemId": 9,  "name": "atlas-service",                 "level": 10,                                    "accessTypeRestrictions": [ "admin-import", "admin-export", "admin-purge", "admin-audits" ] },
+      { "itemId": 10, "name": "relationship-type",             "level": 10 },
+      { "itemId": 11, "name": "end-one-entity-type",           "level": 20, "parent": "relationship-type" },
+      { "itemId": 12, "name": "end-one-entity-classification", "level": 30, "parent": "end-one-entity-type" },
+      { "itemId": 13, "name": "end-one-entity",                "level": 40, "parent": "end-one-entity-classification", "accessTypeRestrictions": [ "add-relationship", "update-relationship", "remove-relationship" ] },
+      { "itemId": 14, "name": "end-two-entity-type",           "level": 50, "parent": "end-one-entity" },
+      { "itemId": 15, "name": "end-two-entity-classification", "level": 60, "parent": "end-two-entity-type" },
+      { "itemId": 16, "name": "end-two-entity",                "level": 70, "parent": "end-two-entity-classification", "accessTypeRestrictions": [ "add-relationship", "update-relationship", "remove-relationship" ] }
+    ],
+    "accessTypes": [
+      { "itemId": 1,  "name": "type-read",                       "category": "READ",   "label": "Read Type" },
+      { "itemId": 2,  "name": "type-create",                     "category": "MANAGE", "label": "Create Type" },
+      { "itemId": 3,  "name": "type-update",                     "category": "MANAGE", "label": "Update Type" },
+      { "itemId": 4,  "name": "type-delete",                     "category": "MANAGE", "label": "Delete Type" },
+      { "itemId": 5,  "name": "entity-read",                     "category": "READ",   "label": "Read Entity" },
+      { "itemId": 6,  "name": "entity-create",                   "category": "CREATE", "label": "Create Entity" },
+      { "itemId": 7,  "name": "entity-update",                   "category": "UPDATE", "label": "Update Entity" },
+      { "itemId": 8,  "name": "entity-delete",                   "category": "DELETE", "label": "Delete Entity" },
+      { "itemId": 9,  "name": "entity-add-classification",       "category": "UPDATE", "label": "Add Classification" },
+      { "itemId": 10, "name": "entity-update-classification",    "category": "UPDATE", "label": "Update Classification" },
+      { "itemId": 11, "name": "entity-remove-classification",    "category": "UPDATE", "label": "Remove Classification" },
+      { "itemId": 12, "name": "entity-add-label",                "category": "UPDATE", "label": "Add Label" },
+      { "itemId": 13, "name": "entity-remove-label",             "category": "UPDATE", "label": "Remove Label" },
+      { "itemId": 14, "name": "entity-update-business-metadata", "category": "UPDATE", "label": "Update Business Metadata" },
+      { "itemId": 15, "name": "add-relationship",                "category": "UPDATE", "label": "Add Relationship" },
+      { "itemId": 16, "name": "update-relationship",             "category": "UPDATE", "label": "Update Relationship" },
+      { "itemId": 17, "name": "remove-relationship",             "category": "UPDATE", "label": "Remove Relationship" },
+      { "itemId": 18, "name": "admin-export",                    "category": "MANAGE", "label": "Export" },
+      { "itemId": 19, "name": "admin-import",                    "category": "MANAGE", "label": "Import" },
+      { "itemId": 20, "name": "admin-purge",                     "category": "MANAGE", "label": "Purge" },
+      { "itemId": 21, "name": "admin-audits",                    "category": "MANAGE", "label": "Admin Audits" }
+    ],
+    "configs": [
+      { "itemId": 1, "name": "username",                    "type": "string",   "mandatory": true },
+      { "itemId": 2, "name": "password",                    "type": "password", "mandatory": true },
+      { "itemId": 3, "name": "atlas.rest.address",          "type": "string",   "mandatory": true, "defaultValue": "http://localhost:21000" },
+      { "itemId": 4, "name": "commonNameForCertificate",    "type": "string",   "mandatory": false },
+      { "itemId": 5, "name": "ranger.plugin.audit.filters", "type": "string",   "mandatory": false }
+    ]
+  }
+}

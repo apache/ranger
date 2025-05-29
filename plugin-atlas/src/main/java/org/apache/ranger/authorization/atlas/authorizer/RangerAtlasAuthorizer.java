@@ -21,7 +21,6 @@ package org.apache.ranger.authorization.atlas.authorizer;
 
 
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
-import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
 import org.apache.atlas.authorize.AtlasRelationshipAccessRequest;
@@ -101,7 +100,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }
 
     @Override
-    public boolean isAccessAllowed(AtlasAdminAccessRequest request) throws AtlasAuthorizationException {
+    public boolean isAccessAllowed(AtlasAdminAccessRequest request) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> isAccessAllowed(" + request + ")");
         }
@@ -138,7 +137,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }
 
     @Override
-    public boolean isAccessAllowed(AtlasEntityAccessRequest request) throws AtlasAuthorizationException {
+    public boolean isAccessAllowed(AtlasEntityAccessRequest request) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> isAccessAllowed(" + request + ")");
         }
@@ -170,7 +169,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }
 
     @Override
-    public boolean isAccessAllowed(AtlasTypeAccessRequest request) throws AtlasAuthorizationException {
+    public boolean isAccessAllowed(AtlasTypeAccessRequest request) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> isAccessAllowed(" + request + ")");
         }
@@ -220,7 +219,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
 
 
-    public boolean isAccessAllowed(AtlasRelationshipAccessRequest request) throws AtlasAuthorizationException {
+    public boolean isAccessAllowed(AtlasRelationshipAccessRequest request) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> isAccessAllowed(" + request + ")");
         }
@@ -293,7 +292,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
 
     @Override
-    public void scrubSearchResults(AtlasSearchResultScrubRequest request) throws AtlasAuthorizationException {
+    public void scrubSearchResults(AtlasSearchResultScrubRequest request) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> scrubSearchResults(" + request + ")");
         }
@@ -336,7 +335,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }
 
     @Override
-    public void filterTypesDef(AtlasTypesDefFilterRequest request) throws AtlasAuthorizationException {
+    public void filterTypesDef(AtlasTypesDefFilterRequest request) {
 
         AtlasTypesDef typesDef = request.getTypesDef();
 
@@ -349,7 +348,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
     }
 
-    private void filterTypes(AtlasAccessRequest request, List<? extends AtlasBaseTypeDef> typeDefs)throws AtlasAuthorizationException {
+    private void filterTypes(AtlasAccessRequest request, List<? extends AtlasBaseTypeDef> typeDefs) {
         if (typeDefs != null) {
             for (ListIterator<? extends AtlasBaseTypeDef> iter = typeDefs.listIterator(); iter.hasNext();) {
                 AtlasBaseTypeDef       typeDef     = iter.next();
@@ -373,7 +372,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         return plugin != null ? plugin.getServiceDef() : null;
     }
 
-    private boolean isAccessAllowed(AtlasEntityAccessRequest request, RangerAtlasAuditHandler auditHandler) throws AtlasAuthorizationException {
+    private boolean isAccessAllowed(AtlasEntityAccessRequest request, RangerAtlasAuditHandler auditHandler) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> isAccessAllowed(" + request + ")");
         }
@@ -470,7 +469,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         return ret;
     }
 
-    private void checkAccessAndScrub(AtlasEntityHeader entity, AtlasSearchResultScrubRequest request) throws AtlasAuthorizationException {
+    private void checkAccessAndScrub(AtlasEntityHeader entity, AtlasSearchResultScrubRequest request) {
         if (entity != null && request != null) {
             final AtlasEntityAccessRequest entityAccessRequest = new AtlasEntityAccessRequest(request.getTypeRegistry(), AtlasPrivilege.ENTITY_READ, entity, request.getUser(), request.getUserGroups());
 
