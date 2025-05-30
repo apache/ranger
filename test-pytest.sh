@@ -44,7 +44,7 @@ docker system prune --all --force --volumes
 
 #path setup
 RANGER_DOCKER_PATH="dev-support/ranger-docker"
-TESTS_PATH="$HOME/Desktop/PyTest-KMS-HDFS"
+TESTS_PATH="../../PyTest-KMS-HDFS"
 cd "$RANGER_DOCKER_PATH"|| exit 1
 
 # Download archives
@@ -106,9 +106,10 @@ if [[ $flag == true ]]; then
   echo "🚀 All required containers are up. Running test cases..."
   cd "$TESTS_PATH" || exit 1         # Switch to the tests directory
 
-  python -m venv myenv  # Create a new environment
-  source myenv/bin/activate  # Activate it
-  pip install -r requirements.txt  # Install dependencies
+  python3 -m venv myenv || { echo "Failed to create venv"; exit 1; }         # Create a new environment
+  source myenv/bin/activate || { echo "Failed to activate venv"; exit 1; }   # Activate it
+  pip install --upgrade pip
+  pip install -r requirements.txt || { echo "❌ Failed to install requirements"; exit 1; }  # Install dependencies
 
   pytest -vs test_kms/ --html=report_kms.html  # Runs all tests in the tests directory
   pytest -vs test_hdfs/ --html=report_hdfs.html
