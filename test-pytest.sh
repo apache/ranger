@@ -44,7 +44,7 @@ docker system prune --all --force --volumes
 
 #path setup
 RANGER_DOCKER_PATH="dev-support/ranger-docker"
-TESTS_PATH="$HOME/Desktop/PyTest-KMS-EP"
+TESTS_PATH="$HOME/Desktop/PyTest-KMS-HDFS"
 cd "$RANGER_DOCKER_PATH"|| exit 1
 
 # Download archives
