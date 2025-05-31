@@ -467,8 +467,8 @@ public class RangerRESTClient {
 			LOG.error("SSL algorithm is not available in the environment", e);
 			throw new IllegalStateException("SSL algorithm is not available in the environment: " + e.getMessage(), e);
 		} catch (KeyManagementException e) {
-			LOG.error("Unable to initials the SSLContext", e);
-			throw new IllegalStateException("Unable to initials the SSLContex: " + e.getMessage(), e);
+			LOG.error("Unable to initialize the SSLContext", e);
+			throw new IllegalStateException("Unable to initialize the SSLContext: " + e.getMessage(), e);
 		}
 	}
 
