@@ -625,7 +625,7 @@ public class RangerRESTClient {
         } catch (KeyManagementException e) {
             LOG.error("Unable to initials the SSLContext", e);
 
-            throw new IllegalStateException("Unable to initials the SSLContex: " + e.getMessage(), e);
+            throw new IllegalStateException("Unable to initials the SSLContext: " + e.getMessage(), e);
         }
     }
 
