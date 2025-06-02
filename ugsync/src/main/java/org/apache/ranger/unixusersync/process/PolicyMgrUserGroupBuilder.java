@@ -152,20 +152,20 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         String userNameCaseConversion = config.getUserNameCaseConversion();
 
-        if (UserGroupSyncConfig.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion)) {
+        if (UgsyncCommonConstants.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion)) {
             userNameCaseConversionFlag = false;
         } else {
             userNameCaseConversionFlag = true;
-            userNameLowerCaseFlag      = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion);
+            userNameLowerCaseFlag      = UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion);
         }
 
         String groupNameCaseConversion = config.getGroupNameCaseConversion();
 
-        if (UserGroupSyncConfig.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion)) {
+        if (UgsyncCommonConstants.UGSYNC_NONE_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion)) {
             groupNameCaseConversionFlag = false;
         } else {
             groupNameCaseConversionFlag = true;
-            groupNameLowerCaseFlag      = UserGroupSyncConfig.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion);
+            groupNameLowerCaseFlag      = UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(groupNameCaseConversion);
         }
     }
 

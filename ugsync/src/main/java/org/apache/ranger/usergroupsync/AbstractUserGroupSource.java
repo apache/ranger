@@ -18,13 +18,14 @@
  */
 package org.apache.ranger.usergroupsync;
 
+import org.apache.ranger.ugsyncutil.transform.Mapper;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class AbstractUserGroupSource {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractUserGroupSource.class);
-
     protected UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
     protected Mapper              userNameRegExInst;
     protected Mapper              groupNameRegExInst;
@@ -39,7 +40,8 @@ public abstract class AbstractUserGroupSource {
                 userNameRegExInst = regExClass.newInstance();
 
                 if (userNameRegExInst != null) {
-                    userNameRegExInst.init(UserGroupSyncConfig.SYNC_MAPPING_USERNAME);
+                    String baseProperty = UgsyncCommonConstants.SYNC_MAPPING_USERNAME;
+                    userNameRegExInst.init(baseProperty, config.getAllRegexPatterns(baseProperty), config.getRegexSeparator());
                 } else {
                     LOG.error("RegEx handler instance for username is null!");
                 }
@@ -59,7 +61,8 @@ public abstract class AbstractUserGroupSource {
                 groupNameRegExInst = regExClass.newInstance();
 
                 if (groupNameRegExInst != null) {
-                    groupNameRegExInst.init(UserGroupSyncConfig.SYNC_MAPPING_GROUPNAME);
+                    String baseProperty = UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME;
+                    groupNameRegExInst.init(baseProperty, config.getAllRegexPatterns(baseProperty), config.getRegexSeparator());
                 } else {
                     LOG.error("RegEx handler instance for groupname is null!");
                 }

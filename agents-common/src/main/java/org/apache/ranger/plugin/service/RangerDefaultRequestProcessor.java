@@ -31,24 +31,29 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerUserStoreUtil;
+import org.apache.ranger.ugsyncutil.transform.Mapper;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RangerDefaultRequestProcessor implements RangerAccessRequestProcessor {
     private static final Logger LOG                              = LoggerFactory.getLogger(RangerDefaultRequestProcessor.class);
     private static final Logger PERF_CONTEXTENRICHER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("contextenricher.request");
 
     protected final PolicyEngine policyEngine;
-    private   final boolean      useRangerGroups;
-    private   final boolean      useOnlyRangerGroups;
-    private   final boolean      convertEmailToUser;
+    private final   boolean      useRangerGroups;
+    private final   boolean      useOnlyRangerGroups;
+    private final   boolean      convertEmailToUser;
 
     public RangerDefaultRequestProcessor(PolicyEngine policyEngine) {
         this.policyEngine = policyEngine;
@@ -96,6 +101,63 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
                 if (reqImpl.getClusterType() == null) {
                     reqImpl.setClusterType(pluginContext.getClusterType());
+                }
+
+                RangerPluginConfig config = policyEngine.getPluginContext().getConfig();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("RangerPluginConfig = " + config.getPropertyPrefix());
+                }
+                if (config != null) {
+                    boolean isNameTransformationSupported = config.getBoolean(config.getPropertyPrefix() + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false);
+
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("isNameTransformationSupported = " + isNameTransformationSupported);
+                    }
+                    if (isNameTransformationSupported) {
+                        String user = request.getUser();
+                        if (policyEngine.getPluginContext().getUserNameCaseConversion().equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE)) {
+                            user = user.toLowerCase();
+                        } else if (policyEngine.getPluginContext().getUserNameCaseConversion().equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE)) {
+                            user = user.toUpperCase();
+                        }
+                        Mapper userNameTransformInst = policyEngine.getPluginContext().getUserNameTransformInst();
+                        if (userNameTransformInst != null) {
+                            String originalUser    = request.getUser();
+                            String transformedUser = userNameTransformInst.transform(user);
+
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("Original username = {}, Transformed username = {}", originalUser, transformedUser);
+                            }
+
+                            reqImpl.setUser(transformedUser);
+                        }
+                        Mapper groupNameTransformInst = policyEngine.getPluginContext().getGroupNameTransformInst();
+                        if (groupNameTransformInst != null) {
+                            Set<String> transformedGroups = request.getUserGroups().stream()
+                                    .filter(Objects::nonNull)
+                                    .map(group -> {
+                                        String originalGroupName = group;
+                                        String conversionType    = policyEngine.getPluginContext().getGroupNameCaseConversion();
+
+                                        if (UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(conversionType)) {
+                                            group = group.toLowerCase();
+                                        } else if (UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE.equalsIgnoreCase(conversionType)) {
+                                            group = group.toUpperCase();
+                                        }
+
+                                        String transformedGroup = groupNameTransformInst.transform(group);
+
+                                        if (LOG.isDebugEnabled()) {
+                                            LOG.debug("Original group name = {}, Transformed group name = {}", originalGroupName, transformedGroup);
+                                        }
+
+                                        return transformedGroup;
+                                    })
+                                    .collect(Collectors.toSet());
+
+                            reqImpl.setUserGroups(transformedGroups);
+                        }
+                    }
                 }
 
                 convertEmailToUsername(reqImpl);

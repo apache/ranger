@@ -17,16 +17,16 @@
  * under the License.
  */
 
-package org.apache.ranger.usergroupsync;
+package org.apache.ranger.ugsynutil.transform;
 
+import org.apache.ranger.ugsyncutil.transform.RegEx;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestRegEx {
     protected String userNameBaseProperty  = "ranger.usersync.mapping.username.regex";
@@ -49,7 +49,7 @@ public class TestRegEx {
     public void testUserNameTransform() {
         userRegexPatterns.add("s/\\s/_/");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
-        assertEquals("test_user", userNameRegEx.transform("test user"));
+        Assert.assertEquals("test_user", userNameRegEx.transform("test user"));
     }
 
     @Test
@@ -57,13 +57,13 @@ public class TestRegEx {
         groupRegexPatterns.add("s/\\s/_/g");
         groupRegexPatterns.add("s/_/\\$/g");
         groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns, mappingSeparator);
-        assertEquals("ldap$grp", groupNameRegEx.transform("ldap grp"));
+        Assert.assertEquals("ldap$grp", groupNameRegEx.transform("ldap grp"));
     }
 
     @Test
     public void testEmptyTransform() {
-        assertEquals("test user", userNameRegEx.transform("test user"));
-        assertEquals("ldap grp", groupNameRegEx.transform("ldap grp"));
+        Assert.assertEquals("test user", userNameRegEx.transform("test user"));
+        Assert.assertEquals("ldap grp", groupNameRegEx.transform("ldap grp"));
     }
 
     @Test
@@ -72,8 +72,8 @@ public class TestRegEx {
         groupRegexPatterns.add("s/\\s/_/g");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
         groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns, mappingSeparator);
-        assertEquals("test_user", userNameRegEx.transform("test user"));
-        assertEquals("ldap_grp", groupNameRegEx.transform("ldap grp"));
+        Assert.assertEquals("test_user", userNameRegEx.transform("test user"));
+        Assert.assertEquals("ldap_grp", groupNameRegEx.transform("ldap grp"));
     }
 
     @Test
@@ -85,8 +85,8 @@ public class TestRegEx {
         groupRegexPatterns.add("s/\\s");
         groupRegexPatterns.add("s/\\$//g");
         groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns, mappingSeparator);
-        assertEquals("test user", userNameRegEx.transform("test\\user"));
-        assertEquals("ldapgrp", groupNameRegEx.transform("ldap grp"));
+        Assert.assertEquals("test user", userNameRegEx.transform("test\\user"));
+        Assert.assertEquals("ldapgrp", groupNameRegEx.transform("ldap grp"));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class TestRegEx {
             userRegexPatterns = new ArrayList<>();
             userRegexPatterns.add(String.format("s%sdark%sDE/dark%sg", separator, separator, separator));
             userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
-            assertEquals("DE/dark_knight_admin", userNameRegEx.transform("dark_knight_admin"));
+            Assert.assertEquals("DE/dark_knight_admin", userNameRegEx.transform("dark_knight_admin"));
         }
     }
 
@@ -106,10 +106,10 @@ public class TestRegEx {
         String separator = "#";
         userRegexPatterns = Collections.singletonList("s#^(.*)#PR/$1#g");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
-        assertEquals("PR/mew_two", userNameRegEx.transform("mew_two"));
-        assertEquals("PR/dragoon", userNameRegEx.transform("dragoon"));
-        assertEquals("PR/pikachu", userNameRegEx.transform("pikachu"));
-        assertEquals("PR/dialga", userNameRegEx.transform("dialga"));
+        Assert.assertEquals("PR/mew_two", userNameRegEx.transform("mew_two"));
+        Assert.assertEquals("PR/dragoon", userNameRegEx.transform("dragoon"));
+        Assert.assertEquals("PR/pikachu", userNameRegEx.transform("pikachu"));
+        Assert.assertEquals("PR/dialga", userNameRegEx.transform("dialga"));
     }
 
     @Test
@@ -118,7 +118,7 @@ public class TestRegEx {
         String separator = "#";
         userRegexPatterns = Collections.singletonList("s#^(.*)#$1_ty#g");
         userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
-        assertEquals("mew_ty", userNameRegEx.transform("mew"));
-        assertEquals("onix_ty", userNameRegEx.transform("onix"));
+        Assert.assertEquals("mew_ty", userNameRegEx.transform("mew"));
+        Assert.assertEquals("onix_ty", userNameRegEx.transform("onix"));
     }
 }

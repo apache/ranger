@@ -17,9 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.usergroupsync;
-
-import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+package org.apache.ranger.ugsyncutil.transform;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,24 +25,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RegEx extends AbstractMapper {
-    private final UserGroupSyncConfig           config = UserGroupSyncConfig.getInstance();
-    private       LinkedHashMap<String, String> replacementPattern;
+    private LinkedHashMap<String, String> replacementPattern;
 
     public LinkedHashMap<String, String> getReplacementPattern() {
         return replacementPattern;
     }
 
     @Override
-    public void init(String baseProperty) {
-        logger.info("Initializing for {}", baseProperty);
-
+    public void init(String baseProperty, List<String> regexPatterns, String regexSeparator) {
+        AbstractMapper.logger.info("Initializing for " + baseProperty);
         try {
-            List<String> regexPatterns  = config.getAllRegexPatterns(baseProperty);
-            String       regexSeparator = config.getRegexSeparator();
-
             populateReplacementPatterns(baseProperty, regexPatterns, regexSeparator);
         } catch (Throwable t) {
-            logger.error("Failed to initialize {}", baseProperty, t.fillInStackTrace());
+            AbstractMapper.logger.error("Failed to initialize " + baseProperty, t.fillInStackTrace());
         }
     }
 
@@ -63,13 +56,13 @@ public class RegEx extends AbstractMapper {
                 }
             }
         } catch (Throwable t) {
-            logger.error("Failed to transform {}", attrValue, t.fillInStackTrace());
+            AbstractMapper.logger.error("Failed to transform " + attrValue, t.fillInStackTrace());
         }
 
         return result;
     }
 
-    protected void populateReplacementPatterns(String baseProperty, List<String> regexPatterns, String regexSeparator) {
+    public void populateReplacementPatterns(String baseProperty, List<String> regexPatterns, String regexSeparator) {
         replacementPattern = new LinkedHashMap<>();
 
         String  regex = String.format("s%s([^%s]*)%s([^%s]*)%s(g)?", regexSeparator, regexSeparator, regexSeparator, regexSeparator, regexSeparator);
@@ -79,7 +72,7 @@ public class RegEx extends AbstractMapper {
             Matcher m = p.matcher(regexPattern);
 
             if (!m.matches()) {
-                logger.warn("Invalid RegEx {} and hence skipping this regex property", regexPattern);
+                AbstractMapper.logger.warn("Invalid RegEx " + regexPattern + " and hence skipping this regex property");
             }
 
             m = m.reset();

@@ -25,6 +25,30 @@ public class UgsyncCommonConstants {
     public static final String SYNC_SOURCE   = "sync_source";
     public static final String LDAP_URL      = "ldap_url";
 
+    public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none";
+    public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower";
+    public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper";
+
+    public static final String UGSYNC_USERNAME_CASE_CONVERSION_PARAM = "ranger.usersync.ldap.username.caseconversion";
+    public static final String DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE = UGSYNC_NONE_CASE_CONVERSION_VALUE;
+
+    public static final String UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM = "ranger.usersync.ldap.groupname.caseconversion";
+    public static final String DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE = UGSYNC_NONE_CASE_CONVERSION_VALUE;
+
+    public static final String SYNC_MAPPING_USERNAME = "ranger.usersync.mapping.username.regex";
+
+    public static final String SYNC_MAPPING_GROUPNAME = "ranger.usersync.mapping.groupname.regex";
+
+    public static final String SYNC_MAPPING_USERNAME_HANDLER = "ranger.usersync.mapping.username.handler";
+    public static final String DEFAULT_SYNC_MAPPING_USERNAME_HANDLER = "org.apache.ranger.ugsyncutil.transform.RegEx";
+
+    public static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
+    public static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.ugsyncutil.transform.RegEx";
+
+    public static final String SYNC_MAPPING_SEPARATOR = "ranger.usersync.mapping.regex.separator";
+
+    public static final String DEFAULT_MAPPING_SEPARATOR = "/";
+
     private UgsyncCommonConstants() {
         // to block instantiation
     }
