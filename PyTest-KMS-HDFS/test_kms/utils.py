@@ -38,5 +38,5 @@ def fetch_logs():
         logs = subprocess.check_output(cmd, shell=True, text=True)
         error_logs = [line for line in logs.split("\n") if "ERROR" in line or "Exception" in line]
         return "\n".join(error_logs) if error_logs else "No recent errors in logs."
-    except Exception as e:
-        return f"Failed to fetch logs from container: {str(e)}"
+    except subprocess.CalledProcessError as e:
+        return f"Failed to fetch logs from container. Command failed with exit code {e.returncode}: {e.output}"

@@ -35,7 +35,7 @@ HEADERS={"Content-Type": "application/json","Accept":"application/json"}
 PARAMS={"user.name":"keyadmin"}
 BASE_URL="http://localhost:9292/kms/v1"
 HADOOP_CONTAINER = "ranger-hadoop"
-HDFS_USER = "hdfs"
+# Line 13 removed as it is redundant.
 KMS_CONTAINER = "ranger-kms"
 
 #KMS configs that needs to be added in XML file------------add more if needed
