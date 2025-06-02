@@ -188,9 +188,7 @@ jobs:
           echo "🚀 All required containers are up. Running test cases..."
 
           cd PyTest-KMS-HDFS || exit 1         # Switch to the tests directory
-
-          python3 -m venv myenv || { echo "Failed to create venv"; exit 1; }         # Create a new environment
-          source myenv/bin/activate || { echo "Failed to activate venv"; exit 1; }   # Activate it
+          
           pip install --upgrade pip
           pip install -r requirements.txt || { echo "❌ Failed to install requirements"; exit 1; }  # Install dependencies
 
