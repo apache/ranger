@@ -177,9 +177,6 @@ public class XUserMgr extends XUserMgrBase {
     ServiceDBStore svcStore;
 
     @Autowired
-    GUIDUtil guidUtil;
-
-    @Autowired
     XUgsyncAuditInfoService xUgsyncAuditInfoService;
 
     @Autowired

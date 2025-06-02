@@ -285,8 +285,8 @@ public class RangerServicePoliciesCache {
     }
 
     private class ServicePoliciesWrapper {
-        final Long               serviceId;
-        final ReentrantLock      lock                  = new ReentrantLock();
+        final Long          serviceId;
+        final ReentrantLock lock = new ReentrantLock();
         ServicePolicies          servicePolicies;
         Date                     updateTime;
         long                     longestDbLoadTimeInMs = -1;
@@ -362,8 +362,14 @@ public class RangerServicePoliciesCache {
                                 if (isDeltaCacheReinitialized) {
                                     this.deltaCache = new ServicePolicyDeltasCache(lastKnownVersion, servicePoliciesForDeltas);
                                 }
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("servicePoliciesForDeltas = " + servicePoliciesForDeltas.getServiceConfig());
+                                }
 
                                 ret = servicePoliciesForDeltas;
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("ret = " + ret.getServiceConfig());
+                                }
                             } else {
                                 LOG.warn("Deltas were requested for service:[{}], but could not get them!! lastKnownVersion:[{}]; Returning cached ServicePolicies:[{}]", serviceName, lastKnownVersion, servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L);
 
