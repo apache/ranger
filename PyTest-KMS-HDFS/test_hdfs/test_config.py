@@ -85,6 +85,10 @@ READ_EZ_FILE=[
     "hdfs dfs -cat /{ez_name}/{filename}.txt"
 ]
 
+READ_EZ = [
+    "hdfs dfs -cat /{ez_name}/"
+]
+
 UNAUTHORIZED_WRITE_COMMAND = 'hdfs dfs -put /home/{user}/{filename}.txt /{ez_name}/'
 
 UNAUTHORIZED_READ_COMMAND = "hdfs dfs -cat /{ez_name}/{filename}.txt"
