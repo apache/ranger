@@ -190,14 +190,13 @@ jobs:
           cd PyTest-KMS-HDFS || exit 1         # Switch to the tests directory
           
           pip install --upgrade pip
-          pip install -r requirements.txt || { echo "❌ Failed to install requirements"; exit 1; }  # Install dependencies
+          pip install --no-cache-dir -r requirements.txt || { echo "❌ Failed to install requirements"; exit 1; }  # Install dependencies
 
           # Run tests, track result but do NOT exit immediately
           test_result=0
-          pytest -vs test_kms/ || test_result=1
           pytest -vs test_hdfs/ || test_result=1
-
-
+          pytest -vs test_kms/ || test_result=1
+          
           echo "🧹 Cleaning up containers..."
           docker stop $(docker ps -q) && docker rm $(docker ps -aq);
 
