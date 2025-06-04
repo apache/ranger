@@ -31,11 +31,11 @@ import { fetchApi } from "Utils/fetchAPI";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
 import { find, sortBy, isUndefined, isEmpty, reject } from "lodash";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import AsyncSelect from "react-select/async";
-import { isKeyAdmin, parseSearchFilter } from "../../utils/XAUtils";
-import { BlockUi } from "../../components/CommonComponents";
-import CustomBreadcrumb from "../CustomBreadcrumb";
+import { isKeyAdmin, parseSearchFilter } from "Utils/XAUtils";
+import { BlockUi } from "Components/CommonComponents";
+import CustomBreadcrumb from "Views/CustomBreadcrumb";
 
 function init(props) {
   return {
@@ -221,10 +221,10 @@ const KeyManager = () => {
     let serviceOptions = [];
     try {
       const servicesResp = await fetchApi({
-        url: "plugins/services",
+        url: "public/v2/api/service-headers",
         params: allParams
       });
-      servicesdata = servicesResp.data.services;
+      servicesdata = servicesResp.data || [];
     } catch (error) {
       let errorMsg = `Error occurred while fetching Services!`;
       if (error?.response?.data?.msgDesc) {

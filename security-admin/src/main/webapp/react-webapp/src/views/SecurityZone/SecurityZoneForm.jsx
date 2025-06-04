@@ -30,6 +30,7 @@ import {
   isEmpty,
   pickBy,
   find,
+  filter,
   maxBy,
   sortBy,
   map,
@@ -170,10 +171,10 @@ const SecurityZoneForm = () => {
 
   const fetchResourceServices = async () => {
     const serviceDefnsResp = await fetchApi({
-      url: "plugins/services"
+      url: "public/v2/api/service-headers"
     });
 
-    const filterServices = serviceDefnsResp.data.services.filter(
+    const filterServices = serviceDefnsResp.data.filter(
       (obj) => obj.type !== "tag" && obj.type !== "kms"
     );
 
@@ -595,12 +596,10 @@ const SecurityZoneForm = () => {
       params["serviceType"] = "tag" || "";
     }
     const serviceResp = await fetchApi({
-      url: "plugins/services",
+      url: "public/v2/api/service-headers",
       params: params
     });
-    const filterServices = serviceResp.data.services.filter(
-      (obj) => obj.type == "tag"
-    );
+    const filterServices = filter(serviceResp.data || [], ["type", "tag"]);
     return filterServices.map(({ name }) => ({
       label: name,
       value: name

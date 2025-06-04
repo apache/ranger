@@ -131,7 +131,6 @@ export const SideBarBody = (props) => {
     if (value.length !== 0) {
       let selectedServiceDefs = [];
       let selectedService = [];
-      let filterSelectedService = [];
 
       value.map((serviceDef) => {
         allServicesDefData?.filter((servicedefs) => {
@@ -148,18 +147,6 @@ export const SideBarBody = (props) => {
           }
         });
       });
-
-      if (isKMSRole) {
-        filterSelectedService = filter(
-          selectedService,
-          (service) => service.type == "kms"
-        );
-      } else {
-        filterSelectedService = filter(
-          selectedService,
-          (service) => service.type !== "tag" && service.type !== "kms"
-        );
-      }
 
       sideBarDispatch({
         type: "SERVICEDEF_DATA",
@@ -181,10 +168,7 @@ export const SideBarBody = (props) => {
     if (value.length == 0) {
       let filterSelectedService = [];
       if (isKMSRole) {
-        filterSelectedService = filter(
-          allServicesData,
-          (service) => service.type == "kms"
-        );
+        filterSelectedService = filter(allServicesData, ["type", "kms"]);
       } else {
         filterSelectedService = filter(
           allServicesData,
@@ -689,6 +673,7 @@ export const SideBarBody = (props) => {
               <li className="list-group-item">
                 <a
                   href={apiUrl}
+                  rel="noreferrer"
                   target="_blank"
                   onClick={() => {
                     props.closeCollapse();

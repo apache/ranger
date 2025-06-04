@@ -54,9 +54,9 @@ class AuditLayout extends Component {
     let servicesResp = [];
     try {
       const response = await fetchApi({
-        url: "plugins/services"
+        url: "public/v2/api/service-headers"
       });
-      servicesResp = response?.data?.services || [];
+      servicesResp = response?.data || [];
     } catch (error) {
       console.error(
         `Error occurred while fetching Services or CSRF headers! ${error}`
