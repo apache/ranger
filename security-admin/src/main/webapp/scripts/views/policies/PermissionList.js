@@ -123,14 +123,14 @@ define(function(require) {
 			});
 			if(this.model.has('editMode') && this.model.get('editMode')){
 				if(!_.isUndefined(this.model.get('groupName')) && !_.isNull(this.model.get('groupName'))){
-					this.ui.selectGroups.val(_.map(this.model.get('groupName'), function(name){ return _.escape(name); }));
+					this.ui.selectGroups.val(this.model.get('groupName'));
 				}
 				if(!_.isUndefined(this.model.get('userName')) && !_.isNull(this.model.get('userName'))){
-					this.ui.selectUsers.val(_.map(this.model.get('userName'), function(name){ return _.escape(name); }));
+					this.ui.selectUsers.val(this.model.get('userName'));
 				}
-                                if(!_.isUndefined(this.model.get('roleName')) && !_.isNull(this.model.get('roleName'))){
-                                        this.ui.selectRoles.val(_.map(this.model.get('roleName'), function(name){ return _.escape(name); }));
-                                }
+				if(!_.isUndefined(this.model.get('roleName')) && !_.isNull(this.model.get('roleName'))){
+					this.ui.selectRoles.val(this.model.get('roleName'));
+				}
 				if(!_.isUndefined(this.model.get('conditions'))){
 					_.each(this.model.get('conditions'), function(obj){
 						this.$el.find('input[data-js="'+obj.type+'"]').val(obj.values.toString())
@@ -214,9 +214,9 @@ define(function(require) {
                         placeholder = (type == 'users') ? 'Select Users' : ((type == 'groups') ? 'Select Groups' : 'Select Roles'),
                         searchUrl   = (type == 'users') ? "service/xusers/lookup/users" : ((type == 'groups') ? "service/xusers/lookup/groups" : "service/roles/roles");
 			if(this.model.has('editMode') && !_.isEmpty($select.val())){
-                                var temp = this.model.attributes[ (type == 'users') ? 'userName' : ((type == 'groups') ? 'groupName' : 'roleName')];
+				var temp = this.model.attributes[ (type == 'users') ? 'userName' : ((type == 'groups') ? 'groupName' : 'roleName')];
 				_.each(temp , function(name){
-					tags.push( { 'id' : _.escape( name ), 'text' : _.escape( name ) } );
+					tags.push( { 'id' : name, 'text' : name } );
 				});
 			}
 			$select.select2({
@@ -247,13 +247,13 @@ define(function(require) {
 						var results = [] , selectedVals = [];
 						//Get selected values of groups/users dropdown
                                                 selectedVals = that.getSelectedValues($select, type);
-						if(data.totalCount != "0"){
-                                                        if(type == 'users' || type == 'groups'){
-								results = data.vXStrings.map(function(m){	return {id : _.escape(m.value), text: _.escape(m.value) };	});
+						if (data.totalCount != "0") {
+							if (type == 'users' || type == 'groups') {
+								results = data.vXStrings.map(function(m){ return {id : m.value, text: m.value }; });
 							} else {
-                                                                results = data.roles.map(function(m){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
+								results = data.roles.map(function(m){ return {id : m.name, text: m.name }; });
 							}
-							if(!_.isEmpty(selectedVals)){
+							if (!_.isEmpty(selectedVals)){
 								results = XAUtil.filterResultByText(results, selectedVals);
 							}
 							return {results : results};
