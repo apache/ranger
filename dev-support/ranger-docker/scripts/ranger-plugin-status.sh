@@ -35,7 +35,7 @@ KNOX_ENDPOINT="https://localhost:8443/gateway/sandbox/webhdfs/v1/?op=LISTSTATUS"
 curl -k -u "$KNOX_USER:$KNOX_PASS" "$KNOX_ENDPOINT" > /dev/null 2>&1
 echo "Knox activity triggered."
 
-sleep 30
+sleep 60
 
 echo "Fetching plugin info from $ENDPOINT ..."
 response=$(curl -s -u "$RANGER_ADMIN_USER:$RANGER_ADMIN_PASS" "$ENDPOINT")
