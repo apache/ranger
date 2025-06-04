@@ -40,6 +40,8 @@ public abstract class RangerRoleServiceBase<T extends XXRole, V extends RangerRo
         searchFields.add(new SearchField(SearchFilter.ROLE_NAME_PARTIAL, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField(SearchFilter.GROUP_NAME_PARTIAL, "xXRoleRefGroup.groupName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefGroup xXRoleRefGroup", "xXRoleRefGroup.roleId = obj.id"));
         searchFields.add(new SearchField(SearchFilter.USER_NAME_PARTIAL, "xXRoleRefUser.userName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefUser xXRoleRefUser", "xXRoleRefUser.roleId = obj.id"));
+        searchFields.add(new SearchField(SearchFilter.SUB_ROLE_NAME, "xXRoleRefRole.subRoleName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXRoleRefRole xXRoleRefRole", "xXRoleRefRole.roleId = obj.id"));
+        searchFields.add(new SearchField(SearchFilter.SUB_ROLE_NAME_PARTIAL, "xXRoleRefRole.subRoleName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefRole xXRoleRefRole", "xXRoleRefRole.roleId = obj.id"));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
