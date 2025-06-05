@@ -43,18 +43,32 @@ def wait_for_hdfs(container, user='hdfs', timeout=30, interval=2):
     start_time = time.time()
     
     while time.time() - start_time < timeout:
-        exit_code, _ = container.exec_run("hdfs dfs -ls /", user=user)
-        if exit_code == 0:
-            print("HDFS is ready.")
-            return True
-        else:
-            print("⏳ HDFS not ready yet, retrying...")
+        container.reload()  # 🔁 refresh state
+
+        if container.status != "running":
+            print("❌ Container is not running yet.")
             time.sleep(interval)
+            continue
+
+        try:
+            exit_code, _ = container.exec_run("hdfs dfs -ls /", user=user)
+            if exit_code == 0:
+                print("✅ HDFS is ready.")
+                return True
+            else:
+                print("⏳ HDFS not ready yet, retrying...")
+        except docker.errors.APIError as e:
+            print(f"⚠️ APIError while checking HDFS: {e}")
+            print("Retrying after brief wait...")
+
+        time.sleep(interval)
 
     raise TimeoutError("HDFS did not become ready within the timeout period.")
 
 
 def configure_kms_property(hadoop_container):
+
+    global client
     # Check if KMS property already exists
     check_cmd = f"grep 'hadoop.security.key.provider.path' {CORE_SITE_XML_PATH}"
     exit_code, _ = hadoop_container.exec_run(check_cmd, user='root')
@@ -73,6 +87,11 @@ def configure_kms_property(hadoop_container):
         # Restart the container to apply the config changes
         print("Restarting Hadoop container to apply changes...")
         hadoop_container.restart()
+        time.sleep(5)
+
+        #Re-fetch container after restart
+        hadoop_container = client.containers.get(HADOOP_CONTAINER)
+
         wait_for_hdfs(hadoop_container, user=HDFS_USER)  # Wait for container to fully restart
         # time.sleep(10)
         print("Hadoop container restarted and ready.")
@@ -90,6 +109,7 @@ def configure_kms_property(hadoop_container):
 def ensure_user_exists(hadoop_container, username):
     # Ensure keyadmin user exists
     print("Ensuring keyadmin user exists...")
+    hadoop_container.reload()
     user_check_cmd = f"id -u {username}"
     exit_code, _ = hadoop_container.exec_run(user_check_cmd, user='root')
 
