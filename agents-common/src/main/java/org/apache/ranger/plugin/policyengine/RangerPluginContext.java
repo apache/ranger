@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerAuthContextListener;
+import org.apache.ranger.ugsyncutil.transform.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,13 +40,49 @@ public class RangerPluginContext {
 
     private final RangerPluginConfig                                                         config;
     private final Map<String, Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher>> resourceMatchers = new HashMap<>();
-    private final ReentrantReadWriteLock                                                     lock             = new ReentrantReadWriteLock(true); // fair lock
+    private final ReentrantReadWriteLock                                                     lock             = new ReentrantReadWriteLock(true);// fair lock
+    private       Mapper                                                                     userNameTransformInst;
+    private       Mapper                                                                     groupNameTransformInst;
+    private       String                                                                     userNameCaseConversion;
+    private       String                                                                     groupNameCaseConversion;
     private       RangerAuthContext                                                          authContext;
     private       RangerAuthContextListener                                                  authContextListener;
     private       RangerAdminClient                                                          adminClient;
 
     public RangerPluginContext(RangerPluginConfig config) {
         this.config = config;
+    }
+
+    public Mapper getUserNameTransformInst() {
+        return userNameTransformInst;
+    }
+
+    public void setUserNameTransformInst(Mapper userNameTransformInst) {
+        this.userNameTransformInst = userNameTransformInst;
+    }
+
+    public Mapper getGroupNameTransformInst() {
+        return groupNameTransformInst;
+    }
+
+    public void setGroupNameTransformInst(Mapper groupNameTransformInst) {
+        this.groupNameTransformInst = groupNameTransformInst;
+    }
+
+    public String getUserNameCaseConversion() {
+        return userNameCaseConversion;
+    }
+
+    public void setUserNameCaseConversion(String userNameCaseConversion) {
+        this.userNameCaseConversion = userNameCaseConversion;
+    }
+
+    public String getGroupNameCaseConversion() {
+        return groupNameCaseConversion;
+    }
+
+    public void setGroupNameCaseConversion(String groupNameCaseConversion) {
+        this.groupNameCaseConversion = groupNameCaseConversion;
     }
 
     public RangerPluginConfig getConfig() {
