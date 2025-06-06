@@ -192,4 +192,75 @@
 		<name>ranger-tagsync.service.https.port</name>
 		<value></value>
 	</property>
+	<!-- configure openmetadata properties -->
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.endpoint</name>
+		<value>http://openmetadata:8585/api</value>
+	</property>
+	<!--Below property is mandatory as it facilitates the initiation of OpenmetadataRestTagSource Class-->
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.OpenmetadataTagSource.class</name>
+		<value>org.apache.ranger.tagsync.source.openmetadatarest.OpenmetadataRESTTagSource</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.download.interval.millis</name>
+		<value>230000</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.entities.batch.size</name>
+		<value>10000</value>
+	</property>
+	<!--Provide you token from OpenMetadata, found under settings > bots > ingestion bot-->
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.token</name>
+		<value>xxxxx</value>
+	</property>
+	<!-- Specify your custom resource mapper classes below if you have any -->
+	<property>
+		<name>ranger.tagsync.openmetadatarest.custom.resource.mappers</name>
+		<value />
+	</property>
+	<!--Set the below property to sync specific table tagged entities -->
+	<!--
+		Note:
+		=> As of now, tag sync can sync tables from openmetadata.
+		=> Other entity types such as containers, messages and dashboards may be added in future releases.
+		=> Examples on setting up the class property to sync from openmetadata entity types
+
+			<property>
+				<name>ranger.tagsync.openmetadata.trino.instance.trinoingestionservicenamefromopenmetadata.ranger.service</name>
+				<value>trino_resource</value>
+			</property>
+
+			<property>
+				<name>ranger.tagsync.openmetadata.hive.instance.hiveingestionservicenamefromopenmetadata.ranger.service</name>
+				<value>hive_resource</value>
+			</property>
+
+		=> Finally, the value of the property must be existing Resource service name in Ranger.
+	-->
+	<property>
+		<name>ranger.tagsync.openmetadata.trino.instance.defaulttrinoingestionservice.ranger.service</name>
+		<value>default_trino_service_in_ranger</value>
+	</property>
+	<!--
+	=> Set the component name that you want to be mapped into ranger resource
+	=> Example: trino, presto, hive and so on.
+	-->
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.component.tabletype</name>
+		<value>trino</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.ssl.config.filename</name>
+		<value />
+	</property>
+	<property>
+		<name>ranger.tagsync.source.openmetadatarest.keystore.filename</name>
+		<value>/etc/ranger/tagsync/conf/openmetadatauser.jceks</value>
+	</property>
 </configuration>
