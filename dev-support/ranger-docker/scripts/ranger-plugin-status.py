@@ -72,7 +72,7 @@ def fetch_plugin_info():
 
 def check_plugins(plugin_data):
 
-    failed = False
+    failed_services = []
     print("\n<---------  Plugin Status  ---------->")
     for svc in expected_services:
         print(f"\nChecking service type: {svc}")
@@ -80,7 +80,7 @@ def check_plugins(plugin_data):
 
         if not entries:
             print(f"MISSING: No plugins found for service type '{svc}'.")
-            failed = True
+            failed_services.append(svc)
             continue
 
         active_plugins = [
@@ -91,7 +91,7 @@ def check_plugins(plugin_data):
 
         if not active_plugins:
             print(f"WARNING: Plugins present but NONE are active for '{svc}'.")
-            failed = True
+            failed_services.append(svc)
 
         print("Details:")
         for entry in entries:
@@ -99,7 +99,7 @@ def check_plugins(plugin_data):
             app_type = entry.get("appType", "unknown")
             version = entry.get("info", {}).get("policyActiveVersion", "null")
             print(f"- Host: {host}, AppType: {app_type}, PolicyActiveVersion: {version}")
-    return failed
+    return failed_services
 
 
 def main():
@@ -110,7 +110,15 @@ def main():
     trigger_knox_activity()
     
     # wait for status update
-    time.sleep(60)
+    for i in range(4):  # Retry up to 2 minutes total
+        plugin_data = fetch_plugin_info()
+        if all(any(entry.get("info", {}).get("policyActiveVersion") for entry in plugin_data if entry["serviceType"] == svc) for svc in expected_services):
+           break
+        print("Some plugins not active yet, retrying in 30s...")
+        time.sleep(30)
+
+    else:
+        print("Timed out waiting for plugins to become active.")
     
     # fetch plugin info through admin API
     plugin_data = fetch_plugin_info()
@@ -120,11 +128,11 @@ def main():
         exit(1)
     
     # get plugin details
-    failed = check_plugins(plugin_data)
+    failed_services = check_plugins(plugin_data)
 
     print()
-    if failed:
-        print("❌ One or more plugins are missing or inactive.")
+    if failed_services:
+        print(f"❌ The following plugins are missing or inactive: {', '.join(failed_services)}")
         exit(1)
     else:
         print("✅ All expected plugins are present and active.")
