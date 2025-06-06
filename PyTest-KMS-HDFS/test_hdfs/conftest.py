@@ -37,7 +37,7 @@ def hadoop_container():
     return container
 
 # polling method to wait until container gets restarted
-def wait_for_hdfs(container, user='hdfs', timeout=60, interval=2):
+def wait_for_hdfs(container, user='hdfs', timeout=120, interval=2):
 
     print("Waiting for HDFS to become available...")
     start_time = time.time()
@@ -99,11 +99,7 @@ def configure_kms_property(hadoop_container):
     else:
         print("KMS provider already present. No need to update config.")
 
-    # # Leave safe mode if active
-    # print("Exiting safe mode (if active)...")
-    # leave_safe_mode_cmd = "hdfs dfsadmin -safemode leave"
-    # exit_code, output = hadoop_container.exec_run(leave_safe_mode_cmd, user=HDFS_USER)
-    # print(output.decode())  # For debugging
+    return hadoop_container
 
 
 def ensure_user_exists(hadoop_container, username):
@@ -135,7 +131,7 @@ def setup_environment(hadoop_container):
     set_path_cmd = SET_PATH_CMD
     hadoop_container.exec_run(set_path_cmd, user='root')
 
-    configure_kms_property(hadoop_container)
+    hadoop_container = configure_kms_property(hadoop_container)
     ensure_user_exists(hadoop_container,"keyadmin")
 
     # Exit Safe Mode
