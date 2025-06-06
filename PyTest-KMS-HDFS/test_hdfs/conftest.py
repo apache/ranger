@@ -37,7 +37,7 @@ def hadoop_container():
     return container
 
 # polling method to wait until container gets restarted
-def wait_for_hdfs(container, user='hdfs', timeout=30, interval=2):
+def wait_for_hdfs(container, user='hdfs', timeout=60, interval=2):
 
     print("Waiting for HDFS to become available...")
     start_time = time.time()

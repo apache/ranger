@@ -32,6 +32,7 @@ import docker
 import tarfile
 import io
 
+
 DBKS_SITE_PATH = "/opt/ranger/ranger-3.0.0-SNAPSHOT-kms/ews/webapp/WEB-INF/classes/conf/dbks-site.xml"
 KMS_SERVICE_NAME = "dev_kms"
 BASE_URL = "http://localhost:9292/kms/v1"   
@@ -40,15 +41,41 @@ BASE_URL_RANGER = "http://localhost:6080/service/public/v2/api/policy"
 HEADERS={"Content-Type": "application/json","Accept":"application/json"}
 KMS_CONTAINER_NAME = "ranger-kms"
 
-user1="nobody"
+test_user="nobody"
 
 client = docker.from_env()
 container = client.containers.get(KMS_CONTAINER_NAME)
 
 
+@pytest.fixture(scope="module", autouse=True)
+def create_test_user():
+    # Add user inside the container
+    exit_code, output = container.exec_run(f"useradd {test_user}", user="root")
+
+    # Proceed if user added successfully or already exists
+    if exit_code != 0 and "already exists" not in output.decode():
+        raise Exception(f"Failed to create user: {output.decode()}")
+
+    print(f"✅ Created test user: {test_user}")
+
+    yield test_user
+
+    # Clean up the user after test
+    exit_code, output = container.exec_run(f"userdel {test_user}", user="root")
+    if exit_code == 0:
+        print(f"🧹 Deleted test user: {test_user}")
+    else:
+        print(f"⚠️ Warning: Failed to delete test user: {output.decode()}")
+
+
+@pytest.fixture(scope="module")
+def user1(create_test_user):
+    return create_test_user
+
+
 # **************** create KMS policy for user1 --------------------------------------
 @pytest.fixture(scope="module", autouse=True)
-def create_initial_kms_policy():
+def create_initial_kms_policy(user1):
     policy_data = {
         "policyName": "blacklist-policy",
         "service": KMS_SERVICE_NAME,
@@ -159,7 +186,7 @@ def unblacklist_op_users(operation, users=[]):
 # ***** user1 has permission for above operation so will pass
 # ***********************************************************************************
 
-def test_user_keyOperation_before_blacklist(headers):
+def test_user_keyOperation_before_blacklist(headers,user1):
     key_name = "blacklist-key1"
     key_data = {
             "name": key_name
@@ -186,7 +213,7 @@ def test_user_keyOperation_before_blacklist(headers):
 # ***** Then unblacklist that operation and now should succeed
 # ***********************************************************************************
 
-def test_blacklist_create(headers):
+def test_blacklist_create(headers,user1):
     # Blacklist the user for CREATE operation
     blacklist_op_users('CREATE', [user1])
     container.restart()
@@ -220,7 +247,7 @@ def test_blacklist_create(headers):
 # ***** Then unblacklist that operation and now should succeed
 # ***********************************************************************************
 
-def test_blacklist_rollOver(headers):
+def test_blacklist_rollOver(headers,user1):
     # Blacklist the user for rollover operation
     blacklist_op_users('ROLLOVER', [user1])
     container.restart()
@@ -261,7 +288,7 @@ def test_blacklist_rollOver(headers):
 # ***** Then unblacklist that operation and now should succeed
 # ***********************************************************************************
 
-def test_blacklist_delete(headers):
+def test_blacklist_delete(headers,user1):
     # Blacklist the user for rollover operation
     blacklist_op_users('DELETE', [user1])
     container.restart()
