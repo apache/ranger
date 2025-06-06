@@ -110,7 +110,7 @@ def main():
     trigger_knox_activity()
     
     # wait for status update
-    time.sleep(30)
+    time.sleep(60)
     
     # fetch plugin info through admin API
     plugin_data = fetch_plugin_info()
