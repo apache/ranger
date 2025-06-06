@@ -163,7 +163,9 @@ jobs:
       - name: Check status of plugin installation in ranger-service containers
         run: |
           cd dev-support/ranger-docker
-          ./scripts/ranger-plugin-status.sh
+          pip install --upgrade pip
+          pip install requests python-dotenv
+          ./scripts/ranger-plugin-status.py
           
 
       - name: Check status of containers and remove them
