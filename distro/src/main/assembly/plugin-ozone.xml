@@ -77,7 +77,9 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-plugins-audit</include>
+                <include>org.apache.ranger:ranger-audit-core</include>
+                <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
+                <include>org.apache.ranger:ranger-audit-dest-solr</include>
                 <include>org.apache.ranger:ranger-plugins-cred</include>
                 <include>org.apache.ranger:ranger-plugins-common</include>
                 <include>org.apache.ranger:ranger-ozone-plugin</include>
