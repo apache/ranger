@@ -110,7 +110,7 @@ def main():
     trigger_knox_activity()
     
     # wait for status update
-    for i in range(4):  # Retry up to 2 minutes total
+    for i in range(6):  # Retry up to 3 minutes total
         plugin_data = fetch_plugin_info()
         if all(any(entry.get("info", {}).get("policyActiveVersion") for entry in plugin_data if entry["serviceType"] == svc) for svc in expected_services):
            break
