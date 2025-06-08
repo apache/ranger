@@ -160,14 +160,6 @@ jobs:
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml up -d
 
-      - name: Check status of plugin installation in ranger-service containers
-        run: |
-          cd dev-support/ranger-docker
-          pip install --upgrade pip
-          pip install requests python-dotenv
-          ./scripts/ranger-plugin-status.py
-          
-
       - name: Check status of containers
         run: |
           sleep 60
