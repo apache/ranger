@@ -168,7 +168,7 @@ jobs:
           ./scripts/ranger-plugin-status.py
           
 
-      - name: Check status of containers and remove them
+      - name: Check status of containers
         run: |
           sleep 60
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
@@ -182,10 +182,20 @@ jobs:
               fi
           done
           
-          if [[ $flag == true ]]; then
-              echo "All required containers are up and running";
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-          else
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-              exit 1;
+          if [[ $flag == false ]]; then
+              echo "Some required containers are NOT running. Failing pipeline."
+              exit 1
           fi
+          
+      - name: Check Ranger plugin status
+        run: |
+          cd dev-support/ranger-docker
+          pip install --upgrade pip
+          pip install requests python-dotenv
+          ./scripts/ranger-plugin-status.py
+
+      - name: Clean up containers
+        if: always()
+        run: |
+          echo "Stopping and removing all containers..."
+          docker stop $(docker ps -q) && docker rm $(docker ps -aq)
