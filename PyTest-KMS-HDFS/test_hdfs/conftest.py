@@ -87,7 +87,7 @@ def configure_kms_property(hadoop_container):
         # Restart the container to apply the config changes
         print("Restarting Hadoop container to apply changes...")
         hadoop_container.restart()
-        time.sleep(5)
+        time.sleep(30)
 
         #Re-fetch container after restart
         hadoop_container = client.containers.get(HADOOP_CONTAINER)
