@@ -181,7 +181,7 @@ jobs:
           
       - name: Check Ranger plugin status
         env:
-          PLUGIN_RETRY_COUNT: 6
+          PLUGIN_RETRY_COUNT: 10
           PLUGIN_RETRY_INTERVAL: 30
         run: |
           cd dev-support/ranger-docker
