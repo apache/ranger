@@ -17,10 +17,9 @@
 # limitations under the License.
 
 import os
-import requests
 import time
-import json
 from dotenv import load_dotenv
+from apache_ranger.client.ranger_client import RangerClient
 
 # Load environment variables from .env
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,42 +30,47 @@ ENV_PATH = os.path.join(SCRIPT_DIR, "..", ".env")
 # Load it
 load_dotenv(dotenv_path=ENV_PATH)
 
-RANGER_HOST = "http://localhost:6080"
-ENDPOINT = f"{RANGER_HOST}/service/public/v2/api/plugins/info"
-KNOX_ENDPOINT = "https://localhost:8443/gateway/sandbox/webhdfs/v1/?op=LISTSTATUS"
-
 RANGER_ADMIN_USER = os.getenv("RANGER_ADMIN_USER")
 RANGER_ADMIN_PASS = os.getenv("RANGER_ADMIN_PASS")
 KNOX_USER = os.getenv("KNOX_USER")
 KNOX_PASS = os.getenv("KNOX_PASS")
 
+# Ranger Admin URL and credentials
+ranger_url = "http://localhost:6080"
+credentials = (RANGER_ADMIN_USER, RANGER_ADMIN_PASS)
+
+# Initialize the Ranger client
+ranger = RangerClient(ranger_url, credentials)
+
+PLUGIN_INFO_ENDPOINT = "/service/public/v2/api/plugins/info"
+KNOX_ENDPOINT = "https://localhost:8443/gateway/sandbox/webhdfs/v1/?op=LISTSTATUS"
+
+RETRY_COUNT = int(os.getenv("PLUGIN_RETRY_COUNT", 4))
+RETRY_INTERVAL = int(os.getenv("PLUGIN_RETRY_INTERVAL", 30))
+
 expected_services = ["hdfs", "hbase", "kms", "yarn", "kafka", "ozone", "knox", "hive"]
 
 
-def trigger_knox_activity():
+def init_knox_plugin():
     print("\nTriggering Knox activity to ensure plugin status is updated...")
     try:
-        response = requests.get(
+        response = ranger.session.get(
             KNOX_ENDPOINT,
             auth=(KNOX_USER,KNOX_PASS),
             verify=False,
             timeout=10
         )
         print("Knox activity triggered.")
-    except requests.RequestException as e:
+    except Exception as e:
         print(f"Failed to trigger Knox activity: {e}")
 
 def fetch_plugin_info():
-    print(f"\nFetching plugin info from {ENDPOINT} ...")
+    print(f"\nFetching plugin info from {PLUGIN_INFO_ENDPOINT} ...")
     try:
-        response = requests.get(
-            ENDPOINT,
-            auth=(RANGER_ADMIN_USER,RANGER_ADMIN_PASS),
-            timeout=10
-        )
+        response = ranger.session.get(ranger_url + PLUGIN_INFO_ENDPOINT)
         response.raise_for_status()
         return response.json()
-    except requests.RequestException as e:
+    except Exception as e:
         print(f"Error fetching plugin info: {e}")
         exit(1)
 
@@ -107,15 +111,15 @@ def main():
     print("Checking Ranger plugin status via Ranger Admin API")
     
     # Trigger knox activity
-    trigger_knox_activity()
+    init_knox_plugin()
     
     # wait for status update
-    for i in range(6):  # Retry up to 3 minutes total
+    for i in range(RETRY_COUNT):         #retrying upto RETRY_COUNT * RETRY_INTERVAL seconds
         plugin_data = fetch_plugin_info()
         if all(any(entry.get("info", {}).get("policyActiveVersion") for entry in plugin_data if entry["serviceType"] == svc) for svc in expected_services):
            break
-        print("Some plugins not active yet, retrying in 30s...")
-        time.sleep(30)
+        print(f"Some plugins not active yet, retrying in {RETRY_INTERVAL}s...")
+        time.sleep(RETRY_INTERVAL)
 
     else:
         print("Timed out waiting for plugins to become active.")

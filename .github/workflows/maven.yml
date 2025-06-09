@@ -180,10 +180,13 @@ jobs:
           fi
           
       - name: Check Ranger plugin status
+        env:
+          PLUGIN_RETRY_COUNT: 6
+          PLUGIN_RETRY_INTERVAL: 30
         run: |
           cd dev-support/ranger-docker
           pip install --upgrade pip
-          pip install requests python-dotenv
+          pip install apache-ranger python-dotenv
           ./scripts/ranger-plugin-status.py
 
       - name: Clean up containers
