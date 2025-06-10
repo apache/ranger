@@ -37,28 +37,36 @@ def hadoop_container():
     return container
 
 # polling method to wait until container gets restarted
-def wait_for_hdfs(container, user='hdfs', timeout=120, interval=2):
+def wait_for_hdfs(container_name, user='hdfs', timeout=240, interval=3):
 
     print("Waiting for HDFS to become available...")
     start_time = time.time()
     
     while time.time() - start_time < timeout:
-        container.reload()  # 🔁 refresh state
-
-        if container.status != "running":
-            print("❌ Container is not running yet.")
-            time.sleep(interval)
-            continue
 
         try:
-            exit_code, _ = container.exec_run("hdfs dfs -ls /", user=user)
+            container= client.containers.get(container_name)
+            container.reload()  # 🔁 refresh state
+
+            if container.status != "running":
+                print("❌ Container is not running yet.")
+                time.sleep(interval)
+                continue
+
+
+            exit_code,output = container.exec_run("hdfs dfs -ls /", user=user)
+            print(output.decode() if isinstance(output, bytes) else output)
+
             if exit_code == 0:
                 print("✅ HDFS is ready.")
                 return True
             else:
                 print("⏳ HDFS not ready yet, retrying...")
+
         except docker.errors.APIError as e:
-            print(f"⚠️ APIError while checking HDFS: {e}")
+            print(f"⚠️ Docker API error: {e}")
+        except Exception as e:
+            print(f"⚠️ Unexpected error: {e}")
             print("Retrying after brief wait...")
 
         time.sleep(interval)
@@ -87,13 +95,13 @@ def configure_kms_property(hadoop_container):
         # Restart the container to apply the config changes
         print("Restarting Hadoop container to apply changes...")
         hadoop_container.restart()
-        time.sleep(30)
+        # time.sleep(30)
+
+        wait_for_hdfs(HADOOP_CONTAINER, user=HDFS_USER)  # Wait for container to fully restart
 
         #Re-fetch container after restart
         hadoop_container = client.containers.get(HADOOP_CONTAINER)
 
-        wait_for_hdfs(hadoop_container, user=HDFS_USER)  # Wait for container to fully restart
-        # time.sleep(10)
         print("Hadoop container restarted and ready.")
 
     else:
