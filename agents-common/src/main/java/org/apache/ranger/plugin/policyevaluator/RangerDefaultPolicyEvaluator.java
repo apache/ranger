@@ -620,7 +620,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                                     else if (denyResult != null) {
                                         accessTypeResults.put(accessType, denyResult);
                                     }
-
                                 }
                             }
                         }
