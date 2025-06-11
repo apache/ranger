@@ -114,15 +114,14 @@ public class VTrxLogAttr extends ViewBaseBean implements Serializable {
     }
 
     private Field getField(Object obj) {
-        Field field = null;
+        Field field    = null;
+        Class objClass = obj.getClass();
 
-        try {
-            field = obj.getClass().getDeclaredField(attribName);
-        } catch (NoSuchFieldException excp) {
+        while (field == null && objClass != null) {
             try {
-                field = obj.getClass().getSuperclass().getDeclaredField(attribName);
-            } catch (NoSuchFieldException excp1) {
-                // ignore
+                field = objClass.getDeclaredField(attribName);
+            } catch (NoSuchFieldException excp) {
+                objClass = objClass.getSuperclass();
             }
         }
 
