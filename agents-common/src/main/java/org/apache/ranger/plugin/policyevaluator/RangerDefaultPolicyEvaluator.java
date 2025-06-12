@@ -616,8 +616,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                                 if (getPolicyPriority() > oldPriority) {
                                     if (allowResult != null) {
                                         accessTypeResults.put(accessType, allowResult);
-                                    }
-                                    else if (denyResult != null) {
+                                    } else if (denyResult != null) {
                                         accessTypeResults.put(accessType, denyResult);
                                     }
                                 }
