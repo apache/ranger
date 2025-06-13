@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.unixusersync.process;
 
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.PolicyMgrUserGroupBuilderTest;
 import org.junit.Test;
@@ -134,10 +135,10 @@ public class TestFileSourceUserGroupBuilder {
         config.setProperty(UserGroupSyncConfig.UGSYNC_SOURCE_FILE_PROC, "src/test/resources/usergroups-dns.csv");
         config.setProperty(UserGroupSyncConfig.UGSYNC_SOURCE_FILE_DELIMITERER, "|");
 
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_USERNAME, "s/[=]/_/g");
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_USERNAME + ".1", "s/[,]//g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_USERNAME, "s/[=]/_/g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_USERNAME + ".1", "s/[,]//g");
 
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_GROUPNAME, "s/[=]//g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME, "s/[=]//g");
 
         FileSourceUserGroupBuilder fileBuilder = new FileSourceUserGroupBuilder();
         fileBuilder.init();

@@ -30,6 +30,7 @@ import org.apache.directory.server.core.integ.FrameworkRunner;
 import org.apache.directory.server.ldap.LdapServer;
 import org.apache.directory.server.protocol.shared.transport.TcpTransport;
 import org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.junit.After;
 import org.junit.Assert;
@@ -385,8 +386,8 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit {
         config.setGroupSearchEnabled(true);
         config.setGroupSearchFirstEnabled(false);
 
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_USERNAME, "s/[=]/_/g");
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_GROUPNAME, "s/[=]/_/g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_USERNAME, "s/[=]/_/g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME, "s/[=]/_/g");
         sink = new PolicyMgrUserGroupBuilderTest();
 
         ldapBuilder.init();
