@@ -104,31 +104,25 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                 }
 
                 RangerPluginConfig config = policyEngine.getPluginContext().getConfig();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("RangerPluginConfig = " + config.getPropertyPrefix());
-                }
+                LOG.debug("RangerPluginConfig = " + config.getPropertyPrefix());
                 if (config != null) {
                     boolean isNameTransformationSupported = config.getBoolean(config.getPropertyPrefix() + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false);
 
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("isNameTransformationSupported = " + isNameTransformationSupported);
-                    }
+                    LOG.debug("isNameTransformationSupported = " + isNameTransformationSupported);
+
                     if (isNameTransformationSupported) {
                         String user = request.getUser();
-                        if (policyEngine.getPluginContext().getUserNameCaseConversion().equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE)) {
+                        String userNameCaseConversion = policyEngine.getPluginContext().getUserNameCaseConversion();
+                        if (userNameCaseConversion != null && userNameCaseConversion.equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE)) {
                             user = user.toLowerCase();
-                        } else if (policyEngine.getPluginContext().getUserNameCaseConversion().equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE)) {
+                        } else if (userNameCaseConversion != null && userNameCaseConversion.equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE)) {
                             user = user.toUpperCase();
                         }
                         Mapper userNameTransformInst = policyEngine.getPluginContext().getUserNameTransformInst();
                         if (userNameTransformInst != null) {
                             String originalUser    = request.getUser();
                             String transformedUser = userNameTransformInst.transform(user);
-
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Original username = {}, Transformed username = {}", originalUser, transformedUser);
-                            }
-
+                            LOG.debug("Original username = {}, Transformed username = {}", originalUser, transformedUser);
                             reqImpl.setUser(transformedUser);
                         }
                         Mapper groupNameTransformInst = policyEngine.getPluginContext().getGroupNameTransformInst();
@@ -146,11 +140,7 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                                         }
 
                                         String transformedGroup = groupNameTransformInst.transform(group);
-
-                                        if (LOG.isDebugEnabled()) {
-                                            LOG.debug("Original group name = {}, Transformed group name = {}", originalGroupName, transformedGroup);
-                                        }
-
+                                        LOG.debug("Original group name = {}, Transformed group name = {}", originalGroupName, transformedGroup);
                                         return transformedGroup;
                                     })
                                     .collect(Collectors.toSet());

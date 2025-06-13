@@ -61,6 +61,7 @@ import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.PerfDataRecorder;
 import org.apache.ranger.plugin.util.PolicyRefresher;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
@@ -69,6 +70,7 @@ import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.ugsyncutil.transform.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,7 +210,7 @@ public class RangerBasePlugin {
         this(pluginConfig);
 
         init();
-
+        configurePluginContextFromServicePoliciesForUserGroupName(policies);
         setPolicies(policies);
         setRoles(roles);
 
@@ -887,7 +889,7 @@ public class RangerBasePlugin {
         RangerPolicyEngine       policyEngine = this.policyEngine;
         RangerRoles              roles        = policyEngine != null ? policyEngine.getRangerRoles() : null;
         Set<RangerRole>          rangerRoles  = roles != null ? roles.getRangerRoles() : null;
-        Map<String, Set<String>> roleMapping = null;
+        Map<String, Set<String>> roleMapping  = null;
 
         if (rangerRoles != null) {
             RangerPluginContext rangerPluginContext = policyEngine.getPluginContext();
@@ -1272,6 +1274,74 @@ public class RangerBasePlugin {
             throw new Exception("ranger-admin client is null");
         }
         return admin;
+    }
+
+    private void configurePluginContextFromServicePoliciesForUserGroupName(ServicePolicies servicePolicies) {
+        Map<String, String> serviceConfigMap = servicePolicies.getServiceConfig();
+        if (MapUtils.isNotEmpty(serviceConfigMap)) {
+            LOG.debug("==> RangerBasePlugin(" + serviceConfigMap.keySet() + ")");
+            pluginContext.setUserNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM));
+            pluginContext.setGroupNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM));
+            String mappingUserNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER);
+            try {
+                if (mappingUserNameHandler != null) {
+                    Class<Mapper> regExClass        = (Class<Mapper>) Class.forName(mappingUserNameHandler);
+                    Mapper        userNameRegExInst = regExClass.newInstance();
+                    if (userNameRegExInst != null) {
+                        String baseProperty = RangerCommonConstants.PLUGINS_MAPPING_USERNAME;
+                        userNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
+                                serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR));
+                        pluginContext.setUserNameTransformInst(userNameRegExInst);
+                    } else {
+                        LOG.error("RegEx handler instance for username is null!");
+                    }
+                }
+            } catch (ClassNotFoundException cne) {
+                LOG.error("Failed to load " + mappingUserNameHandler + " ", cne);
+            } catch (Throwable te) {
+                LOG.error("Failed to instantiate " + mappingUserNameHandler + " ", te);
+            }
+            String mappingGroupNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER);
+            try {
+                if (mappingGroupNameHandler != null) {
+                    Class<Mapper> regExClass         = (Class<Mapper>) Class.forName(mappingGroupNameHandler);
+                    Mapper        groupNameRegExInst = regExClass.newInstance();
+                    if (groupNameRegExInst != null) {
+                        String baseProperty = RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME;
+                        groupNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
+                                serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR));
+                        pluginContext.setGroupNameTransformInst(groupNameRegExInst);
+                    } else {
+                        LOG.error("RegEx handler instance for groupname is null!");
+                    }
+                }
+            } catch (ClassNotFoundException cne) {
+                LOG.error("Failed to load " + mappingGroupNameHandler + " ", cne);
+            } catch (Throwable te) {
+                LOG.error("Failed to instantiate " + mappingGroupNameHandler + " ", te);
+            }
+        }
+    }
+
+    private List<String> getAllRegexPatterns(String baseProperty, Map<String, String> serviceConfig) throws Throwable {
+        List<String> regexPatterns = new ArrayList<String>();
+        String       baseRegex     = serviceConfig.get(baseProperty);
+        LOG.debug("==> getAllRegexPatterns(" + baseProperty + ")");
+        LOG.debug("baseRegex = " + baseRegex);
+        LOG.debug("pluginConfig = " + serviceConfig.keySet());
+        if (baseRegex == null) {
+            return regexPatterns;
+        }
+        regexPatterns.add(baseRegex);
+        int    i         = 1;
+        String nextRegex = serviceConfig.get(baseProperty + "." + i);
+        while (nextRegex != null) {
+            regexPatterns.add(nextRegex);
+            i++;
+            nextRegex = serviceConfig.get(baseProperty + "." + i);
+        }
+        LOG.debug("<== getAllRegexPatterns(" + regexPatterns + ")");
+        return regexPatterns;
     }
 
     private List<RangerChainedPlugin> initChainedPlugins() {

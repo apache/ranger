@@ -271,7 +271,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static          String                        LOCAL_HOSTNAME;
     private static          boolean                       isRolesDownloadedByService;
     private static volatile boolean                       legacyServiceDefsInitDone;
-    private final String               OPTION_UGSYNC_CONFIG_CHANGE = "ugsyncConfigChange";
+    private final String               optionUgsyncConfigChange = "ugsyncConfigChange";
     @Autowired
     RangerServiceDefService                     serviceDefService;
     @Autowired
@@ -1153,7 +1153,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             service = svcService.update(service);
 
-            Boolean isUgsyncConfigChange = options != null && options.get(OPTION_UGSYNC_CONFIG_CHANGE) != null ? (Boolean) options.get(OPTION_UGSYNC_CONFIG_CHANGE) : Boolean.FALSE;
+            Boolean isUgsyncConfigChange = options != null && options.get(optionUgsyncConfigChange) != null ? (Boolean) options.get(optionUgsyncConfigChange) : Boolean.FALSE;
             if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged || isUgsyncConfigChange) {
                 updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null, false);
             }
@@ -6616,9 +6616,9 @@ public class ServiceDBStore extends AbstractServiceStore {
         return ret;
     }
 
-    public enum JSON_FILE_NAME_TYPE {POLICY, ROLE}
+    public enum JSON_FILE_NAME_TYPE { POLICY, ROLE }
 
-    public enum VERSION_TYPE {POLICY_VERSION, TAG_VERSION, ROLE_VERSION, GDS_VERSION}
+    public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, ROLE_VERSION, GDS_VERSION }
 
     public enum METRIC_TYPE {
         USER_GROUP {
@@ -6699,7 +6699,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         abstract String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria);
     }
 
-    public enum REMOVE_REF_TYPE {USER, GROUP, ROLE}
+    public enum REMOVE_REF_TYPE { USER, GROUP, ROLE }
 
     private static class RangerPolicyDeltaComparator implements Comparator<RangerPolicyDelta>, java.io.Serializable {
         @Override

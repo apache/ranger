@@ -358,18 +358,13 @@ public class RangerServicePoliciesCache {
 
                             if (servicePoliciesForDeltas != null && servicePoliciesForDeltas.getPolicyDeltas() != null) {
                                 LOG.debug("Deltas were requested. Returning deltas from lastKnownVersion:[{}]", lastKnownVersion);
-
                                 if (isDeltaCacheReinitialized) {
                                     this.deltaCache = new ServicePolicyDeltasCache(lastKnownVersion, servicePoliciesForDeltas);
                                 }
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("servicePoliciesForDeltas = " + servicePoliciesForDeltas.getServiceConfig());
-                                }
 
+                                LOG.debug("servicePoliciesForDeltas = " + servicePoliciesForDeltas.getServiceConfig());
                                 ret = servicePoliciesForDeltas;
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("ret = " + ret.getServiceConfig());
-                                }
+                                LOG.debug("ret = " + ret.getServiceConfig());
                             } else {
                                 LOG.warn("Deltas were requested for service:[{}], but could not get them!! lastKnownVersion:[{}]; Returning cached ServicePolicies:[{}]", serviceName, lastKnownVersion, servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L);
 

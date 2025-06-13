@@ -40,7 +40,6 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerReadWriteLock;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.ugsyncutil.transform.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,53 +83,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
         policyEngine     = new PolicyEngine(servicePolicies, pluginContext, roles, isUseReadWriteLock);
         serviceConfig    = new ServiceConfig(servicePolicies.getServiceConfig());
         requestProcessor = new RangerDefaultRequestProcessor(policyEngine);
-
-        Map<String, String> serviceConfigMap = servicePolicies.getServiceConfig();
-        if (MapUtils.isNotEmpty(serviceConfigMap)) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerBasePlugin(" + serviceConfigMap.keySet() + ")");
-            }
-            pluginContext.setUserNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM));
-            pluginContext.setGroupNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM));
-            String mappingUserNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER);
-            try {
-                if (mappingUserNameHandler != null) {
-                    Class<Mapper> regExClass        = (Class<Mapper>) Class.forName(mappingUserNameHandler);
-                    Mapper        userNameRegExInst = regExClass.newInstance();
-                    if (userNameRegExInst != null) {
-                        String baseProperty = RangerCommonConstants.PLUGINS_MAPPING_USERNAME;
-                        userNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
-                                serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR));
-                        pluginContext.setUserNameTransformInst(userNameRegExInst);
-                    } else {
-                        LOG.error("RegEx handler instance for username is null!");
-                    }
-                }
-            } catch (ClassNotFoundException cne) {
-                LOG.error("Failed to load " + mappingUserNameHandler + " " + cne);
-            } catch (Throwable te) {
-                LOG.error("Failed to instantiate " + mappingUserNameHandler + " " + te);
-            }
-            String mappingGroupNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER);
-            try {
-                if (mappingGroupNameHandler != null) {
-                    Class<Mapper> regExClass         = (Class<Mapper>) Class.forName(mappingGroupNameHandler);
-                    Mapper        groupNameRegExInst = regExClass.newInstance();
-                    if (groupNameRegExInst != null) {
-                        String baseProperty = RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME;
-                        groupNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
-                                serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR));
-                        pluginContext.setGroupNameTransformInst(groupNameRegExInst);
-                    } else {
-                        LOG.error("RegEx handler instance for groupname is null!");
-                    }
-                }
-            } catch (ClassNotFoundException cne) {
-                LOG.error("Failed to load " + mappingGroupNameHandler + " " + cne);
-            } catch (Throwable te) {
-                LOG.error("Failed to instantiate " + mappingGroupNameHandler + " " + te);
-            }
-        }
     }
 
     private RangerPolicyEngineImpl(final PolicyEngine policyEngine, RangerPolicyEngineImpl other) {
@@ -600,31 +552,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
     public RangerAccessRequestProcessor getRequestProcessor() {
         return requestProcessor;
-    }
-
-    private List<String> getAllRegexPatterns(String baseProperty, Map<String, String> serviceConfig) throws Throwable {
-        List<String> regexPatterns = new ArrayList<String>();
-        String       baseRegex     = serviceConfig.get(baseProperty);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getAllRegexPatterns(" + baseProperty + ")");
-            LOG.debug("baseRegex = " + baseRegex);
-            LOG.debug("pluginConfig = " + serviceConfig.keySet());
-        }
-        if (baseRegex == null) {
-            return regexPatterns;
-        }
-        regexPatterns.add(baseRegex);
-        int    i         = 1;
-        String nextRegex = serviceConfig.get(baseProperty + "." + i);
-        while (nextRegex != null) {
-            regexPatterns.add(nextRegex);
-            i++;
-            nextRegex = serviceConfig.get(baseProperty + "." + i);
-        }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getAllRegexPatterns(" + regexPatterns + ")");
-        }
-        return regexPatterns;
     }
 
     private RangerAccessResult zoneAwareAccessEvaluationWithNoAudit(RangerAccessRequest request, int policyType) {

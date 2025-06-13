@@ -40,7 +40,7 @@ public class RangerPluginContext {
 
     private final RangerPluginConfig                                                         config;
     private final Map<String, Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher>> resourceMatchers = new HashMap<>();
-    private final ReentrantReadWriteLock                                                     lock             = new ReentrantReadWriteLock(true);// fair lock
+    private final ReentrantReadWriteLock                                                     lock             = new ReentrantReadWriteLock(true); // fair lock
     private       Mapper                                                                     userNameTransformInst;
     private       Mapper                                                                     groupNameTransformInst;
     private       String                                                                     userNameCaseConversion;
