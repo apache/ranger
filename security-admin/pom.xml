@@ -544,6 +544,16 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-cloudwatch</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-es</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-authn</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -806,6 +816,18 @@
         </dependency>
 
         <!-- Test -->
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-hdfs</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-orc-util</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
