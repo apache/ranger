@@ -162,8 +162,6 @@ jobs:
 
       - name: Check status of containers and start running functional test and finally cleanup containers
         run: |
-
-          set -e
           sleep 240
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
