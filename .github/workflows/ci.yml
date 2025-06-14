@@ -54,6 +54,18 @@ jobs:
           distribution: 'temurin'
       - name: build (8)
         run: mvn -T 8 clean verify --no-transfer-progress -B -V
+
+      - name: run code coverage
+        run: |
+          cd dev-support/checks
+          chmod +x coverage.sh && ./coverage.sh
+
+      - name: upload coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco
+          path: target/coverage/all/*
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
