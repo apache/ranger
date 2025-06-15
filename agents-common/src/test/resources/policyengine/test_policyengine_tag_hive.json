@@ -55,6 +55,12 @@
       "denyPolicyItems":[
         {"accesses":[{"type":"select","isAllowed":true}],"users":["denieduser"],"groups":[],"delegateAdmin":false}
       ]
+    },
+    {"id":104,"name":"db=default, table=table-override: audit-all-access","isEnabled":true,"isAuditEnabled":true,"policyPriority":1,
+      "resources":{"database":{"values":["default"]},"table":{"values":["table-override"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":["user-override"],"groups":[],"delegateAdmin":false}
+      ]
     }
   ],
   "tagPolicyInfo": {
@@ -185,6 +191,9 @@
         "resources":{"tag":{"values":["PII"],"isRecursive":false}},
         "policyItems":[
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive"],"groups":[],"delegateAdmin":false}
+        ],
+        "denyPolicyItems":[
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["user-override"],"groups":[],"delegateAdmin":false}
         ]
       },
       {"id":3,"name":"PII_TAG_POLICY-FINAL","isEnabled":true,"isAuditEnabled":true,
@@ -367,8 +376,15 @@
         "context": {"TAGS":"[{\"type\":\"PII\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+    },
+    {"name":"ALLOW 'select * from default.table-override;' for user-override",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table-override", "column":"name"}},
+        "accessType":"read","user":"user-override","userGroups":[],"requestData":"select * from default.table-override",
+        "context": {"TAGS":"[{\"type\":\"PII\"}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":104}
     }
-
   ]
 }
 
