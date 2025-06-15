@@ -38,12 +38,17 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-kms</artifactId>
+            <artifactId>ranger-audit-dest-hdfs</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-audit</artifactId>
+            <artifactId>ranger-audit-dest-solr</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-kms</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

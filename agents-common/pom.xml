@@ -157,16 +157,15 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugin-classloader</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-audit</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-cred</artifactId>
