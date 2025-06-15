@@ -158,9 +158,9 @@ jobs:
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml up -d
 
-      - name: Check status of containers and remove them
+      - name: Check status of containers and start running functional test and finally cleanup containers
         run: |
-          sleep 60
+          sleep 240
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
           for container in "${containers[@]}"; do
@@ -171,11 +171,36 @@ jobs:
                   echo "Container $container is NOT running!";
               fi
           done
-          
-          if [[ $flag == true ]]; then
-              echo "All required containers are up and running";
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-          else
-              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
-              exit 1;
+
+          if [[ $flag != true ]]; then
+            echo "⚠️ Some containers failed to start. Exiting..."
+            docker stop $(docker ps -q) && docker rm $(docker ps -aq)
+            exit 1
           fi
+
+          echo "Running functional test suite"
+
+
+          echo "🚀 All required containers are up. Running test cases..."
+
+          cd PyTest-KMS-HDFS || exit 1         # Switch to the tests directory
+          
+          pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt || { echo "❌ Failed to install requirements"; exit 1; }  # Install dependencies
+
+          # Run tests, track result but do NOT exit immediately
+          test_result=0
+          pytest -vs test_hdfs/ || test_result=1
+          pytest -vs test_kms/ || test_result=1
+          
+          echo "🧹 Cleaning up containers..."
+          docker stop $(docker ps -q) && docker rm $(docker ps -aq);
+
+          if [[ $test_result -eq 1 ]]; then
+            echo "❌ Some tests failed."
+            exit 1
+          else
+            echo "✅ All tests passed and environment cleaned up!"
+            exit 0
+          fi
+          
