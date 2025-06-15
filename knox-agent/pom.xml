@@ -127,7 +127,15 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-audit</artifactId>
+            <artifactId>ranger-audit-dest-hdfs</artifactId>
+            <version>${project.version}</version>
+            <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
+       <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
+ -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-solr</artifactId>
             <version>${project.version}</version>
             <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
        <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
