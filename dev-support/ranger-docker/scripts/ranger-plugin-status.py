@@ -52,17 +52,12 @@ expected_services = ["hdfs", "hbase", "kms", "yarn", "kafka", "ozone", "knox", "
 
 
 def init_knox_plugin():
-    print("\nTriggering Knox activity to ensure plugin status is updated...")
+    print("\nInitializing Knox plugin...")
     try:
-        response = ranger.session.get(
-            KNOX_ENDPOINT,
-            auth=(KNOX_USER,KNOX_PASS),
-            verify=False,
-            timeout=10
-        )
+        response = ranger.session.get(KNOX_ENDPOINT,auth=(KNOX_USER,KNOX_PASS),verify=False,timeout=10)
         print("Knox activity triggered.")
     except Exception as e:
-        print(f"Failed to trigger Knox activity: {e}")
+        print(f"Failed to initialize Knox plugin: {e}")
 
 def fetch_plugin_info():
     print(f"\nFetching plugin info from {PLUGIN_INFO_ENDPOINT} ...")
