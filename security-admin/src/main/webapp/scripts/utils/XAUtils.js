@@ -1664,8 +1664,8 @@ define(function(require) {
             if(that.model && !_.isEmpty(that.model.get($select))){
                 _.map (that.model.get($select) , function(name){
                     tags.push({
-	                    'id': _.escape(name),
-	                    'text': _.escape(name)
+	                    'id': name,
+	                    'text': name
 	                });
                 })
             }
@@ -1706,8 +1706,8 @@ define(function(require) {
                             }
                             results = data.vXStrings.map(function(m) {
                                 return {
-                                    id: _.escape(m.value),
-                                    text: _.escape(m.value)
+                                    id: m.value,
+                                    text: m.value
                                 };
                             });
                         } else {
@@ -1718,8 +1718,8 @@ define(function(require) {
                             }
                             results = data.roles.map(function(m){
                                 return {
-                                    id : _.escape(m.name),
-                                    text: _.escape(m.name)
+                                    id : m.name,
+                                    text: m.name
                                 };
                             });
                         }
