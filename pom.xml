@@ -90,7 +90,7 @@
         <dnsjava.version>3.6.2</dnsjava.version>
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
-        <enunciate.version>2.13.2</enunciate.version>
+        <enunciate.version>2.17.1</enunciate.version>
         <fasterxml.jackson.databind.version>2.17.2</fasterxml.jackson.databind.version>
         <fasterxml.jackson.version>2.17.2</fasterxml.jackson.version>
         <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
@@ -171,10 +171,14 @@
         <metrics.core.version>3.0.2</metrics.core.version>
         <mockito.version>3.0.0</mockito.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
+        <nashorn.version>15.3</nashorn.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <netty-all.version>4.1.100.Final</netty-all.version>
         <nimbus-jose-jwt.version>10.0.1</nimbus-jose-jwt.version>
         <noggit.version>0.8</noggit.version>
+
+        <!-- openmetadata deps-->
+        <openmetadata.version>1.6.4</openmetadata.version>
         <orc.core.version>1.6.7</orc.core.version>
         <orc.version>1.5.8</orc.version>
         <org.bouncycastle.bcpkix-jdk15on>1.70</org.bouncycastle.bcpkix-jdk15on>

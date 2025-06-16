@@ -98,6 +98,19 @@ public class TagSyncConfig extends Configuration {
     private static TagSyncConfig instance;
     private static String        localHostname;
 
+    // openmetadata env variables
+    private static final String TAGSYNC_OPENMETADATASOURCE_ENDPOINT_PROP = "ranger.tagsync.source.openmetadatarest.endpoint";
+    public static final long DEFAULT_TAGSYNC_OPENMETADATAREST_SOURCE_DOWNLOAD_INTERVAL = 230000;
+    public  static final int  DEFAULT_TAGSYNC_OPENMETADATAREST_SOURCE_ENTITIES_BATCH_SIZE = 10000;
+    private static final String TAGSYNC_OPENMETADATAREST_SOURCE_DOWNLOAD_INTERVAL = "ranger.tagsync.source.openmetadatarest.download.interval.millis";
+    private static final String TAGSYNC_OPENMETADATAREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.openmetadatarest.entities.batch.size";
+    private static final String TAGSYNC_OPENMETADATAREST_TOKEN_PROP = "ranger.tagsync.source.openmetadatarest.token";
+    public static final String TAGSYNC_SOURCE_OPENMETADATA_CUSTOM_RESOURCE_MAPPERS_PROP = "ranger.tagsync.openmetadatarest.custom.resource.mappers";
+    private static final String TAGSYNC_OPENMETADATA_REST_SSL_CONFIG_FILENAME = "ranger.tagsync.source.openmetadatarest.ssl.config.filename";
+    private static final String TAGSYNC_OPENMETADATAREST_KEYSTORE_PROP = "ranger.tagsync.source.openmetadatarest.keystore.filename";
+    private static final String RANGER_OPENMETADATA_TABLE_COMPONENT_NAME = "ranger.tagsync.source.openmetadatarest.component.tabletype";
+    public static final String DEFAULT_RANGER_OPENMETADATA_TABLE_COMPONENT_NAME = "trino";
+
     private Properties                 props;
 
     private TagSyncConfig() {
@@ -581,5 +594,97 @@ public class TagSyncConfig extends Configuration {
         } catch (UnknownHostException e) {
             localHostname = "unknown";
         }
+    }
+
+    //openmetadata methods
+    static public String getOpenmetadataRESTToken(Properties prop) {
+        String token = null;
+        try{
+            if(prop!=null && prop.containsKey(TAGSYNC_OPENMETADATAREST_TOKEN_PROP)){
+                token = prop.getProperty(TAGSYNC_OPENMETADATAREST_TOKEN_PROP);
+            }
+            else if (prop != null && prop.containsKey(TAGSYNC_OPENMETADATAREST_KEYSTORE_PROP)) {
+                String path = prop.getProperty(TAGSYNC_OPENMETADATAREST_KEYSTORE_PROP);
+                if (path != null) {
+                    if (!path.trim().isEmpty()) {
+                        try {
+                            token = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_OPENMETADATAREST_TOKEN_PROP, getTagsyncKeyStoreType(prop));
+                        } catch (Exception ex) {
+                            token = null;
+                        }
+                        if (token != null && !token.trim().isEmpty() && !token.trim().equalsIgnoreCase("none")) {
+                            return token;
+                        }
+                    }
+                }
+                else{
+                    LOG.info("==> Keystore Property not set for OpenMetadata token. Using the token directly from property.");
+                }
+            }
+            else{
+                token = null;
+            }
+        }
+        catch(Exception exception){
+            LOG.error("The token required to connect with Openmetadata is either null or incorrect. Expecting a valid non null token.", exception);
+        }
+        return token;
+    }
+
+    static public String getOpenmetadataRESTEndpoint(Properties prop) {
+        return prop.getProperty(TAGSYNC_OPENMETADATASOURCE_ENDPOINT_PROP);
+    }
+
+    static public int getOpenmetadataRestTagSourceEntitiesBatchSize(Properties prop) {
+        String val = prop.getProperty(TAGSYNC_OPENMETADATAREST_SOURCE_ENTITIES_BATCH_SIZE);
+        int    ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
+
+        if (StringUtils.isNotBlank(val)) {
+            try {
+                ret = Integer.valueOf(val);
+            } catch (NumberFormatException exception) {
+                // Ignore
+            }
+        }
+
+        return ret;
+    }
+
+    static public long getOpenmetadataRESTTagSourceDownloadIntervalInMillis(Properties prop) {
+        String val = prop.getProperty(TAGSYNC_OPENMETADATAREST_SOURCE_DOWNLOAD_INTERVAL);
+        long    ret = DEFAULT_TAGSYNC_OPENMETADATAREST_SOURCE_DOWNLOAD_INTERVAL;
+
+        if (StringUtils.isNotBlank(val)) {
+            try {
+                ret = Long.valueOf(val);
+            } catch (NumberFormatException exception) {
+                // Ignore
+            }
+        }
+
+        return ret;
+    }
+
+    static public String getOpenmetadataRESTSslConfigFile(Properties prop) {
+        return prop.getProperty(TAGSYNC_OPENMETADATA_REST_SSL_CONFIG_FILENAME);
+    }
+
+    static public String getCustomOpenmetadataRESTResourceMappers(Properties prop) {
+        return prop.getProperty(TAGSYNC_SOURCE_OPENMETADATA_CUSTOM_RESOURCE_MAPPERS_PROP);
+    }
+
+    static public String getRangerOpenmetadataTableComponentName(Properties prop) {
+        String tableComponentType = null;
+        try{
+            if(prop!=null && prop.containsKey(RANGER_OPENMETADATA_TABLE_COMPONENT_NAME)){
+                tableComponentType = prop.getProperty(RANGER_OPENMETADATA_TABLE_COMPONENT_NAME);
+            }
+        }
+        catch(Exception exception){
+            LOG.warn("Error getting table component name", exception);
+            LOG.warn("Setting property 'RANGER_OPENMETADATA_TABLE_COMPONENT_NAME' to default value");
+            tableComponentType = DEFAULT_RANGER_OPENMETADATA_TABLE_COMPONENT_NAME;
+        }
+        return tableComponentType;
     }
 }

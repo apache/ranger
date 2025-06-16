@@ -292,6 +292,16 @@
             <version>${jettison.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.open-metadata</groupId>
+            <artifactId>openmetadata-java-client</artifactId>
+            <version>${openmetadata.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.open-metadata</groupId>
+            <artifactId>openmetadata-spec</artifactId>
+            <version>${openmetadata.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>

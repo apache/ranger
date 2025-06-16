@@ -175,6 +175,11 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>${nashorn.version}</version>
+        </dependency>
         <!-- To be added for JDK15 and above
         <dependency>
             <groupId>org.graalvm.js</groupId>
