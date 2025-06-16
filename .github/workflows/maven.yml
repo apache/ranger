@@ -162,7 +162,7 @@ jobs:
 
       - name: Check status of containers
         run: |
-          sleep 60
+          sleep 240
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
           for container in "${containers[@]}"; do
