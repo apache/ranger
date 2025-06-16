@@ -30,7 +30,7 @@ import settingsIcon from "Images/sidebar/settings.svg";
 import accountIcon from "Images/sidebar/account.svg";
 import gdsIcon from "Images/sidebar/governed-data.svg";
 import { fetchApi } from "Utils/fetchAPI";
-import { getUserProfile, getServiceDef } from "Utils/appState";
+import { getServiceDef, getUserProfile } from "Utils/appState";
 import {
   hasAccessToTab,
   isAuditor,
@@ -156,19 +156,19 @@ export const SideBar = () => {
       servicesResp = await fetchApi({
         url: "public/v2/api/service-headers"
       });
-      tagServices = filter(servicesResp.data, ["type", "tag"]);
+      tagServices = filter(servicesResp?.data, ["type", "tag"]);
       if (isKMSRole) {
-        resourceServices = filter(servicesResp.data, ["type", "kms"]);
+        resourceServices = filter(servicesResp?.data, ["type", "kms"]);
       } else {
         resourceServices = filter(
-          servicesResp.data,
+          servicesResp?.data,
           (service) => service.type !== "tag" && service.type !== "kms"
         );
       }
 
       dispatch({
         type: "SERVICES_DATA",
-        allServiceData: servicesResp.data,
+        allServiceData: servicesResp?.data || [],
         serviceData: resourceServices,
         tagServiceData: tagServices
       });

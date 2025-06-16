@@ -153,7 +153,7 @@ export const TopNavBar = (props) => {
     if (!isEmpty(service)) {
       return {
         label: `Service : ${service?.displayName}`,
-        value: service.displayName
+        value: service.id
       };
     } else {
       return "";
@@ -180,11 +180,13 @@ export const TopNavBar = (props) => {
       );
     }
   };
+
   const formatOptionLabel = ({ label }) => (
     <div title={label} className="text-truncate">
       {label}
     </div>
   );
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light content-top-nav">
       <div className="top-nav-title-wrapper">

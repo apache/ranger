@@ -96,7 +96,7 @@ function UserAccessLayout() {
         url: "public/v2/api/service-headers"
       });
 
-      resourceServices = filter(servicesResp.data, (service) =>
+      resourceServices = filter(servicesResp?.data, (service) =>
         isKMSRole ? service.type == "kms" : service.type != "kms"
       );
     } catch (error) {

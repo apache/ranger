@@ -65,10 +65,9 @@ class AuditLayout extends Component {
 
     this.setState({
       services: servicesResp,
-      servicesAvailable:
-        servicesResp.length === 0
-          ? "SERVICES_NOT_AVAILABLE"
-          : "SERVICES_AVAILABLE"
+      servicesAvailable: servicesResp.length
+        ? "SERVICES_AVAILABLE"
+        : "SERVICES_NOT_AVAILABLE"
     });
   };
 

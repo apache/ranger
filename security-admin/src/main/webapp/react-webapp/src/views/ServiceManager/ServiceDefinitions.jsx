@@ -139,13 +139,13 @@ class ServiceDefinitions extends Component {
         url: "public/v2/api/service-headers"
       });
       if (this.state.isTagView) {
-        tagServices = filter(servicesResp.data, ["type", "tag"]);
+        tagServices = filter(servicesResp?.data, ["type", "tag"]);
       } else {
         if (this.state.isKMSRole) {
-          resourceServices = filter(servicesResp.data, ["type", "kms"]);
+          resourceServices = filter(servicesResp?.data, ["type", "kms"]);
         } else {
           resourceServices = filter(
-            servicesResp.data,
+            servicesResp?.data,
             (service) => service.type !== "tag" && service.type !== "kms"
           );
         }
@@ -157,7 +157,7 @@ class ServiceDefinitions extends Component {
     }
 
     this.setState({
-      allServices: servicesResp.data,
+      allServices: servicesResp?.data || [],
       services: this.state.isTagView ? tagServices : resourceServices,
       filterServices: this.state.isTagView ? tagServices : resourceServices,
       loader: false

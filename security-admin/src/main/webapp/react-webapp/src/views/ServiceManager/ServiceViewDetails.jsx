@@ -42,6 +42,7 @@ export const ServiceViewDetails = (props) => {
     let getServiceData = {};
 
     try {
+      setLoader(true);
       getServiceData = await fetchApi({
         url: `plugins/services/${service.id}`
       });

@@ -74,13 +74,7 @@ class ZoneListing extends Component {
 
     try {
       servicesResp = await fetchApi({
-        url: "public/v2/api/service-headers",
-        params: {
-          page: 0,
-          pageSize: 200,
-          total_pages: 0,
-          startIndex: 0
-        }
+        url: "public/v2/api/service-headers"
       });
     } catch (error) {
       console.error(`Error occurred while fetching Services! ${error}`);
@@ -103,7 +97,7 @@ class ZoneListing extends Component {
       selectedZone: selectedZone,
       zones: zoneList,
       filterZone: zoneList,
-      services: servicesResp.data
+      services: servicesResp?.data || []
     });
   };
 
