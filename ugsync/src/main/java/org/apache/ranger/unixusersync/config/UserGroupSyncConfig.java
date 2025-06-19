@@ -245,7 +245,7 @@ public class UserGroupSyncConfig  {
 
 	private static final String SYNC_SOURCE = "ranger.usersync.sync.source";
 	private static final String LGSYNC_REFERRAL = "ranger.usersync.ldap.referral";
-	private static final String DEFAULT_LGSYNC_REFERRAL = "ignore";
+	private static final String DEFAULT_LGSYNC_REFERRAL = "follow";
 
 	public static final String SYNC_MAPPING_USERNAME = "ranger.usersync.mapping.username.regex";
 
