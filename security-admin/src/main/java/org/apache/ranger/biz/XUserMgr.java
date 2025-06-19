@@ -79,6 +79,7 @@ import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.PasswordUtils.PasswordGenerator;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPortalUserService;
@@ -86,6 +87,7 @@ import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.service.XUgsyncAuditInfoService;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
+import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXGroup;
@@ -2819,6 +2821,33 @@ public class XUserMgr extends XUserMgrBase {
         logger.debug("<== XUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion={}): ret={}", lastKnownUserStoreVersion, ret);
 
         return ret;
+    }
+
+    public void setAccessAuditsUserSource(List<VXAccessAudit> vxAccessAudits) {
+        Long lastKnownUserStoreVersion = 1L;
+
+        if (vxAccessAudits != null) {
+            RangerUserStore latestUserStore = getRangerUserStoreIfUpdated(lastKnownUserStoreVersion);
+            if (latestUserStore != null) {
+                Map<String, Map<String, String>> userAttrMapping = latestUserStore.getUserAttrMapping();
+
+                for (VXAccessAudit vxAccessAudit : vxAccessAudits) {
+                    String              requestUser    = vxAccessAudit.getRequestUser();
+                    Map<String, String> userAttributes = userAttrMapping.getOrDefault(vxAccessAudit.getRequestUser(), Collections.emptyMap());
+
+                    if (MapUtils.isNotEmpty(userAttributes)) {
+                        String userSourceStr = userAttributes.get(RangerCommonConstants.SCRIPT_FIELD__USER_SOURCE);
+                        if (userSourceStr != null) {
+                            try {
+                                vxAccessAudit.setUserSource(Integer.parseInt(userSourceStr));
+                            } catch (NumberFormatException e) {
+                                logger.error("XUserMgr.setAccessAuditsUserSource() : could not parse [{}] as Integer!", userSourceStr, e); // ignore
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public int createOrUpdateXUsers(VXUserList users) {

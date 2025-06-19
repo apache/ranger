@@ -43,6 +43,7 @@ import java.util.Set;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__EMAIL_ADDRESS;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__IS_INTERNAL;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__SYNC_SOURCE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__USER_SOURCE;
 
 @Service
 public class XXUserDao extends BaseDao<XXUser> {
@@ -212,6 +213,10 @@ public class XXUserDao extends BaseDao<XXUser> {
         }
 
         attrMap.put(SCRIPT_FIELD__IS_INTERNAL, Boolean.toString(isInternal));
+
+        if (userSource != null) {
+            attrMap.put(SCRIPT_FIELD__USER_SOURCE, String.valueOf(userSource));
+        }
 
         return new UserInfo(name, description, attrMap);
     }

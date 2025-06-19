@@ -159,6 +159,11 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
     protected String zonedEventTime;
 
     /**
+     * userSource
+     */
+    protected int    userSource;
+
+    /**
      * Default constructor. This will set all the attributes to default value.
      */
     public VXAccessAudit() {
@@ -631,6 +636,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
         str += "agentHost={" + agentHost + "}";
         str += "eventId={" + eventId + "}";
         str += "zonedEventTime={" + zonedEventTime + "} ";
+        str += "userSource={" + userSource + "} ";
         str += "}";
         return str;
     }
@@ -696,5 +702,13 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
      */
     public void setZonedEventTime(String zonedEventTime) {
         this.zonedEventTime = zonedEventTime;
+    }
+
+    public int getUserSource() {
+        return userSource;
+    }
+
+    public void setUserSource(int userSource) {
+        this.userSource = userSource;
     }
 }

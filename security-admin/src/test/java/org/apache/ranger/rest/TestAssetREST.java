@@ -20,6 +20,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
@@ -120,6 +121,8 @@ public class TestAssetREST {
     RangerBizUtil msBizUtil;
     @Mock
     RangerDaoManager daoManager;
+    @Mock
+    XUserMgr xUserMgr;
     @InjectMocks
     AssetREST assetREST = new AssetREST();
     @Mock        RESTErrorUtil           restErrorUtil;
@@ -562,6 +565,7 @@ public class TestAssetREST {
         Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
         XXServiceDef xServiceDef = new XXServiceDef();
         xServiceDef.setId(Id);
+        xUserMgr.setAccessAuditsUserSource(vXAccessAuditList.getVXAccessAudits());
         Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME)).thenReturn(xServiceDef);
         Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
         VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
@@ -597,6 +601,7 @@ public class TestAssetREST {
         Mockito.when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
         XXServiceDef xServiceDef = new XXServiceDef();
         xServiceDef.setId(Id);
+        xUserMgr.setAccessAuditsUserSource(vXAccessAuditList.getVXAccessAudits());
         Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME)).thenReturn(xServiceDef);
         Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
         VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
