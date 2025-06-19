@@ -51,7 +51,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Utility to update .env')
 	parser.add_argument('--release_branch', help='release branch')
 	parser.add_argument('--current_branch', default='master', help='current checked out ranger branch')
-	parser.add_argument('--maven_build', default=False, help='Maven build in Docker required?')
+	parser.add_argument('--maven_build', action='store_true', help='Maven build in Docker required?')
 
 	args = parser.parse_args()
 	update_env(args.current_branch, args.release_branch, args.maven_build)
