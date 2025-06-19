@@ -120,7 +120,7 @@
         <io.reactivex.rxjava.version>1.3.8</io.reactivex.rxjava.version>
 
         <!-- JaCoCo Properties -->
-        <jacoco.version>0.8.7</jacoco.version>
+        <jacoco.version>0.8.13</jacoco.version>
         <java.version.required>1.8</java.version.required>
         <javac.source.version>1.8</javac.source.version>
         <javac.target.version>1.8</javac.target.version>
