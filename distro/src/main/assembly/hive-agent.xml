@@ -46,6 +46,7 @@
         <include>org.apache.ranger:ranger-audit-dest-solr</include>
         <include>org.apache.ranger:ranger-plugins-cred</include>
         <include>org.apache.ranger:ranger-plugins-common</include>
+        <include>org.apache.ranger:ugsync-util</include>
         <include>org.apache.ranger:ranger-hive-plugin</include>
       </includes>
       <binaries>
