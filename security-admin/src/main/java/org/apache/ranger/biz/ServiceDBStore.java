@@ -2849,13 +2849,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     public Map<String, String> getLatestUgsyncConfig() {
         Map<String, String> configs = new HashMap<String, String>();
-        configs.put(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM, PropertiesUtil.getProperty(UgsyncCommonConstants.UGSYNC_USERNAME_CASE_CONVERSION_PARAM,
+        configs.put(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM,
                 UgsyncCommonConstants.DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE));
-        configs.put(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM, PropertiesUtil.getProperty(UgsyncCommonConstants.UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM,
+        configs.put(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM,
                 UgsyncCommonConstants.DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE));
-        configs.put(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER, PropertiesUtil.getProperty(UgsyncCommonConstants.SYNC_MAPPING_USERNAME_HANDLER,
+        configs.put(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER,
                 UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_USERNAME_HANDLER));
-        configs.put(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER, PropertiesUtil.getProperty(UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME_HANDLER,
+        configs.put(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER,
                 UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER));
         configs.put(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR, getRegexSeparator());
         configs.putAll(getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_MAPPING_USERNAME));
@@ -2865,7 +2865,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     public String getRegexSeparator() {
         String ret = UgsyncCommonConstants.DEFAULT_MAPPING_SEPARATOR;
-        String val = PropertiesUtil.getProperty(UgsyncCommonConstants.SYNC_MAPPING_SEPARATOR);
+        String val = PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR);
         if (StringUtils.isNotEmpty(val)) {
             if (val.length() == 1) {
                 ret = val;

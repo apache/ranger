@@ -210,7 +210,6 @@ public class RangerBasePlugin {
         this(pluginConfig);
 
         init();
-        configurePluginContextFromServicePoliciesForUserGroupName(policies);
         setPolicies(policies);
         setRoles(roles);
 
@@ -443,7 +442,7 @@ public class RangerBasePlugin {
 
     public void setPolicies(ServicePolicies policies) {
         LOG.debug("==> setPolicies({})", policies);
-
+        configurePluginContextFromServicePoliciesForUserGroupName(policies);
         this.serviceConfigs = (policies != null && policies.getServiceConfig() != null) ? policies.getServiceConfig() : new HashMap<>();
 
         if (pluginConfig.isEnableImplicitUserStoreEnricher() && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
