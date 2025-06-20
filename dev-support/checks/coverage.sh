@@ -43,7 +43,11 @@ rm -rf target/coverage-classes || true
 mkdir -p target/coverage-classes
 
 # Unzip all the classes from the last build
-find */target/ -name 'ranger-*.jar' -or -name 'embeddedwebserver-*.jar' -name 'credentialbuilder-*.jar' -or -name 'unix*.jar' | xargs -n1 unzip -o -q -d target/coverage-classes
+# exclude certain paths - shims with no tests interfere with the coverage report
+find . -type d -name 'target' -prune -exec find {} -type f \( -name 'ranger-*.jar' -or -name 'embeddedwebserver-*.jar' -or -name 'credentialbuilder-*.jar' -or -name 'unix*.jar' \) \; \
+-or -path './security-admin' -prune \
+-or -name '*shim*' -prune \
+| xargs -n1 unzip -o -q -d target/coverage-classes
 
 # get all source file paths
 src=$(find . -path '*/src/main/java' -o -path './target' -prune | sed 's/^/--sourcefiles /g' | xargs echo)
