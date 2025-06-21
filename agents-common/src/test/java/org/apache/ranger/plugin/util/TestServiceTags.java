@@ -25,8 +25,11 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class TestServiceTags {
     private static final RangerServiceResource[] RESOURCES = {
@@ -110,6 +113,96 @@ public class TestServiceTags {
 
         assertEquals(2, svcTags.dedupTags());
         assertEquals(0, svcTags.dedupTags());
+    }
+
+    @Test
+    public void testDedupTags_DuplicateTagWithHigherId() {
+        // Create ServiceTags with duplicate tags
+        RangerTag[] tags = {
+                new RangerTag("PII", Collections.singletonMap("type", "email")),
+                new RangerTag("PII", Collections.singletonMap("type", "email")),
+                new RangerTag("PCI", Collections.emptyMap()),
+                new RangerTag("PCI", Collections.emptyMap()),
+                new RangerTag("PII", Collections.singletonMap("type", "email"))
+        };
+
+        ServiceTags svcTags = createServiceTags(tags, RESOURCES);
+        assertEquals(5, svcTags.getTags().size());
+        // Should remove 3 duplicates (2 PII, 1 PCI)
+        assertEquals(3, svcTags.dedupTags());
+
+        // Verify: 2 tags remain (one PII, one PCI)
+        assertEquals(2, svcTags.getTags().size());
+        // Find retained PII tag ID
+        Long piiTagId = svcTags.getTags().entrySet().stream()
+                .filter(e -> e.getValue().getType().equals("PII"))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("PII tag not found"));
+        RangerTag cachedTag = svcTags.getTags().get(piiTagId);
+
+        // Verify resource mappings
+        assertTrue(svcTags.getResourceToTagIds().values().stream()
+                .allMatch(tagIds -> tagIds.contains(piiTagId)));
+
+        // Add a new PII tag with higher tag ID
+        ServiceTags svcTags1 = new ServiceTags(svcTags);
+        svcTags1.getTags().remove(piiTagId);
+        RangerTag newTag = new RangerTag("PII", Collections.singletonMap("type", "email"));
+        long newTagId = 23L;
+        newTag.setId(newTagId);
+        svcTags1.getTags().put(newTagId, newTag);
+        svcTags1.getResourceToTagIds().get(1L).add(newTagId);
+
+        assertEquals(0, svcTags1.dedupTags());
+        assertEquals(2, svcTags1.getTags().size());
+        assertEquals(cachedTag, svcTags1.getTags().get(piiTagId));
+        assertFalse(svcTags1.getTags().containsKey(newTagId));
+
+        // Verify resource mappings still include piiTagId
+        assertTrue(svcTags1.getResourceToTagIds().values().stream()
+                .allMatch(tagIds -> tagIds.contains(piiTagId)));
+
+        // Simulate resource deletion
+        svcTags1.getResourceToTagIds().remove(0L);
+        assertEquals(0, svcTags1.dedupTags());
+        assertEquals(cachedTag, svcTags1.getTags().get(piiTagId));
+        assertTrue(svcTags1.getResourceToTagIds().get(1L).contains(piiTagId));
+    }
+
+    @Test
+    public void testDedupTags_HigherIdTagAfterLowerIdRemoval() {
+        // Create ServiceTags with one PII tag
+        RangerTag[] tags = {new RangerTag("PII", Collections.singletonMap("type", "email"))};
+        ServiceTags svcTags = createServiceTags(tags, RESOURCES);
+        assertEquals(1, svcTags.getTags().size());
+
+        Long piiTagId = svcTags.getTags().entrySet().stream()
+                .filter(e -> e.getValue().getType().equals("PII"))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("PII tag not found"));
+        RangerTag cachedTag = svcTags.getTags().get(piiTagId);
+
+        // calling dedupTags() make sure that cachedTags contains PII tag.
+        svcTags.dedupTags();
+        svcTags.getTags().remove(piiTagId);
+
+        ServiceTags svcTags1 = new ServiceTags(svcTags);
+        RangerTag newTag = new RangerTag("PII", Collections.singletonMap("type", "email"));
+        long newTagId = 7L; // Higher tagID
+        newTag.setId(newTagId);
+        svcTags1.getTags().put(newTagId, newTag);
+        svcTags1.getResourceToTagIds().get(1L).add(newTagId);
+
+        // Call dedupTags (should fail with buggy code)
+        assertEquals(0, svcTags1.dedupTags());
+
+        // With buggy dedupTags(), newTagId (7) is removed, and no PII tag remains
+        // With fixed dedupTags(), newTagId is replaced with a valid ID(piiTagId)
+        assertEquals(1, svcTags1.getTags().size());
+        assertEquals(cachedTag, svcTags1.getTags().get(piiTagId));
+        assertFalse(svcTags1.getTags().containsKey(newTagId));
     }
 
     private ServiceTags createServiceTags(RangerTag[] tags, RangerServiceResource[] resources) {
