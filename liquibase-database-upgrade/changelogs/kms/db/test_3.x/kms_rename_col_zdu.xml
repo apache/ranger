@@ -1,0 +1,56 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+    <changeSet id="5a" author="fateh">
+        <addColumn tableName="ranger_keystore">
+            <column name="kms_encoded_value"
+                    type="varchar(2048)"/>
+        </addColumn>
+        <!--        <rollback>-->
+        <!--            &lt;!&ndash; Drop constraints/indexes that reference the new column (if any)-->
+        <!--<sql>ALTER TABLE ranger_keystore DROP CONSTRAINT constraint_name;</sql> &ndash;&gt;-->
+        <!--            &lt;!&ndash; Drop the old column &ndash;&gt;-->
+        <!--            <dropColumn tableName="ranger_keystore"></dropColumn>-->
+        <!--        </rollback>-->
+    </changeSet>
+
+    <changeSet id="5b" author="fateh">
+        <sql dbms="postgresql" >
+            update ranger_keystore set kms_encoded_value = kms_encoded;
+        </sql>
+        <rollback>empty</rollback>
+    </changeSet>
+
+
+    <changeSet id="5c" author="fateh">
+        <sqlFile path="kms/db/postgres/create_trigger_kmsencoded_postgres.sql" dbms="postgresql" />
+        <rollback>
+            <sql dbms="postgresql">
+                DROP TRIGGER IF EXISTS copy_data_trigger ON ranger_keystore;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
