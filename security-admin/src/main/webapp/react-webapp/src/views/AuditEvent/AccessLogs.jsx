@@ -58,8 +58,7 @@ import {
   serverError,
   requestDataTitle,
   fetchSearchFilterParams,
-  parseSearchFilter,
-  isEmptyValueCheck
+  parseSearchFilter
 } from "../../utils/XAUtils";
 import { CustomTooltip, Loader } from "../../components/CommonComponents";
 import {
@@ -531,19 +530,13 @@ function Access() {
         Header: "User Source",
         accessor: "userSource",
         Cell: (rawValue) => {
-          if (!isEmptyValueCheck(rawValue?.value)) {
+          if (!isEmpty(rawValue?.value)) {
             const userSourceVal = find(UserTypes, { value: rawValue.value });
-            if (userSourceVal) {
-              return (
-                <h6 className="text-center">
-                  <Badge bg={userSourceVal.variant}>
-                    {userSourceVal.label}
-                  </Badge>
-                </h6>
-              );
-            } else {
-              return "--";
-            }
+            return (
+              <h6 className="text-center">
+                <Badge bg={userSourceVal.variant}>{userSourceVal.label}</Badge>
+              </h6>
+            );
           } else return "--";
         },
         width: 100,

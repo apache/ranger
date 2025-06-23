@@ -1585,12 +1585,3 @@ export const currentTimeZone = (timeZoneDate) => {
         .replace(/^.*GMT.*\(/, "")
         .replace(/\)$/, "");
 };
-
-export const isEmptyValueCheck = (value) => {
-  return (
-    value == null ||
-    (typeof value === "string" && value.trim() === "") ||
-    (Array.isArray(value) && value.length === 0) ||
-    (typeof value === "object" && Object.keys(value).length === 0)
-  );
-};

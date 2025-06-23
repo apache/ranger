@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
-import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
@@ -142,9 +141,6 @@ public class AssetREST {
 
     @Autowired
     RangerDaoManager daoManager;
-
-    @Autowired
-    XUserMgr xUserMgr;
 
     @GET
     @Path("/assets/{id}")
@@ -599,8 +595,6 @@ public class AssetREST {
         } else {
             vxAccessAuditList.getVXAccessAudits().forEach(vxAccessAudit -> vxAccessAudit.setZonedEventTime(new SimpleDateFormat(RestUtil.ZONED_EVENT_TIME_FORMAT).format(vxAccessAudit.getEventTime())));
         }
-
-        xUserMgr.setAccessAuditsUserSource(vxAccessAuditList.getVXAccessAudits());
 
         return vxAccessAuditList;
     }

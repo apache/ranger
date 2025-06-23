@@ -75,8 +75,6 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.UserInfo;
-import org.apache.ranger.plugin.util.RangerCommonConstants;
-import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.service.RangerPolicyService;
@@ -94,7 +92,6 @@ import org.apache.ranger.service.XUserPermissionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
-import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 import org.apache.ranger.view.VXGroup;
@@ -137,7 +134,6 @@ import javax.ws.rs.WebApplicationException;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -4318,81 +4314,6 @@ public class TestXUserMgr {
         createdXUser = xUserMgr.createExternalUser(vXUser.getName());
         Assert.assertNotNull(createdXUser);
         Assert.assertEquals(createdXUser.getName(), vXUser.getName());
-    }
-
-    @Test
-    public void testSetAccessAuditsUserSource_WhenValidUserMappingExists() {
-        destroySession();
-        setup();
-        VXAccessAudit audit = new VXAccessAudit();
-        audit.setRequestUser("tom");
-
-        List<VXAccessAudit> auditList = Collections.singletonList(audit);
-
-        Map<String, String> userAttributes = new HashMap<>();
-        userAttributes.put(RangerCommonConstants.SCRIPT_FIELD__USER_SOURCE, "5");
-
-        Map<String, Map<String, String>> attrMap = new HashMap<>();
-        attrMap.put("tom", userAttributes);
-        RangerUserStore rangerUserStore = Mockito.mock(RangerUserStore.class);
-        rangerUserStore.setUserAttrMapping(attrMap);
-        XUserMgr spyXUserMgr = Mockito.spy(xUserMgr);
-        Mockito.doReturn(rangerUserStore).when(spyXUserMgr).getRangerUserStoreIfUpdated(1L);
-        Mockito.when(rangerUserStore.getUserAttrMapping()).thenReturn(attrMap);
-
-        spyXUserMgr.setAccessAuditsUserSource(auditList);
-
-        Assert.assertEquals(5, audit.getUserSource());
-    }
-
-    @Test
-    public void testSetAccessAuditsUserSource_WhenUserMappingDoesNotExist() {
-        destroySession();
-        setup();
-        VXAccessAudit audit = new VXAccessAudit();
-        audit.setRequestUser("unknownUser");
-
-        List<VXAccessAudit> auditList = Collections.singletonList(audit);
-
-        Map<String, String> userAttributes = new HashMap<>();
-        userAttributes.put(RangerCommonConstants.SCRIPT_FIELD__USER_SOURCE, "5");
-
-        Map<String, Map<String, String>> attrMap = new HashMap<>();
-        attrMap.put("tom", userAttributes);
-        RangerUserStore rangerUserStore = Mockito.mock(RangerUserStore.class);
-        rangerUserStore.setUserAttrMapping(attrMap);
-        XUserMgr spyXUserMgr = Mockito.spy(xUserMgr);
-        Mockito.doReturn(rangerUserStore).when(spyXUserMgr).getRangerUserStoreIfUpdated(1L);
-        Mockito.when(rangerUserStore.getUserAttrMapping()).thenReturn(attrMap);
-
-        spyXUserMgr.setAccessAuditsUserSource(auditList);
-
-        Assert.assertEquals(0, audit.getUserSource());
-    }
-
-    @Test
-    public void testSetAccessAuditsUserSource_WhenUserSourceKeyIsMissing() {
-        destroySession();
-        setup();
-
-        VXAccessAudit audit = new VXAccessAudit();
-        audit.setRequestUser("tom");
-
-        List<VXAccessAudit> auditList = Collections.singletonList(audit);
-
-        Map<String, String> userAttributes = new HashMap<>();
-
-        Map<String, Map<String, String>> attrMap = new HashMap<>();
-        attrMap.put("tom", userAttributes);
-        RangerUserStore rangerUserStore = Mockito.mock(RangerUserStore.class);
-        rangerUserStore.setUserAttrMapping(attrMap);
-        XUserMgr spyXUserMgr = Mockito.spy(xUserMgr);
-        Mockito.doReturn(rangerUserStore).when(spyXUserMgr).getRangerUserStoreIfUpdated(1L);
-        Mockito.when(rangerUserStore.getUserAttrMapping()).thenReturn(attrMap);
-
-        spyXUserMgr.setAccessAuditsUserSource(auditList);
-
-        Assert.assertEquals(0, audit.getUserSource());
     }
 
     @Test
