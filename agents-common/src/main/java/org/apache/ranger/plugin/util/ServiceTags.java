@@ -250,6 +250,7 @@ public class ServiceTags implements java.io.Serializable {
 		final Map<Long, Long> replacedIds      = new HashMap<>();
 		final int             initialTagsCount = tags.size();
 		final List<Long>      tagIdsToRemove   = new ArrayList<>();
+		final Map<Long, RangerTag> tagsToAdd   = new HashMap<>();
 
 		for (Iterator<Map.Entry<Long, RangerTag>> iter = tags.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry<Long, RangerTag> entry       = iter.next();
@@ -266,6 +267,7 @@ public class ServiceTags implements java.io.Serializable {
 					cachedTag.left = tagId;
 				} else {
 					replacedIds.put(tagId, cachedTag.left);
+					tagsToAdd.put(cachedTag.left, tag);
 					iter.remove();
 				}
 			}
@@ -274,6 +276,9 @@ public class ServiceTags implements java.io.Serializable {
 		for (Long tagIdToRemove : tagIdsToRemove) {
 			tags.remove(tagIdToRemove);
 		}
+
+		// Add all the tags whose tagIds are modified back to tags
+		tags.putAll(tagsToAdd);
 
 		final int finalTagsCount = tags.size();
 
