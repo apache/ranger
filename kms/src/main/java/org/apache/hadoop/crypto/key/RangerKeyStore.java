@@ -1020,7 +1020,7 @@ public class RangerKeyStore extends KeyStoreSpi {
         try {
             this.engineLoad(stream, password);
             Set<String> keyAliases = new HashSet<>(keyEntries.keySet());
-            logger.info("Count of key aliases to be re-encrypted=" + keyAliases.size());
+            logger.info("Count of key aliases to be re-encrypted = {}", keyAliases.size());
             for (String keyAlias : keyAliases) {
                 Key key = this.engineGetKey(keyAlias, password);
                 SecretKeyEntry entry = (SecretKeyEntry) keyEntries.remove(keyAlias);
