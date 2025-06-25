@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class HSTSFilter implements Filter {
-
     static final Logger LOG = LoggerFactory.getLogger(HSTSFilter.class);
 
     @Override
