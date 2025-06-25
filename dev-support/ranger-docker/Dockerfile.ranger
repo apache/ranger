@@ -35,14 +35,14 @@ COPY ./scripts/ranger.sh                                         ${RANGER_SCRIPT
 COPY ./scripts/ranger-admin-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-admin-install.properties
 COPY ./scripts/create-ranger-services.py                         ${RANGER_SCRIPTS}/
 
-RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} \
-    && ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin \
-    && rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz \
-    && cp -f ${RANGER_SCRIPTS}/ranger-admin-install.properties ${RANGER_HOME}/admin/install.properties \
+RUN    tar xvfz /home/ranger/dist/ranger-"${RANGER_VERSION}"-admin.tar.gz --directory="${RANGER_HOME}" \
+    && ln -s "${RANGER_HOME}"/ranger-"${RANGER_VERSION}"-admin "${RANGER_HOME}"/admin \
+    && rm -f /home/ranger/dist/ranger-"${RANGER_VERSION}"-admin.tar.gz \
+    && cp -f "${RANGER_SCRIPTS}"/ranger-admin-install.properties "${RANGER_HOME}"/admin/install.properties \
     && mkdir -p /var/run/ranger \
     && mkdir -p /var/log/ranger \
-    && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
-    && chmod 755 ${RANGER_SCRIPTS}/ranger.sh \
+    && chown -R ranger:ranger "${RANGER_HOME}"/admin/ "${RANGER_SCRIPTS}"/ /var/run/ranger/ /var/log/ranger/ \
+    && chmod 755 "${RANGER_SCRIPTS}"/ranger.sh \
     && mkdir -p /usr/share/java/
 
 FROM ranger AS ranger_postgres
@@ -53,7 +53,7 @@ FROM ranger AS ranger_mysql
 COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
 COPY ./downloads/log4jdbc-1.2.jar                 /home/ranger/dist/
 RUN     mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector.jar \
-     && mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
+     && mv /home/ranger/dist/log4jdbc-1.2.jar "${RANGER_HOME}"/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
 
 FROM ranger AS ranger_oracle
 COPY ./downloads/ojdbc8.jar         /home/ranger/dist/
@@ -63,7 +63,7 @@ FROM ranger AS ranger_sqlserver
 COPY ./downloads/mssql-jdbc-12.8.1.jre8.jar            /home/ranger/dist/
 RUN mv /home/ranger/dist/mssql-jdbc-12.8.1.jre8.jar    /usr/share/java/mssql.jar
 
-FROM ranger_${RANGER_DB_TYPE}
+FROM ranger_${RANGER_DB_TYPE}:${RANGER_VERSION}
 
 USER ranger
 

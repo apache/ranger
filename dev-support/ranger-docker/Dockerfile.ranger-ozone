@@ -23,8 +23,8 @@ ARG OZONE_PLUGIN_VERSION
 
 USER root
 
-RUN useradd -g hadoop -ms /bin/bash ozone
-RUN mkdir -p -m 755 /var/log/ozone
+RUN useradd -g hadoop -ms /bin/bash ozone && \
+    mkdir -p -m 755 /var/log/ozone
 
 # Required to locate the plugin jars and the config files
 ENV OZONE_MANAGER_CLASSPATH="${OZONE_HOME}/ranger-ozone-plugin/lib/libext/*:${OZONE_HOME}/ranger-ozone-plugin/conf"

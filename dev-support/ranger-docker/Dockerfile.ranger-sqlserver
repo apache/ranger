@@ -27,8 +27,8 @@ USER root
 
 RUN  mkdir -p /docker-entrypoint-initdb.d
 COPY config/init_mssql.sh /docker-entrypoint-initdb.d/
-RUN  chown -R mssql /docker-entrypoint-initdb.d/
-RUN  chmod +x /docker-entrypoint-initdb.d/init_mssql.sh
+RUN  chown -R mssql /docker-entrypoint-initdb.d/ && \
+     chmod +x /docker-entrypoint-initdb.d/init_mssql.sh
 
 USER mssql
 

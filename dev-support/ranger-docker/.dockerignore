@@ -15,3 +15,5 @@
 !dist/ranger-*-ozone-plugin.tar.gz
 !downloads/*
 !scripts/*
+!requirements.txt
+!.hadolint.yaml

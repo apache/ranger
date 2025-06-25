@@ -23,10 +23,22 @@ ENV OS_NAME=UBUNTU
 
 # Install tzdata, Python, Java, python-requests
 RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata vim\
-    python3 python3-pip openjdk-8-jdk openjdk-11-jdk openjdk-17-jdk bc iputils-ping ssh pdsh xmlstarlet && \
-    pip3 install apache-ranger && \
-    pip3 install requests
+    DEBIAN_FRONTEND="noninteractive" apt-get --no-install-recommends -y install \
+    bc \
+    iputils-ping \
+    openjdk-11-jdk \
+    openjdk-17-jdk \
+    openjdk-8-jdk \
+    pdsh \
+    python3 \
+    python3-pip \
+    ssh \
+    tzdata \
+    vim \
+    xmlstarlet && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    pip3 install --requirement requirements.txt --no-cache-dir apache-ranger && \
+    pip3 install --requirement requirements.txt --no-cache-dir requests
 
 # Set environment variables
 ENV JAVA_HOME=/usr/lib/jvm/java-${RANGER_BASE_JAVA_VERSION}-openjdk-${TARGETARCH}

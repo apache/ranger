@@ -25,10 +25,10 @@ COPY ./scripts/ranger-usersync.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-usersync-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/ugsync-file-source.csv             ${RANGER_SCRIPTS}/
 
-RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --directory=${RANGER_HOME} && \
-    ln -s ${RANGER_HOME}/ranger-${USERSYNC_VERSION}-usersync ${RANGER_HOME}/usersync && \
-    rm -f /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz && \
-    cp -f ${RANGER_SCRIPTS}/ranger-usersync-install.properties ${RANGER_HOME}/usersync/install.properties && \
+RUN tar xvfz /home/ranger/dist/ranger-"${USERSYNC_VERSION}"-usersync.tar.gz --directory="${RANGER_HOME}" && \
+    ln -s "${RANGER_HOME}"/ranger-"${USERSYNC_VERSION}"-usersync "${RANGER_HOME}"/usersync && \
+    rm -f /home/ranger/dist/ranger-"${USERSYNC_VERSION}"-usersync.tar.gz && \
+    cp -f "${RANGER_SCRIPTS}"/ranger-usersync-install.properties "${RANGER_HOME}"/usersync/install.properties && \
     mkdir -p /var/run/ranger && \
     mkdir -p /var/log/ranger/usersync && \
     ln -s /usr/bin/python3 /usr/bin/python && \
@@ -41,9 +41,9 @@ RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --dire
     ln -s /etc/init.d/ranger-usersync /etc/rc2.d/K00ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc3.d/S99ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc3.d/K00ranger-usersync && \
-    ln -s ${RANGER_HOME}/usersync/ranger-usersync-services.sh /usr/bin/ranger-usersync && \
-    chown -R ranger:ranger ${RANGER_HOME}/usersync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-usersync.sh
+    ln -s "${RANGER_HOME}"/usersync/ranger-usersync-services.sh /usr/bin/ranger-usersync && \
+    chown -R ranger:ranger "${RANGER_HOME}"/usersync/ "${RANGER_SCRIPTS}"/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync && \
+    chmod 744 "${RANGER_SCRIPTS}"/ranger-usersync.sh
 
 USER ranger
 

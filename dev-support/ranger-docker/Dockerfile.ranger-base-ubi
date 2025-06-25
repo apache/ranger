@@ -31,26 +31,31 @@ ENV JAVA_HOME="/usr/lib/jvm/java-${RANGER_BASE_UBI_JAVA_VERSION}" \
     JAVA_VERSION="${RANGER_BASE_UBI_JAVA_VERSION}" \
     JBOSS_CONTAINER_OPENJDK_JDK_MODULE="/opt/jboss/container/openjdk/jdk"
 
-# Install tzdata, Python, python-requests
-RUN microdnf install -y python3 python3-pip bc iputils hostname
-RUN microdnf install -y tar
-RUN microdnf install -y gzip
-RUN microdnf install -y procps
-RUN microdnf install -y vim
+COPY requirements.txt /home/ranger/
 
-# for command useradd, groupadd
-RUN microdnf install -y shadow-utils
-
-# for command su
-RUN microdnf install -y util-linux-user
-RUN microdnf install -y sudo
-
-# for command service
-RUN microdnf install -y initscripts
-RUN microdnf install -y openssh-clients
-RUN microdnf install -y openssh-server
-RUN microdnf install -y wget
-RUN pip3 install apache-ranger
+# Install dnf packages
+# for command useradd, groupadd: shadow-utils
+# for command su: util-linux-user, sudo
+# for command service: initscripts, openssh-clients, openssh-server
+RUN microdnf install -y \
+    bc \
+    gzip \
+    hostname \
+    initscripts \
+    iputils \
+    openssh-clients \
+    openssh-server \
+    procps \
+    python3 \
+    python3-pip \
+    tar \
+    vim \
+    shadow-utils \
+    util-linux-user \
+    sudo \
+    wget && \
+    pip3 install -r /home/ranger/requirements.txt --no-cache-dir apache-ranger && \
+    microdnf clean all
 
 # Set environment variables
 ENV RANGER_HOME=/opt/ranger
