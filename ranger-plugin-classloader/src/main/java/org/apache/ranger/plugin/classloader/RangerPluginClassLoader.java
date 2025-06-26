@@ -41,13 +41,13 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
     private static final Map<String, RangerPluginClassLoader> PLUGIN_CLASS_LOADERS = new HashMap<>();
 
-    private final MyClassLoader            componentClassLoader;
+    private final ComponentClassLoader     componentClassLoader;
     private final ThreadLocal<ClassLoader> preActivateClassLoader = new ThreadLocal<>();
 
     public RangerPluginClassLoader(String pluginType, Class<?> pluginClass) throws Exception {
         super(RangerPluginClassLoaderUtil.getInstance().getPluginFilesForServiceTypeAndPluginclass(pluginType, pluginClass), null);
 
-        componentClassLoader = AccessController.doPrivileged((PrivilegedAction<MyClassLoader>) () -> new MyClassLoader(Thread.currentThread().getContextClassLoader()));
+        componentClassLoader = AccessController.doPrivileged((PrivilegedAction<ComponentClassLoader>) () -> new ComponentClassLoader(pluginClass));
     }
 
     public static RangerPluginClassLoader getInstance(final String pluginType, final Class<?> pluginClass) throws Exception {
@@ -104,7 +104,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
             // Use the Component ClassLoader findClass to load when childClassLoader fails to find
             LOG.debug("RangerPluginClassLoader.findClass({}): calling componentClassLoader.findClass()", name);
 
-            MyClassLoader savedClassLoader = getComponentClassLoader();
+            ComponentClassLoader savedClassLoader = getComponentClassLoader();
 
             if (savedClassLoader != null) {
                 ret = savedClassLoader.findClass(name);
@@ -125,7 +125,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         if (ret == null) {
             LOG.debug("RangerPluginClassLoader.findResource({}): calling componentClassLoader.getResources()", name);
 
-            MyClassLoader savedClassLoader = getComponentClassLoader();
+            ComponentClassLoader savedClassLoader = getComponentClassLoader();
 
             if (savedClassLoader != null) {
                 ret = savedClassLoader.getResource(name);
@@ -165,7 +165,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
             // Use the Component ClassLoader loadClass to load when childClassLoader fails to find
             LOG.debug("RangerPluginClassLoader.loadClass({}): calling componentClassLoader.loadClass()", name);
 
-            MyClassLoader savedClassLoader = getComponentClassLoader();
+            ComponentClassLoader savedClassLoader = getComponentClassLoader();
 
             if (savedClassLoader != null) {
                 ret = savedClassLoader.loadClass(name);
@@ -198,7 +198,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         try {
             LOG.debug("RangerPluginClassLoader.findResourcesUsingComponentClassLoader({}): calling componentClassLoader.getResources()", name);
 
-            MyClassLoader savedClassLoader = getComponentClassLoader();
+            ComponentClassLoader savedClassLoader = getComponentClassLoader();
 
             if (savedClassLoader != null) {
                 ret = savedClassLoader.getResources(name);
@@ -232,7 +232,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         if (classLoader != null) {
             preActivateClassLoader.remove();
         } else {
-            MyClassLoader savedClassLoader = getComponentClassLoader();
+            ComponentClassLoader savedClassLoader = getComponentClassLoader();
 
             if (savedClassLoader != null && savedClassLoader.getParent() != null) {
                 classLoader = savedClassLoader.getParent();
@@ -252,7 +252,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
         ClassLoader ret = preActivateClassLoader.get();
 
         if (ret == null) {
-            MyClassLoader savedClassLoader = getComponentClassLoader();
+            ComponentClassLoader savedClassLoader = getComponentClassLoader();
 
             if (savedClassLoader != null && savedClassLoader.getParent() != null) {
                 ret = savedClassLoader.getParent();
@@ -262,19 +262,23 @@ public class RangerPluginClassLoader extends URLClassLoader {
         return ret;
     }
 
-    private MyClassLoader getComponentClassLoader() {
+    private ComponentClassLoader getComponentClassLoader() {
         return componentClassLoader;
         //return componentClassLoader.get();
     }
 
-    static class MyClassLoader extends ClassLoader {
-        public MyClassLoader(ClassLoader realClassLoader) {
-            super(realClassLoader);
+    static class ComponentClassLoader extends ClassLoader {
+        public ComponentClassLoader(Class<?> pluginShimClass) {
+            super(getClassLoaderOfShimClassOrCurrentThread(pluginShimClass));
         }
 
         @Override
         public Class<?> findClass(String name) throws ClassNotFoundException { //NO PMD
             return super.findClass(name);
+        }
+
+        private static ClassLoader getClassLoaderOfShimClassOrCurrentThread(Class<?> pluginShimClass) {
+            return pluginShimClass != null ? pluginShimClass.getClassLoader() : Thread.currentThread().getContextClassLoader();
         }
     }
 
