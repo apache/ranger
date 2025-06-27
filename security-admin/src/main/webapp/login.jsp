@@ -31,7 +31,7 @@
         <link href="styles/bootstrap.min.css" media="all" rel="stylesheet" type="text/css" id="bootstrap-css">
         <link rel="stylesheet" href="styles/font-awesome.min.css">
         <link href="styles/xa.css" media="all" rel="stylesheet" type="text/css" >
-        <script src="libs/bower/jquery/js/jquery-3.5.1.js" ></script>
+        <script src="libs/bower/jquery/js/core-lib.js" ></script>
         <script src="scripts/prelogin/XAPrelogin.js" ></script>
         <script type="text/javascript">
             $(document).ready(function() {
