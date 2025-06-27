@@ -30,4 +30,8 @@ public interface RangerKMSMKI {
 	default byte[] encryptZoneKey(Key zoneKey) throws Exception {return null;}
 
 	default void onInitialization() throws Exception {}
+
+	default boolean reencryptMKWithFipsAlgo(String mkPassword) throws Exception {
+		return  false;
+	}
 }

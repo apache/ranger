@@ -40,6 +40,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableReadLock;
@@ -90,6 +91,9 @@ public class RangerKeyStoreProvider extends KeyProvider {
     private final ReadWriteLock         lock  = new ReentrantReadWriteLock(true);
     private final boolean               keyVaultEnabled;
     private       boolean               changed = false;
+    private       boolean               isFIPSEnabled;
+    private       boolean               isMKReencrypted;
+    private       boolean               isNewMKGenerated;
 
     public RangerKeyStoreProvider(Configuration conf) throws Throwable {
         super(conf);
@@ -122,6 +126,10 @@ public class RangerKeyStoreProvider extends KeyProvider {
         final RangerKMSDB  rangerKMSDB = new RangerKMSDB(conf);
         final DaoManager   daoManager  = rangerKMSDB.getDaoManager();
         final RangerKMSMKI masterKeyProvider;
+
+        String storeType = conf.get("ranger.keystore.file.type", KeyStore.getDefaultType());
+        this.isFIPSEnabled = StringUtils.equalsIgnoreCase("bcfks", storeType);
+        logger.info("isFIPSEnabled={}",  isFIPSEnabled);
 
         if (isHSMEnabled) {
             logger.info("Ranger KMS HSM is enabled for storing master key.");
@@ -217,8 +225,29 @@ public class RangerKeyStoreProvider extends KeyProvider {
 
             masterKeyProvider = new RangerMasterKey(daoManager);
 
-            dbStore   = new RangerKeyStore(daoManager);
-            masterKey = this.generateAndGetMasterKey(masterKeyProvider, password);
+            dbStore   = new RangerKeyStore(isFIPSEnabled, daoManager);
+            char[] tempMK;
+            tempMK = this.generateAndGetMasterKey(masterKeyProvider, password);
+
+            if (isFIPSEnabled && !isNewMKGenerated) {
+                logger.info("MasterKey already exists and FIPS is enabled, may require re-encryption with compliant algorithm");
+                this.isMKReencrypted = masterKeyProvider.reencryptMKWithFipsAlgo(password);
+                logger.info("MasterKey re-encryption status {}", this.isMKReencrypted);
+
+                // initialize with new MK
+                try {
+                    tempMK = masterKeyProvider.getMasterKey(password).toCharArray();
+                } catch (Throwable e) {
+                    throw new RuntimeException("Error while getting Ranger Master key, Error - " + e.getMessage());
+                }
+            }
+
+            this.masterKey = tempMK;
+        }
+
+        // If MK required re-encryption, means Zone keys were also encrypted using older algo and needs to be re-encrypted.
+        if (isFIPSEnabled  && isMKReencrypted) {
+            this.dbStore.reencryptZoneKeysWithNewAlgo(null, this.masterKey);
         }
 
         reloadKeys();
@@ -639,7 +668,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
         char[] ret;
 
         try {
-            masterKeyProvider.generateMasterKey(password);
+            this.isNewMKGenerated = masterKeyProvider.generateMasterKey(password);
         } catch (Throwable cause) {
             throw new RuntimeException("Error while generating Ranger Master key, Error - ", cause);
         }

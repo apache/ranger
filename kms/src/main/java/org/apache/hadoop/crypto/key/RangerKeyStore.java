@@ -56,6 +56,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,7 +67,6 @@ import javax.crypto.SealedObject;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import org.apache.hadoop.conf.Configuration;
@@ -76,6 +76,7 @@ import org.apache.hadoop.crypto.key.RangerKeyStoreProvider.KeyMetadata;
 import org.apache.ranger.entity.XXRangerKeyStore;
 import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.ranger.kms.dao.RangerKMSDao;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
@@ -94,17 +95,24 @@ public class RangerKeyStore extends KeyStoreSpi {
     private static final String  AZURE_KEYVAULT_ENABLED  = "ranger.kms.azurekeyvault.enabled";
     private static final String  METADATA_FIELDNAME      = "metadata";
     private static final int     NUMBER_OF_BITS_PER_BYTE = 8;
-    private static final String  SECRET_KEY_HASH_WORD    = "Apache Ranger";
+    private static final String SECRET_KEY_HASH_WORD     = "Apache Ranger";
+    public  static final String KEY_CRYPTO_ALGO_NAME     = "keyCryptoAlgoName";
 
     private final    RangerKMSDao        kmsDao;
     private final    RangerKMSMKI        masterKeyProvider;
     private final    boolean             keyVaultEnabled;
+    private          boolean             isFIPSEnabled;
     private volatile Map<String, Object> keyEntries   = new ConcurrentHashMap<>();
     private final    Map<String, Object> deltaEntries = new ConcurrentHashMap<>();
 
 
     public RangerKeyStore(DaoManager daoManager) {
         this(daoManager, false, null);
+    }
+
+    public RangerKeyStore(boolean isFIPSEnabled, DaoManager daoManager) {
+        this(daoManager);
+        this.isFIPSEnabled = isFIPSEnabled;
     }
 
     public RangerKeyStore(DaoManager daoManager, Configuration conf, KeyVaultClient kvClient) {
@@ -133,7 +141,7 @@ public class RangerKeyStore extends KeyStoreSpi {
 
         if (entry instanceof SecretKeyEntry) {
             try {
-                ret = unsealKey(((SecretKeyEntry) entry).sealedKey, password);
+                ret = unsealKey((SecretKeyEntry) entry, password);
             } catch (Exception e) {
                 logger.error("engineGetKey({}) error", alias, e);
             }
@@ -273,6 +281,12 @@ public class RangerKeyStore extends KeyStoreSpi {
         return ret;
     }
 
+    private String addEncrAlgoNameInKeyAttrib(String jsonAttrib) throws Exception {
+        Map<String, String> attribMap = JsonUtilsV2.jsonToMap(jsonAttrib);
+        attribMap.put(KEY_CRYPTO_ALGO_NAME, SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256.getAlgoName());
+        return JsonUtilsV2.mapToJson(attribMap);
+    }
+
     public void addKeyEntry(String alias, Key key, char[] password, String cipher, int bitLength, String description, int version, String attributes) throws KeyStoreException {
         if (logger.isDebugEnabled()) {
             logger.debug("==> addKeyEntry({})", alias);
@@ -281,7 +295,8 @@ public class RangerKeyStore extends KeyStoreSpi {
         SecretKeyEntry entry;
 
         try {
-            entry = new SecretKeyEntry(sealKey(key, password), cipher, bitLength, description, version, attributes);
+            String updatedAttribute = isFIPSEnabled ? addEncrAlgoNameInKeyAttrib(attributes) : attributes;
+            entry = new SecretKeyEntry(sealKey(key, password), cipher, bitLength, description, version, updatedAttribute);
         } catch (Exception e) {
             logger.error("addKeyEntry({}) error", alias, e);
 
@@ -984,70 +999,105 @@ public class RangerKeyStore extends KeyStoreSpi {
 
     private SealedObject sealKey(Key key, char[] password) throws Exception {
         if (logger.isDebugEnabled()) {
-            logger.debug("==> sealKey()");
+            logger.debug("==> RangerKeyStore.sealKey()");
         }
 
         // Create SecretKey
-        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
-        PBEKeySpec       pbeKeySpec       = new PBEKeySpec(password);
-        SecretKey        secretKey        = secretKeyFactory.generateSecret(pbeKeySpec);
+        SupportedPBECryptoAlgo encrAlgo         = isFIPSEnabled ? SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256 : SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES;
+        SecretKeyFactory       secretKeyFactory = SecretKeyFactory.getInstance(encrAlgo.getAlgoName());
 
-        pbeKeySpec.clearPassword();
-
-        // Generate random bytes, set up the PBEParameterSpec, seal the key
-        SecureRandom random = new SecureRandom();
-        byte[]       salt   = new byte[8];
-
-        random.nextBytes(salt);
-
-        PBEParameterSpec pbeSpec = new PBEParameterSpec(salt, 20);
-        Cipher           cipher  = Cipher.getInstance("PBEWithMD5AndTripleDES");
-
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey, pbeSpec);
-
-        RangerSealedObject ret = new RangerSealedObject(key, cipher);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== sealKey(): ret={}", ret);
+        PBEKeySpec   pbeKeySpec    = null;
+        PBEKeySpec   pbeCipherSpec = null;
+        byte[]       salt          = null;
+        SecureRandom random        = new SecureRandom();
+        if (SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256.equals(encrAlgo)) {
+            salt = new byte[8 * 2];
+            random.nextBytes(salt);
+            pbeKeySpec    = new PBEKeySpec(password, salt, 20, encrAlgo.getKeyLength());
+            pbeCipherSpec = pbeKeySpec;
+        } else {
+            salt = new byte[8];
+            random.nextBytes(salt);
+            pbeKeySpec    = new PBEKeySpec(password);
+            pbeCipherSpec = new PBEKeySpec(password, salt, 20);
         }
 
-        return ret;
+        SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
+        pbeKeySpec.clearPassword();
+        // Seal the Key
+        Cipher cipher = Cipher.getInstance(encrAlgo.getCipherTransformation());
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, encrAlgo.getAlgoParamSpec(pbeCipherSpec));
+
+        logger.debug("<== RangerKeyStore.sealKey()");
+
+        return new RangerSealedObject(key, cipher, salt);
     }
 
-    private Key unsealKey(SealedObject sealedKey, char[] password) throws Exception {
+    private Key unsealKey(SecretKeyEntry secretKeyEntry, char[] password) throws Exception {
         if (logger.isDebugEnabled()) {
-            logger.debug("==> unsealKey()");
+            logger.debug("==> RangerKeyStore.unsealKey()");
+        }
+
+        // fetch encryption algo name
+        String encrAlgoName = JsonUtilsV2.jsonToMap(secretKeyEntry.attributes).get(KEY_CRYPTO_ALGO_NAME);
+        SupportedPBECryptoAlgo encrAlgo = StringUtils.isNotEmpty(encrAlgoName) ? SupportedPBECryptoAlgo.valueOf(encrAlgoName) : SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES;
+
+        SealedObject sealedKey = secretKeyEntry.sealedKey;
+        // Get the AlgorithmParameters from RangerSealedObject
+        AlgorithmParameters algorithmParameters = null;
+        byte[] salt = null;
+        PBEKeySpec pbeKeySpec = null;
+
+        if (SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256.equals(encrAlgo)) {
+            salt = ((RangerSealedObject) sealedKey).getSalt();
+            pbeKeySpec = new PBEKeySpec(password, salt, 20, encrAlgo.getKeyLength());
+        } else { // not yet re-encrypted, older algo
+            algorithmParameters = sealedKey instanceof RangerSealedObject ? ((RangerSealedObject) sealedKey).getParameters(encrAlgo.getAlgoName()) : new RangerSealedObject(sealedKey).getParameters(encrAlgo.getAlgoName());
+            pbeKeySpec = new PBEKeySpec(password);
         }
 
         // Create SecretKey
-        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
-        PBEKeySpec       pbeKeySpec       = new PBEKeySpec(password);
-        SecretKey        secretKey        = secretKeyFactory.generateSecret(pbeKeySpec);
-
+        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(encrAlgo.getAlgoName());
+        SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
         pbeKeySpec.clearPassword();
-
-        // Get the AlgorithmParameters from RangerSealedObject
-        AlgorithmParameters algorithmParameters;
-
-        if (sealedKey instanceof RangerSealedObject) {
-            algorithmParameters = ((RangerSealedObject) sealedKey).getParameters();
-        } else {
-            algorithmParameters = new RangerSealedObject(sealedKey).getParameters();
-        }
 
         // Unseal the Key
-        Cipher cipher = Cipher.getInstance("PBEWithMD5AndTripleDES");
+        Cipher cipher = Cipher.getInstance(encrAlgo.getCipherTransformation());
 
-        cipher.init(Cipher.DECRYPT_MODE, secretKey, algorithmParameters);
 
-        Key ret = (Key) sealedKey.getObject(cipher);
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== unsealKey(): ret={}", ret);
+        if (SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256.equals(encrAlgo)) {
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, encrAlgo.getAlgoParamSpec(pbeKeySpec));
+        } else {
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, algorithmParameters);
         }
 
-        return ret;
+        logger.debug("<== RangerKeyStore.unsealKey()");
+
+        return (Key) sealedKey.getObject(cipher);
     }
+
+    public void reencryptZoneKeysWithNewAlgo(InputStream stream, char[] password) throws Exception {
+        logger.debug("==> RangerKeyStore.reencryptZoneKeysWithNewAlgo");
+
+        try {
+            this.engineLoad(stream, password);
+            Set<String> keyAliases = new HashSet<>(keyEntries.keySet());
+            logger.info("Count of key aliases to be re-encrypted = {}", keyAliases.size());
+            for (String keyAlias : keyAliases) {
+                Key            key   = this.engineGetKey(keyAlias, password);
+                SecretKeyEntry entry = (SecretKeyEntry) keyEntries.remove(keyAlias);
+                this.addKeyEntry(keyAlias, key, password, entry.cipher_field, entry.bit_length, entry.description, entry.version, entry.attributes);
+            }
+            this.engineStore(null, password);
+            logger.info("All zone keys got re-encrypted");
+        } catch (IOException | NoSuchAlgorithmException | CertificateException | UnrecoverableKeyException | KeyStoreException e) {
+            logger.error("Error occurred while re-encrypting the zone keys", e);
+            throw e;
+        } finally {
+            logger.debug("<== RangerKeyStore.reencryptZoneKeysWithNewAlgo");
+        }
+    }
+
 
     // keys
     private static class KeyEntry {
@@ -1110,6 +1160,8 @@ public class RangerKeyStore extends KeyStoreSpi {
     private static class RangerSealedObject extends SealedObject {
         private static final long serialVersionUID = -7551578543434362070L;
 
+        private byte[] salt;
+
         /**
          *
          */
@@ -1121,14 +1173,22 @@ public class RangerKeyStore extends KeyStoreSpi {
             super(object, cipher);
         }
 
-        public AlgorithmParameters getParameters() throws NoSuchAlgorithmException, IOException {
-            AlgorithmParameters algorithmParameters = AlgorithmParameters.getInstance("PBEWithMD5AndTripleDES");
+        protected RangerSealedObject(Serializable object, Cipher cipher, byte[] salt) throws IllegalBlockSizeException, IOException {
+            this(object, cipher);
+            this.salt =  salt;
+        }
+
+        public AlgorithmParameters getParameters(String algoName) throws NoSuchAlgorithmException, IOException {
+            AlgorithmParameters algorithmParameters = AlgorithmParameters.getInstance(algoName);
 
             algorithmParameters.init(super.encodedParams);
 
             return algorithmParameters;
         }
 
+        public byte[] getSalt() {
+            return this.salt;
+        }
     }
 
     public static class KeyByteMetadata implements Key, Serializable {
