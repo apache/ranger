@@ -63,8 +63,7 @@ import {
 import { CustomTooltip, Loader } from "../../components/CommonComponents";
 import {
   ServiceRequestDataRangerAcl,
-  ServiceRequestDataHadoopAcl,
-  UserTypes
+  ServiceRequestDataHadoopAcl
 } from "../../utils/XAEnums";
 import { getServiceDef } from "../../utils/appState";
 
@@ -523,23 +522,6 @@ function Access() {
           } else return "--";
         },
         width: 120,
-        disableResizing: true,
-        getResizerProps: () => {}
-      },
-      {
-        Header: "User Source",
-        accessor: "userSource",
-        Cell: (rawValue) => {
-          if (!isEmpty(rawValue?.value)) {
-            const userSourceVal = find(UserTypes, { value: rawValue.value });
-            return (
-              <h6 className="text-center">
-                <Badge bg={userSourceVal.variant}>{userSourceVal.label}</Badge>
-              </h6>
-            );
-          } else return "--";
-        },
-        width: 100,
         disableResizing: true,
         getResizerProps: () => {}
       },
@@ -1020,19 +1002,6 @@ function Access() {
       urlLabel: "user",
       addMultiple: true,
       type: "text"
-    },
-    {
-      category: "userSource",
-      label: "User Source",
-      urlLabel: "userSource",
-      type: "textoptions",
-      options: () => {
-        return [
-          { value: "0", label: "Internal" },
-          { value: "1", label: "External" },
-          { value: "6", label: "Federated" }
-        ];
-      }
     },
     {
       category: "zoneName",

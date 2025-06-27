@@ -52,7 +52,6 @@ export const AccessLogsTable = ({ data = {} }) => {
     zoneName,
     requestData,
     tags,
-    userSource,
     datasets,
     projects
   } = data;
@@ -92,10 +91,6 @@ export const AccessLogsTable = ({ data = {} }) => {
         <tr>
           <td>User</td>
           <td>{!isEmpty(requestUser) ? requestUser : "--"}</td>
-        </tr>
-        <tr>
-          <td>User Source</td>
-          <td>{!isEmpty(userSource) ? userSource : "--"}</td>
         </tr>
         <tr>
           <td>Service Name </td>
