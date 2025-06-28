@@ -38,6 +38,12 @@ services:
         condition: service_started
       ranger-solr:
         condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "su om -c \"/opt/hadoop/bin/ozone fs -ls ofs://om/\"" ]
+      interval: 40s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     environment:
       ENSURE_OM_INITIALIZED: /data/metadata/om/current/VERSION
       OZONE_OPTS: -Dcom.sun.net.ssl.checkRevocation=false

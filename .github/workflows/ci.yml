@@ -168,11 +168,10 @@ jobs:
           -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
-          -f docker-compose.ranger-ozone.yml up -d
+          -f docker-compose.ranger-ozone.yml up -d --wait
 
       - name: Check status of containers and remove them
         run: |
-          sleep 60
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
           for container in "${containers[@]}"; do
