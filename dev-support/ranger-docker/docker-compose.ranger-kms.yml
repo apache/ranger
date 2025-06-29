@@ -18,6 +18,12 @@ services:
     depends_on:
       ranger:
         condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "grep 'Ranger KMS Started' /var/log/ranger/kms/ranger-kms*.log" ]
+      interval: 40s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
     environment:
       - KMS_VERSION
       - RANGER_DB_TYPE

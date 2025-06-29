@@ -15,6 +15,12 @@ services:
     depends_on:
       ranger:
         condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "grep 'Initializing TAG source and sink' /var/log/ranger/tagsync/tagsync*log*" ]
+      interval: 30s
+      timeout: 3s
+      retries: 10
+      start_period: 40s
     environment:
       - TAGSYNC_VERSION
       - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
