@@ -2082,10 +2082,9 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXRMSResourceMapping.deleteByServiceId">
+	<named-query name="XXRMSResourceMapping.deleteByServiceResourceIds">
 		<query>
-			DELETE FROM XXRMSResourceMapping mapping WHERE mapping.hlResourceId in (select obj.id from XXRMSServiceResource obj where obj.serviceId = :serviceId) OR
-			mapping.llResourceId in (select obj.id from XXRMSServiceResource obj where obj.serviceId = :serviceId)
+			DELETE FROM XXRMSResourceMapping mapping WHERE mapping.hlResourceId IN :ids OR mapping.llResourceId IN :ids
 		</query>
 	</named-query>
 

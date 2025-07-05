@@ -234,18 +234,23 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 	}
 
 	public void purge(long serviceId) {
+		List<Long> serviceResourceIds = getEntityManager()
+				.createNamedQuery("XXRMSServiceResource.getByServiceId", Long.class)
+				.setParameter("serviceId", serviceId)
+				.getResultList();
+
+		if (!serviceResourceIds.isEmpty()) {
+			getEntityManager().createNamedQuery("XXRMSResourceMapping.deleteByServiceResourceIds")
+					.setParameter("ids", serviceResourceIds)
+					.executeUpdate();
+		}
 
 		getEntityManager().createNamedQuery("XXRMSNotification.deleteByServiceId")
-				.setParameter("serviceId", serviceId)
-				.executeUpdate();
-
-		getEntityManager().createNamedQuery("XXRMSResourceMapping.deleteByServiceId")
 				.setParameter("serviceId", serviceId)
 				.executeUpdate();
 
 		getEntityManager().createNamedQuery("XXRMSServiceResource.deleteByServiceId")
 				.setParameter("serviceId", serviceId)
 				.executeUpdate();
-
 	}
 }
