@@ -23,9 +23,9 @@ services:
     healthcheck:
       test: [ "CMD-SHELL", "echo 'ping' | kafka-console-producer.sh --broker-list localhost:9092 --topic health-check-topic && kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic health-check-topic --from-beginning --max-messages 1 | grep 'ping'" ]
       interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+      timeout: 20s
+      retries: 5
+      start_period: 60s
     environment:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ranger-kafka:9092,PLAINTEXT_HOST://localhost:9092
