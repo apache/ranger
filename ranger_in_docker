@@ -154,7 +154,6 @@ then
 fi
 
 build_ranger=0
-build_base_image=0
 
 cd ${RD_HOME}
 
@@ -172,33 +171,16 @@ then
         then
             #echo "Found only [${noOfFiles}] RANGER tar files. Enabling RANGER BUILD."
             build_ranger=1
-            build_base_image=1
         #else
             #echo "Found [${noOfFiles}] RANGER tar files. Skipping RANGER BUILD. To Force RANGER BUILD, please set RANGER_REBUILD=1 before running this script."
         fi
     else
         #echo "Found [RANGER_REBUILD as ${RANGER_REBUILD}]. Enabling RANGER BUILD."
-        build_base_image=1
         build_ranger=1
     fi
 
 
     cd ${RD_HOME}
-
-    if [ ${build_base_image} -eq 0 ]
-    then
-        docker images ranger-base:latest 2> /dev/null  | grep ranger-base  > /dev/null 2>&1
-        if [ $? -ne 0 ]
-        then
-            build_base_image=1
-        fi
-    fi
-
-    if [ ${build_base_image} -eq 1 ]
-    then
-        echo "+ docker-compose -f docker-compose.ranger-base.yml build --no-cache"
-        docker-compose -f docker-compose.ranger-base.yml build --no-cache
-    fi
 
     if [ ${build_ranger} -eq 1 ]
     then
@@ -206,11 +188,11 @@ then
         then
             cd ${RD_HOME}
 
-            echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans"
-            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans
+            echo "+ docker-compose -f docker-compose.ranger-build.yml down --remove-orphans"
+            docker-compose -f docker-compose.ranger-build.yml down --remove-orphans
 
             echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up"
-            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
+            docker-compose -f docker-compose.ranger-build.yml up
             if [ $? -ne 0 ]
             then
                 echo "ERROR: Unable to complete RANGER build using DOCKER. Exiting ...."

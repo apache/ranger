@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-build
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_BUILD_JAVA_VERSION=${RANGER_BUILD_JAVA_VERSION}
     image: ranger-build
     container_name: ranger-build
@@ -16,8 +18,6 @@ services:
       - ./patches:/home/ranger/patches
       - ./dist:/home/ranger/dist:delegated
       - ${RANGER_HOME:-./../../}:/home/ranger/src:delegated
-    depends_on:
-      - ranger-base
     environment:
       - BRANCH
       - BUILD_HOST_SRC

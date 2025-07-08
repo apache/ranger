@@ -14,19 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ARG RANGER_DB_TYPE
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
 
-FROM ranger-base:latest AS ranger
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger
 
 ARG RANGER_VERSION
 ARG RANGER_DB_TYPE
 ARG TARGETARCH
-ARG RANGER_ADMIN_JAVA_VERSION
-
-ENV JAVA_HOME=/usr/lib/jvm/java-1.${RANGER_ADMIN_JAVA_VERSION}.0-openjdk-${TARGETARCH}
-
-RUN if [ "${OS_NAME}" = "UBUNTU" ]; then\
-    update-java-alternatives --set "$JAVA_HOME";\
-    fi
 
 COPY ./dist/version                               /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/

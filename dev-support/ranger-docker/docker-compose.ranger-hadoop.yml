@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-hadoop
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - HADOOP_VERSION=${HADOOP_VERSION}
         - HDFS_PLUGIN_VERSION=${HDFS_PLUGIN_VERSION}
         - YARN_PLUGIN_VERSION=${YARN_PLUGIN_VERSION}

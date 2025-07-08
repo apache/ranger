@@ -15,9 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-if [ "${OS_NAME}" = "UBUNTU" ]; then
-  service ssh start
-fi
 
 CREATE_HDFS_DIR=false
 
@@ -35,6 +32,9 @@ then
   su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" yarn
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" yarn
   su -c "chmod 0600 ~/.ssh/authorized_keys" yarn
+
+  ssh-keygen -A
+  /usr/sbin/sshd -D &
 
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default

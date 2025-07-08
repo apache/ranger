@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-kafka
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - KAFKA_VERSION=${KAFKA_VERSION}
         - KAFKA_PLUGIN_VERSION=${KAFKA_PLUGIN_VERSION}
     image: ranger-kafka
