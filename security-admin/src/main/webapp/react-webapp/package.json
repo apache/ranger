@@ -6,7 +6,8 @@
   "scripts": {
     "start": "webpack serve --config ./config/webpack.dev.config.js",
     "build": "webpack --config ./config/webpack.prod.config.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "update-babel-config": "node update-babel-config.js"
   },
   "repository": {
     "type": "git",

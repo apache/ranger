@@ -27,6 +27,8 @@
     <name>Security Admin Web Application</name>
     <description>security-admin-tool java web application</description>
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <skipJSCoverage>true</skipJSCoverage>
         <skipJSTests>false</skipJSTests>
     </properties>
     <dependencies>
@@ -1201,6 +1203,32 @@
                             <installDirectory>${project.build.directory}/react-build</installDirectory>
                             <nodeVersion>v20.19.5</nodeVersion>
                             <npmVersion>10.8.2</npmVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>update-babel-config for react-webapp</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <workingDirectory>${project.build.directory}/react-webapp</workingDirectory>
+                            <installDirectory>${project.build.directory}/react-build</installDirectory>
+                            <arguments>run update-babel-config</arguments>
+                            <skip>${skipJSCoverage}</skip>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>install-babel-coverage for react-webapp</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <workingDirectory>${project.build.directory}/react-webapp</workingDirectory>
+                            <installDirectory>${project.build.directory}/react-build</installDirectory>
+                            <arguments>install --save-dev @babel/preset-react@7.27.1 @babel/preset-env@7.28.0 babel-plugin-istanbul</arguments>
+                            <skip>${skipJSCoverage}</skip>
                         </configuration>
                     </execution>
                     <execution>
