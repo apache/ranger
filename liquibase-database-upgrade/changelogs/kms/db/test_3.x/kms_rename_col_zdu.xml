@@ -28,12 +28,6 @@
             <column name="kms_encoded_value"
                     type="varchar(2048)"/>
         </addColumn>
-        <!--        <rollback>-->
-        <!--            &lt;!&ndash; Drop constraints/indexes that reference the new column (if any)-->
-        <!--<sql>ALTER TABLE ranger_keystore DROP CONSTRAINT constraint_name;</sql> &ndash;&gt;-->
-        <!--            &lt;!&ndash; Drop the old column &ndash;&gt;-->
-        <!--            <dropColumn tableName="ranger_keystore"></dropColumn>-->
-        <!--        </rollback>-->
     </changeSet>
 
     <changeSet id="5b" author="fateh">

@@ -64,7 +64,6 @@ public class FileDBForTest {
             List<String> lines = new ArrayList<>();
             lines.add(",,," + tagName);
             writeLines(filePath, lines, true);
-            //writeLineToFile(filePath,",,,"+tagName);
         } else {
             try {
                 readAndModifyLastLine(filePath, tagName);

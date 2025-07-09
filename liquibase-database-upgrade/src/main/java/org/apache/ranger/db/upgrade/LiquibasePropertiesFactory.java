@@ -36,16 +36,12 @@ public class LiquibasePropertiesFactory {
     }
 
     public String getUrl(String serviceName) {
-        String url;
         IConfigProvider provider = configProviders.get(serviceName);
         if (provider == null) {
             LOG.error("ConfigProvider for service {} is null", serviceName);
-            url = "";
+            return "";
         }
-        else {
-            url = provider.getUrl();
-        }
-        return url;
+        return provider.getUrl();
     }
 
     public String getUsername(String serviceName) {

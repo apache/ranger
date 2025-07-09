@@ -80,8 +80,12 @@ public class LiquibaseDBUtilsMain {
                             response.put("isFinalizeComplete", Constants.RETURN_CODE_FAILURE);
                         }
                         break;
-//                    case "releaseLock":
-//                        throw new NotImplementedException("releaseLock not yet implemented");
+                        /*
+                        TODO: Implement releaseLock here. Workaround: execute command manually or use sql to change value in databasechangeloglock table manually
+                         Required in some cases when liquibase does not automatically release lock incase of unclean exit of the process
+                    case "releaseLock":
+                        throw new NotImplementedException("releaseLock not yet implemented");
+                         */
                     default:
                         throw new UnsupportedOperationException("op=" + op + " is not valid");
                 }

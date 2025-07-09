@@ -35,12 +35,21 @@ public class LiquibaseCommandResultsUtil {
     }
 
     public static boolean isUpdateSuccessful(CommandResults updateResult) {
-    /*
-    TODO: revisit this
-     */
-        boolean operationInfoResult = updateResult.getResult("operationInfo") != null &&
-                ((OperationInfo) updateResult.getResult("operationInfo")).getOperationOutcome().equals("success");
-        boolean updateReportResult = updateResult.getResult("updateReport") != null && (((UpdateReportParameters) updateResult.getResult("updateReport")).getSuccess());
+        /*
+        TODO: revisit this
+        */
+        boolean operationInfoResult = false;
+        Object operationInfoObj = updateResult.getResult("operationInfo");
+        if (operationInfoObj instanceof OperationInfo) {
+            operationInfoResult = ((OperationInfo) operationInfoObj).getOperationOutcome().equals("success");
+        }
+
+        boolean updateReportResult = false;
+        Object updateReportObj = updateResult.getResult("updateReport");
+        if (updateReportObj instanceof UpdateReportParameters) {
+            updateReportResult = ((UpdateReportParameters) updateReportObj).getSuccess();
+        }
+        
         return operationInfoResult || updateReportResult;
     }
 }

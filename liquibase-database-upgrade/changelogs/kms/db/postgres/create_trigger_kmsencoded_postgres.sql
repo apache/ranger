@@ -21,11 +21,11 @@ RETURNS TRIGGER AS
 '
 BEGIN
      -- If column_a is updated and is not null, update column_b
-     IF NEW.kms_encoded IS NOT NULL THEN
+     IF NEW.kms_encoded IS NOT NULL AND NEW.kms_encoded_value IS NULL THEN
           NEW.kms_encoded_value := NEW.kms_encoded;
      END IF;
      -- If column_b is updated and is not null, update column_a
-     IF NEW.kms_encoded_value IS NOT NULL THEN
+     IF NEW.kms_encoded_value IS NOT NULL AND NEW.kms_encoded is NULL THEN
             NEW.kms_encoded := NEW.kms_encoded_value;
      END IF;
      RETURN NEW;
