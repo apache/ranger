@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-knox
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - KNOX_VERSION=${KNOX_VERSION}
         - KNOX_PLUGIN_VERSION=${KNOX_PLUGIN_VERSION}
     image: ranger-knox

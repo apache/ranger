@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-kms
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - KMS_VERSION=${KMS_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
     image: ranger-kms:latest
