@@ -24,11 +24,6 @@ then
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hdfs
   su -c "chmod 0600 ~/.ssh/authorized_keys" hdfs
 
-  if [ "${OS_NAME}" = "RHEL" ]; then
-    ssh-keygen -A
-    /usr/sbin/sshd
-  fi
-
   su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" yarn
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" yarn
   su -c "chmod 0600 ~/.ssh/authorized_keys" yarn
