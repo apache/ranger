@@ -130,12 +130,17 @@ then
     exit 1
 fi
 
-docker-compose --version > /dev/null 2>&1
-
-if [ $? -ne 0 ]
+# Check presence of Docker compose (V1 or V2)
+# It's related to https://issues.apache.org/jira/projects/RANGER/issues/RANGER-5009
+if docker compose version > /dev/null 2>&1
 then
-    echo "ERROR: You must have a valid DOCKER installed on your system to do a docker build. (error running docker-compose command)"
-    exit 1
+  DOCKER_COMPOSE="docker compose"
+elif docker-compose --version > /dev/null 2>&1
+then
+  DOCKER_COMPOSE="docker-compose"
+else
+  echo "ERROR: Neither 'docker compose' (v2) nor 'docker-compose' (v1) is installed. (error running docker compose command)"
+  exit 1
 fi
 
 if [ -z "${DOCKER_MAVEN_BUILD}" ]
@@ -196,8 +201,8 @@ then
 
     if [ ${build_base_image} -eq 1 ]
     then
-        echo "+ docker-compose -f docker-compose.ranger-base.yml build --no-cache"
-        docker-compose -f docker-compose.ranger-base.yml build --no-cache
+        echo "+ '${DOCKER_COMPOSE}' -f docker-compose.ranger-base.yml build --no-cache"
+        ${DOCKER_COMPOSE} -f docker-compose.ranger-base.yml build --no-cache
     fi
 
     if [ ${build_ranger} -eq 1 ]
@@ -206,11 +211,11 @@ then
         then
             cd ${RD_HOME}
 
-            echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans"
-            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans
+            echo "+ '${DOCKER_COMPOSE}' -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans"
+            ${DOCKER_COMPOSE} -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans
 
-            echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up"
-            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
+            echo "+ '${DOCKER_COMPOSE}' -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up"
+            ${DOCKER_COMPOSE} -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
             if [ $? -ne 0 ]
             then
                 echo "ERROR: Unable to complete RANGER build using DOCKER. Exiting ...."
@@ -234,7 +239,7 @@ fi
 
 cd ${RD_HOME}
 
-docker-compose ${OPT} ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
+${DOCKER_COMPOSE} ${OPT} ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
 
 echo
 echo "################### LIST OF DOCKER PROCESSES EXPOSING PORTS #####################"
