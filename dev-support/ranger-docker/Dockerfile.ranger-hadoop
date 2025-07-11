@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger-base:latest
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
 ARG HADOOP_VERSION
 ARG HDFS_PLUGIN_VERSION
@@ -45,6 +47,11 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     cp -f /home/ranger/scripts/ranger-yarn-plugin-install.properties /opt/ranger/ranger-yarn-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
     chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssh-server && \
+    mkdir -p /var/run/sshd && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV HADOOP_HOME=/opt/hadoop
 ENV HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop

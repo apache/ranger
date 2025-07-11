@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-hbase
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - HBASE_VERSION=${HBASE_VERSION}
         - HBASE_PLUGIN_VERSION=${HBASE_PLUGIN_VERSION}
     image: ranger-hbase

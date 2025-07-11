@@ -137,9 +137,6 @@ jobs:
       - name: Build all ranger-service images
         run: |
           cd dev-support/ranger-docker
-          docker compose -f docker-compose.ranger-base.yml build
-          export DOCKER_BUILDKIT=1
-          export COMPOSE_DOCKER_CLI_BUILD=1
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
