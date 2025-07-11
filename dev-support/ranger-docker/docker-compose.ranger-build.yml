@@ -5,8 +5,7 @@ services:
       dockerfile: Dockerfile.ranger-build
       args:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
-        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
-        - RANGER_BUILD_JAVA_VERSION=${RANGER_BUILD_JAVA_VERSION}
+        - RANGER_BASE_BUILD_VERSION=${RANGER_BASE_BUILD_VERSION}
     image: ranger-build
     container_name: ranger-build
     hostname: ranger-build.example.com
