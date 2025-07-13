@@ -57,7 +57,6 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     private static final Logger LOG = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
 
 	private static volatile RangerBasePlugin rangerPlugin = null;
-	RangerDefaultAuditHandler auditHandler = null;
 
 	public RangerOzoneAuthorizer() {
 		RangerBasePlugin plugin = rangerPlugin;
@@ -70,7 +69,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 					plugin = new RangerBasePlugin("ozone", "ozone");
 					plugin.init(); // this will initialize policy engine and policy refresher
 
-					auditHandler = new RangerDefaultAuditHandler();
+					RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 					plugin.setResultProcessor(auditHandler);
 
 					rangerPlugin = plugin;
@@ -97,7 +96,9 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 					context.getIp() + ", resourceType = " + ozoneObj.getResourceType() + ")");
 		}
 
-		if (rangerPlugin == null) {
+		RangerBasePlugin plugin = rangerPlugin;
+
+		if (plugin == null) {
 			MiscUtil.logErrorMessageByInterval(LOG,
 					"Authorizer is still not initialized");
 			return returnValue;
@@ -127,7 +128,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 			return returnValue;
 		}
 		String action = accessType;
-		String clusterName = rangerPlugin.getClusterName();
+		String clusterName = plugin.getClusterName();
 
 		RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
 		rangerRequest.setUser(ugi.getShortUserName());
@@ -165,7 +166,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		}
 
 		try {
-			RangerAccessResult result = rangerPlugin
+			RangerAccessResult result = plugin
 					.isAccessAllowed(rangerRequest);
 			if (result == null) {
 				LOG.error("Ranger Plugin returned null. Returning false");
