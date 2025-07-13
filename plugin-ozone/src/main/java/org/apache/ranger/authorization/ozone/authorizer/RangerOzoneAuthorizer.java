@@ -55,8 +55,6 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
     private static volatile RangerBasePlugin rangerPlugin;
 
-    RangerDefaultAuditHandler auditHandler;
-
     public RangerOzoneAuthorizer() {
         RangerBasePlugin plugin = rangerPlugin;
 
@@ -69,7 +67,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
                     plugin.init(); // this will initialize policy engine and policy refresher
 
-                    auditHandler = new RangerDefaultAuditHandler();
+                    RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 
                     plugin.setResultProcessor(auditHandler);
 
@@ -96,7 +94,9 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
         LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = {}, resource = {}, store type = {}, ugi = {}, ip = {}, resourceType = {}", operation, resource, OzoneObj.StoreType.values(), ugi, context.getIp(), ozoneObj.getResourceType());
 
-        if (rangerPlugin == null) {
+        RangerBasePlugin plugin = rangerPlugin;
+
+        if (plugin == null) {
             MiscUtil.logErrorMessageByInterval(LOG, "Authorizer is still not initialized");
 
             return false;
@@ -128,7 +128,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             return false;
         }
 
-        String                  clusterName   = rangerPlugin.getClusterName();
+        String                  clusterName   = plugin.getClusterName();
         RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
 
         rangerRequest.setUser(ugi.getShortUserName());
@@ -170,7 +170,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         }
 
         try {
-            RangerAccessResult result = rangerPlugin.isAccessAllowed(rangerRequest);
+            RangerAccessResult result = plugin.isAccessAllowed(rangerRequest);
 
             if (result == null) {
                 LOG.error("Ranger Plugin returned null. Returning false");
