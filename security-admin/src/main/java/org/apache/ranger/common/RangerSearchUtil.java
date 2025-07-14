@@ -105,6 +105,7 @@ public class RangerSearchUtil extends SearchUtil {
         ret.setParam(SearchFilter.TAG_SOURCE_PARTIAL, request.getParameter(SearchFilter.TAG_SOURCE_PARTIAL));
         ret.setParam(SearchFilter.TAG_SERVICE_NAME, request.getParameter(SearchFilter.TAG_SERVICE_NAME));
         ret.setParam(SearchFilter.TAG_SERVICE_NAME_PARTIAL, request.getParameter(SearchFilter.TAG_SERVICE_NAME_PARTIAL));
+        ret.setParam(SearchFilter.TAG_RESOURCE_ID, request.getParameter(SearchFilter.TAG_RESOURCE_ID));
         ret.setParam(SearchFilter.TAG_RESOURCE_GUID, request.getParameter(SearchFilter.TAG_RESOURCE_GUID));
         ret.setParam(SearchFilter.TAG_RESOURCE_SIGNATURE, request.getParameter(SearchFilter.TAG_RESOURCE_SIGNATURE));
         ret.setParam(SearchFilter.TAG_RESOURCE_ELEMENTS, request.getParameter(SearchFilter.TAG_RESOURCE_ELEMENTS));
@@ -154,6 +155,8 @@ public class RangerSearchUtil extends SearchUtil {
         ret.setParam(SearchFilter.VALIDITY_EXPIRY_START, request.getParameter(SearchFilter.VALIDITY_EXPIRY_START));
         ret.setParam(SearchFilter.VALIDITY_EXPIRY_END, request.getParameter(SearchFilter.VALIDITY_EXPIRY_END));
         ret.setParam(SearchFilter.VALIDITY_TIME_ZONE, request.getParameter(SearchFilter.VALIDITY_TIME_ZONE));
+        ret.setParam(SearchFilter.DATASET_LABEL_MATCH_TYPE, request.getParameter(SearchFilter.DATASET_LABEL_MATCH_TYPE));
+        ret.setParam(SearchFilter.DATASET_KEYWORD_MATCH_TYPE, request.getParameter(SearchFilter.DATASET_KEYWORD_MATCH_TYPE));
 
         extractCommonCriteriasForFilter(request, ret, sortFields);
 

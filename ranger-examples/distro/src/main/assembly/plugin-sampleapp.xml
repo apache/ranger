@@ -32,8 +32,8 @@
         <includeDependencies>false</includeDependencies>
         <outputDirectory>lib/ranger-sampleapp-plugin-impl</outputDirectory>
         <includes>
+            <include>org.apache.ranger:ranger-audit-core</include>
             <include>org.apache.ranger:ranger-plugins-common</include>
-            <include>org.apache.ranger:ranger-plugins-audit</include>
             <include>org.apache.httpcomponents:httpmime:jar:${httpcomponent.httpmime.version}</include>
             <include>org.noggit:noggit:jar:${noggit.version}</include>
             <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>

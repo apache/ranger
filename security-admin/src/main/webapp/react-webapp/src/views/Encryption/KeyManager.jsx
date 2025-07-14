@@ -31,17 +31,15 @@ import { fetchApi } from "Utils/fetchAPI";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
 import { find, sortBy, isUndefined, isEmpty, reject } from "lodash";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import AsyncSelect from "react-select/async";
-import { isKeyAdmin, parseSearchFilter } from "../../utils/XAUtils";
-import { BlockUi } from "../../components/CommonComponents";
-import CustomBreadcrumb from "../CustomBreadcrumb";
+import { isKeyAdmin, parseSearchFilter } from "Utils/XAUtils";
+import { BlockUi } from "Components/CommonComponents";
+import CustomBreadcrumb from "Views/CustomBreadcrumb";
 
 function init(props) {
   return {
     loader: true,
-    servicesData: [],
-    services: [],
     selcServicesData: [],
     keydata: [],
     onchangeval:
@@ -70,17 +68,9 @@ function reducer(state, action) {
         ...state,
         loader: action.loader
       };
-    case "SET_DATA":
-      return {
-        ...state,
-
-        services: action.services,
-        servicesData: action.servicesdata
-      };
     case "SET_SEL_SERVICE":
       return {
         ...state,
-
         selcServicesData: action.selcservicesData,
         keydata: action.keydatalist,
         pagecount: action.pagecount
@@ -118,7 +108,6 @@ function reducer(state, action) {
         ...state,
         updatetable: action.updatetable
       };
-
     case "SET_CURRENT_PAGE_INDEX":
       return {
         ...state,
@@ -134,7 +123,6 @@ function reducer(state, action) {
         ...state,
         resetPage: action.resetPage
       };
-
     default:
       throw new Error();
   }
@@ -212,19 +200,19 @@ const KeyManager = () => {
   }, [searchParams]);
 
   const fetchServices = async (inputValue) => {
-    let servicesdata = null;
-    let allParams = {};
-    if (inputValue) {
-      allParams["name"] = inputValue || "";
-    }
-    allParams["serviceType"] = "kms";
+    const allParams = {
+      serviceType: "kms",
+      ...(inputValue && { serviceNamePrefix: inputValue })
+    };
+    let servicesData = [];
     let serviceOptions = [];
+
     try {
       const servicesResp = await fetchApi({
-        url: "plugins/services",
+        url: "public/v2/api/service-headers",
         params: allParams
       });
-      servicesdata = servicesResp.data.services;
+      servicesData = servicesResp?.data || [];
     } catch (error) {
       let errorMsg = `Error occurred while fetching Services!`;
       if (error?.response?.data?.msgDesc) {
@@ -233,15 +221,12 @@ const KeyManager = () => {
       toast.error(errorMsg);
       console.error(`Error occurred while fetching Services! ${error}`);
     }
-    serviceOptions = servicesdata.map((obj) => ({
+
+    serviceOptions = servicesData.map((obj) => ({
       value: obj.name,
       label: obj.name
     }));
-    dispatch({
-      type: "SET_DATA",
-      servicesdata: servicesdata,
-      services: serviceOptions
-    });
+
     return serviceOptions;
   };
 

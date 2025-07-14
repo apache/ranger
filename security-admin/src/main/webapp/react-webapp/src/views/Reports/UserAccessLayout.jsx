@@ -50,7 +50,6 @@ import { fetchApi } from "Utils/fetchAPI";
 import { useQuery, selectInputCustomStyles } from "Components/CommonComponents";
 import SearchPolicyTable from "./SearchPolicyTable";
 import { isAuditor, isKeyAdmin, isKMSAuditor } from "Utils/XAUtils";
-import CustomBreadcrumb from "Views/CustomBreadcrumb";
 import moment from "moment-timezone";
 import { getServiceDef } from "Utils/appState";
 
@@ -94,10 +93,10 @@ function UserAccessLayout() {
 
     try {
       servicesResp = await fetchApi({
-        url: "plugins/services"
+        url: "public/v2/api/service-headers"
       });
 
-      resourceServices = filter(servicesResp.data.services, (service) =>
+      resourceServices = filter(servicesResp?.data, (service) =>
         isKMSRole ? service.type == "kms" : service.type != "kms"
       );
     } catch (error) {
@@ -480,7 +479,6 @@ function UserAccessLayout() {
       <div className="clearfix">
         <div className="header-wraper">
           <h3 className="wrap-header bold">Reports</h3>
-          <CustomBreadcrumb />
         </div>
       </div>
       <div className="wrap report-page">

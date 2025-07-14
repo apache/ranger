@@ -35,15 +35,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RangerKMSDB {
-    private static final Logger logger = LoggerFactory.getLogger(RangerKMSDB.class);
-
     public static final int DB_FLAVOR_UNKNOWN     = 0;
     public static final int DB_FLAVOR_MYSQL       = 1;
     public static final int DB_FLAVOR_ORACLE      = 2;
     public static final int DB_FLAVOR_POSTGRES    = 3;
     public static final int DB_FLAVOR_SQLSERVER   = 4;
     public static final int DB_FLAVOR_SQLANYWHERE = 5;
-
+    private static final Logger logger = LoggerFactory.getLogger(RangerKMSDB.class);
     private static final String PROPERTY_PREFIX                = "ranger.ks.";
     private static final String DB_DIALECT                     = "jpa.jdbc.dialect";
     private static final String DB_DRIVER                      = "jpa.jdbc.driver";
@@ -126,7 +124,7 @@ public class RangerKMSDB {
     }
 
     private int getDBFlavor(Configuration newConfig) {
-        String[] propertyNames = new String[] {PROPERTY_PREFIX + DB_DIALECT, PROPERTY_PREFIX + DB_DRIVER, PROPERTY_PREFIX + DB_URL };
+        String[] propertyNames = new String[] {PROPERTY_PREFIX + DB_DIALECT, PROPERTY_PREFIX + DB_DRIVER, PROPERTY_PREFIX + DB_URL};
 
         for (String propertyName : propertyNames) {
             String propertyValue = newConfig.get(propertyName);
@@ -161,8 +159,9 @@ public class RangerKMSDB {
 
     private void updateDBSSLURL() {
         if (conf != null && conf.get(PROPERTY_PREFIX + DB_SSL_ENABLED) != null) {
-            final String dbSslEnabled = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_ENABLED));
-
+            final String dbSslEnabled     = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_ENABLED));
+            String       rangerJpaJdbcUrl = conf.get(PROPERTY_PREFIX + DB_URL);
+            int          dbFlavor         = getDBFlavor(conf);
             if ("true".equalsIgnoreCase(dbSslEnabled)) {
                 final String dbSslRequired                = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_REQUIRED));
                 final String dbSslVerifyServerCertificate = normalize(conf.get(PROPERTY_PREFIX + DB_SSL_VerifyServerCertificate));
@@ -173,12 +172,8 @@ public class RangerKMSDB {
                 conf.set(PROPERTY_PREFIX + DB_SSL_VerifyServerCertificate, dbSslVerifyServerCertificate);
                 conf.set(PROPERTY_PREFIX + DB_SSL_AUTH_TYPE, dbSslAuthType);
 
-                String rangerJpaJdbcUrl = conf.get(PROPERTY_PREFIX + DB_URL);
-
                 if (StringUtils.isNotEmpty(rangerJpaJdbcUrl) && !rangerJpaJdbcUrl.contains("?")) {
                     StringBuilder rangerJpaJdbcUrlSsl = new StringBuilder(rangerJpaJdbcUrl);
-
-                    int dbFlavor = getDBFlavor(conf);
 
                     if (dbFlavor == DB_FLAVOR_MYSQL) {
                         rangerJpaJdbcUrlSsl.append("?useSSL=").append(dbSslEnabled)
@@ -244,6 +239,15 @@ public class RangerKMSDB {
                         logger.debug("truststore property '{}' value not found!", PROPERTY_PREFIX + DB_SSL_TRUSTSTORE);
                     }
                 }
+            } else {
+                if (dbFlavor == DB_FLAVOR_MYSQL) {
+                    if (StringUtils.isNotEmpty(rangerJpaJdbcUrl) && !rangerJpaJdbcUrl.contains("?")) {
+                        rangerJpaJdbcUrl = rangerJpaJdbcUrl + "?useSSL=" + dbSslEnabled;
+                        conf.set(PROPERTY_PREFIX + DB_URL, rangerJpaJdbcUrl);
+                        jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX + DB_URL));
+                    }
+                }
+                logger.info(PROPERTY_PREFIX + DB_URL + "=" + conf.get(PROPERTY_PREFIX + DB_URL));
             }
         }
     }

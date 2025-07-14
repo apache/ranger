@@ -1120,7 +1120,7 @@ public class XUserMgr extends XUserMgrBase {
         }
 
         Collection<Long> groupIdList  = vXUser.getGroupIdList();
-        VXUser           existing     = xUserService.readResource(vXUser.getId());
+        VXUser           existing     = (vXUser.getId() != null) ? xUserService.readResource(vXUser.getId()) : null;
         XXPortalUser     xXPortalUser = userMgr.updateUserWithPass(vXPortalUser);
 
         //update permissions start

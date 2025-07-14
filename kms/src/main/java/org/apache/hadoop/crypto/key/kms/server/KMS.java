@@ -507,7 +507,7 @@ public class KMS {
         } catch (Exception e) {
             LOG.error("Exception in generateDataKey:", e);
 
-            throw new IOException(e);
+            throw e;
         } finally {
             LOG.debug("<== generateDataKey(name={}", name);
         }
@@ -533,8 +533,8 @@ public class KMS {
             if (edekOp.equals(KMSRESTConstants.EEK_GENERATE)) {
                 final List<EncryptedKeyVersion> retEdeks = new LinkedList<>();
 
+                assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, request.getRemoteAddr());
                 try {
-                    assertAccess(Type.GENERATE_EEK, user, KMSOp.GENERATE_EEK, name, request.getRemoteAddr());
                     user.doAs((PrivilegedExceptionAction<Void>) () -> {
                         for (int i = 0; i < numKeys; i++) {
                             retEdeks.add(provider.generateEncryptedKey(name));

@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger-base:latest
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
 ARG TAGSYNC_VERSION
 
@@ -28,13 +30,9 @@ COPY ./scripts/ranger-tagsync-tags.json              ${RANGER_SCRIPTS}/
 RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
     rm -f /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz && \
-    mkdir -p /opt/ranger/tagsync/data && \
+    mkdir -p /opt/ranger/tagsync/data /var/run/ranger /var/log/ranger/tagsync /etc/ranger && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-install.properties ${RANGER_HOME}/tagsync/install.properties && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-tags.json ${RANGER_HOME}/tagsync/data/tags.json && \
-    mkdir -p /var/run/ranger && \
-    mkdir -p /var/log/ranger/tagsync && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
-    mkdir -p /etc/ranger && \
     mkdir /etc/init.d || true && \
     mkdir /etc/rc2.d  || true && \
     mkdir /etc/rc3.d  || true && \

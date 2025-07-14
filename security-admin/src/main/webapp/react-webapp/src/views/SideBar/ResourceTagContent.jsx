@@ -17,10 +17,10 @@
  * under the License.
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { sortBy, capitalize, groupBy, isEmpty } from "lodash";
-import { RangerPolicyType } from "../../utils/XAEnums";
+import { RangerPolicyType } from "Utils/XAEnums";
 import Spinner from "react-bootstrap/Spinner";
 
 export const ResourceTagContent = (props) => {

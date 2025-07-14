@@ -1,0 +1,489 @@
+{
+  "serviceName": "cm_hbase",
+  "serviceId": 3,
+  "policyVersion": 7141,
+  "policies": [
+    {
+      "id": 4, "name": "all - table, column-family, column",
+      "resources": {
+        "table":         { "values": [ "prospects", "invoices" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "users":    [ "hbase", "hive" ], "groups": [ "pr00_xbgdta" ], "delegateAdmin": true
+        },
+        {
+          "accesses": [ { "type": "read" }, {"type": "create" } ],
+          "users":    [ "rangerlookup" ]
+        },
+        {
+          "accesses": [ { "type": "read" }, { "type": "execute" } ],
+          "groups": [ "qqsens", "fb00_xbgdta" ]
+        }
+      ]
+    },
+    {
+      "id": 5, "name": "ATLAS_HBASE_TABLES", "isAuditEnabled": false,
+      "resources": {
+        "table":         { "values": [ "atlas_janus", "ATLAS_ENTITY_AUDIT_EVENTS" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "users":    [ "atlas" ]
+        }
+      ]
+    },
+    {
+      "id": 782, "name": "SYSTEM", "description": "",
+      "resources": {
+        "table":         { "values": [ "SYSTEM:*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "execute" } ],
+          "users":    [ "{USER}" ]
+        }
+      ]
+    },
+    {
+      "id": 821, "name": "fb00_xda017",
+      "resources": {
+        "table":         { "values": [ "fb00_*da017*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda017", "xagcla" ]
+        }
+      ]
+    },
+    {
+      "id": 822, "name": "fb00_xda029",
+      "resources": {
+        "table":         { "values": [ "fb00_*da029*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, {"type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda029" ]
+        }
+      ]
+    },
+    {
+      "id": 823, "name": "fb00_xda034",
+      "resources": {
+        "table":         { "values": [ "fb00_*da034*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, {"type": "write" }, {"type": "create" }, { "type": "admin" }, {"type": "execute" } ],
+          "groups":   [ "fb00_xda034" ]
+        }
+      ]
+    },
+    {
+      "id": 824, "name": "fb00_xda035",
+      "resources": {
+        "table":         { "values": [ "fb00_*da035*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, {"type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda035" ]
+        }
+      ]
+    },
+    {
+      "id": 825, "name": "fb00_xda041",
+      "resources": {
+        "table":         { "values": [ "fb00_*da041*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda041" ]
+        }
+      ]
+    },
+    {
+      "id": 826, "name": "fb00_xda043",
+      "resources": {
+        "table":         { "values": [ "fb00_*da043*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, {"type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda043" ]
+        }
+      ]
+    },
+    {
+      "id": 827, "name": "fb00_xda052",
+      "resources": {
+        "table":         { "values": [ "fb00_*da052*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda052" ]
+        }
+      ]
+    },
+    {
+      "id": 828, "name": "fb00_xda060",
+      "resources": {
+        "table":         { "values": [ "fb00_*da060*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, {"type": "execute" } ],
+          "groups":   [ "fb00_xda060" ]
+        }
+      ]
+    },
+    {
+      "id": 829, "name": "fb00_xda066",
+      "resources": {
+        "table":         { "values": [ "fb00_*da066*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda066" ]
+        }
+      ]
+    },
+    {
+      "id": 830, "name": "fb00_xda085",
+      "resources": {
+        "table":         { "values": [ "fb00_*da085*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, {"type": "execute" } ],
+          "groups":   [ "fb00_xda085" ]
+        }
+      ]
+    },
+    {
+      "id": 831, "name": "fb00_xda092",
+      "resources": {
+        "table":         { "values": [ "fb00_*da092*" ] },
+        "column-family": { "values": [ "*" ]},
+        "column":        { "values": [ "*" ]}
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, {"type": "write" }, {"type": "create" }, { "type": "admin" }, {"type": "execute" } ],
+          "groups":   [ "fb00_xda092" ]
+        }
+      ]
+    },
+    {
+      "id": 832, "name": "fb00_xda126",
+      "resources": {
+        "table":         { "values": [ "fb00_*da126*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute"} ],
+          "groups":   [ "fb00_xda126" ]
+        },
+        {
+          "accesses": [ { "type": "read" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xda085" ]
+        }
+      ]
+    },
+    {
+      "id": 833, "name": "fb00_xds020",
+      "resources": {
+        "table":         { "values": [ "fb00_*ds020*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xds020" ]
+        }
+      ]
+    },
+    {
+      "id": 834, "name": "fb00_xoi022",
+      "resources": {
+        "table":         { "values": [ "fb00_*oi022*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xoi022" ]
+        },
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, { "type": "create" }, { "type": "execute" } ],
+          "groups":   [ "fb00_braff", "fb00_bbrut" ]
+        },
+        {
+          "accesses": [ { "type": "read" }, { "type": "execute" } ],
+          "groups":   [
+            "fb00_xoi099", "fb00_xoi098", "fb00_xoi097", "sd00_xlx001", "fb00_xda085", "fb00_xda126", "fb00_xda017", "qqsens", "fb00_xda062",
+            "fb00_xpr203", "fb00_xda144", "fb00_xda143", "fb00_xda108", "fb00_xoi033", "fb00_xda042", "fb00_xpx091", "fb00_xda107"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 835, "name": "fb00_xoi025",
+      "resources": {
+        "table":         { "values": [ "fb00_*oi025*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, { "type": "write" }, {"type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xoi025" ]
+        }
+      ]
+    },
+    {
+      "id": 836, "name": "fb00_xoi033",
+      "resources": {
+        "table":         { "values": [ "fb00_*oi033*" ] },
+        "column-family": { "values": [ "*" ] },
+        "column":        { "values": [ "*" ] }
+      },
+      "policyItems": [
+        {
+          "accesses": [ { "type": "read" }, {"type": "write" }, { "type": "create" }, { "type": "admin" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xoi033" ]
+        },
+        {
+          "accesses": [ { "type": "read" }, { "type": "execute" } ],
+          "groups":   [ "fb00_xpr203" ]
+        }
+      ]
+    }
+  ],
+  "serviceDef": {
+    "id": 2, "name": "hbase", "implClass": "org.apache.ranger.services.hbase.RangerServiceHBase",
+    "options": { "enableDenyAndExceptionsInPolicies": "true" },
+    "configs": [
+      { "itemId": 1,  "name": "username",                            "type": "string",   "mandatory": true, "label": "Username" },
+      { "itemId": 2,  "name": "password",                            "type": "password", "mandatory": true, "label": "Password" },
+      { "itemId": 3,  "name": "hadoop.security.authentication",      "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+      { "itemId": 4,  "name": "hbase.master.kerberos.principal",     "type": "string",   "mandatory": false, "defaultValue": "" },
+      { "itemId": 5,  "name": "hbase.security.authentication",       "type": "enum",     "subType": "authnType", "mandatory": true, "defaultValue": "simple" },
+      { "itemId": 6,  "name": "hbase.zookeeper.property.clientPort", "type": "int",      "mandatory": true, "defaultValue": "2181" },
+      { "itemId": 7,  "name": "hbase.zookeeper.quorum",              "type": "string",   "mandatory": true, "defaultValue": "" },
+      { "itemId": 8,  "name": "zookeeper.znode.parent",              "type": "string",   "mandatory": true, "defaultValue": "/hbase" },
+      { "itemId": 9,  "name": "commonNameForCertificate",            "type": "string",   "mandatory": false, "label": "Common Name for Certificate" },
+      { "itemId": 10, "name": "ranger.plugin.audit.filters",         "type": "string",   "mandatory": false, "defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*', '*_acl_*', 'hbase:meta', 'hbase:acl', 'default', 'hbase']}}, 'users':['hbase'], 'isAudited': false }, {'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS']},'column-family':{'values':['*']},'column':{'values':['*']}},'users':['atlas', 'hbase'],'isAudited':false},{'users':['hbase'], 'actions':['balance'],'isAudited':false}]",
+        "label": "Ranger Default Audit Filters"
+      }
+    ],
+    "resources": [
+      {
+        "itemId":             1,
+        "name":               "table",
+        "type":               "string",
+        "level":              10,
+        "mandatory":          true,
+        "lookupSupported":    true,
+        "recursiveSupported": false,
+        "excludesSupported":  true,
+        "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+        "label":              "HBase Table",
+        "description":        "HBase Table",
+        "isValidLeaf":        false
+      },
+      {
+        "itemId":             2,
+        "name":               "column-family",
+        "type":               "string",
+        "level":              20,
+        "parent":             "table",
+        "mandatory":          true,
+        "lookupSupported":    true,
+        "recursiveSupported": false,
+        "excludesSupported":  true,
+        "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+        "label":              "HBase Column-family",
+        "description":        "HBase Column-family",
+        "isValidLeaf":        false
+      },
+      {
+        "itemId":             3,
+        "name":               "column",
+        "type":               "string",
+        "level":              30,
+        "parent":             "column-family",
+        "mandatory":          true,
+        "lookupSupported":    false,
+        "recursiveSupported": false,
+        "excludesSupported":  true,
+        "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions":     { "wildCard": "true", "ignoreCase": "false" },
+        "label":              "HBase Column",
+        "description":        "HBase Column",
+        "isValidLeaf":        true
+      }
+    ],
+    "accessTypes": [
+      { "itemId": 1, "name": "read",    "label": "Read" },
+      { "itemId": 2, "name": "write",   "label": "Write" },
+      { "itemId": 3, "name": "create",  "label": "Create" },
+      { "itemId": 4, "name": "admin",   "label": "Admin", "impliedGrants": [ "read", "write", "create", "execute" ] },
+      { "itemId": 5, "name": "execute", "label": "Execute" }
+    ],
+    "enums": [
+      {
+        "itemId": 1, "name": "authnType", "defaultIndex": 0,
+        "elements": [
+          { "itemId": 1, "name": "simple",   "label": "Simple" },
+          { "itemId": 2, "name": "kerberos", "label": "Kerberos" }
+        ]
+      }
+    ]
+  },
+  "auditMode": "audit-default",
+  "tagPolicies": {
+    "serviceName": "cm_tag",
+    "serviceId": 2,
+    "policies": [
+      {
+        "id": 3, "name": "EXPIRES_ON",
+        "resources": {
+          "tag": { "values": [ "EXPIRES_ON" ] }
+        },
+        "denyPolicyItems": [
+          {
+            "accesses":   [ { "type": "hbase:execute" }, { "type": "hbase:create" }, { "type": "hbase:read" }, { "type": "hbase:write" }, { "type": "hbase:admin" } ],
+            "groups":     [ "public" ],
+            "conditions": [ { "type": "accessed-after-expiry", "values": [ "yes" ] } ]
+          }
+        ]
+      },
+      {
+        "id": 780, "name": "kw_raffinageonly",
+        "resources": {
+          "tag": { "values": [ "kw_raffinageonly" ] }
+        },
+        "policyItems": [
+          {
+            "accesses": [ { "type": "hbase:execute" }, { "type": "hbase:create" }, { "type": "hbase:read" }, { "type": "hbase:write" }, { "type": "hbase:admin" } ],
+            "groups":   [ "fb00_braff", "pr00_braff", "hadoop" ]
+          }
+        ]
+      }
+    ],
+    "serviceDef": {
+      "id": 100, "name": "tag", "implClass": "org.apache.ranger.services.tag.RangerServiceTag",
+      "options": { "enableDenyAndExceptionsInPolicies": "true", "ui.pages": "tag-based-policies" },
+      "configs": [
+        {
+          "itemId":       1,
+          "name":         "ranger.plugin.audit.filters",
+          "type":         "string",
+          "mandatory":    false,
+          "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]",
+          "label":        "Ranger Default Audit Filters"
+        }
+      ],
+      "resources": [
+        {
+          "itemId":             1,
+          "name":               "tag",
+          "type":               "string",
+          "level":              1,
+          "mandatory":          true,
+          "lookupSupported":    true,
+          "recursiveSupported": false,
+          "excludesSupported":  false,
+          "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+          "matcherOptions":     { "wildCard": "false", "ignoreCase": "false" },
+          "uiHint":             "{ \"singleValue\":true }",
+          "label":              "TAG",
+          "description":        "TAG",
+          "isValidLeaf":        true
+        }
+      ],
+      "accessTypes": [
+        { "itemId": 104105, "name": "hbase:read",    "label": "Read" },
+        { "itemId": 104106, "name": "hbase:write",   "label": "Write" },
+        { "itemId": 104107, "name": "hbase:execute", "label": "Execute" },
+        { "itemId": 104108, "name": "hbase:create",  "label": "Create" },
+        { "itemId": 104109, "name": "hbase:admin",   "label": "Admin" }
+      ],
+      "policyConditions": [
+        {
+          "itemId":           1,
+          "name":             "accessed-after-expiry",
+          "evaluator":        "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator",
+          "evaluatorOptions": { "scriptTemplate": "ctx.isAccessedAfter('expiry_date');" },
+          "uiHint":           "{ \"singleValue\":true }",
+          "label":            "Accessed after expiry_date (yes/no)?",
+          "description":      "Accessed after expiry_date? (yes/no)"
+        },
+        {
+          "itemId":           2,
+          "name":             "expression",
+          "evaluator":        "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+          "evaluatorOptions": { "engineName": "JavaScript", "ui.isMultiline": "true" },
+          "uiHint":           "{ \"isMultiline\":true }",
+          "label":            "Enter boolean expression",
+          "description":      "Boolean expression"
+        }
+      ],
+      "contextEnrichers": [
+        {
+          "itemId":          1,
+          "name":            "TagEnricher",
+          "enricher":        "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
+          "enricherOptions": { "tagRetrieverClassName": "org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever", "tagRefresherPollingInterval": "60000" }
+        }
+      ]
+    },
+    "auditMode": "audit-default",
+    "serviceConfig": {
+      "ranger.plugin.audit.filters": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
+    }
+  },
+  "serviceConfig": {
+    "ranger.plugin.audit.filters": "[{'accessResult':'DENIED','isAudited':true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*','*_acl_*','hbase:meta','hbase:acl','default','hbase'],'isExcludes':true}},'users':['hbase'],'isAudited':false},{'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS'],'isExcludes':true},'column-family':{'values':['*'],'isExcludes':true},'column':{'values':['*'],'isExcludes':true}},'users':['atlas','hbase'],'isAudited':false},{'users':['hbase'],'actions':['balance'],'isAudited':false}]"
+  }
+}

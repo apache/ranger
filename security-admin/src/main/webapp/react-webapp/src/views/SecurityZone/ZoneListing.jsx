@@ -27,8 +27,7 @@ import ZoneDisplay from "./ZoneDisplay";
 import { Row, Col, Collapse } from "react-bootstrap";
 import { sortBy } from "lodash";
 import withRouter from "Hooks/withRouter";
-import { BlockUi, Loader } from "../../components/CommonComponents";
-import CustomBreadcrumb from "../CustomBreadcrumb";
+import { BlockUi, Loader } from "Components/CommonComponents";
 
 class ZoneListing extends Component {
   constructor(props) {
@@ -75,13 +74,7 @@ class ZoneListing extends Component {
 
     try {
       servicesResp = await fetchApi({
-        url: "plugins/services",
-        params: {
-          page: 0,
-          pageSize: 200,
-          total_pages: 0,
-          startIndex: 0
-        }
+        url: "public/v2/api/service-headers"
       });
     } catch (error) {
       console.error(`Error occurred while fetching Services! ${error}`);
@@ -104,7 +97,7 @@ class ZoneListing extends Component {
       selectedZone: selectedZone,
       zones: zoneList,
       filterZone: zoneList,
-      services: servicesResp.data.services
+      services: servicesResp?.data || []
     });
   };
 
@@ -180,7 +173,6 @@ class ZoneListing extends Component {
       <React.Fragment>
         <div className="header-wraper">
           <h3 className="wrap-header bold">Security Zone</h3>
-          <CustomBreadcrumb />
         </div>
         {this.state.loader ? (
           <Loader />

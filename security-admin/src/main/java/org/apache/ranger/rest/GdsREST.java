@@ -393,8 +393,7 @@ public class GdsREST {
 
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
-            searchUtil.extractStringList(request, filter, SearchFilter.DATASET_LABEL, "Dataset Label List", "datasetLabels", null, null);
-            searchUtil.extractStringList(request, filter, SearchFilter.DATASET_KEYWORD, "Dataset Keyword List", "datasetKeywords", null, null);
+            extractDatasetMultiValueParams(request, filter);
 
             ret = gdsStore.searchDatasets(filter);
         } catch (WebApplicationException excp) {
@@ -456,6 +455,8 @@ public class GdsREST {
         try {
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
 
+            extractDatasetMultiValueParams(request, filter);
+
             ret    = gdsStore.getDatasetSummary(filter);
         } catch (WebApplicationException we) {
             throw we;
@@ -485,6 +486,8 @@ public class GdsREST {
 
         try {
             filter = searchUtil.getSearchFilter(request, datasetService.sortFields);
+
+            extractDatasetMultiValueParams(request, filter);
 
             ret    = gdsStore.getEnhancedDatasetSummary(filter);
         } catch (WebApplicationException we) {
@@ -2266,5 +2269,10 @@ public class GdsREST {
         copy.setDelegateAdmin(policyItem.getDelegateAdmin());
 
         return copy;
+    }
+
+    private void extractDatasetMultiValueParams(HttpServletRequest request, SearchFilter filter) {
+        searchUtil.extractStringList(request, filter, SearchFilter.DATASET_LABEL, "Dataset Label List", "datasetLabels", null, null);
+        searchUtil.extractStringList(request, filter, SearchFilter.DATASET_KEYWORD, "Dataset Keyword List", "datasetKeywords", null, null);
     }
 }

@@ -32,8 +32,8 @@ import { isEmpty, find } from "lodash";
 import { MoreLess } from "Components/CommonComponents";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
-import { Loader } from "../../components/CommonComponents";
-import { isAuditor, isKMSAuditor } from "../../utils/XAUtils";
+import { Loader } from "Components/CommonComponents";
+import { isAuditor, isKMSAuditor } from "Utils/XAUtils";
 
 function SearchPolicyTable(props) {
   const [searchPoliciesData, setSearchPolicies] = useState([]);

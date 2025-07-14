@@ -82,4 +82,20 @@ public class XXGdsProjectPolicyMapDao extends BaseDao<XXGdsProjectPolicyMap> {
 
         return ret;
     }
+
+    public Long getProjectIdForPolicy(Long policyId) {
+        Long ret = null;
+
+        if (policyId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectIdForPolicy", Long.class)
+                        .setParameter("policyId", policyId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+
+        return ret;
+    }
 }
