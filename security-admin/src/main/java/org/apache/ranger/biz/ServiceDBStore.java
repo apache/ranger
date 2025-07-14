@@ -271,7 +271,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static          String                        LOCAL_HOSTNAME;
     private static          boolean                       isRolesDownloadedByService;
     private static volatile boolean                       legacyServiceDefsInitDone;
-    private final String               optionUgsyncConfigChange = "ugsyncConfigChange";
+    private final           String                        optionUgsyncConfigChange         = "ugsyncConfigChange";
     @Autowired
     RangerServiceDefService                     serviceDefService;
     @Autowired
@@ -329,9 +329,9 @@ public class ServiceDBStore extends AbstractServiceStore {
     SecurityZoneDBStore                         securityZoneStore;
     @Autowired
     GUIDUtil                                    guidUtil;
-    private       boolean              populateExistingBaseFields;
-    private       ServicePredicateUtil predicateUtil;
-    private       RangerAdminConfig    config;
+    private boolean              populateExistingBaseFields;
+    private ServicePredicateUtil predicateUtil;
+    private RangerAdminConfig    config;
 
     public static void persistVersionChange(ServiceVersionUpdater serviceVersionUpdater) {
         RangerDaoManager daoMgr      = serviceVersionUpdater.daoManager;
@@ -1899,9 +1899,18 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
             }
         }
-        Map<String, String> ugsyncConfigs = getLatestUgsyncConfig();
-        if (MapUtils.isNotEmpty(ugsyncConfigs)) {
-            configs.putAll(ugsyncConfigs);
+        Set<String> excludedKeys = new HashSet<>(
+                Arrays.asList(
+                RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR,
+                RangerCommonConstants.PLUGINS_MAPPING_USERNAME,
+                RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME
+        )
+        );
+        Map<String, String> rangerPluginsPrefixConfig = PropertiesUtil.getConfigMapWithPrefixAndDefaultValue("ranger.plugins.", excludedKeys);
+        rangerPluginsPrefixConfig.putAll(getPluginsSpecialConfigsForNameTransformed());
+
+        if (MapUtils.isNotEmpty(rangerPluginsPrefixConfig)) {
+            configs.putAll(rangerPluginsPrefixConfig);
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> ServiceDBStore.getServiceConfigForPlugin(" + serviceId + "): configs = " + configs.keySet());
@@ -2847,16 +2856,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         LOG.debug("<=== ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : {} removeRefType : {})", searchUsrGrpRoleName, removeRefType);
     }
 
-    public Map<String, String> getLatestUgsyncConfig() {
+    public Map<String, String> getPluginsSpecialConfigsForNameTransformed() {
         Map<String, String> configs = new HashMap<String, String>();
-        configs.put(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM,
-                UgsyncCommonConstants.DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE));
-        configs.put(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM,
-                UgsyncCommonConstants.DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE));
-        configs.put(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER,
-                UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_USERNAME_HANDLER));
-        configs.put(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER, PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER,
-                UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER));
         configs.put(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR, getRegexSeparator());
         configs.putAll(getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_MAPPING_USERNAME));
         configs.putAll(getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME));

@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -161,6 +162,36 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
         ret.putAll(propertiesMap);
 
         return ret;
+    }
+
+    public static Map<String, String> getConfigMapWithPrefixAndDefaultValue(String confPrefix) {
+        Map<String, String> configMap = new HashMap<>();
+        Map<String, String> propsMap  = getPropertiesMap();
+        for (Map.Entry<String, String> entry : propsMap.entrySet()) {
+            String key = entry.getKey();
+            if (key.startsWith(confPrefix)) {
+                String value = StringUtils.isNotEmpty(entry.getValue()) ? entry.getValue() : null;
+                if (value != null) {
+                    configMap.put(key, value);
+                }
+            }
+        }
+        return configMap;
+    }
+
+    public static Map<String, String> getConfigMapWithPrefixAndDefaultValue(String confPrefix, Set<String> excludedKeys) {
+        Map<String, String> configMap = new HashMap<>();
+        Map<String, String> propsMap  = getPropertiesMap();
+        for (Map.Entry<String, String> entry : propsMap.entrySet()) {
+            String key = entry.getKey();
+            if (key.startsWith(confPrefix) && !excludedKeys.contains(key)) {
+                String value = StringUtils.isNotEmpty(entry.getValue()) ? entry.getValue() : null;
+                if (value != null) {
+                    configMap.put(key, value);
+                }
+            }
+        }
+        return configMap;
     }
 
     @Override
@@ -472,7 +503,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
                     if (!StringUtils.isEmpty(rangerJpaJdbcUrl)) {
                         if (rangerJpaJdbcUrl.contains("?")) {
                             rangerJpaJdbcUrlExtraArgs = rangerJpaJdbcUrl.substring(rangerJpaJdbcUrl.indexOf("?") + 1);
-                            rangerJpaJdbcUrl            = rangerJpaJdbcUrl.substring(0, rangerJpaJdbcUrl.indexOf("?"));
+                            rangerJpaJdbcUrl          = rangerJpaJdbcUrl.substring(0, rangerJpaJdbcUrl.indexOf("?"));
                         }
 
                         if (RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_MYSQL) {
@@ -514,6 +545,8 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
             props.put(RangerCommonConstants.PROP_COOKIE_NAME, cookieName);
         }
 
+        updateRangerPluginsPropertiesForUserGroup(props);
+
         keySet = props.keySet();
 
         for (Object key : keySet) {
@@ -525,5 +558,33 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
         }
 
         super.processProperties(beanFactory, props);
+    }
+
+    private void updateRangerPluginsPropertiesForUserGroup(Properties props) {
+        if (propertiesMap != null) {
+            String userCaseConv = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM))
+                    ? UgsyncCommonConstants.DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
+            props.put(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
+
+            String groupCaseConv = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM))
+                    ? UgsyncCommonConstants.DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
+            props.put(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
+
+            String userHandler = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER))
+                    ? UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_USERNAME_HANDLER
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER, userHandler);
+            props.put(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER, userHandler);
+
+            String groupHandler = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER))
+                    ? UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER, groupHandler);
+            props.put(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER, groupHandler);
+        }
     }
 }
