@@ -25,7 +25,7 @@ import arrayMutators from "final-form-arrays";
 import { FieldArray } from "react-final-form-arrays";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
-import { RegexValidation } from "Utils/XAEnums";
+import { RegexValidation, additionalServiceConfigs } from "Utils/XAEnums";
 import { fetchApi } from "Utils/fetchAPI";
 import ServiceAuditFilter from "./ServiceAuditFilter";
 import TestConnection from "./TestConnection";
@@ -58,7 +58,10 @@ import {
   split,
   without,
   maxBy,
-  cloneDeep
+  cloneDeep,
+  intersection,
+  join,
+  sortBy
 } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { RangerPolicyType } from "Utils/XAEnums";
@@ -78,13 +81,15 @@ class ServiceForm extends Component {
     this.state = {
       serviceDef: {},
       service: {},
-      tagService: [],
       editInitialValues: {},
       showDelete: false,
       loader: true,
       blockUI: false,
       defaultTagOptions: [],
-      loadingOptions: false
+      loadingOptions: false,
+      defaultAdditionalUserConfigOptions: [],
+      defaultAdditionalGroupConfigOptions: [],
+      loadingAdditionalConfigOptions: false
     };
   }
 
@@ -185,6 +190,15 @@ class ServiceForm extends Component {
         if (config === this.configsJson[jsonConfig]) {
           serviceJson["configs"][jsonConfig] = values?.configs[config];
         }
+      }
+    }
+
+    for (const config of additionalServiceConfigs) {
+      if (config.name in serviceJson["configs"]) {
+        serviceJson["configs"][config.name] = join(
+          map(serviceJson["configs"][config.name], "value"),
+          ","
+        );
       }
     }
 
@@ -397,9 +411,33 @@ class ServiceForm extends Component {
         serviceResp?.data?.configs?.[config];
     });
 
-    let editCustomConfigs = serviceCustomConfigs.map((config) => {
-      return { name: config, value: serviceResp?.data?.configs[config] };
+    const additionalConfigs = intersection(
+      serviceCustomConfigs,
+      map(additionalServiceConfigs, "name")
+    );
+
+    const editAdditionalConfigs = additionalConfigs.map((config) => {
+      return {
+        name: config,
+        value: map(split(serviceResp?.data?.configs[config], ","), (val) => ({
+          label: val,
+          value: val
+        }))
+      };
     });
+
+    editAdditionalConfigs.map((config) => {
+      serviceJson["configs"][
+        config.name.replaceAll(".", "_").replaceAll("-", "_")
+      ] = config.value;
+    });
+
+    let editCustomConfigs = sortBy(
+      difference(serviceCustomConfigs, additionalConfigs)?.map((config) => {
+        return { name: config, value: serviceResp?.data?.configs[config] };
+      }),
+      "name"
+    );
 
     serviceJson["customConfigs"] =
       editCustomConfigs.length == 0 ? [undefined] : editCustomConfigs;
@@ -453,6 +491,26 @@ class ServiceForm extends Component {
       this.setState({ defaultTagOptions: opts, loadingOptions: false });
     });
   };
+
+  onFocusAdditionalConfigOptions = (type) => {
+    this.setState({ loadingAdditionalConfigOptions: true });
+    if (type === "user") {
+      this.fetchUsers().then((opts) => {
+        this.setState({
+          defaultAdditionalUserConfigOptions: opts,
+          loadingAdditionalConfigOptions: false
+        });
+      });
+    } else {
+      this.fetchGroups().then((opts) => {
+        this.setState({
+          defaultAdditionalGroupConfigOptions: opts,
+          loadingAdditionalConfigOptions: false
+        });
+      });
+    }
+  };
+
   deleteService = async (serviceId) => {
     this.hideDeleteModal();
     try {
@@ -593,6 +651,65 @@ class ServiceForm extends Component {
       return infoObj.info !== undefined ? [infoObj.info] : [];
     }
     return [];
+  };
+
+  getAdditionalServiceConfigs = () => {
+    const additionalServiceConfigsFormFields = additionalServiceConfigs.map(
+      (additionalConfig, index) => {
+        this.configsJson[additionalConfig.name] = additionalConfig.name
+          .replaceAll(".", "_")
+          .replaceAll("-", "_");
+        return (
+          <Row
+            className="form-group"
+            key={this.configsJson[additionalConfig.name]}
+          >
+            <Col xs={3}>
+              <label className="form-label float-end">
+                {additionalConfig.label}
+              </label>
+            </Col>
+            <Col xs={4}>
+              <Field
+                name={"configs." + this.configsJson[additionalConfig.name]}
+                key={"configs." + additionalConfig.name + index}
+                id={"configs." + additionalConfig.name}
+                data-cy={"configs." + additionalConfig.name}
+                component={this.AsyncSelectField}
+                loadOptions={
+                  additionalConfig.type == "user"
+                    ? this.fetchUsers
+                    : this.fetchGroups
+                }
+                onFocus={() => {
+                  this.onFocusAdditionalConfigOptions(additionalConfig.type);
+                }}
+                defaultOptions={
+                  additionalConfig.type == "user"
+                    ? this.state.defaultAdditionalUserConfigOptions
+                    : this.state.defaultAdditionalGroupConfigOptions
+                }
+                placeholder={
+                  additionalConfig.type == "user"
+                    ? "Select Users"
+                    : "Select Groups"
+                }
+                noOptionsMessage={() =>
+                  this.state.loadingAdditionalConfigOptions
+                    ? "Loading..."
+                    : "No options"
+                }
+                isClearable={true}
+                styles={selectInputCustomStyles}
+                isMulti
+              />
+            </Col>
+          </Row>
+        );
+      }
+    );
+
+    return additionalServiceConfigsFormFields;
   };
 
   getServiceConfigs = (serviceDef) => {
@@ -1160,7 +1277,7 @@ class ServiceForm extends Component {
                             <Row className="form-group">
                               <Col xs={3}>
                                 <label className="form-label float-end">
-                                  Select Tag Service
+                                  Tag Service
                                 </label>
                               </Col>
                               <Col xs={4}>
@@ -1187,10 +1304,11 @@ class ServiceForm extends Component {
                         <Col xs={12}>
                           <p className="form-header">Config Properties :</p>
                           {this.getServiceConfigs(this.state.serviceDef)}
+                          {this.getAdditionalServiceConfigs()}
                           <Row className="form-group">
                             <Col xs={3}>
                               <label className="form-label float-end">
-                                Add New Configurations
+                                Add New Custom Configurations
                               </label>
                             </Col>
                             <Col xs={5}>
@@ -1257,8 +1375,8 @@ class ServiceForm extends Component {
                                 onClick={() =>
                                   addItem("customConfigs", undefined)
                                 }
-                                data-action="addGroup"
-                                data-cy="addGroup"
+                                data-action="addCustomConfigs"
+                                data-cy="addCustomConfigs"
                               >
                                 <i className="fa-fw fa fa-plus"></i>
                               </Button>

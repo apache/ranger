@@ -69,7 +69,7 @@ useEffect(()=>{
       menuIsOpen={false}
       isClearable={false}
       isMulti
-      placeholder="Type Action Name"
+      placeholder="Type Operations Name"
       value={actionValue}
       inputValue={actionInputValue}
       onChange={(actionValue) => handleChange(actionValue)}

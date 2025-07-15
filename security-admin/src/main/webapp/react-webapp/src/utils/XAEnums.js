@@ -856,3 +856,41 @@ export const pluginStatusColumnInfoMsg = {
       "Latest update in tags are not yet active for enforcement."
   }
 };
+
+export const additionalServiceConfigs = [
+  {
+    label: "Policy Download Users",
+    name: "policy.download.auth.users",
+    type: "user"
+  },
+  {
+    label: "Tag Download Users",
+    name: "tag.download.auth.users",
+    type: "user"
+  },
+  {
+    label: "Service Admin Users",
+    name: "service.admin.users",
+    type: "user"
+  },
+  {
+    label: "Service Admin Groups",
+    name: "service.admin.groups",
+    type: "group"
+  },
+  {
+    label: "Superusers",
+    name: "ranger.plugin.super.users",
+    type: "user"
+  },
+  {
+    label: "Superuser Groups",
+    name: "ranger.plugin.super.groups",
+    type: "group"
+  },
+  {
+    label: "Userstore Download Users",
+    name: "userstore.download.auth.users",
+    type: "user"
+  }
+];
