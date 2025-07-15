@@ -89,6 +89,31 @@
         }
       ],
       "denyExceptions":[ ]
+    },
+    {
+      "id": 3,
+      "name": "/override-resource: allow: users=user-td, user-ra-td, user-rd-td",
+      "isEnabled": true,
+      "isAuditEnabled": false,
+      "policyPriority":1,
+      "resources": {
+        "path": { "values": [ "/override-resource" ], "isRecursive": true }
+      },
+      "policyItems": [
+        {
+          "accesses":[
+            {"type":"read" },
+            {"type":"write" }
+          ],
+          "users":["user-td", "user-ra-td", "user-rd-td"],
+          "groups":[],
+          "delegateAdmin":false,
+          "conditions" : []
+        }
+      ],
+      "allowExceptions":[],
+      "denyPolicyItems": [],
+      "denyExceptions":[]
     }
   ],
 
@@ -688,8 +713,21 @@
       },
       "result": { "isAudited": false, "isAllowed": false, "policyId": -1 }
     }
-
-
+    ,
+    {
+      "name": "ALLOW 'read /override-resource' for u=user-td",
+      "request": {
+        "resource": { "elements": { "path": "/override-resource" } },
+        "accessType": "read",
+        "user": "user-td",
+        "userGroups": [ ],
+        "requestData": "read /override-resource",
+        "context": {
+          "TAGS": "[{\"type\":\"PII\"}]"
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 3 }
+    }
   ]
 }
 

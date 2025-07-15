@@ -17,13 +17,8 @@
  * under the License.
  */
 
-import React, { useReducer, useEffect, useCallback, useState } from "react";
-import {
-  NavLink,
-  matchRoutes,
-  useLocation,
-  useNavigate
-} from "react-router-dom";
+import React, { useReducer, useEffect, useState } from "react";
+import { NavLink, matchRoutes, useLocation } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import rangerIcon from "Images/sidebar/ranger.svg";
 import keyIcon from "Images/sidebar/key.svg";
@@ -34,33 +29,19 @@ import zoneIcon from "Images/sidebar/zone.svg";
 import settingsIcon from "Images/sidebar/settings.svg";
 import accountIcon from "Images/sidebar/account.svg";
 import gdsIcon from "Images/sidebar/governed-data.svg";
-import Collapse from "react-bootstrap/Collapse";
 import { fetchApi } from "Utils/fetchAPI";
-import { getUserProfile, setUserProfile } from "Utils/appState";
+import { getServiceDef, getUserProfile } from "Utils/appState";
 import {
   hasAccessToTab,
   isAuditor,
   isKeyAdmin,
   isSystemAdmin,
-  getBaseUrl,
-  isKMSAuditor
+  isKMSAuditor,
+  getLandingPageURl
 } from "Utils/XAUtils";
-import Select from "react-select";
-import {
-  cloneDeep,
-  filter,
-  isEmpty,
-  map,
-  sortBy,
-  uniq,
-  upperCase
-} from "lodash";
-import { toast } from "react-toastify";
-import ResourceTagContent from "./ResourceTagContent";
-import { PathAssociateWithModule } from "../../utils/XAEnums";
-import { getServiceDef } from "../../utils/appState";
+import { cloneDeep, filter, sortBy } from "lodash";
+import { PathAssociateWithModule } from "Utils/XAEnums";
 import { SideBarBody } from "./SideBarBody";
-import { getLandingPageURl } from "../../utils/XAUtils";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -95,8 +76,9 @@ function reducer(state, action) {
 }
 
 export const SideBar = () => {
-  const { allServiceDefs, serviceDefs, tagServiceDefs } =
-    cloneDeep(getServiceDef());
+  const { allServiceDefs, serviceDefs, tagServiceDefs } = cloneDeep(
+    getServiceDef()
+  );
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const [keyState, dispatch] = useReducer(reducer, {
     loader: false,
@@ -134,7 +116,6 @@ export const SideBar = () => {
   const [isActive, setActive] = useState(null);
   const [isDrawerOpen, setDrawer] = useState(false);
   const [accountDrawer, setAccountDrawer] = useState(false);
-  const [isTagView, setTagView] = useState(false);
 
   const handleClickOutside = (e) => {
     if (
@@ -173,24 +154,21 @@ export const SideBar = () => {
 
     try {
       servicesResp = await fetchApi({
-        url: "plugins/services"
+        url: "public/v2/api/service-headers"
       });
-      tagServices = filter(servicesResp.data.services, ["type", "tag"]);
+      tagServices = filter(servicesResp?.data, ["type", "tag"]);
       if (isKMSRole) {
-        resourceServices = filter(
-          servicesResp.data.services,
-          (service) => service.type == "kms"
-        );
+        resourceServices = filter(servicesResp?.data, ["type", "kms"]);
       } else {
         resourceServices = filter(
-          servicesResp.data.services,
+          servicesResp?.data,
           (service) => service.type !== "tag" && service.type !== "kms"
         );
       }
 
       dispatch({
         type: "SERVICES_DATA",
-        allServiceData: servicesResp.data.services,
+        allServiceData: servicesResp?.data || [],
         serviceData: resourceServices,
         tagServiceData: tagServices
       });
@@ -271,7 +249,6 @@ export const SideBar = () => {
                   setActive("resourcesCollapse");
                   setAccountDrawer(false);
                   setDrawer(true);
-                  setTagView(false);
                   fetchServicesData();
                 }}
               >
@@ -296,7 +273,6 @@ export const SideBar = () => {
                   setActive("tagCollapse");
                   setAccountDrawer(false);
                   setDrawer(true);
-                  setTagView(true);
                   fetchServicesData();
                 }}
               >

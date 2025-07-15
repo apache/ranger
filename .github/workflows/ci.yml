@@ -54,6 +54,18 @@ jobs:
           distribution: 'temurin'
       - name: build (8)
         run: mvn -T 8 clean verify --no-transfer-progress -B -V
+
+      - name: run code coverage
+        run: |
+          cd dev-support/checks
+          chmod +x coverage.sh && ./coverage.sh
+
+      - name: upload coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco
+          path: target/coverage/all/*
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -125,9 +137,6 @@ jobs:
       - name: Build all ranger-service images
         run: |
           cd dev-support/ranger-docker
-          docker compose -f docker-compose.ranger-base.yml build
-          export DOCKER_BUILDKIT=1
-          export COMPOSE_DOCKER_CLI_BUILD=1
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \

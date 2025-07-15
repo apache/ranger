@@ -30,6 +30,7 @@ import {
   isEmpty,
   pickBy,
   find,
+  filter,
   maxBy,
   sortBy,
   map,
@@ -169,11 +170,12 @@ const SecurityZoneForm = () => {
   };
 
   const fetchResourceServices = async () => {
-    const serviceDefnsResp = await fetchApi({
-      url: "plugins/services"
+    const servicesResp = await fetchApi({
+      url: "public/v2/api/service-headers"
     });
 
-    const filterServices = serviceDefnsResp.data.services.filter(
+    const filterServices = filter(
+      servicesResp?.data,
       (obj) => obj.type !== "tag" && obj.type !== "kms"
     );
 
@@ -589,18 +591,18 @@ const SecurityZoneForm = () => {
   };
 
   const fetchTagServices = async (inputValue) => {
-    let params = {};
-    if (inputValue) {
-      params["serviceNamePartial"] = inputValue || "";
-      params["serviceType"] = "tag" || "";
-    }
+    const params = {
+      ...(inputValue && { serviceNamePrefix: inputValue }),
+      serviceType: "tag"
+    };
+
     const serviceResp = await fetchApi({
-      url: "plugins/services",
+      url: "public/v2/api/service-headers",
       params: params
     });
-    const filterServices = serviceResp.data.services.filter(
-      (obj) => obj.type == "tag"
-    );
+
+    const filterServices = filter(serviceResp?.data || [], ["type", "tag"]);
+
     return filterServices.map(({ name }) => ({
       label: name,
       value: name

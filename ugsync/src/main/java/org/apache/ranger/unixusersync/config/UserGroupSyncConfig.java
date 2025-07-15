@@ -150,6 +150,7 @@ public class UserGroupSyncConfig {
     private static final String DEFAULT_UGSYNC_UNIX_BACKEND = "passwd";
     private static final String UGSYNC_UPDATE_MILLIS_MIN    = "ranger.usersync.unix.updatemillismin";
     private static final String DEFAULT_USER_GROUP_TEXTFILE_DELIMITER = ",";
+  
     /* Role Assignments */
     private static final String ROLE_ASSIGNMENT_LIST_DELIMITER               = "ranger.usersync.role.assignment.list.delimiter";
     private static final String USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER       = "ranger.usersync.users.groups.assignment.list.delimiter";

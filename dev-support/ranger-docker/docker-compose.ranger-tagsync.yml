@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-tagsync
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - TAGSYNC_VERSION=${TAGSYNC_VERSION}
     image: ranger-tagsync
     container_name: ranger-tagsync

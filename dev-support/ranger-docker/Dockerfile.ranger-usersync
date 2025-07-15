@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger-base:latest
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
 ARG USERSYNC_VERSION
 
@@ -29,10 +31,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --dire
     ln -s ${RANGER_HOME}/ranger-${USERSYNC_VERSION}-usersync ${RANGER_HOME}/usersync && \
     rm -f /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz && \
     cp -f ${RANGER_SCRIPTS}/ranger-usersync-install.properties ${RANGER_HOME}/usersync/install.properties && \
-    mkdir -p /var/run/ranger && \
-    mkdir -p /var/log/ranger/usersync && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
-    mkdir -p /etc/ranger && \
+    mkdir -p /var/run/ranger /var/log/ranger/usersync /etc/ranger && \
     mkdir /etc/init.d || true && \
     mkdir /etc/rc2.d  || true && \
     mkdir /etc/rc3.d  || true && \

@@ -22,7 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Dropdown, DropdownButton, Modal } from "react-bootstrap";
 import { isEmpty, upperCase } from "lodash";
 import Select from "react-select";
-import ServiceViewDetails from "../ServiceManager/ServiceViewDetails";
+import ServiceViewDetails from "Views/ServiceManager/ServiceViewDetails";
 import { fetchApi } from "Utils/fetchAPI";
 import moment from "moment-timezone";
 import { toast } from "react-toastify";
@@ -32,7 +32,7 @@ import {
   isKMSAuditor,
   isUser,
   isSystemAdmin
-} from "../../utils/XAUtils";
+} from "Utils/XAUtils";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -153,7 +153,7 @@ export const TopNavBar = (props) => {
     if (!isEmpty(service)) {
       return {
         label: `Service : ${service?.displayName}`,
-        value: service.displayName
+        value: service.id
       };
     } else {
       return "";
@@ -180,11 +180,13 @@ export const TopNavBar = (props) => {
       );
     }
   };
+
   const formatOptionLabel = ({ label }) => (
     <div title={label} className="text-truncate">
       {label}
     </div>
   );
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light content-top-nav">
       <div className="top-nav-title-wrapper">
@@ -301,26 +303,15 @@ export const TopNavBar = (props) => {
           </DropdownButton>
         )}
       </div>
-      <Modal
-        show={showView === serviceData?.id}
-        onHide={hideViewModal}
-        size="xl"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Service Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ServiceViewDetails
-            serviceDefData={serviceDefData}
-            serviceData={serviceData}
-          />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="primary" size="sm" onClick={hideViewModal}>
-            OK
-          </Button>
-        </Modal.Footer>
-      </Modal>
+
+      <ServiceViewDetails
+        serviceDefData={serviceDefData}
+        serviceData={serviceData}
+        showViewModal={showView === serviceData?.id}
+        hideViewModal={hideViewModal}
+        dashboardServiceView={false}
+      />
+
       <Modal show={showDelete} onHide={hideDeleteModal}>
         <Modal.Header closeButton>
           <span className="text-word-break">
