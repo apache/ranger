@@ -20,8 +20,19 @@
 import React, { useEffect, useState } from "react";
 import { fetchApi } from "Utils/fetchAPI";
 import { Alert, Row, Col, Table, Badge, Modal, Button } from "react-bootstrap";
-import { difference, isEmpty, keys, map, omit, pick } from "lodash";
+import {
+  difference,
+  isEmpty,
+  keys,
+  map,
+  omit,
+  pick,
+  intersection,
+  find,
+  sortBy
+} from "lodash";
 import { ModalLoader } from "Components/CommonComponents";
+import { additionalServiceConfigs } from "Utils/XAEnums";
 
 export const ServiceViewDetails = (props) => {
   const { serviceData: service, serviceDefData } = props;
@@ -74,13 +85,29 @@ export const ServiceViewDetails = (props) => {
 
     let serviceConfigsKey = keys(serviceConfigs);
     let serviceDefConfigsKey = map(serviceDefConfigs, "name");
-    let customConfigsKey = difference(serviceConfigsKey, serviceDefConfigsKey);
+
+    const additionalServiceConfigsKey = intersection(
+      map(additionalServiceConfigs, "name"),
+      serviceConfigsKey
+    );
+
+    const customConfigsKey = sortBy(
+      difference(
+        difference(serviceConfigsKey, serviceDefConfigsKey),
+        additionalServiceConfigsKey
+      )
+    );
 
     serviceDefConfigs?.map(
       (config) =>
         (configs[config.label !== undefined ? config.label : config.name] =
           serviceConfigs[config.name])
     );
+
+    additionalServiceConfigsKey.map((config) => {
+      configs[find(additionalServiceConfigs, ["name", config]).label] =
+        serviceConfigs[config];
+    });
 
     Object.entries(configs)?.map(([key, value]) =>
       tableRow.push(
@@ -98,7 +125,7 @@ export const ServiceViewDetails = (props) => {
     tableRow.push(
       <tr key="custom-configs-title">
         <td colSpan="2">
-          <b>Add New Configurations :</b>
+          <b>Custom Configurations :</b>
         </td>
       </tr>
     );
@@ -226,59 +253,59 @@ export const ServiceViewDetails = (props) => {
           <td className="text-center">
             {a.actions !== undefined
               ? a.actions.map((action) => (
-                  <h6 key={action}>
-                    <Badge bg="info">{action}</Badge>
-                  </h6>
+                  <Badge bg="info" className="m-1 text-truncate" key={action}>
+                    {action}
+                  </Badge>
                 ))
               : "--"}
           </td>
           <td className="text-center">
             {a.accessTypes !== undefined && a.accessTypes.length > 0
               ? a.accessTypes.map((accessType) => (
-                  <h6 key={accessType}>
-                    <Badge bg="info">{accessType}</Badge>
-                  </h6>
+                  <Badge
+                    bg="info"
+                    className="m-1 text-truncate"
+                    key={accessType}
+                  >
+                    {accessType}
+                  </Badge>
                 ))
               : "--"}
           </td>
           <td className="text-center">
             {a.users !== undefined
               ? a.users.map((user) => (
-                  <h6 key={user}>
-                    <Badge
-                      bg="info"
-                      className="m-1 text-truncate more-less-width"
-                      title={user}
-                      key={user}
-                    >
-                      {user}
-                    </Badge>
-                  </h6>
+                  <Badge
+                    bg="info"
+                    className="m-1 text-truncate more-less-width"
+                    title={user}
+                    key={user}
+                  >
+                    {user}
+                  </Badge>
                 ))
               : "--"}
           </td>
           <td className="text-center">
             {a.groups !== undefined
               ? a.groups.map((group) => (
-                  <h6 key={group}>
-                    <Badge
-                      bg="info"
-                      className="m-1 text-truncate more-less-width"
-                      title={group}
-                      key={group}
-                    >
-                      {group}
-                    </Badge>
-                  </h6>
+                  <Badge
+                    bg="info"
+                    className="m-1 text-truncate more-less-width"
+                    title={group}
+                    key={group}
+                  >
+                    {group}
+                  </Badge>
                 ))
               : "--"}
           </td>
           <td className="text-center">
             {a.roles !== undefined
               ? a.roles.map((role) => (
-                  <h6 key={role}>
-                    <Badge bg="info">{role}</Badge>
-                  </h6>
+                  <Badge bg="info" key={role}>
+                    {role}
+                  </Badge>
                 ))
               : "--"}
           </td>
@@ -306,16 +333,16 @@ export const ServiceViewDetails = (props) => {
                   <tbody className="service-details">
                     <tr>
                       <td className="text-nowrap">Service Name</td>
-                      <td className="text-break">{serviceData.name}</td>
+                      <td className="text-break">{serviceData?.name}</td>
                     </tr>
                     <tr>
                       <td className="text-nowrap">Display Name</td>
-                      <td className="text-break">{serviceData.displayName}</td>
+                      <td className="text-break">{serviceData?.displayName}</td>
                     </tr>
                     <tr>
                       <td className="text-nowrap">Description</td>
                       <td className="text-break">
-                        {serviceData.description
+                        {serviceData?.description
                           ? serviceData.description
                           : "--"}
                       </td>
@@ -325,7 +352,7 @@ export const ServiceViewDetails = (props) => {
                       <td>
                         <h6>
                           <Badge bg="info">
-                            {serviceData.isEnabled ? `Enabled` : `Disabled`}
+                            {serviceData?.isEnabled ? `Enabled` : `Disabled`}
                           </Badge>
                         </h6>
                       </td>
@@ -333,7 +360,7 @@ export const ServiceViewDetails = (props) => {
                     <tr>
                       <td className="text-nowrap">Tag Service</td>
                       <td className="text-break">
-                        {serviceData.tagService ? (
+                        {serviceData?.tagService ? (
                           <h6>
                             <Badge bg="info">{serviceData.tagService}</Badge>
                           </h6>
