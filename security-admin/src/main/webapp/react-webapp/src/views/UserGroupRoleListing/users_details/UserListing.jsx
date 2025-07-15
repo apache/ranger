@@ -553,8 +553,7 @@ function Users() {
       options: () => {
         return [
           { value: "0", label: "Internal" },
-          { value: "1", label: "External" },
-          { value: "6", label: "Federated" }
+          { value: "1", label: "External" }
         ];
       }
     },
