@@ -1276,48 +1276,50 @@ public class RangerBasePlugin {
     }
 
     private void configurePluginContextFromServicePoliciesForUserGroupName(ServicePolicies servicePolicies) {
-        Map<String, String> serviceConfigMap = servicePolicies.getServiceConfig();
-        if (MapUtils.isNotEmpty(serviceConfigMap)) {
-            LOG.debug("==> RangerBasePlugin(" + serviceConfigMap.keySet() + ")");
-            pluginContext.setUserNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM));
-            pluginContext.setGroupNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM));
-            String mappingUserNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER);
-            try {
-                if (mappingUserNameHandler != null) {
-                    Class<Mapper> regExClass        = (Class<Mapper>) Class.forName(mappingUserNameHandler);
-                    Mapper        userNameRegExInst = regExClass.newInstance();
-                    if (userNameRegExInst != null) {
-                        String baseProperty = RangerCommonConstants.PLUGINS_MAPPING_USERNAME;
-                        userNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
-                                serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR));
-                        pluginContext.setUserNameTransformInst(userNameRegExInst);
-                    } else {
-                        LOG.error("RegEx handler instance for username is null!");
+        if (servicePolicies != null) {
+            Map<String, String> serviceConfigMap = servicePolicies.getServiceConfig();
+            if (MapUtils.isNotEmpty(serviceConfigMap)) {
+                LOG.debug("==> RangerBasePlugin(" + serviceConfigMap.keySet() + ")");
+                pluginContext.setUserNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM));
+                pluginContext.setGroupNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM));
+                String mappingUserNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER);
+                try {
+                    if (mappingUserNameHandler != null) {
+                        Class<Mapper> regExClass        = (Class<Mapper>) Class.forName(mappingUserNameHandler);
+                        Mapper        userNameRegExInst = regExClass.newInstance();
+                        if (userNameRegExInst != null) {
+                            String baseProperty = RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME;
+                            userNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
+                                    serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR));
+                            pluginContext.setUserNameTransformInst(userNameRegExInst);
+                        } else {
+                            LOG.error("RegEx handler instance for username is null!");
+                        }
                     }
+                } catch (ClassNotFoundException cne) {
+                    LOG.error("Failed to load " + mappingUserNameHandler + " ", cne);
+                } catch (Throwable te) {
+                    LOG.error("Failed to instantiate " + mappingUserNameHandler + " ", te);
                 }
-            } catch (ClassNotFoundException cne) {
-                LOG.error("Failed to load " + mappingUserNameHandler + " ", cne);
-            } catch (Throwable te) {
-                LOG.error("Failed to instantiate " + mappingUserNameHandler + " ", te);
-            }
-            String mappingGroupNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER);
-            try {
-                if (mappingGroupNameHandler != null) {
-                    Class<Mapper> regExClass         = (Class<Mapper>) Class.forName(mappingGroupNameHandler);
-                    Mapper        groupNameRegExInst = regExClass.newInstance();
-                    if (groupNameRegExInst != null) {
-                        String baseProperty = RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME;
-                        groupNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
-                                serviceConfigMap.get(RangerCommonConstants.PLUGINS_MAPPING_SEPARATOR));
-                        pluginContext.setGroupNameTransformInst(groupNameRegExInst);
-                    } else {
-                        LOG.error("RegEx handler instance for groupname is null!");
+                String mappingGroupNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER);
+                try {
+                    if (mappingGroupNameHandler != null) {
+                        Class<Mapper> regExClass         = (Class<Mapper>) Class.forName(mappingGroupNameHandler);
+                        Mapper        groupNameRegExInst = regExClass.newInstance();
+                        if (groupNameRegExInst != null) {
+                            String baseProperty = RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME;
+                            groupNameRegExInst.init(baseProperty, getAllRegexPatterns(baseProperty, serviceConfigMap),
+                                    serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR));
+                            pluginContext.setGroupNameTransformInst(groupNameRegExInst);
+                        } else {
+                            LOG.error("RegEx handler instance for groupname is null!");
+                        }
                     }
+                } catch (ClassNotFoundException cne) {
+                    LOG.error("Failed to load " + mappingGroupNameHandler + " ", cne);
+                } catch (Throwable te) {
+                    LOG.error("Failed to instantiate " + mappingGroupNameHandler + " ", te);
                 }
-            } catch (ClassNotFoundException cne) {
-                LOG.error("Failed to load " + mappingGroupNameHandler + " ", cne);
-            } catch (Throwable te) {
-                LOG.error("Failed to instantiate " + mappingGroupNameHandler + " ", te);
             }
         }
     }

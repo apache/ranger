@@ -164,27 +164,12 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
         return ret;
     }
 
-    public static Map<String, String> getConfigMapWithPrefixAndDefaultValue(String confPrefix) {
+    public static Map<String, String> getConfigMapWithPrefix(String confPrefix) {
         Map<String, String> configMap = new HashMap<>();
         Map<String, String> propsMap  = getPropertiesMap();
         for (Map.Entry<String, String> entry : propsMap.entrySet()) {
             String key = entry.getKey();
             if (key.startsWith(confPrefix)) {
-                String value = StringUtils.isNotEmpty(entry.getValue()) ? entry.getValue() : null;
-                if (value != null) {
-                    configMap.put(key, value);
-                }
-            }
-        }
-        return configMap;
-    }
-
-    public static Map<String, String> getConfigMapWithPrefixAndDefaultValue(String confPrefix, Set<String> excludedKeys) {
-        Map<String, String> configMap = new HashMap<>();
-        Map<String, String> propsMap  = getPropertiesMap();
-        for (Map.Entry<String, String> entry : propsMap.entrySet()) {
-            String key = entry.getKey();
-            if (key.startsWith(confPrefix) && !excludedKeys.contains(key)) {
                 String value = StringUtils.isNotEmpty(entry.getValue()) ? entry.getValue() : null;
                 if (value != null) {
                     configMap.put(key, value);
@@ -562,29 +547,69 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 
     private void updateRangerPluginsPropertiesForUserGroup(Properties props) {
         if (propertiesMap != null) {
-            String userCaseConv = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM))
+            String userCaseConv = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM))
                     ? UgsyncCommonConstants.DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE
-                    : propertiesMap.get(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM);
-            propertiesMap.put(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
-            props.put(RangerCommonConstants.PLUGINS_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
+            props.put(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
 
-            String groupCaseConv = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM))
+            String groupCaseConv = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM))
                     ? UgsyncCommonConstants.DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE
-                    : propertiesMap.get(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM);
-            propertiesMap.put(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
-            props.put(RangerCommonConstants.PLUGINS_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
+            props.put(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
 
-            String userHandler = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER))
+            String userHandler = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER))
                     ? UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_USERNAME_HANDLER
-                    : propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER);
-            propertiesMap.put(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER, userHandler);
-            props.put(RangerCommonConstants.PLUGINS_MAPPING_USERNAME_HANDLER, userHandler);
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER, userHandler);
+            props.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER, userHandler);
 
-            String groupHandler = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER))
+            String groupHandler = StringUtils.isEmpty(propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER))
                     ? UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER
-                    : propertiesMap.get(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER);
-            propertiesMap.put(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER, groupHandler);
-            props.put(RangerCommonConstants.PLUGINS_MAPPING_GROUPNAME_HANDLER, groupHandler);
+                    : propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER, groupHandler);
+            props.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER, groupHandler);
+
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR, getRegexSeparator());
+            props.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR, getRegexSeparator());
+
+            propertiesMap.putAll(getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME));
+            props.putAll(getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME));
+
+            propertiesMap.putAll(getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME));
+            props.putAll(getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME));
         }
+    }
+
+    private static String getRegexSeparator() {
+        String ret = UgsyncCommonConstants.DEFAULT_MAPPING_SEPARATOR;
+        String val = PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR);
+        if (StringUtils.isNotEmpty(val)) {
+            if (val.length() == 1) {
+                ret = val;
+            } else {
+                LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator");
+            }
+        }
+        LOG.info(String.format("Using %s as the RegEx Separator", ret));
+        return ret;
+    }
+
+    private static Map<String, String> getAllRegexPatternsConfig(String baseProperty) {
+        Map<String, String> regexPatterns = new HashMap<>();
+        String              baseRegex     = PropertiesUtil.getProperty(baseProperty);
+        if (baseRegex == null) {
+            return regexPatterns;
+        }
+        regexPatterns.put(baseProperty, baseRegex);
+        int    i         = 1;
+        String nextRegex = PropertiesUtil.getProperty(baseProperty + "." + i);
+        while (nextRegex != null) {
+            regexPatterns.put(baseProperty + "." + i, nextRegex);
+            i++;
+            nextRegex = PropertiesUtil.getProperty(baseProperty + "." + i);
+        }
+        return regexPatterns;
     }
 }
