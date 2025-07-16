@@ -21,12 +21,14 @@ package org.apache.ranger.plugin.util;
 
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -283,6 +285,7 @@ public class ServiceTags implements java.io.Serializable {
 		final int finalTagsCount = tags.size();
 
 		for (Map.Entry<Long, List<Long>> resourceEntry : resourceToTagIds.entrySet()) {
+			Set<Long> uniqueTagIds = new HashSet<>(resourceEntry.getValue().size());
 			for (ListIterator<Long> listIter = resourceEntry.getValue().listIterator(); listIter.hasNext(); ) {
 				final Long tagId       = listIter.next();
 				Long       mappedTagId = null;
@@ -292,6 +295,11 @@ public class ServiceTags implements java.io.Serializable {
 				}
 
 				if (mappedTagId == null) {
+					continue;
+				}
+
+				if (!uniqueTagIds.add(mappedTagId)) {
+					listIter.remove();
 					continue;
 				}
 
