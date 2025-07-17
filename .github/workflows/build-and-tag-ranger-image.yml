@@ -21,7 +21,7 @@ name: build-and-tag-ranger-image
 
 # Use this command to generate a unique 11 character token:
 # code=$(uuidgen | tr A-Z a-z | cut -c 1-11)
-# then pass the code to state param here: http://oauth.apache.org/auth?redirect_uri=https://github.com&state=code
+# then pass the code to state param here: https://oauth.apache.org/auth?redirect_uri=https://ranger.apache.org&state=code
 # On successful authentication, it generates an OAuth token on redirect_uri that can be used to trigger the workflow and push the images to DockerHub.
 
 # For more info, read ASF OAuth doc here: https://idm.apache.org/api.html
@@ -71,7 +71,7 @@ jobs:
         working-directory: dev-support/ranger-docker/dist
         run: |
           RANGER_VERSION=$(cat version)
-          echo "RANGER_VERSION=${RANGER_VERSION}" >> $GITHUB_ENV
+          echo "RANGER_VERSION=${RANGER_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf
