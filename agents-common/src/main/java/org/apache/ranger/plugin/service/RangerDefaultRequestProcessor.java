@@ -109,44 +109,9 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                     boolean isNameTransformationSupported = config.getBoolean(config.getPropertyPrefix() + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false);
 
                     LOG.debug("isNameTransformationSupported = " + isNameTransformationSupported);
-
                     if (isNameTransformationSupported) {
-                        String user = request.getUser();
-                        String userNameCaseConversion = policyEngine.getPluginContext().getUserNameCaseConversion();
-                        if (userNameCaseConversion != null && userNameCaseConversion.equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE)) {
-                            user = user.toLowerCase();
-                        } else if (userNameCaseConversion != null && userNameCaseConversion.equalsIgnoreCase(UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE)) {
-                            user = user.toUpperCase();
-                        }
-                        Mapper userNameTransformInst = policyEngine.getPluginContext().getUserNameTransformInst();
-                        if (userNameTransformInst != null) {
-                            String originalUser    = request.getUser();
-                            String transformedUser = userNameTransformInst.transform(user);
-                            LOG.debug("Original username = {}, Transformed username = {}", originalUser, transformedUser);
-                            reqImpl.setUser(transformedUser);
-                        }
-                        Mapper groupNameTransformInst = policyEngine.getPluginContext().getGroupNameTransformInst();
-                        if (groupNameTransformInst != null) {
-                            Set<String> transformedGroups = request.getUserGroups().stream()
-                                    .filter(Objects::nonNull)
-                                    .map(group -> {
-                                        String originalGroupName = group;
-                                        String conversionType    = policyEngine.getPluginContext().getGroupNameCaseConversion();
-
-                                        if (UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(conversionType)) {
-                                            group = group.toLowerCase();
-                                        } else if (UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE.equalsIgnoreCase(conversionType)) {
-                                            group = group.toUpperCase();
-                                        }
-
-                                        String transformedGroup = groupNameTransformInst.transform(group);
-                                        LOG.debug("Original group name = {}, Transformed group name = {}", originalGroupName, transformedGroup);
-                                        return transformedGroup;
-                                    })
-                                    .collect(Collectors.toSet());
-
-                            reqImpl.setUserGroups(transformedGroups);
-                        }
+                        reqImpl.setUser(getTransformedUser(policyEngine, request));
+                        reqImpl.setUserGroups(getTransformedGroups(policyEngine, request));
                     }
                 }
 
@@ -207,6 +172,52 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         } else {
             LOG.debug("No context-enrichers!!!");
         }
+    }
+
+    private String getTransformedUser(PolicyEngine policyEngine, RangerAccessRequest request) {
+        String user                   = request.getUser();
+        String userNameCaseConversion = policyEngine.getPluginContext().getUserNameCaseConversion();
+
+        if (UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion)) {
+            user = user.toLowerCase();
+        } else if (UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE.equalsIgnoreCase(userNameCaseConversion)) {
+            user = user.toUpperCase();
+        }
+
+        Mapper userNameTransformInst = policyEngine.getPluginContext().getUserNameTransformInst();
+        if (userNameTransformInst != null) {
+            String transformedUser = userNameTransformInst.transform(user);
+            LOG.debug("Original username = {}, Transformed username = {}", request.getUser(), transformedUser);
+            return transformedUser;
+        }
+
+        return user;
+    }
+
+    private Set<String> getTransformedGroups(PolicyEngine policyEngine, RangerAccessRequest request) {
+        Mapper groupNameTransformInst = policyEngine.getPluginContext().getGroupNameTransformInst();
+        String caseConversion         = policyEngine.getPluginContext().getGroupNameCaseConversion();
+
+        if (groupNameTransformInst == null || request.getUserGroups() == null) {
+            return request.getUserGroups();
+        }
+
+        return request.getUserGroups().stream()
+                .filter(Objects::nonNull)
+                .map(group -> {
+                    String originalGroup = group;
+
+                    if (UgsyncCommonConstants.UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(caseConversion)) {
+                        group = group.toLowerCase();
+                    } else if (UgsyncCommonConstants.UGSYNC_UPPER_CASE_CONVERSION_VALUE.equalsIgnoreCase(caseConversion)) {
+                        group = group.toUpperCase();
+                    }
+
+                    String transformedGroup = groupNameTransformInst.transform(group);
+                    LOG.debug("Original group name = {}, Transformed group name = {}", originalGroup, transformedGroup);
+                    return transformedGroup;
+                })
+                .collect(Collectors.toSet());
     }
 
     private void setResourceServiceDef(RangerAccessRequest request) {
