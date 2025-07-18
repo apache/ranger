@@ -44,16 +44,13 @@ public class HSTSFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("===> HSTSFilter:doFilter()");
-        }
+        LOG.debug("===> HSTSFilter:doFilter()");
         String path = ((HttpServletRequest) request).getRequestURI();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> HSTSFilter:doFilter() path = " + path);
-        }
+        LOG.debug("==> HSTSFilter:doFilter() path = " + path);
         HttpServletResponse resp = (HttpServletResponse) response;
         resp.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
         chain.doFilter(request, response);
+        LOG.debug("<=== HSTSFilter:doFilter()");
     }
 
     @Override
