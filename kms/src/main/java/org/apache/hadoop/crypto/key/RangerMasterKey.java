@@ -308,6 +308,13 @@ public class RangerMasterKey implements RangerKMSMKI {
                 init();
                 PBEKeySpec newPbeKeySpec = getPBEParameterSpec(mkPassword, encrCryptoAlgo);
                 byte[] masterKeyToDB = encryptKey(oldKeyMaterial, newPbeKeySpec);
+                byte[] decryptedMaterialWithNewAlgo = decryptKey(masterKeyToDB, newPbeKeySpec);
+                // This is just a sanity check but important to ensure that returned key material after re-encryption is same as old MK key material.
+                if (!Base64.encode(oldKeyMaterial).equals(Base64.encode(decryptedMaterialWithNewAlgo))) {
+                    String errMsg = "After re-encryption, Latest decrypted MasterKey material is different than original.Aborting the re-encryption, DB is not updated with new encrypted material.";
+                    logger.error(errMsg);
+                    throw new RuntimeException(errMsg);
+                }
 
                 String encodeMKToDB = Base64.encode(masterKeyToDB);
                 updateEncryptedMK(paddingString + "," + encodeMKToDB);
