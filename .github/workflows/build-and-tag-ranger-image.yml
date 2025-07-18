@@ -1,0 +1,190 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: build-and-tag-ranger-image
+
+# This workflow builds the following images: ranger, ranger-db, ranger-solr, ranger-zk.
+# It also pushes the image to the GitHub Container Registry, tagging it based on the ranger version present in the release branch.
+# It pushes the images to DockerHub if an OAuth token is provided as input.
+
+# Use this command to generate a unique 11 character token:
+# code=$(uuidgen | tr A-Z a-z | cut -c 1-11)
+# then pass the code to state param here: http://oauth.apache.org/auth?redirect_uri=https://github.com&state=code
+# On successful authentication, it generates an OAuth token on redirect_uri that can be used to trigger the workflow and push the images to DockerHub.
+
+# For more info, read ASF OAuth doc here: https://idm.apache.org/api.html
+on:
+  workflow_dispatch:
+    inputs:
+      token:
+        description: 'OAuth Access Token'
+        required: true
+        type: string
+  push:
+    branches:
+      - 'ranger-**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      ranger-version: ${{ steps.version.outputs.RANGER_VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build-8 artifacts
+        uses: dawidd6/action-download-artifact@v11
+        with:
+          name: target-8
+          workflow: ci.yml
+
+      - name: Copy artifacts for docker build
+        run: |
+          mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-solr-plugin.tar.gz dev-support/ranger-docker/dist
+          mv version dev-support/ranger-docker/dist
+
+      - name: Run download-archives.sh
+        run: |
+          cd dev-support/ranger-docker
+          ./download-archives.sh none
+
+      - name: Output Ranger version
+        id: version
+        working-directory: dev-support/ranger-docker/dist
+        run: |
+          RANGER_VERSION=$(cat version)
+          echo "RANGER_VERSION=${RANGER_VERSION}" >> $GITHUB_ENV
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349
+
+      - name: Login to GitHub Container Registry
+        id: login
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push images
+        id: build
+        working-directory: dev-support/ranger-docker
+        run: |
+          set -o allexport
+          source .env
+          set +o allexport
+          docker buildx build \
+            --build-arg RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE} \
+            --build-arg RANGER_BASE_VERSION=${RANGER_BASE_VERSION} \
+            --build-arg RANGER_VERSION=${RANGER_VERSION} \
+            --build-arg RANGER_DB_TYPE=postgres \
+            --file Dockerfile.ranger \
+            --platform linux/amd64,linux/arm64 \
+            --tag ghcr.io/${{ github.repository_owner }}/ranger:${RANGER_VERSION} \
+            --push .
+          docker buildx build \
+            --build-arg POSTGRES_VERSION=${POSTGRES_VERSION} \
+            --file Dockerfile.ranger-postgres \
+            --platform linux/amd64,linux/arm64 \
+            --tag ghcr.io/${{ github.repository_owner }}/ranger-db:${RANGER_VERSION} \
+            --push .
+          docker buildx build \
+            --build-arg RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE} \
+            --build-arg RANGER_BASE_VERSION=${RANGER_BASE_VERSION} \
+            --build-arg SOLR_VERSION=${SOLR_VERSION} \
+            --build-arg SOLR_PLUGIN_VERSION=${SOLR_PLUGIN_VERSION} \
+            --file Dockerfile.ranger-solr \
+            --platform linux/amd64,linux/arm64 \
+            --tag ghcr.io/${{ github.repository_owner }}/ranger-solr:${RANGER_VERSION} \
+            --push .
+          docker buildx build \
+            --build-arg RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE} \
+            --build-arg RANGER_BASE_VERSION=${RANGER_BASE_VERSION} \
+            --build-arg ZK_VERSION=${ZK_VERSION} \
+            --file Dockerfile.ranger-zk \
+            --platform linux/amd64,linux/arm64 \
+            --tag ghcr.io/${{ github.repository_owner }}/ranger-zk:${RANGER_VERSION} \
+            --push .
+
+  tag:
+    needs: build
+    if: ${{ github.event.inputs.token != '' }}
+    runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USER }}
+      RANGER_VERSION: ${{ needs.build.outputs.ranger-version }}
+      REGISTRIES: ghcr.io # docker.io is appended dynamically
+    steps:
+      - name: Verify OAuth Token
+        run: |
+          response=$(curl -LSs https://oauth.apache.org/token\?code\=${{ github.event.inputs.token }})
+          echo "$response" | jq -e . >/dev/null 2>&1
+          if [[ $? -eq 0 ]]; then
+            check=$(echo $response | jq -e --arg str "ranger" '.pmcs | index($str) != null')
+            if [[ $check == true ]]; then
+              echo "Authorized to push to Docker Hub"
+            else
+              echo "Not authorized to push to Docker Hub"
+              exit 1
+            fi
+          else
+            echo $response
+          fi
+
+      - name: Add Docker Hub to targets
+        if: ${{ env.DOCKERHUB_USER }}
+        run: |
+          echo "REGISTRIES=${{ env.REGISTRIES }} docker.io" >> $GITHUB_ENV
+
+      - name: Pull image
+        run: |
+          docker pull ghcr.io/${{ github.repository_owner }}/ranger:${RANGER_VERSION}
+          docker pull ghcr.io/${{ github.repository_owner }}/ranger-db:${RANGER_VERSION}
+          docker pull ghcr.io/${{ github.repository_owner }}/ranger-solr:${RANGER_VERSION}
+          docker pull ghcr.io/${{ github.repository_owner }}/ranger-zk:${RANGER_VERSION}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_USER }}
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
+        with:
+          username: ${{ env.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Apply tags to existing image
+        run: |
+          set -x
+          for registry in $REGISTRIES; do
+            for service in ranger ranger-db ranger-solr ranger-zk; do
+              opts="$(echo "$RANGER_VERSION" | sed "s@^@--tag $registry/${{ github.repository_owner }}/$service:@g" | xargs echo)"
+              if [[ -n "$opts" ]]; then
+                docker buildx imagetools create $opts ghcr.io/${{ github.repository_owner }}/$service:${RANGER_VERSION}
+              fi
+            done
+          done
