@@ -75,7 +75,6 @@ public class KMSMDCFilter implements Filter {
 		try {
 			String path = ((HttpServletRequest) request).getRequestURI();
 			HttpServletResponse resp = (HttpServletResponse) response;
-			resp.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 
 			if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
 				chain.doFilter(request, resp);
