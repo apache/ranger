@@ -20,7 +20,6 @@ package org.apache.ranger.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.apache.ranger.biz.KmsKeyMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -40,6 +39,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -49,6 +49,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 @Path("keys")
@@ -223,12 +225,8 @@ public class XKeyREST {
     private void handleError(Exception e) {
         String message = e.getMessage();
 
-        if (e instanceof UniformInterfaceException) {
-            UniformInterfaceException uie = (UniformInterfaceException) e;
-
-            message = uie.getResponse().getEntity(String.class);
-
-            logger.error(message);
+        if (e instanceof ClientErrorException || e instanceof ServerErrorException || e instanceof WebApplicationException) {
+            logger.error(e.getMessage());
 
             try {
                 JsonNode rootNode = JsonUtilsV2.getMapper().readTree(message);

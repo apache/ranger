@@ -32,7 +32,6 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -408,7 +407,6 @@ public class TestRangerAdminJersey2RESTClient {
     }
 
     @Test
-    @Disabled("Mockito spy() cannot mock RangerAdminJersey2RESTClient in Java 17")
     public void test12_policies_secure_mode_uses_secure_url() throws Exception {
         Client clientMock = mock(Client.class);
         WebTarget targetMock = mock(WebTarget.class);
@@ -448,7 +446,6 @@ public class TestRangerAdminJersey2RESTClient {
     }
 
     @Test
-    @Disabled("Mockito spy() cannot mock RangerAdminJersey2RESTClient in Java 17")
     public void test13_tags_secure_mode_uses_secure_url() throws Exception {
         Client clientMock = mock(Client.class);
         WebTarget targetMock = mock(WebTarget.class);
@@ -487,7 +484,6 @@ public class TestRangerAdminJersey2RESTClient {
     }
 
     @Test
-    @Disabled("Mockito spy() cannot mock RangerAdminJersey2RESTClient in Java 17")
     public void test14_roles_secure_mode_uses_secure_url() throws Exception {
         Client clientMock = mock(Client.class);
         WebTarget targetMock = mock(WebTarget.class);
@@ -526,7 +522,6 @@ public class TestRangerAdminJersey2RESTClient {
     }
 
     @Test
-    @Disabled("Mockito spy() cannot mock RangerAdminJersey2RESTClient in Java 17")
     public void test15_userstore_secure_mode_uses_secure_url() throws Exception {
         Client clientMock = mock(Client.class);
         WebTarget targetMock = mock(WebTarget.class);

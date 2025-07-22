@@ -48,7 +48,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestUserGroupSync {
     @BeforeAll
-    public static void setupHA() {
+    public static void setupHA() throws Exception {
+        // Reset HA singletons to pick up non-HA config
+        Class<?> serviceStateClz = Class.forName("org.apache.ranger.ha.ServiceState");
+        Field serviceStateInstance = serviceStateClz.getDeclaredField("instance");
+        serviceStateInstance.setAccessible(true);
+        serviceStateInstance.set(null, null);
+
+        Class<?> haInitClz = Class.forName("org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl");
+        Field haInstance = haInitClz.getDeclaredField("theInstance");
+        haInstance.setAccessible(true);
+        haInstance.set(null, null);
+
         // Disable HA for unit tests
         UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
         cfg.setProperty("ranger-ugsync.server.ha.enabled", "false");

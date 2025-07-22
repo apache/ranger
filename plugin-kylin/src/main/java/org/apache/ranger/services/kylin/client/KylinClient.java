@@ -22,10 +22,6 @@ package org.apache.ranger.services.kylin.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -34,11 +30,18 @@ import org.apache.http.HttpStatus;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.services.kylin.client.json.model.KylinProjectResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -138,7 +141,7 @@ public class KylinClient extends BaseClient {
         }
 
         List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
-            ClientResponse response                     = getClientResponse(kylinUrl, userName, password);
+            Response response                     = getClientResponse(kylinUrl, userName, password);
             List<KylinProjectResponse> projectResponses = getKylinProjectResponse(response);
 
             if (CollectionUtils.isEmpty(projectResponses)) {
@@ -153,55 +156,66 @@ public class KylinClient extends BaseClient {
         return ret;
     }
 
-    private static ClientResponse getClientResponse(String kylinUrl, String userName, String password) {
-        ClientResponse response  = null;
-        String[]       kylinUrls = kylinUrl.trim().split("[,;]");
+    private static Response getClientResponse(String kylinUrl, String userName, String password) {
+        Response response = null;
+        String[] kylinUrls = kylinUrl.trim().split("[,;]");
 
         if (ArrayUtils.isEmpty(kylinUrls)) {
             return null;
         }
 
-        Client client       = Client.create();
+        Client client       = null;
         String decryptedPwd = PasswordUtils.getDecryptPassword(password);
 
-        client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
+        try {
+            // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder() to prevent MOXy usage
+            client = RangerJersey2ClientBuilder.newBuilder().build();
 
-        for (String currentUrl : kylinUrls) {
-            if (StringUtils.isBlank(currentUrl)) {
-                continue;
-            }
-
-            String url = currentUrl.trim() + KYLIN_LIST_API_ENDPOINT;
-
-            try {
-                response = getProjectResponse(url, client);
-
-                if (response != null) {
-                    if (response.getStatus() == HttpStatus.SC_OK) {
-                        break;
-                    } else {
-                        response.close();
-                    }
+            // Register authentication filter on the client
+            client.register(new javax.ws.rs.client.ClientRequestFilter() {
+                @Override
+                public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
+                    String authHeader = "Basic " + java.util.Base64.getEncoder().encodeToString((userName + ":" + decryptedPwd).getBytes());
+                    requestContext.getHeaders().add("Authorization", authHeader);
                 }
-            } catch (Throwable t) {
-                String msgDesc = "Exception while getting kylin response, kylinUrl: " + url;
+            });
 
-                LOG.error(msgDesc, t);
+            for (String currentUrl : kylinUrls) {
+                if (StringUtils.isBlank(currentUrl)) {
+                    continue;
+                }
+
+                String url = currentUrl.trim() + KYLIN_LIST_API_ENDPOINT;
+
+                try {
+                    response = getProjectResponse(url, client);
+
+                    if (response != null && response.getStatus() == HttpStatus.SC_OK) {
+                        break;
+                    }
+                } catch (Throwable t) {
+                    String msgDesc = "Exception while getting kylin response, kylinUrl: " + url;
+                    LOG.error(msgDesc, t);
+                }
+            }
+        } catch (Throwable t) {
+            String msgDesc = "Exception while getting kylin response, kylinUrl: " + kylinUrl;
+            LOG.error(msgDesc, t);
+        } finally {
+            if (client != null) {
+                client.close();
             }
         }
-
-        client.destroy();
-
         return response;
     }
 
-    private List<KylinProjectResponse> getKylinProjectResponse(ClientResponse response) {
+    private List<KylinProjectResponse> getKylinProjectResponse(Response response) throws HadoopException {
         List<KylinProjectResponse> projectResponses;
 
         try {
             if (response != null) {
                 if (response.getStatus() == HttpStatus.SC_OK) {
-                    String jsonString = response.getEntity(String.class);
+                    String jsonString = response.readEntity(String.class);
                     Gson   gson       = new GsonBuilder().setPrettyPrinting().create();
 
                     projectResponses = gson.fromJson(jsonString, new TypeToken<List<KylinProjectResponse>>() {}.getType());
@@ -247,25 +261,29 @@ public class KylinClient extends BaseClient {
         return projectResponses;
     }
 
-    private static ClientResponse getProjectResponse(String url, Client client) {
+    private static Response getProjectResponse(String url, Client client) {
         LOG.debug("getProjectResponse():calling {}", url);
 
-        WebResource    webResource = client.resource(url);
-        ClientResponse response    = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+        try {
+            WebTarget webTarget = client.target(url);
+            Response response = webTarget.request(MediaType.APPLICATION_JSON).get();
 
-        if (response != null) {
-            LOG.debug("getProjectResponse():response.getStatus()= {}", response.getStatus());
+            if (response != null) {
+                LOG.debug("getProjectResponse():response.getStatus()= {}", response.getStatus());
 
-            if (response.getStatus() != HttpStatus.SC_OK) {
-                LOG.warn("getProjectResponse():response.getStatus()= {} for URL {}, failed to get kylin project list.", response.getStatus(), url);
+                if (response.getStatus() != HttpStatus.SC_OK) {
+                    LOG.warn("getProjectResponse():response.getStatus()= {} for URL {}, failed to get kylin project list.", response.getStatus(), url);
 
-                String jsonString = response.getEntity(String.class);
+                    String jsonString = response.readEntity(String.class);
 
-                LOG.warn(jsonString);
+                    LOG.warn(jsonString);
+                }
             }
+            return response;
+        } catch (ProcessingException | WebApplicationException t) {
+            LOG.error("getProjectResponse(): Exception on REST call to URL {}.", url, t);
+            return null;
         }
-
-        return response;
     }
 
     private static List<String> getProjectFromResponse(String projectMatching, List<String> existingProjects, List<KylinProjectResponse> projectResponses) {

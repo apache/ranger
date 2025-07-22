@@ -949,7 +949,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
-                    <version>2.4.3</version>
+                    <version>${maven-resources-plugin.version}</version>
                     <configuration>
                         <encoding>UTF-8</encoding>
                     </configuration>
@@ -958,11 +958,16 @@
                     <inherited>true</inherited>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${javac.source.version}</source>
+                        <target>${javac.target.version}</target>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.7</version>
+                    <version>${maven-site-plugin.version}</version>
                     <dependencies>
                       <dependency>
                         <groupId>io.github.olamy.maven.skins</groupId>
@@ -972,7 +977,7 @@
                       <dependency>
                         <groupId>org.apache.velocity</groupId>
                         <artifactId>velocity</artifactId>
-                        <version>1.7</version>
+                        <version>${velocity.version}</version>
                       </dependency>
                     </dependencies>
                     <configuration>
@@ -988,7 +993,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.4</version>
+                <version>${maven-project-info-reports-plugin.version}</version>
                 <reportSets>
                     <reportSet>
                         <reports>

@@ -83,7 +83,7 @@
               <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
               <include>com.fasterxml.jackson.core:jackson-databind</include>
-              <include>com.fasterxml.jackson.core:jackson-core</include>
+              <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
               <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
               <include>commons-codec:commons-codec</include>
               <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
@@ -137,7 +137,6 @@
             <directoryMode>755</directoryMode>
             <fileMode>644</fileMode>
             <includes>
-              <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
             </includes>
           </dependencySet>
         </dependencySets>

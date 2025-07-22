@@ -17,7 +17,6 @@
  */
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -109,6 +108,7 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.MethodOrderer;
@@ -1454,7 +1454,6 @@ public class TestServiceREST {
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
         request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
         SearchFilter        filter   = new SearchFilter();
         filter.setParam("zoneName", "zone1");
         Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
@@ -1469,9 +1468,9 @@ public class TestServiceREST {
         Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
         Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
         Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
-        serviceREST.getPoliciesInJson(request, response, false);
+        serviceREST.getPoliciesInJson(request, false);
 
-        Mockito.verify(svcStore).getObjectInJson(rangerPolicyList, response, JSON_FILE_NAME_TYPE.POLICY);
+        Mockito.verify(svcStore).getObjectInJson(rangerPolicyList, JSON_FILE_NAME_TYPE.POLICY);
     }
 
     @Test
@@ -1489,7 +1488,6 @@ public class TestServiceREST {
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
         request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
         SearchFilter        filter   = new SearchFilter();
 
         Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
@@ -1505,9 +1503,9 @@ public class TestServiceREST {
 
         Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
         Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
-        serviceREST.getPoliciesInCsv(request, response);
+        serviceREST.getPoliciesInCsv(request);
 
-        Mockito.verify(svcStore).getPoliciesInCSV(rangerPolicyList, response);
+        Mockito.verify(svcStore).getPoliciesInCSV(rangerPolicyList);
     }
 
     @Test
@@ -1524,7 +1522,6 @@ public class TestServiceREST {
         XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
 
         request.setAttribute("serviceType", "hdfs,hbase,hive,yarn,knox,storm,solr,kafka,nifi,atlas,sqoop");
-        HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
         SearchFilter        filter   = new SearchFilter();
 
         Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
@@ -1540,8 +1537,8 @@ public class TestServiceREST {
 
         Mockito.when(daoManager.getXXService().findByName("HDFS_1-1-20150316062453")).thenReturn(xService);
         Mockito.when(daoManager.getXXServiceDef().getById(xService.getType())).thenReturn(xServiceDef);
-        serviceREST.getPoliciesInExcel(request, response);
-        Mockito.verify(svcStore).getPoliciesInExcel(rangerPolicyList, response);
+        serviceREST.getPoliciesInExcel(request);
+        Mockito.verify(svcStore).getPoliciesInExcelAsBytes(rangerPolicyList);
     }
 
     @SuppressWarnings("unchecked")
@@ -2574,7 +2571,7 @@ public class TestServiceREST {
     @Test
     public void test85GetCSRFProperties() throws Exception {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-        HttpSession session = Mockito.mock(HttpSession.class);
+        HttpSession        session = Mockito.mock(HttpSession.class);
 
         Mockito.when(request.getSession()).thenReturn(session);
         Mockito.when(session.getAttribute(Mockito.anyString())).thenReturn("test-salt");
