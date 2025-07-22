@@ -1784,10 +1784,9 @@ public class ServiceDBStore extends AbstractServiceStore {
                 ret.getTagPolicies().setServiceConfig(getServiceConfigForPlugin(ret.getTagPolicies().getServiceId()));
             }
         }
-        if (LOG.isDebugEnabled()) {
-            if (ret != null) {
-                LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + "): configs =" + ret.getServiceConfig());
-            }
+
+        if (ret != null) {
+            LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {}): configs = {}", serviceName, lastKnownVersion, needsBackwardCompatibility, ret.getServiceConfig());
         }
 
         LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {}): count={}", serviceName, lastKnownVersion, needsBackwardCompatibility, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size());
@@ -1813,10 +1812,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS, cachedPolicyVersion);
         }
-        if (LOG.isDebugEnabled()) {
-            if (ret != null) {
-                LOG.debug("<=== ServiceDBStore.getServicePolicyDeltas(" + serviceName + ", " + lastKnownVersion + "): ret = " + ret.getServiceConfig());
-            }
+
+        if (ret != null) {
+            LOG.debug("<=== ServiceDBStore.getServicePolicyDeltas({}, {}): ret = {}", serviceName, lastKnownVersion, ret.getServiceConfig());
         }
 
         return ret;
@@ -1886,9 +1884,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     @Override
     public Map<String, String> getServiceConfigForPlugin(Long serviceId) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ServiceDBStore.getServiceConfigForPlugin(" + serviceId + ")");
-        }
+        LOG.debug("==> ServiceDBStore.getServiceConfigForPlugin({})", serviceId);
+
         Map<String, String>      configs             = new HashMap<>();
         List<XXServiceConfigMap> xxServiceConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(serviceId);
 
@@ -1905,10 +1902,8 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (MapUtils.isNotEmpty(rangerPluginsPrefixConfig)) {
             configs.putAll(rangerPluginsPrefixConfig);
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ServiceDBStore.getServiceConfigForPlugin(" + serviceId + "): configs = " + configs.keySet());
-        }
 
+        LOG.debug("<== ServiceDBStore.getServiceConfigForPlugin({}): configs = {}", serviceId, configs.keySet());
         return configs;
     }
 
@@ -2185,6 +2180,45 @@ public class ServiceDBStore extends AbstractServiceStore {
         XXServiceVersionInfo serviceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
 
         return serviceVersionInfoDbObj != null ? serviceVersionInfoDbObj.getPolicyVersion() : null;
+    }
+
+    // when a service-def is updated, the updated service-def should be made available to plugins
+    //   this is achieved by incrementing policyVersion of all services of this service-def
+    protected void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) {
+        if (serviceDef == null) {
+            return;
+        }
+
+        final RangerDaoManager daoManager      = daoMgr;
+        boolean                isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+        XXServiceDao           serviceDao      = daoMgr.getXXService();
+        List<XXService>        services        = serviceDao.findByServiceDefId(serviceDef.getId());
+
+        if (CollectionUtils.isNotEmpty(services)) {
+            for (XXService service : services) {
+                if (isTagServiceDef) {
+                    List<XXService> referringServices = serviceDao.findByTagServiceId(service.getId());
+
+                    if (CollectionUtils.isNotEmpty(referringServices)) {
+                        for (XXService referringService : referringServices) {
+                            final Long         referringServiceId    = referringService.getId();
+                            final VERSION_TYPE tagServiceVersionType = VERSION_TYPE.POLICY_VERSION;
+
+                            Runnable tagServiceVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, tagServiceVersionType, RangerPolicyDelta.CHANGE_TYPE_SERVICE_DEF_CHANGE);
+
+                            transactionSynchronizationAdapter.executeOnTransactionCommit(tagServiceVersionUpdater);
+                        }
+                    }
+                }
+
+                final Long         serviceId   = service.getId();
+                final VERSION_TYPE versionType = VERSION_TYPE.POLICY_VERSION;
+
+                Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType, RangerPolicyDelta.CHANGE_TYPE_SERVICE_DEF_CHANGE);
+
+                transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
+            }
+        }
     }
 
     public List<String> findAllServiceDefNamesHavingContextEnrichers() {
@@ -2808,45 +2842,6 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
 
         LOG.debug("<=== ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : {} removeRefType : {})", searchUsrGrpRoleName, removeRefType);
-    }
-
-    // when a service-def is updated, the updated service-def should be made available to plugins
-    //   this is achieved by incrementing policyVersion of all services of this service-def
-    protected void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) {
-        if (serviceDef == null) {
-            return;
-        }
-
-        final RangerDaoManager daoManager      = daoMgr;
-        boolean                isTagServiceDef = StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
-        XXServiceDao           serviceDao      = daoMgr.getXXService();
-        List<XXService>        services        = serviceDao.findByServiceDefId(serviceDef.getId());
-
-        if (CollectionUtils.isNotEmpty(services)) {
-            for (XXService service : services) {
-                if (isTagServiceDef) {
-                    List<XXService> referringServices = serviceDao.findByTagServiceId(service.getId());
-
-                    if (CollectionUtils.isNotEmpty(referringServices)) {
-                        for (XXService referringService : referringServices) {
-                            final Long         referringServiceId    = referringService.getId();
-                            final VERSION_TYPE tagServiceVersionType = VERSION_TYPE.POLICY_VERSION;
-
-                            Runnable tagServiceVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, tagServiceVersionType, RangerPolicyDelta.CHANGE_TYPE_SERVICE_DEF_CHANGE);
-
-                            transactionSynchronizationAdapter.executeOnTransactionCommit(tagServiceVersionUpdater);
-                        }
-                    }
-                }
-
-                final Long         serviceId   = service.getId();
-                final VERSION_TYPE versionType = VERSION_TYPE.POLICY_VERSION;
-
-                Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType, RangerPolicyDelta.CHANGE_TYPE_SERVICE_DEF_CHANGE);
-
-                transactionSynchronizationAdapter.executeOnTransactionCommit(serviceVersionUpdater);
-            }
-        }
     }
 
     void createTransactionLog(RangerPolicy policy, int operationImportContext, int operationContext) {
@@ -4104,10 +4099,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             ret.setTagPolicies(tagPolicies);
         }
 
-        if (LOG.isDebugEnabled()) {
-            if (ret != null) {
-                LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + ", " + lastKnownVersion + "): ret=" + ret.getServiceConfig());
-            }
+        if (ret != null) {
+            LOG.debug("<== ServiceDBStore.getServicePolicies({}, {}): ret = {}", serviceName, lastKnownVersion, ret.getServiceConfig());
         }
 
         LOG.debug("<== ServiceDBStore.getServicePolicies({}, {}): count={}, delta-count={}", serviceName, lastKnownVersion, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size(), (ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size());
