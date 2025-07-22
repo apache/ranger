@@ -73,7 +73,8 @@ public class GdsDshidEvaluator {
         boolean ret = isActive();
 
         if (ret) {
-            // TODO:
+            // TODO: Implement DSHID-specific access validation logic
+            LOG.debug("DSHID evaluation for request: {} - returning active status", request);
         }
 
         return ret;

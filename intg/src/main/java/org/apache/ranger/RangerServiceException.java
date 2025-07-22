@@ -18,10 +18,10 @@
  */
 package org.apache.ranger;
 
-import com.sun.jersey.api.client.ClientResponse;
+import javax.ws.rs.core.Response;
 
 public class RangerServiceException extends Exception {
-    private final ClientResponse.Status status;
+    private final Response.Status status;
 
     public RangerServiceException(Exception e) {
         super(e);
@@ -29,18 +29,18 @@ public class RangerServiceException extends Exception {
         this.status = null;
     }
 
-    public RangerServiceException(RangerClient.API api, ClientResponse response) {
-        this(api, response == null ? null : ClientResponse.Status.fromStatusCode(response.getStatus()), response == null ? null : response.getEntity(String.class));
+    public RangerServiceException(RangerClient.API api, Response response) {
+        this(api, response == null ? null : Response.Status.fromStatusCode(response.getStatus()), response == null ? null : response.readEntity(String.class));
     }
 
-    private RangerServiceException(RangerClient.API api, ClientResponse.Status status, String response) {
+    private RangerServiceException(RangerClient.API api, Response.Status status, String response) {
         super("Ranger API " + api + " failed: statusCode=" + (status != null ? status.getStatusCode() : "null")
                 + ", status=" + status + ", response:" + response);
 
         this.status = status;
     }
 
-    public ClientResponse.Status getStatus() {
+    public Response.Status getStatus() {
         return status;
     }
 }

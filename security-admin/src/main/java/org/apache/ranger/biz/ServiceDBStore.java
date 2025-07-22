@@ -187,13 +187,11 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -2337,64 +2335,42 @@ public class ServiceDBStore extends AbstractServiceStore {
         return ret;
     }
 
-    public void getPoliciesInExcel(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
-        LOG.debug("==> ServiceDBStore.getPoliciesInExcel()");
-
-        String timeStamp     = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String excelFileName = "Ranger_Policies_" + timeStamp + ".xls";
-
-        writeExcel(policies, excelFileName, response);
-    }
-
-    public void getPoliciesInCSV(List<RangerPolicy> policies, HttpServletResponse response) throws Exception {
+    public byte[] getPoliciesInCSV(List<RangerPolicy> policies) throws Exception {
         LOG.debug("==> ServiceDBStore.getPoliciesInCSV()");
 
-        ServletOutputStream out         = null;
-        String              csvfilename = null;
-
         try {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-
-            csvfilename = "Ranger_Policies_" + timeStamp + ".csv";
-            out         = response.getOutputStream();
-
-            StringBuilder sb = writeCSV(policies, csvfilename, response);
-
-            IOUtils.write(sb.toString(), out, "UTF-8");
+            return writeCSV(policies);
         } catch (Exception e) {
-            LOG.error("Error while generating report file {}", csvfilename, e);
-
-            e.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.flush();
-                    out.close();
-                }
-            } catch (Exception ex) {
-                // ignored
-            }
+            LOG.error("Error while generating report file", e);
+            throw e;
         }
     }
 
-    public <T> void getObjectInJson(List<T> objList, HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws Exception {
+    public <T> Object getObjectInJson(List<T> objList, JSON_FILE_NAME_TYPE type) throws Exception {
         LOG.debug("==> ServiceDBStore.getObjectInJson()");
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String jsonFileName;
+        Object ret;
 
         switch (type) {
             case POLICY:
-                jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
+                RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+                rangerExportPolicyList.setGenericPolicies(objList);
+                rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
+                ret = rangerExportPolicyList;
                 break;
             case ROLE:
-                jsonFileName = "Ranger_Roles_" + timeStamp + ".json";
+                RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
+                rangerExportRoleList.setGenericRoleList(objList);
+                Map<String, Object> metaDataInfo = getMetaDataInfo();
+                metaDataInfo.put(EXPORT_COUNT, rangerExportRoleList.getListSize());
+                rangerExportRoleList.setMetaDataInfo(metaDataInfo);
+                ret = rangerExportRoleList;
                 break;
             default:
                 throw restErrorUtil.createRESTException("Invalid type " + type);
         }
-
-        writeJson(objList, jsonFileName, response, type);
+        LOG.debug("<== ServiceDBStore.getObjectInJson()");
+        return ret;
     }
 
     public List<RangerPolicy> noZoneFilter(List<RangerPolicy> servicePolicies) {
@@ -4552,128 +4528,110 @@ public class ServiceDBStore extends AbstractServiceStore {
         return false;
     }
 
-    private void writeExcel(List<RangerPolicy> policies, String excelFileName, HttpServletResponse response) throws IOException {
-        OutputStream outStream = null;
-
-        try (Workbook workbook = new HSSFWorkbook()) {
+    public byte[] getPoliciesInExcelAsBytes(List<RangerPolicy> policies) throws IOException {
+        LOG.debug("==> ServiceDBStore.getPoliciesInExcelAsBytes()");
+        try (ByteArrayOutputStream outByteStream = new ByteArrayOutputStream();
+                Workbook workbook = new HSSFWorkbook()) {
             Sheet sheet = workbook.createSheet();
 
-            createHeaderRow(sheet);
+            writeExcel(policies, workbook, sheet);
 
-            int rowCount = 0;
+            workbook.write(outByteStream);
 
-            if (!CollectionUtils.isEmpty(policies)) {
-                Map<String, String> svcNameToSvcType = new HashMap<>();
+            return outByteStream.toByteArray();
+        } catch (IOException ex) {
+            LOG.error("Failed to create report file", ex);
+            throw ex;
+        }
+    }
 
-                for (RangerPolicy policy : policies) {
-                    List<RangerPolicyItem>          policyItems          = policy.getPolicyItems();
-                    List<RangerRowFilterPolicyItem> rowFilterPolicyItems = policy.getRowFilterPolicyItems();
-                    List<RangerDataMaskPolicyItem>  dataMaskPolicyItems  = policy.getDataMaskPolicyItems();
-                    List<RangerPolicyItem>          allowExceptions      = policy.getAllowExceptions();
-                    List<RangerPolicyItem>          denyExceptions       = policy.getDenyExceptions();
-                    List<RangerPolicyItem>          denyPolicyItems      = policy.getDenyPolicyItems();
-                    String                          serviceType          = policy.getServiceType();
+    private void writeExcel(List<RangerPolicy> policies, Workbook workbook, Sheet sheet) throws IOException {
+        createHeaderRow(sheet);
+        int rowCount = 0;
+
+        if (!CollectionUtils.isEmpty(policies)) {
+            Map<String, String> svcNameToSvcType = new HashMap<>();
+
+            for (RangerPolicy policy : policies) {
+                List<RangerPolicyItem>          policyItems          = policy.getPolicyItems();
+                List<RangerRowFilterPolicyItem> rowFilterPolicyItems = policy.getRowFilterPolicyItems();
+                List<RangerDataMaskPolicyItem>  dataMaskPolicyItems  = policy.getDataMaskPolicyItems();
+                List<RangerPolicyItem>          allowExceptions      = policy.getAllowExceptions();
+                List<RangerPolicyItem>          denyExceptions       = policy.getDenyExceptions();
+                List<RangerPolicyItem>          denyPolicyItems      = policy.getDenyPolicyItems();
+                String                          serviceType          = policy.getServiceType();
+
+                if (StringUtils.isBlank(serviceType)) {
+                    serviceType = svcNameToSvcType.get(policy.getService());
 
                     if (StringUtils.isBlank(serviceType)) {
-                        serviceType = svcNameToSvcType.get(policy.getService());
+                        serviceType = daoMgr.getXXServiceDef().findServiceDefTypeByServiceName(policy.getService());
 
-                        if (StringUtils.isBlank(serviceType)) {
-                            serviceType = daoMgr.getXXServiceDef().findServiceDefTypeByServiceName(policy.getService());
-
-                            if (StringUtils.isNotBlank(serviceType)) {
-                                svcNameToSvcType.put(policy.getService(), serviceType);
-                            }
+                        if (StringUtils.isNotBlank(serviceType)) {
+                            svcNameToSvcType.put(policy.getService(), serviceType);
                         }
                     }
+                }
 
-                    if (CollectionUtils.isNotEmpty(policyItems)) {
-                        for (RangerPolicyItem policyItem : policyItems) {
-                            Row row = sheet.createRow(++rowCount);
+                if (CollectionUtils.isNotEmpty(policyItems)) {
+                    for (RangerPolicyItem policyItem : policyItems) {
+                        Row row = sheet.createRow(++rowCount);
 
-                            writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
-                        }
-                    } else if (CollectionUtils.isNotEmpty(dataMaskPolicyItems)) {
-                        for (RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
-                            Row row = sheet.createRow(++rowCount);
+                        writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
+                    }
+                } else if (CollectionUtils.isNotEmpty(dataMaskPolicyItems)) {
+                    for (RangerDataMaskPolicyItem dataMaskPolicyItem : dataMaskPolicyItems) {
+                        Row row = sheet.createRow(++rowCount);
 
-                            writeBookForPolicyItems(svcNameToSvcType, policy, null, dataMaskPolicyItem, null, row, null);
-                        }
-                    } else if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
-                        for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
-                            Row row = sheet.createRow(++rowCount);
+                        writeBookForPolicyItems(svcNameToSvcType, policy, null, dataMaskPolicyItem, null, row, null);
+                    }
+                } else if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
+                    for (RangerRowFilterPolicyItem rowFilterPolicyItem : rowFilterPolicyItems) {
+                        Row row = sheet.createRow(++rowCount);
 
-                            writeBookForPolicyItems(svcNameToSvcType, policy, null, null, rowFilterPolicyItem, row, null);
-                        }
-                    } else if (serviceType.equalsIgnoreCase(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-                        if (CollectionUtils.isEmpty(policyItems)) {
-                            Row              row        = sheet.createRow(++rowCount);
-                            RangerPolicyItem policyItem = new RangerPolicyItem();
-
-                            writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
-                        }
-                    } else if (CollectionUtils.isEmpty(policyItems)) {
+                        writeBookForPolicyItems(svcNameToSvcType, policy, null, null, rowFilterPolicyItem, row, null);
+                    }
+                } else if (serviceType.equalsIgnoreCase(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+                    if (CollectionUtils.isEmpty(policyItems)) {
                         Row              row        = sheet.createRow(++rowCount);
                         RangerPolicyItem policyItem = new RangerPolicyItem();
 
                         writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
                     }
+                } else if (CollectionUtils.isEmpty(policyItems)) {
+                    Row              row        = sheet.createRow(++rowCount);
+                    RangerPolicyItem policyItem = new RangerPolicyItem();
 
-                    if (CollectionUtils.isNotEmpty(allowExceptions)) {
-                        for (RangerPolicyItem policyItem : allowExceptions) {
-                            Row row = sheet.createRow(++rowCount);
+                    writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_INCLUDE);
+                }
 
-                            writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_EXCLUDE);
-                        }
-                    }
+                if (CollectionUtils.isNotEmpty(allowExceptions)) {
+                    for (RangerPolicyItem policyItem : allowExceptions) {
+                        Row row = sheet.createRow(++rowCount);
 
-                    if (CollectionUtils.isNotEmpty(denyExceptions)) {
-                        for (RangerPolicyItem policyItem : denyExceptions) {
-                            Row row = sheet.createRow(++rowCount);
-
-                            writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_DENY_EXCLUDE);
-                        }
-                    }
-
-                    if (CollectionUtils.isNotEmpty(denyPolicyItems)) {
-                        for (RangerPolicyItem policyItem : denyPolicyItems) {
-                            Row row = sheet.createRow(++rowCount);
-
-                            writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_DENY_INCLUDE);
-                        }
+                        writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_ALLOW_EXCLUDE);
                     }
                 }
-            }
 
-            ByteArrayOutputStream outByteStream = new ByteArrayOutputStream();
+                if (CollectionUtils.isNotEmpty(denyExceptions)) {
+                    for (RangerPolicyItem policyItem : denyExceptions) {
+                        Row row = sheet.createRow(++rowCount);
 
-            workbook.write(outByteStream);
+                        writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_DENY_EXCLUDE);
+                    }
+                }
 
-            byte[] outArray = outByteStream.toByteArray();
-
-            response.setContentType("application/ms-excel");
-            response.setContentLength(outArray.length);
-            response.setHeader("Expires:", "0");
-            response.setHeader("Content-Disposition", "attachment; filename=" + excelFileName);
-            response.setStatus(HttpServletResponse.SC_OK);
-
-            outStream = response.getOutputStream();
-
-            outStream.write(outArray);
-            outStream.flush();
-        } catch (IOException ex) {
-            LOG.error("Failed to create report file {}", excelFileName, ex);
-        } catch (Exception ex) {
-            LOG.error("Error while generating report file {}", excelFileName, ex);
-        } finally {
-            if (outStream != null) {
-                outStream.close();
+                if (CollectionUtils.isNotEmpty(denyPolicyItems)) {
+                    for (RangerPolicyItem policyItem : denyPolicyItems) {
+                        Row row = sheet.createRow(++rowCount);
+                        writeBookForPolicyItems(svcNameToSvcType, policy, policyItem, null, null, row, POLICY_DENY_INCLUDE);
+                    }
+                }
             }
         }
     }
 
-    private StringBuilder writeCSV(List<RangerPolicy> policies, String cSVFileName, HttpServletResponse response) {
-        response.setContentType("text/csv");
-
+    private byte[] writeCSV(List<RangerPolicy> policies) throws IOException {
         StringBuilder csvBuffer = new StringBuilder();
 
         csvBuffer.append(FILE_HEADER);
@@ -4745,10 +4703,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
-        response.setHeader("Content-Disposition", "attachment; filename=" + cSVFileName);
-        response.setStatus(HttpServletResponse.SC_OK);
-
-        return csvBuffer;
+        return csvBuffer.toString().getBytes("UTF-8");
     }
 
     private void writeCSVForPolicyItems(Map<String, String> svcNameToSvcType, RangerPolicy policy, RangerPolicyItem policyItem, RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, StringBuilder csvBuffer, String policyConditionType) {
@@ -4989,59 +4944,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     private String sanitizeCell(String value) {
         return (value != null && !value.isEmpty() && CSV_SANITIZATION_PATTERN.matcher(value).find()) ? " " + value : value;
-    }
-
-    private <T> void writeJson(List<T> objList, String jsonFileName, HttpServletResponse response, JSON_FILE_NAME_TYPE type) {
-        response.setContentType("text/json");
-        response.setHeader("Content-Disposition", "attachment; filename=" + jsonFileName);
-
-        ServletOutputStream out = null;
-        String              json;
-
-        switch (type) {
-            case POLICY:
-                RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-
-                rangerExportPolicyList.setGenericPolicies(objList);
-                rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
-
-                json = JsonUtils.objectToJson(rangerExportPolicyList);
-                break;
-            case ROLE:
-                RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
-
-                rangerExportRoleList.setGenericRoleList(objList);
-
-                Map<String, Object> metaDataInfo = getMetaDataInfo();
-
-                metaDataInfo.put(EXPORT_COUNT, rangerExportRoleList.getListSize());
-
-                rangerExportRoleList.setMetaDataInfo(metaDataInfo);
-
-                json = JsonUtils.objectToJson(rangerExportRoleList);
-                break;
-            default:
-                throw restErrorUtil.createRESTException("Invalid type " + type);
-        }
-
-        try {
-            out = response.getOutputStream();
-
-            response.setStatus(HttpServletResponse.SC_OK);
-
-            IOUtils.write(json, out, "UTF-8");
-        } catch (Exception e) {
-            LOG.error("Error while exporting json file {}", jsonFileName, e);
-        } finally {
-            try {
-                if (out != null) {
-                    out.flush();
-                    out.close();
-                }
-            } catch (Exception ex) {
-                // ignored
-            }
-        }
     }
 
     private void writeBookForPolicyItems(Map<String, String> svcNameToSvcType, RangerPolicy policy, RangerPolicyItem policyItem, RangerDataMaskPolicyItem dataMaskPolicyItem, RangerRowFilterPolicyItem rowFilterPolicyItem, Row row, String policyConditionType) {

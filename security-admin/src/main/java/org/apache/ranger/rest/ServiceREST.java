@@ -20,8 +20,6 @@
 package org.apache.ranger.rest;
 
 import com.google.gson.JsonSyntaxException;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -117,6 +115,8 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,14 +145,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -1994,8 +1997,8 @@ public class ServiceREST {
     @Deprecated
     @GET
     @Path("/policies/downloadExcel")
-    @Produces("application/ms-excel")
-    public void getPoliciesInExcel(@Context HttpServletRequest request, @Context HttpServletResponse response) {
+    @Produces("application/vnd.ms-excel")
+    public Response getPoliciesInExcel(@Context HttpServletRequest request) {
         LOG.debug("==> ServiceREST.getPoliciesInExcel()");
 
         RangerPerfTracer perf   = null;
@@ -2018,13 +2021,13 @@ public class ServiceREST {
                         ensureAdminAndAuditAccess(rangerPolicy, mapServiceTypeAndImplClass);
                     }
                 }
-
-                svcStore.getPoliciesInExcel(policyLists, response);
             } else {
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-
                 LOG.error("No policies found to download!");
+
+                return Response.noContent().build();
             }
+
+            final byte[] excelFileBytes = svcStore.getPoliciesInExcelAsBytes(policyLists);
 
             RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
 
@@ -2033,6 +2036,13 @@ public class ServiceREST {
             String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
 
             policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT EXCEL"), "Export Excel", metaDataInfo, null);
+
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String excelFileName = "Ranger_Policies_" + timeStamp + ".xls";
+
+            return Response.ok(excelFileBytes, "application/vnd.ms-excel")
+                    .header("Content-Disposition", "attachment; filename=\"" + excelFileName + "\"")
+                    .build();
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -2048,7 +2058,7 @@ public class ServiceREST {
     @GET
     @Path("/policies/csv")
     @Produces("text/csv")
-    public void getPoliciesInCsv(@Context HttpServletRequest request, @Context HttpServletResponse response) throws IOException {
+    public Response getPoliciesInCsv(@Context HttpServletRequest request) throws IOException {
         LOG.debug("==> ServiceREST.getPoliciesInCsv()");
 
         RangerPerfTracer perf   = null;
@@ -2072,20 +2082,26 @@ public class ServiceREST {
                     }
                 }
 
-                svcStore.getPoliciesInCSV(policyLists, response);
+                final byte[] csvBytes = svcStore.getPoliciesInCSV(policyLists);
+
+                RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+
+                rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
+
+                String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
+
+                policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT CSV"), "Export CSV", metaDataInfo, null);
+
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                String csvFileName = "Ranger_Policies_" + timeStamp + ".csv";
+
+                return Response.ok(csvBytes, "text/csv")
+                        .header("Content-Disposition", "attachment; filename=\"" + csvFileName + "\"")
+                        .build();
             } else {
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-
                 LOG.error("No policies found to download!");
+                return Response.noContent().build();
             }
-
-            RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-
-            rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
-
-            String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
-
-            policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT CSV"), "Export CSV", metaDataInfo, null);
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
@@ -2099,8 +2115,8 @@ public class ServiceREST {
 
     @GET
     @Path("/policies/exportJson")
-    @Produces("text/json")
-    public void getPoliciesInJson(@Context HttpServletRequest request, @Context HttpServletResponse response, @QueryParam("checkPoliciesExists") Boolean checkPoliciesExists) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getPoliciesInJson(@Context HttpServletRequest request, @QueryParam("checkPoliciesExists") Boolean checkPoliciesExists) {
         LOG.debug("==> ServiceREST.getPoliciesInJson()");
 
         RangerPerfTracer perf   = null;
@@ -2132,23 +2148,29 @@ public class ServiceREST {
 
                 bizUtil.blockAuditorRoleUser();
 
-                svcStore.getObjectInJson(policyLists, response, JSON_FILE_NAME_TYPE.POLICY);
+                Object exportObject = svcStore.getObjectInJson(policyLists, JSON_FILE_NAME_TYPE.POLICY);
+
+                if (!checkPoliciesExists) {
+                    RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+
+                    rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
+
+                    String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
+
+                    policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT JSON"), "Export Json", metaDataInfo, null);
+                }
+
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                String jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
+
+                return Response.ok(exportObject, MediaType.APPLICATION_JSON)
+                        .header("Content-Disposition", "attachment; filename=\"" + jsonFileName + "\"")
+                        .build();
             } else {
-                checkPoliciesExists = true;
-
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-
-                LOG.error("There is no Policy to Export!!");
-            }
-
-            if (!checkPoliciesExists) {
-                RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-
-                rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
-
-                String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
-
-                policyService.createTransactionLog(new XXTrxLogV2(AppConstants.CLASS_TYPE_RANGER_POLICY, null, null, "EXPORT JSON"), "Export Json", metaDataInfo, null);
+                if (checkPoliciesExists) {
+                    LOG.error("There is no Policy to Export!!");
+                }
+                return Response.noContent().build();
             }
         } catch (WebApplicationException excp) {
             throw excp;

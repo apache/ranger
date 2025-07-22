@@ -19,16 +19,22 @@
 package org.apache.ranger.services.knox.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -219,76 +225,75 @@ public class KnoxClient {
         }
 
         try {
-            Client         client   = null;
-            ClientResponse response = null;
+            final String finalDecryptedPwd = decryptedPwd;
+            // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder() to prevent MOXy usage
+            Client client = RangerJersey2ClientBuilder.newBuilder().build();
 
+            // Register providers on the client
+            client.register(JacksonJaxbJsonProvider.class);
+            client.register(new ClientRequestFilter() {
+                @Override
+                public void filter(ClientRequestContext requestContext) {
+                    String authHeader = "Basic " + java.util.Base64.getEncoder().encodeToString((userName + ":" + finalDecryptedPwd).getBytes());
+                    requestContext.getHeaders().add("Authorization", authHeader);
+                }
+            });
+
+            WebTarget webTarget = client.target(knoxUrl);
+            Response response = null;
             try {
-                client = Client.create();
-
-                client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
-
-                WebResource webResource = client.resource(knoxUrl);
-
-                response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+                response = webTarget.request(EXPECTED_MIME_TYPE).get();
 
                 LOG.debug("Knox topology list response: {}", response);
 
-                if (response != null) {
-                    if (response.getStatus() == 200) {
-                        String jsonString = response.getEntity(String.class);
+                if (response != null && response.getStatus() == 200) {
+                    String jsonString = response.readEntity(String.class);
 
-                        LOG.debug("Knox topology list response JSON string: {}", jsonString);
+                    LOG.debug("Knox topology list response JSON string: {}", jsonString);
 
-                        JsonNode rootNode     = JsonUtilsV2.getMapper().readTree(jsonString);
-                        JsonNode topologyNode = rootNode.findValue("topology");
+                    JsonNode rootNode     = JsonUtilsV2.getMapper().readTree(jsonString);
+                    JsonNode topologyNode = rootNode.findValue("topology");
 
-                        if (topologyNode == null) {
-                            return topologyList;
-                        }
+                    if (topologyNode == null) {
+                        return topologyList;
+                    }
 
-                        Iterator<JsonNode> elements = topologyNode.elements();
+                    Iterator<JsonNode> elements = topologyNode.elements();
 
-                        while (elements.hasNext()) {
-                            JsonNode element     = elements.next();
-                            JsonNode nameElement = element.get("name");
+                    while (elements.hasNext()) {
+                        JsonNode element     = elements.next();
+                        JsonNode nameElement = element.get("name");
 
-                            if (nameElement != null) {
-                                String topologyName = nameElement.asText();
+                        if (nameElement != null) {
+                            String topologyName = nameElement.asText();
 
-                                LOG.debug("Found Knox topologyName: {}", topologyName);
+                            LOG.debug("Found Knox topologyName: {}", topologyName);
 
-                                if (knoxTopologyList != null && topologyName != null && knoxTopologyList.contains(topologyNameMatching)) {
-                                    continue;
-                                }
+                            if (knoxTopologyList != null && topologyName != null && knoxTopologyList.contains(topologyNameMatching)) {
+                                continue;
+                            }
 
-                                if (topologyName != null && ("*".equals(topologyNameMatching) || topologyName.startsWith(topologyNameMatching))) {
-                                    topologyList.add(topologyName);
-                                }
+                            if (topologyName != null && ("*".equals(topologyNameMatching) || topologyName.startsWith(topologyNameMatching))) {
+                                topologyList.add(topologyName);
                             }
                         }
-                    } else {
-                        LOG.error("Got invalid REST response from: {}, responseStatus: {}", knoxUrl, response.getStatus());
                     }
                 } else {
-                    String msgDesc = "Unable to get a valid response for getTopologyList() call for KnoxUrl : [" + knoxUrl + "] - got null response.";
-
-                    LOG.error(msgDesc);
-
-                    HadoopException hdpException = new HadoopException(msgDesc);
-
-                    hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
-
-                    throw hdpException;
+                    LOG.error("Got invalid REST response from: {}, responseStatus: {}", knoxUrl, response.getStatus());
                 }
+            } catch (ProcessingException ex) {
+                throw new HadoopException("Exception on REST call to KnoxUrl: " + knoxUrl, ex);
             } finally {
                 if (response != null) {
                     response.close();
                 }
 
                 if (client != null) {
-                    client.destroy();
+                    client.close();
                 }
             }
+        } catch (WebApplicationException we) {
+            throw new HadoopException("HTTP " + we.getResponse().getStatus() + " Error on REST call to KnoxUrl: " + knoxUrl, we);
         } catch (HadoopException he) {
             throw he;
         } catch (Throwable t) {
@@ -329,82 +334,79 @@ public class KnoxClient {
                 decryptedPwd = password;
             }
         }
-
         try {
-            Client         client   = null;
-            ClientResponse response = null;
+            final String finalDecryptedPwd = decryptedPwd;
+            // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder() to prevent MOXy usage
+            Client client = RangerJersey2ClientBuilder.newBuilder().build();
 
-            try {
-                client = Client.create();
+            // Register providers on the client
+            client.register(JacksonJaxbJsonProvider.class);
+            client.register(new javax.ws.rs.client.ClientRequestFilter() {
+                @Override
+                public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
+                    String authHeader = "Basic " + java.util.Base64.getEncoder().encodeToString((userName + ":" + finalDecryptedPwd).getBytes());
+                    requestContext.getHeaders().add("Authorization", authHeader);
+                }
+            });
 
-                client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
-
-                for (String topologyName : knoxTopologyList) {
-                    WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
-
-                    response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
-
+            for (String topologyName : knoxTopologyList) {
+                WebTarget webTarget = client.target(knoxUrl).path(topologyName);
+                Response response = null;
+                try {
+                    response = webTarget.request(EXPECTED_MIME_TYPE).get();
                     LOG.debug("Knox service lookup response: {}", response);
 
-                    if (response != null) {
-                        if (response.getStatus() == 200) {
-                            String jsonString = response.getEntity(String.class);
+                    if (response != null && response.getStatus() == 200) {
+                        String jsonString = response.readEntity(String.class);
 
-                            LOG.debug("Knox service lookup response JSON string: {}", jsonString);
+                        LOG.debug("Knox service lookup response JSON string: {}", jsonString);
 
-                            JsonNode rootNode     = JsonUtilsV2.getMapper().readTree(jsonString);
-                            JsonNode topologyNode = rootNode.findValue("topology");
+                        JsonNode rootNode     = JsonUtilsV2.getMapper().readTree(jsonString);
+                        JsonNode topologyNode = rootNode.findValue("topology");
 
-                            if (topologyNode != null) {
-                                JsonNode servicesNode = topologyNode.get("service");
+                        if (topologyNode != null) {
+                            JsonNode servicesNode = topologyNode.get("service");
 
-                                if (servicesNode != null) {
-                                    Iterator<JsonNode> services = servicesNode.elements();
+                            if (servicesNode != null) {
+                                Iterator<JsonNode> services = servicesNode.elements();
 
-                                    while (services.hasNext()) {
-                                        JsonNode service        = services.next();
-                                        JsonNode serviceElement = service.get("role");
+                                while (services.hasNext()) {
+                                    JsonNode service        = services.next();
+                                    JsonNode serviceElement = service.get("role");
 
-                                        if (serviceElement != null) {
-                                            String serviceName = serviceElement.asText();
+                                    if (serviceElement != null) {
+                                        String serviceName = serviceElement.asText();
 
-                                            LOG.debug("Knox serviceName: {}", serviceName);
+                                        LOG.debug("Knox serviceName: {}", serviceName);
 
-                                            if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))) {
-                                                continue;
-                                            }
+                                        if (serviceName == null || (knoxServiceList != null && knoxServiceList.contains(serviceName))) {
+                                            continue;
+                                        }
 
-                                            if (serviceName.startsWith(serviceNameMatching) || "*".equals(serviceNameMatching)) {
-                                                serviceList.add(serviceName);
-                                            }
+                                        if (serviceName.startsWith(serviceNameMatching) || "*".equals(serviceNameMatching)) {
+                                            serviceList.add(serviceName);
                                         }
                                     }
                                 }
                             }
-                        } else {
-                            LOG.error("Got invalid  REST response from: {}, responsStatus: {}", knoxUrl, response.getStatus());
                         }
                     } else {
-                        String msgDesc = "Unable to get a valid response for getServiceList() call for KnoxUrl : [" + knoxUrl + "] - got null response.";
+                        LOG.error("Got invalid REST response from: {}, responsStatus: {}", knoxUrl, response.getStatus());
+                    }
+                } catch (ProcessingException ex) {
+                    throw new HadoopException("Exception on REST call to KnoxUrl: " + knoxUrl, ex);
+                } finally {
+                    if (response != null) {
+                        response.close();
+                    }
 
-                        LOG.error(msgDesc);
-
-                        HadoopException hdpException = new HadoopException(msgDesc);
-
-                        hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
-
-                        throw hdpException;
+                    if (client != null) {
+                        client.close();
                     }
                 }
-            } finally {
-                if (response != null) {
-                    response.close();
-                }
-
-                if (client != null) {
-                    client.destroy();
-                }
             }
+        } catch (WebApplicationException we) {
+            throw new HadoopException("HTTP " + we.getResponse().getStatus() + " Error on REST call to KnoxUrl: " + knoxUrl, we);
         } catch (HadoopException he) {
             throw he;
         } catch (Throwable t) {
@@ -418,6 +420,7 @@ public class KnoxClient {
 
             throw hdpException;
         }
+        LOG.debug("<== KnoxClient.getServiceList() Service Name: {} Result : {}", serviceNameMatching, serviceList);
         return serviceList;
     }
 }

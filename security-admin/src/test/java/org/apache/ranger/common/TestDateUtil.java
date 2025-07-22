@@ -16,7 +16,6 @@
  */
 package org.apache.ranger.common;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,15 +38,18 @@ public class TestDateUtil {
     DateUtil dateUtil = new DateUtil();
 
     @Test
-    @Disabled
     public void testGetDateFromNow() {
-        int  days      = 1;
-        Date dateCheck = dateUtil.getDateFromNow(days);
-        int  minutes   = dateCheck.getMinutes();
-        int  hourse    = dateCheck.getHours();
-        assertEquals(days + 2, dateCheck.getDay());
-        assertEquals(dateCheck.getMinutes(), minutes);
-        assertEquals(dateCheck.getHours(), hourse);
+        int days = 1;
+
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, days);
+        Date expectedDate = cal.getTime();
+
+        Date actualDate = dateUtil.getDateFromNow(days);
+
+        assertEquals(expectedDate.getYear(), actualDate.getYear());
+        assertEquals(expectedDate.getDay(), actualDate.getDay());
+        assertEquals(expectedDate.getMonth(), actualDate.getMonth());
     }
 
     @Test

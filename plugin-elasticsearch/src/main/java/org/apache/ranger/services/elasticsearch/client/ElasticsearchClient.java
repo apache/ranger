@@ -22,8 +22,6 @@ package org.apache.ranger.services.elasticsearch.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -35,7 +33,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.lang.reflect.Type;
 import java.security.PrivilegedAction;
@@ -142,7 +145,7 @@ public class ElasticsearchClient extends BaseClient {
                 indexApi = ELASTICSEARCH_INDEX_API_ENDPOINT;
             }
 
-            ClientResponse      response        = getClientResponse(elasticsearchUrl, indexApi, userName);
+            Response            response        = getClientResponse(elasticsearchUrl, indexApi, userName);
             Map<String, Object> index2detailMap = getElasticsearchResourceResponse(response, new TypeToken<HashMap<String, Object>>() {}.getType());
 
             if (MapUtils.isEmpty(index2detailMap)) {
@@ -163,15 +166,15 @@ public class ElasticsearchClient extends BaseClient {
         return ret;
     }
 
-    private static ClientResponse getClientResponse(String elasticsearchUrl, String elasticsearchApi, String userName) {
+    private static Response getClientResponse(String elasticsearchUrl, String elasticsearchApi, String userName) {
         String[] elasticsearchUrls = elasticsearchUrl.trim().split("[,;]");
 
         if (ArrayUtils.isEmpty(elasticsearchUrls)) {
             return null;
         }
 
-        ClientResponse response = null;
-        Client         client   = Client.create();
+        Response response = null;
+        Client   client   = ClientBuilder.newClient();
 
         for (String currentUrl : elasticsearchUrls) {
             if (StringUtils.isBlank(currentUrl)) {
@@ -197,33 +200,35 @@ public class ElasticsearchClient extends BaseClient {
             }
         }
 
-        client.destroy();
+        client.close();
 
         return response;
     }
 
-    private static ClientResponse getClientResponse(String url, Client client, String userName) {
+    private static Response getClientResponse(String url, Client client, String userName) {
         LOG.debug("getClientResponse():calling {}", url);
 
-        ClientResponse response = client.resource(url).accept(MediaType.APPLICATION_JSON).header("userName", userName).get(ClientResponse.class);
+        WebTarget          target   = client.target(url);
+        Invocation.Builder builder  = target.request(MediaType.APPLICATION_JSON).header("userName", userName);
+        Response           response = builder.get();
 
         if (response != null) {
             LOG.debug("getClientResponse():response.getStatus()= {}", response.getStatus());
 
             if (response.getStatus() != HttpStatus.SC_OK) {
-                LOG.warn("getClientResponse():response.getStatus()= {} for URL {}, failed to get elasticsearch resource list, response= {}", response.getStatus(), url, response.getEntity(String.class));
+                LOG.warn("getClientResponse():response.getStatus()= {} for URL {}, failed to get elasticsearch resource list, response= {}", response.getStatus(), url, response.readEntity(String.class));
             }
         }
 
         return response;
     }
 
-    private <T> T getElasticsearchResourceResponse(ClientResponse response, Type type) {
+    private <T> T getElasticsearchResourceResponse(Response response, Type type) {
         T resource;
 
         try {
             if (response != null && response.getStatus() == HttpStatus.SC_OK) {
-                String jsonString = response.getEntity(String.class);
+                String jsonString = response.readEntity(String.class);
                 Gson   gson       = new GsonBuilder().setPrettyPrinting().create();
 
                 resource = gson.fromJson(jsonString, type);

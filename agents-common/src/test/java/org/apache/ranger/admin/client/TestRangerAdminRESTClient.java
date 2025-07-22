@@ -20,7 +20,6 @@
 
 package org.apache.ranger.admin.client;
 
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -47,6 +46,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 
 import java.lang.reflect.Field;
 import java.security.PrivilegedExceptionAction;
@@ -73,6 +73,31 @@ public class TestRangerAdminRESTClient {
         return f.get(target);
     }
 
+    private static void injectAndVerifyRestClient(RangerAdminRESTClient client, RangerRESTClient mockRestClient) throws Exception {
+        setPrivateField(client, "restClient", mockRestClient);
+        Object injectedRestClient = getPrivateField(client, "restClient");
+        Assertions.assertNotNull(injectedRestClient, "Failed to inject mock restClient");
+        if (injectedRestClient != mockRestClient) {
+            throw new RuntimeException("Mock injection failed: injected object is not the same as the mock");
+        }
+    }
+
+    private static Response mockResponse(int status, String responseBody, List<NewCookie> cookies) {
+        Response resp = Mockito.mock(Response.class);
+        Mockito.when(resp.getStatus()).thenReturn(status);
+        if (responseBody != null) {
+            Mockito.when(resp.readEntity(String.class)).thenReturn(responseBody);
+        }
+        if (cookies != null) {
+            java.util.Map<String, javax.ws.rs.core.NewCookie> cookieMap = new java.util.HashMap<>();
+            for (NewCookie cookie : cookies) {
+                cookieMap.put(cookie.getName(), cookie);
+            }
+            Mockito.when(resp.getCookies()).thenReturn(cookieMap);
+        }
+        return resp;
+    }
+
     @Test
     public void test01_getTagTypes_okAndCookieSet() throws Exception {
         RangerAdminRESTClient client = new RangerAdminRESTClient();
@@ -85,10 +110,7 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse resp = Mockito.mock(ClientResponse.class);
-        Mockito.when(resp.getStatus()).thenReturn(200);
-        Mockito.when(resp.getEntity(String.class)).thenReturn("[\"t1\",\"t2\"]");
-        Mockito.when(resp.getCookies()).thenReturn(Arrays.asList(new NewCookie("RANGERSESSION", "abc")));
+        Response resp = mockResponse(200, "[\"t1\",\"t2\"]", Arrays.asList(new NewCookie("RANGERSESSION", "abc")));
 
         ArgumentCaptor<String> url = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map> params = ArgumentCaptor.forClass(Map.class);
@@ -99,13 +121,11 @@ public class TestRangerAdminRESTClient {
         Assertions.assertEquals(Arrays.asList("t1", "t2"), tags);
 
         // Invoke again to verify a cookie is now being sent
-        ClientResponse resp2 = Mockito.mock(ClientResponse.class);
-        Mockito.when(resp2.getStatus()).thenReturn(500);
-        Mockito.when(resp2.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Response resp2 = mockResponse(500, new RESTResponse() {
             {
                 setMsgDesc("err");
             }
-        }.toJson());
+        }.toJson(), null);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(resp2);
         Assertions.assertThrows(Exception.class, () -> client.getTagTypes("t"));
     }
@@ -120,9 +140,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse resp = Mockito.mock(ClientResponse.class);
+        Response resp = Mockito.mock(Response.class);
         Mockito.when(resp.getStatus()).thenReturn(500);
-        Mockito.when(resp.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(resp.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("server-error");
             }
@@ -141,9 +161,11 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse resp = Mockito.mock(ClientResponse.class);
+        Response resp = Mockito.mock(Response.class);
         Mockito.when(resp.getStatus()).thenReturn(304);
-        Mockito.when(resp.getCookies()).thenReturn(Arrays.asList(new NewCookie("R", "v")));
+        java.util.Map<String, javax.ws.rs.core.NewCookie> cookieMap = new java.util.HashMap<>();
+        cookieMap.put("R", new NewCookie("R", "v"));
+        Mockito.when(resp.getCookies()).thenReturn(cookieMap);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(resp);
 
         Assertions.assertNull(client.getServicePoliciesIfUpdated(1L, 2L));
@@ -158,11 +180,11 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse resp = Mockito.mock(ClientResponse.class);
+        Response resp = Mockito.mock(Response.class);
         Mockito.when(resp.getStatus()).thenReturn(404);
         String body = "\"RANGER_ERROR_SERVICE_NOT_FOUND: ServiceName=svc\"";
         Mockito.when(resp.hasEntity()).thenReturn(true);
-        Mockito.when(resp.getEntity(String.class)).thenReturn(body);
+        Mockito.when(resp.readEntity(String.class)).thenReturn(body);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(resp);
 
         Assertions.assertThrows(RangerServiceNotFoundException.class, () -> client.getServicePoliciesIfUpdated(1L, 2L));
@@ -180,9 +202,9 @@ public class TestRangerAdminRESTClient {
         RangerRole role = new RangerRole();
         role.setName("r1");
 
-        ClientResponse unauthorized = Mockito.mock(ClientResponse.class);
+        Response unauthorized = Mockito.mock(Response.class);
         Mockito.when(unauthorized.getStatus()).thenReturn(401);
-        Mockito.when(unauthorized.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauthorized.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -205,7 +227,7 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse ok204 = Mockito.mock(ClientResponse.class);
+        Response ok204 = Mockito.mock(Response.class);
         Mockito.when(ok204.getStatus()).thenReturn(204);
         Mockito.when(rest.delete(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok204);
         client.dropRole("u", "r");
@@ -223,15 +245,14 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("[\"a\"]");
+        Response ok = mockResponse(200, "[\"a\"]", null);
+
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok);
         Assertions.assertEquals(Arrays.asList("a"), client.getAllRoles("u"));
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -252,10 +273,10 @@ public class TestRangerAdminRESTClient {
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(null);
         Assertions.assertNull(client.getServiceTagsIfUpdated(1L, 2L));
 
-        ClientResponse notFound = Mockito.mock(ClientResponse.class);
+        Response notFound = Mockito.mock(Response.class);
         Mockito.when(notFound.getStatus()).thenReturn(404);
         Mockito.when(notFound.hasEntity()).thenReturn(true);
-        Mockito.when(notFound.getEntity(String.class))
+        Mockito.when(notFound.readEntity(String.class))
                 .thenReturn("\"RANGER_ERROR_SERVICE_NOT_FOUND: ServiceName=svc\"");
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notFound);
         Assertions.assertThrows(RangerServiceNotFoundException.class, () -> client.getServiceTagsIfUpdated(1L, 2L));
@@ -272,17 +293,15 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("{}\n");
-        Mockito.when(ok.getCookies()).thenReturn(Arrays.asList(new NewCookie("RANGERSESSION", "abc")));
+        Response ok = mockResponse(200, "{}\n", Arrays.asList(new NewCookie("RANGERSESSION", "abc")));
+
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok);
         client.getUserStoreIfUpdated(1L, 2L);
         Assertions.assertNotNull(getPrivateField(client, "sessionId"));
 
-        ClientResponse unexpected = Mockito.mock(ClientResponse.class);
+        Response unexpected = Mockito.mock(Response.class);
         Mockito.when(unexpected.getStatus()).thenReturn(418); // unexpected status
-        Mockito.when(unexpected.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unexpected.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("teapot");
             }
@@ -324,7 +343,7 @@ public class TestRangerAdminRESTClient {
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(null);
         Assertions.assertNull(client.getRolesIfUpdated(1L, 2L));
 
-        ClientResponse notModified = Mockito.mock(ClientResponse.class);
+        Response notModified = Mockito.mock(Response.class);
         Mockito.when(notModified.getStatus()).thenReturn(304);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notModified);
         Assertions.assertNull(client.getRolesIfUpdated(1L, 2L));
@@ -339,10 +358,7 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class))
-                .thenReturn("{\n  \"serviceName\": \"svc\",\n  \"roleVersion\": 5\n}\n");
+        Response ok = mockResponse(200, "{\n  \"serviceName\": \"svc\",\n  \"roleVersion\": 5\n}\n", null);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok);
         RangerRoles roles = client.getRolesIfUpdated(1L, 2L);
         Assertions.assertNotNull(roles);
@@ -357,10 +373,10 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse notFound = Mockito.mock(ClientResponse.class);
+        Response notFound = Mockito.mock(Response.class);
         Mockito.when(notFound.getStatus()).thenReturn(404);
         Mockito.when(notFound.hasEntity()).thenReturn(true);
-        Mockito.when(notFound.getEntity(String.class))
+        Mockito.when(notFound.readEntity(String.class))
                 .thenReturn("\"RANGER_ERROR_SERVICE_NOT_FOUND: ServiceName=svc\"");
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notFound);
         Assertions.assertThrows(RangerServiceNotFoundException.class, () -> client.getRolesIfUpdated(1L, 2L));
@@ -375,9 +391,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse unexpected = Mockito.mock(ClientResponse.class);
+        Response unexpected = Mockito.mock(Response.class);
         Mockito.when(unexpected.getStatus()).thenReturn(500);
-        Mockito.when(unexpected.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unexpected.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -395,15 +411,13 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("[\"r1\",\"r2\"]");
+        Response ok = mockResponse(200, "[\"r1\",\"r2\"]", null);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.isNull(), Mockito.isNull())).thenReturn(ok);
         Assertions.assertEquals(Arrays.asList("r1", "r2"), client.getUserRoles("u"));
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -423,17 +437,14 @@ public class TestRangerAdminRESTClient {
         client.init("svc", "app", "p", cfg);
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
-
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("{\n  \"name\": \"role1\"\n}\n");
+        Response ok = mockResponse(200, "{\n  \"name\": \"role1\"\n}\n", null);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok);
         RangerRole role = client.getRole("u", "role1");
         Assertions.assertNotNull(role);
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -456,9 +467,9 @@ public class TestRangerAdminRESTClient {
 
         GrantRevokeRoleRequest req = new GrantRevokeRoleRequest();
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -471,9 +482,9 @@ public class TestRangerAdminRESTClient {
                 .thenReturn(null);
         Assertions.assertThrows(Exception.class, () -> client.grantRole(req));
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -482,7 +493,7 @@ public class TestRangerAdminRESTClient {
                 .thenReturn(err);
         Assertions.assertThrows(Exception.class, () -> client.grantRole(req));
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
+        Response ok = Mockito.mock(Response.class);
         Mockito.when(ok.getStatus()).thenReturn(200);
         Mockito.when(rest.put(Mockito.anyString(), Mockito.<Object>any(), Mockito.isNull(Cookie.class))).thenReturn(ok);
         client.grantRole(req);
@@ -499,9 +510,9 @@ public class TestRangerAdminRESTClient {
 
         GrantRevokeRoleRequest req = new GrantRevokeRoleRequest();
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -514,9 +525,9 @@ public class TestRangerAdminRESTClient {
                 .thenReturn(null);
         Assertions.assertThrows(Exception.class, () -> client.revokeRole(req));
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -525,7 +536,7 @@ public class TestRangerAdminRESTClient {
                 .thenReturn(err);
         Assertions.assertThrows(Exception.class, () -> client.revokeRole(req));
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
+        Response ok = Mockito.mock(Response.class);
         Mockito.when(ok.getStatus()).thenReturn(200);
         Mockito.when(rest.put(Mockito.anyString(), Mockito.<Object>any(), Mockito.isNull(Cookie.class))).thenReturn(ok);
         client.revokeRole(req);
@@ -542,9 +553,9 @@ public class TestRangerAdminRESTClient {
 
         GrantRevokeRequest req = new GrantRevokeRequest();
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -557,9 +568,9 @@ public class TestRangerAdminRESTClient {
                 .thenReturn(null);
         Assertions.assertThrows(Exception.class, () -> client.grantAccess(req));
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -567,7 +578,7 @@ public class TestRangerAdminRESTClient {
         Mockito.when(rest.post(Mockito.anyString(), Mockito.anyMap(), Mockito.any(), Mockito.isNull())).thenReturn(err);
         Assertions.assertThrows(Exception.class, () -> client.grantAccess(req));
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
+        Response ok = Mockito.mock(Response.class);
         Mockito.when(ok.getStatus()).thenReturn(200);
         Mockito.when(rest.post(Mockito.anyString(), Mockito.anyMap(), Mockito.any(), Mockito.isNull())).thenReturn(ok);
         client.grantAccess(req);
@@ -584,9 +595,9 @@ public class TestRangerAdminRESTClient {
 
         GrantRevokeRequest req = new GrantRevokeRequest();
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -599,9 +610,9 @@ public class TestRangerAdminRESTClient {
                 .thenReturn(null);
         Assertions.assertThrows(Exception.class, () -> client.revokeAccess(req));
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -609,7 +620,7 @@ public class TestRangerAdminRESTClient {
         Mockito.when(rest.post(Mockito.anyString(), Mockito.anyMap(), Mockito.any(), Mockito.isNull())).thenReturn(err);
         Assertions.assertThrows(Exception.class, () -> client.revokeAccess(req));
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
+        Response ok = Mockito.mock(Response.class);
         Mockito.when(ok.getStatus()).thenReturn(200);
         Mockito.when(rest.post(Mockito.anyString(), Mockito.anyMap(), Mockito.any(), Mockito.isNull())).thenReturn(ok);
         client.revokeAccess(req);
@@ -624,10 +635,8 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class))
-                .thenReturn("{\n  \"serviceName\": \"svc\",\n  \"policyVersion\": 3\n}\n");
+        Response ok = mockResponse(200, "{\n  \"serviceName\": \"svc\",\n  \"policyVersion\": 3\n}\n", null);
+
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok);
         ServicePolicies policies = client.getServicePoliciesIfUpdated(1L, 2L);
         Assertions.assertNotNull(policies);
@@ -642,9 +651,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse unexpected = Mockito.mock(ClientResponse.class);
+        Response unexpected = Mockito.mock(Response.class);
         Mockito.when(unexpected.getStatus()).thenReturn(500);
-        Mockito.when(unexpected.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unexpected.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -668,9 +677,8 @@ public class TestRangerAdminRESTClient {
         RangerRole roleReq = new RangerRole();
         roleReq.setName("r1");
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("{\"name\":\"r1\"}");
+        Response ok = mockResponse(200, "{\"name\":\"r1\"}", null);
+
         Mockito.when(rest.post(Mockito.anyString(), Mockito.anyMap(), Mockito.any(), Mockito.isNull())).thenReturn(ok);
 
         RangerRole role = client.createRole(roleReq);
@@ -686,9 +694,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse unauth = Mockito.mock(ClientResponse.class);
+        Response unauth = Mockito.mock(Response.class);
         Mockito.when(unauth.getStatus()).thenReturn(401);
-        Mockito.when(unauth.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unauth.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("unauth");
             }
@@ -696,9 +704,9 @@ public class TestRangerAdminRESTClient {
         Mockito.when(rest.delete(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(unauth);
         Assertions.assertThrows(AccessControlException.class, () -> client.dropRole("u", "r"));
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -729,7 +737,7 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse notModified = Mockito.mock(ClientResponse.class);
+        Response notModified = Mockito.mock(Response.class);
         Mockito.when(notModified.getStatus()).thenReturn(304);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notModified);
         Assertions.assertNull(client.getServiceTagsIfUpdated(1L, 2L));
@@ -743,10 +751,8 @@ public class TestRangerAdminRESTClient {
         client.init("svc", "app", "p", cfg);
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
+        Response ok = mockResponse(200, "{}\n", null);
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("{}\n");
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok);
         ServiceTags tags = client.getServiceTagsIfUpdated(1L, 2L);
         Assertions.assertNotNull(tags);
@@ -761,9 +767,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse unexpected = Mockito.mock(ClientResponse.class);
+        Response unexpected = Mockito.mock(Response.class);
         Mockito.when(unexpected.getStatus()).thenReturn(500);
-        Mockito.when(unexpected.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unexpected.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -781,22 +787,22 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse notModified = Mockito.mock(ClientResponse.class);
+        Response notModified = Mockito.mock(Response.class);
         Mockito.when(notModified.getStatus()).thenReturn(304);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notModified);
         Assertions.assertNull(client.getUserStoreIfUpdated(1L, 2L));
 
-        ClientResponse notFound = Mockito.mock(ClientResponse.class);
+        Response notFound = Mockito.mock(Response.class);
         Mockito.when(notFound.getStatus()).thenReturn(404);
         Mockito.when(notFound.hasEntity()).thenReturn(true);
-        Mockito.when(notFound.getEntity(String.class))
+        Mockito.when(notFound.readEntity(String.class))
                 .thenReturn("\"RANGER_ERROR_SERVICE_NOT_FOUND: ServiceName=svc\"");
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notFound);
         Assertions.assertThrows(RangerServiceNotFoundException.class, () -> client.getUserStoreIfUpdated(1L, 2L));
 
-        ClientResponse unexpected = Mockito.mock(ClientResponse.class);
+        Response unexpected = Mockito.mock(Response.class);
         Mockito.when(unexpected.getStatus()).thenReturn(500);
-        Mockito.when(unexpected.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(unexpected.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -817,9 +823,9 @@ public class TestRangerAdminRESTClient {
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(null);
         Assertions.assertNull(client.getGdsInfoIfUpdated(1L, 2L));
 
-        ClientResponse notModified = Mockito.mock(ClientResponse.class);
+        Response notModified = Mockito.mock(Response.class);
         Mockito.when(notModified.getStatus()).thenReturn(304);
-        Mockito.when(notModified.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(notModified.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("not-modified");
             }
@@ -827,17 +833,16 @@ public class TestRangerAdminRESTClient {
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notModified);
         Assertions.assertNull(client.getGdsInfoIfUpdated(1L, 2L));
 
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("{}\n");
+        Response ok = mockResponse(200, "{}\n", null);
+
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(ok);
         ServiceGdsInfo gds = client.getGdsInfoIfUpdated(1L, 2L);
         Assertions.assertNotNull(gds);
 
-        ClientResponse notFound = Mockito.mock(ClientResponse.class);
+        Response notFound = Mockito.mock(Response.class);
         Mockito.when(notFound.getStatus()).thenReturn(404);
         Mockito.when(notFound.hasEntity()).thenReturn(true);
-        Mockito.when(notFound.getEntity(String.class))
+        Mockito.when(notFound.readEntity(String.class))
                 .thenReturn("\"RANGER_ERROR_SERVICE_NOT_FOUND: ServiceName=svc\"");
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(notFound);
         Assertions.assertThrows(RangerServiceNotFoundException.class, () -> client.getGdsInfoIfUpdated(1L, 2L));
@@ -852,7 +857,7 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse noContent = Mockito.mock(ClientResponse.class);
+        Response noContent = Mockito.mock(Response.class);
         Mockito.when(noContent.getStatus()).thenReturn(204);
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.isNull())).thenReturn(noContent);
 
@@ -868,9 +873,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -889,9 +894,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -910,9 +915,9 @@ public class TestRangerAdminRESTClient {
         RangerRESTClient rest = Mockito.mock(RangerRESTClient.class);
         setPrivateField(client, "restClient", rest);
 
-        ClientResponse err = Mockito.mock(ClientResponse.class);
+        Response err = Mockito.mock(Response.class);
         Mockito.when(err.getStatus()).thenReturn(500);
-        Mockito.when(err.getEntity(String.class)).thenReturn(new RESTResponse() {
+        Mockito.when(err.readEntity(String.class)).thenReturn(new RESTResponse() {
             {
                 setMsgDesc("err");
             }
@@ -934,10 +939,7 @@ public class TestRangerAdminRESTClient {
         setPrivateField(client, "restClient", rest);
 
         // First call sets the cookie
-        ClientResponse ok = Mockito.mock(ClientResponse.class);
-        Mockito.when(ok.getStatus()).thenReturn(200);
-        Mockito.when(ok.getEntity(String.class)).thenReturn("[\"t\"]");
-        Mockito.when(ok.getCookies()).thenReturn(Arrays.asList(new NewCookie("RANGERSESSION", "abc")));
+        Response ok = mockResponse(200, "[\"t\"]", Arrays.asList(new NewCookie("RANGERSESSION", "abc")));
         Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(ok);
         client.getTagTypes("t");
         Assertions.assertNotNull(getPrivateField(client, "sessionId"));
@@ -963,13 +965,13 @@ public class TestRangerAdminRESTClient {
             misc.when(MiscUtil::getUGILoginUser).thenReturn(ugi);
             ugiStatic.when(UserGroupInformation::isSecurityEnabled).thenReturn(true);
             Mockito.when(ugi.hasKerberosCredentials()).thenReturn(true);
-            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<ClientResponse>>any()))
+            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<Response>>any()))
                     .thenAnswer(inv -> {
-                        PrivilegedExceptionAction<ClientResponse> action = inv.getArgument(0);
+                        PrivilegedExceptionAction<Response> action = inv.getArgument(0);
                         return action.run();
                     });
 
-            ClientResponse notModified = Mockito.mock(ClientResponse.class);
+            Response notModified = Mockito.mock(Response.class);
             Mockito.when(notModified.getStatus()).thenReturn(304);
             Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(notModified);
 
@@ -996,13 +998,13 @@ public class TestRangerAdminRESTClient {
             misc.when(MiscUtil::getUGILoginUser).thenReturn(ugi);
             ugiStatic.when(UserGroupInformation::isSecurityEnabled).thenReturn(true);
             Mockito.when(ugi.hasKerberosCredentials()).thenReturn(true);
-            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<ClientResponse>>any()))
+            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<Response>>any()))
                     .thenAnswer(inv -> {
-                        PrivilegedExceptionAction<ClientResponse> action = inv.getArgument(0);
+                        PrivilegedExceptionAction<Response> action = inv.getArgument(0);
                         return action.run();
                     });
 
-            ClientResponse notModified = Mockito.mock(ClientResponse.class);
+            Response notModified = Mockito.mock(Response.class);
             Mockito.when(notModified.getStatus()).thenReturn(304);
             Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(notModified);
 
@@ -1029,13 +1031,13 @@ public class TestRangerAdminRESTClient {
             misc.when(MiscUtil::getUGILoginUser).thenReturn(ugi);
             ugiStatic.when(UserGroupInformation::isSecurityEnabled).thenReturn(true);
             Mockito.when(ugi.hasKerberosCredentials()).thenReturn(true);
-            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<ClientResponse>>any()))
+            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<Response>>any()))
                     .thenAnswer(inv -> {
-                        PrivilegedExceptionAction<ClientResponse> action = inv.getArgument(0);
+                        PrivilegedExceptionAction<Response> action = inv.getArgument(0);
                         return action.run();
                     });
 
-            ClientResponse notModified = Mockito.mock(ClientResponse.class);
+            Response notModified = Mockito.mock(Response.class);
             Mockito.when(notModified.getStatus()).thenReturn(304);
             Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(notModified);
 
@@ -1062,13 +1064,13 @@ public class TestRangerAdminRESTClient {
             misc.when(MiscUtil::getUGILoginUser).thenReturn(ugi);
             ugiStatic.when(UserGroupInformation::isSecurityEnabled).thenReturn(true);
             Mockito.when(ugi.hasKerberosCredentials()).thenReturn(true);
-            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<ClientResponse>>any()))
+            misc.when(() -> MiscUtil.executePrivilegedAction(Mockito.<PrivilegedExceptionAction<Response>>any()))
                     .thenAnswer(inv -> {
-                        PrivilegedExceptionAction<ClientResponse> action = inv.getArgument(0);
+                        PrivilegedExceptionAction<Response> action = inv.getArgument(0);
                         return action.run();
                     });
 
-            ClientResponse notModified = Mockito.mock(ClientResponse.class);
+            Response notModified = Mockito.mock(Response.class);
             Mockito.when(notModified.getStatus()).thenReturn(304);
             Mockito.when(rest.get(Mockito.anyString(), Mockito.anyMap(), Mockito.any())).thenReturn(notModified);
 
@@ -1097,7 +1099,7 @@ public class TestRangerAdminRESTClient {
             ugiStatic.when(UserGroupInformation::isSecurityEnabled).thenReturn(true);
 
             ArgumentCaptor<String> url = ArgumentCaptor.forClass(String.class);
-            ClientResponse notModified = Mockito.mock(ClientResponse.class);
+            Response notModified = Mockito.mock(Response.class);
             Mockito.when(notModified.getStatus()).thenReturn(304);
             Mockito.when(rest.get(url.capture(), Mockito.anyMap(), Mockito.any())).thenReturn(notModified);
 
