@@ -46,7 +46,7 @@ Add the following dependency to pom.xml
 <dependency>
     <groupId>org.apache.ranger</groupId>
     <artifactId>ranger-intg</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>2.7.0</version>
     <scope>compile</scope>
 </dependency>
 ```
@@ -55,7 +55,7 @@ Add the following dependency to pom.xml
 ```
 mvn clean package
 mvn install dependency:copy-dependencies
-java -cp "target/<module name>-3.0.0-SNAPSHOT.jar:target/dependency/*" testRanger
+java -cp "target/<module name>-2.7.0.jar:target/dependency/*" testRanger
 ```
 
 ```java
