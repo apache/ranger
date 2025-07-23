@@ -33,13 +33,12 @@ import java.io.PrintStream;
 import java.util.List;
 
 public class TestKMSAudit {
-    private PrintStream           originalOut;
-    private ByteArrayOutputStream memOut;
-    private FilterOut             filterOut;
-    private PrintStream           capturedOut;
-
-    private KMSAudit             kmsAudit;
-    private UserGroupInformation luser = UserGroupInformation.createUserForTesting("luser@REALM", new String[0]);
+    private final UserGroupInformation  luser = UserGroupInformation.createUserForTesting("luser@REALM", new String[0]);
+    private       PrintStream           originalOut;
+    private       ByteArrayOutputStream memOut;
+    private       FilterOut             filterOut;
+    private       PrintStream           capturedOut;
+    private       KMSAudit              kmsAudit;
 
     @BeforeEach
     public void setUp() {
@@ -184,7 +183,7 @@ public class TestKMSAudit {
 
     private String getAndResetLogOutput() {
         capturedOut.flush();
-        String logOutput = new String(memOut.toByteArray());
+        String logOutput = memOut.toString();
         memOut = new ByteArrayOutputStream();
         filterOut.setOutputStream(memOut);
         return logOutput;
