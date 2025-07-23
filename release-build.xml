@@ -53,19 +53,17 @@
 		</tar>
 		<exec executable="gpg">
 			<arg value="--armor"/>
+			<arg value="--local-user"/>
+			<arg value="${signing-key}"/>
 			<arg value="--output"/>
 			<arg value="${release-dir}/${build-release-tar-file}.asc"/>
 			<arg value="--detach-sig"/>
 			<arg value="${release-dir}/${build-release-tar-file}"/>
 		</exec>
-		<exec executable="gpg" output="${release-dir}/${build-release-tar-file}.sha256" dir="${release-dir}">
-			<arg value="--print-md"/>
-			<arg value="SHA256"/>
+		<exec executable="sha512sum" output="${release-dir}/${build-release-tar-file}.sha512" dir="${release-dir}">
 			<arg value="${build-release-tar-file}"/>
 		</exec>
-		<exec executable="gpg" output="${release-dir}/${build-release-tar-file}.sha512" dir="${release-dir}">
-			<arg value="--print-md"/>
-			<arg value="SHA512"/>
+		<exec executable="sha256sum" output="${release-dir}/${build-release-tar-file}.sha256" dir="${release-dir}">
 			<arg value="${build-release-tar-file}"/>
 		</exec>
 	</target>
