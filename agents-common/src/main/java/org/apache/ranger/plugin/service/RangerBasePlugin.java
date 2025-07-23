@@ -1279,7 +1279,7 @@ public class RangerBasePlugin {
         if (servicePolicies != null) {
             Map<String, String> serviceConfigMap = servicePolicies.getServiceConfig();
             if (MapUtils.isNotEmpty(serviceConfigMap)) {
-                LOG.debug("==> RangerBasePlugin(" + serviceConfigMap.keySet() + ")");
+                LOG.debug("==> RangerBasePlugin({})", serviceConfigMap.keySet());
                 pluginContext.setUserNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM));
                 pluginContext.setGroupNameCaseConversion(serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM));
                 String mappingUserNameHandler = serviceConfigMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER);
@@ -1327,9 +1327,9 @@ public class RangerBasePlugin {
     private List<String> getAllRegexPatterns(String baseProperty, Map<String, String> serviceConfig) throws Throwable {
         List<String> regexPatterns = new ArrayList<String>();
         String       baseRegex     = serviceConfig.get(baseProperty);
-        LOG.debug("==> getAllRegexPatterns(" + baseProperty + ")");
-        LOG.debug("baseRegex = " + baseRegex);
-        LOG.debug("pluginConfig = " + serviceConfig.keySet());
+        LOG.debug("==> getAllRegexPatterns({})", baseProperty);
+        LOG.debug("baseRegex = {}", baseRegex);
+        LOG.debug("pluginConfig = {}", serviceConfig != null ? serviceConfig.keySet() : "null");
         if (baseRegex == null) {
             return regexPatterns;
         }
@@ -1341,7 +1341,7 @@ public class RangerBasePlugin {
             i++;
             nextRegex = serviceConfig.get(baseProperty + "." + i);
         }
-        LOG.debug("<== getAllRegexPatterns(" + regexPatterns + ")");
+        LOG.debug("<== getAllRegexPatterns({})", regexPatterns);
         return regexPatterns;
     }
 

@@ -104,11 +104,11 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                 }
 
                 RangerPluginConfig config = policyEngine.getPluginContext().getConfig();
-                LOG.debug("RangerPluginConfig = " + config.getPropertyPrefix());
+                LOG.debug("RangerPluginConfig = {}", config.getPropertyPrefix());
                 if (config != null) {
                     boolean isNameTransformationSupported = config.getBoolean(config.getPropertyPrefix() + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false);
 
-                    LOG.debug("isNameTransformationSupported = " + isNameTransformationSupported);
+                    LOG.debug("isNameTransformationSupported = {}", isNameTransformationSupported);
                     if (isNameTransformationSupported) {
                         reqImpl.setUser(getTransformedUser(policyEngine, request));
                         reqImpl.setUserGroups(getTransformedGroups(policyEngine, request));
