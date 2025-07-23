@@ -873,7 +873,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select User"
+                              placeholder="Select Users"
                             />
                           </Col>
                         </Row>
@@ -917,7 +917,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Group"
+                              placeholder="Select Groups"
                             />
                           </Col>
                         </Row>
@@ -961,7 +961,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Role"
+                              placeholder="Select Roles"
                             />
                             {meta.touched && meta.error && (
                               <span className="invalid-field">
@@ -1010,7 +1010,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select User"
+                              placeholder="Select Users"
                             />
                           </Col>
                         </Row>
@@ -1054,7 +1054,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Group"
+                              placeholder="Select Groups"
                             />
                           </Col>
                         </Row>
@@ -1098,7 +1098,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Role"
+                              placeholder="Select Roles"
                             />
                             {meta.error && meta.touched && (
                               <span className="invalid-field">
@@ -1117,7 +1117,7 @@ const SecurityZoneForm = () => {
                         <Row className="form-group">
                           <Col xs={3}>
                             <label className="form-label float-end">
-                              Select Tag Services
+                              Tag Services
                             </label>
                           </Col>
                           <Col xs={6}>
@@ -1152,7 +1152,7 @@ const SecurityZoneForm = () => {
                         <Row className="form-group">
                           <Col xs={3}>
                             <label className="form-label float-end">
-                              Select Resource Services
+                              Resource Services
                             </label>
                           </Col>
                           <Col xs={6}>
@@ -1175,7 +1175,7 @@ const SecurityZoneForm = () => {
                               options={resourceServicesOpt}
                               isClearable={false}
                               isSearchable={true}
-                              placeholder="Select Service Name"
+                              placeholder="Select Resource Services"
                               styles={selectInputCustomStyles}
                             />
                           </Col>

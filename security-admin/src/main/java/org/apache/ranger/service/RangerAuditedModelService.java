@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.entity.XXDataMaskTypeDef;
 import org.apache.ranger.entity.XXGdsDataset;
 import org.apache.ranger.entity.XXGdsProject;
 import org.apache.ranger.entity.XXTrxLogV2;
@@ -34,6 +35,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXTrxLogV2.ObjectChangeInfo;
@@ -218,6 +220,10 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
 
         String value = getTrxLogAttrValue(obj, trxLogAttr);
 
+        if ("dataMaskPolicyItems".equals(trxLogAttr.getAttribName())) {
+            value = addLabelToDataMaskTxnPolicy(obj, value);
+        }
+
         if ((action == OPERATION_CREATE_CONTEXT || action == OPERATION_DELETE_CONTEXT) && StringUtils.isBlank(value)) {
             return;
         }
@@ -250,6 +256,31 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
         }
 
         objChangeInfo.addAttribute(trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
+    }
+
+    public String addLabelToDataMaskTxnPolicy(V obj, String value) {
+        if (obj instanceof RangerPolicy && ((RangerPolicy) obj).getDataMaskPolicyItems() != null) {
+            for (RangerDataMaskPolicyItem policyItem : ((RangerPolicy) obj).getDataMaskPolicyItems()) {
+                if (policyItem.getDataMaskInfo() != null && policyItem.getDataMaskInfo().getDataMaskType() != null) {
+                    String dataMaskType = policyItem.getDataMaskInfo().getDataMaskType();
+                    List<XXDataMaskTypeDef> dataMaskDefs = daoMgr.getXXDataMaskTypeDef().getAll();
+                    if (CollectionUtils.isNotEmpty(dataMaskDefs)) {
+                        for (XXDataMaskTypeDef dataMaskTypeDef : dataMaskDefs) {
+                            if (dataMaskTypeDef.getName().equalsIgnoreCase(dataMaskType)) {
+                                String label = dataMaskTypeDef.getLabel();
+                                StringBuilder sbValue = new StringBuilder(value);
+                                label = ",\"DataMasklabel\":\"" + label + "\"";
+                                int sbValueIndex = sbValue.lastIndexOf("}]");
+                                sbValue.insert(sbValueIndex, label);
+                                value = sbValue.toString();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return value;
     }
 
     private String toActionString(int action) {

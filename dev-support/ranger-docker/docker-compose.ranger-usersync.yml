@@ -4,6 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-usersync
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - USERSYNC_VERSION=${USERSYNC_VERSION}
     image: ranger-usersync
     container_name: ranger-usersync

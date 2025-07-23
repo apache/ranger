@@ -23,9 +23,12 @@ import org.apache.ranger.plugin.model.RangerTag;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -203,6 +206,54 @@ public class TestServiceTags {
         assertEquals(1, svcTags1.getTags().size());
         assertEquals(cachedTag, svcTags1.getTags().get(piiTagId));
         assertFalse(svcTags1.getTags().containsKey(newTagId));
+    }
+
+    @Test
+    public void testDedupTags_DuplicateResourceToTagIds() {
+        RangerTag[] tags = {
+                new RangerTag("PII", Collections.singletonMap("type", "email")),
+                new RangerTag("PII", Collections.singletonMap("type", "email")),
+                new RangerTag("PCI", Collections.emptyMap()),
+                new RangerTag("PCI", Collections.emptyMap()),
+                new RangerTag("PII", Collections.singletonMap("type", "email"))
+        };
+        ServiceTags svcTags = createServiceTags(tags, RESOURCES);
+        assertEquals(5, svcTags.getTags().size());
+
+        int dedupCount = svcTags.dedupTags();
+        assertEquals(3, dedupCount);
+        assertEquals(2, svcTags.getTags().size());
+
+        ServiceTags svcTags1 = new ServiceTags(svcTags);
+        // Simulate resource1 deletion (like delete table_1)
+        svcTags1.getResourceToTagIds().remove(0L);
+        // Clear tags to simulate new sync
+        svcTags1.getTags().clear();
+
+        RangerTag tag1 = new RangerTag("PII", Collections.singletonMap("type", "email"));
+        RangerTag tag2 = new RangerTag("PII", Collections.singletonMap("type", "email"));
+        tag1.setId(200L);
+        tag2.setId(201L);
+        svcTags1.getTags().put(200L, tag1);
+        svcTags1.getTags().put(201L, tag2);
+
+        // Set resource mappings with duplicate tag IDs
+        svcTags1.getResourceToTagIds().put(0L, new ArrayList<>(Arrays.asList(200L, 200L, 201L)));
+        svcTags1.getResourceToTagIds().put(1L, new ArrayList<>(Arrays.asList(200L, 200L, 201L, 201L)));
+
+        dedupCount = svcTags1.dedupTags();
+        assertEquals(1, dedupCount);
+        assertEquals(1, svcTags1.getTags().size());
+
+        // Verify resource1 has no duplicate tag IDs
+        List<Long> resource1Tags = svcTags1.getResourceToTagIds().get(0L);
+        Set<Long> uniqueTags = new HashSet<>(resource1Tags);
+        assertEquals("Duplicate tag IDs should be removed from resource1", uniqueTags.size(), resource1Tags.size());
+
+        // Verify resource2 has no duplicate tag IDs
+        List<Long> resource2Tags = svcTags1.getResourceToTagIds().get(1L);
+        uniqueTags = new HashSet<>(resource2Tags);
+        assertEquals("Duplicate tag IDs should be removed from resource2", uniqueTags.size(), resource2Tags.size());
     }
 
     private ServiceTags createServiceTags(RangerTag[] tags, RangerServiceResource[] resources) {

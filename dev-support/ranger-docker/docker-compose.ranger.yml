@@ -4,9 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile.ranger
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
-        - RANGER_ADMIN_JAVA_VERSION=${RANGER_ADMIN_JAVA_VERSION}
     image: ranger:latest
     container_name: ranger
     hostname: ranger.example.com

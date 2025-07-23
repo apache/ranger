@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger-base:latest
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
 ARG HBASE_VERSION
 ARG HBASE_PLUGIN_VERSION
@@ -37,6 +39,11 @@ RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/op
     rm -f /home/ranger/dist/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-hbase-plugin-install.properties /opt/ranger/ranger-hbase-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssh-server && \
+    mkdir -p /var/run/sshd && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV HBASE_HOME=/opt/hbase
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hbase/bin

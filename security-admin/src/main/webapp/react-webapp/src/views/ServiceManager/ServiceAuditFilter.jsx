@@ -281,7 +281,7 @@ export default function ServiceAuditFilter(props) {
                                     }
                                   ]}
                                   menuPlacement="auto"
-                                  placeholder="Select Value"
+                                  placeholder="Select Access Result"
                                 />
                               </div>
                             )}
@@ -428,6 +428,7 @@ export default function ServiceAuditFilter(props) {
                                   cacheOptions
                                   isMulti
                                   styles={selectInputCustomStyles}
+                                  placeholder="Select Roles"
                                 />
                               </div>
                             )}
@@ -467,6 +468,7 @@ export default function ServiceAuditFilter(props) {
                                   cacheOptions
                                   isMulti
                                   styles={selectInputCustomStyles}
+                                  placeholder="Select Groups"
                                 />
                               </div>
                             )}
@@ -506,6 +508,7 @@ export default function ServiceAuditFilter(props) {
                                   cacheOptions
                                   isMulti
                                   styles={selectInputCustomStyles}
+                                  placeholder="Select Users"
                                 />
                               </div>
                             )}

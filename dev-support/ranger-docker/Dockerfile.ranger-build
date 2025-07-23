@@ -14,20 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger-base:latest
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_BUILD_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_BUILD_VERSION}
 
-ARG RANGER_BUILD_JAVA_VERSION
 ARG TARGETARCH
 
-ENV JAVA_HOME=/usr/lib/jvm/java-1.${RANGER_BUILD_JAVA_VERSION}.0-openjdk-${TARGETARCH}
-
 # Install necessary packages to build Ranger
-RUN if [ "${OS_NAME}" = "UBUNTU" ]; then\
-    apt-get update && apt-get -y install git maven build-essential;\
-    update-java-alternatives --set "$JAVA_HOME";\
+RUN if grep -i ubuntu /etc/os-release; then\
+    apt-get update && apt-get -y install --no-install-recommends git maven build-essential;\
     fi
 
-RUN if [ "${OS_NAME}" = "RHEL" ]; then\
+RUN if grep -i rhel /etc/os-release; then\
     microdnf install -y git maven gcc;\
     fi
 
@@ -36,8 +34,7 @@ ENV MAVEN_HOME=/usr/share/maven
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/apache-maven/bin
 
 # setup ranger group, and users
-RUN mkdir -p /home/ranger/git && \
-    mkdir -p /home/ranger/.m2 && \
+RUN mkdir -p /home/ranger/git /home/ranger/.m2 && \
 	chown -R ranger:ranger /home/ranger
 
 COPY ./scripts/ranger-build.sh /home/ranger/scripts/
