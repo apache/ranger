@@ -50,7 +50,7 @@ public class TestKMSACLs {
     public void testCustom() {
         final Configuration conf = new Configuration(false);
         for (Type type : Type.values()) {
-            conf.set(type.getAclConfigKey(), type.toString() + " ");
+            conf.set(type.getAclConfigKey(), type + " ");
         }
         final KMSACLs acls = new KMSACLs(conf);
         for (Type type : Type.values()) {
