@@ -1785,9 +1785,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
-        if (ret != null) {
-            LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {}): configs = {}", serviceName, lastKnownVersion, needsBackwardCompatibility, ret.getServiceConfig());
-        }
+        LOG.debug("getServicePoliciesIfUpdated({}, {}, {}): configs = {}", serviceName, lastKnownVersion, needsBackwardCompatibility, ret == null ? null : ret.getServiceConfig());
 
         LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {}): count={}", serviceName, lastKnownVersion, needsBackwardCompatibility, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size());
 
@@ -1812,10 +1810,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS, cachedPolicyVersion);
         }
-
-        if (ret != null) {
-            LOG.debug("<=== ServiceDBStore.getServicePolicyDeltas({}, {}): ret = {}", serviceName, lastKnownVersion, ret.getServiceConfig());
-        }
+        LOG.debug("<== ServiceDBStore.getServicePolicyDeltas({}, {}): ret = {}", serviceName, lastKnownVersion, ret == null ? ret : ret.getServiceConfig());
 
         return ret;
     }
@@ -4099,9 +4094,7 @@ public class ServiceDBStore extends AbstractServiceStore {
             ret.setTagPolicies(tagPolicies);
         }
 
-        if (ret != null) {
-            LOG.debug("<== ServiceDBStore.getServicePolicies({}, {}): ret = {}", serviceName, lastKnownVersion, ret.getServiceConfig());
-        }
+        LOG.debug("ServiceDBStore.getServicePolicies({}, {}): ret = {}", serviceName, lastKnownVersion, ret == null ? null : ret.getServiceConfig());
 
         LOG.debug("<== ServiceDBStore.getServicePolicies({}, {}): count={}, delta-count={}", serviceName, lastKnownVersion, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size(), (ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size());
 

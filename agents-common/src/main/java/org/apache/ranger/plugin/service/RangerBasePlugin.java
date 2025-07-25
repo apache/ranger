@@ -1328,19 +1328,18 @@ public class RangerBasePlugin {
         List<String> regexPatterns = new ArrayList<String>();
         String       baseRegex     = serviceConfig.get(baseProperty);
         LOG.debug("==> getAllRegexPatterns({})", baseProperty);
-        LOG.debug("baseRegex = {}", baseRegex);
-        LOG.debug("pluginConfig = {}", serviceConfig != null ? serviceConfig.keySet() : "null");
-        if (baseRegex == null) {
-            return regexPatterns;
+        LOG.debug("baseRegex = {}, pluginConfig = {}", baseRegex, serviceConfig == null ? null : serviceConfig.keySet());
+        if (baseRegex != null) {
+            regexPatterns.add(baseRegex);
+            int    i         = 1;
+            String nextRegex = serviceConfig.get(baseProperty + "." + i);
+            while (nextRegex != null) {
+                regexPatterns.add(nextRegex);
+                i++;
+                nextRegex = serviceConfig.get(baseProperty + "." + i);
+            }
         }
-        regexPatterns.add(baseRegex);
-        int    i         = 1;
-        String nextRegex = serviceConfig.get(baseProperty + "." + i);
-        while (nextRegex != null) {
-            regexPatterns.add(nextRegex);
-            i++;
-            nextRegex = serviceConfig.get(baseProperty + "." + i);
-        }
+
         LOG.debug("<== getAllRegexPatterns({})", regexPatterns);
         return regexPatterns;
     }

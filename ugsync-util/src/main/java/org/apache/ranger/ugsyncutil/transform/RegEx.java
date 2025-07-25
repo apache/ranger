@@ -33,11 +33,11 @@ public class RegEx extends AbstractMapper {
 
     @Override
     public void init(String baseProperty, List<String> regexPatterns, String regexSeparator) {
-        AbstractMapper.logger.info("Initializing for {}", baseProperty);
+        logger.info("Initializing for {}", baseProperty);
         try {
             populateReplacementPatterns(baseProperty, regexPatterns, regexSeparator);
         } catch (Throwable t) {
-            AbstractMapper.logger.error("Failed to initialize {}", baseProperty, t.fillInStackTrace());
+            logger.error("Failed to initialize {}", baseProperty, t.fillInStackTrace());
         }
     }
 
@@ -56,7 +56,7 @@ public class RegEx extends AbstractMapper {
                 }
             }
         } catch (Throwable t) {
-            AbstractMapper.logger.error("Failed to transform {}", attrValue, t.fillInStackTrace());
+            logger.error("Failed to transform {}", attrValue, t.fillInStackTrace());
         }
 
         return result;
@@ -72,7 +72,7 @@ public class RegEx extends AbstractMapper {
             Matcher m = p.matcher(regexPattern);
 
             if (!m.matches()) {
-                AbstractMapper.logger.warn("Invalid RegEx {} and hence skipping this regex property", regexPattern);
+                logger.warn("Invalid RegEx {} and hence skipping this regex property", regexPattern);
             }
 
             m = m.reset();

@@ -2672,9 +2672,7 @@ public class ServiceREST {
             throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
         }
 
-        if (ret != null) {
-            LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated(): configs =" + ret.getServiceConfig());
-        }
+        LOG.debug("ServiceREST.getSecureServicePoliciesIfUpdated(): configs ={}", ret == null ? ret : ret.getServiceConfig());
         LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated({}, {}, {}, {}, {}, {}) : count={}", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, supportsPolicyDeltas, ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 
         return ret;
