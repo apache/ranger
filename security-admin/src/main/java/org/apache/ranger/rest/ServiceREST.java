@@ -170,6 +170,9 @@ import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SE
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class ServiceREST {
+    private static final Logger LOG      = LoggerFactory.getLogger(ServiceREST.class);
+    private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.ServiceREST");
+
     public static final String PARAM_SERVICE_NAME                   = "serviceName";
     public static final String PARAM_SERVICE_TYPE                   = "serviceType";
     public static final String PARAM_POLICY_NAME                    = "policyName";
@@ -191,8 +194,7 @@ public class ServiceREST {
     public static final String PURGE_RECORD_TYPE_LOGIN_LOGS         = "login_records";
     public static final String PURGE_RECORD_TYPE_TRX_LOGS           = "trx_records";
     public static final String PURGE_RECORD_TYPE_POLICY_EXPORT_LOGS = "policy_export_logs";
-    private static final Logger LOG      = LoggerFactory.getLogger(ServiceREST.class);
-    private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.ServiceREST");
+
     private final RangerAdminConfig config                              = RangerAdminConfig.getInstance();
     private final int               maxPolicyNameLength                 = config.getInt("ranger.policyname.maxlength", 255);
     private final boolean           isPolicyNameLengthValidationEnabled = config.getBoolean("ranger.policyname.maxlength.validation.enabled", true);

@@ -761,14 +761,9 @@ public class UserGroupSyncConfig {
     }
 
     public boolean isDeltaSyncEnabled() {
-        boolean deltaSyncEnabled;
-        String  val = prop.getProperty(LGSYNC_LDAP_DELTASYNC_ENABLED);
-        if (val == null || val.trim().isEmpty()) {
-            deltaSyncEnabled = DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED;
-        } else {
-            deltaSyncEnabled = Boolean.valueOf(val);
-        }
-        return deltaSyncEnabled;
+        String val = prop.getProperty(LGSYNC_LDAP_DELTASYNC_ENABLED);
+
+        return StringUtils.isBlank(val) ? DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED : Boolean.parseBoolean(val);
     }
 
     public boolean isGroupSearchEnabled() {
@@ -1394,37 +1389,6 @@ public class UserGroupSyncConfig {
         }
 
         return isSyncSourceValidationEnabled;
-    }
-
-    public Map<String, String> getNameTransformationRules() {
-        Map<String, String> nameTransformationRules = new HashMap<>();
-        nameTransformationRules.put(UgsyncCommonConstants.UGSYNC_USERNAME_CASE_CONVERSION_PARAM, getUserNameCaseConversion());
-        nameTransformationRules.put(UgsyncCommonConstants.UGSYNC_GROUPNAME_CASE_CONVERSION_PARAM, getGroupNameCaseConversion());
-        nameTransformationRules.put(UgsyncCommonConstants.SYNC_MAPPING_USERNAME_HANDLER, getUserSyncMappingUserNameHandler());
-        nameTransformationRules.put(UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME_HANDLER, getUserSyncMappingGroupNameHandler());
-        nameTransformationRules.put(UgsyncCommonConstants.SYNC_MAPPING_SEPARATOR, getRegexSeparator());
-        nameTransformationRules.putAll(getAllRegexPatternsConfig(UgsyncCommonConstants.SYNC_MAPPING_USERNAME));
-        nameTransformationRules.putAll(getAllRegexPatternsConfig(UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME));
-        return nameTransformationRules;
-    }
-
-    public Map<String, String> getAllRegexPatternsConfig(String baseProperty) {
-        Map<String, String> regexPatterns = new HashMap<>();
-        if (prop != null) {
-            String baseRegex = prop.getProperty(baseProperty);
-            if (baseRegex == null) {
-                return regexPatterns;
-            }
-            regexPatterns.put(baseProperty, baseRegex);
-            int    i         = 1;
-            String nextRegex = prop.getProperty(baseProperty + "." + i);
-            while (nextRegex != null) {
-                regexPatterns.put(baseProperty + "." + i, nextRegex);
-                i++;
-                nextRegex = prop.getProperty(baseProperty + "." + i);
-            }
-        }
-        return regexPatterns;
     }
 
     private void init() {

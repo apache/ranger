@@ -99,9 +99,7 @@ public class PolicyEngine {
             }
         }
 
-        RangerAuthContext currAuthContext = pluginContext.getAuthContext();
-        RangerUserStore   userStore       = currAuthContext != null ? currAuthContext.getUserStoreUtil().getUserStore() : null;
-        RangerAuthContext authContext     = new RangerAuthContext(null, zoneMatcher, roles, userStore);
+        RangerAuthContext authContext= new RangerAuthContext(pluginContext.getAuthContext(), zoneMatcher, roles);
 
         this.pluginContext.setAuthContext(authContext);
 

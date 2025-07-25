@@ -20,6 +20,8 @@
 package org.apache.ranger.ugsyncutil.util;
 
 public class UgsyncCommonConstants {
+    public enum CaseConversion { NONE, TO_LOWER, TO_UPPER }
+
     public static final String ORIGINAL_NAME = "original_name";
     public static final String FULL_NAME     = "full_name";
     public static final String SYNC_SOURCE   = "sync_source";
@@ -51,5 +53,15 @@ public class UgsyncCommonConstants {
 
     private UgsyncCommonConstants() {
         // to block instantiation
+    }
+
+    public static CaseConversion toCaseConversion(String value) {
+        if (UGSYNC_LOWER_CASE_CONVERSION_VALUE.equalsIgnoreCase(value)) {
+            return CaseConversion.TO_LOWER;
+        } else if (UGSYNC_UPPER_CASE_CONVERSION_VALUE.equalsIgnoreCase(value)) {
+            return CaseConversion.TO_UPPER;
+        } else {
+            return CaseConversion.NONE;
+        }
     }
 }

@@ -17,9 +17,8 @@
  * under the License.
  */
 
-package org.apache.ranger.ugsynutil.transform;
+package org.apache.ranger.ugsyncutil.transform;
 
-import org.apache.ranger.ugsyncutil.transform.RegEx;
 import org.junit.Before;
 import org.junit.Test;
 

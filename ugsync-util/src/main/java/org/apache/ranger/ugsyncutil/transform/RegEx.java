@@ -62,7 +62,7 @@ public class RegEx extends AbstractMapper {
         return result;
     }
 
-    public void populateReplacementPatterns(String baseProperty, List<String> regexPatterns, String regexSeparator) {
+    void populateReplacementPatterns(String baseProperty, List<String> regexPatterns, String regexSeparator) {
         replacementPattern = new LinkedHashMap<>();
 
         String  regex = String.format("s%s([^%s]*)%s([^%s]*)%s(g)?", regexSeparator, regexSeparator, regexSeparator, regexSeparator, regexSeparator);
