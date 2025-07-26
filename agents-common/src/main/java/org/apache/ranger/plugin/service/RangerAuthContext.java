@@ -56,7 +56,6 @@ public class RangerAuthContext {
     private       CaseConversion                     userNameCaseConversion;
     private       CaseConversion                     groupNameCaseConversion;
 
-
     public RangerAuthContext(RangerAuthContext prevContext, RangerSecurityZoneMatcher zoneMatcher, RangerRoles roles) {
         this(null, zoneMatcher, roles, prevContext != null ? prevContext.getUserStoreUtil().getUserStore() : null);
 

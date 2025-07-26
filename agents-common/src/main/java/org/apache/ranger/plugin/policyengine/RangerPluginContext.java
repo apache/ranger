@@ -27,7 +27,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerAuthContextListener;
-import org.apache.ranger.ugsyncutil.transform.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -34,7 +34,6 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.RangerReadWriteLock;
 import org.apache.ranger.plugin.util.RangerRoles;
-import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
@@ -99,7 +98,7 @@ public class PolicyEngine {
             }
         }
 
-        RangerAuthContext authContext= new RangerAuthContext(pluginContext.getAuthContext(), zoneMatcher, roles);
+        RangerAuthContext authContext = new RangerAuthContext(pluginContext.getAuthContext(), zoneMatcher, roles);
 
         this.pluginContext.setAuthContext(authContext);
 

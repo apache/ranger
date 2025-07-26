@@ -442,8 +442,6 @@ public class RangerBasePlugin {
     public void setPolicies(ServicePolicies policies) {
         LOG.debug("==> setPolicies({})", policies);
 
-        setServiceConfigs((policies != null && policies.getServiceConfig() != null) ? policies.getServiceConfig() : null);
-
         if (pluginConfig.isEnableImplicitUserStoreEnricher() && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
             String retrieverClassName = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
             String retrieverPollIntMs = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
@@ -582,6 +580,8 @@ public class RangerBasePlugin {
                         newPolicyEngine.setUseForwardedIPAddress(pluginConfig.isUseForwardedIPAddress());
                         newPolicyEngine.setTrustedProxyAddresses(pluginConfig.getTrustedProxyAddresses());
                     }
+
+                    setServiceConfigs(policies.getServiceConfig());
 
                     LOG.info("Switching policy engine from [{}]", getPolicyVersion());
                     this.policyEngine = newPolicyEngine;
@@ -1204,8 +1204,10 @@ public class RangerBasePlugin {
 
         this.serviceConfigs = serviceConfigs != null ? serviceConfigs : new HashMap<>();
 
-        if (!Objects.equals(oldServiceConfigs, this.serviceConfigs)) {
-            this.pluginContext.getAuthContext().onServiceConfigsUpdate(this.serviceConfigs);
+        RangerAuthContext authContext = this.pluginContext.getAuthContext();
+
+        if (authContext != null && !Objects.equals(oldServiceConfigs, this.serviceConfigs)) {
+            authContext.onServiceConfigsUpdate(this.serviceConfigs);
         }
     }
 
