@@ -70,6 +70,7 @@ public class ServicePolicies implements java.io.Serializable {
         ret.setPolicyVersion(source.getPolicyVersion());
         ret.setAuditMode(source.getAuditMode());
         ret.setServiceDef(source.getServiceDef());
+        ret.setServiceConfig(source.getServiceConfig() != null ? new HashMap<>(source.getServiceConfig()) : null);
         ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
         ret.setSecurityZones(source.getSecurityZones());
         ret.setPolicies(Collections.emptyList());

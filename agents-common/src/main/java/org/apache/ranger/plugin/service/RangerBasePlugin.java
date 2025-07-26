@@ -83,6 +83,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class RangerBasePlugin {
@@ -208,7 +209,6 @@ public class RangerBasePlugin {
         this(pluginConfig);
 
         init();
-
         setPolicies(policies);
         setRoles(roles);
 
@@ -442,8 +442,6 @@ public class RangerBasePlugin {
     public void setPolicies(ServicePolicies policies) {
         LOG.debug("==> setPolicies({})", policies);
 
-        this.serviceConfigs = (policies != null && policies.getServiceConfig() != null) ? policies.getServiceConfig() : new HashMap<>();
-
         if (pluginConfig.isEnableImplicitUserStoreEnricher() && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
             String retrieverClassName = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
             String retrieverPollIntMs = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
@@ -582,6 +580,8 @@ public class RangerBasePlugin {
                         newPolicyEngine.setUseForwardedIPAddress(pluginConfig.isUseForwardedIPAddress());
                         newPolicyEngine.setTrustedProxyAddresses(pluginConfig.getTrustedProxyAddresses());
                     }
+
+                    setServiceConfigs(policies.getServiceConfig());
 
                     LOG.info("Switching policy engine from [{}]", getPolicyVersion());
                     this.policyEngine = newPolicyEngine;
@@ -887,7 +887,7 @@ public class RangerBasePlugin {
         RangerPolicyEngine       policyEngine = this.policyEngine;
         RangerRoles              roles        = policyEngine != null ? policyEngine.getRangerRoles() : null;
         Set<RangerRole>          rangerRoles  = roles != null ? roles.getRangerRoles() : null;
-        Map<String, Set<String>> roleMapping = null;
+        Map<String, Set<String>> roleMapping  = null;
 
         if (rangerRoles != null) {
             RangerPluginContext rangerPluginContext = policyEngine.getPluginContext();
@@ -1197,6 +1197,18 @@ public class RangerBasePlugin {
 
     protected RangerPolicyEngine getPolicyEngine() {
         return policyEngine;
+    }
+
+    private void setServiceConfigs(Map<String, String> serviceConfigs) {
+        Map<String, String> oldServiceConfigs = this.serviceConfigs;
+
+        this.serviceConfigs = serviceConfigs != null ? serviceConfigs : new HashMap<>();
+
+        RangerAuthContext authContext = this.pluginContext.getAuthContext();
+
+        if (authContext != null && !Objects.equals(oldServiceConfigs, this.serviceConfigs)) {
+            authContext.onServiceConfigsUpdate(this.serviceConfigs);
+        }
     }
 
     private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {

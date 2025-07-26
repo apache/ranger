@@ -2507,7 +2507,8 @@ public class ServiceREST {
     @GET
     @Path("/policies/download/{serviceName}")
     @Produces("application/json")
-    public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId, @DefaultValue("") @QueryParam("clusterName") String clusterName, @DefaultValue("") @QueryParam("zoneName") String zoneName, @DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas, @DefaultValue("") @QueryParam("pluginCapabilities") String pluginCapabilities, @Context HttpServletRequest request) throws Exception {
+    public ServicePolicies getServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId, @DefaultValue("") @QueryParam("clusterName") String clusterName, @DefaultValue("") @QueryParam("zoneName") String zoneName, @DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas, @DefaultValue("") @QueryParam("pluginCapabilities") String pluginCapabilities, @Context HttpServletRequest request)
+            throws Exception {
         LOG.debug("==> ServiceREST.getServicePoliciesIfUpdated({}, {}, {}, {}, {}, {})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, supportsPolicyDeltas);
 
         ServicePolicies  ret               = null;
@@ -2571,7 +2572,8 @@ public class ServiceREST {
     @GET
     @Path("/secure/policies/download/{serviceName}")
     @Produces("application/json")
-    public ServicePolicies getSecureServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId, @DefaultValue("") @QueryParam("clusterName") String clusterName, @DefaultValue("") @QueryParam("zoneName") String zoneName, @DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas, @DefaultValue("") @QueryParam("pluginCapabilities") String pluginCapabilities, @Context HttpServletRequest request) throws Exception {
+    public ServicePolicies getSecureServicePoliciesIfUpdated(@PathParam("serviceName") String serviceName, @DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion, @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime, @QueryParam("pluginId") String pluginId, @DefaultValue("") @QueryParam("clusterName") String clusterName, @DefaultValue("") @QueryParam("zoneName") String zoneName, @DefaultValue("false") @QueryParam("supportsPolicyDeltas") Boolean supportsPolicyDeltas, @DefaultValue("") @QueryParam("pluginCapabilities") String pluginCapabilities, @Context HttpServletRequest request)
+            throws Exception {
         LOG.debug("==> ServiceREST.getSecureServicePoliciesIfUpdated({}, {}, {}, {}, {}, {})", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, supportsPolicyDeltas);
 
         ServicePolicies  ret               = null;
@@ -2602,8 +2604,8 @@ public class ServiceREST {
                     perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getSecureServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ",lastActivationTime=" + lastActivationTime + ")");
                 }
 
-                XXService     xService      = daoManager.getXXService().findByName(serviceName);
-                XXServiceDef  xServiceDef   = daoManager.getXXServiceDef().getById(xService.getType());
+                XXService     xService    = daoManager.getXXService().findByName(serviceName);
+                XXServiceDef  xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
                 RangerService rangerService;
 
                 if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
@@ -2672,6 +2674,7 @@ public class ServiceREST {
             throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
         }
 
+        LOG.debug("ServiceREST.getSecureServicePoliciesIfUpdated(): configs ={}", ret == null ? ret : ret.getServiceConfig());
         LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated({}, {}, {}, {}, {}, {}) : count={}", serviceName, lastKnownVersion, lastActivationTime, pluginId, clusterName, supportsPolicyDeltas, ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 
         return ret;
@@ -3208,11 +3211,11 @@ public class ServiceREST {
         boolean isKeyAdmin = bizUtil.isKeyAdmin();
         String  userName   = bizUtil.getCurrentUserLoginId();
 
-        XXServiceDef        xServiceDef = daoManager.getXXServiceDef().getById(xxService.getType());
-        Set<String>         userGroups  = userMgr.getGroupsForUser(userName);
-        RangerPolicyAdmin   policyAdmin = getPolicyAdminForDelegatedAdmin(serviceName);
-        Set<String>         roles       = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
-        Map<String, Object> evalContext = new HashMap<>();
+        XXServiceDef        xServiceDef  = daoManager.getXXServiceDef().getById(xxService.getType());
+        Set<String>         userGroups   = userMgr.getGroupsForUser(userName);
+        RangerPolicyAdmin   policyAdmin  = getPolicyAdminForDelegatedAdmin(serviceName);
+        Set<String>         roles        = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
+        Map<String, Object> evalContext  = new HashMap<>();
         boolean             isKmsService = EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname());
 
         RangerAccessRequestUtil.setCurrentUserInContext(evalContext, userName);
@@ -3223,7 +3226,7 @@ public class ServiceREST {
         policies.forEach(policy -> {
             boolean isServiceAdminUser = serviceToIsAdminUserMap.computeIfAbsent(policy.getService(), svcName -> svcStore.isServiceAdminUser(svcName, userName));
             boolean isZoneAdmin        = !StringUtils.isEmpty(policy.getZoneName()) && zoneToIsAdminMap.computeIfAbsent(policy.getZoneName(), serviceMgr::isZoneAdmin);
-            boolean isSvcAdmin          = isAdmin || isServiceAdminUser || isZoneAdmin;
+            boolean isSvcAdmin         = isAdmin || isServiceAdminUser || isZoneAdmin;
 
             if (!isAdmin && !isKeyAdmin && !isSvcAdmin) {
                 boolean isAllowed = policyAdmin.isDelegatedAdminAccessAllowedForModify(policy, userName, userGroups, roles, evalContext);
@@ -4567,7 +4570,7 @@ public class ServiceREST {
 
         RangerContextHolder.getOrCreateOpContext().setBulkModeContext(true);
 
-        RangerPerfTracer perf               = null;
+        RangerPerfTracer perf = null;
         String           deletedServiceName;
 
         try {

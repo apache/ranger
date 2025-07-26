@@ -31,15 +31,20 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerUserStoreUtil;
+import org.apache.ranger.ugsyncutil.transform.Mapper;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RangerDefaultRequestProcessor implements RangerAccessRequestProcessor {
     private static final Logger LOG                              = LoggerFactory.getLogger(RangerDefaultRequestProcessor.class);
@@ -96,6 +101,17 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
                 if (reqImpl.getClusterType() == null) {
                     reqImpl.setClusterType(pluginContext.getClusterType());
+                }
+
+                RangerPluginConfig config = policyEngine.getPluginContext().getConfig();
+
+                boolean isNameTransformationSupported = config.getBoolean(config.getPropertyPrefix() + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION, false);
+
+                LOG.debug("isNameTransformationSupported = {}", isNameTransformationSupported);
+
+                if (isNameTransformationSupported) {
+                    reqImpl.setUser(getTransformedUser(policyEngine, request));
+                    reqImpl.setUserGroups(getTransformedGroups(policyEngine, request));
                 }
 
                 convertEmailToUsername(reqImpl);
@@ -155,6 +171,65 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         } else {
             LOG.debug("No context-enrichers!!!");
         }
+    }
+
+    private String getTransformedUser(PolicyEngine policyEngine, RangerAccessRequest request) {
+        RangerAuthContext authContext     = policyEngine.getPluginContext().getAuthContext();
+        boolean           toLowerCase     = authContext.getUserNameCaseConversion() == UgsyncCommonConstants.CaseConversion.TO_LOWER;
+        boolean           toUpperCase     = authContext.getUserNameCaseConversion() == UgsyncCommonConstants.CaseConversion.TO_UPPER;
+        Mapper            nameTransformer = authContext.getUserNameTransformer();
+
+        if (toLowerCase || toUpperCase || nameTransformer != null) {
+            String user = request.getUser();
+
+            if (toLowerCase) {
+                user = user.toLowerCase();
+            } else if (toUpperCase) {
+                user = user.toUpperCase();
+            }
+
+            if (nameTransformer != null) {
+                user = nameTransformer.transform(user);
+            }
+
+            LOG.debug("Original username = {}, Transformed username = {}", request.getUser(), user);
+
+            return user;
+        }
+
+        return request.getUser();
+    }
+
+    private Set<String> getTransformedGroups(PolicyEngine policyEngine, RangerAccessRequest request) {
+        if (CollectionUtils.isNotEmpty(request.getUserGroups())) {
+            RangerAuthContext authContext     = policyEngine.getPluginContext().getAuthContext();
+            boolean           toLowerCase     = authContext.getGroupNameCaseConversion() == UgsyncCommonConstants.CaseConversion.TO_LOWER;
+            boolean           toUpperCase     = authContext.getGroupNameCaseConversion() == UgsyncCommonConstants.CaseConversion.TO_UPPER;
+            Mapper            nameTransformer = authContext.getGroupNameTransformer();
+
+            if (toLowerCase || toUpperCase || nameTransformer != null) {
+                return request.getUserGroups().stream()
+                        .filter(Objects::nonNull)
+                        .map(group -> {
+                            String originalGroup = group;
+
+                            if (toLowerCase) {
+                                group = group.toLowerCase();
+                            } else if (toUpperCase) {
+                                group = group.toUpperCase();
+                            }
+
+                            String transformedGroup = nameTransformer.transform(group);
+
+                            LOG.debug("Original group name = {}, Transformed group name = {}", originalGroup, transformedGroup);
+
+                            return transformedGroup;
+                        })
+                        .collect(Collectors.toSet());
+            }
+        }
+
+        return request.getUserGroups();
     }
 
     private void setResourceServiceDef(RangerAccessRequest request) {

@@ -46,6 +46,7 @@
         <include>org.apache.ranger:ranger-audit-dest-solr</include>
         <include>org.apache.ranger:ranger-plugins-cred</include>
         <include>org.apache.ranger:ranger-plugins-common</include>
+        <include>org.apache.ranger:ugsync-util</include>
         <include>org.apache.ranger:ranger-kms-plugin</include>
       </includes>
       <binaries>
@@ -84,6 +85,7 @@
       <includes>
         <include>org.apache.ranger:ranger-plugins-installer</include>
         <include>org.apache.ranger:credentialbuilder</include>
+        <include>org.apache.ranger:ugsync-util</include>
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
