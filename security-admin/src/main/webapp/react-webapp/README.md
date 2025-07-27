@@ -23,7 +23,7 @@ under the License.
 
 To build the Ranger Admin UI package, run the following Maven command:
 ```
-mvn clean compile package -DskipTests -DskipJSTests=true
+mvn clean compile package -DskipTests
 ```
 
 ## Updating React JS Code to Comply with Checkstyle Requirements

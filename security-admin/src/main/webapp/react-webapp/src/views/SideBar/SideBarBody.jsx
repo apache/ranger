@@ -70,7 +70,6 @@ export const SideBarBody = (props) => {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const navigate = useNavigate();
   const apiUrl = getBaseUrl() + "apidocs/swagger.html";
-  const backboneUrl = getBaseUrl() + "backbone-index.html";
 
   const serviceSelectThemes = (theme) => {
     return {
@@ -657,18 +656,6 @@ export const SideBarBody = (props) => {
                 >
                   Profile
                 </NavLink>
-              </li>
-              <li className="list-group-item">
-                <a
-                  href={backboneUrl}
-                  onClick={() => {
-                    props.closeCollapse();
-                    localStorage.clear();
-                  }}
-                  className="text-decoration-none"
-                >
-                  Backbone Classic UI
-                </a>
               </li>
               <li className="list-group-item">
                 <a

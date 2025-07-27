@@ -62,10 +62,6 @@ Ranger is built using [Apache Maven](https://maven.apache.org/). To run Ranger:
 
    `mvn eclipse:eclipse`
 
-   Ranger Admin UI tests depend on PhantomJS. If the build fails with npm or Karma errors you can either:
-   - install PhantomJS dependencies for your platform (bzip2 and fontconfig)
-   - skip JavaScript test execution: mvn -DskipJSTests ...
-
 3. After the above build command execution, you should see the following TAR files in the target folder:
    ```
    ranger-<version>-admin.tar.gz
