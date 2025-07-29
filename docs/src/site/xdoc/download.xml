@@ -20,18 +20,26 @@
 <section name="Download Apache Ranger&#8482;">
 <subsection name="How to Download">
 <p>
-Use the links below to download a distribution of Apache Ranger&#8482; from one of our mirrors.
-It is good practice to verify the integrity of the distribution files. Apache Ranger releases are 
-available under the 
-<a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the 
-LICENSE.txt and NOTICE.txt files contained in each release artifact.
+    Use the links below to download a distribution of Apache Ranger&#8482; from one of our mirrors.
+    It is good practice to verify the integrity of the distribution files.
+    Apache Ranger releases are available under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> - see the LICENSE.txt and NOTICE.txt files contained in each release artifact.
 </p>
 </subsection>
 <subsection name="Current official release (closest mirror site selected automatically)">
 <ul>
 <li>
 <p>
-Current Stable release - Apache Ranger 2.6.0:
+Current Stable release - Apache Ranger 2.7.0:
+</p>
+<p>
+<a href="https://downloads.apache.org/ranger/2.7.0/apache-ranger-2.7.0.tar.gz">apache-ranger-2.7.0.tar.gz</a>
+(<a href="https://downloads.apache.org/ranger/2.7.0/apache-ranger-2.7.0.tar.gz.asc">PGP</a>)
+(<a href="https://downloads.apache.org/ranger/2.7.0/apache-ranger-2.7.0.tar.gz.sha512">Digest</a>)
+</p>
+</li>
+<li>
+<p>
+Apache Ranger 2.6.0:
 </p>
 <p>
 <a href="https://downloads.apache.org/ranger/2.6.0/apache-ranger-2.6.0.tar.gz">apache-ranger-2.6.0.tar.gz</a>
@@ -190,6 +198,5 @@ Older releases are available in the <a href="https://archive.apache.org/dist/inc
 </p>
 </subsection>
 </section>
-            
 </body>
 </document>
