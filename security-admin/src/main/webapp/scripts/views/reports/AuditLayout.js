@@ -566,8 +566,7 @@ define(function(require) {
 						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value)
 						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_USER.value)
 						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_USER_PROFILE.value)
-						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value)
-						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP_USER.value))
+						|| (obj.value == XAEnums.ClassTypes.CLASS_TYPE_XA_GROUP.value))
 					auditList.push({label :obj.label, value :obj.label+''});
 			});
 			_.each(XAGlobals.ActionType, function(obj){
