@@ -416,6 +416,7 @@ function Admin() {
           { value: "1056", label: "Ranger Security Zone" },
           { value: "1030", label: "Ranger Service" },
           { value: "1003", label: "Ranger User" },
+          { value: "1004", label: "XA Group of Users" },
           { value: "2", label: "User Profile" }
         ];
       }
