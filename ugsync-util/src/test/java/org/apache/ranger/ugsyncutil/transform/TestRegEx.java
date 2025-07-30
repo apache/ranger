@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.usergroupsync;
+package org.apache.ranger.ugsyncutil.transform;
 
 import org.junit.Before;
 import org.junit.Test;

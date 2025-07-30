@@ -43,6 +43,7 @@
 				<include>org.apache.ranger:ranger-kafka-plugin</include>
 				<include>org.apache.ranger:ranger-plugins-cred</include>
 				<include>org.apache.ranger:ranger-plugins-common</include>
+				<include>org.apache.ranger:ugsync-util</include>
 			</includes>
 			<binaries>
 				<outputDirectory>lib/ranger-kafka-plugin-impl</outputDirectory>

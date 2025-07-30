@@ -20,16 +20,25 @@
 package org.apache.ranger.plugin.util;
 
 public class RangerCommonConstants {
-    public static final String  PROP_COOKIE_NAME                                     = "ranger.admin.cookie.name";
-    public static final String  DEFAULT_COOKIE_NAME                                  = "RANGERADMINSESSIONID";
-    public static final String  RANGER_ADMIN_SUFFIX_POLICY_DELTA                     = ".supports.policy.deltas";
-    public static final String  PLUGIN_CONFIG_SUFFIX_POLICY_DELTA                    = ".supports.policy.deltas";
-    public static final String  RANGER_ADMIN_SUFFIX_TAG_DELTA                        = ".supports.tag.deltas";
-    public static final String  PLUGIN_CONFIG_SUFFIX_TAG_DELTA                       = ".supports.tag.deltas";
-    public static final String  RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES          = ".supports.in.place.policy.updates";
-    public static final String  PLUGIN_CONFIG_SUFFIX_IN_PLACE_POLICY_UPDATES         = ".supports.in.place.policy.updates";
-    public static final String  RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES             = ".supports.in.place.tag.updates";
-    public static final String  PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES            = ".supports.in.place.tag.updates";
+    public static final String PROP_COOKIE_NAME                             = "ranger.admin.cookie.name";
+    public static final String DEFAULT_COOKIE_NAME                          = "RANGERADMINSESSIONID";
+    public static final String RANGER_ADMIN_SUFFIX_POLICY_DELTA             = ".supports.policy.deltas";
+    public static final String PLUGIN_CONFIG_SUFFIX_POLICY_DELTA            = ".supports.policy.deltas";
+    public static final String RANGER_ADMIN_SUFFIX_TAG_DELTA                = ".supports.tag.deltas";
+    public static final String PLUGIN_CONFIG_SUFFIX_TAG_DELTA               = ".supports.tag.deltas";
+    public static final String RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES  = ".supports.in.place.policy.updates";
+    public static final String PLUGIN_CONFIG_SUFFIX_IN_PLACE_POLICY_UPDATES = ".supports.in.place.policy.updates";
+    public static final String RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES     = ".supports.in.place.tag.updates";
+    public static final String PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES    = ".supports.in.place.tag.updates";
+    public static final String PLUGIN_CONFIG_SUFFIX_NAME_TRANSFORMATION     = ".supports.name.transformation";
+
+    public static final String  PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM          = "ranger.plugins.conf.ldap.username.caseconversion";
+    public static final String  PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM         = "ranger.plugins.conf.ldap.groupname.caseconversion";
+    public static final String  PLUGINS_CONF_MAPPING_USERNAME                        = "ranger.plugins.conf.mapping.username.regex";
+    public static final String  PLUGINS_CONF_MAPPING_GROUPNAME                       = "ranger.plugins.conf.mapping.groupname.regex";
+    public static final String  PLUGINS_CONF_MAPPING_USERNAME_HANDLER                = "ranger.plugins.conf.mapping.username.handler";
+    public static final String  PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER               = "ranger.plugins.conf.mapping.groupname.handler";
+    public static final String  PLUGINS_CONF_MAPPING_SEPARATOR                       = "ranger.plugins.conf.mapping.regex.separator";
     public static final String  RANGER_SUPPORTS_TAGS_DEDUP                           = ".supports.tags.dedup";
     public static final boolean RANGER_ADMIN_SUFFIX_POLICY_DELTA_DEFAULT             = false;
     public static final boolean PLUGIN_CONFIG_SUFFIX_POLICY_DELTA_DEFAULT            = false;
