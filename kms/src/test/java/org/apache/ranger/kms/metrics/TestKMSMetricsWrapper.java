@@ -44,6 +44,10 @@ public class TestKMSMetricsWrapper {
     public void testNonThreadsafeCounterMetrics() throws NoSuchFieldException, IllegalAccessException {
         // set the "isMetricCollectionThreadsafe" value to true to verify different flow.
         setKmsMetricsCollectorThreadSafelyFlag(false);
+        DefaultMetricsSystem.instance().publishMetricsNow();
+
+        long prevKeyCreateCount =  (long) kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey());
+        long prevKeyCreateElapsedTime = (long) kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey());
 
         // For COUNTER type
         kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.KEY_CREATE_COUNT);
@@ -53,14 +57,21 @@ public class TestKMSMetricsWrapper {
 
         DefaultMetricsSystem.instance().publishMetricsNow();
 
-        Assertions.assertEquals(1L, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
-        Assertions.assertEquals(100L, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
+        long expectedKeyCreateCount = prevKeyCreateCount + 1;
+        long expectedKeyCreateElapsedTime = prevKeyCreateElapsedTime + 100L;
+
+        Assertions.assertEquals(expectedKeyCreateCount, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
+        Assertions.assertEquals(expectedKeyCreateElapsedTime, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
     }
 
     @Test
     public void testThreadsafeCounterMetrics() throws NoSuchFieldException, IllegalAccessException {
         // set the "isMetricCollectionThreadsafe" value to true to verify different flow.
         setKmsMetricsCollectorThreadSafelyFlag(true);
+        DefaultMetricsSystem.instance().publishMetricsNow();
+
+        long prevKeyCreateCount =  (long) kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey());
+        long prevKeyCreateElapsedTime = (long) kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey());
 
         // For COUNTER type
         kmsMetricsCollector.incrementCounter(KMSMetrics.KMSMetric.KEY_CREATE_COUNT);
@@ -70,8 +81,11 @@ public class TestKMSMetricsWrapper {
 
         DefaultMetricsSystem.instance().publishMetricsNow();
 
-        Assertions.assertEquals(1L, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
-        Assertions.assertEquals(200L, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
+        long expectedKeyCreateCount = prevKeyCreateCount + 1;
+        long expectedKeyCreateElapsedTime = prevKeyCreateElapsedTime + 200L;
+
+        Assertions.assertEquals(expectedKeyCreateCount, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_COUNT.getKey()));
+        Assertions.assertEquals(expectedKeyCreateElapsedTime, kmsMetricWrapper.getRangerMetricsInJsonFormat().get("KMS").get(KMSMetrics.KMSMetric.KEY_CREATE_ELAPSED_TIME.getKey()));
     }
 
     private void setKmsMetricsCollectorThreadSafelyFlag(boolean isMetricCollectionThreadsafe) throws IllegalAccessException, NoSuchFieldException {
