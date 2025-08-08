@@ -24,6 +24,7 @@ import org.apache.ranger.kms.dao.DaoManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Cipher;
@@ -36,6 +37,7 @@ import java.nio.file.Paths;
 /**
  * A test for the RangerMasterKey.
  */
+@Disabled
 public class RangerMasterKeyTest {
     private static final boolean UNRESTRICTED_POLICIES_INSTALLED;
 

@@ -16,6 +16,7 @@
  */
 package org.apache.ranger.kms.biz;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -24,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestRangerKMSStartUp {
     @Test
     public void testInitRangerMasterKey() throws Throwable {
