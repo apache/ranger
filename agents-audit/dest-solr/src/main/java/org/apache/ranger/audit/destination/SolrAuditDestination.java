@@ -163,7 +163,8 @@ public class SolrAuditDestination extends AuditDestination {
 					if (zkHosts != null && !zkHosts.isEmpty()) {
 						LOG.info("Connecting to solr cloud using zkHosts="
 								+ zkHosts);
-						try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
+						try {
+								Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
 								SolrHttpClientBuilder kb = krbBuild.getBuilder();
 								HttpClientUtil.setHttpClientBuilder(kb);
 
@@ -174,8 +175,6 @@ public class SolrAuditDestination extends AuditDestination {
 										CloudSolrClient solrCloudClient = new CloudSolrClient.Builder(zkhosts, Optional.empty()).build();
 										return solrCloudClient;
 									}
-
-									;
 								});
 
 								solrCloudClient.setDefaultCollection(collectionName);
@@ -185,7 +184,8 @@ public class SolrAuditDestination extends AuditDestination {
 									+ zkHosts, t);
 						}
 					} else if (solrURLs != null && !solrURLs.isEmpty()) {
-						try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
+						try {
+								Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder();
 								LOG.info("Connecting to Solr using URLs=" + solrURLs);
 								SolrHttpClientBuilder kb = krbBuild.getBuilder();
 								HttpClientUtil.setHttpClientBuilder(kb);
@@ -199,8 +199,6 @@ public class SolrAuditDestination extends AuditDestination {
 										LBHttpSolrClient lbSolrClient = builder.build();
 										return lbSolrClient;
 									}
-
-									;
 								});
 
 								for (int i = 1; i < solrURLs.size(); i++) {
