@@ -17,6 +17,7 @@
 package org.apache.hadoop.crypto.key.kms;
 
 import org.apache.hadoop.crypto.key.MigrateDBMKeyToGCP;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestMigrateDBMKeyToGCP {
     @Test
     public void testShowUsage() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {

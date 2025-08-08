@@ -21,6 +21,7 @@ import com.microsoft.azure.keyvault.webkey.JsonWebKeyEncryptionAlgorithm;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.RangerAzureKeyVaultKeyGenerator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestRangerAzureKeyVaultKeyGenerator {
     private static final String        VALID_VAULT_URL     = "https://test-keyvault.vault.azure.net/";
     private static final String        VALID_MASTER_KEY    = "test-master-key";

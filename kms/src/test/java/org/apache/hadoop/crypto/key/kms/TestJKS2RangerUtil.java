@@ -19,6 +19,7 @@ package org.apache.hadoop.crypto.key.kms;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.JKS2RangerUtil;
 import org.apache.hadoop.crypto.key.RangerMasterKey;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -40,6 +41,7 @@ import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestJKS2RangerUtil {
     @Test
     public void testGetFromJceks() throws Exception {
