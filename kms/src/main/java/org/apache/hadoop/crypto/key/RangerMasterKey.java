@@ -17,6 +17,7 @@
 
 package org.apache.hadoop.crypto.key;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
@@ -620,5 +621,34 @@ public class RangerMasterKey implements RangerKMSMKI {
 
     private SecretKey getMasterKeyFromBytes(byte[] keyData) {
         return new SecretKeySpec(keyData, mkCipher);
+    }
+
+    // Following methods MUST NOT BE USED FOR PROD CODE. IT HAS BEEN EXPOSED ONLY FOR UnitTesting.
+
+    @VisibleForTesting
+    SupportedPBECryptoAlgo getDefaultCryptoAlgorithm() {
+        return defaultCryptAlgo;
+    }
+
+    @VisibleForTesting
+    SupportedPBECryptoAlgo getSelectedCryptoAlgorithm() {
+        return encrCryptoAlgo;
+    }
+
+    @VisibleForTesting
+    SupportedPBECryptoAlgo getMKEncryptionAlgoName() {
+        List result = getEncryptedMK();
+        String encryptedPassString = null;
+        if (CollectionUtils.isNotEmpty(result) && result.size() == 2) {
+            encryptedPassString = (String) result.get(1);
+        }
+
+        return  SupportedPBECryptoAlgo.valueOf(fetchEncrAlgo(encryptedPassString));
+    }
+
+    @VisibleForTesting
+    void resetDefaultMDAlgoAndEncrAlgo() {
+        defaultMdAlgo = "MD5";
+        defaultCryptAlgo = SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES;
     }
 }
