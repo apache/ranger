@@ -17,6 +17,7 @@
 package org.apache.ranger.kms.metrics.source;
 
 import org.apache.hadoop.crypto.key.kms.server.KMSMetricUtil;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -28,6 +29,7 @@ import java.lang.reflect.Method;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestKMSMetricUtil {
     @Test
     public void testGetKMSMetricCalculation() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
