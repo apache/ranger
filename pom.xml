@@ -183,6 +183,7 @@
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
+        <slf4j2.version>2.17.2</slf4j2.version>
         <solr.version>7.7.1</solr.version>
         <spring-ldap-core.version>2.3.3.RELEASE</spring-ldap-core.version>
         <springframework.security.version>5.5.0</springframework.security.version>
@@ -224,7 +225,7 @@
         <lucene.version>8.4.0</lucene.version>
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
-        <log4j.core.version>2.13.3</log4j.core.version>
+        <log4j.core.version>2.17.2</log4j.core.version>
     </properties>
     <profiles>
         <profile>
