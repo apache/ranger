@@ -455,6 +455,7 @@ CREATE TABLE `x_trx_log_v2` (
   PRIMARY KEY (`id`),
   KEY `x_trx_log_v2_FK_added_by_id` (`added_by_id`),
   KEY `x_trx_log_v2_cr_time` (`create_time`),
+  KEY `x_trx_log_v2_action` (`action`),
   KEY `x_trx_log_v2_trx_id` (`trx_id`)
 )ROW_FORMAT=DYNAMIC;
 
