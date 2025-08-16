@@ -1980,6 +1980,7 @@ CREATE INDEX x_resource_FK_parent_id ON x_resource(parent_id);
 CREATE INDEX x_resource_cr_time ON x_resource(create_time);
 CREATE INDEX x_resource_up_time ON x_resource(update_time);
 CREATE INDEX x_trx_log_v2_FK_added_by_id ON x_trx_log_v2(added_by_id);
+CREATE INDEX x_trx_log_v2_action ON x_trx_log_v2(action);
 CREATE INDEX x_trx_log_v2_cr_time ON x_trx_log_v2(create_time);
 CREATE INDEX x_trx_log_v2_trx_id ON x_trx_log_v2(trx_id);
 CREATE INDEX x_user_FK_added_by_id ON x_user(added_by_id);
