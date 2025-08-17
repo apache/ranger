@@ -25,6 +25,7 @@ import arrayMutators from "final-form-arrays";
 import { FieldArray } from "react-final-form-arrays";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
+import AsyncCreatableSelect from "react-select/async-creatable";
 import { RegexValidation, additionalServiceConfigs } from "Utils/XAEnums";
 import { fetchApi } from "Utils/fetchAPI";
 import ServiceAuditFilter from "./ServiceAuditFilter";
@@ -675,7 +676,7 @@ class ServiceForm extends Component {
                 key={"configs." + additionalConfig.name + index}
                 id={"configs." + additionalConfig.name}
                 data-cy={"configs." + additionalConfig.name}
-                component={this.AsyncSelectField}
+                component={this.AsyncCreatableSelectField}
                 loadOptions={
                   additionalConfig.type == "user"
                     ? this.fetchUsers
@@ -989,6 +990,10 @@ class ServiceForm extends Component {
 
   AsyncSelectField = ({ input, ...rest }) => (
     <AsyncSelect {...input} {...rest} cacheOptions />
+  );
+
+  AsyncCreatableSelectField = ({ input, ...rest }) => (
+    <AsyncCreatableSelect {...input} {...rest} />
   );
 
   fetchUsers = async (inputValue) => {
