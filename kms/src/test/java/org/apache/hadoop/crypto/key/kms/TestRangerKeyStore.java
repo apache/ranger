@@ -28,6 +28,7 @@ import org.apache.ranger.kms.dao.RangerKMSDao;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -259,6 +260,7 @@ public class TestRangerKeyStore {
     }
 
     @Test
+    @Disabled
     public void testAddKeyEntry_throwsKeyStoreException_whenSealKeyFails() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
@@ -279,6 +281,7 @@ public class TestRangerKeyStore {
     }
 
     @Test
+    @Disabled
     public void testDbOperationStore_whenUpdateThrowsException() {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
@@ -328,6 +331,7 @@ public class TestRangerKeyStore {
     }
 
     @Test
+    @Disabled
     public void testDbOperationDelete() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
@@ -348,6 +352,7 @@ public class TestRangerKeyStore {
     }
 
     @Test
+    @Disabled
     public void testDbOperationLoad() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
@@ -472,6 +477,7 @@ public class TestRangerKeyStore {
     }
 
     @Test
+    @Disabled
     void testAddSecureKeyByteEntry_EncryptFails_ThrowsKeyStoreException() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager));

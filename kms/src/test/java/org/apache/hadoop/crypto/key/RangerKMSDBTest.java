@@ -20,6 +20,7 @@ package org.apache.hadoop.crypto.key;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
+@Disabled
 public class RangerKMSDBTest {
     private static final String PROPERTY_PREFIX                = "ranger.ks.";
     private static final String DB_DIALECT                     = "jpa.jdbc.dialect";

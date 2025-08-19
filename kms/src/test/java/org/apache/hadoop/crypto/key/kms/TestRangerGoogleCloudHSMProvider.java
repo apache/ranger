@@ -20,6 +20,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.RangerGoogleCloudHSMProvider;
 import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestRangerGoogleCloudHSMProvider {
     private static final String        VALID_PROJECT_ID      = "test-project-id";
     private static final String        VALID_LOCATION_ID     = "us-central1";

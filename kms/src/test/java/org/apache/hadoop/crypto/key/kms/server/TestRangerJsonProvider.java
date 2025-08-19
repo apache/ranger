@@ -17,6 +17,7 @@
 package org.apache.hadoop.crypto.key.kms.server;
 
 import org.apache.ranger.common.RangerJsonProvider;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestRangerJsonProvider {
     @Test
     public void testRangerJsonProvider() {

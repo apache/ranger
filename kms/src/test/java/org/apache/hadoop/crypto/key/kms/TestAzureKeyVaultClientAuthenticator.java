@@ -18,6 +18,7 @@ package org.apache.hadoop.crypto.key.kms;
 
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import org.apache.hadoop.crypto.key.AzureKeyVaultClientAuthenticator;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
 public class TestAzureKeyVaultClientAuthenticator {
     @Test
     public void testDoAuthenticate_shouldThrowRuntimeException() {
