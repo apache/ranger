@@ -50,7 +50,7 @@
     "react-infinite-scroll-component": "^6.1.0",
     "react-onclickoutside": "^6.12.2",
     "react-paginate": "^8.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^7.5.2",
     "react-select": "^5.7.0",
     "react-table": "^7.8.0",
     "react-toastify": "^8.1.0",
