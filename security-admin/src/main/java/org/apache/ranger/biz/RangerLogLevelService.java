@@ -19,16 +19,20 @@
 
 package org.apache.ranger.biz;
 
-import java.lang.reflect.Method;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.util.StatusPrinter;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.net.URL;
+
 /**
  * Service class to handle logging-related operations.
- * This class uses reflection to avoid compile-time dependencies on specific
- * logging frameworks, allowing it to be portable.
+ * This class only supports Logback as the logging mechanism.
  */
 @Component
 public class RangerLogLevelService {
@@ -36,7 +40,8 @@ public class RangerLogLevelService {
     private static final Logger LOG = LoggerFactory.getLogger(RangerLogLevelService.class);
 
     /**
-     * Reloads the logging configuration by detecting the underlying SLF4J implementation.
+     * Reloads the logging configuration using only Logback.
+     * Any other logging implementation will result in an error.
      */
     public void reloadLogConfiguration() {
         ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
@@ -44,56 +49,29 @@ public class RangerLogLevelService {
 
         LOG.info("Detected SLF4J binding: {}", loggerFactoryClassName);
 
-        if (loggerFactoryClassName.startsWith("org.apache.logging.slf4j")) {
-            reloadLog4j2Configuration();
-        } else if (loggerFactoryClassName.startsWith("ch.qos.logback.classic")) {
-            reloadLogbackConfiguration(iLoggerFactory);
+        if (loggerFactoryClassName.startsWith("ch.qos.logback.classic")) {
+            reloadLogbackConfiguration();
         } else {
-            String message = "Dynamic log configuration reload is not supported for SLF4J binding: " + loggerFactoryClassName;
-            LOG.warn(message);
+            String message = "Logback is the only supported logging mechanism. Detected unsupported SLF4J binding: " + loggerFactoryClassName;
+            LOG.error(message);
             throw new UnsupportedOperationException(message);
         }
     }
 
     /**
-     * Reloads the Log4j 2 configuration using reflection.
+     * Reloads the Logback configuration using direct API calls.
      */
-    private void reloadLog4j2Configuration() {
+    private void reloadLogbackConfiguration() {
         try {
-            LOG.debug("Attempting to reload Log4j 2 configuration via reflection.");
-            Class<?> configuratorClass = Class.forName("org.apache.logging.log4j.core.config.Configurator");
-            Method reconfigureMethod = configuratorClass.getMethod("reconfigure");
-            reconfigureMethod.invoke(null); // Static method call
-            LOG.info("Successfully triggered Log4j 2 configuration reload.");
-        } catch (Exception e) {
-            LOG.error("Failed to reload Log4j 2 configuration using reflection", e);
-            throw new RuntimeException("Failed to reload Log4j 2 configuration", e);
-        }
-    }
-
-    /**
-     * Reloads the Logback configuration using reflection.
-     */
-    private void reloadLogbackConfiguration(ILoggerFactory iLoggerFactory) {
-        try {
-            LOG.debug("Attempting to reload Logback configuration via reflection.");
-            // Get the context
-            Object context = iLoggerFactory; // The ILoggerFactory is the LoggerContext in Logback
-
-            // Create a JoranConfigurator instance
-            Class<?> joranConfiguratorClass = Class.forName("ch.qos.logback.classic.joran.JoranConfigurator");
-            Object configurator = joranConfiguratorClass.newInstance();
-
-            // Set the context: configurator.setContext(context)
-            Method setContextMethod = joranConfiguratorClass.getMethod("setContext", Class.forName("ch.qos.logback.core.Context"));
-            setContextMethod.invoke(configurator, context);
-
-            // Reset the context: context.reset()
-            Method resetMethod = context.getClass().getMethod("reset");
-            resetMethod.invoke(context);
+            LOG.debug("Attempting to reload Logback configuration.");
+            
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+            JoranConfigurator configurator = new JoranConfigurator();
+            configurator.setContext(context);
+            context.reset();
 
             // Find the configuration file URL (e.g., logback.xml)
-            java.net.URL configUrl = this.getClass().getClassLoader().getResource("logback.xml");
+            URL configUrl = this.getClass().getClassLoader().getResource("logback.xml");
             if (configUrl == null) {
                 configUrl = this.getClass().getClassLoader().getResource("logback-test.xml");
             }
@@ -101,13 +79,18 @@ public class RangerLogLevelService {
                 throw new RuntimeException("Could not find logback.xml or logback-test.xml on the classpath.");
             }
 
-            // Configure: configurator.doConfigure(url)
-            Method doConfigureMethod = joranConfiguratorClass.getMethod("doConfigure", java.net.URL.class);
-            doConfigureMethod.invoke(configurator, configUrl);
+            // Configure using the found configuration file
+            configurator.doConfigure(configUrl);
 
             LOG.info("Successfully triggered Logback configuration reload from {}.", configUrl);
+        } catch (JoranException e) {
+            // Logback-specific error handling
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+            StatusPrinter.printInCaseOfErrorsOrWarnings(context);
+            LOG.error("Failed to reload Logback configuration", e);
+            throw new RuntimeException("Failed to reload Logback configuration", e);
         } catch (Exception e) {
-            LOG.error("Failed to reload Logback configuration using reflection", e);
+            LOG.error("Failed to reload Logback configuration", e);
             throw new RuntimeException("Failed to reload Logback configuration", e);
         }
     }
