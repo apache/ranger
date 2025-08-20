@@ -23,9 +23,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.json.JsonDateSerializer;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -90,6 +93,8 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
      * sync Source Attribute.
      */
     protected String syncSource;
+    @JsonSerialize(using = JsonDateSerializer.class)
+    protected Date lastLoginTime;
 
     /**
      * Configuration properties.
@@ -318,6 +323,7 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
         str += "userRoleList={" + userRoleList + "} ";
         str += "otherAttributes={" + otherAttributes + "} ";
         str += "syncSource={" + syncSource + "} ";
+        str += "lastLoginTime={" + lastLoginTime + "} ";
         str += "}";
         return str;
     }
@@ -384,5 +390,13 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
      */
     public void setSyncSource(final String syncSource) {
         this.syncSource = syncSource;
+    }
+
+    public Date getLastLoginTime() {
+        return lastLoginTime;
+    }
+
+    public void setLastLoginTime(Date lastLoginTime) {
+        this.lastLoginTime = lastLoginTime;
     }
 }

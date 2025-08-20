@@ -475,6 +475,18 @@ public class SessionMgr {
         }
     }
 
+    public Date getLastSuccessLoginAuthTimeByUserId(String loginId) {
+        XXAuthSession xXAuthSession = daoManager.getXXAuthSession().getLastSuccessLoginAuthSessionByUserId(loginId);
+
+        if (xXAuthSession != null) {
+            return authSessionService.populateViewBean(xXAuthSession).getAuthTime();
+        } else {
+            logger.info("Session cleaned up or  User logged in for first time");
+        }
+
+        return null;
+    }
+
     protected boolean validateUserSession(UserSessionBase userSession, String currentLoginId) {
         if (currentLoginId.equalsIgnoreCase(userSession.getXXPortalUser().getLoginId())) {
             return true;
