@@ -3445,7 +3445,11 @@ CREATE NONCLUSTERED INDEX [x_resource_up_time] ON [x_resource]
    [update_time] ASC
 )
 WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
-
+CREATE NONCLUSTERED INDEX [x_trx_log_v2_action] ON [x_trx_log_v2]
+(
+   [action] ASC
+)
+WITH (SORT_IN_TEMPDB = OFF,DROP_EXISTING = OFF,IGNORE_DUP_KEY = OFF,ONLINE = OFF) ON [PRIMARY]
 CREATE NONCLUSTERED INDEX [x_trx_log_v2_cr_time] ON [x_trx_log_v2]
 (
    [create_time] ASC

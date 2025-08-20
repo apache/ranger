@@ -87,6 +87,8 @@ public class RangerTrxLogV2Service {
 
         sortFields.add(new SortField("id", "obj.id", true, SortField.SORT_ORDER.DESC));
         sortFields.add(new SortField("createDate", "obj.createTime", true, SortField.SORT_ORDER.DESC));
+        sortFields.add(new SortField("addedByUserId", "obj.addedByUserId", true, SortField.SORT_ORDER.DESC));
+        sortFields.add(new SortField("action", "obj.action", true, SortField.SORT_ORDER.DESC));
     }
 
     public List<SearchField> getSearchFields() {
