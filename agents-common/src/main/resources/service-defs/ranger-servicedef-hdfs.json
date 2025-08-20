@@ -86,7 +86,7 @@
 			"mandatory": true,
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"1.For one Namenode Url, eg.<br>hdfs://&lt;host&gt;:&lt;port&gt;<br>2.For HA Namenode Urls(use , delimiter), eg.<br>hdfs://&lt;host&gt;:&lt;port&gt;,hdfs://&lt;host2&gt;:&lt;port2&gt;<br>\"}",
+			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"1. For a single NameNode URL, use:<br>hdfs://&lt;host&gt;:&lt;port&gt;<br><br>2. For HDFS High Availability (HA) setup, use the nameservice-based URL:<br>hdfs://&lt;nameservice&gt;<br><br>Note: Do not provide multiple NameNode URLs separated by commas. Instead, use the nameservice configured for your HDFS cluster.<br><br>You can confirm the correct value from the Hadoop configuration property <strong>fs.defaultFS</strong> in <em>core-site.xml</em>.\"}",
 			"label": "Namenode URL"
 		},
 
