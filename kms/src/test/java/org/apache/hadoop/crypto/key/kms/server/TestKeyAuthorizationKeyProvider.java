@@ -101,8 +101,8 @@ public class TestKeyAuthorizationKeyProvider {
     @Test
     public void testOpsWhenACLAttributeExists() throws Exception {
         final Configuration conf = new Configuration();
-        KeyProvider kp = new UserProvider.Factory().createProvider(new URI("user:///"), conf);
-        KeyACLs mock = mock(KeyACLs.class);
+        KeyProvider         kp   = new UserProvider.Factory().createProvider(new URI("user:///"), conf);
+        KeyACLs             mock = mock(KeyACLs.class);
         when(mock.isACLPresent("testKey", KeyOpType.MANAGEMENT)).thenReturn(true);
         when(mock.isACLPresent("testKey", KeyOpType.GENERATE_EEK)).thenReturn(true);
         when(mock.isACLPresent("testKey", KeyOpType.DECRYPT_EEK)).thenReturn(true);
@@ -207,8 +207,8 @@ public class TestKeyAuthorizationKeyProvider {
     @Test
     public void testDecryptWithKeyVersionNameKeyMismatch() throws Exception {
         final Configuration conf = new Configuration();
-        KeyProvider kp = new UserProvider.Factory().createProvider(new URI("user:///"), conf);
-        KeyACLs mock = mock(KeyACLs.class);
+        KeyProvider         kp   = new UserProvider.Factory().createProvider(new URI("user:///"), conf);
+        KeyACLs             mock = mock(KeyACLs.class);
         when(mock.isACLPresent("testKey", KeyOpType.MANAGEMENT)).thenReturn(true);
         when(mock.isACLPresent("testKey", KeyOpType.GENERATE_EEK)).thenReturn(true);
         when(mock.isACLPresent("testKey", KeyOpType.DECRYPT_EEK)).thenReturn(true);

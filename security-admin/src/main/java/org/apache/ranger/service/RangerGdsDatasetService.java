@@ -90,6 +90,7 @@ public class RangerGdsDatasetService extends RangerGdsBaseModelService<XXGdsData
         trxLogAttrs.put("labels",      new VTrxLogAttr("labels", "Labels"));
         trxLogAttrs.put("keywords",    new VTrxLogAttr("keywords", "keywords"));
         trxLogAttrs.put("description", new VTrxLogAttr("description", "Description"));
+        trxLogAttrs.put("validitySchedule", new VTrxLogAttr("validitySchedule", "Validity Schedule"));
     }
 
     @Override

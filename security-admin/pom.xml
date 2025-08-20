@@ -28,7 +28,6 @@
     <description>security-admin-tool java web application</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <skipJSTests>false</skipJSTests>
     </properties>
     <dependencies>
         <dependency>
@@ -182,7 +181,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>com.webcohesion.enunciate</groupId>
             <artifactId>enunciate-core-annotations</artifactId>
@@ -903,40 +901,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>replacer</artifactId>
-                <version>1.5.3</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>replace</goal>
-                        </goals>
-                        <phase>prepare-package</phase>
-                        <configuration>
-                            <basedir>${project.build.directory}/${project.build.finalName}</basedir>
-                            <includes>
-                                <include>backbone-index.html</include>
-                                <include>scripts/Init.js</include>
-                            </includes>
-                            <replacements>
-                                <replacement>
-                                    <token>build.version</token>
-                                    <value>${project.version}</value>
-                                </replacement>
-                                <replacement>
-                                    <token>(?m)\&lt;\!-- *dev *--\&gt;(.*)$</token>
-                                    <value>\&lt;\!-- dev $1 --\&gt;</value>
-                                </replacement>
-                                <replacement>
-                                    <token>\&lt;\!-- *prod *(.*) *--\&gt;</token>
-                                    <value>\&lt;\!-- prod --\&gt;$1</value>
-                                </replacement>
-                            </replacements>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>com.webcohesion.enunciate</groupId>
                 <artifactId>enunciate-maven-plugin</artifactId>
                 <configuration>
@@ -961,44 +925,6 @@
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>2.7</version>
                 <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <phase>validate</phase>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/jsmain</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/src/main/webapp</directory>
-                                    <includes>
-                                        <include>package.json</include>
-                                        <include>package-lock.json</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-js-test-resources</id>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <phase>validate</phase>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/jstest</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${basedir}/src/test/javascript</directory>
-                                    <includes>
-                                        <include>package.json</include>
-                                        <include>package-lock.json</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
                     <!-- react-webapp copy-resources execution start -->
                     <execution>
                         <id>copy-resources-react-webapp</id>
@@ -1101,82 +1027,6 @@
                     <installDirectory>${project.build.directory}</installDirectory>
                 </configuration>
                 <executions>
-                    <execution>
-                        <id>install node and npm</id>
-                        <goals>
-                            <goal>install-node-and-npm</goal>
-                        </goals>
-                        <phase>process-resources</phase>
-                        <configuration>
-                            <nodeVersion>v8.12.0</nodeVersion>
-                            <npmVersion>6.4.1</npmVersion>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm install for packaging</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>prepare-package</phase>
-                        <configuration>
-                            <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
-                            <arguments>install</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm run r.js</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>prepare-package</phase>
-                        <configuration>
-                            <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
-                            <arguments>run r.js -- -o ../${project.build.finalName}/minify.build.js</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>npm install for tests</id>
-                        <goals>
-                            <goal>npm</goal>
-                        </goals>
-                        <phase>test</phase>
-                        <configuration>
-                            <skip>${skipJSTests}</skip>
-                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
-                            <arguments>install</arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>karma dev</id>
-                        <goals>
-                            <goal>karma</goal>
-                        </goals>
-                        <phase>test</phase>
-                        <configuration>
-                            <environmentVariables>
-                                <OPENSSL_CONF>/etc/ssl/</OPENSSL_CONF>
-                            </environmentVariables>
-                            <skip>${skipJSTests}</skip>
-                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
-                            <karmaConfPath>../../src/test/javascript/karma-dev.conf.js</karmaConfPath>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>karma prd</id>
-                        <goals>
-                            <goal>karma</goal>
-                        </goals>
-                        <phase>integration-test</phase>
-                        <configuration>
-                            <environmentVariables>
-                                <buildDir>${project.build.finalName}</buildDir>
-                                <OPENSSL_CONF>/etc/ssl/</OPENSSL_CONF>
-                            </environmentVariables>
-                            <skip>${skipJSTests}</skip>
-                            <workingDirectory>${project.build.directory}/jstest</workingDirectory>
-                            <karmaConfPath>../../src/test/javascript/karma-prd.conf.js</karmaConfPath>
-                        </configuration>
-                    </execution>
                     <!-- react-webapp frontend-maven-plugin start -->
                     <execution>
                         <id>install node and npm for react-webapp</id>

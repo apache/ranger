@@ -57,6 +57,7 @@
 							<include>org.apache.ranger:credentialbuilder</include>
 							<include>org.apache.ranger:ranger-plugins-cred</include>
 							<include>org.apache.ranger:ranger-plugins-common</include>
+							<include>org.apache.ranger:ugsync-util</include>
 							<include>org.apache.ranger:ranger-util</include>
 							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 							<include>com.fasterxml.jackson.core:jackson-annotations:jar:${atlas.jackson.version}</include>

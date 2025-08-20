@@ -26,7 +26,6 @@ import org.apache.hadoop.util.Time;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -175,9 +174,6 @@ public class XUserMgr extends XUserMgrBase {
 
     @Autowired
     ServiceDBStore svcStore;
-
-    @Autowired
-    GUIDUtil guidUtil;
 
     @Autowired
     XUgsyncAuditInfoService xUgsyncAuditInfoService;

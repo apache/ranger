@@ -24,7 +24,7 @@ import java.sql.Statement;
 import java.util.Properties;
 
 public final class DerbyTestUtils {
-    private DerbyTestUtils(){
+    private DerbyTestUtils() {
     }
 
     public static void startDerby() throws Exception {

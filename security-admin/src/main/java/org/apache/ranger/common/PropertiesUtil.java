@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -161,6 +162,22 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
         ret.putAll(propertiesMap);
 
         return ret;
+    }
+
+    public static Map<String, String> getConfigMapWithPrefix(String confPrefix) {
+        Map<String, String> configMap = new HashMap<>();
+
+        for (Map.Entry<String, String> entry : getPropertiesMap().entrySet()) {
+            String key = entry.getKey();
+
+            if (key.startsWith(confPrefix)) {
+                if (StringUtils.isNotEmpty(entry.getValue())) {
+                    configMap.put(key, entry.getValue());
+                }
+            }
+        }
+
+        return configMap;
     }
 
     @Override
@@ -472,7 +489,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
                     if (!StringUtils.isEmpty(rangerJpaJdbcUrl)) {
                         if (rangerJpaJdbcUrl.contains("?")) {
                             rangerJpaJdbcUrlExtraArgs = rangerJpaJdbcUrl.substring(rangerJpaJdbcUrl.indexOf("?") + 1);
-                            rangerJpaJdbcUrl            = rangerJpaJdbcUrl.substring(0, rangerJpaJdbcUrl.indexOf("?"));
+                            rangerJpaJdbcUrl          = rangerJpaJdbcUrl.substring(0, rangerJpaJdbcUrl.indexOf("?"));
                         }
 
                         if (RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_MYSQL) {
@@ -514,6 +531,8 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
             props.put(RangerCommonConstants.PROP_COOKIE_NAME, cookieName);
         }
 
+        updateRangerPluginsPropertiesForUserGroup(props);
+
         keySet = props.keySet();
 
         for (Object key : keySet) {
@@ -525,5 +544,88 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
         }
 
         super.processProperties(beanFactory, props);
+    }
+
+    private void updateRangerPluginsPropertiesForUserGroup(Properties props) {
+        if (propertiesMap != null) {
+            String userCaseConv  = propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM);
+            String groupCaseConv = propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM);
+            String userHandler   = propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER);
+            String groupHandler  = propertiesMap.get(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER);
+
+            if (StringUtils.isEmpty(userCaseConv)) {
+                userCaseConv = UgsyncCommonConstants.DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE;
+            }
+
+            if (StringUtils.isEmpty(groupCaseConv)) {
+                groupCaseConv = UgsyncCommonConstants.DEFAULT_UGSYNC_GROUPNAME_CASE_CONVERSION_VALUE;
+            }
+
+            if (StringUtils.isEmpty(userHandler)) {
+                userHandler = UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_USERNAME_HANDLER;
+            }
+
+            if (StringUtils.isEmpty(groupHandler)) {
+                groupHandler = UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER;
+            }
+
+            Map<String, String> userNameRegex = getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME);
+            Map<String, String> groupNameRegex = getAllRegexPatternsConfig(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME);
+
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER, userHandler);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER, groupHandler);
+            propertiesMap.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR, getRegexSeparator());
+            propertiesMap.putAll(userNameRegex);
+            propertiesMap.putAll(groupNameRegex);
+
+            props.put(RangerCommonConstants.PLUGINS_CONF_USERNAME_CASE_CONVERSION_PARAM, userCaseConv);
+            props.put(RangerCommonConstants.PLUGINS_CONF_GROUPNAME_CASE_CONVERSION_PARAM, groupCaseConv);
+            props.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_USERNAME_HANDLER, userHandler);
+            props.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_GROUPNAME_HANDLER, groupHandler);
+            props.put(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR, getRegexSeparator());
+            props.putAll(userNameRegex);
+            props.putAll(groupNameRegex);
+        }
+    }
+
+    private static String getRegexSeparator() {
+        String ret = UgsyncCommonConstants.DEFAULT_MAPPING_SEPARATOR;
+        String val = PropertiesUtil.getProperty(RangerCommonConstants.PLUGINS_CONF_MAPPING_SEPARATOR);
+
+        if (StringUtils.isNotEmpty(val)) {
+            if (val.length() == 1) {
+                ret = val;
+            } else {
+                LOG.warn("More than one character found in RegEx Separator '{}', using default RegEx Separator '{}'", val, ret);
+            }
+        }
+
+        LOG.info("Using {} as the RegEx Separator", ret);
+
+        return ret;
+    }
+
+    private static Map<String, String> getAllRegexPatternsConfig(String baseProperty) {
+        Map<String, String> regexPatterns = new HashMap<>();
+        String              baseRegex     = PropertiesUtil.getProperty(baseProperty);
+
+        if (baseRegex != null) {
+            regexPatterns.put(baseProperty, baseRegex);
+
+            for (int i = 1; true; i++) {
+                String nextProperty = baseProperty + "." + i;
+                String nextRegex    = PropertiesUtil.getProperty(nextProperty);
+
+                if (nextRegex == null) {
+                    break;
+                }
+
+                regexPatterns.put(nextProperty, nextRegex);
+            }
+        }
+
+        return regexPatterns;
     }
 }

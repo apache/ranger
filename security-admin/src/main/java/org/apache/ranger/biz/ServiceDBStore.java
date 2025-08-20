@@ -222,147 +222,113 @@ import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceDBStore.class);
-
-    public static final String  SERVICE_ADMIN_USERS         = "service.admin.users";
-    public static final String  SERVICE_ADMIN_GROUPS        = "service.admin.groups";
-    public static final String  GDS_SERVICE_NAME            = "_gds";
-    public static final String  CRYPT_ALGO                  = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
-    public static final String  ENCRYPT_KEY                 = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
-    public static final String  SALT                        = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
-    public static final Integer ITERATION_COUNT             = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
-    public static final String  RANGER_PLUGIN_AUDIT_FILTERS = "ranger.plugin.audit.filters";
-    public static final String  HIDDEN_PASSWORD_STR         = "*****";
-    public static final String  CONFIG_KEY_PASSWORD         = "password";
-    public static final String  ACCESS_TYPE_DECRYPT_EEK     = "decrypteek";
-    public static final String  ACCESS_TYPE_GENERATE_EEK    = "generateeek";
-    public static final String  ACCESS_TYPE_GET_METADATA    = "getmetadata";
-
-    private static final String POLICY_ALLOW_EXCLUDE        = "Policy Allow:Exclude";
-    private static final String POLICY_ALLOW_INCLUDE        = "Policy Allow:Include";
-    private static final String POLICY_DENY_EXCLUDE         = "Policy Deny:Exclude";
-    private static final String POLICY_DENY_INCLUDE         = "Policy Deny:Include";
-    private static final String POLICY_TYPE_ACCESS          = "Access";
-    private static final String POLICY_TYPE_DATAMASK        = "Masking";
-    private static final String POLICY_TYPE_ROWFILTER       = "Row Level Filter";
-    private static final String HOSTNAME                    = "Host name";
-    private static final String USER_NAME                   = "Exported by";
-    private static final String RANGER_VERSION              = "Ranger apache version";
-    private static final String TIMESTAMP                   = "Export time";
-    private static final String EXPORT_COUNT                = "Exported count";
-    private static final String SERVICE_CHECK_USER          = "service.check.user";
-    private static final String AMBARI_SERVICE_CHECK_USER   = "ambari.service.check.user";
-    private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
-    private static final String LINE_SEPARATOR              = "\n";
-    private static final String FILE_HEADER                 = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
-    private static final String COMMA_DELIMITER             = "|";
-
-    private static final String  DEFAULT_CSV_SANITIZATION_PATTERN = "^[=+\\-@\\t\\r]";
-    private static final Pattern CSV_SANITIZATION_PATTERN = Pattern.compile(PropertiesUtil.getProperty("ranger.admin.csv.sanitization.pattern", DEFAULT_CSV_SANITIZATION_PATTERN));
-
-    private static final Comparator<RangerPolicyDelta> POLICY_DELTA_ID_COMPARATOR = new RangerPolicyDeltaComparator();
-
-    public static boolean SUPPORTS_POLICY_DELTAS;
-    public static boolean SUPPORTS_IN_PLACE_POLICY_UPDATES;
-    public static Integer RETENTION_PERIOD_IN_DAYS     = 7;
-    public static Integer TAG_RETENTION_PERIOD_IN_DAYS = 3;
-    public static boolean SUPPORTS_PURGE_LOGIN_RECORDS;
-    public static Integer LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS;
-    public static boolean SUPPORTS_PURGE_TRANSACTION_RECORDS;
-    public static Integer TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS;
-    public static boolean SUPPORTS_PURGE_POLICY_EXPORT_LOGS;
-    public static Integer POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS;
-
-    private static String  LOCAL_HOSTNAME;
-    private static boolean isRolesDownloadedByService;
-
-    private static volatile boolean legacyServiceDefsInitDone;
-
+    public static final     String                        SERVICE_ADMIN_USERS               = "service.admin.users";
+    public static final     String                        SERVICE_ADMIN_GROUPS              = "service.admin.groups";
+    public static final     String                        GDS_SERVICE_NAME                  = "_gds";
+    public static final     String                        CRYPT_ALGO                        = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
+    public static final     String                        ENCRYPT_KEY                       = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
+    public static final     String                        SALT                              = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
+    public static final     Integer                       ITERATION_COUNT                   = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
+    public static final     String                        RANGER_PLUGIN_AUDIT_FILTERS       = "ranger.plugin.audit.filters";
+    public static final     String                        RANGER_PLUGINS_CONFIG_CONF_PREFIX = "ranger.plugins.conf.";
+    public static final     String                        HIDDEN_PASSWORD_STR               = "*****";
+    public static final     String                        CONFIG_KEY_PASSWORD               = "password";
+    public static final     String                        ACCESS_TYPE_DECRYPT_EEK           = "decrypteek";
+    public static final     String                        ACCESS_TYPE_GENERATE_EEK          = "generateeek";
+    public static final     String                        ACCESS_TYPE_GET_METADATA          = "getmetadata";
+    private static final    Logger                        LOG                               = LoggerFactory.getLogger(ServiceDBStore.class);
+    private static final    String                        POLICY_ALLOW_EXCLUDE              = "Policy Allow:Exclude";
+    private static final    String                        POLICY_ALLOW_INCLUDE              = "Policy Allow:Include";
+    private static final    String                        POLICY_DENY_EXCLUDE               = "Policy Deny:Exclude";
+    private static final    String                        POLICY_DENY_INCLUDE               = "Policy Deny:Include";
+    private static final    String                        POLICY_TYPE_ACCESS                = "Access";
+    private static final    String                        POLICY_TYPE_DATAMASK              = "Masking";
+    private static final    String                        POLICY_TYPE_ROWFILTER             = "Row Level Filter";
+    private static final    String                        HOSTNAME                          = "Host name";
+    private static final    String                        USER_NAME                         = "Exported by";
+    private static final    String                        RANGER_VERSION                    = "Ranger apache version";
+    private static final    String                        TIMESTAMP                         = "Export time";
+    private static final    String                        EXPORT_COUNT                      = "Exported count";
+    private static final    String                        SERVICE_CHECK_USER                = "service.check.user";
+    private static final    String                        AMBARI_SERVICE_CHECK_USER         = "ambari.service.check.user";
+    private static final    String                        RANGER_PLUGIN_CONFIG_PREFIX       = "ranger.plugin.";
+    private static final    String                        LINE_SEPARATOR                    = "\n";
+    private static final    String                        FILE_HEADER                       = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
+    private static final    String                        COMMA_DELIMITER                   = "|";
+    private static final    String                        DEFAULT_CSV_SANITIZATION_PATTERN  = "^[=+\\-@\\t\\r]";
+    private static final    Pattern                       CSV_SANITIZATION_PATTERN          = Pattern.compile(PropertiesUtil.getProperty("ranger.admin.csv.sanitization.pattern", DEFAULT_CSV_SANITIZATION_PATTERN));
+    private static final    Comparator<RangerPolicyDelta> POLICY_DELTA_ID_COMPARATOR        = new RangerPolicyDeltaComparator();
+    public static           boolean                       SUPPORTS_POLICY_DELTAS;
+    public static           boolean                       SUPPORTS_IN_PLACE_POLICY_UPDATES;
+    public static           Integer                       RETENTION_PERIOD_IN_DAYS          = 7;
+    public static           Integer                       TAG_RETENTION_PERIOD_IN_DAYS      = 3;
+    public static           boolean                       SUPPORTS_PURGE_LOGIN_RECORDS;
+    public static           Integer                       LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS;
+    public static           boolean                       SUPPORTS_PURGE_TRANSACTION_RECORDS;
+    public static           Integer                       TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS;
+    public static           boolean                       SUPPORTS_PURGE_POLICY_EXPORT_LOGS;
+    public static           Integer                       POLICY_EXPORT_LOGS_RETENTION_PERIOD_IN_DAYS;
+    private static          String                        LOCAL_HOSTNAME;
+    private static          boolean                       isRolesDownloadedByService;
+    private static volatile boolean                       legacyServiceDefsInitDone;
+    private final           String                        optionUgsyncConfigChange          = "ugsyncConfigChange";
     @Autowired
-    RangerServiceDefService serviceDefService;
-
+    RangerServiceDefService                     serviceDefService;
     @Autowired
-    RangerDaoManager daoMgr;
-
+    RangerDaoManager                            daoMgr;
     @Autowired
-    RESTErrorUtil restErrorUtil;
-
+    RESTErrorUtil                               restErrorUtil;
     @Autowired
-    RangerServiceService svcService;
-
+    RangerServiceService                        svcService;
     @Autowired
-    StringUtil stringUtil;
-
+    StringUtil                                  stringUtil;
     @Autowired
-    RangerAuditFields<?> rangerAuditFields;
-
+    RangerAuditFields<?>                        rangerAuditFields;
     @Autowired
-    RangerPolicyService policyService;
-
+    RangerPolicyService                         policyService;
     @Autowired
     RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
-
     @Autowired
-    XUserService xUserService;
-
+    XUserService                                xUserService;
     @Autowired
-    XUserMgr xUserMgr;
-
+    XUserMgr                                    xUserMgr;
     @Autowired
-    XGroupService xGroupService;
-
+    XGroupService                               xGroupService;
     @Autowired
-    PolicyRefUpdater policyRefUpdater;
-
+    PolicyRefUpdater                            policyRefUpdater;
     @Autowired
-    RangerDataHistService dataHistService;
-
+    RangerDataHistService                       dataHistService;
     @Autowired
     @Qualifier(value = "transactionManager")
-    PlatformTransactionManager txManager;
-
+    PlatformTransactionManager                  txManager;
     @Autowired
-    RangerBizUtil bizUtil;
-
+    RangerBizUtil                               bizUtil;
     @Autowired
-    RangerPolicyWithAssignedIdService assignedIdPolicyService;
-
+    RangerPolicyWithAssignedIdService           assignedIdPolicyService;
     @Autowired
-    RangerServiceWithAssignedIdService svcServiceWithAssignedId;
-
+    RangerServiceWithAssignedIdService          svcServiceWithAssignedId;
     @Autowired
-    RangerServiceDefWithAssignedIdService svcDefServiceWithAssignedId;
-
+    RangerServiceDefWithAssignedIdService       svcDefServiceWithAssignedId;
     @Autowired
-    RangerFactory factory;
-
+    RangerFactory                               factory;
     @Autowired
-    JSONUtil jsonUtil;
-
+    JSONUtil                                    jsonUtil;
     @Autowired
-    ServiceMgr serviceMgr;
-
+    ServiceMgr                                  serviceMgr;
     @Autowired
-    AssetMgr assetMgr;
-
+    AssetMgr                                    assetMgr;
     @Autowired
-    RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
-
+    RangerTransactionSynchronizationAdapter     transactionSynchronizationAdapter;
     @Autowired
-    RangerSecurityZoneServiceService securityZoneService;
-
+    RangerSecurityZoneServiceService            securityZoneService;
     @Autowired
-    TagDBStore tagStore;
-
+    TagDBStore                                  tagStore;
     @Autowired
-    UserMgr userMgr;
-
+    UserMgr                                     userMgr;
     @Autowired
-    SecurityZoneDBStore securityZoneStore;
-
+    SecurityZoneDBStore                         securityZoneStore;
     @Autowired
-    GUIDUtil guidUtil;
-
+    GUIDUtil                                    guidUtil;
     private boolean              populateExistingBaseFields;
     private ServicePredicateUtil predicateUtil;
     private RangerAdminConfig    config;
@@ -374,9 +340,9 @@ public class ServiceDBStore extends AbstractServiceStore {
         Long             nextVersion = 1L;
         Date             now         = new Date();
 
-        XXServiceVersionInfoDao serviceVersionInfoDao = daoMgr.getXXServiceVersionInfo();
-        XXServiceVersionInfo serviceVersionInfoDbObj  = serviceVersionInfoDao.findByServiceId(id);
-        XXService            service                  = daoMgr.getXXService().getById(id);
+        XXServiceVersionInfoDao serviceVersionInfoDao   = daoMgr.getXXServiceVersionInfo();
+        XXServiceVersionInfo    serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(id);
+        XXService               service                 = daoMgr.getXXService().getById(id);
 
         if (serviceVersionInfoDbObj != null) {
             if (versionType == VERSION_TYPE.POLICY_VERSION) {
@@ -1187,7 +1153,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             service = svcService.update(service);
 
-            if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
+            Boolean isUgsyncConfigChange = options != null && options.get(optionUgsyncConfigChange) != null ? (Boolean) options.get(optionUgsyncConfigChange) : Boolean.FALSE;
+            if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged || isUgsyncConfigChange) {
                 updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null, false);
             }
         }
@@ -1818,6 +1785,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
+        LOG.debug("getServicePoliciesIfUpdated({}, {}, {}): configs = {}", serviceName, lastKnownVersion, needsBackwardCompatibility, ret == null ? null : ret.getServiceConfig());
+
         LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated({}, {}, {}): count={}", serviceName, lastKnownVersion, needsBackwardCompatibility, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size());
 
         return ret;
@@ -1841,6 +1810,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS, cachedPolicyVersion);
         }
+        LOG.debug("<== ServiceDBStore.getServicePolicyDeltas({}, {}): ret = {}", serviceName, lastKnownVersion, ret == null ? ret : ret.getServiceConfig());
 
         return ret;
     }
@@ -1909,6 +1879,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
     @Override
     public Map<String, String> getServiceConfigForPlugin(Long serviceId) {
+        LOG.debug("==> ServiceDBStore.getServiceConfigForPlugin({})", serviceId);
+
         Map<String, String>      configs             = new HashMap<>();
         List<XXServiceConfigMap> xxServiceConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(serviceId);
 
@@ -1920,6 +1892,13 @@ public class ServiceDBStore extends AbstractServiceStore {
             }
         }
 
+        Map<String, String> rangerPluginsPrefixConfig = PropertiesUtil.getConfigMapWithPrefix(RANGER_PLUGINS_CONFIG_CONF_PREFIX);
+
+        if (MapUtils.isNotEmpty(rangerPluginsPrefixConfig)) {
+            configs.putAll(rangerPluginsPrefixConfig);
+        }
+
+        LOG.debug("<== ServiceDBStore.getServiceConfigForPlugin({}): configs = {}", serviceId, configs.keySet());
         return configs;
     }
 
@@ -2810,8 +2789,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                 String jsonStr = xConfigMap.getConfigvalue() != null ? xConfigMap.getConfigvalue() : null;
 
                 if (StringUtils.isNotBlank(jsonStr)) {
-                    List<AuditFilter> auditFilters  = JsonUtils.jsonToAuditFilterList(jsonStr);
-                    int               filterCount   = auditFilters != null ? auditFilters.size() : 0;
+                    List<AuditFilter> auditFilters = JsonUtils.jsonToAuditFilterList(jsonStr);
+                    int               filterCount  = auditFilters != null ? auditFilters.size() : 0;
 
                     if (filterCount > 0) {
                         String userName  = null;
@@ -4078,6 +4057,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         if (ret != null) {
             ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
             ret.setAuditMode(auditMode);
+            ret.setServiceConfig(getServiceConfigForPlugin(serviceDbObj.getId()));
 
             if (ret.getTagPolicies() != null) {
                 ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
@@ -4091,6 +4071,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
                 tagPolicies.setServiceId(tagServiceDbObj.getId());
                 tagPolicies.setServiceName(tagServiceDbObj.getName());
+                tagPolicies.setServiceConfig(getServiceConfigForPlugin(tagServiceDbObj.getId()));
                 tagPolicies.setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
                 tagPolicies.setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
                 tagPolicies.setPolicies(getServicePoliciesFromDb(tagServiceDbObj));
@@ -4104,6 +4085,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             ret.setServiceId(serviceDbObj.getId());
             ret.setServiceName(serviceDbObj.getName());
+            ret.setServiceConfig(getServiceConfigForPlugin(ret.getServiceId()));
             ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
             ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
             ret.setPolicies(policies);
@@ -4111,6 +4093,8 @@ public class ServiceDBStore extends AbstractServiceStore {
             ret.setAuditMode(auditMode);
             ret.setTagPolicies(tagPolicies);
         }
+
+        LOG.debug("ServiceDBStore.getServicePolicies({}, {}): ret = {}", serviceName, lastKnownVersion, ret == null ? null : ret.getServiceConfig());
 
         LOG.debug("<== ServiceDBStore.getServicePolicies({}, {}): count={}, delta-count={}", serviceName, lastKnownVersion, (ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size(), (ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size());
 
@@ -4806,9 +4790,9 @@ public class ServiceDBStore extends AbstractServiceStore {
                 String               resKey         = resource.getKey();
                 RangerPolicyResource policyResource = resource.getValue();
                 List<String>         resvalueList   = policyResource.getValues();
-                String                isExcludes    = policyResource.getIsExcludes().toString();
-                String                isRecursive   = policyResource.getIsRecursive().toString();
-                String                resValue      = resvalueList.toString();
+                String               isExcludes     = policyResource.getIsExcludes().toString();
+                String               isRecursive    = policyResource.getIsRecursive().toString();
+                String               resValue       = resvalueList.toString();
 
                 sb.append(resourceKeyVal).append(" ").append(resKey).append("=").append(resValue);
                 sbIsExcludes.append(resourceKeyVal).append(" ").append(resKey).append("=[").append(isExcludes).append("]");
@@ -5086,10 +5070,10 @@ public class ServiceDBStore extends AbstractServiceStore {
         String                                     resourceKeyVal    = "";
         String                                     isRecursiveValue  = "";
         String                                     resKey;
-        StringBuilder                              sb            = new StringBuilder();
-        StringBuilder                              sbIsRecursive = new StringBuilder();
-        StringBuilder                              sbIsExcludes  = new StringBuilder();
-        Map<String, RangerPolicyResource>          resources     = policy.getResources();
+        StringBuilder                              sb                = new StringBuilder();
+        StringBuilder                              sbIsRecursive     = new StringBuilder();
+        StringBuilder                              sbIsExcludes      = new StringBuilder();
+        Map<String, RangerPolicyResource>          resources         = policy.getResources();
         RangerPolicy.RangerPolicyItemDataMaskInfo  dataMaskInfo;
         RangerPolicy.RangerPolicyItemRowFilterInfo filterInfo;
 
@@ -5103,9 +5087,9 @@ public class ServiceDBStore extends AbstractServiceStore {
                 RangerPolicyResource policyResource = resource.getValue();
                 List<String>         resvalueList   = policyResource.getValues();
 
-                isExcludes    = policyResource.getIsExcludes().toString();
-                isRecursive   = policyResource.getIsRecursive().toString();
-                resValue      = resvalueList.toString();
+                isExcludes  = policyResource.getIsExcludes().toString();
+                isRecursive = policyResource.getIsRecursive().toString();
+                resValue    = resvalueList.toString();
 
                 sb.append(resourceKeyVal).append("; ").append(resKey).append("=").append(resValue);
                 sbIsExcludes.append(resourceKeyVal).append("; ").append(resKey).append("=[").append(isExcludes).append("]");
@@ -5379,7 +5363,7 @@ public class ServiceDBStore extends AbstractServiceStore {
         Set<Long>               processedSvcIdsForRole = new HashSet<>();
         Set<Long>               processedPolicies      = new HashSet<>();
         List<XXPolicy>          xPolList               = null;
-        String                   serviceName           = searchFilter.getParam(ServiceREST.PARAM_SERVICE_NAME);
+        String                  serviceName            = searchFilter.getParam(ServiceREST.PARAM_SERVICE_NAME);
 
         if (StringUtils.isNotBlank(serviceName)) {
             Long serviceId = getRangerServiceByName(serviceName.trim());
@@ -5429,8 +5413,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             groupNames.add(RangerConstants.GROUP_PUBLIC);
 
-            Set<Long>      processedSvcIdsForGroup = new HashSet<>();
-            Set<String>    processedGroupsName     = new HashSet<>();
+            Set<Long>   processedSvcIdsForGroup = new HashSet<>();
+            Set<String> processedGroupsName     = new HashSet<>();
 
             for (String groupName : groupNames) {
                 searchFilter.setParam("group", groupName);
@@ -5554,8 +5538,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                 getContainingRoles(xxRole.getId(), allContainedRoles);
             }
 
-            Set<String>    roleNames         = getRoleNames(allContainedRoles);
-            Set<String>    processedRoleName = new HashSet<>();
+            Set<String> roleNames         = getRoleNames(allContainedRoles);
+            Set<String> processedRoleName = new HashSet<>();
 
             for (String roleName : roleNames) {
                 searchFilter.setParam("role", roleName);
@@ -6028,8 +6012,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
             if (repoTypeList != null) {
                 for (RangerServiceDef repoType : repoTypeList) {
-                    String                         name                = repoType.getName();
-                    List<RangerContextEnricherDef> contextEnrichers    = repoType.getContextEnrichers();
+                    String                         name             = repoType.getName();
+                    List<RangerContextEnricherDef> contextEnrichers = repoType.getContextEnrichers();
 
                     if (contextEnrichers != null && !contextEnrichers.isEmpty()) {
                         serviceWithContextEnrichers.setServiceName(name);
@@ -6196,9 +6180,9 @@ public class ServiceDBStore extends AbstractServiceStore {
         Iterable<RangerServiceDef> repoTypeGet          = paginatedSvcDefs.getList();
 
         for (RangerServiceDef repoType : repoTypeGet) {
-            long             id                     = repoType.getId();
-            String           serviceRepoName        = repoType.getName();
-            SearchCriteria   searchCriteriaWithType = new SearchCriteria();
+            long           id                     = repoType.getId();
+            String         serviceRepoName        = repoType.getName();
+            SearchCriteria searchCriteriaWithType = new SearchCriteria();
 
             searchCriteriaWithType.getParamList().put("repoType", id);
             searchCriteriaWithType.getParamList().put("accessResult", accessResult);
