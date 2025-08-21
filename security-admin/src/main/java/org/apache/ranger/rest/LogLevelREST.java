@@ -1,0 +1,174 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.ranger.rest;
+
+import org.apache.ranger.biz.RangerLogLevelService;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+/**
+ * REST API for logging-related operations.
+ * These endpoints require ROLE_SYS_ADMIN role as they perform system-level operations.
+ */
+@Path("loggers")
+@Component
+@Scope("singleton")
+public class LogLevelREST {
+    private static final Logger LOG = LoggerFactory.getLogger(LogLevelREST.class);
+
+    @Inject
+    RangerLogLevelService logLevelService;
+
+    @Inject
+    RESTErrorUtil restErrorUtil;
+
+    /**
+     * An endpoint to dynamically reload the logging configuration from the
+     * logback properties file on the classpath.
+     * 
+     * This operation requires ROLE_SYS_ADMIN role as it affects system-wide logging configuration.
+     *
+     * @return An HTTP response indicating success or failure.
+     */
+    @POST
+    @Path("/reload")
+    @Produces("application/json")
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public Response reloadLogConfiguration() {
+        try {
+            logLevelService.reloadLogConfiguration();
+            return Response.ok("Log configuration reloaded successfully.").build();
+        } catch (Exception e) {
+            LOG.error("Error reloading Log configuration", e);
+            throw restErrorUtil.createRESTException(e.getMessage(), MessageEnums.ERROR_SYSTEM);
+        }
+    }
+
+    /**
+     * An endpoint to set the log level for a specific class or package.
+     * 
+     * This operation requires ROLE_SYS_ADMIN role as it affects system logging behavior
+     * and can impact performance and security monitoring.
+     *
+     * @param request The request containing loggerName and logLevel
+     * @return An HTTP response indicating success or failure.
+     */
+    @POST
+    @Path("/set-level")
+    @Consumes("application/json")
+    @Produces("application/json")
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public Response setLogLevel(LogLevelRequest request) {
+        try {
+            // Validate input parameters
+            if (request == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Request body is required")
+                        .build();
+            }
+            
+            if (request.getLoggerName() == null || request.getLoggerName().trim().isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("loggerName is required")
+                        .build();
+            }
+            
+            if (request.getLogLevel() == null || request.getLogLevel().trim().isEmpty()) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity("logLevel is required")
+                        .build();
+            }
+
+            LOG.info("Setting log level for logger '{}' to '{}'", 
+                    request.getLoggerName(), request.getLogLevel());
+            
+            // Call the service to set the log level
+            String result = logLevelService.setLogLevel(
+                request.getLoggerName().trim(), 
+                request.getLogLevel().trim()
+            );
+            
+            return Response.ok(result).build();
+            
+        } catch (IllegalArgumentException e) {
+            LOG.warn("Invalid parameters for setting log level: {}", e.getMessage());
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invalid parameters: " + e.getMessage())
+                    .build();
+        } catch (UnsupportedOperationException e) {
+            LOG.error("Unsupported operation for setting log level: {}", e.getMessage());
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .entity("Service not available: " + e.getMessage())
+                    .build();
+        } catch (Exception e) {
+            LOG.error("Error setting log level for request: {}", request, e);
+            throw restErrorUtil.createRESTException(e.getMessage(), MessageEnums.ERROR_SYSTEM);
+        }
+    }
+
+    /**
+     * Request class for JSON payload.
+     */
+    public static class LogLevelRequest {
+        private String loggerName;
+        private String logLevel;
+
+        public LogLevelRequest() {
+            // Default constructor for JSON deserialization
+        }
+
+        public LogLevelRequest(String loggerName, String logLevel) {
+            this.loggerName = loggerName;
+            this.logLevel = logLevel;
+        }
+
+        public String getLoggerName() {
+            return loggerName;
+        }
+
+        public void setLoggerName(String loggerName) {
+            this.loggerName = loggerName;
+        }
+
+        public String getLogLevel() {
+            return logLevel;
+        }
+
+        public void setLogLevel(String logLevel) {
+            this.logLevel = logLevel;
+        }
+
+        @Override
+        public String toString() {
+            return "LogLevelRequest{" +
+                    "loggerName='" + loggerName + '\'' +
+                    ", logLevel='" + logLevel + '\'' +
+                    '}';
+        }
+    }
+}
