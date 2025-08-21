@@ -124,11 +124,11 @@ then
     exit 1
 fi
 
-docker-compose --version > /dev/null 2>&1
+docker compose --version > /dev/null 2>&1
 
 if [ $? -ne 0 ]
 then
-    echo "ERROR: You must have a valid DOCKER installed on your system to do a docker build. (error running docker-compose command)"
+    echo "ERROR: You must have a valid DOCKER and Docker Compose V2 installed on your system to do a docker build. (error running docker compose command)"
     exit 1
 fi
 
@@ -182,11 +182,11 @@ then
         then
             cd ${RD_HOME}
 
-            echo "+ docker-compose -f docker-compose.ranger-build.yml down --remove-orphans"
-            docker-compose -f docker-compose.ranger-build.yml down --remove-orphans
+            echo "+ docker compose -f docker-compose.ranger-build.yml down --remove-orphans"
+            docker compose -f docker-compose.ranger-build.yml down --remove-orphans
 
-            echo "+ docker-compose -f docker-compose.ranger-build.yml up"
-            docker-compose -f docker-compose.ranger-build.yml up
+            echo "+ docker compose -f docker-compose.ranger-build.yml up"
+            docker compose -f docker-compose.ranger-build.yml up
             if [ $? -ne 0 ]
             then
                 echo "ERROR: Unable to complete RANGER build using DOCKER. Exiting ...."
@@ -210,7 +210,7 @@ fi
 
 cd ${RD_HOME}
 
-docker-compose ${OPT} ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
+docker compose ${OPT} ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
 
 echo
 echo "################### LIST OF DOCKER PROCESSES EXPOSING PORTS #####################"
