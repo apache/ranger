@@ -19,12 +19,13 @@
 
 package org.apache.ranger.biz;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 import org.slf4j.ILoggerFactory;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +38,7 @@ import java.net.URL;
 @Component
 public class RangerLogLevelService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RangerLogLevelService.class);
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RangerLogLevelService.class);
 
     /**
      * Reloads the logging configuration using only Logback.
@@ -55,6 +56,80 @@ public class RangerLogLevelService {
             String message = "Logback is the only supported logging mechanism. Detected unsupported SLF4J binding: " + loggerFactoryClassName;
             LOG.error(message);
             throw new UnsupportedOperationException(message);
+        }
+    }
+
+    /**
+     * Sets the log level for a specific class or package.
+     * 
+     * @param loggerName The name of the logger (class or package name)
+     * @param logLevel The log level to set (TRACE, DEBUG, INFO, WARN, ERROR, OFF)
+     * @return A message indicating the result of the operation
+     * @throws IllegalArgumentException if the log level is invalid
+     * @throws UnsupportedOperationException if Logback is not the active logging framework
+     */
+    public String setLogLevel(String loggerName, String logLevel) {
+        ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
+        String loggerFactoryClassName = iLoggerFactory.getClass().getName();
+
+        LOG.info("Setting log level for logger '{}' to '{}'", loggerName, logLevel);
+
+        if (loggerFactoryClassName.startsWith("ch.qos.logback.classic")) {
+            return setLogbackLogLevel(loggerName, logLevel);
+        } else {
+            String message = "Logback is the only supported logging mechanism. Detected unsupported SLF4J binding: " + loggerFactoryClassName;
+            LOG.error(message);
+            throw new UnsupportedOperationException(message);
+        }
+    }
+
+    /**
+     * Sets the Logback log level for a specific logger.
+     */
+    private String setLogbackLogLevel(String loggerName, String logLevel) {
+        try {
+            // Validate log level
+            Level level = validateAndParseLogLevel(logLevel);
+            
+            // Get the Logback LoggerContext
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+            
+            // Get or create the logger
+            Logger logger = context.getLogger(loggerName);
+            
+            // Set the log level
+            logger.setLevel(level);
+            
+            // Log the change
+            LOG.info("Successfully set log level for logger '{}' to '{}'", loggerName, level);
+            
+            return String.format("Log level for logger '%s' has been set to '%s'", loggerName, level);
+            
+        } catch (Exception e) {
+            LOG.error("Failed to set log level for logger '{}' to '{}'", loggerName, logLevel, e);
+            throw new RuntimeException("Failed to set log level for logger '" + loggerName + "' to '" + logLevel + "'", e);
+        }
+    }
+
+    /**
+     * Validates and parses the log level string.
+     * 
+     * @param logLevel The log level string to validate
+     * @return The corresponding Logback Level object
+     * @throws IllegalArgumentException if the log level is invalid
+     */
+    private Level validateAndParseLogLevel(String logLevel) {
+        if (logLevel == null || logLevel.trim().isEmpty()) {
+            throw new IllegalArgumentException("Log level cannot be null or empty");
+        }
+        
+        String normalizedLevel = logLevel.trim().toUpperCase();
+        
+        try {
+            return Level.valueOf(normalizedLevel);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid log level: '" + logLevel + "'. " +
+                    "Valid levels are: TRACE, DEBUG, INFO, WARN, ERROR, OFF");
         }
     }
 
