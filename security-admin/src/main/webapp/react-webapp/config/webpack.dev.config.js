@@ -37,16 +37,22 @@ const devConfig = merge(commonConfig, {
   devServer: {
     host: commonPaths.host,
     port: commonPaths.port,
+    hot: true, // Explicit hot reload
+    open: false, // Prevent auto-opening browser
     historyApiFallback: true,
+    allowedHosts: "all", // Security setting for v5
+    client: {
+      overlay: false // Restore pre-v5 behavior: errors in console only
+    },
     proxy: [
       {
         context: ["/service", "/login", "/logout"],
         target: `${commonPaths.proxyHost}:${commonPaths.proxyPort}`,
-        secure: false
+        secure: false,
+        changeOrigin: true // Better proxy handling
       }
     ]
-  },
-  plugins: [new webpack.HotModuleReplacementPlugin()]
+  }
 });
 
 module.exports = devConfig;
