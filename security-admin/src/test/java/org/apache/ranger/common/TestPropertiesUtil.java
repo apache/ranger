@@ -125,4 +125,38 @@ public class TestPropertiesUtil {
         Assert.assertEquals("write", actualRoles[1]);
         Assert.assertEquals("access", actualRoles[2]);
     }
+
+    @Test
+    public void testGetPropsContainsInsertedEntries() {
+        PropertiesUtil.getPropertiesMap().put("prop.alpha", "A");
+        PropertiesUtil.getPropertiesMap().put("prop.beta", "B");
+        java.util.Properties props = PropertiesUtil.getProps();
+        Assert.assertEquals("A", props.getProperty("prop.alpha"));
+        Assert.assertEquals("B", props.getProperty("prop.beta"));
+    }
+
+    @Test
+    public void testGetConfigMapWithPrefix() {
+        PropertiesUtil.getPropertiesMap().put("abc.key1", "v1");
+        PropertiesUtil.getPropertiesMap().put("abc.key2", "v2");
+        PropertiesUtil.getPropertiesMap().put("xyz.key3", "v3");
+        java.util.Map<String, String> res = PropertiesUtil.getConfigMapWithPrefix("abc.");
+        Assert.assertEquals(2, res.size());
+        Assert.assertEquals("v1", res.get("abc.key1"));
+        Assert.assertEquals("v2", res.get("abc.key2"));
+    }
+
+    @Test
+    public void testGetLongPropertyWithDefaultWhenKeyMissing() {
+        long def = 123L;
+        long val = PropertiesUtil.getLongProperty("missing.long.key", def);
+        Assert.assertEquals(def, val);
+    }
+
+    @Test
+    public void testGetPropertyStringListEmptyWhenKeyMissing() {
+        String[] arr = PropertiesUtil.getPropertyStringList("no.such.key");
+        Assert.assertNotNull(arr);
+        Assert.assertEquals(0, arr.length);
+    }
 }
