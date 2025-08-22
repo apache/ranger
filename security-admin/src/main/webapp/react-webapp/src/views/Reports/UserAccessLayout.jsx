@@ -774,15 +774,15 @@ function SearchByAsyncSelect(props) {
     let optsList = [];
     let serverResp = [];
 
-    if (inputValue) {
-      params["name"] = inputValue || "";
-    }
     if (searchByOptName.value == "searchByGroup") {
       apiUrl = "xusers/lookup/groups";
+      params["name"] = inputValue || "";
     } else if (searchByOptName.value == "searchByUser") {
       apiUrl = "xusers/lookup/users";
+      params["name"] = inputValue || "";
     } else if (searchByOptName.value == "searchByRole") {
-      apiUrl = "roles/roles";
+      apiUrl = "roles/lookup/roles/names";
+      params["roleNamePartial"] = inputValue || "";
     }
     if (!isEmpty(apiUrl)) {
       serverResp = await fetchApi({
@@ -790,23 +790,10 @@ function SearchByAsyncSelect(props) {
         params: params
       });
     }
-
-    if (searchByOptName.value == "searchByUser") {
-      optsList = serverResp.data.vXStrings.map((obj) => ({
-        label: obj["value"],
-        value: obj["value"]
-      }));
-    } else if (searchByOptName.value == "searchByRole") {
-      optsList = serverResp.data.roles.map(({ name }) => ({
-        label: name,
-        value: name
-      }));
-    } else {
-      optsList = serverResp.data.vXStrings.map((obj) => ({
-        label: obj["value"],
-        value: obj["value"]
-      }));
-    }
+    optsList = serverResp?.data?.vXStrings.map((obj) => ({
+      label: obj["value"],
+      value: obj["value"]
+    }));
 
     return optsList;
   };
