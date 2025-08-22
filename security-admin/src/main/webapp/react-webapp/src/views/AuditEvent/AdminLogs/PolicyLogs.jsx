@@ -20,7 +20,7 @@
 import React from "react";
 import { Table, Badge, Row, Col } from "react-bootstrap";
 import dateFormat from "dateformat";
-import { ClassTypes } from "../../../utils/XAEnums";
+import { ClassTypes } from "Utils/XAEnums";
 import {
   isEmpty,
   isEqual,
@@ -34,7 +34,7 @@ import {
   includes,
   split
 } from "lodash";
-import { currentTimeZone } from "../../../utils/XAUtils";
+import { currentTimeZone } from "Utils/XAUtils";
 
 export const PolicyLogs = ({ data, reportdata }) => {
   const {
@@ -46,6 +46,10 @@ export const PolicyLogs = ({ data, reportdata }) => {
     action,
     objectId
   } = data;
+
+  const policyZoneName = reportdata?.find(
+    (obj) => obj.attributeName === "Zone Name"
+  );
 
   /* CREATE LOGS VARIABLES */
   const createPolicyDetails = reportdata.filter((policy) => {
@@ -59,7 +63,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
       policy.attributeName != "Deny Exceptions" &&
       policy.attributeName != "Masked Policy Items" &&
       policy.attributeName != "Row level filter Policy Items" &&
-      policy.attributeName != "Validity Schedules"
+      policy.attributeName != "Validity Schedules" &&
+      policy.attributeName != "Zone Name"
     );
   });
 
@@ -369,11 +374,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   })
                 )
               : !isEmpty(filterdiff)
-                ? filterdiff.map((obj) => obj).join(", ")
-                : "--"
+              ? filterdiff.map((obj) => obj).join(", ")
+              : "--"
             : !isEmpty(oldvals)
-              ? oldvals.values.map((obj) => obj).join(", ")
-              : "--"}
+            ? oldvals.values.map((obj) => obj).join(", ")
+            : "--"}
         </>
       );
     };
@@ -408,11 +413,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
                   })
                 )
               : !isEmpty(filterdiff)
-                ? filterdiff.map((obj) => obj).join(", ")
-                : "--"
+              ? filterdiff.map((obj) => obj).join(", ")
+              : "--"
             : !isEmpty(newvals)
-              ? newvals.values.map((obj) => obj).join(", ")
-              : "--"}
+            ? newvals.values.map((obj) => obj).join(", ")
+            : "--"}
         </>
       );
     };
@@ -1059,8 +1064,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
             })
           )
         : filterdiff[index]?.permissions !== undefined
-          ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
-          : "<empty>";
+        ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
+        : "<empty>";
     };
 
     const getMaskingLabel = (DataMasklabel, dataMaskInfo, index) => {
@@ -1377,8 +1382,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
             })
           )
         : filterdiff[index]?.permissions !== undefined
-          ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
-          : "<empty>";
+        ? filterdiff[index]?.permissions?.map((obj) => obj).join(", ")
+        : "<empty>";
     };
 
     const getMaskingLabel = (DataMasklabel, dataMaskInfo, index) => {
@@ -1866,6 +1871,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
             </div>
             <div className="fw-bolder">Policy Name: {objectName}</div>
             <div className="fw-bolder">Service Name: {parentObjectName}</div>
+            {policyZoneName?.newValue ? (
+              <div className="fw-bolder">
+                Zone Name: {policyZoneName.newValue}
+              </div>
+            ) : null}
             <div className="fw-bolder">
               Created Date: {currentTimeZone(createDate)}
             </div>
@@ -2902,6 +2912,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
             </div>
             <div className="fw-bolder">Policy Name: {objectName}</div>
             <div className="fw-bolder">Service Name: {parentObjectName}</div>
+            {policyZoneName?.previousValue ? (
+              <div className="fw-bolder">
+                Zone Name: {policyZoneName.previousValue}
+              </div>
+            ) : null}
             <div className="fw-bolder">
               Deleted Date:{currentTimeZone(createDate)}
             </div>
@@ -3661,6 +3676,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
             </div>
             <div className="fw-bolder">Policy Name: {objectName}</div>
             <div className="fw-bolder">Service Name: {parentObjectName}</div>
+            {policyZoneName?.previousValue ? (
+              <div className="fw-bolder">
+                Zone Name: {policyZoneName.previousValue}
+              </div>
+            ) : null}
             <div className="fw-bolder">
               Deleted Date: {currentTimeZone(createDate)}
             </div>
