@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.ranger.common;
 
 import org.apache.commons.collections.MapUtils;

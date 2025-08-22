@@ -24,19 +24,19 @@ import java.util.Date;
 import java.util.List;
 
 public class TestRangerSearchUtil {
-    private static final String SEARCH_PARAM_ID                = "id";
-    private static final String SEARCH_PARAM_NAME              = "name";
-    private static final String SEARCH_PARAM_NAME_CONTAINS     = "nameContains";
-    private static final String SEARCH_PARAM_IS_ENABLED        = "isEnabled";
-    private static final String SEARCH_PARAM_CREATED_TIME      = "createdTime";
-    private static final String SEARCH_PARAM_CREATED_TIME_FROM = "createdTimeFrom";
-    private static final String SEARCH_PARAM_CREATED_TIME_TO   = "createdTimeTo";
-    private static final String SEARCH_PARAM_EXCLUDE_ID        = "excludeId";
-    private static final String SEARCH_PARAM_EXCLUDE_NAME      = "excludeName";
-    private static final String WHERE_PREFIX     = "WHERE 1 = 1 ";
-    private static final String WHERE_PREFIX_AND = WHERE_PREFIX + " and ";
-    private final RangerSearchUtil  searchUtil   = new RangerSearchUtil();
-    private final List<SearchField> searchFields = new ArrayList<>();
+    private static final String            SEARCH_PARAM_ID                = "id";
+    private static final String            SEARCH_PARAM_NAME              = "name";
+    private static final String            SEARCH_PARAM_NAME_CONTAINS     = "nameContains";
+    private static final String            SEARCH_PARAM_IS_ENABLED        = "isEnabled";
+    private static final String            SEARCH_PARAM_CREATED_TIME      = "createdTime";
+    private static final String            SEARCH_PARAM_CREATED_TIME_FROM = "createdTimeFrom";
+    private static final String            SEARCH_PARAM_CREATED_TIME_TO   = "createdTimeTo";
+    private static final String            SEARCH_PARAM_EXCLUDE_ID        = "excludeId";
+    private static final String            SEARCH_PARAM_EXCLUDE_NAME      = "excludeName";
+    private static final String            WHERE_PREFIX                   = "WHERE 1 = 1 ";
+    private static final String            WHERE_PREFIX_AND               = WHERE_PREFIX + " and ";
+    private final        RangerSearchUtil  searchUtil                     = new RangerSearchUtil();
+    private final        List<SearchField> searchFields                   = new ArrayList<>();
 
     public TestRangerSearchUtil() {
         searchFields.add(new SearchField(SEARCH_PARAM_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
