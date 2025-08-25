@@ -169,7 +169,7 @@
         <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
         <maven.version.required>3.6.3</maven.version.required>
         <metrics.core.version>3.0.2</metrics.core.version>
-        <mockito.version>3.0.0</mockito.version>
+        <mockito.version>3.12.4</mockito.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <netty-all.version>4.1.100.Final</netty-all.version>
