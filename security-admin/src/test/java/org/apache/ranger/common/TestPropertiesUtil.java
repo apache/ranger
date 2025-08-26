@@ -16,15 +16,11 @@
  */
 package org.apache.ranger.common;
 
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class TestPropertiesUtil {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     @Autowired
     PropertiesUtil propertiesUtil;
 
@@ -33,7 +29,7 @@ public class TestPropertiesUtil {
         String key          = null;
         String defaultValue = "test";
         String value        = PropertiesUtil.getProperty(key, defaultValue);
-        Assert.assertNull(value);
+        Assertions.assertNull(value);
     }
 
     @Test
@@ -41,28 +37,28 @@ public class TestPropertiesUtil {
         String key          = "1";
         String defaultValue = "test";
         String value        = PropertiesUtil.getProperty(key, defaultValue);
-        Assert.assertNotNull(value);
+        Assertions.assertNotNull(value);
     }
 
     @Test
     public void testgetPropertyNullValue() {
         String key   = null;
         String value = PropertiesUtil.getProperty(key);
-        Assert.assertNull(value);
+        Assertions.assertNull(value);
     }
 
     @Test
     public void testGetIntPropertyNull1() {
         String  key   = null;
         Integer value = PropertiesUtil.getIntProperty(key);
-        Assert.assertNull(value);
+        Assertions.assertNull(value);
     }
 
     @Test
     public void testGetIntPropertyl1() {
         String  key   = "1";
         Integer value = PropertiesUtil.getIntProperty(key);
-        Assert.assertNull(value);
+        Assertions.assertNull(value);
     }
 
     @Test
@@ -70,8 +66,8 @@ public class TestPropertiesUtil {
         String  key          = null;
         int     defaultValue = 0;
         Integer value        = PropertiesUtil.getIntProperty(key, defaultValue);
-        Assert.assertNotNull(value);
-        Assert.assertEquals(value.intValue(), defaultValue);
+        Assertions.assertNotNull(value);
+        Assertions.assertEquals(value.intValue(), defaultValue);
     }
 
     @Test
@@ -79,7 +75,7 @@ public class TestPropertiesUtil {
         String  key          = "1";
         int     defaultValue = 1;
         Integer value        = PropertiesUtil.getIntProperty(key, defaultValue);
-        Assert.assertEquals(value, Integer.valueOf(defaultValue));
+        Assertions.assertEquals(value, Integer.valueOf(defaultValue));
     }
 
     @Test
@@ -87,8 +83,8 @@ public class TestPropertiesUtil {
         String key          = "longKey";
         long   defaultValue = 23L;
         Long   value        = PropertiesUtil.getLongProperty(key, defaultValue);
-        Assert.assertNotNull(value);
-        Assert.assertEquals(defaultValue, value.intValue());
+        Assertions.assertNotNull(value);
+        Assertions.assertEquals(defaultValue, value.intValue());
     }
 
     @Test
@@ -96,7 +92,7 @@ public class TestPropertiesUtil {
         String  key          = null;
         boolean defaultValue = true;
         boolean returnValue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
-        Assert.assertTrue(returnValue);
+        Assertions.assertTrue(returnValue);
     }
 
     @Test
@@ -104,14 +100,14 @@ public class TestPropertiesUtil {
         String  key          = "1";
         boolean defaultValue = true;
         boolean returnValue  = PropertiesUtil.getBooleanProperty(key, defaultValue);
-        Assert.assertTrue(returnValue);
+        Assertions.assertTrue(returnValue);
     }
 
     @Test
     public void testGetPropertyStringListForNull() {
         String key = null;
         PropertiesUtil.getPropertyStringList(key);
-        Assert.assertNull(key);
+        Assertions.assertNull(key);
     }
 
     @Test
@@ -121,8 +117,42 @@ public class TestPropertiesUtil {
         PropertiesUtil.getPropertiesMap().put("ranger.users.roles.list", "read,write,access");
         String[] actualRoles = PropertiesUtil.getPropertyStringList(key);
 
-        Assert.assertEquals("read", actualRoles[0]);
-        Assert.assertEquals("write", actualRoles[1]);
-        Assert.assertEquals("access", actualRoles[2]);
+        Assertions.assertEquals("read", actualRoles[0]);
+        Assertions.assertEquals("write", actualRoles[1]);
+        Assertions.assertEquals("access", actualRoles[2]);
+    }
+
+    @Test
+    public void testGetPropsContainsInsertedEntries() {
+        PropertiesUtil.getPropertiesMap().put("prop.alpha", "A");
+        PropertiesUtil.getPropertiesMap().put("prop.beta", "B");
+        java.util.Properties props = PropertiesUtil.getProps();
+        Assertions.assertEquals("A", props.getProperty("prop.alpha"));
+        Assertions.assertEquals("B", props.getProperty("prop.beta"));
+    }
+
+    @Test
+    public void testGetConfigMapWithPrefix() {
+        PropertiesUtil.getPropertiesMap().put("abc.key1", "v1");
+        PropertiesUtil.getPropertiesMap().put("abc.key2", "v2");
+        PropertiesUtil.getPropertiesMap().put("xyz.key3", "v3");
+        java.util.Map<String, String> res = PropertiesUtil.getConfigMapWithPrefix("abc.");
+        Assertions.assertEquals(2, res.size());
+        Assertions.assertEquals("v1", res.get("abc.key1"));
+        Assertions.assertEquals("v2", res.get("abc.key2"));
+    }
+
+    @Test
+    public void testGetLongPropertyWithDefaultWhenKeyMissing() {
+        long def = 123L;
+        long val = PropertiesUtil.getLongProperty("missing.long.key", def);
+        Assertions.assertEquals(def, val);
+    }
+
+    @Test
+    public void testGetPropertyStringListEmptyWhenKeyMissing() {
+        String[] arr = PropertiesUtil.getPropertyStringList("no.such.key");
+        Assertions.assertNotNull(arr);
+        Assertions.assertEquals(0, arr.length);
     }
 }
