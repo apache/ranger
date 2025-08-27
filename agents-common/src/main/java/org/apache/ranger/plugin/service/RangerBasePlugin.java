@@ -585,7 +585,7 @@ public class RangerBasePlugin {
                     setServiceConfigs(policies.getServiceConfig());
 
                     this.synchronousPolicyRefresh = isSynchronousPolicyRefresh();
-                    LOG.info("synchronousPolicyRefreshFlag = {}", this.synchronousPolicyRefresh);
+                    LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
 
                     LOG.info("Switching policy engine from [{}]", getPolicyVersion());
                     this.policyEngine = newPolicyEngine;
