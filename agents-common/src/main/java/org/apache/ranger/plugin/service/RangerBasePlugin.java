@@ -103,7 +103,7 @@ public class RangerBasePlugin {
     private       RangerRoles                 roles;
     private       boolean                     isUserStoreEnricherAddedImplcitly;
     private       Map<String, String>         serviceConfigs;
-    private boolean synchronousPolicyRefreshFlag;
+    private boolean synchronousPolicyRefresh;
 
     public RangerBasePlugin(String serviceType, String appId) {
         this(new RangerPluginConfig(serviceType, null, appId, null, null, null));
@@ -584,8 +584,8 @@ public class RangerBasePlugin {
 
                     setServiceConfigs(policies.getServiceConfig());
 
-                    this.synchronousPolicyRefreshFlag = isSynchronousPolicyRefresh();
-                    LOG.info("synchronousPolicyRefreshFlag = {}", this.synchronousPolicyRefreshFlag);
+                    this.synchronousPolicyRefresh = isSynchronousPolicyRefresh();
+                    LOG.info("synchronousPolicyRefreshFlag = {}", this.synchronousPolicyRefresh);
 
                     LOG.info("Switching policy engine from [{}]", getPolicyVersion());
                     this.policyEngine = newPolicyEngine;
@@ -657,8 +657,7 @@ public class RangerBasePlugin {
     }
 
     public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        if (this.synchronousPolicyRefreshFlag) {
-            LOG.debug("==> isAccessAllowed isSynchronousPolicyCacheUpdateEnabled = {}", this.synchronousPolicyRefreshFlag);
+        if (this.synchronousPolicyRefresh) {
             refreshPoliciesAndTags();
         }
 
@@ -703,8 +702,7 @@ public class RangerBasePlugin {
     }
 
     public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
-        if (this.synchronousPolicyRefreshFlag) {
-            LOG.debug("==> isAccessAllowed isSynchronousPolicyCacheUpdateEnabled = {}", this.synchronousPolicyRefreshFlag);
+        if (this.synchronousPolicyRefresh) {
             refreshPoliciesAndTags();
         }
 
@@ -749,8 +747,7 @@ public class RangerBasePlugin {
     }
 
     public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        if (this.synchronousPolicyRefreshFlag) {
-            LOG.debug("==> evalDataMaskPolicies isSynchronousPolicyCacheUpdateEnabled = {}", this.synchronousPolicyRefreshFlag);
+        if (this.synchronousPolicyRefresh) {
             refreshPoliciesAndTags();
         }
 
@@ -784,8 +781,7 @@ public class RangerBasePlugin {
     }
 
     public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
-        if (this.synchronousPolicyRefreshFlag) {
-            LOG.debug("==> evalRowFilterPolicies isSynchronousPolicyCacheUpdateEnabled = {}", this.synchronousPolicyRefreshFlag);
+        if (this.synchronousPolicyRefresh) {
             refreshPoliciesAndTags();
         }
 
@@ -819,8 +815,7 @@ public class RangerBasePlugin {
     }
 
     public void evalAuditPolicies(RangerAccessResult result) {
-        if (this.synchronousPolicyRefreshFlag) {
-            LOG.debug("==> evalAuditPolicies isSynchronousPolicyCacheUpdateEnabled = {}", this.synchronousPolicyRefreshFlag);
+        if (this.synchronousPolicyRefresh) {
             refreshPoliciesAndTags();
         }
 
@@ -846,8 +841,7 @@ public class RangerBasePlugin {
     }
 
     public RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer policyType) {
-        if (this.synchronousPolicyRefreshFlag) {
-            LOG.debug("==> getResourceACLs isSynchronousPolicyCacheUpdateEnabled = {}", this.synchronousPolicyRefreshFlag);
+        if (this.synchronousPolicyRefresh) {
             refreshPoliciesAndTags();
         }
 
@@ -1093,7 +1087,7 @@ public class RangerBasePlugin {
 
     public void refreshPoliciesAndTags() {
         LOG.debug("==> refreshPoliciesAndTags()");
-
+        LOG.debug("synchronousPolicyRefresh = {}", synchronousPolicyRefresh);
         try {
             long oldPolicyVersion = getPoliciesVersion();
 
