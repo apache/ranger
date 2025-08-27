@@ -372,7 +372,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
             return null;
         } finally {
-            auditHandler.flushAudit();
+            if (auditHandler != null) auditHandler.flushAudit();
         }
     }
 
