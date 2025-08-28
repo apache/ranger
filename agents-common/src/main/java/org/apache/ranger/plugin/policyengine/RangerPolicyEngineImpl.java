@@ -1082,7 +1082,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
                 }
             } else if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_ROWFILTER) {
                 // pick row-filter from GDS policies only if there is no decision yet
-                if (result.getPolicyId() != -1 && CollectionUtils.isNotEmpty(gdsResult.getRowFilters())) {
+                if (result.getPolicyId() == -1 && CollectionUtils.isNotEmpty(gdsResult.getRowFilters())) {
                     result.setIsAllowed(true);
                     result.setIsAccessDetermined(true);
                     result.setPolicyId(gdsResult.getPolicyId());
@@ -1092,7 +1092,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
                 }
             } else if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_DATAMASK) {
                 // pick data-mask from GDS policies only if there is no decision yet
-                if (result.getPolicyId() != -1 && StringUtils.isNotEmpty(gdsResult.getMaskType())) {
+                if (result.getPolicyId() == -1 && StringUtils.isNotEmpty(gdsResult.getMaskType())) {
                     result.setIsAllowed(true);
                     result.setIsAccessDetermined(true);
                     result.setPolicyId(gdsResult.getPolicyId());
