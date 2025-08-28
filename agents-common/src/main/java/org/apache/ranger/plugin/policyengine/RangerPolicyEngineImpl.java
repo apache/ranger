@@ -1074,47 +1074,46 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
             if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_ACCESS) {
                 // pick access result from GDS policies only if there is no decision yet
                 if (!result.getIsAccessDetermined() && gdsResult.getIsAllowed()) {
-                    result.setIsAllowed(true);
-                    result.setIsAccessDetermined(true);
-                    result.setPolicyId(gdsResult.getPolicyId());
-                    result.setPolicyVersion(gdsResult.getPolicyVersion());
-                    result.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+                    copyFromGdsResult(gdsResult, result);
                 }
             } else if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_ROWFILTER) {
                 // pick row-filter from GDS policies only if there is no decision yet
                 if (result.getPolicyId() == -1 && CollectionUtils.isNotEmpty(gdsResult.getRowFilters())) {
-                    result.setIsAllowed(true);
-                    result.setIsAccessDetermined(true);
-                    result.setPolicyId(gdsResult.getPolicyId());
-                    result.setPolicyVersion(gdsResult.getPolicyVersion());
-                    result.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+                    copyFromGdsResult(gdsResult, result);
+
                     result.setFilterExpr(gdsResult.getRowFilters().get(0));
                 }
             } else if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_DATAMASK) {
                 // pick data-mask from GDS policies only if there is no decision yet
                 if (result.getPolicyId() == -1 && StringUtils.isNotEmpty(gdsResult.getMaskType())) {
-                    result.setIsAllowed(true);
-                    result.setIsAccessDetermined(true);
-                    result.setPolicyId(gdsResult.getPolicyId());
-                    result.setPolicyVersion(gdsResult.getPolicyVersion());
-                    result.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+                    copyFromGdsResult(gdsResult, result);
+
                     result.setMaskType(gdsResult.getMaskType());
                     result.setMaskedValue(gdsResult.getMaskedValue());
                     result.setMaskCondition(gdsResult.getMaskCondition());
                 }
             }
-
-            if (!result.getIsAuditedDetermined() && gdsResult.getIsAudited()) {
-                result.setIsAudited(true);
-            }
-
-            result.setDatasets(gdsResult.getDatasets());
-            result.setProjects(gdsResult.getProjects());
         } else {
             LOG.debug("updateFromGdsResult(): no GdsAccessResult found in request context({})", request);
         }
 
         LOG.debug("<== updateFromGdsResult(result={})", result);
+    }
+
+    private void copyFromGdsResult(GdsAccessResult gdsResult, RangerAccessResult result) {
+        if (gdsResult != null && result != null) {
+            result.setIsAllowed(true);
+            result.setIsAccessDetermined(true);
+            result.setPolicyId(gdsResult.getPolicyId());
+            result.setPolicyVersion(gdsResult.getPolicyVersion());
+            result.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+            result.setDatasets(gdsResult.getDatasets());
+            result.setProjects(gdsResult.getProjects());
+
+            if (!result.getIsAuditedDetermined() && gdsResult.getIsAudited()) {
+                result.setIsAudited(true);
+            }
+        }
     }
 
     private static class ServiceConfig {
