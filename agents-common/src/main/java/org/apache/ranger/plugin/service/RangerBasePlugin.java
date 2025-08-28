@@ -1490,7 +1490,7 @@ public class RangerBasePlugin {
     private boolean isSynchronousPolicyRefresh() {
         boolean ret = false;
         if (this.getServiceConfigs() != null && this.pluginConfig != null && this.pluginConfig.getServiceType() != null) {
-            String synchronousPolicyRefreshConfigName = "ranger.plugins.conf.policy.refresh.synchronous";
+            String synchronousPolicyRefreshConfigName = String.format("ranger.plugin.%s.policy.refresh.synchronous", this.pluginConfig.getServiceType());
             if (this.getServiceConfigs().containsKey(synchronousPolicyRefreshConfigName)) {
                 boolean synchronousPolicyRefreshConfigValue = Boolean.parseBoolean(this.getServiceConfigs().get(synchronousPolicyRefreshConfigName).trim().toLowerCase());
                 if (synchronousPolicyRefreshConfigValue) {
