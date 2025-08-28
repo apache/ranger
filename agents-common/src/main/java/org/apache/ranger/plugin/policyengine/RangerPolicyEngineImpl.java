@@ -1093,6 +1093,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
                     result.setMaskCondition(gdsResult.getMaskCondition());
                 }
             }
+
+            if (!result.getIsAuditedDetermined() && gdsResult.getIsAudited()) {
+                result.setIsAudited(true);
+            }
+
+            result.setDatasets(gdsResult.getDatasets());
+            result.setProjects(gdsResult.getProjects());
         } else {
             LOG.debug("updateFromGdsResult(): no GdsAccessResult found in request context({})", request);
         }
@@ -1107,12 +1114,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
             result.setPolicyId(gdsResult.getPolicyId());
             result.setPolicyVersion(gdsResult.getPolicyVersion());
             result.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
-            result.setDatasets(gdsResult.getDatasets());
-            result.setProjects(gdsResult.getProjects());
-
-            if (!result.getIsAuditedDetermined() && gdsResult.getIsAudited()) {
-                result.setIsAudited(true);
-            }
         }
     }
 
