@@ -62,6 +62,7 @@ public class GdsPolicyEngine {
     public static final String RESOURCE_NAME_PROJECT_ID = "project-id";
 
     private final ServiceGdsInfo                   gdsInfo;
+    private final RangerServiceDefHelper           serviceDefHelper;
     private final Set<String>                      allAccessTypes;
     private final Map<Long, GdsProjectEvaluator>   projects      = new HashMap<>();
     private final Map<Long, GdsDatasetEvaluator>   datasets      = new HashMap<>();
@@ -71,8 +72,9 @@ public class GdsPolicyEngine {
     public GdsPolicyEngine(ServiceGdsInfo gdsInfo, RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
         LOG.debug("==> RangerGdsPolicyEngine()");
 
-        this.gdsInfo        = gdsInfo;
-        this.allAccessTypes = serviceDefHelper.getAllAccessTypes();
+        this.gdsInfo          = gdsInfo;
+        this.serviceDefHelper = serviceDefHelper;
+        this.allAccessTypes   = serviceDefHelper.getAllAccessTypes();
 
         init(serviceDefHelper, pluginContext);
 
@@ -95,7 +97,22 @@ public class GdsPolicyEngine {
 
             if (ret.getIsAllowed()) {
                 evaluate(request, RangerPolicy.POLICY_TYPE_DATAMASK, ret);
+            }
+
+            // consider the following:
+            //   1. accessed resource is table table1
+            //   2. a shared-resource allows the user access to only few columns in table1
+            // In this case ret.getIsAllowed() will be false, since the user doesn't have access
+            // to all columns of table1; still, row-filter specified in the shared-resource must
+            // be included in the result.
+            if (serviceDefHelper.isRowFilterSupported(request.getResource().getKeys())) {
+                boolean isAccessAllowed = ret.getIsAllowed();
+
                 evaluate(request, RangerPolicy.POLICY_TYPE_ROWFILTER, ret);
+
+                if (!isAccessAllowed) {
+                    ret.setIsAllowed(false);
+                }
             }
         } else {
             ret = null;

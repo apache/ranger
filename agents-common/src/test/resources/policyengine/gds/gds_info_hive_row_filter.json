@@ -169,6 +169,11 @@
       "id": 61, "dataShareId": 6, "conditionExpr": "", "accessTypes": [ "select" ],
       "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "contact_info" ] } }, "rowFilter": { "filterExpr": "country = 'US'" },
       "subResourceType": "column", "subResource": { "values": [ "*" ] }, "subResourceMasks": null
+    },
+    {
+      "id": 71, "dataShareId": 6, "conditionExpr": "", "accessTypes": [ "select" ],
+      "resource": { "database": { "values": [ "customers" ] }, "table": { "values": [ "shipping_address" ] } }, "rowFilter": { "filterExpr": "country = 'US'" },
+      "subResourceType": "column", "subResource": { "values": [ "phone", "city", "zip" ] }, "subResourceMasks": [ { "values": [ "phone" ], "maskInfo": { "dataMaskType": "MASK_SHOW_LAST_4" } }]
     }
   ],
   "gdsVersion": 1
