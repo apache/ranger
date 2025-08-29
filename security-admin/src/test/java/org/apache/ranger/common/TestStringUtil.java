@@ -16,8 +16,8 @@
  */
 package org.apache.ranger.common;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -31,14 +31,14 @@ public class TestStringUtil {
     public void testToCamelCaseAllWords() {
         String camelcase      = "hello world";
         String camelCaseWords = stringUtil.toCamelCaseAllWords(camelcase);
-        Assert.assertEquals("Hello World", camelCaseWords);
+        Assertions.assertEquals("Hello World", camelCaseWords);
     }
 
     @Test
     public void testNullValidatePassword() {
         String[] invalidValues = {"aa", "bb", "aa12345dd"};
         boolean  value         = stringUtil.validatePassword(null, invalidValues);
-        Assert.assertFalse(value);
+        Assertions.assertFalse(value);
     }
 
     @Test
@@ -46,8 +46,8 @@ public class TestStringUtil {
         String   password      = "Aa1234ddas12";
         String[] invalidValues = {"aa", "bb", "aa12345dd"};
         boolean  value         = stringUtil.validatePassword(password, invalidValues);
-        Assert.assertTrue(password.length() >= 8);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(password.length() >= 8);
+        Assertions.assertTrue(value);
     }
 
     @Test
@@ -55,28 +55,28 @@ public class TestStringUtil {
         String   password      = "aassasavcvcvc";
         String[] invalidValues = {"aa", "bb", "aa12345dd"};
         boolean  value         = stringUtil.validatePassword(password, invalidValues);
-        Assert.assertTrue(password.length() >= 8);
-        Assert.assertFalse(value);
+        Assertions.assertTrue(password.length() >= 8);
+        Assertions.assertFalse(value);
     }
 
     @Test
     public void testIsEmptyValue() {
         String  str   = "";
         boolean value = stringUtil.isEmpty(str);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(value);
     }
 
     @Test
     public void testIsNullValue() {
         boolean value = stringUtil.isEmpty((String) null);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(value);
     }
 
     @Test
     public void testIsWithValue() {
         String  str   = "test value";
         boolean value = stringUtil.isEmpty(str);
-        Assert.assertFalse(value);
+        Assertions.assertFalse(value);
     }
 
     @Test
@@ -84,7 +84,7 @@ public class TestStringUtil {
         String  str1  = "test";
         String  str2  = "test";
         boolean value = stringUtil.equals(str1, str2);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(value);
     }
 
     @Test
@@ -93,13 +93,13 @@ public class TestStringUtil {
         String  lowercase = stringUtil.normalizeEmail(email);
         String  emailId   = email.toLowerCase();
         boolean value     = emailId.equals(lowercase);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(value);
     }
 
     @Test
     public void testNormalizeEmailIdNull() {
         String lowercase = stringUtil.normalizeEmail(null);
-        Assert.assertNull(lowercase);
+        Assertions.assertNull(lowercase);
     }
 
     @Test
@@ -109,31 +109,31 @@ public class TestStringUtil {
         String   str3        = "Test3";
         String   value       = str1 + "," + str2 + "," + str3;
         String[] stringArray = stringUtil.split(value);
-        Assert.assertEquals(3, stringArray.length);
-        Assert.assertEquals(str1, stringArray[0]);
-        Assert.assertEquals(str2, stringArray[1]);
-        Assert.assertEquals(str3, stringArray[2]);
+        Assertions.assertEquals(3, stringArray.length);
+        Assertions.assertEquals(str1, stringArray[0]);
+        Assertions.assertEquals(str2, stringArray[1]);
+        Assertions.assertEquals(str3, stringArray[2]);
     }
 
     @Test
     public void testTrim() {
         String str        = "test";
         String dataString = StringUtil.trim(str);
-        Assert.assertEquals(str, dataString);
+        Assertions.assertEquals(str, dataString);
     }
 
     @Test
     public void testValidateEmailId() {
         String  email = "rangerqa@apache.org";
         boolean value = stringUtil.validateEmail(email);
-        Assert.assertTrue(email.length() < 128);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(email.length() < 128);
+        Assertions.assertTrue(value);
     }
 
     @Test
     public void testNullEmailId() {
         boolean value = stringUtil.validateEmail(null);
-        Assert.assertFalse(value);
+        Assertions.assertFalse(value);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class TestStringUtil {
         String  regExStr = "^[\\w]([\\-\\.\\w])+[\\w]+@[\\w]+[\\w\\-]+[\\w]*\\.([\\w]+[\\w\\-]+[\\w]*(\\.[a-z][a-z|0-9]*)?)$";
         String  str      = "test.test@gmail.com";
         boolean value    = stringUtil.validateString(regExStr, str);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(value);
     }
 
     @Test
@@ -149,14 +149,14 @@ public class TestStringUtil {
         String  regExStr = "^[\\w]([\\-\\.\\w])+[\\w]+[\\w]*\\.([\\w]+[\\w\\-]+[\\w]*(\\.[a-z][a-z|0-9]*)?)$";
         String  str      = "test.test@gmail.com";
         boolean value    = stringUtil.validateString(regExStr, str);
-        Assert.assertFalse(value);
+        Assertions.assertFalse(value);
     }
 
     @Test
     public void testIsListEmpty() {
         List<String> list      = new ArrayList<>();
         boolean      listValue = stringUtil.isEmpty(list);
-        Assert.assertTrue(listValue);
+        Assertions.assertTrue(listValue);
     }
 
     @Test
@@ -165,19 +165,19 @@ public class TestStringUtil {
         list.add("a");
         list.add("b");
         boolean listValue = stringUtil.isEmpty(list);
-        Assert.assertFalse(listValue);
+        Assertions.assertFalse(listValue);
     }
 
     @Test
     public void testIsValidName() {
         String  name  = "test";
         boolean value = stringUtil.isValidName(name);
-        Assert.assertTrue(value);
+        Assertions.assertTrue(value);
     }
 
     @Test
     public void testIsValidNameNull() {
         boolean value = stringUtil.isValidName(null);
-        Assert.assertFalse(value);
+        Assertions.assertFalse(value);
     }
 }
