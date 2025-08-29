@@ -27,6 +27,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -120,6 +121,26 @@ public class TestRangerBasePlugin {
                 assertEquals("isAllowed mismatched! - " + test.name, test.result.getPolicyId(), result.getPolicyId());
                 assertEquals("isAudited mismatched! - " + test.name, test.result.getIsAudited(), result.getIsAudited());
                 assertEquals("isAuditedDetermined mismatched! - " + test.name, test.result.getIsAuditedDetermined(), result.getIsAuditedDetermined());
+
+                result = plugin.evalDataMaskPolicies(request, new RangerDefaultAuditHandler());
+
+                if (test.result.getMaskType() != null) {
+                    assertNotNull("result was null! - " + test.name, result);
+                    assertEquals("maskType mismatched! - " + test.name, test.result.getMaskType(), result.getMaskType());
+                    assertEquals("maskedValue mismatched! - " + test.name, test.result.getMaskedValue(), result.getMaskedValue());
+                    assertEquals("maskCondition mismatched! - " + test.name, test.result.getMaskCondition(), result.getMaskCondition());
+                } else {
+                    assertEquals("maskType mismatched! - " + test.name, test.result.getMaskType(), result != null ? result.getMaskType() : null);
+                }
+
+                result = plugin.evalRowFilterPolicies(request, new RangerDefaultAuditHandler());
+
+                if (test.result.getFilterExpr() != null) {
+                    assertNotNull("result was null! - " + test.name, result);
+                    assertEquals("filterExpr mismatched! - " + test.name, test.result.getFilterExpr(), result.getFilterExpr());
+                } else {
+                    assertEquals("filterExpr mismatched! - " + test.name, test.result.getFilterExpr(), result != null ? result.getFilterExpr() : null);
+                }
             }
 
             if (test.acls != null) {
