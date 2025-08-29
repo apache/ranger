@@ -63,15 +63,12 @@ public class RangerTrxLogV2Service {
 
     private final List<SortField>   sortFields   = new ArrayList<>();
     private final List<SearchField> searchFields = new ArrayList<>();
-
-    @Autowired
-    RangerSearchUtil searchUtil;
-
-    @Autowired
-    RangerDaoManager daoManager;
-
     @Autowired
     protected RESTErrorUtil restErrorUtil;
+    @Autowired
+    RangerSearchUtil searchUtil;
+    @Autowired
+    RangerDaoManager daoManager;
 
     public RangerTrxLogV2Service() {
         searchFields.add(new SearchField("attributeName", "obj.changeInfo", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
@@ -82,7 +79,7 @@ public class RangerTrxLogV2Service {
         searchFields.add(new SearchField("owner", "obj.addedByUserId", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("objectClassType", "obj.objectClassType", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("objectId", "obj.objectId", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
-        searchFields.add(new SearchField("parentObjectId",  "obj.parentObjectId",  SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("parentObjectId", "obj.parentObjectId", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("parentObjectName", "obj.parentObjectName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
         sortFields.add(new SortField("id", "obj.id", true, SortField.SORT_ORDER.DESC));
@@ -111,8 +108,8 @@ public class RangerTrxLogV2Service {
     }
 
     public long getTrxLogsCount(SearchCriteria searchCriteria) {
-        Map<String, Object> params = new HashMap<>();
-        UserSessionBase session = ContextUtil.getCurrentUserSession();
+        Map<String, Object> params  = new HashMap<>();
+        UserSessionBase     session = ContextUtil.getCurrentUserSession();
 
         if (session != null && (session.isKeyAdmin() || session.isAuditKeyAdmin())) {
             searchFields.stream().filter(field -> "parentObjectName".equals(field.getClientFieldName())).findFirst()
@@ -127,7 +124,7 @@ public class RangerTrxLogV2Service {
             params.forEach(query::setParameter);
         }
 
-        Long   count         = daoManager.getXXTrxLogV2().executeCountQueryInSecurityContext(XXTrxLogV2.class, query);
+        Long count = daoManager.getXXTrxLogV2().executeCountQueryInSecurityContext(XXTrxLogV2.class, query);
 
         return count == null ? 0 : count;
     }
@@ -200,6 +197,62 @@ public class RangerTrxLogV2Service {
         return ret;
     }
 
+    public String applyKeyAdminAccessFilters(Map<String, Object> parameters) {
+        StringBuilder filterClause = new StringBuilder();
+
+        List<XXPortalUser> listXXPortalUser = daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_KEY_ADMIN);
+        listXXPortalUser.addAll(daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_KEY_ADMIN_AUDITOR));
+        List<Long> addedByUserId = listXXPortalUser.stream().map(XXPortalUser::getId).collect(Collectors.toList());
+
+        if (!addedByUserId.isEmpty()) {
+            filterClause.append("obj.addedByUserId IN :addedByUserId");
+            parameters.put("addedByUserId", addedByUserId);
+        }
+
+        if (filterClause.length() > 0) {
+            filterClause.append(" OR ");
+        }
+        String parentObjectName = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME;
+        filterClause.append("obj.parentObjectName = :parentObjectName");
+        parameters.put("parentObjectName", parentObjectName);
+
+        XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
+        if (xxServiceDef != null) {
+            List<Long> parentObjectId = daoManager.getXXService().findByServiceDefId(xxServiceDef.getId()).stream().map(XXService::getId).collect(Collectors.toList());
+
+            if (!parentObjectId.isEmpty()) {
+                if (filterClause.length() > 0) {
+                    filterClause.append(" OR ");
+                }
+                filterClause.append("obj.parentObjectId IN :parentObjectId");
+                parameters.put("parentObjectId", parentObjectId);
+            }
+        }
+
+        if (filterClause.length() > 0) {
+            filterClause.insert(0, "(").append(")");
+        }
+        return filterClause.toString();
+    }
+
+    public boolean getValidTrxLogsForKeyAdminAndAuditor(XXTrxLogV2 xXTrxLog) {
+        Map<String, Object> params = new HashMap<>();
+        applyKeyAdminAccessFilters(params);
+
+        List<Long> addedByUserIdList  = (List<Long>) params.get("addedByUserId");
+        List<Long> parentObjectIdList = (List<Long>) params.get("parentObjectId");
+        String     parentObjectName   = (String) params.get("parentObjectName");
+
+        if (addedByUserIdList == null || parentObjectIdList == null || parentObjectName == null) {
+            return false;
+        }
+
+        boolean isValid = addedByUserIdList.contains(xXTrxLog.getAddedByUserId()) || parentObjectIdList.contains(xXTrxLog.getParentObjectId())
+                || parentObjectName.equals(xXTrxLog.getParentObjectName());
+
+        return isValid;
+    }
+
     private List<XXTrxLogV2> searchTrxLogs(SearchCriteria searchCriteria, PList<VXTrxLogV2> pList) {
         // Get total count of the rows which meet the search criteria
         long count = -1;
@@ -212,8 +265,8 @@ public class RangerTrxLogV2Service {
             }
         }
 
-        Map<String, Object> params = new HashMap<>();
-        UserSessionBase session = ContextUtil.getCurrentUserSession();
+        Map<String, Object> params  = new HashMap<>();
+        UserSessionBase     session = ContextUtil.getCurrentUserSession();
 
         if (session != null && (session.isKeyAdmin() || session.isAuditKeyAdmin())) {
             searchFields.stream().filter(field -> "parentObjectName".equals(field.getClientFieldName())).findFirst()
@@ -340,61 +393,5 @@ public class RangerTrxLogV2Service {
         }
 
         return ret;
-    }
-
-    public String applyKeyAdminAccessFilters(Map<String, Object> parameters) {
-        StringBuilder filterClause = new StringBuilder();
-
-        List<XXPortalUser> listXXPortalUser = daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_KEY_ADMIN);
-        listXXPortalUser.addAll(daoManager.getXXPortalUser().findByRole(RangerConstants.ROLE_KEY_ADMIN_AUDITOR));
-        List<Long> addedByUserId = listXXPortalUser.stream().map(XXPortalUser::getId).collect(Collectors.toList());
-
-        if (!addedByUserId.isEmpty()) {
-            filterClause.append("obj.addedByUserId IN :addedByUserId");
-            parameters.put("addedByUserId", addedByUserId);
-        }
-
-        if (filterClause.length() > 0) {
-            filterClause.append(" OR ");
-        }
-        String parentObjectName = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME;
-        filterClause.append("obj.parentObjectName = :parentObjectName");
-        parameters.put("parentObjectName", parentObjectName);
-
-        XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
-        if (xxServiceDef != null) {
-            List<Long> parentObjectId = daoManager.getXXService().findByServiceDefId(xxServiceDef.getId()).stream().map(XXService::getId).collect(Collectors.toList());
-
-            if (!parentObjectId.isEmpty()) {
-                if (filterClause.length() > 0) {
-                    filterClause.append(" OR ");
-                }
-                filterClause.append("obj.parentObjectId IN :parentObjectId");
-                parameters.put("parentObjectId", parentObjectId);
-            }
-        }
-
-        if (filterClause.length() > 0) {
-            filterClause.insert(0, "(").append(")");
-        }
-        return filterClause.toString();
-    }
-
-    public boolean getValidTrxLogsForKeyAdminAndAuditor(XXTrxLogV2 xXTrxLog) {
-        Map<String, Object> params = new HashMap<>();
-        applyKeyAdminAccessFilters(params);
-
-        List<Long> addedByUserIdList  = (List<Long>) params.get("addedByUserId");
-        List<Long> parentObjectIdList = (List<Long>) params.get("parentObjectId");
-        String     parentObjectName   = (String)     params.get("parentObjectName");
-
-        if (addedByUserIdList == null || parentObjectIdList == null || parentObjectName == null) {
-            return false;
-        }
-
-        boolean isValid = addedByUserIdList.contains(xXTrxLog.getAddedByUserId()) || parentObjectIdList.contains(xXTrxLog.getParentObjectId())
-                || parentObjectName.equals(xXTrxLog.getParentObjectName());
-
-        return isValid;
     }
 }

@@ -45,11 +45,9 @@ import java.util.Map;
 
 @Service
 public class RangerServiceResourceService extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceResourceService.class);
-
     public static final TypeReference<Map<String, RangerPolicy.RangerPolicyResource>> subsumedDataType   = new TypeReference<Map<String, RangerPolicy.RangerPolicyResource>>() {};
     public static final TypeReference<List<RangerTag>>                                duplicatedDataType = new TypeReference<List<RangerTag>>() {};
-
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceResourceService.class);
     private boolean serviceUpdateNeeded = true;
 
     public RangerServiceResourceService() {

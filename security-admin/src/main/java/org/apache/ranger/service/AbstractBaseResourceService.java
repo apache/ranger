@@ -74,8 +74,8 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
     protected static final Map<Class<?>, String> tEntityValueMap = new HashMap<>();
 
-    public final List<SortField>   sortFields      = new ArrayList<>();
-    public final List<SearchField> searchFields    = new ArrayList<>();
+    public final List<SortField>   sortFields   = new ArrayList<>();
+    public final List<SearchField> searchFields = new ArrayList<>();
 
     protected final Class<T> tEntityClass;
     protected final Class<V> tViewClass;
@@ -209,7 +209,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         } catch (Exception e) {
             logger.error("Error deleting {} => Id = {}", getResourceName(), id, e);
 
-            throw restErrorUtil.createRESTException(getResourceName() + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, "" + id + ", error=" + e.getMessage());
+            throw restErrorUtil.createRESTException(getResourceName() + " can't be deleted", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE, id, null, id + ", error=" + e.getMessage());
         }
 
         postDelete(resource);
@@ -672,7 +672,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
         for (SearchField searchField : searchFields) {
             if (paramList.containsKey(searchField.getClientFieldName())) {
                 Path<Object> tableField;
-                String       fieldName  = searchField.getFieldName();
+                String       fieldName = searchField.getFieldName();
 
                 // stuff to handle jpql syntax (e.g. obj.id, obj.city.city etc). There has to be better way of dealing with this. Will look again.
                 int dotIndex = fieldName.indexOf(".");

@@ -104,7 +104,7 @@ public class RangerServiceResourceWithTagsService extends RangerServiceResourceW
 
         if (StringUtils.isNotEmpty(xxServiceResource.getServiceResourceElements())) {
             try {
-                Map<String, RangerPolicyResource> serviceResourceElements = (Map<String, RangerPolicyResource>) JsonUtils.jsonToObject(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
+                Map<String, RangerPolicyResource> serviceResourceElements = JsonUtils.jsonToObject(xxServiceResource.getServiceResourceElements(), RangerServiceResourceService.subsumedDataType);
 
                 if (MapUtils.isNotEmpty(serviceResourceElements)) {
                     ret.setResourceElements(serviceResourceElements);

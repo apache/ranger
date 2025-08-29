@@ -49,15 +49,15 @@ import static org.apache.ranger.service.RangerBaseModelService.OPERATION_UPDATE_
 public abstract class AbstractAuditedResourceService<T extends XXDBBase, V extends VXDataObject> extends AbstractBaseResourceService<T, V> {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractAuditedResourceService.class);
 
-    protected final Map<String, VTrxLogAttr> trxLogAttrs  = new HashMap<>();
+    protected final Map<String, VTrxLogAttr> trxLogAttrs = new HashMap<>();
     protected final String                   hiddenPasswordString;
 
-    private final   int               classType;
-    private final   int               parentClassType;
-    private final   List<VTrxLogAttr> objNameAttrs = new ArrayList<>();
+    private final int               classType;
+    private final int               parentClassType;
+    private final List<VTrxLogAttr> objNameAttrs = new ArrayList<>();
 
     @Autowired
-    JSONUtil       jsonUtil;
+    JSONUtil jsonUtil;
 
     @Autowired
     RangerEnumUtil xaEnumUtil;

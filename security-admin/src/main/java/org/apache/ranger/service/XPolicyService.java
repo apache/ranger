@@ -61,10 +61,8 @@ import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_
 
 @Service
 public class XPolicyService extends PublicAPIServiceBase<VXResource, VXPolicy> {
-    Logger logger = LoggerFactory.getLogger(XPolicyService.class);
-
     private static final String uniqueKeySeparator = "_";
-
+    Logger logger = LoggerFactory.getLogger(XPolicyService.class);
     @Autowired
     RESTErrorUtil restErrorUtil;
 

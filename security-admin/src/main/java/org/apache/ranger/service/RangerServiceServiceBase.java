@@ -99,14 +99,14 @@ public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extend
 
     @Override
     public String getParentObjectName(V vObj, V oldObj) {
-        String serviceType = vObj != null ? vObj.getType() : null;
+        String       serviceType = vObj != null ? vObj.getType() : null;
         XXServiceDef xServiceDef = serviceType != null ? daoMgr.getXXServiceDef().findByName(serviceType) : null;
         return xServiceDef != null ? xServiceDef.getName() : null;
     }
 
     @Override
     public Long getParentObjectId(V vObj, V oldObj) {
-        String serviceType = vObj != null ? vObj.getType() : null;
+        String       serviceType = vObj != null ? vObj.getType() : null;
         XXServiceDef xServiceDef = serviceType != null ? daoMgr.getXXServiceDef().findByName(serviceType) : null;
         return xServiceDef != null ? xServiceDef.getId() : null;
     }

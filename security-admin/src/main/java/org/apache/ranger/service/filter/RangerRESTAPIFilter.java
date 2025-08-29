@@ -44,10 +44,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RangerRESTAPIFilter extends LoggingFilter {
-    Logger logger = LoggerFactory.getLogger(RangerRESTAPIFilter.class);
-
     static volatile boolean initDone;
-
+    Logger logger = LoggerFactory.getLogger(RangerRESTAPIFilter.class);
     boolean                  logStdOut            = true;
     HashMap<String, String>  regexPathMap         = new HashMap<>();
     HashMap<String, Pattern> regexPatternMap      = new HashMap<>();
@@ -179,7 +177,7 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 
                         UriTemplate ut = new UriTemplate(servicePath);
 
-                        regEx     = httpMethod + ":" + path.value() + ut.getPattern().getRegex();
+                        regEx = httpMethod + ":" + path.value() + ut.getPattern().getRegex();
                         fullPath += servicePath;
                     }
 
