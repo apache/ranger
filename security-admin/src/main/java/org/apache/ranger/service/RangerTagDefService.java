@@ -117,7 +117,7 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 
         if (StringUtils.isNotEmpty(xObj.getTagAttrDefs())) {
             try {
-                List<RangerTagDef.RangerTagAttributeDef> attributeDefs = (List<RangerTagDef.RangerTagAttributeDef>) JsonUtils.jsonToObject(xObj.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
+                List<RangerTagDef.RangerTagAttributeDef> attributeDefs = JsonUtils.jsonToObject(xObj.getTagAttrDefs(), RangerTagDBRetriever.subsumedDataType);
                 ret.setAttributeDefs(attributeDefs);
             } catch (JsonProcessingException e) {
                 logger.error("Error occurred while processing json", e);

@@ -54,7 +54,7 @@ import java.util.Map;
 public abstract class RangerAuditedModelService<T extends XXDBBase, V extends RangerBaseModelObject> extends RangerBaseModelService<T, V> {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAuditedModelService.class);
 
-    protected final Map<String, VTrxLogAttr> trxLogAttrs  = new HashMap<>();
+    protected final Map<String, VTrxLogAttr> trxLogAttrs = new HashMap<>();
     protected final String                   hiddenPasswordString;
 
     private final int               classType;
@@ -173,6 +173,43 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
         return trxLogAttr.getAttrValue(obj, xaEnumUtil);
     }
 
+    public String addLabelToDataMaskTxnPolicy(V obj, String value) {
+        if (obj instanceof RangerPolicy && ((RangerPolicy) obj).getDataMaskPolicyItems() != null) {
+            for (RangerDataMaskPolicyItem policyItem : ((RangerPolicy) obj).getDataMaskPolicyItems()) {
+                if (policyItem.getDataMaskInfo() != null && policyItem.getDataMaskInfo().getDataMaskType() != null) {
+                    String                  dataMaskType = policyItem.getDataMaskInfo().getDataMaskType();
+                    List<XXDataMaskTypeDef> dataMaskDefs = daoMgr.getXXDataMaskTypeDef().getAll();
+                    if (CollectionUtils.isNotEmpty(dataMaskDefs)) {
+                        for (XXDataMaskTypeDef dataMaskTypeDef : dataMaskDefs) {
+                            if (dataMaskTypeDef.getName().equalsIgnoreCase(dataMaskType)) {
+                                String        label   = dataMaskTypeDef.getLabel();
+                                StringBuilder sbValue = new StringBuilder(value);
+                                label = ",\"DataMasklabel\":\"" + label + "\"";
+                                int sbValueIndex = sbValue.lastIndexOf("}]");
+                                sbValue.insert(sbValueIndex, label);
+                                value = sbValue.toString();
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return value;
+    }
+
+    protected void addXXTrxLogV2(V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo, List<List<XXTrxLogV2>> ret) {
+        try {
+            if (obj != null) {
+                XXTrxLogV2 trxLog = new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo));
+
+                ret.add(Collections.singletonList(trxLog));
+            }
+        } catch (Exception excp) {
+            LOG.warn("failed to get transaction log for object: type={}, id={}", obj.getClass().getName(), obj.getId(), excp);
+        }
+    }
+
     private List<List<XXTrxLogV2>> getTransactionLogs(V obj, V oldObj, int action) {
         if (obj == null || (action == OPERATION_UPDATE_CONTEXT && oldObj == null)) {
             return Collections.emptyList();
@@ -258,31 +295,6 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
         objChangeInfo.addAttribute(trxLogAttr.getAttribUserFriendlyName(), prevValue, newValue);
     }
 
-    public String addLabelToDataMaskTxnPolicy(V obj, String value) {
-        if (obj instanceof RangerPolicy && ((RangerPolicy) obj).getDataMaskPolicyItems() != null) {
-            for (RangerDataMaskPolicyItem policyItem : ((RangerPolicy) obj).getDataMaskPolicyItems()) {
-                if (policyItem.getDataMaskInfo() != null && policyItem.getDataMaskInfo().getDataMaskType() != null) {
-                    String dataMaskType = policyItem.getDataMaskInfo().getDataMaskType();
-                    List<XXDataMaskTypeDef> dataMaskDefs = daoMgr.getXXDataMaskTypeDef().getAll();
-                    if (CollectionUtils.isNotEmpty(dataMaskDefs)) {
-                        for (XXDataMaskTypeDef dataMaskTypeDef : dataMaskDefs) {
-                            if (dataMaskTypeDef.getName().equalsIgnoreCase(dataMaskType)) {
-                                String label = dataMaskTypeDef.getLabel();
-                                StringBuilder sbValue = new StringBuilder(value);
-                                label = ",\"DataMasklabel\":\"" + label + "\"";
-                                int sbValueIndex = sbValue.lastIndexOf("}]");
-                                sbValue.insert(sbValueIndex, label);
-                                value = sbValue.toString();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return value;
-    }
-
     private String toActionString(int action) {
         switch (action) {
             case OPERATION_CREATE_CONTEXT:
@@ -298,18 +310,6 @@ public abstract class RangerAuditedModelService<T extends XXDBBase, V extends Ra
         }
 
         return "unknown";
-    }
-
-    protected void addXXTrxLogV2(V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo, List<List<XXTrxLogV2>> ret) {
-        try {
-            if (obj != null) {
-                XXTrxLogV2 trxLog = new XXTrxLogV2(classType, obj.getId(), getObjectName(obj), getParentObjectType(obj, oldObj), getParentObjectId(obj, oldObj), getParentObjectName(obj, oldObj), toActionString(action), JsonUtilsV2.objToJson(objChangeInfo));
-
-                ret.add(Collections.singletonList(trxLog));
-            }
-        } catch (Exception excp) {
-            LOG.warn("failed to get transaction log for object: type={}, id={}", obj.getClass().getName(), obj.getId(), excp);
-        }
     }
 
     private void addTransactionLogsOnImpactedObjects(V obj, V oldObj, int action, ObjectChangeInfo objChangeInfo, List<List<XXTrxLogV2>> ret) {

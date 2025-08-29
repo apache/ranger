@@ -44,10 +44,8 @@ import java.util.List;
 @Service
 @Scope("singleton")
 public class UserService extends UserServiceBase<XXPortalUser, VXPortalUser> {
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-
     public static final String NAME = "User";
-
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private static UserService instance;
 
     @Autowired

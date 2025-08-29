@@ -52,14 +52,12 @@ import java.util.Collections;
 import java.util.List;
 
 public abstract class RangerBaseModelService<T extends XXDBBase, V extends RangerBaseModelObject> {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerBaseModelService.class);
-
     public static final int OPERATION_CREATE_CONTEXT        = 1;
     public static final int OPERATION_UPDATE_CONTEXT        = 2;
     public static final int OPERATION_DELETE_CONTEXT        = 3;
     public static final int OPERATION_IMPORT_CREATE_CONTEXT = 4;
     public static final int OPERATION_IMPORT_DELETE_CONTEXT = 5;
-
+    private static final Logger LOG = LoggerFactory.getLogger(RangerBaseModelService.class);
     public final List<SortField>   sortFields   = new ArrayList<>();
     public final List<SearchField> searchFields = new ArrayList<>();
 
@@ -411,7 +409,7 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
     }
 
     protected String getUserScreenName(Long userId) {
-        String       ret = null;
+        String       ret         = null;
         XXPortalUser xPortalUser = userId == null ? null : daoMgr.getXXPortalUser().getById(userId);
 
         if (xPortalUser != null) {

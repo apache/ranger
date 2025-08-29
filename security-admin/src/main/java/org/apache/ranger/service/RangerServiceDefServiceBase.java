@@ -68,12 +68,10 @@ import java.util.Set;
 import static org.apache.ranger.plugin.util.ServiceDefUtil.IMPLICIT_CONDITION_EXPRESSION_EVALUATOR;
 
 public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef> extends RangerBaseModelService<T, V> {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
-
     public static final String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
-
-    private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS  = "__accessTypeRestrictions";
-    private static final String OPTION_RESOURCE_IS_VALID_LEAF             = "__isValidLeaf";
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
+    private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS = "__accessTypeRestrictions";
+    private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";
 
     @Autowired
     RangerAuditFields<?> rangerAuditFields;

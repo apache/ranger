@@ -90,9 +90,9 @@ public abstract class RangerTagDefServiceBase<T extends XXTagDef, V extends Rang
     }
 
     public PList<V> searchRangerTagDefs(SearchFilter searchFilter) {
-        PList<V> retList    = new PList<>();
-        List<V>  tagDefList = new ArrayList<>();
-        List<T> xTagDefList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
+        PList<V> retList     = new PList<>();
+        List<V>  tagDefList  = new ArrayList<>();
+        List<T>  xTagDefList = searchRangerObjects(searchFilter, searchFields, sortFields, retList);
 
         for (T xTagDef : xTagDefList) {
             V tagDef = populateViewBean(xTagDef);
