@@ -300,7 +300,9 @@ public class RangerKafkaAuthorizer implements Authorizer {
       logger.error("Error while calling isAccessAllowed(). requests={}", rangerRequests, t);
       return null;
     } finally {
-      auditHandler.flushAudit();
+        if (auditHandler != null) {
+          auditHandler.flushAudit();
+        }
     }
   }
 
