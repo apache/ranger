@@ -22,6 +22,8 @@ package org.apache.ranger.common;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @description : Unit Test cases for TimedExecutor
  */
 
+@ExtendWith(MockitoExtension.class)
 public class TestTimedExecutor {
     static final         String        format   = "%15s id: %2d";
     private static final Logger        LOG      = LoggerFactory.getLogger(TestTimedExecutor.class);

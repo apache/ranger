@@ -17,6 +17,8 @@
 package org.apache.ranger.common;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +26,7 @@ import java.util.Properties;
 
 import static org.mockito.Mockito.mock;
 
+@ExtendWith(MockitoExtension.class)
 public class TestXMLPropertiesUtil {
     @Test
     public void testLoadFromXml() throws IOException {

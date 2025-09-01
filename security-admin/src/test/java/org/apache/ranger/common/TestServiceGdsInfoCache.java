@@ -19,6 +19,7 @@ package org.apache.ranger.common;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.entity.XXServiceVersionInfo;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.service.RangerGdsDataShareInDatasetService;
@@ -27,15 +28,19 @@ import org.apache.ranger.service.RangerGdsDatasetInProjectService;
 import org.apache.ranger.service.RangerGdsDatasetService;
 import org.apache.ranger.service.RangerGdsProjectService;
 import org.apache.ranger.service.RangerGdsSharedResourceService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.util.Date;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -45,6 +50,7 @@ import static org.mockito.Mockito.when;
  * @description : Unit Test cases for ServiceGdsInfoCache
  */
 
+@ExtendWith(MockitoExtension.class)
 public class TestServiceGdsInfoCache {
     @Test
     public void testGetLoadsFromDatabaseAndCaches() throws Exception {
@@ -54,7 +60,6 @@ public class TestServiceGdsInfoCache {
         PlatformTransactionManager txManager = Mockito.mock(PlatformTransactionManager.class, Answers.RETURNS_DEEP_STUBS);
         when(txManager.getTransaction(any())).thenReturn(new SimpleTransactionStatus());
         doNothing().when(txManager).commit(any());
-        doNothing().when(txManager).rollback(any());
         cache.txManager = txManager;
 
         // mock dao and return version info
@@ -70,7 +75,7 @@ public class TestServiceGdsInfoCache {
 
         // mock store and all GDS services to return empty sets
         ServiceStore svcStore = Mockito.mock(ServiceStore.class);
-        when(svcStore.getServiceDefByName("gds")).thenReturn(new org.apache.ranger.plugin.model.RangerServiceDef());
+        when(svcStore.getServiceDefByName("gds")).thenReturn(new RangerServiceDef());
         cache.svcStore                  = svcStore;
         cache.datasetService            = Mockito.mock(RangerGdsDatasetService.class, Answers.RETURNS_DEEP_STUBS);
         cache.projectService            = Mockito.mock(RangerGdsProjectService.class, Answers.RETURNS_DEEP_STUBS);
@@ -86,12 +91,12 @@ public class TestServiceGdsInfoCache {
         try {
             info = cache.get("svc-gds");
         } catch (Exception e) {
-            Assertions.fail("Should not throw: " + e.getMessage());
+            fail("Should not throw: " + e.getMessage());
         }
 
-        Assertions.assertNotNull(info);
-        Assertions.assertEquals("svc-gds", info.getServiceName());
-        Assertions.assertEquals(Long.valueOf(5L), info.getGdsVersion());
-        Assertions.assertNotNull(info.getGdsServiceDef());
+        assertNotNull(info);
+        assertEquals("svc-gds", info.getServiceName());
+        assertEquals(Long.valueOf(5L), info.getGdsVersion());
+        assertNotNull(info.getGdsServiceDef());
     }
 }

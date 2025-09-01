@@ -18,10 +18,10 @@ package org.apache.ranger.common;
 
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,15 +54,15 @@ public class TestRangerServiceTagsCacheDeltasCache {
         RangerServiceTagsCache cache = RangerServiceTagsCache.getInstance();
         // Reset internal singleton map by clearing and creating wrapper via getServiceTags
         ServiceTags first = cache.getServiceTags(serviceName, serviceId, -1L, false, tagStore);
-        Assertions.assertEquals(Long.valueOf(2L), first.getTagVersion());
+        assertEquals(Long.valueOf(2L), first.getTagVersion());
 
         // Now ask for deltas; the cache should return the delta object, and re-use cached delta on repeat
         ServiceTags d1 = cache.getServiceTags(serviceName, serviceId, 1L, false, tagStore);
-        Assertions.assertEquals(Boolean.TRUE, d1.getIsDelta());
+        assertEquals(Boolean.TRUE, d1.getIsDelta());
 
         // Make TagStore return null to ensure cache serves previous delta from memory
         when(tagStore.getServiceTagsDelta(serviceName, 1L)).thenReturn(null);
         ServiceTags d2 = cache.getServiceTags(serviceName, serviceId, 1L, false, tagStore);
-        Assertions.assertEquals(Boolean.TRUE, d2.getIsDelta());
+        assertEquals(Boolean.TRUE, d2.getIsDelta());
     }
 }
