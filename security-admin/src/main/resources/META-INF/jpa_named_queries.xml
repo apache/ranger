@@ -48,6 +48,11 @@
 		<query>DELETE FROM XXAuthSession obj WHERE obj.id in :ids
 		</query>
 	</named-query>
+	<named-query name="XXAuthSession.getSuccessAuthSessionsByUserId">
+		<query>SELECT obj FROM XXAuthSession obj WHERE obj.loginId = :loginId and obj.authStatus = :authStatus order by obj.id DESC
+		</query>
+	</named-query>
+
 
 	<!-- XXPortalUser -->
 	<named-query name="XXPortalUser.findByEmailAddress">
