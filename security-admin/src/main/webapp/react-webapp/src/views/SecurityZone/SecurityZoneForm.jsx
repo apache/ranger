@@ -574,17 +574,17 @@ const SecurityZoneForm = () => {
 
     try {
       const roleResp = await fetchApi({
-        url: "roles/roles",
+        url: "roles/lookup/roles/names",
         params: params
       });
-      op = roleResp.data.roles;
+      op = roleResp?.data?.vXStrings;
     } catch (error) {
       console.error(`Error occurred while fetching Roles! ${error}`);
       serverError(error);
     }
     return op.map((obj) => ({
-      label: obj.name,
-      value: obj.name
+      label: obj.value,
+      value: obj.value
     }));
   };
 

@@ -76,6 +76,8 @@ import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerRoleList;
+import org.apache.ranger.view.VXString;
+import org.apache.ranger.view.VXStringList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -355,6 +357,42 @@ public class RoleREST {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== getRole(id=" + id + "):" + ret);
         }
+        return ret;
+    }
+
+    @GET
+    @Path("/lookup/roles/names")
+    @Produces("application/json")
+    public VXStringList lookupAllRolesNames(@Context HttpServletRequest request) {
+        LOG.debug("==> lookupAllRolesNames()");
+
+        VXStringList ret = new VXStringList();
+
+        RangerRoleList rangerRoleList = new RangerRoleList();
+        List<VXString> vXList = new ArrayList<>();
+
+        SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
+        try {
+            roleStore.getRoles(filter, rangerRoleList);
+            VXString vXString = null;
+            for (RangerRole role : rangerRoleList.getSecurityRoles()) {
+                vXString = new VXString();
+                vXString.setValue(role.getName());
+                vXList.add(vXString);
+            }
+            ret.setVXStrings(vXList);
+            ret.setPageSize(rangerRoleList.getPageSize());
+            ret.setTotalCount(rangerRoleList.getTotalCount());
+            ret.setSortType(rangerRoleList.getSortType());
+            ret.setSortBy(rangerRoleList.getSortBy());
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("lookupAllRolesNames() failed", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        LOG.debug("<== lookupAllRolesNames():{}", ret);
         return ret;
     }
 
