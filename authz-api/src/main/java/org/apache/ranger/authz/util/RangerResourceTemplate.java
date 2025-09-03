@@ -173,7 +173,7 @@ public class RangerResourceTemplate {
 
     @Override
     public String toString() {
-        return "ResourceParser{" +
+        return "RangerResourceTemplate{" +
                 "template=" + template +
                 ", resources='" + String.join(",", resources) + "'" +
                 ", prefix='" + prefix + "'" +
