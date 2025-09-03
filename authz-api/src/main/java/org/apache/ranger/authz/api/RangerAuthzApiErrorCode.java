@@ -38,7 +38,7 @@ public enum RangerAuthzApiErrorCode implements RangerAuthzErrorCode {
 
     RangerAuthzApiErrorCode(int httpStatusCode, String code, String message) {
         this.httpStatusCode = httpStatusCode;
-        this.code           = String.format("%s-%3d-%s", ERROR_CODE_MODULE_PREFIX, String.valueOf(httpStatusCode), code);
+        this.code           = String.format("%s-%3d-%s", ERROR_CODE_MODULE_PREFIX, httpStatusCode, code);
         this.message        = message;
     }
 
