@@ -61,7 +61,7 @@ const keyCreateReducer = (state, action) => {
   }
 };
 
-const PromtDialog = (props) => {
+const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
   return null;
@@ -225,7 +225,7 @@ function KeyCreate(props) {
           }
         }) => (
           <div className="wrap">
-            <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
+            <PromptDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
             <form
               onSubmit={(event) => {
                 handleSubmit(event);

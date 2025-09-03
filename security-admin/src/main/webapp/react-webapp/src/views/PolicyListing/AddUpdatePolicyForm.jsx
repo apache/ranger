@@ -53,7 +53,8 @@ import {
   BlockUi,
   Loader,
   scrollToError,
-  selectInputCustomStyles
+  selectInputCustomStyles,
+  trimInputValue
 } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType, getEnumElementByValue } from "Utils/XAEnums";
@@ -62,19 +63,20 @@ import PolicyPermissionItem from "../PolicyListing/PolicyPermissionItem";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import PolicyValidityPeriodComp from "./PolicyValidityPeriodComp";
 import PolicyConditionsComp from "./PolicyConditionsComp";
-import { getAllTimeZoneList, policyConditionUpdatedJSON } from "Utils/XAUtils";
 import moment from "moment";
 import {
   InfoIcon,
   commonBreadcrumb,
   isPolicyExpired,
-  getResourcesDefVal
+  getResourcesDefVal,
+  getAllTimeZoneList,
+  policyConditionUpdatedJSON,
+  policyInfo
 } from "Utils/XAUtils";
 import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
 import usePrompt from "Hooks/usePrompt";
 import { RegexMessage } from "Utils/XAMessages";
-import { policyInfo } from "Utils/XAUtils";
 import { getServiceDef } from "Utils/appState";
 import { FieldArray } from "react-final-form-arrays";
 
@@ -290,7 +292,7 @@ export default function AddUpdatePolicyForm() {
   const fetchPolicyLabel = async (inputValue) => {
     let params = {};
     if (inputValue) {
-      params["policyLabel"] = inputValue || "";
+      params["policyLabel"] = inputValue.trim() || "";
     }
     const policyLabelResp = await fetchApi({
       url: "plugins/policyLabels",
@@ -298,8 +300,8 @@ export default function AddUpdatePolicyForm() {
     });
 
     return policyLabelResp.data.map((name) => ({
-      label: name,
-      value: name
+      label: name.trim(),
+      value: name.trim()
     }));
   };
 
@@ -387,15 +389,15 @@ export default function AddUpdatePolicyForm() {
       });
     }
     if (policyId) {
-      data.policyName = policyData?.name;
+      data.policyName = policyData?.name?.trim();
       data.isEnabled = policyData?.isEnabled;
       data.policyPriority = policyData?.policyPriority == 0 ? false : true;
-      data.description = policyData?.description;
+      data.description = policyData?.description?.trim();
       data.isAuditEnabled = policyData?.isAuditEnabled;
       data.policyLabel =
         policyData &&
         policyData?.policyLabels?.map((val) => {
-          return { label: val, value: val };
+          return { label: val?.trim(), value: val?.trim() };
         });
       if (policyData?.resources) {
         if (!isMultiResources) {
@@ -404,7 +406,7 @@ export default function AddUpdatePolicyForm() {
             let setResources = find(serviceCompResourcesDetails, ["name", key]);
             data[`resourceName-${setResources?.level}`] = setResources;
             data[`value-${setResources?.level}`] = value.values.map((m) => {
-              return { label: m, value: m };
+              return { label: m?.trim(), value: m?.trim() };
             });
             if (setResources?.excludesSupported) {
               data[`isExcludesSupport-${setResources?.level}`] =
@@ -449,7 +451,7 @@ export default function AddUpdatePolicyForm() {
                   setResources;
                 additionalResourcesObj[`value-${setResources?.level}`] =
                   value.values.map((m) => {
-                    return { label: m, value: m };
+                    return { label: m?.trim(), value: m?.trim() };
                   });
                 if (setResources?.excludesSupported) {
                   additionalResourcesObj[
@@ -888,7 +890,7 @@ export default function AddUpdatePolicyForm() {
       data["conditions"] = [];
     }
 
-    /* For create zoen policy*/
+    /* For create zone policy*/
     if (localStorage.getItem("zoneDetails") != null) {
       data["zoneName"] = JSON.parse(localStorage.getItem("zoneDetails")).label;
     }
@@ -1299,6 +1301,7 @@ export default function AddUpdatePolicyForm() {
                                           : "form-control"
                                       }
                                       data-cy="policyName"
+                                      onBlur={(e) => trimInputValue(e, input)}
                                     />
                                     <InfoIcon
                                       css="input-box-info-icon"
@@ -1389,6 +1392,23 @@ export default function AddUpdatePolicyForm() {
                                   }}
                                   defaultOptions={defaultPolicyLabelOptions}
                                   styles={selectInputCustomStyles}
+                                  // Add this prop to trim the visual "Create" label
+                                  formatCreateLabel={(inputValue) =>
+                                    `Create "${inputValue.trim()}"`
+                                  }
+                                  // Add this prop to trim the value when a tag is created
+                                  onCreateOption={(inputValue) => {
+                                    const policyLabelVal = inputValue.trim();
+                                    if (policyLabelVal) {
+                                      input.onChange([
+                                        ...input.value,
+                                        {
+                                          label: policyLabelVal,
+                                          value: policyLabelVal
+                                        }
+                                      ]);
+                                    }
+                                  }}
                                 />
                               </Col>
                             </FormB.Group>
@@ -1421,6 +1441,7 @@ export default function AddUpdatePolicyForm() {
                                   as="textarea"
                                   rows={3}
                                   data-cy="description"
+                                  onBlur={(e) => trimInputValue(e, input)}
                                 />
                               </Col>
                             </FormB.Group>

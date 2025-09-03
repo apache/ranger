@@ -134,17 +134,17 @@ export default function ResourceComp(props) {
       delete formValues[`isRecursiveSupport-${levelKey}`];
     }
     delete formValues[`value-${grpResourcesKeys[index]}`];
-    let CurrentSelectedResourcs = selectedVal.name;
+    let currentSelectedResources = selectedVal.name;
     for (let j = index + 1; j < grpResourcesKeys.length; j++) {
       let level = grpResourcesKeys[j];
       let nextResource = resources.find((m) => {
         if (m?.parent) {
-          return m.parent === CurrentSelectedResourcs;
+          return m.parent === currentSelectedResources;
         }
       });
       if (nextResource) {
         formValues[`resourceName-${level}`] = nextResource;
-        CurrentSelectedResourcs = nextResource.name;
+        currentSelectedResources = nextResource.name;
       }
     }
 

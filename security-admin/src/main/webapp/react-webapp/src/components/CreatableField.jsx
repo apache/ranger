@@ -45,15 +45,18 @@ const CreatableField = (props) => {
       case "Enter":
       case "Tab":
         setActionInputValue("");
-        setActionValue([...actionValue, createOption(actionInputValue)]);
-        creatableOnChange([...actionValue, createOption(actionInputValue)]);
+        setActionValue([...actionValue, createOption(actionInputValue.trim())]);
+        creatableOnChange([
+          ...actionValue,
+          createOption(actionInputValue.trim())
+        ]);
         e.preventDefault();
     }
   };
 
   const createOption = (label) => ({
-    value: label,
-    label: label
+    value: label.trim(),
+    label: label.trim()
   });
 
   const handleInputChange = (value) => {

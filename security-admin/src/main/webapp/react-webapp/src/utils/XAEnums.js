@@ -586,7 +586,7 @@ export const RegexValidation = {
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\-+/@= ]|[\u00C0-\u017F])+$/i,
     regexExpressionForFirstAndLastName:
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
-    regexforNameValidation: /^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,
+    regexForNameValidation: /^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,
     regexExpressionForSecondaryName:
       /^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\s_. -@]|[\u00C0-\u017F])+$/i,
     regexforServiceNameValidation: /^[a-zA-Z0-9_-][a-zA-Z0-9_-]{0,254}$/,
@@ -601,7 +601,7 @@ export const RegexValidation = {
         3. Name length should be greater than one."
       </>
     ),
-    regexforNameValidationMessage:
+    regexForNameValidationMessage:
       "Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space).",
     secondaryNameValidationMessage: (
       <>

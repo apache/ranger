@@ -42,7 +42,8 @@ import {
   CustomPopover,
   Loader,
   scrollToError,
-  selectInputCustomStyles
+  selectInputCustomStyles,
+  trimInputValue
 } from "Components/CommonComponents";
 import {
   difference,
@@ -387,8 +388,8 @@ class ServiceForm extends Component {
 
     const serviceJson = {};
     serviceJson["name"] = serviceResp?.data?.name;
-    serviceJson["displayName"] = serviceResp?.data?.displayName;
-    serviceJson["description"] = serviceResp?.data?.description;
+    serviceJson["displayName"] = serviceResp?.data?.displayName?.trim();
+    serviceJson["description"] = serviceResp?.data?.description?.trim();
     serviceJson["isEnabled"] = JSON.stringify(serviceResp?.data?.isEnabled);
 
     serviceJson["tagService"] =
@@ -409,7 +410,7 @@ class ServiceForm extends Component {
 
     serviceDefConfigs.map((config) => {
       serviceJson["configs"][config.replaceAll(".", "_").replaceAll("-", "_")] =
-        serviceResp?.data?.configs?.[config];
+        serviceResp?.data?.configs?.[config]?.trim();
     });
 
     const additionalConfigs = intersection(
@@ -435,7 +436,10 @@ class ServiceForm extends Component {
 
     let editCustomConfigs = sortBy(
       difference(serviceCustomConfigs, additionalConfigs)?.map((config) => {
-        return { name: config, value: serviceResp?.data?.configs[config] };
+        return {
+          name: config?.trim(),
+          value: serviceResp?.data?.configs[config]?.trim()
+        };
       }),
       "name"
     );
@@ -762,6 +766,7 @@ class ServiceForm extends Component {
                         data-cy={
                           "configs." + this.configsJson[configParam.name]
                         }
+                        onBlur={(e) => trimInputValue(e, input)}
                       />
                     </Col>
                     {configInfo.length === 1 && (
@@ -972,8 +977,8 @@ class ServiceForm extends Component {
       : undefined;
 
   validateDisplayName = (value) =>
-    !RegexValidation.NAME_VALIDATION.regexforNameValidation.test(value)
-      ? RegexValidation.NAME_VALIDATION.regexforNameValidationMessage
+    !RegexValidation.NAME_VALIDATION.regexForNameValidation.test(value)
+      ? RegexValidation.NAME_VALIDATION.regexForNameValidationMessage
       : undefined;
 
   composeValidators =
@@ -1209,6 +1214,7 @@ class ServiceForm extends Component {
                                         : "form-control"
                                     }
                                     data-cy="displayName"
+                                    onBlur={(e) => trimInputValue(e, input)}
                                   />
                                 </Col>
                                 {meta.error && meta.touched && (
@@ -1236,6 +1242,7 @@ class ServiceForm extends Component {
                                         : "form-control"
                                     }
                                     data-cy="description"
+                                    onBlur={(e) => trimInputValue(e, input)}
                                   />
                                 </Col>
                                 {meta.error && meta.touched && (
@@ -1334,22 +1341,34 @@ class ServiceForm extends Component {
                                       fields.map((name, index) => (
                                         <tr key={name}>
                                           <td className="text-center">
-                                            <Field
-                                              name={`${name}.name`}
-                                              component="input"
-                                              className="form-control"
-                                              data-js="name"
-                                              data-cy="name"
-                                            />
+                                            <Field name={`${name}.name`}>
+                                              {({ input, meta }) => (
+                                                <input
+                                                  {...input}
+                                                  className="form-control"
+                                                  data-js="name"
+                                                  data-cy="name"
+                                                  onBlur={(e) =>
+                                                    trimInputValue(e, input)
+                                                  }
+                                                />
+                                              )}
+                                            </Field>
                                           </td>
                                           <td className="text-center">
-                                            <Field
-                                              name={`${name}.value`}
-                                              component="input"
-                                              className="form-control"
-                                              data-js="value"
-                                              data-cy="value"
-                                            />
+                                            <Field name={`${name}.value`}>
+                                              {({ input, meta }) => (
+                                                <input
+                                                  {...input}
+                                                  className="form-control"
+                                                  data-js="value"
+                                                  data-cy="value"
+                                                  onBlur={(e) =>
+                                                    trimInputValue(e, input)
+                                                  }
+                                                />
+                                              )}
+                                            </Field>
                                           </td>
                                           <td className="text-center">
                                             <Button
