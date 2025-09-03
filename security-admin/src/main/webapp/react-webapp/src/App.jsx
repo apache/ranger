@@ -161,8 +161,18 @@ export default class App extends Component {
   }
 
   componentDidMount() {
+    this.setClientTimeOffset();
     this.fetchUserProfile();
   }
+
+  setClientTimeOffset = () => {
+    const offset = new Date().getTimezoneOffset();
+
+    Cookies.set("clientTimeOffset", offset, {
+      path: "/", // Available site-wide
+      sameSite: "Strict" // CSRF protection
+    });
+  };
 
   fetchUserProfile = async () => {
     let getServiceDefData = [];
