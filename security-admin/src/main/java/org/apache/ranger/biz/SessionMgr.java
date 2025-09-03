@@ -21,6 +21,7 @@
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -325,6 +326,18 @@ public class SessionMgr {
 		gjAuthSession = storeAuthSession(gjAuthSession);
 		return gjAuthSession;
 	}
+
+    public Date getLastSuccessLoginAuthTimeByUserId(String loginId) {
+        XXAuthSession xXAuthSession = daoManager.getXXAuthSession().getLastSuccessLoginAuthSessionByUserId(loginId);
+
+        if (xXAuthSession != null) {
+            return authSessionService.populateViewBean(xXAuthSession).getAuthTime();
+        } else {
+            logger.info("Session cleaned up or  User logged in for first time");
+        }
+
+        return null;
+    }
 
 	protected boolean validateUserSession(UserSessionBase userSession,
 			String currentLoginId) {
