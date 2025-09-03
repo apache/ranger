@@ -585,7 +585,9 @@ public class UserMgr {
 
 			userProfile.setUserRoleList(userRoleList);
 		}
+		userProfile.setLastLoginTime(sessionMgr.getLastSuccessLoginAuthTimeByUserId(sess.getLoginId()));
 		userProfile.setUserSource(user.getUserSource());
+
 		return userProfile;
 	}
 
