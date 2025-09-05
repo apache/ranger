@@ -30,29 +30,11 @@ import java.util.Set;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerAccessInfo {
-    private String              serviceType;
-    private String              serviceName;
     private String              resource;
     private Set<String>         subResources;
     private String              action;
     private Set<String>         permissions;
     private Map<String, Object> attributes;
-
-    public String getServiceType() {
-        return serviceType;
-    }
-
-    public void setServiceType(String serviceType) {
-        this.serviceType = serviceType;
-    }
-
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-    }
 
     public String getResource() {
         return resource;
@@ -97,9 +79,7 @@ public class RangerAccessInfo {
     @Override
     public String toString() {
         return "RangerAccessInfo{" +
-                "serviceType=" + serviceType +
-                ", serviceName=" + serviceName +
-                ", resource='" + resource + '\'' +
+                "resource='" + resource + '\'' +
                 ", subResources=" + subResources +
                 ", action=" + action +
                 ", permissions=" + permissions +

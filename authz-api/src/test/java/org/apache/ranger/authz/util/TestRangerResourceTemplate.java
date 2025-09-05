@@ -21,10 +21,7 @@ package org.apache.ranger.authz.util;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TestRangerResourceTemplate {
     @Test
     public void testHiveResources() throws Exception {
-        Map<String, List<RangerResourceTemplate>> templates = getHiveTemplates();
+        Map<String, RangerResourceTemplate> templates = getHiveTemplates();
 
         TestData[] tests = {
                 new TestData("database:db1", "database", "db1"),
@@ -61,19 +58,12 @@ public class TestRangerResourceTemplate {
 
     @Test
     public void testS3Resources() throws Exception {
-        Map<String, List<RangerResourceTemplate>> templates = getS3Templates();
+        Map<String, RangerResourceTemplate> templates = getS3Templates();
 
         TestData[] tests = {
-                new TestData("bucket:s3a://mybucket", "bucket", "mybucket"),
-                new TestData("bucket:s3a://mybucket/", "bucket", "mybucket"),
-                new TestData("bucket:s3://mybucket", "bucket", "mybucket"),
-                new TestData("bucket:s3://mybucket/", "bucket", "mybucket"),
                 new TestData("bucket:mybucket", "bucket", "mybucket"),
-                new TestData("bucket:mybucket/", "bucket", "mybucket"),
-                new TestData("path:s3a://mybucket/myfolder/myfile.txt", "bucket", "mybucket", "path", "myfolder/myfile.txt"),
-                new TestData("path:s3://mybucket/myfolder/myfile.txt", "bucket", "mybucket", "path", "myfolder/myfile.txt"),
                 new TestData("path:mybucket/myfolder/myfile.txt", "bucket", "mybucket", "path", "myfolder/myfile.txt"),
-                new TestData("path:s3a://mybucket/", "bucket", "mybucket", "path", ""),
+                new TestData("path:mybucket/", "bucket", "mybucket", "path", ""),
                 // invalid values
                 new TestData("mybucket/myfolder/myfile.txt"),                     // no resource-type
                 new TestData(":mybucket/myfolder/myfile.txt"),                    // empty resource-type
@@ -91,16 +81,10 @@ public class TestRangerResourceTemplate {
 
     @Test
     public void testAdlsGen2Resources() throws Exception {
-        Map<String, List<RangerResourceTemplate>> templates = getAdlsGen2Templates();
+        Map<String, RangerResourceTemplate> templates = getAdlsGen2Templates();
 
         TestData[] tests = {
-                new TestData("container:abfss://mycontainer@myaccount.dfs.core.windows.net", "storageaccount", "myaccount", "container", "mycontainer"),
-                new TestData("container:abfs://mycontainer@myaccount.dfs.core.windows.net", "storageaccount", "myaccount", "container", "mycontainer"),
-                new TestData("container:mycontainer@myaccount.dfs.core.windows.net", "storageaccount", "myaccount", "container", "mycontainer"),
                 new TestData("container:mycontainer@myaccount", "storageaccount", "myaccount", "container", "mycontainer"),
-                new TestData("relativepath:abfss://mycontainer@myaccount.dfs.core.windows.net/p1/p2/f1.txt", "storageaccount", "myaccount", "container", "mycontainer", "relativepath", "p1/p2/f1.txt"),
-                new TestData("relativepath:abfs://mycontainer@myaccount.dfs.core.windows.net/p1/p2/f1.txt", "storageaccount", "myaccount", "container", "mycontainer", "relativepath", "p1/p2/f1.txt"),
-                new TestData("relativepath:mycontainer@myaccount.dfs.core.windows.net/p1/p2/f1.txt", "storageaccount", "myaccount", "container", "mycontainer", "relativepath", "p1/p2/f1.txt"),
                 new TestData("relativepath:mycontainer@myaccount/p1/p2/f1.txt", "storageaccount", "myaccount", "container", "mycontainer", "relativepath", "p1/p2/f1.txt"),
         };
 
@@ -113,7 +97,8 @@ public class TestRangerResourceTemplate {
 
     @Test
     public void testTrinoResources() throws Exception {
-        Map<String, List<RangerResourceTemplate>> templates = getTrinoTemplates();
+        Map<String, RangerResourceTemplate> templates = getTrinoTemplates();
+
         TestData[] tests = {
                 new TestData("catalog:mycatalog", "catalog", "mycatalog"),
                 new TestData("schema:mycatalog.myschema", "catalog", "mycatalog", "schema", "myschema"),
@@ -148,73 +133,65 @@ public class TestRangerResourceTemplate {
         }
     }
 
-    private static Map<String, List<RangerResourceTemplate>> getHiveTemplates() throws Exception {
-        Map<String, List<RangerResourceTemplate>> ret = new HashMap<>();
+    private static Map<String, RangerResourceTemplate> getHiveTemplates() throws Exception {
+        Map<String, RangerResourceTemplate> ret = new HashMap<>();
 
-        ret.put("database", Collections.singletonList(new RangerResourceTemplate("{database}")));
-        ret.put("table", Collections.singletonList(new RangerResourceTemplate("{database}.{table}")));
-        ret.put("column", Collections.singletonList(new RangerResourceTemplate("{database}.{table}.{column}")));
-        ret.put("udf", Collections.singletonList(new RangerResourceTemplate("{database}.{udf}")));
-        ret.put("url", Collections.singletonList(new RangerResourceTemplate("{url}")));
-        ret.put("hiveservice", Collections.singletonList(new RangerResourceTemplate("{hiveservice}")));
-        ret.put("global", Collections.singletonList(new RangerResourceTemplate("{global}")));
-
-        return ret;
-    }
-
-    private static Map<String, List<RangerResourceTemplate>> getS3Templates() throws Exception {
-        Map<String, List<RangerResourceTemplate>> ret = new HashMap<>();
-
-        ret.put("bucket", Arrays.asList(new RangerResourceTemplate("s3a://{bucket}/"), new RangerResourceTemplate("s3a://{bucket}"), new RangerResourceTemplate("s3://{bucket}/"), new RangerResourceTemplate("s3://{bucket}"), new RangerResourceTemplate("{bucket}/"), new RangerResourceTemplate("{bucket}")));
-        ret.put("path", Arrays.asList(new RangerResourceTemplate("s3a://{bucket}/{path}"), new RangerResourceTemplate("s3://{bucket}/{path}"), new RangerResourceTemplate("{bucket}/{path}")));
+        ret.put("database", new RangerResourceTemplate("{database}"));
+        ret.put("table", new RangerResourceTemplate("{database}.{table}"));
+        ret.put("column", new RangerResourceTemplate("{database}.{table}.{column}"));
+        ret.put("udf", new RangerResourceTemplate("{database}.{udf}"));
+        ret.put("url", new RangerResourceTemplate("{url}"));
+        ret.put("hiveservice", new RangerResourceTemplate("{hiveservice}"));
+        ret.put("global", new RangerResourceTemplate("{global}"));
 
         return ret;
     }
 
-    private static Map<String, List<RangerResourceTemplate>> getAdlsGen2Templates() throws Exception {
-        Map<String, List<RangerResourceTemplate>> ret = new HashMap<>();
+    private static Map<String, RangerResourceTemplate> getS3Templates() throws Exception {
+        Map<String, RangerResourceTemplate> ret = new HashMap<>();
 
-        ret.put("container", Arrays.asList(new RangerResourceTemplate("abfss://{container}@{storageaccount}.dfs.core.windows.net"), new RangerResourceTemplate("abfs://{container}@{storageaccount}.dfs.core.windows.net"), new RangerResourceTemplate("{container}@{storageaccount}.dfs.core.windows.net"), new RangerResourceTemplate("{container}@{storageaccount}")));
-        ret.put("relativepath", Arrays.asList(new RangerResourceTemplate("abfss://{container}@{storageaccount}.dfs.core.windows.net/{relativepath}"), new RangerResourceTemplate("abfs://{container}@{storageaccount}.dfs.core.windows.net/{relativepath}"), new RangerResourceTemplate("{container}@{storageaccount}.dfs.core.windows.net/{relativepath}"), new RangerResourceTemplate("{container}@{storageaccount}/{relativepath}")));
-
-        return ret;
-    }
-
-    private static Map<String, List<RangerResourceTemplate>> getTrinoTemplates() throws Exception {
-        Map<String, List<RangerResourceTemplate>> ret = new HashMap<>();
-
-        ret.put("catalog", Collections.singletonList(new RangerResourceTemplate("{catalog}")));
-        ret.put("schema", Collections.singletonList(new RangerResourceTemplate("{catalog}.{schema}")));
-        ret.put("table", Collections.singletonList(new RangerResourceTemplate("{catalog}.{schema}.{table}")));
-        ret.put("column", Collections.singletonList(new RangerResourceTemplate("{catalog}.{schema}.{table}.{column}")));
-        ret.put("trinouser", Collections.singletonList(new RangerResourceTemplate("{trinouser}")));
-        ret.put("systemproperty", Collections.singletonList(new RangerResourceTemplate("{systemproperty}")));
-        ret.put("sessionproperty", Collections.singletonList(new RangerResourceTemplate("{catalog}.{sessionproperty}")));
-        ret.put("function", Collections.singletonList(new RangerResourceTemplate("{function}")));
-        ret.put("procedure", Collections.singletonList(new RangerResourceTemplate("{catalog}.{schema}.{procedure}")));
-        ret.put("schemafunction", Collections.singletonList(new RangerResourceTemplate("{catalog}.{schema}.{schemafunction}")));
-        ret.put("queryid", Collections.singletonList(new RangerResourceTemplate("{queryid}")));
-        ret.put("sysinfo", Collections.singletonList(new RangerResourceTemplate("{sysinfo}")));
-        ret.put("role", Collections.singletonList(new RangerResourceTemplate("{role}")));
+        ret.put("bucket", new RangerResourceTemplate("{bucket}"));
+        ret.put("path", new RangerResourceTemplate("{bucket}/{path}"));
 
         return ret;
     }
 
-    private Map<String, String> getResourceAsMap(String resource, Map<String, List<RangerResourceTemplate>> templates) {
-        String[]            resourceParts = resource.split(":", 2);
-        String              resourceType  = resourceParts.length > 0 ? resourceParts[0] : null;
-        String              resourceValue = resourceParts.length > 1 ? resourceParts[1] : null;
-        Map<String, String> ret           = null;
+    private static Map<String, RangerResourceTemplate> getAdlsGen2Templates() throws Exception {
+        Map<String, RangerResourceTemplate> ret = new HashMap<>();
 
-        for (RangerResourceTemplate template : templates.getOrDefault(resourceType, Collections.emptyList())) {
-            ret = template.parse(resourceValue);
-
-            if (ret != null) {
-                break;
-            }
-        }
+        ret.put("container", new RangerResourceTemplate("{container}@{storageaccount}"));
+        ret.put("relativepath", new RangerResourceTemplate("{container}@{storageaccount}/{relativepath}"));
 
         return ret;
+    }
+
+    private static Map<String, RangerResourceTemplate> getTrinoTemplates() throws Exception {
+        Map<String, RangerResourceTemplate> ret = new HashMap<>();
+
+        ret.put("catalog", new RangerResourceTemplate("{catalog}"));
+        ret.put("schema", new RangerResourceTemplate("{catalog}.{schema}"));
+        ret.put("table", new RangerResourceTemplate("{catalog}.{schema}.{table}"));
+        ret.put("column", new RangerResourceTemplate("{catalog}.{schema}.{table}.{column}"));
+        ret.put("trinouser", new RangerResourceTemplate("{trinouser}"));
+        ret.put("systemproperty", new RangerResourceTemplate("{systemproperty}"));
+        ret.put("sessionproperty", new RangerResourceTemplate("{catalog}.{sessionproperty}"));
+        ret.put("function", new RangerResourceTemplate("{function}"));
+        ret.put("procedure", new RangerResourceTemplate("{catalog}.{schema}.{procedure}"));
+        ret.put("schemafunction", new RangerResourceTemplate("{catalog}.{schema}.{schemafunction}"));
+        ret.put("queryid", new RangerResourceTemplate("{queryid}"));
+        ret.put("sysinfo", new RangerResourceTemplate("{sysinfo}"));
+        ret.put("role", new RangerResourceTemplate("{role}"));
+
+        return ret;
+    }
+
+    private Map<String, String> getResourceAsMap(String resource, Map<String, RangerResourceTemplate> templates) {
+        String[]               resourceParts = resource.split(":", 2);
+        String                 resourceType  = resourceParts.length > 0 ? resourceParts[0] : null;
+        String                 resourceValue = resourceParts.length > 1 ? resourceParts[1] : null;
+        RangerResourceTemplate template      = templates.get(resourceType);
+
+        return template != null ? template.parse(resourceValue) : null;
     }
 
     private static class TestData {

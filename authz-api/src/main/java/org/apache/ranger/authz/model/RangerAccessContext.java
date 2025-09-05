@@ -35,10 +35,28 @@ public class RangerAccessContext {
     public static final String CONTEXT_INFO_CLUSTER_TYPE = "clusterType";
     public static final String CONTEXT_INFO_REQUEST_DATA = "requestData";
 
+    private String              serviceType;
+    private String              serviceName;
     private long                accessTime;
     private String              clientIpAddress;
     private List<String>        forwardedIpAddresses;
     private Map<String, Object> additionalInfo;
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
 
     public long getAccessTime() {
         return accessTime;
@@ -75,7 +93,9 @@ public class RangerAccessContext {
     @Override
     public String toString() {
         return "RangerAccessContext{" +
-                "accessTime=" + accessTime +
+                "serviceType=" + serviceType +
+                ", serviceName=" + serviceName +
+                ", accessTime=" + accessTime +
                 ", clientIpAddress='" + clientIpAddress + '\'' +
                 ", forwardedIpAddresses=" + forwardedIpAddresses +
                 ", additionalInfo=" + additionalInfo +

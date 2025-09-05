@@ -216,6 +216,10 @@ public class RangerServiceDefHelper {
         return delegate.getResourceHierarchyKeys(policyType);
     }
 
+    public String getRrnTemplate(String resourceName) {
+        return delegate.getRrnTemplate(resourceName);
+    }
+
     public boolean isDataMaskSupported() {
         return delegate.isDataMaskSupported();
     }
@@ -438,6 +442,7 @@ public class RangerServiceDefHelper {
         final Set<String>                                  allAccessTypes;
         final boolean                                      isDataMaskSupported;
         final boolean                                      isRowFilterSupported;
+        final Map<String, String>                          rrnTemplates = new HashMap<>();
 
         public Delegate(RangerServiceDef serviceDef, boolean checkForCycles) {
             // NOTE: we assume serviceDef, its name and update time are can never by null.
@@ -481,6 +486,25 @@ public class RangerServiceDefHelper {
 
             if (isValid) {
                 orderedResourceNames = buildSortedResourceNames();
+
+                for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+                    String rrnTemplate = resourceDef.getRrnTemplate();
+
+                    // when rrnTemplate is not specified, create a default one using the full path from root to this resource
+                    if (StringUtils.isBlank(rrnTemplate)) {
+                        List<String> path = new ArrayList<>();
+
+                        for (RangerResourceDef resource = resourceDef; resource != null; resource = getResourceDef(resource.getParent(), RangerPolicy.POLICY_TYPE_ACCESS)) {
+                            path.add(resource.getName());
+                        }
+
+                        Collections.reverse(path);
+
+                        rrnTemplate = "{" + StringUtils.join(path, "}.{") + "}";
+                    }
+
+                    this.rrnTemplates.put(resourceDef.getName(), rrnTemplate);
+                }
             } else {
                 orderedResourceNames = new ArrayList<>();
             }
@@ -549,6 +573,10 @@ public class RangerServiceDefHelper {
             Set<Set<String>> ret = hierarchyKeys.get(policyType);
 
             return ret != null ? ret : Collections.emptySet();
+        }
+
+        public String getRrnTemplate(String resourceName) {
+            return rrnTemplates.get(resourceName);
         }
 
         public boolean isDataMaskSupported() {
