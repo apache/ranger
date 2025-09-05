@@ -117,6 +117,7 @@ public abstract class BaseDao<T> {
             logger.error("create({}) failed", tClass.getSimpleName(), e);
 
             rollbackTransaction();
+            throw e;
         }
 
         return ret;
