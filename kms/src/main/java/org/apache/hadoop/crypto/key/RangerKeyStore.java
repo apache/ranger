@@ -423,6 +423,7 @@ public class RangerKeyStore extends KeyStoreSpi {
             }
         } catch (Exception e) {
             logger.error("dbOperationStore({}) error", rangerKeyStore.getAlias(), e);
+            throw new RuntimeException("Error while storing object in the DB.", e);
         }
 
         if (logger.isDebugEnabled()) {
