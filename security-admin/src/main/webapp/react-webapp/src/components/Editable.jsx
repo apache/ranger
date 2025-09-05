@@ -303,6 +303,24 @@ const CustomCondition = (props) => {
                       width="500px"
                       isClearable={false}
                       styles={selectInputCustomStyles}
+                      formatCreateLabel={(inputValue) =>
+                        `Create "${inputValue.trim()}"`
+                      }
+                      onCreateOption={(inputValue) => {
+                        const trimmedValue = inputValue.trim();
+                        if (trimmedValue) {
+                          const newOption = {
+                            label: trimmedValue,
+                            value: trimmedValue
+                          };
+                          const currentValues = selectedInputVal || [];
+                          const newValues = Array.isArray(currentValues)
+                            ? [...currentValues, newOption]
+                            : [newOption];
+                          setSelectVal(newValues);
+                          tagAccessData(newValues, m.name);
+                        }
+                      }}
                     />
                   </Form.Group>
                 </div>
