@@ -22,6 +22,7 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 ARG HIVE_VERSION
 ARG HIVE_HADOOP_VERSION
 ARG HIVE_PLUGIN_VERSION
+ARG TEZ_VERSION
 ARG RANGER_DB_TYPE
 
 
@@ -29,6 +30,7 @@ COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz /home/ranger/dist/
 COPY ./downloads/apache-hive-${HIVE_VERSION}-bin.tar.gz      /home/ranger/dist/
 COPY ./downloads/hadoop-${HIVE_HADOOP_VERSION}.tar.gz        /home/ranger/dist/
+COPY ./downloads/apache-tez-${TEZ_VERSION}-bin.tar.gz        /home/ranger/dist/
 COPY ./downloads/postgresql-42.2.16.jre7.jar                 /home/ranger/dist/
 COPY ./downloads/mysql-connector-java-8.0.28.jar             /home/ranger/dist/
 COPY ./downloads/ojdbc8.jar                                  /home/ranger/dist/
@@ -37,8 +39,10 @@ COPY ./scripts/ranger-hive-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hive.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hive-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hive-site.xml
+COPY ./scripts/hive-site-metastore-${RANGER_DB_TYPE}.xml /home/ranger/scripts/hive-site-metastore.xml
+COPY ./scripts/create-users.sh                          /home/ranger/scripts/
 
-RUN tar xvfz /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz --directory=/opt/ && \
+RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     ln -s /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
     rm -f /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /opt/hive/lib/ && \
@@ -47,15 +51,22 @@ RUN tar xvfz /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz --director
     tar xvfz /home/ranger/dist/hadoop-${HIVE_HADOOP_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/hadoop-${HIVE_HADOOP_VERSION} /opt/hadoop && \
     rm -f /home/ranger/dist/hadoop-${HIVE_HADOOP_VERSION}.tar.gz && \
+    tar xvfz /home/ranger/dist/apache-tez-${TEZ_VERSION}-bin.tar.gz --directory=/opt/ && \
+    ln -s /opt/apache-tez-${TEZ_VERSION}-bin /opt/tez && \
+    rm -f /home/ranger/dist/apache-tez-${TEZ_VERSION}-bin.tar.gz && \
     tar xvfz /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin /opt/ranger/ranger-hive-plugin && \
     rm -f /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-hive-setup.sh ${RANGER_SCRIPTS}/ranger-hive.sh
+    chmod 744 ${RANGER_SCRIPTS}/ranger-hive-setup.sh ${RANGER_SCRIPTS}/ranger-hive.sh && \
+    chmod +x ${RANGER_SCRIPTS}/create-users.sh && \
+    ${RANGER_SCRIPTS}/create-users.sh
 
 ENV HIVE_HOME=/opt/hive
 ENV HADOOP_HOME=/opt/hadoop
-ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hive/bin:/opt/hadoop/bin
+ENV TEZ_HOME=/opt/tez
+ENV TEZ_CONF_DIR=/opt/tez/conf
+ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hive/bin:/opt/hadoop/bin:/opt/tez/bin
 
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hive.sh" ]

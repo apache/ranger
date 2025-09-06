@@ -19,13 +19,14 @@
  */
 -->
 <configuration>
+    <!-- Database Connection Configuration -->
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:sqlserver://ranger-db/hive</value>
+        <value>jdbc:mysql://ranger-db/hive</value>
     </property>
     <property>
         <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>com.microsoft.sqlserver.jdbc.SQLServerDriver</value>
+        <value>com.mysql.jdbc.Driver</value>
     </property>
     <property>
         <name>javax.jdo.option.ConnectionUserName</name>
@@ -35,10 +36,23 @@
         <name>javax.jdo.option.ConnectionPassword</name>
         <value>rangerR0cks!</value>
     </property>
+
+    <!-- Basic Hive Configuration -->
     <property>
         <name>hive.server2.enable.doAs</name>
         <value>false</value>
     </property>
+
+    <!-- Warehouse Configuration - Use Local Filesystem -->
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>file:///warehouse/tablespace/managed/hive</value>
+    </property>
+    <property>
+        <name>hive.metastore.warehouse.external.dir</name>
+        <value>file:///warehouse/tablespace/external/hive</value>
+    </property>
+
     <property>
         <name>hive.zookeeper.quorum</name>
         <value>ranger-zk.example.com</value>

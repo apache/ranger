@@ -26,6 +26,7 @@ COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                   /home/ranger/dist
 
 COPY ./scripts/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
+COPY ./scripts/create-users.sh                                  /home/ranger/scripts/
 
 RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \
@@ -39,7 +40,8 @@ RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RA
     ln -s /etc/init.d/ranger-kms /etc/rc3.d/K90ranger-kms && \
     ln -s ${RANGER_HOME}/kms/ranger-kms-services.sh /usr/bin/ranger-kms-services.sh && \
     chown -R rangerkms:ranger ${RANGER_HOME}/kms/ ${RANGER_SCRIPTS}/ /var/run/ranger_kms/ /var/log/ranger/ && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-kms.sh
+    chmod 744 ${RANGER_SCRIPTS}/ranger-kms.sh && \
+    ${RANGER_SCRIPTS}/create-users.sh
 
 FROM ranger-kms AS ranger_postgres
 COPY ./downloads/postgresql-42.2.16.jre7.jar          /home/ranger/dist/
