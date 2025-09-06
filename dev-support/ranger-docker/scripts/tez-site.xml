@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?><!--
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+-->
+<configuration>
+    <property>
+        <name>tez.lib.uris</name>
+        <value>${fs.defaultFS}/apps/tez/apache-tez-${TEZ_VERSION}-bin.tar.gz</value>
+        <description>Comma-delimited list of the location of the Tez libraries which will be localized for DAGs.</description>
+    </property>
+
+    <property>
+        <name>tez.use.cluster.hadoop-libs</name>
+        <value>true</value>
+        <description>Use Hadoop libraries provided by cluster instead of those packaged with Tez</description>
+    </property>
+
+    <property>
+        <name>tez.am.resource.memory.mb</name>
+        <value>1024</value>
+        <description>The amount of memory to be used by the AppMaster</description>
+    </property>
+
+    <property>
+        <name>tez.am.java.opts</name>
+        <value>-Xmx768m</value>
+        <description>Java opts for the Tez AppMaster process</description>
+    </property>
+
+    <property>
+        <name>tez.task.resource.memory.mb</name>
+        <value>1024</value>
+        <description>The amount of memory to be used by tasks</description>
+    </property>
+
+    <property>
+        <name>tez.task.launch.cmd-opts</name>
+        <value>-Xmx768m</value>
+        <description>Java opts for tasks</description>
+    </property>
+
+    <property>
+        <name>tez.runtime.io.sort.mb</name>
+        <value>256</value>
+        <description>The size of the sort buffer when output needs to be sorted</description>
+    </property>
+
+    <property>
+        <name>tez.runtime.unordered.output.buffer.size-mb</name>
+        <value>100</value>
+        <description>The size of the buffer when output does not require to be sorted</description>
+    </property>
+
+    <property>
+        <name>tez.session.am.dag.submit.timeout.secs</name>
+        <value>300</value>
+        <description>Time to wait (in seconds) for AM to submit a DAG before timing out</description>
+    </property>
+
+    <property>
+        <name>tez.am.container.reuse.enabled</name>
+        <value>true</value>
+        <description>Whether to reuse containers for tasks belonging to the same session</description>
+    </property>
+
+    <property>
+        <name>tez.am.container.reuse.rack-fallback.enabled</name>
+        <value>true</value>
+        <description>Whether to fallback to rack local containers when node local containers are not available</description>
+    </property>
+
+    <property>
+        <name>tez.am.container.reuse.non-local-fallback.enabled</name>
+        <value>false</value>
+        <description>Whether to fallback to non-local containers when rack local containers are not available</description>
+    </property>
+</configuration>
