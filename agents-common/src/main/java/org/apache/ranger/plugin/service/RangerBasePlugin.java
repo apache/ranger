@@ -584,9 +584,6 @@ public class RangerBasePlugin {
 
                     setServiceConfigs(policies.getServiceConfig());
 
-                    this.synchronousPolicyRefresh = isSynchronousPolicyRefresh();
-                    LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
-
                     LOG.info("Switching policy engine from [{}]", getPolicyVersion());
                     this.policyEngine = newPolicyEngine;
                     LOG.info("Switched policy engine to [{}]", getPolicyVersion());
@@ -1240,6 +1237,11 @@ public class RangerBasePlugin {
         if (authContext != null && !Objects.equals(oldServiceConfigs, this.serviceConfigs)) {
             authContext.onServiceConfigsUpdate(this.serviceConfigs);
         }
+        String isSyncPolicyRefresh = this.pluginConfig == null ? null : this.serviceConfigs.get(this.pluginConfig.getPropertyPrefix() + ".policy.refresh.synchronous");
+        if (Boolean.parseBoolean(isSyncPolicyRefresh)) {
+            this.synchronousPolicyRefresh = true;
+        }
+        LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
     }
 
     private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
@@ -1485,19 +1487,5 @@ public class RangerBasePlugin {
     private static final class LogHistory {
         long lastLogTime;
         int  counter;
-    }
-
-    private boolean isSynchronousPolicyRefresh() {
-        boolean ret = false;
-        if (this.getServiceConfigs() != null && this.pluginConfig != null && this.pluginConfig.getServiceType() != null) {
-            String synchronousPolicyRefreshConfigName = String.format("ranger.plugin.%s.policy.refresh.synchronous", this.pluginConfig.getServiceType());
-            if (this.getServiceConfigs().containsKey(synchronousPolicyRefreshConfigName)) {
-                boolean synchronousPolicyRefreshConfigValue = Boolean.parseBoolean(this.getServiceConfigs().get(synchronousPolicyRefreshConfigName).trim().toLowerCase());
-                if (synchronousPolicyRefreshConfigValue) {
-                    ret = true;
-                }
-            }
-        }
-        return ret;
     }
 }
