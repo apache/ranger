@@ -115,8 +115,8 @@ chmod -R 777 ${HADOOP_HOME}/logs/userlogs
 echo "Installing Tez JARs for YARN NodeManager..."
 if [ -d "/opt/tez" ]; then
     echo "Copying Tez JARs to YARN lib directory..."
-    cp /opt/tez/lib/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null || echo 'Some Tez lib JARs may already exist'
-    cp /opt/tez/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null || echo 'Some Tez JARs may already exist'
+    cp /opt/tez/lib/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null
+    cp /opt/tez/*.jar /opt/hadoop/share/hadoop/yarn/lib/ 2>/dev/null
 
     # Set up Tez environment
     export TEZ_HOME=/opt/tez

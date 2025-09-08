@@ -39,7 +39,6 @@ COPY ./scripts/ranger-hive-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hive.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hive-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hive-site.xml
-COPY ./scripts/hive-site-metastore-${RANGER_DB_TYPE}.xml /home/ranger/scripts/hive-site-metastore.xml
 COPY ./scripts/create-users.sh                          /home/ranger/scripts/
 
 RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \

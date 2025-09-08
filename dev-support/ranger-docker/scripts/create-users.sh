@@ -22,26 +22,14 @@
 # Function to create a user for testing.
 create_user_if_not_exists() {
     local username=$1
-    local uid=$2
-    local gid=$3
-    local home_dir=$4
+    local home_dir=$2
 
     if ! id "$username" &>/dev/null; then
-        echo "Creating user: $username (uid:$uid, gid:$gid)"
-        useradd -u "$uid" -g "$gid" -m -d "$home_dir" -s /bin/bash "$username"
+        echo "Creating user: $username"
+        useradd -m -d "$home_dir" -s /bin/bash "$username"
 
-        # Set a default password (same as username for demo purposes)
+        # Set a default password
         echo "$username:$username" | chpasswd
-
-        # Add user to hadoop group for HDFS access
-        if getent group hadoop &>/dev/null; then
-            usermod -a -G hadoop "$username"
-        fi
-
-        # Create .ssh directory and set proper permissions
-        mkdir -p "$home_dir/.ssh"
-        chmod 700 "$home_dir/.ssh"
-        chown "$username:$gid" "$home_dir/.ssh"
 
         echo "User $username created successfully"
     else
@@ -49,14 +37,7 @@ create_user_if_not_exists() {
     fi
 }
 
-# Ensure hadoop group exists (gid 1001 is used by hdfs, yarn, hive users)
-if ! getent group hadoop &>/dev/null; then
-    groupadd -g 1001 hadoop
-    echo "Created hadoop group"
-fi
-
-# Create alice user (uid: 2001, gid: 1001 - hadoop group)
-create_user_if_not_exists "alice" 2001 1001 "/home/alice"
-
-# Create abram user (uid: 2002, gid: 1001 - hadoop group)
-create_user_if_not_exists "abram" 2002 1001 "/home/abram"
+# Create alice user
+create_user_if_not_exists "alice" "/home/alice"
+# Create abram user
+create_user_if_not_exists "abram"  "/home/abram"
