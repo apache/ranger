@@ -1417,7 +1417,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
         private String              rbKeyValidationMessage;
         private Set<String>         accessTypeRestrictions;
         private Boolean             isValidLeaf;
-        private String              rrnTemplate;
+        private String              rrnTemplate; // resource-name template. Examples: {database}.{table}.{column}, {container}@{storageaccount}/{relativepath}
 
         public RangerResourceDef() {
             this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);

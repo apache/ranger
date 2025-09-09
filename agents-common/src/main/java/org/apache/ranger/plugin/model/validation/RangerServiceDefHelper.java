@@ -363,6 +363,10 @@ public class RangerServiceDefHelper {
         return delegate.isResourceGraphValid();
     }
 
+    public Set<String> getAllResourceNames() {
+        return delegate.rrnTemplates.keySet();
+    }
+
     public List<String> getOrderedResourceNames(Collection<String> resourceNames) {
         final List<String> ret;
 
@@ -488,10 +492,8 @@ public class RangerServiceDefHelper {
                 orderedResourceNames = buildSortedResourceNames();
 
                 for (RangerResourceDef resourceDef : serviceDef.getResources()) {
-                    String rrnTemplate = resourceDef.getRrnTemplate();
-
                     // when rrnTemplate is not specified, create a default one using the full path from root to this resource
-                    if (StringUtils.isBlank(rrnTemplate)) {
+                    if (StringUtils.isBlank(resourceDef.getRrnTemplate())) {
                         List<String> path = new ArrayList<>();
 
                         for (RangerResourceDef resource = resourceDef; resource != null; resource = getResourceDef(resource.getParent(), RangerPolicy.POLICY_TYPE_ACCESS)) {
@@ -500,10 +502,14 @@ public class RangerServiceDefHelper {
 
                         Collections.reverse(path);
 
-                        rrnTemplate = "{" + StringUtils.join(path, "}.{") + "}";
+                        String rrnTemplate = "{" + StringUtils.join(path, "}.{") + "}";
+
+                        LOG.debug("Setting rrnTemplate for resource {}.{} to: {}", serviceName, resourceDef.getName(), rrnTemplate);
+
+                        resourceDef.setRrnTemplate(rrnTemplate);
                     }
 
-                    this.rrnTemplates.put(resourceDef.getName(), rrnTemplate);
+                    this.rrnTemplates.put(resourceDef.getName(), resourceDef.getRrnTemplate());
                 }
             } else {
                 orderedResourceNames = new ArrayList<>();
