@@ -61,7 +61,7 @@ import static org.mockito.Mockito.when;
  */
 
 public class TestRangerServiceResourceServiceBase {
-    private static class TestSvc extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
+    public static class TestSvc extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
         @Override
         protected XXServiceResource createEntityObject() {
             return new XXServiceResource();

@@ -41,25 +41,6 @@ import static org.mockito.Mockito.spy;
  */
 
 public class TestXAccessAuditServiceBase {
-    private static class TestSvc extends XAccessAuditServiceBase<XXAccessAudit, VXAccessAudit> {
-        @Override
-        protected void validateForCreate(VXAccessAudit vObj) {
-        }
-
-        @Override
-        protected void validateForUpdate(VXAccessAudit vObj, XXAccessAudit entityObj) {
-        }
-
-        // Expose protected mapping for testing
-        VXAccessAudit callMapEntityToViewBean(VXAccessAudit v, XXAccessAudit x) {
-            return super.mapEntityToViewBean(v, x);
-        }
-
-        XXAccessAudit callMapViewToEntityBean(VXAccessAudit v, XXAccessAudit x) {
-            return super.mapViewToEntityBean(v, x, 0);
-        }
-    }
-
     private TestSvc svc;
 
     @BeforeEach
@@ -105,12 +86,31 @@ public class TestXAccessAuditServiceBase {
         v.setEventCount(3L);
         v.setEventDuration(7L);
 
-        XXAccessAudit x = svc.callMapViewToEntityBean(v, new XXAccessAudit());
+        XXAccessAudit x    = svc.callMapViewToEntityBean(v, new XXAccessAudit());
         VXAccessAudit back = svc.callMapEntityToViewBean(new VXAccessAudit(), x);
 
         assertEquals(v.getAuditType(), back.getAuditType());
         assertEquals(v.getAccessType(), back.getAccessType());
         assertEquals(v.getClientIP(), back.getClientIP());
         assertEquals(v.getResourcePath(), back.getResourcePath());
+    }
+
+    public static class TestSvc extends XAccessAuditServiceBase<XXAccessAudit, VXAccessAudit> {
+        @Override
+        protected void validateForCreate(VXAccessAudit vObj) {
+        }
+
+        @Override
+        protected void validateForUpdate(VXAccessAudit vObj, XXAccessAudit entityObj) {
+        }
+
+        // Expose protected mapping for testing
+        VXAccessAudit callMapEntityToViewBean(VXAccessAudit v, XXAccessAudit x) {
+            return super.mapEntityToViewBean(v, x);
+        }
+
+        XXAccessAudit callMapViewToEntityBean(VXAccessAudit v, XXAccessAudit x) {
+            return super.mapViewToEntityBean(v, x, 0);
+        }
     }
 }
