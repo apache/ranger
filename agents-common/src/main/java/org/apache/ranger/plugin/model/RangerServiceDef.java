@@ -1803,7 +1803,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
             sb.append("rbKeyValidationMessage={").append(rbKeyValidationMessage).append("} ");
             sb.append("accessTypeRestrictions={").append(accessTypeRestrictions == null ? "null" : accessTypeRestrictions.toString()).append("} ");
             sb.append("isValidLeaf={").append(isValidLeaf == null ? "null" : isValidLeaf.toString()).append("} ");
-            sb.append("rrnTemplate={").append(rrnTemplate == null ? "null" : rrnTemplate.toString()).append("} ");
+            sb.append("rrnTemplate={").append(rrnTemplate == null ? "null" : rrnTemplate).append("} ");
             sb.append("}");
 
             return sb;

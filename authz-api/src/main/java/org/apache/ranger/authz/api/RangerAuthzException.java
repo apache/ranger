@@ -29,11 +29,11 @@ public class RangerAuthzException extends Exception {
     }
 
     public RangerAuthzException(RangerAuthzErrorCode errorCode) {
-        super(errorCode.getMessage());
+        super(errorCode.getFormattedMessage());
     }
 
     public RangerAuthzException(RangerAuthzErrorCode errorCode, Throwable cause) {
-        super(errorCode.getMessage(), cause);
+        super(errorCode.getFormattedMessage(), cause);
     }
 
     public RangerAuthzException(RangerAuthzErrorCode errorCode, Object...params) {

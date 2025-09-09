@@ -29,6 +29,6 @@ public interface RangerAuthzErrorCode {
     String getMessage();
 
     default String getFormattedMessage(Object... params) {
-        return new MessageFormat(getMessage()).format(params);
+        return new MessageFormat(getCode() + ": " + getMessage()).format(params);
     }
 }

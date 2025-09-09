@@ -19,61 +19,32 @@
 
 package org.apache.ranger.authz.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Properties;
 
-import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.AUTHZ_FACTORY_INITIALIZATION_FAILED;
-import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.AUTHZ_FACTORY_NOT_INITIALIZED;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.AUTHORIZER_CREATION_FAILED;
 
 public class RangerAuthorizerFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizerFactory.class);
+
     public static final String PROPERTY_RANGER_AUTHORIZER_IMPL_CLASS = "ranger.authorizer.impl.class";
     public static final String DEFAULT_RANGER_AUTHORIZER_IMPL_CLASS  = "org.apache.ranger.authz.embedded.RangerEmbeddedAuthorizer";
 
-    private static RangerAuthorizerFactory instance;
-
-    private final Properties       properties;
-    private final RangerAuthorizer authorizer;
-
-    public static RangerAuthorizerFactory getOrCreateInstance(Properties properties) throws RangerAuthzException {
-        RangerAuthorizerFactory instance = RangerAuthorizerFactory.instance;
-
-        if (instance == null) {
-            synchronized (RangerAuthorizerFactory.class) {
-                instance = RangerAuthorizerFactory.instance;
-
-                if (instance == null) {
-                    instance = new RangerAuthorizerFactory(properties);
-
-                    RangerAuthorizerFactory.instance = instance;
-                }
-            }
-        }
-
-        return instance;
-    }
-
-    public static RangerAuthorizerFactory getInstance() throws RangerAuthzException {
-        RangerAuthorizerFactory ret = instance;
-
-        if (ret == null) {
-            throw new RangerAuthzException(AUTHZ_FACTORY_NOT_INITIALIZED);
-        }
-
-        return ret;
-    }
-
-    private RangerAuthorizerFactory(Properties properties) throws RangerAuthzException {
-        this.properties = properties;
-
-        String implClass = this.properties.getProperty(PROPERTY_RANGER_AUTHORIZER_IMPL_CLASS, DEFAULT_RANGER_AUTHORIZER_IMPL_CLASS);
+    public static RangerAuthorizer createAuthorizer(Properties properties) throws RangerAuthzException {
+        String implClass = properties != null ? properties.getProperty(PROPERTY_RANGER_AUTHORIZER_IMPL_CLASS, DEFAULT_RANGER_AUTHORIZER_IMPL_CLASS) : DEFAULT_RANGER_AUTHORIZER_IMPL_CLASS;
 
         try {
-            authorizer = (RangerAuthorizer) Class.forName(implClass).getDeclaredConstructor(Properties.class).newInstance(properties);
+            LOG.info("creating authorizer implementation of type: {}", implClass);
+
+            return (RangerAuthorizer) Class.forName(implClass).getDeclaredConstructor(Properties.class).newInstance(properties);
         } catch (Exception e) {
-            throw new RangerAuthzException(AUTHZ_FACTORY_INITIALIZATION_FAILED, e);
+            throw new RangerAuthzException(AUTHORIZER_CREATION_FAILED, e, implClass);
         }
     }
 
-    public RangerAuthorizer getAuthorizer() {
-        return authorizer;
+    private RangerAuthorizerFactory() {
+        // prevent instantiation
     }
 }

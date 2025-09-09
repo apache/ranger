@@ -17,8 +17,10 @@
  * under the License.
  */
 
-package org.apache.ranger.authz.api;
+package org.apache.ranger.authz;
 
+import org.apache.ranger.authz.api.RangerAuthorizer;
+import org.apache.ranger.authz.api.RangerAuthzException;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
@@ -26,18 +28,26 @@ import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 
 import java.util.Properties;
 
-public abstract class RangerAuthorizer {
-    protected final Properties properties;
-
-    protected RangerAuthorizer(Properties properties) {
-        this.properties = properties;
+public class DummyAuthorizer extends RangerAuthorizer {
+    public DummyAuthorizer(Properties properties) {
+        super(properties);
     }
 
-    public abstract void init() throws RangerAuthzException;
+    @Override
+    public void init()  {
+    }
 
-    public abstract void close() throws RangerAuthzException;
+    @Override
+    public void close()  {
+    }
 
-    public abstract RangerAuthzResult authorize(RangerAuthzRequest request) throws RangerAuthzException;
+    @Override
+    public RangerAuthzResult authorize(RangerAuthzRequest request) throws RangerAuthzException {
+        return null;
+    }
 
-    public abstract RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request) throws RangerAuthzException;
+    @Override
+    public RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request) throws RangerAuthzException {
+        return null;
+    }
 }

@@ -26,7 +26,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestRangerResourceTemplate {
+public class TestResourceTemplate {
     @Test
     public void testHiveResources() throws Exception {
         Map<String, RangerResourceTemplate> templates = getHiveTemplates();
