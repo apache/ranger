@@ -96,6 +96,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerHiveAuthorizer.class);
 
 	private static final Logger PERF_HIVEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hiveauth.request");
+	private static final Logger PERF_HIVEAUTH_COARSEURI_LOG = RangerPerfTracer.getPerfLogger("hiveauth.coarsecheck");
+
 
 	private static final char COLUMN_SEP = ',';
 
@@ -2187,6 +2189,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		boolean ret = false;
 		boolean recurse = !coarseCheck;
 
+		RangerPerfTracer perf = null;
+		if (RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEAUTH_COARSEURI_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_HIVEAUTH_COARSEURI_LOG, "RangerHiveAuthorizer.isURIAccessAllowed(userName=" + userName + " filePath=" + filePath + " coarseCheck=" + coarseCheck + ")");
+		}
+
 		if(action == FsAction.NONE) {
 			ret = true;
 		} else {
@@ -2197,7 +2204,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					boolean isDenied = false;
 
 					for(FileStatus file : filestat) {
-						if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
+						if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName, recurse) ||
 								FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action, recurse)) {
 							continue;
 						} else {
@@ -2218,6 +2225,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 		}
 
+		RangerPerfTracer.log(perf);
 		return ret;
 	}
 
