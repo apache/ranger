@@ -1238,9 +1238,7 @@ public class RangerBasePlugin {
             authContext.onServiceConfigsUpdate(this.serviceConfigs);
         }
         String isSyncPolicyRefresh = this.pluginConfig == null ? null : this.serviceConfigs.get(this.pluginConfig.getPropertyPrefix() + ".policy.refresh.synchronous");
-        if (Boolean.parseBoolean(isSyncPolicyRefresh)) {
-            this.synchronousPolicyRefresh = true;
-        }
+        this.synchronousPolicyRefresh = Boolean.parseBoolean(isSyncPolicyRefresh);
         LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
     }
 
