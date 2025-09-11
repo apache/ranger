@@ -93,7 +93,7 @@ export default function ResourceSelectComp(props) {
         toastId.current = toast.error(error.response.data.msgDesc);
       } else {
         toastId.current = toast.error(
-          "Resouce lookup failed for current resource"
+          "Resource lookup failed for current resource"
         );
       }
     }
@@ -216,6 +216,18 @@ export default function ResourceSelectComp(props) {
             filterOption={customFilterOptions}
             isLoading={isLoading}
             styles={selectInputCustomStyles}
+            formatCreateLabel={(inputValue) => `Create "${inputValue.trim()}"`}
+            onCreateOption={(inputValue) => {
+              const trimmedValue = inputValue.trim();
+              if (trimmedValue) {
+                const newOption = { label: trimmedValue, value: trimmedValue };
+                const currentValue = input.value || [];
+                const newValue = isArray(currentValue)
+                  ? [...currentValue, newOption]
+                  : [newOption];
+                input.onChange(newValue);
+              }
+            }}
           />
           {formValues &&
             formValues[`resourceName-${levelKey}`]?.mandatory &&

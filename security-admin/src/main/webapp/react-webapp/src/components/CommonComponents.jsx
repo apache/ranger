@@ -24,8 +24,9 @@ import { Alert, Badge, Button, OverlayTrigger, Popover } from "react-bootstrap";
 import { Field } from "react-final-form";
 import { useLocation } from "react-router-dom";
 import blockLoading from "Images/blockLoading.gif";
+import { toast } from "react-toastify";
 
-const Loader = () => {
+export const Loader = () => {
   return (
     <div className="loading-img">
       <div id="center">
@@ -570,4 +571,11 @@ export const ModalLoader = () => {
   );
 };
 
-export { Loader };
+export const trimInputValue = (e, input) => {
+  const value = e.target.value;
+  const trimmed = value.trim();
+  if (value !== trimmed) {
+    input.onChange(trimmed);
+  }
+  input.onBlur(e); // Always call onBlur to trigger validation
+};

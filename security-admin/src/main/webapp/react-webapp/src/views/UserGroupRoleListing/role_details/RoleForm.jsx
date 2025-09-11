@@ -25,7 +25,8 @@ import {
   BlockUi,
   Loader,
   CustomTooltip,
-  selectInputCustomStyles
+  selectInputCustomStyles,
+  trimInputValue
 } from "Components/CommonComponents";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
@@ -48,7 +49,7 @@ const initialState = {
   blockUI: false
 };
 
-const PromtDialog = (props) => {
+const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
   return null;
@@ -291,7 +292,7 @@ function RoleForm() {
   const handleUserAdd = (push) => {
     if (selectedUser.length == 0) {
       toast.dismiss(toastId.current);
-      toastId.current = toast.warning("Please select atleast one user!!");
+      toastId.current = toast.warning("Please select at least one user!!");
     } else {
       let usr = selectedUser.map(({ value }) => ({
         name: value,
@@ -311,7 +312,7 @@ function RoleForm() {
   const handleGroupAdd = (push) => {
     if (selectedGroup.length == 0) {
       toast.dismiss(toastId.current);
-      toastId.current = toast.warning("Please select atleast one group!!");
+      toastId.current = toast.warning("Please select at least one group!!");
     } else {
       let grp = selectedGroup.map(({ value }) => ({
         name: value,
@@ -351,7 +352,7 @@ function RoleForm() {
   const handleRoleAdd = (push) => {
     if (selectedRole.length == 0) {
       toast.dismiss(toastId.current);
-      toastId.current = toast.warning("Please select atleast one role!!");
+      toastId.current = toast.warning("Please select at least one role!!");
     } else {
       let rol = selectedRole.map(({ value }) => ({
         name: value,
@@ -404,7 +405,7 @@ function RoleForm() {
     if (params?.roleID) {
       if (Object.keys(roleInfo).length > 0) {
         formValueObj.name = roleInfo.name;
-        formValueObj.description = roleInfo.description;
+        formValueObj.description = roleInfo?.description?.trim();
         formValueObj.users = roleInfo.users;
         formValueObj.groups = roleInfo.groups;
         formValueObj.roles = roleInfo.roles;
@@ -461,7 +462,7 @@ function RoleForm() {
             dirty
           }) => (
             <div className="wrap user-role-grp-form">
-              <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
+              <PromptDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
 
               <form
                 onSubmit={(event) => {
@@ -490,6 +491,7 @@ function RoleForm() {
                           }
                           disabled={params.roleID ? true : false}
                           data-cy="name"
+                          onBlur={(e) => trimInputValue(e, input)}
                         />
                         <span className="input-box-info-icon">
                           <CustomTooltip
@@ -531,6 +533,7 @@ function RoleForm() {
                           placeholder="Description"
                           className="form-control"
                           data-cy="description"
+                          onBlur={(e) => trimInputValue(e, input)}
                         />
                       </Col>
                     </Row>

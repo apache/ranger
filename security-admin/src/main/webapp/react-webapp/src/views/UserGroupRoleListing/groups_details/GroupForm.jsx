@@ -21,18 +21,19 @@ import React, { useEffect, useReducer } from "react";
 import { Button, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
-import { commonBreadcrumb, serverError } from "../../../utils/XAUtils";
+import { commonBreadcrumb, serverError } from "Utils/XAUtils";
 import { SyncSourceDetails } from "../SyncSourceDetails";
 import {
   Loader,
   scrollToError,
-  CustomTooltip
+  CustomTooltip,
+  trimInputValue,
+  BlockUi
 } from "Components/CommonComponents";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 import { fetchApi } from "Utils/fetchAPI";
-import { RegexValidation, GroupSource } from "../../../utils/XAEnums";
-import { BlockUi } from "../../../components/CommonComponents";
+import { RegexValidation, GroupSource } from "Utils/XAEnums";
 
 const initialState = {
   groupInfo: {},
@@ -42,7 +43,7 @@ const initialState = {
   blockUI: false
 };
 
-const PromtDialog = (props) => {
+const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
   return null;
@@ -202,7 +203,7 @@ function GroupForm() {
     if (params?.groupID) {
       if (Object.keys(groupInfo).length > 0) {
         formValueObj.name = groupInfo.name;
-        formValueObj.description = groupInfo.description;
+        formValueObj.description = groupInfo?.description?.trim();
       }
     }
     return formValueObj;
@@ -255,7 +256,7 @@ function GroupForm() {
             dirty
           }) => (
             <div className="wrap user-role-grp-form">
-              <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
+              <PromptDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
               <form
                 onSubmit={(event) => {
                   handleSubmit(event);
@@ -292,6 +293,7 @@ function GroupForm() {
                               : false
                           }
                           data-cy="name"
+                          onBlur={(e) => trimInputValue(e, input)}
                         />
                         <span className="input-box-info-icon">
                           <CustomTooltip
@@ -341,6 +343,7 @@ function GroupForm() {
                           }
                           id="description"
                           data-cy="description"
+                          onBlur={(e) => trimInputValue(e, input)}
                         />
                       </Col>
                     </Row>
