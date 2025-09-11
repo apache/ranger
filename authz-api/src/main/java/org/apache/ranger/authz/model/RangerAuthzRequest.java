@@ -23,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.Objects;
+
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -76,6 +78,27 @@ public class RangerAuthzRequest {
 
     public void setContext(RangerAccessContext context) {
         this.context = context;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(requestId, user, access, context);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RangerAuthzRequest that = (RangerAuthzRequest) o;
+
+        return Objects.equals(requestId, that.requestId) &&
+                Objects.equals(user, that.user) &&
+                Objects.equals(access, that.access) &&
+                Objects.equals(context, that.context);
     }
 
     @Override

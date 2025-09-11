@@ -19,12 +19,22 @@
 
 package org.apache.ranger.authz.api;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authz.model.RangerAccessContext;
+import org.apache.ranger.authz.model.RangerAccessInfo;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
+import org.apache.ranger.authz.model.RangerUserInfo;
 
+import java.util.HashMap;
 import java.util.Properties;
+
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_ACCESS_CONTEXT;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_ACCESS_INFO;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_USER_INFO;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_PERMISSIONS_EMPTY;
 
 public abstract class RangerAuthorizer {
     protected final Properties properties;
@@ -40,4 +50,40 @@ public abstract class RangerAuthorizer {
     public abstract RangerAuthzResult authorize(RangerAuthzRequest request) throws RangerAuthzException;
 
     public abstract RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request) throws RangerAuthzException;
+
+    protected void validateRequest(RangerAuthzRequest request) throws RangerAuthzException {
+        validateUserInfo(request.getUser());
+        validateAccessInfo(request.getAccess());
+        validateAccessContext(request.getContext());
+    }
+
+    protected void validateUserInfo(RangerUserInfo user) throws RangerAuthzException {
+        if (user == null || StringUtils.isBlank(user.getName())) {
+            throw new RangerAuthzException(INVALID_REQUEST_MISSING_USER_INFO);
+        }
+    }
+
+    protected void validateAccessInfo(RangerAccessInfo access) throws RangerAuthzException {
+        if (access == null) {
+            throw new RangerAuthzException(INVALID_REQUEST_MISSING_ACCESS_INFO);
+        }
+
+        if (access.getPermissions() == null || access.getPermissions().isEmpty()) {
+            throw new RangerAuthzException(INVALID_REQUEST_PERMISSIONS_EMPTY);
+        }
+    }
+
+    protected void validateAccessContext(RangerAccessContext context) throws RangerAuthzException {
+        if (context == null) {
+            throw new RangerAuthzException(INVALID_REQUEST_MISSING_ACCESS_CONTEXT);
+        }
+
+        if (context.getAccessTime() <= 0) {
+            context.setAccessTime(System.currentTimeMillis());
+        }
+
+        if (context.getAdditionalInfo() == null) {
+            context.setAdditionalInfo(new HashMap<>());
+        }
+    }
 }

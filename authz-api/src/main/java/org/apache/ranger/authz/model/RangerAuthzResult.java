@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -73,6 +74,26 @@ public class RangerAuthzResult {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(requestId, decision, permissions);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RangerAuthzResult that = (RangerAuthzResult) o;
+
+        return Objects.equals(requestId, that.requestId) &&
+                Objects.equals(decision, that.decision) &&
+                Objects.equals(permissions, that.permissions);
+    }
+
+    @Override
     public String toString() {
         return "RangerAuthzResult{" +
                 "requestId='" + requestId + '\'' +
@@ -91,6 +112,13 @@ public class RangerAuthzResult {
         private RowFilterResult               rowFilter;
         private Map<String, PermissionResult> subResources;
         private Map<String, Object>           additionalInfo;
+
+        public PermissionResult() {
+        }
+
+        public PermissionResult(String permission) {
+            this(permission, null, null);
+        }
 
         public PermissionResult(String permission, AccessResult access) {
             this(permission, access, null);
@@ -166,6 +194,29 @@ public class RangerAuthzResult {
         }
 
         @Override
+        public int hashCode() {
+            return Objects.hash(permission, access, dataMask, rowFilter, subResources, additionalInfo);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            PermissionResult that = (PermissionResult) o;
+
+            return Objects.equals(permission, that.permission) &&
+                    Objects.equals(access, that.access) &&
+                    Objects.equals(dataMask, that.dataMask) &&
+                    Objects.equals(rowFilter, that.rowFilter) &&
+                    Objects.equals(subResources, that.subResources) &&
+                    Objects.equals(additionalInfo, that.additionalInfo);
+        }
+
+        @Override
         public String toString() {
             return "PermissionResult{" +
                     "permission='" + permission + '\'' +
@@ -205,8 +256,27 @@ public class RangerAuthzResult {
             return policy;
         }
 
-        public void setPolicyInfo(PolicyInfo policy) {
+        public void setPolicy(PolicyInfo policy) {
             this.policy = policy;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(decision, policy);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            AccessResult that = (AccessResult) o;
+
+            return Objects.equals(decision, that.decision) &&
+                    Objects.equals(policy, that.policy);
         }
 
         @Override
@@ -260,6 +330,26 @@ public class RangerAuthzResult {
         }
 
         @Override
+        public int hashCode() {
+            return Objects.hash(maskType, maskedValue, policy);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            DataMaskResult that = (DataMaskResult) o;
+
+            return Objects.equals(maskType, that.maskType) &&
+                    Objects.equals(maskedValue, that.maskedValue) &&
+                    Objects.equals(policy, that.policy);
+        }
+
+        @Override
         public String toString() {
             return "DataMaskResult{" +
                     "maskType='" + maskType + '\'' +
@@ -301,6 +391,25 @@ public class RangerAuthzResult {
         }
 
         @Override
+        public int hashCode() {
+            return Objects.hash(filterExpression, policy);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            RowFilterResult that = (RowFilterResult) o;
+
+            return Objects.equals(filterExpression, that.filterExpression) &&
+                    Objects.equals(policy, that.policy);
+        }
+
+        @Override
         public String toString() {
             return "RowFilterResult{" +
                     "filterExpression='" + filterExpression + '\'' +
@@ -338,6 +447,25 @@ public class RangerAuthzResult {
 
         public void setVersion(Long version) {
             this.version = version;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, version);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            PolicyInfo that = (PolicyInfo) o;
+
+            return Objects.equals(id, that.id) &&
+                    Objects.equals(version, that.version);
         }
 
         @Override

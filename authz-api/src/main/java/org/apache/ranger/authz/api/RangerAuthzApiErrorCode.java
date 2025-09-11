@@ -24,11 +24,15 @@ public enum RangerAuthzApiErrorCode implements RangerAuthzErrorCode {
 
     INVALID_REQUEST_SERVICE_NOT_FOUND(400, "00-001", "{0}: service not found"),
     INVALID_REQUEST_SERVICE_TYPE_NOT_FOUND(400, "00-002", "{0}: service type not found"),
-    INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND(400, "00-003", "{0}: resource type not found"),
-    INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE(400, "00-004", "{0}: invalid resource value for type {1}"),
-    INVALID_REQUEST_PERMISSION_NOT_FOUND(400, "00-005", "{0}: permission not found"),
-    INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY(400, "00-006", "service name or service type is mandatory"),
-    INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT(400, "00-007", "invalid resource template: {0}. Unexpected marker \"{1}\" at position {2}");
+    INVALID_REQUEST_MISSING_USER_INFO(400, "00-003", "missing user info"),
+    INVALID_REQUEST_MISSING_ACCESS_INFO(400, "00-004", "missing access info"),
+    INVALID_REQUEST_MISSING_ACCESS_CONTEXT(400, "00-005", "missing access context"),
+    INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND(400, "00-006", "{0}: resource type not found"),
+    INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE(400, "00-007", "{0}: invalid resource value for type {1}"),
+    INVALID_REQUEST_PERMISSION_NOT_FOUND(400, "00-008", "{0}: permission not found"),
+    INVALID_REQUEST_PERMISSIONS_EMPTY(400, "00-009", "permissions is empty. Nothing to authorize"),
+    INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY(400, "00-010", "service name or service type is mandatory"),
+    INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT(400, "00-011", "invalid resource template: {0}. Unexpected marker \"{1}\" at position {2}");
 
     private static final String ERROR_CODE_MODULE_PREFIX = "AUTHZ";
 

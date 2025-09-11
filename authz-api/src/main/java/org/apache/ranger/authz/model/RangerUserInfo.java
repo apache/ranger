@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
@@ -34,6 +35,20 @@ public class RangerUserInfo {
     private Map<String, Object> attributes;
     private Set<String>         groups;
     private Set<String>         roles;
+
+    public RangerUserInfo() {
+    }
+
+    public RangerUserInfo(String name) {
+        this(name, null, null, null);
+    }
+
+    public RangerUserInfo(String name, Map<String, Object> attributes, Set<String> groups, Set<String> roles) {
+        this.name       = name;
+        this.attributes = attributes;
+        this.groups     = groups;
+        this.roles      = roles;
+    }
 
     public String getName() {
         return name;
@@ -65,6 +80,27 @@ public class RangerUserInfo {
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, attributes, groups, roles);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RangerUserInfo that = (RangerUserInfo) o;
+
+        return Objects.equals(name, that.name) &&
+                Objects.equals(attributes, that.attributes) &&
+                Objects.equals(groups, that.groups) &&
+                Objects.equals(roles, that.roles);
     }
 
     @Override

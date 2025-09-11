@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -68,6 +69,26 @@ public class RangerMultiAuthzResult {
 
     public void setAccesses(List<RangerAuthzResult> accesses) {
         this.accesses = accesses;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(requestId, decision, accesses);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RangerMultiAuthzResult that = (RangerMultiAuthzResult) o;
+
+        return Objects.equals(requestId, that.requestId) &&
+                decision == that.decision &&
+                Objects.equals(accesses, that.accesses);
     }
 
     @Override

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
@@ -35,6 +36,17 @@ public class RangerAccessInfo {
     private String              action;
     private Set<String>         permissions;
     private Map<String, Object> attributes;
+
+    public RangerAccessInfo() {
+    }
+
+    public RangerAccessInfo(String resource, Set<String> subResources, String action, Set<String> permissions, Map<String, Object> attributes) {
+        this.resource     = resource;
+        this.subResources = subResources;
+        this.action       = action;
+        this.permissions  = permissions;
+        this.attributes   = attributes;
+    }
 
     public String getResource() {
         return resource;
@@ -74,6 +86,28 @@ public class RangerAccessInfo {
 
     public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(resource, subResources, action, permissions, attributes);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RangerAccessInfo that = (RangerAccessInfo) o;
+
+        return Objects.equals(resource, that.resource) &&
+                Objects.equals(subResources, that.subResources) &&
+                Objects.equals(action, that.action) &&
+                Objects.equals(permissions, that.permissions) &&
+                Objects.equals(attributes, that.attributes);
     }
 
     @Override

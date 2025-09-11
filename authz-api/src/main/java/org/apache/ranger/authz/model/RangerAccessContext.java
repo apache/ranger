@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -41,6 +42,23 @@ public class RangerAccessContext {
     private String              clientIpAddress;
     private List<String>        forwardedIpAddresses;
     private Map<String, Object> additionalInfo;
+
+    public RangerAccessContext() {
+        this(null, null, 0, null, null, null);
+    }
+
+    public RangerAccessContext(String serviceType, String serviceName) {
+        this(serviceType, serviceName, 0, null, null, null);
+    }
+
+    public RangerAccessContext(String serviceType, String serviceName, long accessTime, String clientIpAddress, List<String> forwardedIpAddresses, Map<String, Object> additionalInfo) {
+        this.serviceType          = serviceType;
+        this.serviceName          = serviceName;
+        this.accessTime           = accessTime <= 0 ? System.currentTimeMillis() : accessTime;
+        this.clientIpAddress      = clientIpAddress;
+        this.forwardedIpAddresses = forwardedIpAddresses;
+        this.additionalInfo       = additionalInfo;
+    }
 
     public String getServiceType() {
         return serviceType;
@@ -88,6 +106,29 @@ public class RangerAccessContext {
 
     public void setAdditionalInfo(Map<String, Object> additionalInfo) {
         this.additionalInfo = additionalInfo;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(serviceType, serviceName, accessTime, clientIpAddress, forwardedIpAddresses, additionalInfo);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        } else if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        RangerAccessContext that = (RangerAccessContext) o;
+
+        return Objects.equals(serviceType, that.serviceType) &&
+                Objects.equals(serviceName, that.serviceName) &&
+                accessTime == that.accessTime &&
+                Objects.equals(clientIpAddress, that.clientIpAddress) &&
+                Objects.equals(forwardedIpAddresses, that.forwardedIpAddresses) &&
+                Objects.equals(additionalInfo, that.additionalInfo);
     }
 
     @Override

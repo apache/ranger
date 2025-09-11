@@ -23,6 +23,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.apache.ranger.authz.api.RangerAuthorizerFactory.DEFAULT_RANGER_AUTHORIZER_IMPL_CLASS;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.AUTHORIZER_CREATION_FAILED;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_ACCESS_CONTEXT;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_ACCESS_INFO;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_USER_INFO;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_PERMISSIONS_EMPTY;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_PERMISSION_NOT_FOUND;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE;
@@ -39,10 +43,14 @@ public class TestAuthzApiErrorCode {
 
         assertEquals("AUTHZ-400-00-001: dev_myapp: service not found", INVALID_REQUEST_SERVICE_NOT_FOUND.getFormattedMessage("dev_myapp"));
         assertEquals("AUTHZ-400-00-002: myapp: service type not found", INVALID_REQUEST_SERVICE_TYPE_NOT_FOUND.getFormattedMessage("myapp"));
-        assertEquals("AUTHZ-400-00-003: myresource: resource type not found", INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND.getFormattedMessage("myresource"));
-        assertEquals("AUTHZ-400-00-004: mypath: invalid resource value for type path", INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE.getFormattedMessage("mypath", "path"));
-        assertEquals("AUTHZ-400-00-005: mypermission: permission not found", INVALID_REQUEST_PERMISSION_NOT_FOUND.getFormattedMessage("mypermission"));
-        assertEquals("AUTHZ-400-00-006: service name or service type is mandatory", INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY.getFormattedMessage());
-        assertEquals("AUTHZ-400-00-007: invalid resource template: {database}.{table}}. Unexpected marker \"}\" at position 18", INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT.getFormattedMessage("{database}.{table}}", "}", 18));
+        assertEquals("AUTHZ-400-00-003: missing user info", INVALID_REQUEST_MISSING_USER_INFO.getFormattedMessage());
+        assertEquals("AUTHZ-400-00-004: missing access info", INVALID_REQUEST_MISSING_ACCESS_INFO.getFormattedMessage());
+        assertEquals("AUTHZ-400-00-005: missing access context", INVALID_REQUEST_MISSING_ACCESS_CONTEXT.getFormattedMessage());
+        assertEquals("AUTHZ-400-00-006: myresource: resource type not found", INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND.getFormattedMessage("myresource"));
+        assertEquals("AUTHZ-400-00-007: mypath: invalid resource value for type path", INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE.getFormattedMessage("mypath", "path"));
+        assertEquals("AUTHZ-400-00-008: mypermission: permission not found", INVALID_REQUEST_PERMISSION_NOT_FOUND.getFormattedMessage("mypermission"));
+        assertEquals("AUTHZ-400-00-009: permissions is empty. Nothing to authorize", INVALID_REQUEST_PERMISSIONS_EMPTY.getFormattedMessage());
+        assertEquals("AUTHZ-400-00-010: service name or service type is mandatory", INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY.getFormattedMessage());
+        assertEquals("AUTHZ-400-00-011: invalid resource template: {database}.{table}}. Unexpected marker \"}\" at position 18", INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT.getFormattedMessage("{database}.{table}}", "}", 18));
     }
 }
