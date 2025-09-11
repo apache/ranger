@@ -103,7 +103,7 @@ public class RangerBasePlugin {
     private       RangerRoles                 roles;
     private       boolean                     isUserStoreEnricherAddedImplcitly;
     private       Map<String, String>         serviceConfigs;
-    private boolean synchronousPolicyRefresh;
+    private       boolean                     synchronousPolicyRefresh;
 
     public RangerBasePlugin(String serviceType, String appId) {
         this(new RangerPluginConfig(serviceType, null, appId, null, null, null));
@@ -1083,8 +1083,8 @@ public class RangerBasePlugin {
     }
 
     public void refreshPoliciesAndTags() {
-        LOG.debug("==> refreshPoliciesAndTags()");
-        LOG.debug("synchronousPolicyRefresh = {}", synchronousPolicyRefresh);
+        LOG.debug("==> refreshPoliciesAndTags(): synchronousPolicyRefresh={}", synchronousPolicyRefresh);
+
         try {
             long oldPolicyVersion = getPoliciesVersion();
 
@@ -1211,10 +1211,7 @@ public class RangerBasePlugin {
     }
 
     public Map<String, String> getServiceConfigs() {
-        if (serviceConfigs == null) {
-            return Collections.emptyMap();
-        }
-        return serviceConfigs;
+        return (serviceConfigs == null) ? Collections.emptyMap() : serviceConfigs;
     }
 
     public Long getPolicyVersion() {
@@ -1237,9 +1234,14 @@ public class RangerBasePlugin {
         if (authContext != null && !Objects.equals(oldServiceConfigs, this.serviceConfigs)) {
             authContext.onServiceConfigsUpdate(this.serviceConfigs);
         }
+
         String isSyncPolicyRefresh = this.pluginConfig == null ? null : this.serviceConfigs.get(this.pluginConfig.getPropertyPrefix() + ".policy.refresh.synchronous");
+
         this.synchronousPolicyRefresh = Boolean.parseBoolean(isSyncPolicyRefresh);
-        LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
+
+        if (this.synchronousPolicyRefresh) {
+            LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
+        }
     }
 
     private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
