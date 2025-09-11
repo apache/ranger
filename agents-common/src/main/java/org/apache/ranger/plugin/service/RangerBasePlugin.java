@@ -1212,7 +1212,7 @@ public class RangerBasePlugin {
 
     public Map<String, String> getServiceConfigs() {
         if (serviceConfigs == null) {
-            return new HashMap<>();
+            return Collections.emptyMap();
         }
         return serviceConfigs;
     }
