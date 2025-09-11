@@ -231,6 +231,18 @@ public class AtlasTagSource extends AbstractTagSource {
                             return;
                         }
                     }
+                } else {
+                    // Only sleep when HA is enabled, similar to user sync
+                    if (TagSyncConfig.getInstance().isTagSyncHAEnabled()) {
+                        try {
+                            long sleepInterval = TagSyncConfig.getTagSyncHAPassiveSleepInterval();
+                            LOG.debug("Sleeping for [{}] milliSeconds as this server is running in passive mode", sleepInterval);
+                            Thread.sleep(sleepInterval);
+                        } catch (InterruptedException interrupted) {
+                            LOG.error("Interrupted: ", interrupted);
+                            return;
+                        }
+                    }
                 }
             }
         }
