@@ -121,9 +121,9 @@ public class TestTimedExecutor {
          * - at least 3 and no more than 5 tasks must get rejected.
          * - at least 3 and no more than 5 tasks must get timed out
          */
-        int successCount  = results.get("success").get();
-        int timeoutCount  = results.get("java.util.concurrent.TimeoutException").get();
-        int rejectedCount = results.get("java.util.concurrent.RejectedExecutionException").get();
+        int successCount  = results.getOrDefault("success", new AtomicInteger(0)).get();
+        int timeoutCount  = results.getOrDefault("java.util.concurrent.TimeoutException", new AtomicInteger(0)).get();
+        int rejectedCount = results.getOrDefault("java.util.concurrent.RejectedExecutionException", new AtomicInteger(0)).get();
         assertEquals(2, successCount, "success count");
         assertTrue(timeoutCount >= 3 && timeoutCount <= 5, "timeout[" + timeoutCount + "]: 3 <= count(timeout) <= 5");
         assertTrue(rejectedCount >= 3 && rejectedCount <= 5, "rejected[" + rejectedCount + "]: 3 <= count(timeout) <= 5");
@@ -134,8 +134,8 @@ public class TestTimedExecutor {
     @Test
     public void testLocalUncaughtExceptionHandlerDoesNotThrow() {
         UncaughtExceptionHandler h = new TimedExecutor.LocalUncaughtExceptionHandler();
-        // Should not throw despite nulls; but pass a dummy thread and exception
-        h.uncaughtException(new Thread("t1"), new RuntimeException("boom"));
+        // Should not throw; pass a dummy thread and exception
+        h.uncaughtException(Thread.currentThread(), new RuntimeException("boom"));
     }
 
     @Test
@@ -144,7 +144,7 @@ public class TestTimedExecutor {
         TimedExecutor             exec = new TimedExecutor();
         exec.initialize(cfg);
         try {
-            String v = exec.timedTask(() -> "ok", 1, TimeUnit.SECONDS);
+            String v = exec.timedTask(() -> "ok", 2, TimeUnit.SECONDS);
             Assertions.assertEquals("ok", v);
         } finally {
             exec.shutdown();

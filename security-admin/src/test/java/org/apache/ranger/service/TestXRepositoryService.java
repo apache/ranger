@@ -37,7 +37,9 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,7 +56,7 @@ public class TestXRepositoryService {
     @BeforeEach
     void init() {
         MockitoAnnotations.initMocks(this);
-        svc = new XRepositoryService();
+        svc               = new XRepositoryService();
         svc.restErrorUtil = restErrorUtil;
     }
 
@@ -70,7 +72,7 @@ public class TestXRepositoryService {
 
         VXRepository out = svc.mapXAToPublicObject(in);
         assertEquals("repo", out.getName());
-        assertEquals(true, out.getIsActive());
+        assertTrue(out.getIsActive());
 
         VXAsset back = svc.mapPublicToXAObject(out);
         assertEquals(in.getName(), back.getName());
@@ -81,11 +83,11 @@ public class TestXRepositoryService {
     void testGetMappedSearchParams_buildsStatusAndType() {
         SearchCriteria sc = new SearchCriteria();
         sc.addParam("type", "hdfs");
-        when(restErrorUtil.parseBoolean(anyString(), anyString(), org.mockito.ArgumentMatchers.eq(MessageEnums.INVALID_INPUT_DATA), org.mockito.ArgumentMatchers.isNull(), anyString())).thenReturn(Boolean.TRUE);
+        when(restErrorUtil.parseBoolean(anyString(), anyString(), eq(MessageEnums.INVALID_INPUT_DATA), org.mockito.ArgumentMatchers.isNull(), anyString())).thenReturn(Boolean.TRUE);
         when(request.getParameter("status")).thenReturn("true");
 
-        SearchCriteria out = svc.getMappedSearchParams(request, sc);
-        Object statuses = out.getParamValue("status");
+        SearchCriteria out      = svc.getMappedSearchParams(request, sc);
+        Object         statuses = out.getParamValue("status");
         assertNotNull(statuses);
         assertFalse(((java.util.List<?>) statuses).isEmpty());
         assertEquals(AppConstants.ASSET_HDFS, out.getParamValue("type"));
@@ -99,8 +101,8 @@ public class TestXRepositoryService {
         VXAsset b = new VXAsset();
         b.setName("b");
         b.setActiveStatus(RangerCommonEnums.STATUS_DISABLED);
-        VXAssetList list = new VXAssetList(Arrays.asList(a, b));
-        VXRepositoryList out = svc.mapToVXRepositoryList(list);
+        VXAssetList      list = new VXAssetList(Arrays.asList(a, b));
+        VXRepositoryList out  = svc.mapToVXRepositoryList(list);
         assertEquals(2, out.getList().size());
     }
 }

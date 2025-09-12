@@ -196,6 +196,7 @@ public class TestRangerTagDBRetriever {
         when(tagDefDao.findByServiceId(9L)).thenReturn(new ArrayList<XXTagDef>());
 
         RangerTagDBRetriever r = newRetriever(daoMgr, txMgr, service);
+        // After separate thread initialization, collections should be non-null (possibly empty)
         Assertions.assertNotNull(r.getServiceResources());
         Assertions.assertNotNull(r.getTagDefs());
     }

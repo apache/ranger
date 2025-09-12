@@ -38,11 +38,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -196,7 +198,68 @@ public class TestRangerPluginInfoService {
         assertEquals("3000", only.getInfo().get(RangerPluginInfo.RANGER_ADMIN_LAST_GDS_UPDATE_TIME));
     }
 
+    @Test
+    public void testA_getFields_notEmpty() {
+        RangerPluginInfoService                  svc = createSvc();
+        List<SearchField>                        s   = svc.getSearchFields();
+        List<org.apache.ranger.common.SortField> o   = svc.getSortFields();
+        assertNotNull(s);
+        assertNotNull(o);
+    }
+
+    @Test
+    public void testD_searchRangerObjects_viaReflection_setsPListMeta() throws Exception {
+        RangerPluginInfoService svc = createSvc();
+        SearchFilter            f   = new SearchFilter();
+        f.setGetCount(true);
+        when(searchUtil.createSearchQuery(eq(entityManager), anyString(), anyString(), eq(f), any(), eq(false), eq(false))).thenReturn(query);
+        when(searchUtil.createSearchQuery(eq(entityManager), anyString(), isNull(), eq(f), any(), eq(false), eq(true))).thenReturn(query);
+        when(searchUtil.constructSortClause(eq(f), any())).thenReturn(" ORDER BY obj.serviceName asc");
+        when(query.getFirstResult()).thenReturn(0);
+        when(query.getMaxResults()).thenReturn(1000);
+        when(xxPluginInfoDao.executeCountQueryInSecurityContext(eq(XXPluginInfo.class), eq(query))).thenReturn(1L);
+        XXPluginInfo x = new XXPluginInfo();
+        x.setServiceName("svc");
+        x.setInfo("{}");
+        when(xxPluginInfoDao.executeQueryInSecurityContext(eq(XXPluginInfo.class), eq(query))).thenReturn(Collections.singletonList(x));
+        // also stub internal count query creation used by getCountForSearchQuery
+        Mockito.when(searchUtil.createSearchQuery(eq(entityManager), anyString(), isNull(), eq(f), any(), eq(true)))
+                .thenReturn(query);
+        PList<RangerPluginInfo> pList = new PList<>();
+        Method                  m     = RangerPluginInfoService.class.getDeclaredMethod("searchRangerObjects", SearchFilter.class, List.class, List.class, PList.class);
+        m.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<XXPluginInfo> out = (List<XXPluginInfo>) m.invoke(svc, f, svc.getSearchFields(), svc.getSortFields(), pList);
+        assertNotNull(out);
+        assertEquals(1, out.size());
+    }
+
+    @Test
+    public void testF_jsonStringToMap_reflection_variants() throws Exception {
+        RangerPluginInfoService svc = createSvc();
+        Method                  m   = RangerPluginInfoService.class.getDeclaredMethod("jsonStringToMap", String.class, XXServiceVersionInfo.class, boolean.class);
+        m.setAccessible(true);
+        Map<String, String> base = new HashMap<>();
+        when(jsonUtil.jsonToMap("{}")).thenReturn(base);
+        @SuppressWarnings("unchecked")
+        Map<String, String> out = (Map<String, String>) m.invoke(svc, "{}", null, false);
+        assertNotNull(out);
+    }
+
     private List<SearchField> anyList() {
         return null;
+    }
+
+    private RangerPluginInfoService createSvc() {
+        RangerPluginInfoService svc = new RangerPluginInfoService();
+        svc.searchUtil = searchUtil;
+        svc.jsonUtil   = jsonUtil;
+        svc.daoManager = daoManager;
+        when(daoManager.getEntityManager()).thenReturn(entityManager);
+        when(daoManager.getXXPluginInfo()).thenReturn(xxPluginInfoDao);
+        when(daoManager.getXXService()).thenReturn(xxServiceDao);
+        when(daoManager.getXXServiceDef()).thenReturn(xxServiceDefDao);
+        when(daoManager.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
+        return svc;
     }
 }
