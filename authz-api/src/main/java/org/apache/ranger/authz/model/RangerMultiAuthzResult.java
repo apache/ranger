@@ -93,7 +93,7 @@ public class RangerMultiAuthzResult {
 
     @Override
     public String toString() {
-        return "RangerAuthzResult{" +
+        return "RangerMultiAuthzResult{" +
                 "requestId='" + requestId + '\'' +
                 ", decision=" + decision +
                 ", accesses=" + accesses +
