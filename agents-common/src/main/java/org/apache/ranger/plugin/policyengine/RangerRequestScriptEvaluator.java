@@ -159,7 +159,7 @@ public final class RangerRequestScriptEvaluator {
     private static final String  DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy/MM/dd";
     private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
     private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT      = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private static final String  SCRIPT_SAFE_PREEXEC                          = "exit=null;quit=null;";
+    private static final String  SCRIPT_SAFE_PREEXEC                          = "Object.defineProperty(this,'engine',{value:null,writable:false});exit=null;quit=null;";
     private static final String  SCRIPT_PREEXEC                               = SCRIPT_VAR__CTX + "=JSON.parse(" + SCRIPT_VAR__CTX_JSON + "); J=JSON.stringify;" +
             SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
             SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
