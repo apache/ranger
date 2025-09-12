@@ -195,10 +195,6 @@ public class TagSyncConfig extends Configuration {
         return TagSyncHAInitializerImpl.getInstance(TagSyncConfig.getInstance()).isActive();
     }
 
-    public boolean isTagSyncHAEnabled() {
-        return this.getBoolean(TAGSYNC_SERVER_HA_ENABLED_PARAM, false);
-    }
-
     public static long getTagSyncHAPassiveSleepInterval() {
         return DEFAULT_TAGSYNC_HA_PASSIVE_SLEEP_INTERVAL;
     }
