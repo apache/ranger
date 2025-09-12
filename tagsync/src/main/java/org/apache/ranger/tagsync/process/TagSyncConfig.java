@@ -102,6 +102,7 @@ public class TagSyncConfig extends Configuration {
 	public  static final int  DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = 10000;
 	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
 	private static final long DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL = 10000;
+	private static final long DEFAULT_TAGSYNC_HA_PASSIVE_SLEEP_INTERVAL            = 5000;
 
 	private static final String AUTH_TYPE = "hadoop.security.authentication";
 	private static final String NAME_RULES = "hadoop.security.auth_to_local";
@@ -226,6 +227,14 @@ public class TagSyncConfig extends Configuration {
 
 	synchronized static public boolean isTagSyncServiceActive() {
 		return TagSyncHAInitializerImpl.getInstance(TagSyncConfig.getInstance()).isActive();
+	}
+
+	public boolean isTagSyncHAEnabled() {
+		return this.getBoolean(TAGSYNC_SERVER_HA_ENABLED_PARAM, false);
+	}
+
+	public static long getTagSyncHAPassiveSleepInterval() {
+		return DEFAULT_TAGSYNC_HA_PASSIVE_SLEEP_INTERVAL;
 	}
 
 	@Override
