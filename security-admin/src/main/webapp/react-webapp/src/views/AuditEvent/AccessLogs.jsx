@@ -963,6 +963,12 @@ function Access() {
       urlLabel: "zoneName",
       type: "textoptions",
       options: getZones
+    },
+    {
+      category: "excludeResourceName",
+      label: "Exclude Resource Name",
+      urlLabel: "excludeResourceName",
+      type: "text"
     }
   ];
 

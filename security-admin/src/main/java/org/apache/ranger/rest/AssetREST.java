@@ -628,6 +628,8 @@ public class AssetREST {
 				"Request Data", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "resourcePath",
 				"Resource Name", StringUtil.VALIDATION_TEXT);
+		searchUtil.extractString(request, searchCriteria, "excludeResourceName",
+				"Exclude Resource Name", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "clientIP",
 				"Client IP", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request, searchCriteria, "resourceType",

@@ -687,8 +687,7 @@ public class TestAssetREST {
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
-		Mockito.verify(searchUtil, Mockito.times(14)).extractString((HttpServletRequest) Mockito.any(),
-				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
+		Mockito.verify(searchUtil, Mockito.times(15)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
@@ -743,8 +742,7 @@ public class TestAssetREST {
 		Mockito.verify(msBizUtil).isKeyAdmin();
 		Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
 		Mockito.verify(daoManager).getXXServiceDef();
-		Mockito.verify(searchUtil, Mockito.times(14)).extractString((HttpServletRequest) Mockito.any(),
-				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
+		Mockito.verify(searchUtil, Mockito.times(15)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.nullable(String.class));
 		Mockito.verify(searchUtil, Mockito.times(4)).extractInt((HttpServletRequest) Mockito.any(),
 				(SearchCriteria) Mockito.any(), Mockito.anyString(), Mockito.anyString());
 		Mockito.verify(searchUtil, Mockito.times(2)).extractDate((HttpServletRequest) Mockito.any(),
