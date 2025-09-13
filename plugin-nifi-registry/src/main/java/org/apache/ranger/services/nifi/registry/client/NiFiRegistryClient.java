@@ -173,9 +173,11 @@ public class NiFiRegistryClient {
                     return false;
                 }
                 // verify hostname against server certificate[0]
-                final X509Certificate x509Cert = (X509Certificate) certificates[0];
-                final List<String> subjectAltNames = getSubjectAlternativeNames(x509Cert);
-                return subjectAltNames.contains(hostname.toLowerCase());
+                if (certificates[0] instanceof X509Certificate) {
+                    final X509Certificate x509Cert = (X509Certificate) certificates[0];
+                    final List<String> subjectAltNames = getSubjectAlternativeNames(x509Cert);
+                    return subjectAltNames.contains(hostname.toLowerCase());
+                }
             } catch (final SSLPeerUnverifiedException | CertificateParsingException ex) {
                 LOG.warn("Hostname Verification encountered exception verifying hostname due to: {}", ex, ex);
             }
