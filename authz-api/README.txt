@@ -117,7 +117,7 @@
       "decision":  "ALLOWED",
       "permissions": {
         "select": {
-          "rowFilter": { "filterExpression": "dept = 'mktg'", "policy": { "id": 11, "version": 3 } }
+          "rowFilter": { "filterExpr": "dept = 'mktg'", "policy": { "id": 11, "version": 3 } }
           "subResources": {
             "column:col1": { "access":   { "decision": "ALLOWED", "policy": { "id": 5, "version": 1 } },
 	                         "dataMask": { "maskType": "MASK_SHOW_LAST_4", "maskedValue": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')", "policy": { "id": 26, "version": 2 } } },
@@ -153,7 +153,7 @@
           "permissions": {
             "select": {
               "access":    { "decision": "ALLOWED", "policy": { "id": 1, "version": 1 } },
-              "rowFilter": { "filterExpression": "dept = 'mktg'", "policy": { "id": 11, "version": 3 } }
+              "rowFilter": { "filterExpr": "dept = 'mktg'", "policy": { "id": 11, "version": 3 } }
             }
           }
         },

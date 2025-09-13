@@ -363,23 +363,23 @@ public class RangerAuthzResult {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RowFilterResult {
-        private String     filterExpression;
+        private String     filterExpr;
         private PolicyInfo policy;
 
         public RowFilterResult() {
         }
 
-        public RowFilterResult(String filterExpression, PolicyInfo policy) {
-            this.filterExpression = filterExpression;
-            this.policy           = policy;
+        public RowFilterResult(String filterExpr, PolicyInfo policy) {
+            this.filterExpr = filterExpr;
+            this.policy     = policy;
         }
 
-        public String getFilterExpression() {
-            return filterExpression;
+        public String getFilterExpr() {
+            return filterExpr;
         }
 
-        public void setFilterExpression(String filterExpression) {
-            this.filterExpression = filterExpression;
+        public void setFilterExpr(String filterExpr) {
+            this.filterExpr = filterExpr;
         }
 
         public PolicyInfo getPolicy() {
@@ -392,7 +392,7 @@ public class RangerAuthzResult {
 
         @Override
         public int hashCode() {
-            return Objects.hash(filterExpression, policy);
+            return Objects.hash(filterExpr, policy);
         }
 
         @Override
@@ -405,14 +405,14 @@ public class RangerAuthzResult {
 
             RowFilterResult that = (RowFilterResult) o;
 
-            return Objects.equals(filterExpression, that.filterExpression) &&
+            return Objects.equals(filterExpr, that.filterExpr) &&
                     Objects.equals(policy, that.policy);
         }
 
         @Override
         public String toString() {
             return "RowFilterResult{" +
-                    "filterExpression='" + filterExpression + '\'' +
+                    "filterExpr='" + filterExpr + '\'' +
                     ", policy=" + policy +
                     '}';
         }
