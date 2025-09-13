@@ -128,23 +128,41 @@ public class PolicyRefresher extends Thread {
     }
 
     public void startRefresher() {
-        loadRoles();
-        loadPolicy();
+        try {
+            loadRoles();
+        } catch (Exception e) {
+            LOG.error("Initial roles load failed for serviceName={}: {}, will retry in {}ms via scheduled refresh", serviceName, e, pollingIntervalMs);
+        }
+        try {
+            loadPolicy();
+        } catch (Exception e) {
+            LOG.error("Initial policy load failed for serviceName={}: {}, will retry in {}ms via scheduled refresh", serviceName, e, pollingIntervalMs);
+        }
+        initRefresher();
+    }
 
-        super.start();
-
+    private void initRefresher() {
+        LOG.debug("==> PolicyRefresher(serviceName={}).initRefresher()", serviceName);
+        try {
+            super.start();
+        } catch (IllegalStateException e) {
+            LOG.error("Failed to start PolicyRefresher thread for serviceName={}", serviceName, e);
+            throw e;
+        }
         policyDownloadTimer = new Timer("policyDownloadTimer", true);
-
         try {
             policyDownloadTimer.schedule(new DownloaderTask(policyDownloadQueue), pollingIntervalMs, pollingIntervalMs);
-
             LOG.debug("Scheduled policyDownloadRefresher to download policies every {} milliseconds", pollingIntervalMs);
-        } catch (IllegalStateException exception) {
-            LOG.error("Error scheduling policyDownloadTimer:", exception);
+        } catch (IllegalArgumentException | IllegalStateException | NullPointerException e) {
+            LOG.error("Error scheduling policyDownloadTimer:", e);
             LOG.error("*** Policies will NOT be downloaded every {} milliseconds ***", pollingIntervalMs);
-
-            policyDownloadTimer = null;
+            if (policyDownloadTimer != null) {
+                policyDownloadTimer.cancel();
+                policyDownloadTimer = null;
+            }
+            throw e;
         }
+        LOG.debug("<== PolicyRefresher(serviceName={}).initRefresher()", serviceName);
     }
 
     public void stopRefresher() {
