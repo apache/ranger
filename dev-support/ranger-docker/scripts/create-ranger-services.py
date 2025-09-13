@@ -17,24 +17,29 @@ hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
                       'configs': {'username': 'hdfs', 'password': 'hdfs',
                                   'fs.default.name': 'hdfs://ranger-hadoop:9000',
                                   'hadoop.security.authentication': 'simple',
-                                  'hadoop.security.authorization': 'true'}})
+                                  'hadoop.security.authorization': 'true',
+                                  'ranger.plugin.hdfs.policy.refresh.synchronous':'true'}})
 
 hive = RangerService({'name': 'dev_hive', 'type': 'hive',
                       'configs': {'username': 'hive', 'password': 'hive',
                                   'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver',
                                   'jdbc.url': 'jdbc:hive2://ranger-hive:10000',
-                                  'hadoop.security.authorization': 'true'}})
+                                  'hadoop.security.authorization': 'true',
+                                  'ranger.plugin.hive.policy.refresh.synchronous':'true'}})
 
 kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                        'configs': {'username': 'kafka', 'password': 'kafka',
-                                   'zookeeper.connect': 'ranger-zk.example.com:2181'}})
+                                   'zookeeper.connect': 'ranger-zk.example.com:2181',
+                                   'ranger.plugin.kafka.policy.refresh.synchronous':'true'}})
 
 knox = RangerService({'name': 'dev_knox', 'type': 'knox',
-                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'https://ranger-knox:8443'}})
+                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'https://ranger-knox:8443',
+                      'ranger.plugin.knox.policy.refresh.synchronous':'true'}})
 
 yarn = RangerService({'name': 'dev_yarn', 'type': 'yarn',
                       'configs': {'username': 'yarn', 'password': 'yarn',
-                                  'yarn.url': 'http://ranger-hadoop:8088'}})
+                                  'yarn.url': 'http://ranger-hadoop:8088',
+                                  'ranger.plugin.yarn.policy.refresh.synchronous':'true'}})
 
 hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                        'configs': {'username': 'hbase', 'password': 'hbase',
@@ -43,11 +48,13 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                                    'hadoop.security.authorization': 'true',
                                    'hbase.zookeeper.property.clientPort': '2181',
                                    'hbase.zookeeper.quorum': 'ranger-zk',
-                                   'zookeeper.znode.parent': '/hbase'}})
+                                   'zookeeper.znode.parent': '/hbase',
+                                   'ranger.plugin.hbase.policy.refresh.synchronous':'true'}})
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
-                                 'provider': 'http://ranger-kms:9292'}})
+                                 'provider': 'http://ranger-kms:9292',
+                                 'ranger.plugin.kms.policy.refresh.synchronous':'true'}})
 
 trino = RangerService({'name': 'dev_trino',
                        'type': 'trino',
@@ -56,6 +63,7 @@ trino = RangerService({'name': 'dev_trino',
                            'password': 'trino',
                            'jdbc.driverClassName': 'io.trino.jdbc.TrinoDriver',
                            'jdbc.url': 'jdbc:trino://ranger-trino:8080',
+                           'ranger.plugin.trino.policy.refresh.synchronous':'true'
                        }})
 
 ozone = RangerService({'name': 'dev_ozone',
@@ -63,7 +71,8 @@ ozone = RangerService({'name': 'dev_ozone',
                        'displayName': 'dev_ozone',
                        'configs': {'username': 'hdfs', 'password': 'hdfs',
                                    'ozone.om.http-address': 'http://om:9874',
-                                   'hadoop.security.authentication': 'simple'}})
+                                   'hadoop.security.authentication': 'simple',
+                                   'ranger.plugin.ozone.policy.refresh.synchronous':'true'}})
 
 services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone]
 for service in services:

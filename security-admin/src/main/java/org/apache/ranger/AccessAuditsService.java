@@ -71,6 +71,7 @@ public class AccessAuditsService {
          */
         searchFields.add(new SearchField("-repoType", "-repoType", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("-requestUser", "-reqUser", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField("excludeResourceName", "-resource", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
         searchFields.add(new SearchField("resourceType", "resType", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("reason", "reason", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("action", "action", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
