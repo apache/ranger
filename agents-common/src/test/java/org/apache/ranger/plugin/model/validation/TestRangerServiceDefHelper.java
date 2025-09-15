@@ -377,7 +377,7 @@ public class TestRangerServiceDefHelper {
     }
 
     @Test
-    public void testRrnTemplate() {
+    public void testRrnTemplateHive() {
         InputStreamReader      reader       = new InputStreamReader(requireNonNull(this.getClass().getResourceAsStream("/admin/service-defs/test-hive-servicedef.json")));
         RangerServiceDef       svcDef       = JsonUtils.jsonToObject(reader, RangerServiceDef.class);
         RangerServiceDefHelper svcDefHelper = new RangerServiceDefHelper(svcDef);
@@ -395,6 +395,19 @@ public class TestRangerServiceDefHelper {
         assertEquals("{database}.{udf}", rrnUdf);
         assertEquals("{url}", rrnUrl);
         assertNull(rrnUnknown);
+    }
+
+    @Test
+    public void testRrnTemplateS3() {
+        InputStreamReader      reader       = new InputStreamReader(requireNonNull(this.getClass().getResourceAsStream("/admin/service-defs/test-s3-servicedef.json")));
+        RangerServiceDef       svcDef       = JsonUtils.jsonToObject(reader, RangerServiceDef.class);
+        RangerServiceDefHelper svcDefHelper = new RangerServiceDefHelper(svcDef);
+
+        String rrnBucket = svcDefHelper.getRrnTemplate("bucket");
+        String rrnPath   = svcDefHelper.getRrnTemplate("path");
+
+        assertEquals("{bucket}", rrnBucket);
+        assertEquals("{bucket}/{path}", rrnPath);
     }
 
     RangerResourceDef createResourceDef(String name, String parent) {

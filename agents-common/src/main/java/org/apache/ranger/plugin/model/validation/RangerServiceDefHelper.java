@@ -48,6 +48,11 @@ import java.util.stream.Collectors;
 public class RangerServiceDefHelper {
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefHelper.class);
 
+    public static final String RRN_RESOURCE_PREFIX   = "{";
+    public static final String RRN_RESOURCE_SUFFIX   = "}";
+    public static final String RRN_RESOURCE_SEP      = ".";
+    public static final String RRN_PATH_RESOURCE_SEP = "/";
+
     static final Map<String, Delegate> cache = new ConcurrentHashMap<>();
     final        Delegate              delegate;
 
@@ -492,21 +497,10 @@ public class RangerServiceDefHelper {
                 orderedResourceNames = buildSortedResourceNames();
 
                 for (RangerResourceDef resourceDef : serviceDef.getResources()) {
-                    // when rrnTemplate is not specified, create a default one using the full path from root to this resource
                     if (StringUtils.isBlank(resourceDef.getRrnTemplate())) {
-                        List<String> path = new ArrayList<>();
+                        resourceDef.setRrnTemplate(getDefaultRrnTemplate(resourceDef));
 
-                        for (RangerResourceDef resource = resourceDef; resource != null; resource = getResourceDef(resource.getParent(), RangerPolicy.POLICY_TYPE_ACCESS)) {
-                            path.add(resource.getName());
-                        }
-
-                        Collections.reverse(path);
-
-                        String rrnTemplate = "{" + StringUtils.join(path, "}.{") + "}";
-
-                        LOG.debug("Setting rrnTemplate for resource {}.{} to: {}", serviceName, resourceDef.getName(), rrnTemplate);
-
-                        resourceDef.setRrnTemplate(rrnTemplate);
+                        LOG.debug("No rrnTemplate was defined for resource {}.{}. It is now set to default: {}", serviceName, resourceDef.getName(), resourceDef.getRrnTemplate());
                     }
 
                     this.rrnTemplates.put(resourceDef.getName(), resourceDef.getRrnTemplate());
@@ -904,6 +898,34 @@ public class RangerServiceDefHelper {
             public int compareTo(ResourceNameLevel other) {
                 return Integer.compare(this.level, other.level);
             }
+        }
+
+        // create default resource-name template for the resource-def, like:
+        //  database:{database}
+        //  table:{database}.{table}
+        //  column:{database}.{table}.{column}
+        //  path:{bucket}/{path}
+        //  key:{volume}.{bucket}/{key}
+        private String getDefaultRrnTemplate(RangerResourceDef resourceDef) {
+            List<RangerResourceDef> path = new ArrayList<>();
+
+            for (RangerResourceDef resource = resourceDef; resource != null; resource = getResourceDef(resource.getParent(), RangerPolicy.POLICY_TYPE_ACCESS)) {
+                path.add(0, resource);
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < path.size(); i++) {
+                RangerResourceDef res = path.get(i);
+
+                if (i > 0) {
+                    sb.append(StringUtils.equalsIgnoreCase(res.getType(), "path") ? RRN_PATH_RESOURCE_SEP : RRN_RESOURCE_SEP);
+                }
+
+                sb.append(RRN_RESOURCE_PREFIX).append(res.getName()).append(RRN_RESOURCE_SUFFIX);
+            }
+
+            return sb.toString();
         }
     }
 
