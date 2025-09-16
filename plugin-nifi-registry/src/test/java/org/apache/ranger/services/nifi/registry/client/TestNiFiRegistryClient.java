@@ -44,7 +44,9 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -321,12 +323,8 @@ public class TestNiFiRegistryClient {
 
             // Intermediate cert (index 1): Has SAN with hostname
             X509Certificate intermediateCert = Mockito.mock(X509Certificate.class);
-            Collection<?> intermediateAltNames = Mockito.mock(Collection.class);
-            List<?> intermediateGeneralName = Mockito.mock(List.class);
-            doReturn(2).when(intermediateGeneralName).size();
-            doReturn(2).when(intermediateGeneralName).get(0);
-            doReturn(HOSTNAME.toLowerCase()).when(intermediateGeneralName).get(1);
-            doReturn(java.util.Collections.singletonList(intermediateGeneralName).iterator()).when(intermediateAltNames).iterator();
+            Collection<List<?>> intermediateAltNames = Collections.singletonList(
+                    Arrays.asList(2, HOSTNAME.toLowerCase()));
             doReturn(intermediateAltNames).when(intermediateCert).getSubjectAlternativeNames();
 
             // Root cert (index 2): No SANs
@@ -337,38 +335,9 @@ public class TestNiFiRegistryClient {
             doReturn(certs).when(mockSession).getPeerCertificates();
 
             doAnswer(invocation -> {
-                String calledHostname = invocation.getArgument(0);
-                SSLSession calledSession = invocation.getArgument(1);
-                try {
-                    Certificate[] certificates = calledSession.getPeerCertificates();
-                    if (certificates == null || certificates.length == 0) {
-                        lastVerifyResult = false;
-                        return false;
-                    }
-                    final X509Certificate x509Cert = (X509Certificate) certificates[0];
-                    final Collection<List<?>> sanCollection = x509Cert.getSubjectAlternativeNames();
-                    if (sanCollection == null) {
-                        lastVerifyResult = false;
-                        return false;
-                    }
-                    boolean match = false;
-                    for (final List<?> generalNameEntry : sanCollection) {
-                        if (generalNameEntry.size() > 1) {
-                            final Object value = generalNameEntry.get(1);
-                            if (value instanceof String) {
-                                if (calledHostname.equalsIgnoreCase(((String) value))) {
-                                    match = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    lastVerifyResult = match;
-                    return match;
-                } catch (final SSLPeerUnverifiedException | CertificateParsingException ex) {
-                    lastVerifyResult = false;
-                    return false;
-                }
+                Boolean result = (Boolean) invocation.callRealMethod();
+                lastVerifyResult = result;
+                return result;
             }).when(hostnameVerifierSpy).verify(any(String.class), any(SSLSession.class));
         }
 
