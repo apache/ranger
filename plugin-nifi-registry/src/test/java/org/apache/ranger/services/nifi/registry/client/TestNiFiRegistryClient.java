@@ -242,47 +242,13 @@ public class TestNiFiRegistryClient {
             Certificate[] certs = {mockCert};
             doReturn(certs).when(mockSession).getPeerCertificates();
 
-            Collection<?> altNames = Mockito.mock(Collection.class);
-            List<?> generalName = Mockito.mock(List.class);
-            doReturn(2).when(generalName).size();
-            doReturn(2).when(generalName).get(0);
-            doReturn(sanHostname.toLowerCase()).when(generalName).get(1);
-            doReturn(java.util.Collections.singletonList(generalName).iterator()).when(altNames).iterator();
+            Collection<List<?>> altNames = Collections.singletonList(
+                    Arrays.asList(2, sanHostname.toLowerCase()));
             doReturn(altNames).when(mockCert).getSubjectAlternativeNames();
-
             doAnswer(invocation -> {
-                String calledHostname = invocation.getArgument(0);
-                SSLSession calledSession = invocation.getArgument(1);
-                try {
-                    Certificate[] certificates = calledSession.getPeerCertificates();
-                    if (certificates == null || certificates.length == 0) {
-                        lastVerifyResult = false;
-                        return false;
-                    }
-                    final X509Certificate x509Cert = (X509Certificate) certificates[0];
-                    final Collection<List<?>> sanCollection = x509Cert.getSubjectAlternativeNames();
-                    if (sanCollection == null) {
-                        lastVerifyResult = false;
-                        return false;
-                    }
-                    boolean match = false;
-                    for (final List<?> generalNameEntry : sanCollection) {
-                        if (generalNameEntry.size() > 1) {
-                            final Object value = generalNameEntry.get(1);
-                            if (value instanceof String) {
-                                if (calledHostname.equalsIgnoreCase(((String) value))) {
-                                    match = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    lastVerifyResult = match;
-                    return match;
-                } catch (final SSLPeerUnverifiedException | CertificateParsingException ex) {
-                    lastVerifyResult = false;
-                    return false;
-                }
+                Boolean result = (Boolean) invocation.callRealMethod();
+                lastVerifyResult = result;
+                return result;
             }).when(hostnameVerifierSpy).verify(any(String.class), any(SSLSession.class));
         }
 
