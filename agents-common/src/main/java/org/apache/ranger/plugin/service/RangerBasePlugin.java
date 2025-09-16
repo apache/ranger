@@ -77,7 +77,7 @@ public class RangerBasePlugin {
 	private final boolean                     dedupStrings;
 	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
 	private       Map<String, String>         serviceConfigs;
-
+	private       boolean                     synchronousPolicyRefresh;
 
 	public RangerBasePlugin(String serviceType, String appId) {
 		this(new RangerPluginConfig(serviceType, null, appId, null, null, null));
@@ -362,6 +362,12 @@ public class RangerBasePlugin {
 			}
 		}
 
+		String isSyncPolicyRefresh = this.pluginConfig == null ? null : this.serviceConfigs.get(this.pluginConfig.getPropertyPrefix() + ".policy.refresh.synchronous");
+		this.synchronousPolicyRefresh = Boolean.parseBoolean(isSyncPolicyRefresh);
+		if (this.synchronousPolicyRefresh) {
+			LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
+		}
+
 		// guard against catastrophic failure during policy engine Initialization or
 		try {
 			RangerPolicyEngine oldPolicyEngine = this.policyEngine;
@@ -558,6 +564,9 @@ public class RangerBasePlugin {
 	}
 
 	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		if (this.synchronousPolicyRefresh) {
+			refreshPoliciesAndTags();
+		}
 		RangerAccessResult ret          = null;
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
@@ -603,6 +612,9 @@ public class RangerBasePlugin {
 	}
 
 	public Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests, RangerAccessResultProcessor resultProcessor) {
+		if (this.synchronousPolicyRefresh) {
+			refreshPoliciesAndTags();
+		}
 		Collection<RangerAccessResult> ret          = null;
 		RangerPolicyEngine             policyEngine = this.policyEngine;
 
@@ -644,6 +656,9 @@ public class RangerBasePlugin {
 	}
 
 	public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		if (this.synchronousPolicyRefresh) {
+			refreshPoliciesAndTags();
+		}
 		RangerPolicyEngine policyEngine = this.policyEngine;
 		RangerAccessResult ret          = null;
 
@@ -680,6 +695,9 @@ public class RangerBasePlugin {
 	}
 
 	public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		if (this.synchronousPolicyRefresh) {
+			refreshPoliciesAndTags();
+		}
 		RangerPolicyEngine policyEngine = this.policyEngine;
 		RangerAccessResult ret          = null;
 
@@ -716,6 +734,9 @@ public class RangerBasePlugin {
 	}
 
 	public void evalAuditPolicies(RangerAccessResult result) {
+		if (this.synchronousPolicyRefresh) {
+			refreshPoliciesAndTags();
+		}
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if (policyEngine != null) {
@@ -738,6 +759,9 @@ public class RangerBasePlugin {
 	}
 
 	public RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer policyType) {
+		if (this.synchronousPolicyRefresh) {
+			refreshPoliciesAndTags();
+		}
 		RangerResourceACLs ret          = null;
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
@@ -1037,7 +1061,7 @@ public class RangerBasePlugin {
 
 	public void refreshPoliciesAndTags() {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> refreshPoliciesAndTags()");
+			LOG.debug("==> refreshPoliciesAndTags(): synchronousPolicyRefresh={}", synchronousPolicyRefresh);
 		}
 
 		try {
@@ -1224,7 +1248,7 @@ public class RangerBasePlugin {
 	}
 
 	public Map<String, String> getServiceConfigs() {
-		return serviceConfigs;
+		return (serviceConfigs == null) ? Collections.emptyMap() : serviceConfigs;
 	}
 
 	protected RangerPolicyEngine getPolicyEngine() {
