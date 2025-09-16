@@ -1050,8 +1050,12 @@ public final class RangerRequestScriptEvaluator {
     private Collection<String> getUserAttrNames() {
         Collection<String> ret = getSorted(userAttrs.keySet());
 
-        if (ret.contains(SCRIPT_FIELD__NAME)) { // this is needed to avoid calling remove() on unmodifiable collection
-            ret.remove(SCRIPT_FIELD__NAME);
+        if (ret.contains(SCRIPT_FIELD__NAME)) {
+            if (ret.size() == 1) { // SCRIPT_FIELD__NAME is the only entry; return empty list
+                ret = Collections.emptyList();
+            } else { // ret is safe to mutate when size > 1 - see getSorted()
+                ret.remove(SCRIPT_FIELD__NAME);
+            }
         }
 
         return ret;
