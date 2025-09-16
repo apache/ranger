@@ -48,6 +48,11 @@ import java.util.stream.Collectors;
 public class RangerServiceDefHelper {
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefHelper.class);
 
+    public static final String RRN_RESOURCE_PREFIX   = "{";
+    public static final String RRN_RESOURCE_SUFFIX   = "}";
+    public static final String RRN_RESOURCE_SEP      = ".";
+    public static final String RRN_PATH_RESOURCE_SEP = "/";
+
     static final Map<String, Delegate> cache = new ConcurrentHashMap<>();
     final        Delegate              delegate;
 
@@ -216,6 +221,10 @@ public class RangerServiceDefHelper {
         return delegate.getResourceHierarchyKeys(policyType);
     }
 
+    public String getRrnTemplate(String resourceName) {
+        return delegate.getRrnTemplate(resourceName);
+    }
+
     public boolean isDataMaskSupported() {
         return delegate.isDataMaskSupported();
     }
@@ -359,6 +368,10 @@ public class RangerServiceDefHelper {
         return delegate.isResourceGraphValid();
     }
 
+    public Set<String> getAllResourceNames() {
+        return delegate.rrnTemplates.keySet();
+    }
+
     public List<String> getOrderedResourceNames(Collection<String> resourceNames) {
         final List<String> ret;
 
@@ -438,6 +451,7 @@ public class RangerServiceDefHelper {
         final Set<String>                                  allAccessTypes;
         final boolean                                      isDataMaskSupported;
         final boolean                                      isRowFilterSupported;
+        final Map<String, String>                          rrnTemplates = new HashMap<>();
 
         public Delegate(RangerServiceDef serviceDef, boolean checkForCycles) {
             // NOTE: we assume serviceDef, its name and update time are can never by null.
@@ -481,6 +495,16 @@ public class RangerServiceDefHelper {
 
             if (isValid) {
                 orderedResourceNames = buildSortedResourceNames();
+
+                for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+                    if (StringUtils.isBlank(resourceDef.getRrnTemplate())) {
+                        resourceDef.setRrnTemplate(getDefaultRrnTemplate(resourceDef));
+
+                        LOG.debug("No rrnTemplate was defined for resource {}.{}. It is now set to default: {}", serviceName, resourceDef.getName(), resourceDef.getRrnTemplate());
+                    }
+
+                    this.rrnTemplates.put(resourceDef.getName(), resourceDef.getRrnTemplate());
+                }
             } else {
                 orderedResourceNames = new ArrayList<>();
             }
@@ -549,6 +573,10 @@ public class RangerServiceDefHelper {
             Set<Set<String>> ret = hierarchyKeys.get(policyType);
 
             return ret != null ? ret : Collections.emptySet();
+        }
+
+        public String getRrnTemplate(String resourceName) {
+            return rrnTemplates.get(resourceName);
         }
 
         public boolean isDataMaskSupported() {
@@ -870,6 +898,34 @@ public class RangerServiceDefHelper {
             public int compareTo(ResourceNameLevel other) {
                 return Integer.compare(this.level, other.level);
             }
+        }
+
+        // create default resource-name template for the resource-def, like:
+        //  database:{database}
+        //  table:{database}.{table}
+        //  column:{database}.{table}.{column}
+        //  path:{bucket}/{path}
+        //  key:{volume}.{bucket}/{key}
+        private String getDefaultRrnTemplate(RangerResourceDef resourceDef) {
+            List<RangerResourceDef> path = new ArrayList<>();
+
+            for (RangerResourceDef resource = resourceDef; resource != null; resource = getResourceDef(resource.getParent(), RangerPolicy.POLICY_TYPE_ACCESS)) {
+                path.add(0, resource);
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < path.size(); i++) {
+                RangerResourceDef res = path.get(i);
+
+                if (i > 0) {
+                    sb.append(StringUtils.equalsIgnoreCase(res.getType(), "path") ? RRN_PATH_RESOURCE_SEP : RRN_RESOURCE_SEP);
+                }
+
+                sb.append(RRN_RESOURCE_PREFIX).append(res.getName()).append(RRN_RESOURCE_SUFFIX);
+            }
+
+            return sb.toString();
         }
     }
 
