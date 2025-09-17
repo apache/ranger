@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -450,5 +451,5 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit {
         }
     }
 
-    public static class EmptyExtension implements org.junit.jupiter.api.extension.Extension {}
+    public static class EmptyExtension implements Extension {}
 }
