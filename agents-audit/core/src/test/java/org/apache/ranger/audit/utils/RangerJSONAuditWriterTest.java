@@ -21,9 +21,15 @@ package org.apache.ranger.audit.utils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -33,8 +39,12 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class RangerJSONAuditWriterTest {
@@ -178,5 +188,81 @@ public class RangerJSONAuditWriterTest {
         jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
         jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
         jsonAuditWriter.closeWriter();
+    }
+
+    @Test
+    public void testInitMethod() throws Exception {
+        RangerJSONAuditWriter jsonAuditWriter = new RangerJSONAuditWriter();
+        jsonAuditWriter.init();
+
+        Field field = org.apache.ranger.audit.utils.AbstractRangerAuditWriter.class.getDeclaredField("fileExtension");
+        field.setAccessible(true);
+        Assertions.assertEquals(".log", field.get(jsonAuditWriter));
+    }
+
+    @Test
+    public void testLogFileMethod() throws Exception {
+        RangerJSONAuditWriter jsonAuditWriter = spy(new RangerJSONAuditWriter());
+        doNothing().when(jsonAuditWriter).createFileSystemFolders();
+        doReturn(new PrintWriter(new StringWriter())).when(jsonAuditWriter).createWriter();
+        doReturn(true).when(jsonAuditWriter).logFileToHDFS(any(File.class));
+
+        setup();
+        jsonAuditWriter.init(props, "test", "localfs", auditConfigs);
+
+        File tempFile = File.createTempFile("ranger-audit-test", ".json");
+        tempFile.deleteOnExit();
+
+        boolean result = jsonAuditWriter.logFile(tempFile);
+        Assertions.assertTrue(result);
+        tempFile.delete();
+    }
+
+    @Test
+    public void testStartMethod() {
+        RangerJSONAuditWriter jsonAuditWriter = new RangerJSONAuditWriter();
+        jsonAuditWriter.start();
+    }
+
+    @Test
+    public void testGetLogFileStreamWithoutPeriodicRollover() throws Exception {
+        RangerJSONAuditWriter jsonAuditWriter = spy(new RangerJSONAuditWriter());
+        doNothing().when(jsonAuditWriter).createFileSystemFolders();
+        doReturn(new PrintWriter(new StringWriter())).when(jsonAuditWriter).createWriter();
+
+        setup();
+        props.setProperty("test.file.rollover.enable.periodic.rollover", "false");
+        jsonAuditWriter.init(props, "test", "localfs", auditConfigs);
+
+        // Set nextRollOverTime to avoid NPE
+        Field nextRollOverTimeField = org.apache.ranger.audit.utils.AbstractRangerAuditWriter.class.getDeclaredField("nextRollOverTime");
+        nextRollOverTimeField.setAccessible(true);
+        nextRollOverTimeField.set(jsonAuditWriter, new Date());
+
+        doNothing().when(jsonAuditWriter).closeFileIfNeeded();
+        PrintWriter result = jsonAuditWriter.getLogFileStream();
+        verify(jsonAuditWriter).closeFileIfNeeded();
+        Assertions.assertNotNull(result);
+        jsonAuditWriter.stop();
+    }
+
+    @Test
+    public void testFlushMethod() throws Exception {
+        RangerJSONAuditWriter jsonAuditWriter = spy(new RangerJSONAuditWriter());
+        doNothing().when(jsonAuditWriter).createFileSystemFolders();
+        doReturn(new PrintWriter(new StringWriter())).when(jsonAuditWriter).createWriter();
+
+        setup();
+        jsonAuditWriter.init(props, "test", "localfs", auditConfigs);
+
+        // Set nextRollOverTime to avoid NPE
+        Field nextRollOverTimeField = org.apache.ranger.audit.utils.AbstractRangerAuditWriter.class.getDeclaredField("nextRollOverTime");
+        nextRollOverTimeField.setAccessible(true);
+        nextRollOverTimeField.set(jsonAuditWriter, new Date());
+
+        jsonAuditWriter.logJSON(Collections.singleton("Test message"));
+        // Just call flush for coverage; don't verify superFlush
+        jsonAuditWriter.flush();
+        jsonAuditWriter.stop();
     }
 }
