@@ -20,6 +20,7 @@ package org.apache.hadoop.crypto.key;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.crypto.CipherSuite;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
@@ -442,6 +443,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
         logger.debug("==> createKey({})", name);
 
         KeyVersion ret;
+        validateKeyCiphers(options.getCipher());
 
         try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
             reloadKeys();
@@ -595,6 +597,16 @@ public class RangerKeyStoreProvider extends KeyProvider {
         logger.debug("<== getConfiguration()");
 
         return conf;
+    }
+
+    private void validateKeyCiphers(String ciphers) throws IOException {
+        if (StringUtils.isNotEmpty(ciphers)) {
+            try {
+                CipherSuite.convert(ciphers);
+            }  catch (Exception e) {
+                throw new IOException("Invalid ciphers: " + ciphers, e);
+            }
+        }
     }
 
     private static void getFromJceks(Configuration conf, String path, String alias, String key) {
