@@ -35,6 +35,7 @@ import org.junit.Test;
 
 import javax.script.ScriptEngine;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -432,6 +433,21 @@ public class RangerRequestScriptEvaluatorTest {
 
         Assert.assertNull("test: java.lang.System.out.println(\"test\");", evaluator.evaluateScript("java.lang.System.out.println(\"test\");"));
         Assert.assertNull("test: java.lang.Runtime.getRuntime().exec(\"bash\");", evaluator.evaluateScript("java.lang.Runtime.getRuntime().exec(\"bash\");"));
+
+        String fileName = "/tmp/ctest1-" + System.currentTimeMillis();
+        String script   = "var file = new java.io.File('" + fileName +  "'); file.createNewFile()";
+
+        Assert.assertNull("test file access using: " + script, evaluator.evaluateScript(script));
+
+        File testFile = new File(fileName);
+        Assert.assertFalse(fileName + ": file should not have been created", testFile.exists());
+
+        script = "engine.eval('malicious code')";
+
+        Assert.assertNull("test engine access using: " + script, evaluator.evaluateScript(script));
+
+        script = "var str = new java.lang.String('test'); str.length()";
+        Assert.assertNull("test Java String class access using: " + script, evaluator.evaluateScript(script));
     }
 
     @Test
