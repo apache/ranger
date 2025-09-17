@@ -480,6 +480,39 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00:42', '2100/01/01 15:00:42', 'GMT')", (Boolean) evaluator.evaluateScript("IS_ACCESS_TIME_BETWEEN('2010/01/01 15:00:42', '2100/01/01 15:00:42', 'GMT')"));
     }
 
+    @Test
+    public void testMultipleTagInstancesOfType() {
+        List<RangerTag> tags = Arrays.asList(new RangerTag("PII", Collections.singletonMap("type", "email")),
+                new RangerTag("PII", Collections.singletonMap("type", "phone")),
+                new RangerTag("PII", Collections.emptyMap()),
+                new RangerTag("PCI", Collections.singletonMap("kind", "pan")),
+                new RangerTag("PCI", Collections.singletonMap("kind", "sad")),
+                new RangerTag("PCI", null));
+        RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), tags);
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine);
+
+        Object[][] tests = new Object[][] {
+                {"TAG_NAMES_CSV", "PCI,PII"},
+                {"TAG_ATTR_NAMES_CSV", "kind,type"},
+                {"ctx.getAttributeValueForAllMatchingTags('PII', 'type')", Arrays.asList("email", "phone")},
+                {"ctx.getAttributeValueForAllMatchingTags('PCI', 'kind')", Arrays.asList("pan", "sad")},
+                {"ctx.getAttributeValueForAllMatchingTags('PII', 'kind')", Collections.emptyList()},
+                {"ctx.getAttributeValueForAllMatchingTags('PCI', 'type')", Collections.emptyList()},
+                {"ctx.getAttributeValueForAllMatchingTags('notag', 'noattr')", Collections.emptyList()},
+                {"ctx.getAttributeValueForAllMatchingTags('notag', null)", null},
+                {"ctx.getAttributeValueForAllMatchingTags(null, 'noattr')", null},
+                {"ctx.getAttributeValueForAllMatchingTags(null, noull)", null}
+        };
+
+        for (Object[] test : tests) {
+            String script   = (String) test[0];
+            Object expected = test[1];
+            Object actual   = evaluator.evaluateScript(script);
+
+            Assert.assertEquals("test: " + script, expected, actual);
+        }
+    }
+
     RangerAccessRequest createRequest(String userName, Set<String> userGroups, Set<String> userRoles, List<RangerTag> resourceTags) {
         RangerAccessResource resource = mock(RangerAccessResource.class);
 

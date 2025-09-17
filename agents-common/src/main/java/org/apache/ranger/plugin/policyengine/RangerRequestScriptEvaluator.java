@@ -432,9 +432,7 @@ public final class RangerRequestScriptEvaluator {
     }
 
     public Set<String> getAllTagTypes() {
-        Set<RangerTagForEval> tags = getAllTags();
-
-        return CollectionUtils.isEmpty(tags) ? null : tags.stream().map(RangerTagForEval::getType).collect(Collectors.toSet());
+        return Collections.unmodifiableSet(tags.keySet());
     }
 
     public Map<String, String> getTagAttributes(final String tagType) {
@@ -445,8 +443,9 @@ public final class RangerRequestScriptEvaluator {
         return CollectionUtils.isEmpty(tags) ? null :
                 tags.stream()
                         .filter(tag -> tagType.equals(tag.getType()))
-                        .findFirst()
                         .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .findFirst()
                         .orElse(null);
     }
 
@@ -474,10 +473,17 @@ public final class RangerRequestScriptEvaluator {
     }
 
     public List<String> getAttributeValueForAllMatchingTags(final String tagType, final String attributeName) {
-        List<Map<String, String>> attributes = (StringUtils.isBlank(tagType) || StringUtils.isBlank(attributeName)) ? null : getTagAttributesForAllMatchingTags(tagType);
+        Set<RangerTagForEval> tags = StringUtils.isBlank(tagType) || StringUtils.isBlank(attributeName) ? null : getAllTags();
 
-        return attributes == null ? null :
-                attributes.stream().map(tagAttrs -> tagAttrs.get(attributeName)).filter(Objects::nonNull).collect(Collectors.toList());
+        return CollectionUtils.isEmpty(tags) ? null :
+                tags.stream()
+                        .filter(tag -> tagType.equals(tag.getType()))
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .map(tagAttrs -> tagAttrs.get(attributeName))
+                        .filter(Objects::nonNull)
+                        .sorted()
+                        .collect(Collectors.toList());
     }
 
     public String getAttributeValue(final String attributeName) {
@@ -1039,11 +1045,14 @@ public final class RangerRequestScriptEvaluator {
     }
 
     private List<Object> getTagAttr(String attrName) {
-        return tagNames.stream()
-                .map(tags::get)
+        Set<RangerTagForEval> tags = StringUtils.isBlank(attrName) ? null : getAllTags();
+
+        return tags == null ? Collections.emptyList() : tags.stream()
+                .map(RangerTagForEval::getAttributes)
                 .filter(Objects::nonNull)
                 .map(attrs -> attrs.get(attrName))
                 .filter(Objects::nonNull)
+                .sorted()
                 .collect(Collectors.toList());
     }
 
@@ -1070,8 +1079,12 @@ public final class RangerRequestScriptEvaluator {
     }
 
     private Collection<String> getTagAttrNames() {
-        return getSorted(
-                tags.values().stream()
+        Set<RangerTagForEval> tags = getAllTags();
+
+        return tags == null ? Collections.emptySet() : getSorted(
+                tags.stream()
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(Objects::nonNull)
                         .flatMap(attrs -> attrs.keySet().stream())
                         .filter(attr -> !SCRIPT_FIELD__TYPE.equals(attr) && !SCRIPT_FIELD__MATCH_TYPE.equals(attr))
                         .collect(Collectors.toSet()));
