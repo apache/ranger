@@ -187,6 +187,8 @@ public class TagAdminRESTSink implements TagSink, Runnable {
                     Thread.sleep(sleepInterval);
                 } catch (InterruptedException interrupted) {
                     LOG.error("Interrupted..: ", interrupted);
+                    // preserve interrupt status for caller of the thread
+                    Thread.currentThread().interrupt();
                     return;
                 }
             }

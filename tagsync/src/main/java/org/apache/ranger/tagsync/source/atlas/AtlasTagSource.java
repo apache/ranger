@@ -238,6 +238,8 @@ public class AtlasTagSource extends AbstractTagSource {
                         Thread.sleep(sleepInterval);
                     } catch (InterruptedException interrupted) {
                         LOG.error("Interrupted: ", interrupted);
+                        // preserve interrupt status for caller of the thread
+                        Thread.currentThread().interrupt();
                         return;
                     }
                 }
