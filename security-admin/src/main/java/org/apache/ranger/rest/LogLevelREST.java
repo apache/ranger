@@ -28,12 +28,11 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * REST API for logging-related operations.
- * These endpoints require ROLE_SYS_ADMIN role as they perform system-level operations.
+ * REST API for log level management operations.
+ * This endpoint requires ROLE_SYS_ADMIN role as it performs system-level operations.
  */
 @Path("loggers")
 @Component
@@ -46,28 +45,6 @@ public class LogLevelREST {
 
     @Inject
     RESTErrorUtil restErrorUtil;
-
-    /**
-     * An endpoint to dynamically reload the logging configuration from the
-     * logback properties file on the classpath.
-     * 
-     * This operation requires ROLE_SYS_ADMIN role as it affects system-wide logging configuration.
-     *
-     * @return An HTTP response indicating success or failure.
-     */
-    @POST
-    @Path("/reload")
-    @Produces("application/json")
-    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-    public Response reloadLogConfiguration() {
-        try {
-            logLevelService.reloadLogConfiguration();
-            return Response.ok("Log configuration reloaded successfully.").build();
-        } catch (Exception e) {
-            LOG.error("Error reloading Log configuration", e);
-            throw restErrorUtil.createRESTException(e.getMessage(), MessageEnums.ERROR_SYSTEM);
-        }
-    }
 
     /**
      * An endpoint to set the log level for a specific class or package.
