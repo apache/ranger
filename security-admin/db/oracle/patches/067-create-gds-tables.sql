@@ -159,7 +159,7 @@ CREATE TABLE x_gds_shared_resource (
     name                 VARCHAR2(512) NOT NULL,
     description          CLOB          DEFAULT NULL NULL,
     data_share_id        NUMBER(20)    NOT NULL,
-    "resource"           CLOB          NOT NULL,
+    resource_name        CLOB          NOT NULL,
     resource_signature   VARCHAR2(128) NOT NULL,
     sub_resource         CLOB          DEFAULT NULL NULL,
     sub_resource_type    CLOB          DEFAULT NULL NULL,

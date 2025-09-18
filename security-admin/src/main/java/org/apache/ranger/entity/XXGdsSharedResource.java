@@ -67,7 +67,7 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
     @Column(name = "data_share_id")
     protected Long dataShareId;
 
-    @Column(name = "resource")
+    @Column(name = "resource_name")
     protected String resource;
 
     @Column(name = "sub_resource")
