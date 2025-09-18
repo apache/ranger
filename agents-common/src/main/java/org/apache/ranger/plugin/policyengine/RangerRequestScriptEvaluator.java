@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -46,7 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACCESS_TIME;
 import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACCESS_TYPE;
@@ -159,7 +160,7 @@ public final class RangerRequestScriptEvaluator {
     private static final String  DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy/MM/dd";
     private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
     private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT      = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private static final String  SCRIPT_SAFE_PREEXEC                          = "exit=null;quit=null;";
+    private static final String  SCRIPT_SAFE_PREEXEC                          = "Object.defineProperty(this,'engine',{value:null,writable:false});exit=null;quit=null;";
     private static final String  SCRIPT_PREEXEC                               = SCRIPT_VAR__CTX + "=JSON.parse(" + SCRIPT_VAR__CTX_JSON + "); J=JSON.stringify;" +
             SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
             SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
@@ -288,19 +289,7 @@ public final class RangerRequestScriptEvaluator {
     }
 
     public static boolean hasUserGroupAttributeReference(Collection<String> scripts) {
-        boolean ret = false;
-
-        if (scripts != null) {
-            for (String script : scripts) {
-                if (hasUserGroupAttributeReference(script)) {
-                    ret = true;
-
-                    break;
-                }
-            }
-        }
-
-        return ret;
+        return scripts != null && scripts.stream().anyMatch(RangerRequestScriptEvaluator::hasUserGroupAttributeReference);
     }
 
     public static String expandMacros(String script) {
@@ -365,7 +354,7 @@ public final class RangerRequestScriptEvaluator {
     public Set<String> getResourceZones() {
         Set<String> ret = RangerAccessRequestUtil.getResourceZoneNamesFromContext(getRequestContext());
 
-        return ret != null ? Collections.emptySet() : ret;
+        return ret != null ? ret : Collections.emptySet();
     }
 
     public String getRequestContextAttribute(String attributeName) {
@@ -443,125 +432,65 @@ public final class RangerRequestScriptEvaluator {
     }
 
     public Set<String> getAllTagTypes() {
-        Set<String>           allTagTypes   = null;
-        Set<RangerTagForEval> tagObjectList = getAllTags();
-
-        if (CollectionUtils.isNotEmpty(tagObjectList)) {
-            for (RangerTagForEval tag : tagObjectList) {
-                String tagType = tag.getType();
-                if (allTagTypes == null) {
-                    allTagTypes = new HashSet<>();
-                }
-                allTagTypes.add(tagType);
-            }
-        }
-
-        return allTagTypes;
+        return Collections.unmodifiableSet(tags.keySet());
     }
 
     public Map<String, String> getTagAttributes(final String tagType) {
-        Map<String, String> ret = null;
+        Set<RangerTagForEval> tags = StringUtils.isBlank(tagType) ? null : getAllTags();
 
-        if (StringUtils.isNotBlank(tagType)) {
-            Set<RangerTagForEval> tagObjectList = getAllTags();
-
-            // Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
-            // This will get attributes of the first tagType that matches
-            if (CollectionUtils.isNotEmpty(tagObjectList)) {
-                for (RangerTagForEval tag : tagObjectList) {
-                    if (tag.getType().equals(tagType)) {
-                        ret = tag.getAttributes();
-                        break;
-                    }
-                }
-            }
-        }
-
-        return ret;
+        // Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO**
+        // This will get attributes of the first tagType that matches
+        return CollectionUtils.isEmpty(tags) ? null :
+                tags.stream()
+                        .filter(tag -> tagType.equals(tag.getType()))
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .findFirst()
+                        .orElse(null);
     }
 
     public List<Map<String, String>> getTagAttributesForAllMatchingTags(final String tagType) {
-        List<Map<String, String>> ret = null;
+        Set<RangerTagForEval> tags = StringUtils.isBlank(tagType) ? null : getAllTags();
 
-        if (StringUtils.isNotBlank(tagType)) {
-            Set<RangerTagForEval> tagObjectList = getAllTags();
-
-            // Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
-            // This will get attributes of the first tagType that matches
-            if (CollectionUtils.isNotEmpty(tagObjectList)) {
-                for (RangerTagForEval tag : tagObjectList) {
-                    if (tag.getType().equals(tagType)) {
-                        Map<String, String> tagAttributes = tag.getAttributes();
-                        if (tagAttributes != null) {
-                            if (ret == null) {
-                                ret = new ArrayList<>();
-                            }
-                            ret.add(tagAttributes);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        return ret;
+        return CollectionUtils.isEmpty(tags) ? null :
+                tags.stream()
+                        .filter(tag -> tagType.equals(tag.getType()))
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .collect(Collectors.toList());
     }
 
     public Set<String> getAttributeNames(final String tagType) {
-        Set<String>         ret        = null;
         Map<String, String> attributes = getTagAttributes(tagType);
 
-        if (attributes != null) {
-            ret = attributes.keySet();
-        }
-
-        return ret;
+        return attributes == null ? null : attributes.keySet();
     }
 
     public String getAttributeValue(final String tagType, final String attributeName) {
-        String ret = null;
+        Map<String, String> attributes = (StringUtils.isBlank(tagType) || StringUtils.isBlank(attributeName)) ? null : getTagAttributes(tagType);
 
-        if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
-            Map<String, String> attributes = getTagAttributes(tagType);
-
-            if (attributes != null) {
-                ret = attributes.get(attributeName);
-            }
-        }
-        return ret;
+        return attributes == null ? null : attributes.get(attributeName);
     }
 
     public List<String> getAttributeValueForAllMatchingTags(final String tagType, final String attributeName) {
-        List<String> ret = null;
+        Set<RangerTagForEval> tags = StringUtils.isBlank(tagType) || StringUtils.isBlank(attributeName) ? null : getAllTags();
 
-        if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
-            Map<String, String> attributes = getTagAttributes(tagType);
-
-            if (attributes != null && attributes.get(attributeName) != null) {
-                if (ret == null) {
-                    ret = new ArrayList<>();
-                }
-                ret.add(attributes.get(attributeName));
-            }
-        }
-        return ret;
+        return CollectionUtils.isEmpty(tags) ? null :
+                tags.stream()
+                        .filter(tag -> tagType.equals(tag.getType()))
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .map(tagAttrs -> tagAttrs.get(attributeName))
+                        .filter(Objects::nonNull)
+                        .sorted()
+                        .collect(Collectors.toList());
     }
 
     public String getAttributeValue(final String attributeName) {
-        String ret = null;
+        RangerTagForEval    tag        = StringUtils.isBlank(attributeName) ? null : getCurrentTag();
+        Map<String, String> attributes = tag == null ? null : tag.getAttributes();
 
-        if (StringUtils.isNotBlank(attributeName)) {
-            RangerTagForEval    tag        = getCurrentTag();
-            Map<String, String> attributes = null;
-            if (tag != null) {
-                attributes = tag.getAttributes();
-            }
-            if (attributes != null) {
-                ret = attributes.get(attributeName);
-            }
-        }
-
-        return ret;
+        return attributes == null ? null : attributes.get(attributeName);
     }
 
     public boolean getResult() {
@@ -573,19 +502,11 @@ public final class RangerRequestScriptEvaluator {
     }
 
     public Date getAsDate(String value) {
-        Date ret = null;
-
-        if (StringUtils.isNotBlank(value)) {
-            for (SimpleDateFormat simpleDateFormat : THREADLOCAL_DATE_FORMATS.get()) {
-                ret = getAsDate(value, simpleDateFormat);
-                if (ret != null) {
-                    if (LOG.isDebugEnabled()) {
-                        logDebug("RangerRequestScriptEvaluator.getAsDate() -The best match found for Format-String:[" + simpleDateFormat.toPattern() + "], date:[" + ret + "]");
-                    }
-                    break;
-                }
-            }
-        }
+        Date ret = StringUtils.isBlank(value) ? null : THREADLOCAL_DATE_FORMATS.get().stream()
+                .map(dateFormat -> getAsDate(value, dateFormat))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
         if (ret == null) {
             logError("RangerRequestScriptEvaluator.getAsDate() - Could not convert [" + value + "] to Date using any of the Format-Strings: " + Arrays.toString(dateFormatStrings));
@@ -603,51 +524,31 @@ public final class RangerRequestScriptEvaluator {
     }
 
     public boolean isAccessedAfter(String tagType, String attributeName) {
-        boolean ret        = false;
-        Date    accessDate = getAccessTime();
-        Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
+        Date accessDate = getAccessTime();
+        Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
-        if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
-            ret = true;
-        }
-
-        return ret;
+        return expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate);
     }
 
     public boolean isAccessedAfter(String attributeName) {
-        boolean ret        = false;
-        Date    accessDate = getAccessTime();
-        Date    expiryDate = getAsDate(getAttributeValue(attributeName));
+        Date accessDate = getAccessTime();
+        Date expiryDate = getAsDate(getAttributeValue(attributeName));
 
-        if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
-            ret = true;
-        }
-
-        return ret;
+        return expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate);
     }
 
     public boolean isAccessedBefore(String tagType, String attributeName) {
-        boolean ret        = true;
-        Date    accessDate = getAccessTime();
-        Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
+        Date accessDate = getAccessTime();
+        Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
-        if (expiryDate == null || accessDate.after(expiryDate)) {
-            ret = false;
-        }
-
-        return ret;
+        return !(expiryDate == null || accessDate.after(expiryDate));
     }
 
     public boolean isAccessedBefore(String attributeName) {
-        boolean ret        = true;
-        Date    accessDate = getAccessTime();
-        Date    expiryDate = getAsDate(getAttributeValue(attributeName));
+        Date accessDate = getAccessTime();
+        Date expiryDate = getAsDate(getAttributeValue(attributeName));
 
-        if (expiryDate == null || accessDate.after(expiryDate)) {
-            ret = false;
-        }
-
-        return ret;
+        return !(expiryDate == null || accessDate.after(expiryDate));
     }
 
     public String tagNames(Object... args) {
@@ -783,36 +684,15 @@ public final class RangerRequestScriptEvaluator {
     public boolean hasUgAttr(String attrName) {
         init();
 
-        boolean ret = false;
-
-        for (Map<String, String> attrs : groupAttrs.values()) {
-            if (attrs.containsKey(attrName)) {
-                ret = true;
-
-                break;
-            }
-        }
-
-        return ret;
+        return groupAttrs.values().stream().anyMatch(attrs -> attrs.containsKey(attrName));
     }
 
     public boolean hasTagAttr(String attrName) {
         init();
 
-        boolean               ret  = false;
         Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
 
-        if (tags != null) {
-            for (RangerTagForEval tag : tags) {
-                if (tag.getAttributes().containsKey(attrName)) {
-                    ret = true;
-
-                    break;
-                }
-            }
-        }
-
-        return ret;
+        return tags != null && tags.stream().anyMatch(tag -> tag.getAttributes().containsKey(attrName));
     }
 
     public boolean isInGroup(String groupName) {
@@ -1089,12 +969,8 @@ public final class RangerRequestScriptEvaluator {
             if (CollectionUtils.isNotEmpty(requestTags)) {
                 RangerTagForEval currentTag = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
 
-                tags = new HashMap();
                 tag  = (currentTag != null) ? toMap(currentTag) : Collections.emptyMap();
-
-                for (RangerTagForEval tag : requestTags) {
-                    tags.put(tag.getType(), toMap(tag));
-                }
+                tags = requestTags.stream().collect(Collectors.toMap(RangerTagForEval::getType, RangerRequestScriptEvaluator::toMap, (oldVal, newVal) -> newVal));
 
                 tagNames = getSorted(tags.keySet());
             } else {
@@ -1143,7 +1019,7 @@ public final class RangerRequestScriptEvaluator {
         if (values == null) {
             ret = Collections.emptyList();
         } else if (values.size() > 1) {
-            List lst = new ArrayList<>(values);
+            List<String> lst = new ArrayList<>(values);
 
             Collections.sort(lst);
 
@@ -1160,124 +1036,86 @@ public final class RangerRequestScriptEvaluator {
     }
 
     private List<Object> getUgAttr(String attrName) {
-        List<Object> ret = new ArrayList<>();
-
-        for (String groupName : userGroups) {
-            Map<String, String> attrs = groupAttrs.get(groupName);
-            Object              val   = attrs != null ? attrs.get(attrName) : null;
-
-            if (val != null) {
-                ret.add(val);
-            }
-        }
-
-        return ret;
+        return userGroups.stream()
+                .map(groupAttrs::get)
+                .filter(Objects::nonNull)
+                .map(attrs -> attrs.get(attrName))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private List<Object> getTagAttr(String attrName) {
-        List<Object> ret = new ArrayList<>();
+        Set<RangerTagForEval> tags = StringUtils.isBlank(attrName) ? null : getAllTags();
 
-        for (String tagName : tagNames) {
-            Map<String, Object> attrs = tags.get(tagName);
-            Object              val   = attrs != null ? attrs.get(attrName) : null;
-
-            if (val != null) {
-                ret.add(val);
-            }
-        }
-
-        return ret;
+        return tags == null ? Collections.emptyList() : tags.stream()
+                .map(RangerTagForEval::getAttributes)
+                .filter(Objects::nonNull)
+                .map(attrs -> attrs.get(attrName))
+                .filter(Objects::nonNull)
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     private Collection<String> getUserAttrNames() {
         Collection<String> ret = getSorted(userAttrs.keySet());
 
         if (ret.contains(SCRIPT_FIELD__NAME)) {
-            ret.remove(SCRIPT_FIELD__NAME);
+            if (ret.size() == 1) { // SCRIPT_FIELD__NAME is the only entry; return empty list
+                ret = Collections.emptyList();
+            } else { // ret is safe to mutate when size > 1 - see getSorted()
+                ret.remove(SCRIPT_FIELD__NAME);
+            }
         }
 
         return ret;
     }
 
     private Collection<String> getUgAttrNames() {
-        Set<String> ret = new HashSet<>();
-
-        for (Map<String, String> attrs : groupAttrs.values()) {
-            ret.addAll(attrs.keySet());
-        }
-
-        ret.remove(SCRIPT_FIELD__NAME);
-
-        return getSorted(ret);
+        return getSorted(
+                groupAttrs.values().stream()
+                        .flatMap(attrs -> attrs.keySet().stream())
+                        .filter(attr -> !SCRIPT_FIELD__NAME.equals(attr))
+                        .collect(Collectors.toSet()));
     }
 
     private Collection<String> getTagAttrNames() {
-        Set<String> ret = new HashSet<>();
+        Set<RangerTagForEval> tags = getAllTags();
 
-        for (Map<String, Object> attrs : tags.values()) {
-            ret.addAll(attrs.keySet());
-        }
-
-        ret.remove(SCRIPT_FIELD__TYPE);
-        ret.remove(SCRIPT_FIELD__MATCH_TYPE);
-
-        return getSorted(ret);
+        return tags == null ? Collections.emptySet() : getSorted(
+                tags.stream()
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(Objects::nonNull)
+                        .flatMap(attrs -> attrs.keySet().stream())
+                        .filter(attr -> !SCRIPT_FIELD__TYPE.equals(attr) && !SCRIPT_FIELD__MATCH_TYPE.equals(attr))
+                        .collect(Collectors.toSet()));
     }
 
-    private String toCsv(Collection<? extends Object> values, Object[] args) {
-        StringBuilder sb        = new StringBuilder();
-        String        separator = getSeparator(args);
+    private String toCsv(Collection<?> values, Object[] args) {
+        String separator = getSeparator(args);
+        String ret       = values.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.joining(separator));
 
-        for (Object value : values) {
-            if (value == null) {
-                continue;
-            }
-
-            if (sb.length() > 0) {
-                sb.append(separator);
-            }
-
-            sb.append(value);
+        if (StringUtils.isEmpty(ret)) {
+            ret = getDefaultValue(args);
         }
 
-        if (sb.length() == 0) {
+        return ret == null ? StringUtils.EMPTY : ret;
+    }
+
+    private String toCsvQ(Collection<?> values, Object[] args) {
+        String openQuote  = getOpenQuote(args);
+        String closeQuote = getCloseQuote(args, openQuote);
+        String separator  = getSeparator(args);
+        String ret        = values.stream().filter(Objects::nonNull).map(value -> openQuote + value + closeQuote).collect(Collectors.joining(separator));
+
+        if (StringUtils.isEmpty(ret)) {
             String defValue = getDefaultValue(args);
 
             if (defValue != null) {
-                sb.append(getDefaultValue(args));
+                ret = (openQuote + defValue + closeQuote);
             }
         }
 
-        return sb.toString();
-    }
-
-    private String toCsvQ(Collection<? extends Object> values, Object[] args) {
-        StringBuilder sb         = new StringBuilder();
-        String        openQuote  = getOpenQuote(args);
-        String        closeQuote = getCloseQuote(args, openQuote);
-        String        separator  = getSeparator(args);
-
-        for (Object value : values) {
-            if (value == null) {
-                continue;
-            }
-
-            if (sb.length() > 0) {
-                sb.append(separator);
-            }
-
-            sb.append(openQuote).append(value).append(closeQuote);
-        }
-
-        if (sb.length() == 0) {
-            String defValue = getDefaultValue(args);
-
-            if (defValue != null) {
-                sb.append(openQuote).append(getDefaultValue(args)).append(closeQuote);
-            }
-        }
-
-        return sb.toString();
+        return ret;
     }
 
     private String getDefaultValue(Object[] args) {
