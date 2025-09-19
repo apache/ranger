@@ -355,16 +355,6 @@ class RangerClient:
     def purge_records(self, record_type, retention_days):
         return self.client_http.call_api(RangerClient.PURGE_RECORDS, { 'type': record_type, 'retentionDays': retention_days})
 
-    def reload_log_configuration(self):
-        """
-        Reloads the logging configuration from the logback properties file.
-        This operation requires ROLE_SYS_ADMIN role.
-        
-        :return: A message indicating the result of the operation
-        :raises: RangerServiceException if the operation fails
-        """
-        return self.client_http.call_api(RangerClient.RELOAD_LOG_CONFIGURATION)
-
     def set_log_level(self, logger_name, log_level):
         """
         Sets the log level for a specific class or package.
@@ -425,7 +415,6 @@ class RangerClient:
     URI_POLICY_DELTAS       = URI_BASE + "/server/policydeltas"
     URI_PURGE_RECORDS       = URI_BASE + "/server/purge/records"
     URI_LOGGERS             = "service/loggers"
-    URI_LOGGERS_RELOAD      = URI_LOGGERS + "/reload"
     URI_LOGGERS_SET_LEVEL   = URI_LOGGERS + "/set-level"
 
     # APIs
@@ -495,7 +484,6 @@ class RangerClient:
     DELETE_POLICY_DELTAS      = API(URI_POLICY_DELTAS, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
     PURGE_RECORDS             = API(URI_PURGE_RECORDS, HttpMethod.DELETE, HTTPStatus.OK)
 
-    RELOAD_LOG_CONFIGURATION  = API(URI_LOGGERS_RELOAD, HttpMethod.POST, HTTPStatus.OK)
     SET_LOG_LEVEL             = API(URI_LOGGERS_SET_LEVEL, HttpMethod.POST, HTTPStatus.OK)
 
 

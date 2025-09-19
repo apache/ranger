@@ -106,7 +106,6 @@ public class RangerClient {
     private static final String URI_POLICY_DELTAS         = URI_BASE + "/server/policydeltas";
     private static final String URI_PURGE_RECORDS         = URI_BASE + "/server/purge/records";
     private static final String URI_LOGGERS               = "/service/loggers";
-    private static final String URI_LOGGERS_RELOAD        = URI_LOGGERS + "/reload";
     private static final String URI_LOGGERS_SET_LEVEL     = URI_LOGGERS + "/set-level";
 
     // APIs
@@ -168,7 +167,6 @@ public class RangerClient {
     public static final API DELETE_POLICY_DELTAS = new API(URI_POLICY_DELTAS, HttpMethod.DELETE, Response.Status.NO_CONTENT);
     public static final API PURGE_RECORDS        = new API(URI_PURGE_RECORDS, HttpMethod.DELETE, Response.Status.OK);
 
-    public static final API RELOAD_LOG_CONFIGURATION = new API(URI_LOGGERS_RELOAD, HttpMethod.POST, Response.Status.OK);
     public static final API SET_LOG_LEVEL           = new API(URI_LOGGERS_SET_LEVEL, HttpMethod.POST, Response.Status.OK);
 
     private static final TypeReference<Void>                               TYPE_VOID                 = new TypeReference<Void>() {};
@@ -482,17 +480,6 @@ public class RangerClient {
         queryParams.put(PARAM_PURGE_RETENTION_DAYS, String.valueOf(retentionDays));
 
         return callAPI(PURGE_RECORDS, queryParams, null, TYPE_LIST_PURGE_RESULT);
-    }
-
-    /**
-     * Reloads the logging configuration from the logback properties file.
-     * This operation requires ROLE_SYS_ADMIN role.
-     *
-     * @return A message indicating the result of the operation
-     * @throws RangerServiceException if the operation fails
-     */
-    public String reloadLogConfiguration() throws RangerServiceException {
-        return callAPI(RELOAD_LOG_CONFIGURATION, null, null, new TypeReference<String>() {});
     }
 
     /**
