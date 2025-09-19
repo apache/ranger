@@ -16,7 +16,6 @@
  */
 package org.apache.ranger.patch.cliutil;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.AssetMgr;
@@ -30,7 +29,6 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
@@ -390,76 +388,9 @@ public class MetricUtil extends BaseLoader {
                     break;
                 case "denyconditions":
                     try {
-                        SearchFilter policyFilter1 = new SearchFilter();
-
-                        policyFilter1.setMaxRows(200);
-                        policyFilter1.setStartIndex(0);
-                        policyFilter1.setGetCount(true);
-                        policyFilter1.setSortBy("serviceId");
-                        policyFilter1.setSortType("asc");
-
-                        int                     denyCount           = 0;
-                        Map<String, Integer>    denyconditionsonMap = new HashMap<>();
-                        PList<RangerServiceDef> paginatedSvcDefs    = svcStore.getPaginatedServiceDefs(policyFilter1);
-
-                        if (paginatedSvcDefs != null) {
-                            List<RangerServiceDef> rangerServiceDefs = paginatedSvcDefs.getList();
-
-                            if (rangerServiceDefs != null && !rangerServiceDefs.isEmpty()) {
-                                for (RangerServiceDef rangerServiceDef : rangerServiceDefs) {
-                                    if (rangerServiceDef != null) {
-                                        String serviceDef = rangerServiceDef.getName();
-
-                                        if (!StringUtils.isEmpty(serviceDef)) {
-                                            policyFilter1.setParam("serviceType", serviceDef);
-                                            policyFilter1.setParam("denyCondition", "true");
-
-                                            PList<RangerPolicy> policiesList = svcStore.getPaginatedPolicies(policyFilter1);
-
-                                            if (policiesList != null && policiesList.getListSize() > 0) {
-                                                int policyListCount = policiesList.getListSize();
-
-                                                if (policyListCount > 0 && policiesList.getList() != null) {
-                                                    List<RangerPolicy> policies = policiesList.getList();
-
-                                                    for (RangerPolicy policy : policies) {
-                                                        if (policy != null) {
-                                                            List<RangerPolicyItem> policyItem = policy.getDenyPolicyItems();
-
-                                                            if (policyItem != null && !policyItem.isEmpty()) {
-                                                                if (denyconditionsonMap.get(serviceDef) != null) {
-                                                                    denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItem.size();
-                                                                } else {
-                                                                    denyCount = denyCount + policyItem.size();
-                                                                }
-                                                            }
-
-                                                            List<RangerPolicyItem> policyItemExclude = policy.getDenyExceptions();
-                                                            if (policyItemExclude != null && !policyItemExclude.isEmpty()) {
-                                                                if (denyconditionsonMap.get(serviceDef) != null) {
-                                                                    denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItemExclude.size();
-                                                                } else {
-                                                                    denyCount = denyCount + policyItemExclude.size();
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                            policyFilter1.removeParam("serviceType");
-                                        }
-
-                                        denyconditionsonMap.put(serviceDef, denyCount);
-
-                                        denyCount = 0;
-                                    }
-                                }
-                            }
-                        }
-
-                        String jsonContextDenyCondtionOn = JsonUtils.objectToJson(denyconditionsonMap);
-                        System.out.println(jsonContextDenyCondtionOn);
+                        Map<String, Long>    denyconditionsonMap = svcStore.getPolicyCountByDenyConditionsAndServiceDef();
+                        String jsonContextDenyCondition = JsonUtils.objectToJson(denyconditionsonMap);
+                        System.out.println(jsonContextDenyCondition);
                     } catch (Exception e) {
                         logger.error("Error calculating Metric for denyconditions : {}", e.getMessage());
                     }

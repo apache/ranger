@@ -111,7 +111,7 @@ CREATE TABLE `x_gds_shared_resource`(
   , `name`                 VARCHAR(512) NOT NULL
   , `description`          TEXT         NULL     DEFAULT NULL
   , `data_share_id`        BIGINT(20)   NOT NULL
-  , `resource`             TEXT         NOT NULL
+  , `resource_name`        TEXT         NOT NULL
   , `resource_signature`   VARCHAR(128) NOT NULL
   , `sub_resource`         TEXT         NULL     DEFAULT NULL
   , `sub_resource_type`    TEXT         NULL     DEFAULT NULL
