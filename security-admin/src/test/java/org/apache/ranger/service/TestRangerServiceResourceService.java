@@ -54,9 +54,9 @@ import static org.mockito.Mockito.when;
 public class TestRangerServiceResourceService {
     @InjectMocks private RangerServiceResourceService svc = spy(new RangerServiceResourceService());
 
-    @Mock private RangerDaoManager         daoMgr;
-    @Mock private XXServiceResourceDao     xxServiceResourceDao;
-    @Mock private XXServiceVersionInfoDao  xxServiceVersionInfoDao;
+    @Mock private RangerDaoManager        daoMgr;
+    @Mock private XXServiceResourceDao    xxServiceResourceDao;
+    @Mock private XXServiceVersionInfoDao xxServiceVersionInfoDao;
 
     @BeforeEach
     void init() {
@@ -74,9 +74,9 @@ public class TestRangerServiceResourceService {
 
     @Test
     void testGetPopulatedViewObject_usesPopulateViewBean() {
-        XXServiceResource                        x        = new XXServiceResource();
-        RangerServiceResource                    expected = new RangerServiceResource();
-        RangerServiceResourceService             spySvc   = spy(new RangerServiceResourceService());
+        XXServiceResource            x        = new XXServiceResource();
+        RangerServiceResource        expected = new RangerServiceResource();
+        RangerServiceResourceService spySvc   = spy(new RangerServiceResourceService());
         doReturn(expected).when(spySvc).populateViewBean(any(XXServiceResource.class));
 
         RangerServiceResource out = spySvc.getPopulatedViewObject(x);
@@ -88,8 +88,8 @@ public class TestRangerServiceResourceService {
         XXServiceResource x = new XXServiceResource();
         when(xxServiceResourceDao.findByGuid("g")).thenReturn(x);
 
-        RangerServiceResourceService spySvc = spy(svc);
-        RangerServiceResource expected = new RangerServiceResource();
+        RangerServiceResourceService spySvc   = spy(svc);
+        RangerServiceResource        expected = new RangerServiceResource();
         doReturn(expected).when(spySvc).populateViewBean(any(XXServiceResource.class));
 
         RangerServiceResource out1 = spySvc.getServiceResourceByGuid("g");

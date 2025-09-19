@@ -34,10 +34,12 @@ import org.apache.ranger.security.handler.Permission;
 import org.apache.ranger.security.handler.RangerDomainObjectSecurityHandler;
 import org.apache.ranger.view.VXLong;
 import org.apache.ranger.view.VXResource;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -45,18 +47,22 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.ws.rs.WebApplicationException;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -78,28 +84,30 @@ import static org.mockito.Mockito.when;
  * @description : Unit Test cases for AbstractBaseResourceService
  */
 
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestAbstractBaseResourceService {
-    private TestableService service;
+    private       TestableService                   service;
     @Mock private RangerDaoManager                  daoManager;
     @Mock private SearchUtil                        searchUtil;
     @Mock private RESTErrorUtil                     restErrorUtil;
     @Mock private BaseDao<XXResource>               entityDao;
     @Mock private RangerDomainObjectSecurityHandler objectSecurityHandler;
 
-    @BeforeEach
-    void init() {
-        MockitoAnnotations.initMocks(this);
-        service                       = new TestableService();
-        service.daoManager            = daoManager;
-        service.searchUtil            = searchUtil;
-        service.restErrorUtil         = restErrorUtil;
-        service.entityDao             = entityDao;
-        service.stringUtil            = new StringUtil();
-        service.objectSecurityHandler = objectSecurityHandler;
+    public NoopService createNoopService() {
+        NoopService svc = new NoopService();
+        svc.daoManager            = daoManager;
+        svc.searchUtil            = searchUtil;
+        svc.restErrorUtil         = restErrorUtil;
+        svc.entityDao             = entityDao;
+        svc.stringUtil            = new StringUtil();
+        svc.objectSecurityHandler = objectSecurityHandler;
+        return svc;
     }
 
     @Test
-    void testConvertVListToVMap() {
+    public void testConvertVListToVMap() {
+        service = createService();
         VXResource v1 = new VXResource();
         v1.setId(1L);
         VXResource v2 = new VXResource();
@@ -112,7 +120,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testGetSearchCount_usesDaoCount() {
+    public void testGetSearchCount_usesDaoCount() {
+        service = createService();
         SearchCriteria sc    = new SearchCriteria();
         EntityManager  em    = mock(EntityManager.class);
         Query          query = mock(Query.class);
@@ -127,7 +136,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testSetSortClause_setsDefaultWhenNotProvided() {
+    public void testSetSortClause_setsDefaultWhenNotProvided() {
+        service = createService();
         SearchCriteria   sc       = new SearchCriteria();
         CriteriaBuilder  cb       = mock(CriteriaBuilder.class);
         CriteriaQuery<?> criteria = mock(CriteriaQuery.class);
@@ -141,7 +151,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testCreateResource_accessDenied_throws403() {
+    public void testCreateResource_accessDenied_throws403() {
+        service = createService();
         VXResource view = new VXResource();
         when(objectSecurityHandler.hasAccess(any(), eq(Permission.PermissionType.CREATE))).thenReturn(false);
         when(restErrorUtil.create403RESTException(anyString())).thenThrow(new WebApplicationException());
@@ -150,14 +161,16 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testReadResource_notFound_throws404() {
+    public void testReadResource_notFound_throws404() {
+        service = createService();
         when(entityDao.getById(5L)).thenReturn(null);
         when(restErrorUtil.createRESTException(anyString(), eq(MessageEnums.DATA_NOT_FOUND), eq(5L), isNull(), anyString(), anyInt())).thenThrow(new WebApplicationException());
         assertThrows(WebApplicationException.class, () -> service.readResource(5L));
     }
 
     @Test
-    void testReadResource_success_checksAccessAndReturnsView() {
+    public void testReadResource_success_checksAccessAndReturnsView() {
+        service = createService();
         XXResource entity = new XXResource();
         entity.setId(9L);
         when(entityDao.getById(9L)).thenReturn(entity);
@@ -168,7 +181,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testUpdateResource_accessDenied_throws403() {
+    public void testUpdateResource_accessDenied_throws403() {
+        service = createService();
         VXResource view = new VXResource();
         view.setId(10L);
         XXResource entity = new XXResource();
@@ -181,14 +195,16 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testDeleteResource_notFound_throws404() {
+    public void testDeleteResource_notFound_throws404() {
+        service = createService();
         when(entityDao.getById(15L)).thenReturn(null);
         when(restErrorUtil.createRESTException(contains("not found"), eq(MessageEnums.DATA_NOT_FOUND), eq(15L), isNull(), anyString())).thenThrow(new WebApplicationException());
         assertThrows(WebApplicationException.class, () -> service.deleteResource(15L));
     }
 
     @Test
-    void testDeleteResource_success_callsRemoveAndPostDelete() {
+    public void testDeleteResource_success_callsRemoveAndPostDelete() {
+        service = createService();
         XXResource entity = new XXResource();
         entity.setId(20L);
         when(entityDao.getById(20L)).thenReturn(entity);
@@ -200,7 +216,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testDeleteResource_removeThrows_wrapsInRESTException() {
+    public void testDeleteResource_removeThrows_wrapsInRESTException() {
+        service = createService();
         XXResource entity = new XXResource();
         entity.setId(21L);
         when(entityDao.getById(21L)).thenReturn(entity);
@@ -210,7 +227,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testGetSearchCountUsingCriteria_returnsCount() {
+    public void testGetSearchCountUsingCriteria_returnsCount() {
+        service = createService();
         SearchCriteria  sc = new SearchCriteria();
         EntityManager   em = mock(EntityManager.class);
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
@@ -240,7 +258,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testSearchResourcesUsingCriteria_countZeroReturnsEmpty() {
+    public void testSearchResourcesUsingCriteria_countZeroReturnsEmpty() {
+        service = createService();
         SearchCriteria sc = new SearchCriteria();
         sc.setGetCount(true);
         EntityManager   em = mock(EntityManager.class);
@@ -266,7 +285,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testSearchResourcesUsingCriteria_returnsResultAndSetsVList() {
+    public void testSearchResourcesUsingCriteria_returnsResultAndSetsVList() {
+        service = createService();
         SearchCriteria sc = new SearchCriteria();
         sc.setGetCount(true);
         EntityManager   em = mock(EntityManager.class);
@@ -302,23 +322,24 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testBuildUserConditions_forStringAndIntegerAndNull() {
+    public void testBuildUserConditions_forStringAndIntegerAndNull() {
+        service = createService();
         CriteriaBuilder cb = mock(CriteriaBuilder.class);
         @SuppressWarnings("unchecked")
         Root<XXDBBase> root = (Root<XXDBBase>) mock(Root.class);
-        javax.persistence.criteria.Path<Object>       path    = mock(javax.persistence.criteria.Path.class);
-        javax.persistence.criteria.Expression<String> strExpr = mock(javax.persistence.criteria.Expression.class);
-        javax.persistence.criteria.Expression<String> literal = mock(javax.persistence.criteria.Expression.class);
-        javax.persistence.criteria.Predicate          pred    = mock(javax.persistence.criteria.Predicate.class);
+        Path<Object>       path    = mock(Path.class);
+        Expression<String> strExpr = mock(Expression.class);
+        Expression<String> literal = mock(Expression.class);
+        Predicate          pred    = mock(Predicate.class);
 
         when(root.get("name")).thenReturn(path);
         when(cb.lower(any())).thenReturn(strExpr);
         when(cb.literal(anyString())).thenReturn(literal);
         when(cb.equal(any(), any())).thenReturn(pred);
         when(cb.conjunction()).thenReturn(pred);
-        when(cb.and(any(javax.persistence.criteria.Predicate.class))).thenReturn(pred);
+        when(cb.and(any(Predicate.class))).thenReturn(pred);
 
-        java.util.Map<String, Object> params = new java.util.HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("name", "Alice");
         params.put("status", 1);
         List<SearchField> fields = Arrays.asList(
@@ -332,7 +353,8 @@ public class TestAbstractBaseResourceService {
     }
 
     @Test
-    void testReadResource_accessDeniedThrows() {
+    public void testReadResource_accessDeniedThrows() {
+        service = createService();
         XXResource entity = new XXResource();
         entity.setId(30L);
         when(entityDao.getById(30L)).thenReturn(entity);
@@ -341,7 +363,55 @@ public class TestAbstractBaseResourceService {
         assertThrows(WebApplicationException.class, () -> service.readResource(30L));
     }
 
-    private static class TestableService extends AbstractBaseResourceService<XXResource, VXResource> {
+    @Test
+    public void testPostDelete_baseMethodInvocableViaReflection() throws Exception {
+        service = createService();
+        XXResource resource = new XXResource();
+        Method     method   = AbstractBaseResourceService.class.getDeclaredMethod("postDelete", XXDBBase.class);
+        method.setAccessible(true);
+        method.invoke(service, resource);
+    }
+
+    @Test
+    public void testPreRead_returnsNull() {
+        service = createService();
+        assertNull(service.preRead(1L));
+    }
+
+    @Test
+    public void testPostUpdate_populatesView() {
+        service = createService();
+        XXResource entity = new XXResource();
+        entity.setId(42L);
+        VXResource view = service.postUpdate(entity);
+        assertNotNull(view);
+        assertEquals(42L, view.getId());
+    }
+
+    @Test
+    public void testDeleteResource_callsBasePostDelete_noOverride() {
+        NoopService svc    = createNoopService();
+        XXResource  entity = new XXResource();
+        entity.setId(25L);
+        when(entityDao.getById(25L)).thenReturn(entity);
+        when(objectSecurityHandler.hasAccess(eq(entity), eq(Permission.PermissionType.DELETE))).thenReturn(true);
+        when(entityDao.remove(eq(entity))).thenReturn(true);
+        boolean result = svc.deleteResource(25L);
+        assertTrue(result);
+    }
+
+    private TestableService createService() {
+        TestableService svc = new TestableService();
+        svc.daoManager            = daoManager;
+        svc.searchUtil            = searchUtil;
+        svc.restErrorUtil         = restErrorUtil;
+        svc.entityDao             = entityDao;
+        svc.stringUtil            = new StringUtil();
+        svc.objectSecurityHandler = objectSecurityHandler;
+        return svc;
+    }
+
+    public static class TestableService extends AbstractBaseResourceService<XXResource, VXResource> {
         boolean validateCreateCalled;
         boolean validateUpdateCalled;
         boolean postDeleteCalled;
@@ -376,7 +446,25 @@ public class TestAbstractBaseResourceService {
         }
     }
 
-    private static class TestVList extends VList {
+    public static class NoopService extends AbstractBaseResourceService<XXResource, VXResource> {
+        @Override
+        protected void validateForCreate(VXResource viewBaseBean) {}
+
+        @Override
+        protected void validateForUpdate(VXResource viewBaseBean, XXResource t) {}
+
+        @Override
+        protected XXResource mapViewToEntityBean(VXResource viewBean, XXResource t, int operationContext) {
+            return t;
+        }
+
+        @Override
+        protected VXResource mapEntityToViewBean(VXResource viewBean, XXResource t) {
+            return viewBean;
+        }
+    }
+
+    public static class TestVList extends VList {
         private final List<Object> list = new ArrayList<>();
 
         @Override

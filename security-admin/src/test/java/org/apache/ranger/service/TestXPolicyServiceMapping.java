@@ -49,9 +49,11 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -75,25 +77,25 @@ public class TestXPolicyServiceMapping {
     @Mock
     RangerDaoManager xaDaoMgr;
     @Mock
-    RESTErrorUtil restErrorUtil;
+    RESTErrorUtil    restErrorUtil;
     @Mock
-    XPermMapService xPermMapService;
+    XPermMapService  xPermMapService;
     @Mock
-    XXResourceDao xxResourceDao;
+    XXResourceDao    xxResourceDao;
     @Mock
-    XXAssetDao xxAssetDao;
+    XXAssetDao       xxAssetDao;
     @Mock
-    XXUserDao xxUserDao;
+    XXUserDao        xxUserDao;
     @Mock
-    XXGroupDao xxGroupDao;
+    XXGroupDao       xxGroupDao;
     @Mock
-    XXPermMapDao xxPermMapDao;
+    XXPermMapDao     xxPermMapDao;
     @Mock
     XResourceService xResourceService;
     @Mock
     XAuditMapService xAuditMapService;
     @Spy
-    StringUtil stringUtil = new StringUtil();
+    StringUtil       stringUtil = new StringUtil();
     @InjectMocks
     private XPolicyService xPolicyService = new XPolicyService();
 
@@ -349,7 +351,7 @@ public class TestXPolicyServiceMapping {
     @Test
     void testGetPrevPermMap_buildsUniqueKeyForUserAndGroup() throws Exception {
         when(xaDaoMgr.getXXPermMap()).thenReturn(xxPermMapDao);
-        java.util.List<XXPermMap> prev = new java.util.ArrayList<>();
+        List<XXPermMap> prev = new ArrayList<>();
 
         XXPermMap userPrev = new XXPermMap();
         userPrev.setPermFor(AppConstants.XA_PERM_FOR_USER);
@@ -365,11 +367,11 @@ public class TestXPolicyServiceMapping {
 
         when(xxPermMapDao.findByResourceId(999L)).thenReturn(prev);
 
-        java.lang.reflect.Method m = XPolicyService.class.getDeclaredMethod("getPrevPermMap", Long.class);
+        Method m = XPolicyService.class.getDeclaredMethod("getPrevPermMap", Long.class);
         m.setAccessible(true);
 
         @SuppressWarnings("unchecked")
-        java.util.Map<String, XXPermMap> result = (java.util.Map<String, XXPermMap>) m.invoke(xPolicyService, 999L);
+        Map<String, XXPermMap> result = (Map<String, XXPermMap>) m.invoke(xPolicyService, 999L);
 
         assertEquals(2, result.size());
         assertTrue(result.containsKey("999_" + AppConstants.XA_PERM_FOR_USER + "_11_" + AppConstants.XA_PERM_TYPE_READ));

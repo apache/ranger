@@ -47,33 +47,14 @@ import static org.mockito.Mockito.when;
  */
 
 public class TestXPolicyExportAuditServiceBase {
-    private static class TestSvc extends XPolicyExportAuditServiceBase<XXPolicyExportAudit, VXPolicyExportAudit> {
-        @Override
-        protected void validateForCreate(VXPolicyExportAudit vObj) {
-        }
-
-        @Override
-        protected void validateForUpdate(VXPolicyExportAudit vObj, XXPolicyExportAudit mObj) {
-        }
-
-        VXPolicyExportAudit callMapEntityToViewBean(VXPolicyExportAudit v, XXPolicyExportAudit x) {
-            return super.mapEntityToViewBean(v, x);
-        }
-
-        XXPolicyExportAudit callMapViewToEntityBean(VXPolicyExportAudit v, XXPolicyExportAudit x) {
-            return super.mapViewToEntityBean(v, x, 0);
-        }
-    }
-
     private TestSvc svc;
-
     @Mock private RangerDaoManager daoManager;
     @Mock private XXServiceDao     xxServiceDao;
 
     @BeforeEach
     void init() {
         MockitoAnnotations.initMocks(this);
-        svc = spy(new TestSvc());
+        svc            = spy(new TestSvc());
         svc.daoManager = daoManager;
         when(daoManager.getXXService()).thenReturn(xxServiceDao);
     }
@@ -108,9 +89,27 @@ public class TestXPolicyExportAuditServiceBase {
         v.setZoneName("z");
         v.setPolicyVersion(5L);
 
-        XXPolicyExportAudit x = svc.callMapViewToEntityBean(v, new XXPolicyExportAudit());
+        XXPolicyExportAudit x    = svc.callMapViewToEntityBean(v, new XXPolicyExportAudit());
         VXPolicyExportAudit back = svc.callMapEntityToViewBean(new VXPolicyExportAudit(), x);
         assertEquals(v.getRepositoryName(), back.getRepositoryName());
         assertEquals(v.getHttpRetCode(), back.getHttpRetCode());
+    }
+
+    public static class TestSvc extends XPolicyExportAuditServiceBase<XXPolicyExportAudit, VXPolicyExportAudit> {
+        @Override
+        protected void validateForCreate(VXPolicyExportAudit vObj) {
+        }
+
+        @Override
+        protected void validateForUpdate(VXPolicyExportAudit vObj, XXPolicyExportAudit mObj) {
+        }
+
+        VXPolicyExportAudit callMapEntityToViewBean(VXPolicyExportAudit v, XXPolicyExportAudit x) {
+            return super.mapEntityToViewBean(v, x);
+        }
+
+        XXPolicyExportAudit callMapViewToEntityBean(VXPolicyExportAudit v, XXPolicyExportAudit x) {
+            return super.mapViewToEntityBean(v, x, 0);
+        }
     }
 }

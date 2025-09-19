@@ -39,6 +39,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.lang.reflect.Method;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -60,7 +62,7 @@ public class TestRangerBaseModelService {
     @Mock private XXAccessTypeDefDao      xxAccessTypeDefDao;
     @Mock private XXPolicyConditionDefDao xxPolicyConditionDefDao;
     @Mock private XXResourceDefDao        xxResourceDefDao;
-    private DummyService svc;
+    private       DummyService            svc;
 
     @Test
     public void testBaseFieldsInitialized() {
@@ -176,7 +178,7 @@ public class TestRangerBaseModelService {
 
     private String invokeStringHelper(Object target, String method, Long arg) {
         try {
-            java.lang.reflect.Method m = RangerBaseModelService.class.getDeclaredMethod(method, Long.class);
+            Method m = RangerBaseModelService.class.getDeclaredMethod(method, Long.class);
             m.setAccessible(true);
             return (String) m.invoke(target, arg);
         } catch (Exception e) {
