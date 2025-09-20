@@ -105,6 +105,7 @@ public class RangerClient {
     private static final String URI_PLUGIN_INFO           = URI_BASE + "/plugins/info";
     private static final String URI_POLICY_DELTAS         = URI_BASE + "/server/policydeltas";
     private static final String URI_PURGE_RECORDS         = URI_BASE + "/server/purge/records";
+    private static final String URI_LOGGERS_SET_LEVEL     = "/service/admin/set-logger-level";
 
     // APIs
     public static final API CREATE_SERVICEDEF         = new API(URI_SERVICEDEF, HttpMethod.POST, Response.Status.OK);
@@ -164,6 +165,8 @@ public class RangerClient {
     public static final API GET_PLUGIN_INFO      = new API(URI_PLUGIN_INFO, HttpMethod.GET, Response.Status.OK);
     public static final API DELETE_POLICY_DELTAS = new API(URI_POLICY_DELTAS, HttpMethod.DELETE, Response.Status.NO_CONTENT);
     public static final API PURGE_RECORDS        = new API(URI_PURGE_RECORDS, HttpMethod.DELETE, Response.Status.OK);
+
+    public static final API SET_LOG_LEVEL           = new API(URI_LOGGERS_SET_LEVEL, HttpMethod.POST, Response.Status.OK);
 
     private static final TypeReference<Void>                               TYPE_VOID                 = new TypeReference<Void>() {};
     private static final TypeReference<Set<String>>                        TYPE_SET_STRING           = new TypeReference<Set<String>>() {};
@@ -476,6 +479,23 @@ public class RangerClient {
         queryParams.put(PARAM_PURGE_RETENTION_DAYS, String.valueOf(retentionDays));
 
         return callAPI(PURGE_RECORDS, queryParams, null, TYPE_LIST_PURGE_RESULT);
+    }
+
+    /**
+     * Sets the log level for a specific class or package.
+     * This operation requires ROLE_SYS_ADMIN role.
+     *
+     * @param loggerName The name of the logger (class or package name)
+     * @param logLevel The log level to set (TRACE, DEBUG, INFO, WARN, ERROR, OFF)
+     * @return A message indicating the result of the operation
+     * @throws RangerServiceException if the operation fails
+     */
+    public String setLogLevel(String loggerName, String logLevel) throws RangerServiceException {
+        Map<String, Object> requestData = new HashMap<>();
+        requestData.put("loggerName", loggerName);
+        requestData.put("logLevel", logLevel);
+
+        return callAPI(SET_LOG_LEVEL, null, requestData, new TypeReference<String>() {});
     }
 
     private void authInit(String authType, String username, String password) {
