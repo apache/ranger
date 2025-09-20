@@ -28,9 +28,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-
 
 @Path("admin")
 @Component
@@ -46,7 +48,6 @@ public class AdminREST {
 
     /**
      * An endpoint to set the log level for a specific class or package.
-     * 
      * This operation requires ROLE_SYS_ADMIN role as it affects system logging behavior
      * and can impact performance and security monitoring.
      *
@@ -66,13 +67,11 @@ public class AdminREST {
                         .entity("Request body is required")
                         .build();
             }
-            
             if (StringUtils.isBlank(request.getLoggerName())) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("loggerName is required")
                         .build();
             }
-            
             if (StringUtils.isBlank(request.getLogLevel())) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("logLevel is required")
@@ -80,13 +79,8 @@ public class AdminREST {
             }
 
             LOG.info("Setting log level for logger '{}' to '{}'", request.getLoggerName(), request.getLogLevel());
-            
             // Call the service to set the log level
-            String result = logLevelService.setLogLevel(
-                request.getLoggerName().trim(), 
-                request.getLogLevel().trim()
-            );
-            
+            String result = logLevelService.setLogLevel(request.getLoggerName().trim(), request.getLogLevel().trim());
             return Response.ok(result).build();
         } catch (IllegalArgumentException e) {
             LOG.error("Invalid parameters for setting log level:", e);

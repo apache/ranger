@@ -33,15 +33,12 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class RangerLogLevelService {
-
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RangerLogLevelService.class);
-    
     // Constants for SLF4J binding class name prefixes
     private static final String LOGBACK_CLASSIC_PREFIX = "ch.qos.logback.classic";
 
     /**
      * Sets the log level for a specific class or package.
-     * 
      * @param loggerName The name of the logger (class or package name)
      * @param logLevel The log level to set (TRACE, DEBUG, INFO, WARN, ERROR, OFF)
      * @return A message indicating the result of the operation
@@ -92,7 +89,6 @@ public class RangerLogLevelService {
 
     /**
      * Validates and parses the log level string.
-     * 
      * @param logLevel The log level string to validate
      * @return The corresponding Logback Level object
      * @throws IllegalArgumentException if the log level is invalid
