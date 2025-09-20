@@ -105,8 +105,7 @@ public class RangerClient {
     private static final String URI_PLUGIN_INFO           = URI_BASE + "/plugins/info";
     private static final String URI_POLICY_DELTAS         = URI_BASE + "/server/policydeltas";
     private static final String URI_PURGE_RECORDS         = URI_BASE + "/server/purge/records";
-    private static final String URI_LOGGERS               = "/service/loggers";
-    private static final String URI_LOGGERS_SET_LEVEL     = URI_LOGGERS + "/set-level";
+    private static final String URI_LOGGERS_SET_LEVEL     = "/service/admin/set-logger-level";
 
     // APIs
     public static final API CREATE_SERVICEDEF         = new API(URI_SERVICEDEF, HttpMethod.POST, Response.Status.OK);

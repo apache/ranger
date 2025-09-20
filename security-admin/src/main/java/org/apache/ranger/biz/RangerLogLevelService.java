@@ -22,6 +22,7 @@ package org.apache.ranger.biz;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,6 @@ public class RangerLogLevelService {
     // Constants for SLF4J binding class name prefixes
     private static final String LOGBACK_CLASSIC_PREFIX = "ch.qos.logback.classic";
 
-
     /**
      * Sets the log level for a specific class or package.
      * 
@@ -52,9 +52,8 @@ public class RangerLogLevelService {
         ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
         String loggerFactoryClassName = iLoggerFactory.getClass().getName();
 
-        LOG.info("Setting log level for logger '{}' to '{}'", loggerName, logLevel);
-
         if (loggerFactoryClassName.startsWith(LOGBACK_CLASSIC_PREFIX)) {
+            LOG.info("Setting log level for logger '{}' to '{}'", loggerName, logLevel);
             return setLogbackLogLevel(loggerName, logLevel);
         } else {
             String message = "Logback is the only supported logging mechanism. Detected unsupported SLF4J binding: " + loggerFactoryClassName;
@@ -70,25 +69,25 @@ public class RangerLogLevelService {
         try {
             // Validate log level
             Level level = validateAndParseLogLevel(logLevel);
-            
-            // Get the Logback LoggerContext
-            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-            
-            // Get or create the logger
-            Logger logger = context.getLogger(loggerName);
-            
-            // Set the log level
+            Logger logger = getLogger(loggerName);
             logger.setLevel(level);
-            
-            // Log the change
             LOG.info("Successfully set log level for logger '{}' to '{}'", loggerName, level);
-            
             return String.format("Log level for logger '%s' has been set to '%s'", loggerName, level);
-            
         } catch (Exception e) {
             LOG.error("Failed to set log level for logger '{}' to '{}'", loggerName, logLevel, e);
             throw new RuntimeException("Failed to set log level for logger '" + loggerName + "' to '" + logLevel + "'", e);
         }
+    }
+
+    private static Logger getLogger(String loggerName) {
+        ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
+        if (!(iLoggerFactory instanceof LoggerContext)) {
+            throw new IllegalStateException("Expected ILoggerFactory to be an instance of LoggerContext, but found " + iLoggerFactory.getClass().getName() + ". Is Logback configured as the SLF4J backend?");
+        }
+        // Get the Logback LoggerContext
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        // Get or create the logger
+        return context.getLogger(loggerName);
     }
 
     /**
@@ -99,18 +98,14 @@ public class RangerLogLevelService {
      * @throws IllegalArgumentException if the log level is invalid
      */
     private Level validateAndParseLogLevel(String logLevel) {
-        if (logLevel == null || logLevel.trim().isEmpty()) {
+        if (StringUtils.isBlank(logLevel)) {
             throw new IllegalArgumentException("Log level cannot be null or empty");
         }
-        
-        String normalizedLevel = logLevel.trim().toUpperCase();
-        
+
         try {
-            return Level.valueOf(normalizedLevel);
+            return Level.valueOf(logLevel.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Invalid log level: '" + logLevel + "'. " +
-                    "Valid levels are: TRACE, DEBUG, INFO, WARN, ERROR, OFF");
+            throw new IllegalArgumentException("Invalid log level: '" + logLevel + "'. " + "Valid levels are: TRACE, DEBUG, INFO, WARN, ERROR, OFF");
         }
     }
-
 }

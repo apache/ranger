@@ -414,8 +414,7 @@ class RangerClient:
     URI_PLUGIN_INFO         = URI_BASE + "/plugins/info"
     URI_POLICY_DELTAS       = URI_BASE + "/server/policydeltas"
     URI_PURGE_RECORDS       = URI_BASE + "/server/purge/records"
-    URI_LOGGERS             = "service/loggers"
-    URI_LOGGERS_SET_LEVEL   = URI_LOGGERS + "/set-level"
+    URI_LOGGERS_SET_LEVEL   = "service/admin/set-logger-level"
 
     # APIs
     CREATE_SERVICEDEF         = API(URI_SERVICEDEF, HttpMethod.POST, HTTPStatus.OK)

@@ -17,6 +17,7 @@
 
 package org.apache.ranger.rest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.RangerLogLevelService;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -30,15 +31,12 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
-/**
- * REST API for log level management operations.
- * This endpoint requires ROLE_SYS_ADMIN role as it performs system-level operations.
- */
-@Path("loggers")
+
+@Path("admin")
 @Component
 @Scope("singleton")
-public class LogLevelREST {
-    private static final Logger LOG = LoggerFactory.getLogger(LogLevelREST.class);
+public class AdminREST {
+    private static final Logger LOG = LoggerFactory.getLogger(AdminREST.class);
 
     @Inject
     RangerLogLevelService logLevelService;
@@ -56,7 +54,7 @@ public class LogLevelREST {
      * @return An HTTP response indicating success or failure.
      */
     @POST
-    @Path("/set-level")
+    @Path("/set-logger-level")
     @Consumes("application/json")
     @Produces("application/json")
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
@@ -69,20 +67,19 @@ public class LogLevelREST {
                         .build();
             }
             
-            if (request.getLoggerName() == null || request.getLoggerName().trim().isEmpty()) {
+            if (StringUtils.isBlank(request.getLoggerName())) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("loggerName is required")
                         .build();
             }
             
-            if (request.getLogLevel() == null || request.getLogLevel().trim().isEmpty()) {
+            if (StringUtils.isBlank(request.getLogLevel())) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("logLevel is required")
                         .build();
             }
 
-            LOG.info("Setting log level for logger '{}' to '{}'", 
-                    request.getLoggerName(), request.getLogLevel());
+            LOG.info("Setting log level for logger '{}' to '{}'", request.getLoggerName(), request.getLogLevel());
             
             // Call the service to set the log level
             String result = logLevelService.setLogLevel(
@@ -91,14 +88,13 @@ public class LogLevelREST {
             );
             
             return Response.ok(result).build();
-            
         } catch (IllegalArgumentException e) {
-            LOG.warn("Invalid parameters for setting log level: {}", e.getMessage());
+            LOG.error("Invalid parameters for setting log level:", e);
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Invalid parameters: " + e.getMessage())
                     .build();
         } catch (UnsupportedOperationException e) {
-            LOG.error("Unsupported operation for setting log level: {}", e.getMessage());
+            LOG.error("Unsupported operation for setting log level:", e);
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity("Service not available: " + e.getMessage())
                     .build();
