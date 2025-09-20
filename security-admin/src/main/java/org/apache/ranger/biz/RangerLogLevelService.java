@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RangerLogLevelService {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RangerLogLevelService.class);
-    // Constants for SLF4J binding class name prefixes
+
     private static final String LOGBACK_CLASSIC_PREFIX = "ch.qos.logback.classic";
 
     /**
@@ -46,15 +46,18 @@ public class RangerLogLevelService {
      * @throws UnsupportedOperationException if Logback is not the active logging framework
      */
     public String setLogLevel(String loggerName, String logLevel) {
-        ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
-        String loggerFactoryClassName = iLoggerFactory.getClass().getName();
+        ILoggerFactory iLoggerFactory         = LoggerFactory.getILoggerFactory();
+        String         loggerFactoryClassName = iLoggerFactory.getClass().getName();
 
         if (loggerFactoryClassName.startsWith(LOGBACK_CLASSIC_PREFIX)) {
             LOG.info("Setting log level for logger '{}' to '{}'", loggerName, logLevel);
+
             return setLogbackLogLevel(loggerName, logLevel);
         } else {
             String message = "Logback is the only supported logging mechanism. Detected unsupported SLF4J binding: " + loggerFactoryClassName;
+
             LOG.error(message);
+
             throw new UnsupportedOperationException(message);
         }
     }
@@ -64,25 +67,30 @@ public class RangerLogLevelService {
      */
     private String setLogbackLogLevel(String loggerName, String logLevel) {
         try {
-            // Validate log level
-            Level level = validateAndParseLogLevel(logLevel);
+            Level  level  = validateAndParseLogLevel(logLevel);
             Logger logger = getLogger(loggerName);
+
             logger.setLevel(level);
+
             LOG.info("Successfully set log level for logger '{}' to '{}'", loggerName, level);
+
             return String.format("Log level for logger '%s' has been set to '%s'", loggerName, level);
         } catch (Exception e) {
             LOG.error("Failed to set log level for logger '{}' to '{}'", loggerName, logLevel, e);
+
             throw new RuntimeException("Failed to set log level for logger '" + loggerName + "' to '" + logLevel + "'", e);
         }
     }
 
     private static Logger getLogger(String loggerName) {
         ILoggerFactory iLoggerFactory = LoggerFactory.getILoggerFactory();
+
         if (!(iLoggerFactory instanceof LoggerContext)) {
             throw new IllegalStateException("Expected ILoggerFactory to be an instance of LoggerContext, but found " + iLoggerFactory.getClass().getName() + ". Is Logback configured as the SLF4J backend?");
         }
-        // Get the Logback LoggerContext
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+        LoggerContext context = (LoggerContext) iLoggerFactory;
+
         // Get or create the logger
         return context.getLogger(loggerName);
     }
