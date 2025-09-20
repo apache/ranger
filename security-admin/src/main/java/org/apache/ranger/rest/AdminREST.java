@@ -67,11 +67,13 @@ public class AdminREST {
                         .entity("Request body is required")
                         .build();
             }
+
             if (StringUtils.isBlank(request.getLoggerName())) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("loggerName is required")
                         .build();
             }
+
             if (StringUtils.isBlank(request.getLogLevel())) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity("logLevel is required")
@@ -79,21 +81,25 @@ public class AdminREST {
             }
 
             LOG.info("Setting log level for logger '{}' to '{}'", request.getLoggerName(), request.getLogLevel());
-            // Call the service to set the log level
+
             String result = logLevelService.setLogLevel(request.getLoggerName().trim(), request.getLogLevel().trim());
+
             return Response.ok(result).build();
         } catch (IllegalArgumentException e) {
             LOG.error("Invalid parameters for setting log level:", e);
+
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Invalid parameters: " + e.getMessage())
                     .build();
         } catch (UnsupportedOperationException e) {
             LOG.error("Unsupported operation for setting log level:", e);
+
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity("Service not available: " + e.getMessage())
                     .build();
         } catch (Exception e) {
             LOG.error("Error setting log level for request: {}", request, e);
+
             throw restErrorUtil.createRESTException(e.getMessage(), MessageEnums.ERROR_SYSTEM);
         }
     }
@@ -111,7 +117,7 @@ public class AdminREST {
 
         public LogLevelRequest(String loggerName, String logLevel) {
             this.loggerName = loggerName;
-            this.logLevel = logLevel;
+            this.logLevel   = logLevel;
         }
 
         public String getLoggerName() {
