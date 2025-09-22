@@ -405,6 +405,12 @@
   	<value>false</value>
   	<description></description>
   </property>
+
+  <property>
+        <name>ranger.ks.hsm.masterkey.alias</name>
+        <value></value>
+        <description>Custom alias for Luna HSM master key</description>
+  </property>
   
   <property>
   	<name>ranger.ks.hsm.partition.name</name>
