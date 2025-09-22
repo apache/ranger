@@ -54,7 +54,7 @@ svn status
 # For adding any new files, use the following command
 # svn add PATH
 
-# For deleteing any existing file, use the following command
+# For deleting any existing file, use the following command
 # svn delete PATH
 
 #
