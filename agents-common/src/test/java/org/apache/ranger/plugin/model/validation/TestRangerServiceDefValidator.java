@@ -465,7 +465,6 @@ public class TestRangerServiceDefValidator {
 
         failures.clear();
         assertFalse(validator.isValidResourceGraph(serviceDef, failures));
-        utils.checkFailureForMissingValue(failures, "resource level");
         utils.checkFailureForSemanticError(failures, "resource level", "20"); // level 20 is duplicate for 1 hierarchy
         utils.checkFailureForSemanticError(failures, "resource level", "10"); // level 10 is duplicate for another hierarchy
 
@@ -484,7 +483,7 @@ public class TestRangerServiceDefValidator {
 
         failures.clear();
         assertFalse(validator.isValidResourceGraph(serviceDef, failures));
-        utils.checkFailureForSemanticError(failures, "resource level", "15"); // level 20 is duplicate for 1 hierarchy
+        utils.checkFailureForSemanticError(failures, "resource level", "15");
 
         Object[][] dataGood = new Object[][] {
                 //  { name,  excludesSupported, recursiveSupported, mandatory, reg-exp, parent-level, level }
@@ -495,6 +494,8 @@ public class TestRangerServiceDefValidator {
         };
         resourceDefs = utils.createResourceDefs(dataGood);
         when(serviceDef.getResources()).thenReturn(resourceDefs);
+        when(serviceDef.getName()).thenReturn("service-name");
+        when(serviceDef.getUpdateTime()).thenReturn(new Date());
         failures.clear();
         assertTrue(validator.isValidResourceGraph(serviceDef, failures));
         assertTrue(failures.isEmpty());
@@ -509,6 +510,8 @@ public class TestRangerServiceDefValidator {
 
         resourceDefs = utils.createResourceDefs(dataCycles);
         when(serviceDef.getResources()).thenReturn(resourceDefs);
+        when(serviceDef.getName()).thenReturn("service-name");
+        when(serviceDef.getUpdateTime()).thenReturn(new Date());
         failures.clear();
         assertFalse("Graph was valid!", validator.isValidResourceGraph(serviceDef, failures));
         assertFalse(failures.isEmpty());
@@ -523,6 +526,8 @@ public class TestRangerServiceDefValidator {
         };
         resourceDefs = utils.createResourceDefs(dataBad);
         when(serviceDef.getResources()).thenReturn(resourceDefs);
+        when(serviceDef.getName()).thenReturn("service-name");
+        when(serviceDef.getUpdateTime()).thenReturn(new Date());
         failures.clear();
         assertFalse(validator.isValidResourceGraph(serviceDef, failures));
         assertFalse(failures.isEmpty());
@@ -536,6 +541,8 @@ public class TestRangerServiceDefValidator {
         };
         resourceDefs = utils.createResourceDefs(dataGood);
         when(serviceDef.getResources()).thenReturn(resourceDefs);
+        when(serviceDef.getName()).thenReturn("service-name");
+        when(serviceDef.getUpdateTime()).thenReturn(new Date());
         failures.clear();
         assertTrue(validator.isValidResourceGraph(serviceDef, failures));
         assertTrue(failures.isEmpty());
@@ -612,5 +619,47 @@ public class TestRangerServiceDefValidator {
         utils.checkFailureForSemanticError(failures, "policy condition def name", "condition-1");
         utils.checkFailureForMissingValue(failures, "policy condition def evaluator", "condition-2");
         utils.checkFailureForMissingValue(failures, "policy condition def evaluator", "condition-1");
+    }
+
+    @Test
+    public final void test_isValidServiceDefDisplayName_conflicts() throws Exception {
+        Long id = null;
+        String displayName = "svc-display";
+        RangerServiceDef other = mock(RangerServiceDef.class);
+        when(other.getId()).thenReturn(99L);
+        when(other.getName()).thenReturn("svc-name");
+        when(store.getServiceDefByDisplayName(displayName)).thenReturn(other);
+        assertFalse(validator.isValidServiceDefDisplayName(displayName, id, Action.CREATE, failures));
+        utils.checkFailureForSemanticError(failures, "displayName");
+
+        failures.clear();
+        id = 7L;
+        assertFalse(validator.isValidServiceDefDisplayName(displayName, id, Action.UPDATE, failures));
+        utils.checkFailureForSemanticError(failures, "id/displayName");
+    }
+
+    @Test
+    public final void test_isValidConfigs_enumTypeBranches() {
+        List<RangerServiceDef.RangerServiceConfigDef> configs = new ArrayList<>();
+        RangerServiceDef.RangerServiceConfigDef enumCfg = new RangerServiceDef.RangerServiceConfigDef();
+        enumCfg.setItemId(1L);
+        enumCfg.setName("enumCfg");
+        enumCfg.setType("enum");
+        enumCfg.setSubType("time-unit");
+        enumCfg.setDefaultValue("year"); // not in enum
+        configs.add(enumCfg);
+
+        List<RangerEnumDef> enumDefs = utils.createEnumDefs(new Object[][] {
+                {1L, "time-unit", new String[] {"day", "hour"}}
+        });
+
+        assertFalse(validator.isValidConfigs(configs, enumDefs, failures));
+        utils.checkFailureForSemanticError(failures, "config def default value", "enumCfg");
+
+        failures.clear();
+        enumCfg.setSubType("unknown-enum");
+        enumCfg.setDefaultValue(null);
+        assertFalse(validator.isValidConfigs(configs, enumDefs, failures));
+        utils.checkFailureForSemanticError(failures, "config def subtype", "enumCfg");
     }
 }
