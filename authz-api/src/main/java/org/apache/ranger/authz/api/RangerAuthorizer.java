@@ -26,6 +26,7 @@ import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
+import org.apache.ranger.authz.model.RangerResourcePermissions;
 import org.apache.ranger.authz.model.RangerUserInfo;
 
 import java.util.HashMap;
@@ -50,6 +51,8 @@ public abstract class RangerAuthorizer {
     public abstract RangerAuthzResult authorize(RangerAuthzRequest request) throws RangerAuthzException;
 
     public abstract RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request) throws RangerAuthzException;
+
+    public abstract RangerResourcePermissions getResourcePermissions(String resource, RangerAccessContext context) throws RangerAuthzException;
 
     protected void validateRequest(RangerAuthzRequest request) throws RangerAuthzException {
         validateUserInfo(request.getUser());

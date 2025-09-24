@@ -37,10 +37,10 @@ public class RangerResourceTemplate {
     private static final char RESOURCE_END_CHAR   = '}';
     private static final char ESCAPE_CHAR         = '\\';
 
-    private final String   template;
-    private final String[] resources;
-    private final String   prefix;
-    private final String[] separators;
+    private final String   template;   // examples: {database}.{table}.{column}, ofs://{bucket}/{volume}/{path}
+    private final String[] resources;  // examples: [database, table, column],   [bucket, volume, path]
+    private final String   prefix;     // examples: "",                          "ofs://"
+    private final String[] separators; // examples: [".", "."],                  ["/", "/"]
     private final String   suffix;
 
     public RangerResourceTemplate(String template) throws RangerAuthzException {
