@@ -376,6 +376,7 @@ public class RangerAPIMapping {
         apiAssociatedWithAudit.add(RangerAPIList.GET_POLICY_FROM_EVENT_TIME);
         apiAssociatedWithAudit.add(RangerAPIList.GET_POLICY_VERSION_LIST);
         apiAssociatedWithAudit.add(RangerAPIList.GET_PLUGINS_INFO);
+        apiAssociatedWithAudit.add(RangerAPIList.DELETE_PLUGINS_INFO);
         apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE);
         apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_BY_NAME);
         apiAssociatedWithAudit.add(RangerAPIList.GET_SERVICE_DEF);
