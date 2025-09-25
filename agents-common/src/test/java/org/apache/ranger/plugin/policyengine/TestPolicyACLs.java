@@ -25,8 +25,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
@@ -44,7 +42,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -127,164 +124,11 @@ public class TestPolicyACLs {
 
                 RangerResourceACLs acls = policyEngine.getResourceACLs(request);
 
-                boolean userACLsMatched    = true;
-                boolean groupACLsMatched   = true;
-                boolean roleACLsMatched    = true;
-                boolean rowFiltersMatched  = true;
-                boolean dataMaskingMatched = true;
-
-                if (MapUtils.isNotEmpty(acls.getUserACLs()) && MapUtils.isNotEmpty(oneTest.userPermissions)) {
-                    assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched", oneTest.userPermissions.size(), acls.getUserACLs().size());
-
-                    for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
-                            acls.getUserACLs().entrySet()) {
-                        String                                       userName = entry.getKey();
-                        Map<String, RangerResourceACLs.AccessResult> expected = oneTest.userPermissions.get(userName);
-                        if (MapUtils.isNotEmpty(entry.getValue()) && MapUtils.isNotEmpty(expected)) {
-                            // Compare
-                            for (Map.Entry<String, RangerResourceACLs.AccessResult> privilege : entry.getValue().entrySet()) {
-                                if (StringUtils.equals(RangerPolicyEngine.ADMIN_ACCESS, privilege.getKey())) {
-                                    continue;
-                                }
-                                RangerResourceACLs.AccessResult expectedResult = expected.get(privilege.getKey());
-                                if (expectedResult == null) {
-                                    userACLsMatched = false;
-                                    break;
-                                } else if (!expectedResult.equals(privilege.getValue())) {
-                                    userACLsMatched = false;
-                                    break;
-                                }
-                            }
-                        } else if (!(MapUtils.isEmpty(entry.getValue()) && MapUtils.isEmpty(expected))) {
-                            Set<String> privileges = entry.getValue().keySet();
-
-                            userACLsMatched = privileges.size() == 1 && privileges.contains(RangerPolicyEngine.ADMIN_ACCESS);
-
-                            break;
-                        }
-
-                        if (!userACLsMatched) {
-                            break;
-                        }
-                    }
-                } else if (!(MapUtils.isEmpty(acls.getUserACLs()) && MapUtils.isEmpty(oneTest.userPermissions))) {
-                    userACLsMatched = false;
-                }
-
-                if (acls.getDataMasks().isEmpty()) {
-                    dataMaskingMatched = (oneTest.dataMasks == null || oneTest.dataMasks.isEmpty());
-                } else if (acls.getDataMasks().size() != (oneTest.dataMasks == null ? 0 : oneTest.dataMasks.size())) {
-                    dataMaskingMatched = false;
-                } else {
-                    for (int i = 0; i < acls.getDataMasks().size(); i++) {
-                        DataMaskResult found    = acls.getDataMasks().get(i);
-                        DataMaskResult expected = oneTest.dataMasks.get(i);
-
-                        dataMaskingMatched = found.equals(expected);
-
-                        if (!dataMaskingMatched) {
-                            break;
-                        }
-                    }
-                }
-
-                if (acls.getRowFilters().isEmpty()) {
-                    rowFiltersMatched = (oneTest.rowFilters == null || oneTest.rowFilters.isEmpty());
-                } else if (acls.getRowFilters().size() != (oneTest.rowFilters == null ? 0 : oneTest.rowFilters.size())) {
-                    rowFiltersMatched = false;
-                } else {
-                    for (int i = 0; i < acls.getRowFilters().size(); i++) {
-                        RowFilterResult found    = acls.getRowFilters().get(i);
-                        RowFilterResult expected = oneTest.rowFilters.get(i);
-
-                        rowFiltersMatched = found.equals(expected);
-
-                        if (!rowFiltersMatched) {
-                            break;
-                        }
-                    }
-                }
-
-                if (MapUtils.isNotEmpty(acls.getGroupACLs()) && MapUtils.isNotEmpty(oneTest.groupPermissions)) {
-                    assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - groupACLsMatched", oneTest.groupPermissions.size(), acls.getGroupACLs().size());
-
-                    for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
-                            acls.getGroupACLs().entrySet()) {
-                        String                                       groupName = entry.getKey();
-                        Map<String, RangerResourceACLs.AccessResult> expected  = oneTest.groupPermissions.get(groupName);
-                        if (MapUtils.isNotEmpty(entry.getValue()) && MapUtils.isNotEmpty(expected)) {
-                            // Compare
-                            for (Map.Entry<String, RangerResourceACLs.AccessResult> privilege : entry.getValue().entrySet()) {
-                                if (StringUtils.equals(RangerPolicyEngine.ADMIN_ACCESS, privilege.getKey())) {
-                                    continue;
-                                }
-                                RangerResourceACLs.AccessResult expectedResult = expected.get(privilege.getKey());
-                                if (expectedResult == null) {
-                                    groupACLsMatched = false;
-                                    break;
-                                } else if (!expectedResult.equals(privilege.getValue())) {
-                                    groupACLsMatched = false;
-                                    break;
-                                }
-                            }
-                        } else if (!(MapUtils.isEmpty(entry.getValue()) && MapUtils.isEmpty(expected))) {
-                            Set<String> privileges = entry.getValue().keySet();
-
-                            groupACLsMatched = privileges.size() == 1 && privileges.contains(RangerPolicyEngine.ADMIN_ACCESS);
-
-                            break;
-                        }
-
-                        if (!groupACLsMatched) {
-                            break;
-                        }
-                    }
-                } else if (!(MapUtils.isEmpty(acls.getGroupACLs()) && MapUtils.isEmpty(oneTest.groupPermissions))) {
-                    groupACLsMatched = false;
-                }
-
-                if (MapUtils.isNotEmpty(acls.getRoleACLs()) && MapUtils.isNotEmpty(oneTest.rolePermissions)) {
-                    assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - roleACLsMatched", oneTest.rolePermissions.size(), acls.getRoleACLs().size());
-
-                    for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
-                            acls.getRoleACLs().entrySet()) {
-                        String                                       roleName = entry.getKey();
-                        Map<String, RangerResourceACLs.AccessResult> expected = oneTest.rolePermissions.get(roleName);
-                        if (MapUtils.isNotEmpty(entry.getValue()) && MapUtils.isNotEmpty(expected)) {
-                            // Compare
-                            for (Map.Entry<String, RangerResourceACLs.AccessResult> privilege : entry.getValue().entrySet()) {
-                                if (StringUtils.equals(RangerPolicyEngine.ADMIN_ACCESS, privilege.getKey())) {
-                                    continue;
-                                }
-                                RangerResourceACLs.AccessResult expectedResult = expected.get(privilege.getKey());
-                                if (expectedResult == null) {
-                                    roleACLsMatched = false;
-                                    break;
-                                } else if (!expectedResult.equals(privilege.getValue())) {
-                                    roleACLsMatched = false;
-                                    break;
-                                }
-                            }
-                        } else if (!(MapUtils.isEmpty(entry.getValue()) && MapUtils.isEmpty(expected))) {
-                            Set<String> privileges = entry.getValue().keySet();
-
-                            roleACLsMatched = privileges.size() == 1 && privileges.contains(RangerPolicyEngine.ADMIN_ACCESS);
-
-                            break;
-                        }
-                        if (!roleACLsMatched) {
-                            break;
-                        }
-                    }
-                } else if (!(MapUtils.isEmpty(acls.getRoleACLs()) && MapUtils.isEmpty(oneTest.rolePermissions))) {
-                    roleACLsMatched = false;
-                }
-
-                assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched", userACLsMatched);
-                assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - groupACLsMatched", groupACLsMatched);
-                assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - roleACLsMatched", roleACLsMatched);
-                assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - rowFiltersMatched", rowFiltersMatched);
-                assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - dataMaskingMatched", dataMaskingMatched);
+                assertEquals(oneTest.name + ": userACLs mismatch", oneTest.userPermissions, acls.getUserACLs());
+                assertEquals(oneTest.name + ": groupACLs mismatch", oneTest.groupPermissions, acls.getGroupACLs());
+                assertEquals(oneTest.name + ": roleACLs mismatch", oneTest.rolePermissions, acls.getRoleACLs());
+                assertEquals(oneTest.name + ": rowFilters mismatch", oneTest.rowFilters, acls.getRowFilters());
+                assertEquals(oneTest.name + ": dataMasks mismatch", oneTest.dataMasks, acls.getDataMasks());
             });
         }
     }

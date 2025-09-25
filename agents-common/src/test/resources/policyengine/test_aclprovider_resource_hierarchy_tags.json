@@ -150,7 +150,8 @@
       "tests": [
         { "name":            "table: db1.tbl1",
           "resource":        { "elements": { "database": "db1", "table": "tbl1" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } }
+          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } },
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         },
         { "name":            "column: db1.tbl1.SSN",
           "resource":        { "elements": { "database": "db1", "table": "tbl1", "column": "SSN" } },
@@ -159,7 +160,8 @@
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
+          ],
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         { "name":            "column: db1.tbl1.Age",
           "resource":        { "elements": { "database": "db1", "table": "tbl1", "column": "Age" } },
@@ -168,7 +170,8 @@
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
+          ],
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         { "name":            "column: db1.tbl1.Name",
           "resource":        { "elements": { "database": "db1", "table": "tbl1", "column": "Name" } },
@@ -177,15 +180,18 @@
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
+          ],
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         { "name":            "database: db2",
           "resource":        { "elements": { "database": "db2" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } }
+          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } },
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         },
         { "name":            "table: db2.tbl1",
           "resource":        { "elements": { "database": "db2", "table": "tbl1" } },
-          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } }
+          "userPermissions": { "test-user": { "select":  { "result": 1, "isFinal": true } } },
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         },
         { "name":            "column: db2.tbl1.Name",
           "resource":        { "elements": { "database": "db2", "table": "tbl1", "column": "Name" } },
@@ -194,18 +200,21 @@
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "SHUFFLE" },   "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK" },      "isConditional": true },
             {"users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": true }
-          ]
+          ],
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         { "name":            "database: order",
           "resource":        { "elements": { "database": "order" } },
-          "userPermissions": { "dba": { "create": { "result":  1, "isFinal":  true } } }
+          "userPermissions": { "dba": { "create": { "result":  1, "isFinal":  true } } },
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         },
         { "name":            "table: order.customer",
           "resource":        { "elements": { "database": "order", "table": "customer" } },
           "userPermissions": {
             "test-user": { "select":  { "result": 1, "isFinal": true } },
             "dba":       { "create":  { "result": 1, "isFinal": true } }
-          }
+          },
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         },
         { "name":            "column: order.customer.address",
           "resource":        { "elements": { "database": "order", "table": "customer", "column": "address" } },
@@ -216,7 +225,8 @@
           "dataMasks": [
             { "users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_NONE" }, "isConditional": false },
             { "users": [ "test-user" ], "groups": [], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": false }
-          ]
+          ],
+          "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         }
       ]
     }
