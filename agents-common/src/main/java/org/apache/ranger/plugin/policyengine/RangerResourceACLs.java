@@ -163,8 +163,8 @@ public class RangerResourceACLs {
         }
     }
 
-    public void setGroupAccessInfo(String userName, String accessType, AccessResult accessResult) {
-        Map<String, AccessResult> groupAccessInfo = groupACLs.computeIfAbsent(userName, k -> new HashMap<>());
+    public void setGroupAccessInfo(String groupName, String accessType, AccessResult accessResult) {
+        Map<String, AccessResult> groupAccessInfo = groupACLs.computeIfAbsent(groupName, k -> new HashMap<>());
         AccessResult              existingResult  = groupAccessInfo.get(accessType);
 
         if (existingResult == null) {
@@ -175,8 +175,8 @@ public class RangerResourceACLs {
         }
     }
 
-    public void setRoleAccessInfo(String userName, String accessType, AccessResult accessResult) {
-        Map<String, AccessResult> roleAccessInfo = roleACLs.computeIfAbsent(userName, k -> new HashMap<>());
+    public void setRoleAccessInfo(String roleName, String accessType, AccessResult accessResult) {
+        Map<String, AccessResult> roleAccessInfo = roleACLs.computeIfAbsent(roleName, k -> new HashMap<>());
         AccessResult              existingResult = roleAccessInfo.get(accessType);
 
         if (existingResult == null) {
