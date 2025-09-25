@@ -18,10 +18,13 @@
  */
 package org.apache.ranger.common.db;
 
+import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.RangerDaoManagerBase;
 import org.apache.ranger.entity.XXDBBase;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -62,6 +65,13 @@ public class TestBaseDao {
     public RangerDaoManager daoManager;
     @Mock
     public EntityManager    em;
+
+    // ensure bulk mode is disabled and context is clean before each test
+    @BeforeEach
+    public void resetBulkModeContext() {
+        RangerContextHolder.resetOpContext();
+        RangerBizUtil.setBulkMode(false);
+    }
 
     @Test
     public void test1_constructor_usesDefaultEntityManager() {
