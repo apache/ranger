@@ -32,7 +32,7 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerResourcePermissions {
-    private String                                     resource;
+    private RangerResourceInfo                         resource;
     private Map<String, Map<String, PermissionResult>> users;
     private Map<String, Map<String, PermissionResult>> groups;
     private Map<String, Map<String, PermissionResult>> roles;
@@ -40,18 +40,18 @@ public class RangerResourcePermissions {
     public RangerResourcePermissions() {
     }
 
-    public RangerResourcePermissions(String resource, Map<String, Map<String, PermissionResult>> users, Map<String, Map<String, PermissionResult>> groups, Map<String, Map<String, PermissionResult>> roles) {
+    public RangerResourcePermissions(RangerResourceInfo resource, Map<String, Map<String, PermissionResult>> users, Map<String, Map<String, PermissionResult>> groups, Map<String, Map<String, PermissionResult>> roles) {
         this.resource = resource;
         this.users    = users;
         this.groups   = groups;
         this.roles    = roles;
     }
 
-    public String getResource() {
+    public RangerResourceInfo getResource() {
         return resource;
     }
 
-    public void setResource(String resource) {
+    public void setResource(RangerResourceInfo resource) {
         this.resource = resource;
     }
 
@@ -210,7 +210,7 @@ public class RangerResourcePermissions {
 
     @Override
     public int hashCode() {
-        return Objects.hash(users, groups, roles);
+        return Objects.hash(resource, users, groups, roles);
     }
 
     @Override
@@ -223,7 +223,8 @@ public class RangerResourcePermissions {
 
         RangerResourcePermissions that = (RangerResourcePermissions) o;
 
-        return Objects.equals(users, that.users) &&
+        return Objects.equals(resource, that.resource) &&
+                Objects.equals(users, that.users) &&
                 Objects.equals(groups, that.groups) &&
                 Objects.equals(roles, that.roles);
     }
@@ -231,7 +232,8 @@ public class RangerResourcePermissions {
     @Override
     public String toString() {
         return "RangerResourcePermissions{" +
-                "users=" + users +
+                "resource=" + resource +
+                ", users=" + users +
                 ", groups=" + groups +
                 ", roles=" + roles +
                 '}';

@@ -25,6 +25,7 @@ import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
+import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
 
 import java.util.Properties;
@@ -53,7 +54,7 @@ public class DummyAuthorizer extends RangerAuthorizer {
     }
 
     @Override
-    public RangerResourcePermissions getResourcePermissions(String resource, RangerAccessContext context) {
+    public RangerResourcePermissions getResourcePermissions(RangerResourceInfo resource, RangerAccessContext context) {
         return null;
     }
 }

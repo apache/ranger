@@ -23,53 +23,54 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RangerAccessInfo {
-    private RangerResourceInfo resource;
-    private String             action;
-    private Set<String>        permissions;
+public class RangerResourceInfo {
+    private String              name;
+    private Set<String>         subResources;
+    private Map<String, Object> attributes;
 
-    public RangerAccessInfo() {
+    public RangerResourceInfo() {
     }
 
-    public RangerAccessInfo(RangerResourceInfo resource, String action, Set<String> permissions) {
-        this.resource    = resource;
-        this.action      = action;
-        this.permissions = permissions;
+    public RangerResourceInfo(String name, Set<String> subResources, Map<String, Object> attributes) {
+        this.name         = name;
+        this.subResources = subResources;
+        this.attributes   = attributes;
     }
 
-    public RangerResourceInfo getResource() {
-        return resource;
+    public String getName() {
+        return name;
     }
 
-    public void setResource(RangerResourceInfo resource) {
-        this.resource = resource;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getAction() {
-        return action;
+    public Set<String> getSubResources() {
+        return subResources;
     }
 
-    public void setAction(String action) {
-        this.action = action;
+    public void setSubResources(Set<String> subResources) {
+        this.subResources = subResources;
     }
 
-    public Set<String> getPermissions() {
-        return permissions;
+    public Map<String, Object> getAttributes() {
+        return attributes;
     }
 
-    public void setPermissions(Set<String> permissions) {
-        this.permissions = permissions;
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resource, action, permissions);
+        return Objects.hash(name, subResources, attributes);
     }
 
     @Override
@@ -80,19 +81,19 @@ public class RangerAccessInfo {
             return false;
         }
 
-        RangerAccessInfo that = (RangerAccessInfo) o;
+        RangerResourceInfo that = (RangerResourceInfo) o;
 
-        return Objects.equals(resource, that.resource) &&
-                Objects.equals(action, that.action) &&
-                Objects.equals(permissions, that.permissions);
+        return Objects.equals(name, that.name) &&
+                Objects.equals(subResources, that.subResources) &&
+                Objects.equals(attributes, that.attributes);
     }
 
     @Override
     public String toString() {
-        return "RangerAccessInfo{" +
-                "resource='" + resource + '\'' +
-                ", action=" + action +
-                ", permissions=" + permissions +
+        return "RangerResourceInfo{" +
+                "name='" + name + '\'' +
+                ", subResources=" + subResources +
+                ", attributes=" + attributes +
                 '}';
     }
 }
