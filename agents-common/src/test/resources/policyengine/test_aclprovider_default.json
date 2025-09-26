@@ -583,11 +583,13 @@
       "tests": [
         { "name": "{USER} macro in database name",
           "resource": { "elements": { "database": "user_madhan", "table": "test_tbl1" } },
-          "groupPermissions": { "public":  { "select":  { "result": 2, "isFinal": true }, "update": { "result": 2, "isFinal": true } } }
+          "groupPermissions": { "public":  { "select":  { "result": 2, "isFinal": true }, "update": { "result": 2, "isFinal": true } } },
+          "userPermissions": {}, "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         { "name": "${{USER.dept}} macro in database name",
           "resource": { "elements": { "database": "dept_engg", "table": "test_tbl1" } },
-          "groupPermissions": { "public":  { "select":  { "result": 2, "isFinal": true } }, "engg":  { "select":  { "result": 1, "isFinal": true } } }
+          "groupPermissions": { "public":  { "select":  { "result": 2, "isFinal": true } }, "engg":  { "select":  { "result": 1, "isFinal": true } } },
+          "userPermissions": {}, "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
       {
         "name": "denyAllElse-test",
@@ -597,74 +599,83 @@
             "user2": {"select": {"result": -1, "isFinal": true}, "update": {"result": -1, "isFinal": true},"create": {"result": -1, "isFinal": true},"drop": {"result": -1, "isFinal": true},"alter": {"result": -1, "isFinal": true},"index": {"result": -1, "isFinal": true},"lock": {"result": -1, "isFinal": true}},
             "user3": {"select": {"result": 1, "isFinal": true}, "update": {"result": 1, "isFinal": true},"create": {"result": 1, "isFinal": true},"drop": {"result": 1, "isFinal": true},"alter": {"result": 1, "isFinal": true},"index": {"result": 1, "isFinal": true},"lock": {"result": -1, "isFinal": true}}},
         "groupPermissions": {"public": {"select": {"result": 2, "isFinal": true}, "update": {"result": 2, "isFinal": true},"create": {"result": 2, "isFinal": true},"drop": {"result": 2, "isFinal": true},"alter": {"result": 2, "isFinal": true},"index": {"result": 2, "isFinal": true},"lock": {"result": -1, "isFinal": true}}},
-        "rolePermissions": {}
+        "rolePermissions": {}, "dataMasks": [], "rowFilters": []
       },
         {
           "name": "all-deny-test",
           "resource": {"elements":{"database":"hr", "udf":"udf" }},
           "userPermissions": {},
-          "groupPermissions": {"public": {"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true}}}
+          "groupPermissions": {"public": {"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true},"_admin":{"result":-1, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "no-deny-test",
           "resource": {"elements":{"database":"default", "table":"test1", "column":"column2"}},
-          "userPermissions": {"user1":{"select":{"result":1, "isFinal":true}}, "user2":{"select":{"result":1, "isFinal":true}}, "admin":{"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true}}},
-          "groupPermissions": {"group1": {"select":{"result":1, "isFinal":true}}, "group2": {"select":{"result":1, "isFinal":true}},"cluster-admin": {"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true}}}
+          "userPermissions": {"user1":{"select":{"result":1, "isFinal":true}}, "user2":{"select":{"result":1, "isFinal":true}}, "admin":{"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true},"_admin":{"result":1, "isFinal":true}}},
+          "groupPermissions": {"group1": {"select":{"result":1, "isFinal":true}}, "group2": {"select":{"result":1, "isFinal":true}},"cluster-admin": {"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true}, "_admin":{"result":1, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "partial-deny-test",
           "resource": {"elements":{"database":"default", "table":"test2", "column":"column2"}},
-          "userPermissions": {"user1":{"select":{"result":1, "isFinal":true}}, "user2":{"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true}}, "user3":{"select":{"result":1, "isFinal":true},"create":{"result":-1, "isFinal":true}},"user4":{"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true}},"admin":{"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true}}},
-          "groupPermissions": {"group1": {"select":{"result":1, "isFinal":true}}, "group2": {"select":{"result":1, "isFinal":true}},"group3": {"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true}},"cluster-admin": {"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true}}}
+          "userPermissions": {"user1":{"select":{"result":1, "isFinal":true}}, "user2":{"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true}}, "user3":{"select":{"result":1, "isFinal":true},"create":{"result":-1, "isFinal":true}},"user4":{"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true}},"admin":{"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true},"_admin":{"result":1, "isFinal":true}}},
+          "groupPermissions": {"group1": {"select":{"result":1, "isFinal":true}}, "group2": {"select":{"result":1, "isFinal":true}},"group3": {"select":{"result":-1, "isFinal":true},"create":{"result":-1, "isFinal":true}},"cluster-admin": {"create":{"result":1, "isFinal":true},"drop":{"result":1, "isFinal":true},"_admin":{"result":1, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "conditional-deny-test",
           "resource": {"elements":{"database":"finance", "table":"fin_1", "column":"salary"}},
-          "userPermissions": {"user1":{"select":{"result":1, "isFinal":true}}, "user2":{"select":{"result":1, "isFinal":true}}, "user3":{"select":{"result":2, "isFinal":true}} },
-          "groupPermissions": {"finance-controller": {"select":{"result":1, "isFinal":true}}, "cluster-admin": {"select":{"result":2, "isFinal":true}}}
+          "userPermissions": {"user1":{"select":{"result":1, "isFinal":true},"_admin":{"result":1, "isFinal":true}}, "user2":{"select":{"result":1, "isFinal":true},"_admin":{"result":1, "isFinal":true}}, "user3":{"select":{"result":2, "isFinal":true},"_admin":{"result":2, "isFinal":true}} },
+          "groupPermissions": {"finance-controller": {"select":{"result":1, "isFinal":true},"_admin":{"result":1, "isFinal":true}}, "cluster-admin": {"select":{"result":2, "isFinal":true},"_admin":{"result":2, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "conditional-tag-only-test-descendant",
           "resource": {"elements":{"database":"finance", "table":"sales"}},
           "resourceMatchingScope": "SELF_OR_DESCENDANTS",
-          "userPermissions": {"hive":{"select":{"result":-1, "isFinal":true},"create":{"result":1, "isFinal":true}, "drop":{"result":-1, "isFinal":true}}, "admin":{"select":{"result":-1, "isFinal":true}} },
-          "groupPermissions": {"public": {"index":{"result":2, "isFinal":true}}}
+          "userPermissions": {"hive":{"select":{"result":-1, "isFinal":true},"create":{"result":1, "isFinal":true}}, "admin":{"select":{"result":-1, "isFinal":true}} },
+          "groupPermissions": {"public": {"index":{"result":2, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "all-types-of-policy-items",
           "resource": {"elements":{"database":"default", "table":"table", "column":"column"}},
-          "userPermissions": {"user1":{"select":{"result":2, "isFinal":true}}, "user2":{"select":{"result":2, "isFinal":true}}, "user3":{"select":{"result":2, "isFinal":true}}, "user4":{"select":{"result":2, "isFinal":true}} },
-          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "cluster-admin": {"select":{"result":2, "isFinal":true}}}
+          "userPermissions": {"user1":{"select":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}}, "user2":{"select":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}}, "user3":{"select":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}}, "user4":{"select":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}} },
+          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}}, "cluster-admin": {"select":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "public-allow-test",
           "resource": {"elements":{"database":"finance", "table":"accounts", "column": "status" }},
-          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}},
-          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "housekeeping":{"select":{"result":-1, "isFinal":true}}}
+          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}, "_admin":{"result": 2, "isFinal": true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}, "_admin":{"result": 2, "isFinal": true}}},
+          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true},"_admin":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true},"_admin":{"result":2, "isFinal":true}}, "housekeeping":{"select":{"result":-1, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "public-allow-test-next",
           "resource": {"elements":{"database":"finance", "table":"accounts", "column": "amount" }},
-          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}},
-          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "housekeeping":{"drop":{"result":-1, "isFinal":true}}}
+          "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}, "_admin":{"result":2, "isFinal":true}}},
+          "groupPermissions": {"public": {"select":{"result":2, "isFinal":true}}, "accounting": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true},"_admin":{"result":2, "isFinal":true}}, "admin": {"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true},"_admin":{"result":2, "isFinal":true}}, "housekeeping":{"drop":{"result":-1, "isFinal":true}}},
+          "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "conditions-in-exceptions-test",
           "resource": {"elements":{"database":"db1", "table":"tbl1", "column": "col1" }},
           "userPermissions": {"john":{"select":{"result":2, "isFinal":true}, "update":{"result":2, "isFinal":true}}, "jane":{"select":{"result":2, "isFinal":true},"update":{"result":2, "isFinal":true}}, "adam":{"drop":{"result":2, "isFinal":true}}, "eve":{"drop":{"result":2, "isFinal":true}}},
-          "groupPermissions": {}
+          "groupPermissions": {}, "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "conditions-in-some-exceptions-test",
           "resource": {"elements":{"database":"db2", "table":"tbl2", "column": "col2" }},
           "userPermissions": {"john":{"select":{"result":1, "isFinal":true}, "update":{"result":-1, "isFinal":true}}, "jane":{"select":{"result":1, "isFinal":true},"update":{"result":1, "isFinal":true}}, "adam":{"drop":{"result":2, "isFinal":true}}, "eve":{"drop":{"result":2, "isFinal":true}}},
-          "groupPermissions": {}
+          "groupPermissions": {}, "rolePermissions": {}, "dataMasks": [], "rowFilters": []
         },
         {
           "name": "roles-test",
           "resource": {"elements":{"database":"db3", "table":"tbl3", "column": "col3" }},
           "userPermissions": {"john":{"select":{"result":1, "isFinal":true}, "update":{"result":1, "isFinal":true}}, "jane":{"select":{"result":1, "isFinal":true},"update":{"result":1, "isFinal":true}}, "adam":{"drop":{"result":-1, "isFinal":true}}, "eve":{"drop":{"result":-1, "isFinal":true}}},
-          "rolePermissions": {"tarzan":{"select":{"result":1, "isFinal":true}, "update":{"result":1, "isFinal":true}}, "eden":{"drop":{"result":-1, "isFinal":true}}}
+          "rolePermissions": {"tarzan":{"select":{"result":1, "isFinal":true}, "update":{"result":1, "isFinal":true}}, "eden":{"drop":{"result":-1, "isFinal":true}}},
+          "groupPermissions": {}, "dataMasks": [], "rowFilters": []
         }
       ]
     }

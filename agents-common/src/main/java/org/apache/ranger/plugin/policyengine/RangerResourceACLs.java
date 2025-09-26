@@ -100,65 +100,74 @@ public class RangerResourceACLs {
 	}
 
 	public void setUserAccessInfo(String userName, String accessType, Integer access, RangerPolicy policy) {
-		Map<String, AccessResult> userAccessInfo = userACLs.get(userName);
+		Map<String, AccessResult> userAccessInfo = userACLs.computeIfAbsent(userName, k -> new HashMap<>());
+		AccessResult              existingResult = userAccessInfo.get(accessType);
 
-		if (userAccessInfo == null) {
-			userAccessInfo = new HashMap<>();
-
-			userACLs.put(userName, userAccessInfo);
-		}
-
-		AccessResult accessResult = userAccessInfo.get(accessType);
-
-		if (accessResult == null) {
-			accessResult = new AccessResult(access, policy);
-
-			userAccessInfo.put(accessType, accessResult);
-		} else if (access != ACCESS_CONDITIONAL) {
-			accessResult.setResult(access);
-			accessResult.setPolicy(policy);
+		if (existingResult == null) {
+			userAccessInfo.put(accessType, new AccessResult(access, policy));
+		} else if (!ACCESS_CONDITIONAL.equals(access)) {
+			existingResult.setResult(access);
+			existingResult.setPolicy(policy);
 		}
 	}
 
 	public void setGroupAccessInfo(String groupName, String accessType, Integer access, RangerPolicy policy) {
-		Map<String, AccessResult> groupAccessInfo = groupACLs.get(groupName);
+		Map<String, AccessResult> groupAccessInfo = groupACLs.computeIfAbsent(groupName, k -> new HashMap<>());
+		AccessResult              existingResult  = groupAccessInfo.get(accessType);
 
-		if (groupAccessInfo == null) {
-			groupAccessInfo = new HashMap<>();
-
-			groupACLs.put(groupName, groupAccessInfo);
-		}
-
-		AccessResult accessResult = groupAccessInfo.get(accessType);
-
-		if (accessResult == null) {
-			accessResult = new AccessResult(access, policy);
-
-			groupAccessInfo.put(accessType, accessResult);
-		} else if (access != ACCESS_CONDITIONAL) {
-			accessResult.setResult(access);
-			accessResult.setPolicy(policy);
+		if (existingResult == null) {
+			groupAccessInfo.put(accessType, new AccessResult(access, policy));
+		} else if (!ACCESS_CONDITIONAL.equals(access)) {
+			existingResult.setResult(access);
+			existingResult.setPolicy(policy);
 		}
 	}
 
 	public void setRoleAccessInfo(String roleName, String accessType, Integer access, RangerPolicy policy) {
-		Map<String, AccessResult> roleAccessInfo = roleACLs.get(roleName);
+		Map<String, AccessResult> roleAccessInfo = roleACLs.computeIfAbsent(roleName, k -> new HashMap<>());
+		AccessResult              existingResult = roleAccessInfo.get(accessType);
 
-		if (roleAccessInfo == null) {
-			roleAccessInfo = new HashMap<>();
-
-			roleACLs.put(roleName, roleAccessInfo);
+		if (existingResult == null) {
+			roleAccessInfo.put(accessType, new AccessResult(access, policy));
+		} else if (!ACCESS_CONDITIONAL.equals(access)) {
+			existingResult.setResult(access);
+			existingResult.setPolicy(policy);
 		}
+	}
 
-		AccessResult accessResult = roleAccessInfo.get(accessType);
+	public void setUserAccessInfo(String userName, String accessType, AccessResult accessResult) {
+		Map<String, AccessResult> userAccessInfo = userACLs.computeIfAbsent(userName, k -> new HashMap<>());
+		AccessResult              existingResult = userAccessInfo.get(accessType);
 
-		if (accessResult == null) {
-			accessResult = new AccessResult(access, policy);
+		if (existingResult == null) {
+			userAccessInfo.put(accessType, accessResult);
+		} else if (!ACCESS_CONDITIONAL.equals(accessResult.getResult())) {
+			existingResult.setResult(accessResult.getResult());
+			existingResult.setPolicy(accessResult.getPolicy());
+		}
+	}
 
+	public void setGroupAccessInfo(String groupName, String accessType, AccessResult accessResult) {
+		Map<String, AccessResult> groupAccessInfo = groupACLs.computeIfAbsent(groupName, k -> new HashMap<>());
+		AccessResult              existingResult  = groupAccessInfo.get(accessType);
+
+		if (existingResult == null) {
+			groupAccessInfo.put(accessType, accessResult);
+		} else if (!ACCESS_CONDITIONAL.equals(accessResult.getResult())) {
+			existingResult.setResult(accessResult.getResult());
+			existingResult.setPolicy(accessResult.getPolicy());
+		}
+	}
+
+	public void setRoleAccessInfo(String roleName, String accessType, AccessResult accessResult) {
+		Map<String, AccessResult> roleAccessInfo = roleACLs.computeIfAbsent(roleName, k -> new HashMap<>());
+		AccessResult              existingResult = roleAccessInfo.get(accessType);
+
+		if (existingResult == null) {
 			roleAccessInfo.put(accessType, accessResult);
-		} else if (access != ACCESS_CONDITIONAL) {
-			accessResult.setResult(access);
-			accessResult.setPolicy(policy);
+		} else if (!ACCESS_CONDITIONAL.equals(accessResult.getResult())) {
+			existingResult.setResult(accessResult.getResult());
+			existingResult.setPolicy(accessResult.getPolicy());
 		}
 	}
 

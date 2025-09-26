@@ -1394,13 +1394,13 @@ public class RangerBasePlugin {
 
 				switch (userType) {
 					case USER:
-						baseResourceACLs.setUserAccessInfo(name, chainedAccessType, finalAccessResult.getResult(), finalAccessResult.getPolicy());
+						baseResourceACLs.setUserAccessInfo(name, chainedAccessType, finalAccessResult);
 						break;
 					case GROUP:
-						baseResourceACLs.setGroupAccessInfo(name, chainedAccessType, finalAccessResult.getResult(), finalAccessResult.getPolicy());
+						baseResourceACLs.setGroupAccessInfo(name, chainedAccessType, finalAccessResult);
 						break;
 					case ROLE:
-						baseResourceACLs.setRoleAccessInfo(name, chainedAccessType, finalAccessResult.getResult(), finalAccessResult.getPolicy());
+						baseResourceACLs.setRoleAccessInfo(name, chainedAccessType, finalAccessResult);
 						break;
 					default:
 						break;

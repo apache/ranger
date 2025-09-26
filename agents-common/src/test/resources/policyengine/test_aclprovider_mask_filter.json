@@ -326,7 +326,8 @@
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"SHUFFLE"}},
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         {"name":"mask: hr.employee.date_of_birth",
           "resource":{"elements":{"database":"hr", "table":"employee", "column":"date_of_birth"}},
@@ -334,56 +335,64 @@
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"SHUFFLE"}},
             {"users":["user3"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"LAST_4"}, "isConditional":  true}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         {"name":"mask: hr.employee.project - conditional: validity-schedule",
           "resource":{"elements":{"database":"hr", "table":"employee", "column":"project"}},
           "dataMasks": [
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}, "isConditional": true},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}, "isConditional": true}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         {"name":"mask: employee.personal.city - tag-based: RESTRICTED",
           "resource":{"elements":{"database":"employee", "table":"personal", "column":"city"}},
           "dataMasks": [
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         {"name":"mask: employee.personal.mrn - tag-based: DATA_QUALITY; conditional",
           "resource":{"elements":{"database":"employee", "table":"personal", "column":"mrn"}},
           "dataMasks": [
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}, "isConditional": true},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}, "isConditional": true}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         {"name":"mask: employee.personal.address - tag-based: RESTRICTED-FINAL; conditional: validity-schedule",
           "resource":{"elements":{"database":"employee", "table":"personal", "column":"address"}},
           "dataMasks": [
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}, "isConditional": true},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}, "isConditional": true}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         {"name":"mask: finance.forecast.revenue - tag-based: RESTRICTED; conditional: tag-validity-period",
           "resource":{"elements":{"database":"finance", "table":"forecast", "column":"revenue"}},
           "dataMasks": [
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}, "isConditional": true},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}, "isConditional": true}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         { "name": "mask: test_db.dept_hr.col1: conditional",
           "resource": { "elements": { "database": "test_db", "table":"dept_hr", "column":"col1" } },
           "dataMasks": [
             { "users": [ ], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_NONE" }, "isConditional": true },
             { "users": [ ], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": false }
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "rowFilters": []
         },
         {"name":"row-filter: employee.personal",
           "resource":{"elements":{"database":"employee", "table":"personal"}},
           "rowFilters":[
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"location='US'"}},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"location='CA'"}}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "dataMasks": []
         },
         {"name":"row-filter: hr.employee",
           "resource":{"elements":{"database":"hr", "table":"employee"}},
@@ -391,21 +400,24 @@
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"dept='production'"}},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"dept='purchase'"}},
             {"users":["user3"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"location='GR'"}, "isConditional":  true}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "dataMasks": []
         },
         {"name":"row-filter: hr.employee2 - conditional: validity-schedule",
           "resource":{"elements":{"database":"hr", "table":"employee2"}},
           "rowFilters":[
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"dept='production'"}, "isConditional": true},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"dept='purchase'"}, "isConditional": true}
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "dataMasks": []
         },
         { "name": "row-filter: test_db.dept_hr: conditional",
           "resource": { "elements": { "database": "test_db", "table":"dept_hr" } },
           "rowFilters": [
             { "users": [], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "filterInfo": { "filterExpr": "1 = 1" },        "isConditional": true },
             { "users": [], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "filterInfo": { "filterExpr": "dept != 'hr'" }, "isConditional": false }
-          ]
+          ],
+          "userPermissions": {}, "groupPermissions": {}, "rolePermissions": {}, "dataMasks": []
         }
       ]
     }
