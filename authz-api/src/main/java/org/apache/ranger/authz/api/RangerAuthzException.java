@@ -20,27 +20,33 @@
 package org.apache.ranger.authz.api;
 
 public class RangerAuthzException extends Exception {
-    public RangerAuthzException(String message) {
-        super(message);
-    }
-
-    public RangerAuthzException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    private final RangerAuthzErrorCode errorCode;
 
     public RangerAuthzException(RangerAuthzErrorCode errorCode) {
         super(errorCode.getFormattedMessage());
+
+        this.errorCode = errorCode;
     }
 
     public RangerAuthzException(RangerAuthzErrorCode errorCode, Throwable cause) {
         super(errorCode.getFormattedMessage(), cause);
+
+        this.errorCode = errorCode;
     }
 
     public RangerAuthzException(RangerAuthzErrorCode errorCode, Object...params) {
         super(errorCode.getFormattedMessage(params));
+
+        this.errorCode = errorCode;
     }
 
     public RangerAuthzException(RangerAuthzErrorCode errorCode, Throwable cause, Object...params) {
         super(errorCode.getFormattedMessage(params), cause);
+
+        this.errorCode = errorCode;
+    }
+
+    public RangerAuthzErrorCode getErrorCode() {
+        return errorCode;
     }
 }

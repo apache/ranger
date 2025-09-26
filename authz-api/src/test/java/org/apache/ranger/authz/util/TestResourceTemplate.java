@@ -19,12 +19,18 @@
 
 package org.apache.ranger.authz.util;
 
+import org.apache.ranger.authz.api.RangerAuthzErrorCode;
+import org.apache.ranger.authz.api.RangerAuthzException;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_EMPTY_VALUE;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TYPE_NOT_VALID;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 public class TestResourceTemplate {
     @Test
@@ -40,19 +46,23 @@ public class TestResourceTemplate {
                 new TestData("hiveservice:server1", "hiveservice", "server1"),
                 new TestData("global:*", "global", "*"),
                 // invalid values
-                new TestData("db1.tbl1.col1"),                     // no resource-type
-                new TestData(":db1.tbl1.col1"),                    // empty resource-type
-                new TestData("invalidResourceType:db1.tbl1.col1"), // unknown resource-type
-                new TestData("database:"),
-                new TestData("table:db1_tbl1"),
-                new TestData("column:db1_tbl1.col1"),
-                new TestData("udf:db1_myUDF"),
+                new TestData("db1.tbl1.col1", INVALID_RESOURCE_TYPE_NOT_VALID),                     // no resource-type
+                new TestData(":db1.tbl1.col1", INVALID_RESOURCE_TYPE_NOT_VALID),                    // empty resource-type
+                new TestData("invalidResourceType:db1.tbl1.col1", INVALID_RESOURCE_TYPE_NOT_VALID), // unknown resource-type
+                new TestData("database:", INVALID_RESOURCE_EMPTY_VALUE),
+                new TestData("table:db1_tbl1", INVALID_RESOURCE_VALUE),
+                new TestData("column:db1_tbl1.col1", INVALID_RESOURCE_VALUE),
+                new TestData("udf:db1_myUDF", INVALID_RESOURCE_VALUE),
         };
 
         for (TestData test : tests) {
-            Map<String, String> actual = getResourceAsMap(test.resource, templates);
+            if (test.errorCode != null) {
+                RangerAuthzException excp = assertThrowsExactly(RangerAuthzException.class, () -> getResourceAsMap(test.resource, templates), test.resource);
 
-            assertEquals(test.expected, actual, test.resource);
+                assertEquals(test.errorCode.getCode(), excp.getErrorCode().getCode(), test.resource);
+            } else {
+                assertEquals(test.expected, getResourceAsMap(test.resource, templates), test.resource);
+            }
         }
     }
 
@@ -65,17 +75,21 @@ public class TestResourceTemplate {
                 new TestData("path:mybucket/myfolder/myfile.txt", "bucket", "mybucket", "path", "myfolder/myfile.txt"),
                 new TestData("path:mybucket/", "bucket", "mybucket", "path", ""),
                 // invalid values
-                new TestData("mybucket/myfolder/myfile.txt"),                     // no resource-type
-                new TestData(":mybucket/myfolder/myfile.txt"),                    // empty resource-type
-                new TestData("invalidResourceType:mybucket/myfolder/myfile.txt"), // unknown resource-type
-                new TestData("bucket:"),
-                new TestData("path:mybucket_myfolder_myfile.txt"),
+                new TestData("mybucket/myfolder/myfile.txt", INVALID_RESOURCE_TYPE_NOT_VALID),                     // no resource-type
+                new TestData(":mybucket/myfolder/myfile.txt", INVALID_RESOURCE_TYPE_NOT_VALID),                    // empty resource-type
+                new TestData("invalidResourceType:mybucket/myfolder/myfile.txt", INVALID_RESOURCE_TYPE_NOT_VALID), // unknown resource-type
+                new TestData("bucket:", INVALID_RESOURCE_EMPTY_VALUE),
+                new TestData("path:mybucket_myfolder_myfile.txt", INVALID_RESOURCE_VALUE),
         };
 
         for (TestData test : tests) {
-            Map<String, String> actual = getResourceAsMap(test.resource, templates);
+            if (test.errorCode != null) {
+                RangerAuthzException excp = assertThrowsExactly(RangerAuthzException.class, () -> getResourceAsMap(test.resource, templates), test.resource);
 
-            assertEquals(test.expected, actual, test.resource);
+                assertEquals(test.errorCode.getCode(), excp.getErrorCode().getCode(), test.resource);
+            } else {
+                assertEquals(test.expected, getResourceAsMap(test.resource, templates), test.resource);
+            }
         }
     }
 
@@ -89,9 +103,13 @@ public class TestResourceTemplate {
         };
 
         for (TestData test : tests) {
-            Map<String, String> actual = getResourceAsMap(test.resource, templates);
+            if (test.errorCode != null) {
+                RangerAuthzException excp = assertThrowsExactly(RangerAuthzException.class, () -> getResourceAsMap(test.resource, templates), test.resource);
 
-            assertEquals(test.expected, actual, test.resource);
+                assertEquals(test.errorCode.getCode(), excp.getErrorCode().getCode(), test.resource);
+            } else {
+                assertEquals(test.expected, getResourceAsMap(test.resource, templates), test.resource);
+            }
         }
     }
 
@@ -114,22 +132,26 @@ public class TestResourceTemplate {
                 new TestData("sysinfo:systeminfo", "sysinfo", "systeminfo"),
                 new TestData("role:myrole", "role", "myrole"),
                 // invalid values
-                new TestData("mycatalog.myschema.mytable.mycolumn"),                     // no resource-type
-                new TestData(":mycatalog.myschema.mytable.mycolumn"),                    // empty resource-type
-                new TestData("invalidResourceType:mycatalog.myschema.mytable.mycolumn"), // unknown resource-type
-                new TestData("catalog:"),
-                new TestData("schema:mycatalog_myschema"),
-                new TestData("table:mycatalog_myschema_mytable"),
-                new TestData("column:mycatalog_myschema_mytable_mycolumn"),
-                new TestData("trinouser:"),
-                new TestData("sessionproperty:mycatalog_mysessionproperty"),
-                new TestData("procedure:mycatalog_myschema_myprocedure"),
+                new TestData("mycatalog.myschema.mytable.mycolumn", INVALID_RESOURCE_TYPE_NOT_VALID),                     // no resource-type
+                new TestData(":mycatalog.myschema.mytable.mycolumn", INVALID_RESOURCE_TYPE_NOT_VALID),                    // empty resource-type
+                new TestData("invalidResourceType:mycatalog.myschema.mytable.mycolumn", INVALID_RESOURCE_TYPE_NOT_VALID), // unknown resource-type
+                new TestData("catalog:", INVALID_RESOURCE_EMPTY_VALUE),
+                new TestData("schema:mycatalog_myschema", INVALID_RESOURCE_VALUE),
+                new TestData("table:mycatalog_myschema_mytable", INVALID_RESOURCE_VALUE),
+                new TestData("column:mycatalog_myschema_mytable_mycolumn", INVALID_RESOURCE_VALUE),
+                new TestData("trinouser:", INVALID_RESOURCE_EMPTY_VALUE),
+                new TestData("sessionproperty:mycatalog_mysessionproperty", INVALID_RESOURCE_VALUE),
+                new TestData("procedure:mycatalog_myschema_myprocedure", INVALID_RESOURCE_VALUE),
         };
 
         for (TestData test : tests) {
-            Map<String, String> actual = getResourceAsMap(test.resource, templates);
+            if (test.errorCode != null) {
+                RangerAuthzException excp = assertThrowsExactly(RangerAuthzException.class, () -> getResourceAsMap(test.resource, templates), test.resource);
 
-            assertEquals(test.expected, actual, test.resource);
+                assertEquals(test.errorCode.getCode(), excp.getErrorCode().getCode(), test.resource);
+            } else {
+                assertEquals(test.expected, getResourceAsMap(test.resource, templates), test.resource);
+            }
         }
     }
 
@@ -185,31 +207,44 @@ public class TestResourceTemplate {
         return ret;
     }
 
-    private Map<String, String> getResourceAsMap(String resource, Map<String, RangerResourceTemplate> templates) {
+    private Map<String, String> getResourceAsMap(String resource, Map<String, RangerResourceTemplate> templates) throws RangerAuthzException {
         String[]               resourceParts = resource.split(":", 2);
         String                 resourceType  = resourceParts.length > 0 ? resourceParts[0] : null;
         String                 resourceValue = resourceParts.length > 1 ? resourceParts[1] : null;
         RangerResourceTemplate template      = templates.get(resourceType);
 
-        return template != null ? template.parse(resourceValue) : null;
+        if (template == null) {
+            throw new RangerAuthzException(INVALID_RESOURCE_TYPE_NOT_VALID, resourceType);
+        }
+
+        return template.parse(resourceValue);
     }
 
     private static class TestData {
-        public final String              resource;
-        public final Map<String, String> expected;
+        public final String               resource;
+        public final Map<String, String>  expected;
+        public final RangerAuthzErrorCode errorCode;
 
         public TestData(String resource, String...values) {
             this.resource = resource;
 
             if (values.length > 1) {
-                this.expected = new HashMap<>();
+                this.expected  = new HashMap<>();
+                this.errorCode = null;
 
                 for (int i = 1; i < values.length; i += 2) {
                     expected.put(values[i - 1], values[i]);
                 }
             } else {
-                this.expected = null;
+                this.expected  = null;
+                this.errorCode = null;
             }
+        }
+
+        public TestData(String resource, RangerAuthzErrorCode errorCode) {
+            this.resource  = resource;
+            this.expected  = null;
+            this.errorCode = errorCode;
         }
     }
 }

@@ -52,5 +52,11 @@ public class TestAuthzApiErrorCode {
         assertEquals("AUTHZ-400-00-009: permissions is empty. Nothing to authorize", INVALID_REQUEST_PERMISSIONS_EMPTY.getFormattedMessage());
         assertEquals("AUTHZ-400-00-010: service name or service type is mandatory", INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY.getFormattedMessage());
         assertEquals("AUTHZ-400-00-011: invalid resource template: {database}.{table}}. Unexpected marker \"}\" at position 18", INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT.getFormattedMessage("{database}.{table}}", "}", 18));
+
+        assertEquals("AUTHZ-400-00-012: invalid resource \"mytype:myresource\" - unknown type \"mytype\"", RangerAuthzApiErrorCode.INVALID_RESOURCE_TYPE_NOT_VALID.getFormattedMessage("mytype:myresource", "mytype"));
+        assertEquals("AUTHZ-400-00-013: invalid resource - empty", RangerAuthzApiErrorCode.INVALID_RESOURCE_EMPTY_VALUE.getFormattedMessage());
+        assertEquals("AUTHZ-400-00-014: invalid resource \"mytype:myresource\" - prefix \"myprefix\" not found", RangerAuthzApiErrorCode.INVALID_RESOURCE_PREFIX_MISMATCH.getFormattedMessage("mytype:myresource", "myprefix"));
+        assertEquals("AUTHZ-400-00-015: invalid resource \"mytype:myresource\" - suffix \"mysuffix\" not found", RangerAuthzApiErrorCode.INVALID_RESOURCE_SUFFIX_MISMATCH.getFormattedMessage("mytype:myresource", "mysuffix"));
+        assertEquals("AUTHZ-400-00-016: invalid resource \"mytype:myresource\" - does not match template \"{res1}.{res2}\"", RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE.getFormattedMessage("mytype:myresource", "{res1}.{res2}"));
     }
 }

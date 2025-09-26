@@ -28,7 +28,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_EMPTY_VALUE;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_PREFIX_MISMATCH;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_SUFFIX_MISMATCH;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE;
 
 public class RangerResourceTemplate {
     private static final Logger LOG = LoggerFactory.getLogger(RangerResourceTemplate.class);
@@ -100,15 +104,15 @@ public class RangerResourceTemplate {
         return template;
     }
 
-    public Map<String, String> parse(String resource) {
+    public Map<String, String> parse(String resource) throws RangerAuthzException {
         Map<String, String> ret = null;
 
         if (resource == null || resource.isEmpty()) {
-            LOG.debug("parse(resource='{}', template='{}'): empty or null resource", resource, template);
+            throw new RangerAuthzException(INVALID_RESOURCE_EMPTY_VALUE);
         } else if (!resource.startsWith(prefix)) {
-            LOG.debug("parse(resource='{}', template='{}'): resource does not start with prefix {}", resource, template, prefix);
+            throw new RangerAuthzException(INVALID_RESOURCE_PREFIX_MISMATCH, resource, prefix);
         } else if (!resource.endsWith(suffix)) {
-            LOG.debug("parse(resource='{}', template='{}'): resource does not end with suffix {}", resource, template, suffix);
+            throw new RangerAuthzException(INVALID_RESOURCE_SUFFIX_MISMATCH, resource, suffix);
         } else {
             ret = new HashMap<>();
 
@@ -139,6 +143,10 @@ public class RangerResourceTemplate {
 
                 ret.put(name, value);
             }
+        }
+
+        if (ret == null || ret.size() != resources.length) {
+            throw new RangerAuthzException(INVALID_RESOURCE_VALUE, resource, template);
         }
 
         LOG.debug("parse(resource='{}', template='{}'): ret={}", resource, template, ret);

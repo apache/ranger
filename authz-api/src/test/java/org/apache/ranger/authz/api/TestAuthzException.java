@@ -33,7 +33,12 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUES
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_NOT_FOUND;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_TYPE_NOT_FOUND;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_EMPTY_VALUE;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_PREFIX_MISMATCH;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_SUFFIX_MISMATCH;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TYPE_NOT_VALID;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestAuthzException {
@@ -52,5 +57,11 @@ public class TestAuthzException {
         assertEquals("AUTHZ-400-00-009: permissions is empty. Nothing to authorize", new RangerAuthzException(INVALID_REQUEST_PERMISSIONS_EMPTY).getMessage());
         assertEquals("AUTHZ-400-00-010: service name or service type is mandatory", new RangerAuthzException(INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY).getMessage());
         assertEquals("AUTHZ-400-00-011: invalid resource template: {database}.{table}}. Unexpected marker \"}\" at position 18", new RangerAuthzException(INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT, "{database}.{table}}", "}", 18).getMessage());
+
+        assertEquals("AUTHZ-400-00-012: invalid resource \"mytype:myresource\" - unknown type \"mytype\"", new RangerAuthzException(INVALID_RESOURCE_TYPE_NOT_VALID, "mytype:myresource", "mytype").getMessage());
+        assertEquals("AUTHZ-400-00-013: invalid resource - empty", new RangerAuthzException(INVALID_RESOURCE_EMPTY_VALUE).getMessage());
+        assertEquals("AUTHZ-400-00-014: invalid resource \"mytype:myresource\" - prefix \"myprefix\" not found", new RangerAuthzException(INVALID_RESOURCE_PREFIX_MISMATCH, "mytype:myresource", "myprefix").getMessage());
+        assertEquals("AUTHZ-400-00-015: invalid resource \"mytype:myresource\" - suffix \"mysuffix\" not found", new RangerAuthzException(INVALID_RESOURCE_SUFFIX_MISMATCH, "mytype:myresource", "mysuffix").getMessage());
+        assertEquals("AUTHZ-400-00-016: invalid resource \"mytype:myresource\" - does not match template \"{res1}.{res2}\"", new RangerAuthzException(INVALID_RESOURCE_VALUE, "mytype:myresource", "{res1}.{res2}").getMessage());
     }
 }
