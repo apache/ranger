@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 
 /**
  * Servlet filter that captures context of the HTTP request to be use in the
@@ -39,6 +40,8 @@ import java.io.IOException;
 @InterfaceAudience.Private
 public class KMSMDCFilter implements Filter {
     static final String RANGER_KMS_REST_API_PATH = "/kms/api/status";
+
+    private static final String EEK_OP_CODE = "eek_op";
 
     private static final ThreadLocal<Data> DATA_TL = new ThreadLocal<>();
 
@@ -54,6 +57,10 @@ public class KMSMDCFilter implements Filter {
         return DATA_TL.get().url;
     }
 
+    public static String getOperation() {
+        return DATA_TL.get().operation;
+    }
+
     @Override
     public void init(FilterConfig config) throws ServletException {
     }
@@ -62,6 +69,7 @@ public class KMSMDCFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         try {
             String              path = ((HttpServletRequest) request).getRequestURI();
+            HttpServletRequest  req  = (HttpServletRequest) request;
             HttpServletResponse resp = (HttpServletResponse) response;
 
             if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
@@ -70,15 +78,32 @@ public class KMSMDCFilter implements Filter {
                 DATA_TL.remove();
 
                 UserGroupInformation ugi         = HttpUserGroupInformation.get();
-                String               method      = ((HttpServletRequest) request).getMethod();
-                StringBuffer         requestURL  = ((HttpServletRequest) request).getRequestURL();
-                String               queryString = ((HttpServletRequest) request).getQueryString();
+                String               method      = req.getMethod();
+                StringBuffer         requestURL  = req.getRequestURL();
+                String               queryString = req.getQueryString();
+
+                // Extract operation from query parameters if present
+                String operation = null;
+                if (path.contains("/_eek") && queryString != null) {
+                    for (String param : queryString.split("&")) {
+                        String[] kv = param.split("=", 2);
+                        if (kv.length == 2 && "eek_op".equals(kv[0])) {
+                            operation = URLDecoder.decode(kv[1], "UTF-8");
+                            break;
+                        }
+                    }
+                }
 
                 if (queryString != null) {
                     requestURL.append("?").append(queryString);
                 }
 
-                DATA_TL.set(new Data(ugi, method, requestURL.toString()));
+                // Store opCode in request attribute for Tomcat access logs
+                if (operation != null) {
+                    req.setAttribute(EEK_OP_CODE, operation);
+                }
+
+                DATA_TL.set(new Data(ugi, method, requestURL.toString(), operation));
 
                 chain.doFilter(request, resp);
             }
@@ -95,11 +120,13 @@ public class KMSMDCFilter implements Filter {
         private final UserGroupInformation ugi;
         private final String               method;
         private final String               url;
+        private final String               operation;
 
-        private Data(UserGroupInformation ugi, String method, String url) {
-            this.ugi    = ugi;
-            this.method = method;
-            this.url    = url;
+        private Data(UserGroupInformation ugi, String method, String url, String operation) {
+            this.ugi       = ugi;
+            this.method    = method;
+            this.url       = url;
+            this.operation = operation;
         }
     }
 }
