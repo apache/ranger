@@ -1,0 +1,22 @@
+{
+  "id": 1, "name": "s3", "label": "AWS S3", "description": "AWS S3", "implClass": "org.apache.ranger.services.s3.RangerServiceS3",
+  "resources":
+  [
+    {
+      "itemId": 1, "name": "bucket", "type": "string", "parent": "", "level": 10, "label": "S3 Bucket", "description": "S3 Bucket",
+      "mandatory": true, "lookupSupported": false, "recursiveSupported": false, "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }
+    },
+    {
+      "itemId": 2, "name": "path", "type": "path", "parent": "bucket", "level": 20, "label": "Path", "description": "Path inside Bucket",
+      "mandatory": true, "lookupSupported": false, "recursiveSupported": true, "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }
+    }
+  ],
+
+  "accessTypes":
+  [
+    { "itemId": 1, "name": "read", "label": "Read" },
+    { "itemId": 2, "name": "write", "label": "Write" }
+  ]
+}
