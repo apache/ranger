@@ -33,10 +33,13 @@ import org.apache.ranger.authz.model.RangerUserInfo;
 import java.util.HashMap;
 import java.util.Properties;
 
-import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_ACCESS_CONTEXT;
-import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_ACCESS_INFO;
-import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_MISSING_USER_INFO;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_ACCESS_CONTEXT_MISSING;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_ACCESS_INFO_MISSING;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_NAME_MATCH_SCOPE_INVALID;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_PERMISSIONS_EMPTY;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_RESOURCE_INFO_MISSING;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_RESOURCE_NAME_MISSING;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_USER_INFO_MISSING;
 
 public abstract class RangerAuthorizer {
     protected final Properties properties;
@@ -65,7 +68,7 @@ public abstract class RangerAuthorizer {
         validateUserInfo(request.getUser());
 
         if (request.getAccesses() == null || request.getAccesses().isEmpty()) {
-            throw new RangerAuthzException(INVALID_REQUEST_MISSING_ACCESS_INFO);
+            throw new RangerAuthzException(INVALID_REQUEST_ACCESS_INFO_MISSING);
         }
 
         for (RangerAccessInfo access : request.getAccesses()) {
@@ -77,23 +80,41 @@ public abstract class RangerAuthorizer {
 
     protected void validateUserInfo(RangerUserInfo user) throws RangerAuthzException {
         if (user == null || StringUtils.isBlank(user.getName())) {
-            throw new RangerAuthzException(INVALID_REQUEST_MISSING_USER_INFO);
+            throw new RangerAuthzException(INVALID_REQUEST_USER_INFO_MISSING);
         }
     }
 
     protected void validateAccessInfo(RangerAccessInfo access) throws RangerAuthzException {
         if (access == null) {
-            throw new RangerAuthzException(INVALID_REQUEST_MISSING_ACCESS_INFO);
+            throw new RangerAuthzException(INVALID_REQUEST_ACCESS_INFO_MISSING);
         }
+
+        validateResourceInfo(access.getResource());
 
         if (access.getPermissions() == null || access.getPermissions().isEmpty()) {
             throw new RangerAuthzException(INVALID_REQUEST_PERMISSIONS_EMPTY);
         }
     }
 
+    protected void validateResourceInfo(RangerResourceInfo resource) throws RangerAuthzException {
+        if (resource == null) {
+            throw new RangerAuthzException(INVALID_REQUEST_RESOURCE_INFO_MISSING);
+        }
+
+        if (resource.getName() == null || resource.getName().isEmpty()) {
+            throw new RangerAuthzException(INVALID_REQUEST_RESOURCE_NAME_MISSING);
+        }
+
+        if (resource.getSubResources() != null && !resource.getSubResources().isEmpty()) {
+            if (resource.getNameMatchScope() != null && !RangerResourceInfo.ResourceMatchScope.SELF.equals(resource.getNameMatchScope())) {
+                throw new RangerAuthzException(INVALID_REQUEST_NAME_MATCH_SCOPE_INVALID, resource.getNameMatchScope());
+            }
+        }
+    }
+
     protected void validateAccessContext(RangerAccessContext context) throws RangerAuthzException {
         if (context == null) {
-            throw new RangerAuthzException(INVALID_REQUEST_MISSING_ACCESS_CONTEXT);
+            throw new RangerAuthzException(INVALID_REQUEST_ACCESS_CONTEXT_MISSING);
         }
 
         if (context.getAccessTime() <= 0) {
