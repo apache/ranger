@@ -29,6 +29,7 @@ COPY ./downloads/hbase-${HBASE_VERSION}-bin.tar.gz              /home/ranger/dis
 COPY ./scripts/ranger-hbase-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hbase.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hbase-plugin-install.properties    /home/ranger/scripts/
+COPY ./scripts/create-users.sh                           /home/ranger/scripts/
 COPY ./scripts/hbase-site.xml                            /home/ranger/scripts/
 
 RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
@@ -38,7 +39,9 @@ RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/op
     ln -s /opt/ranger/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin /opt/ranger/ranger-hbase-plugin && \
     rm -f /home/ranger/dist/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-hbase-plugin-install.properties /opt/ranger/ranger-hbase-plugin/install.properties && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh
+    chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh && \
+    chmod +x ${RANGER_SCRIPTS}/create-users.sh && \
+    ${RANGER_SCRIPTS}/create-users.sh
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openssh-server && \

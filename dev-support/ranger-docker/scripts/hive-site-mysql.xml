@@ -49,4 +49,72 @@
         <name>hive.zookeeper.client.port</name>
         <value>2181</value>
     </property>
+
+    <!-- Tez Configuration -->
+    <property>
+        <name>hive.execution.engine</name>
+        <value>tez</value>
+        <description>Execution engine to use for Hive queries</description>
+    </property>
+
+    <property>
+        <name>hive.tez.container.size</name>
+        <value>1024</value>
+        <description>By default Tez will spawn containers of the size of a mapper</description>
+    </property>
+
+    <property>
+        <name>hive.tez.java.opts</name>
+        <value>-Xmx768m</value>
+        <description>Java command line options for Tez</description>
+    </property>
+
+    <property>
+        <name>hive.tez.log.level</name>
+        <value>INFO</value>
+        <description>Log level for Tez</description>
+    </property>
+
+    <property>
+        <name>hive.prewarm.enabled</name>
+        <value>false</value>
+        <description>Enables container prewarm for Tez</description>
+    </property>
+
+    <property>
+        <name>hive.prewarm.numcontainers</name>
+        <value>3</value>
+        <description>Controls the number of containers to prewarm for Tez</description>
+    </property>
+
+    <property>
+        <name>hive.tez.auto.reducer.parallelism</name>
+        <value>true</value>
+        <description>Turn on Tez' auto reducer parallelism feature</description>
+    </property>
+
+    <property>
+        <name>hive.tez.min.reducer.per.query</name>
+        <value>2</value>
+        <description>Controls the minimum number of reducers for Tez</description>
+    </property>
+
+    <property>
+        <name>hive.tez.max.reducer.per.query</name>
+        <value>999</value>
+        <description>Controls the maximum number of reducers for Tez</description>
+    </property>
+
+    <!-- YARN Configuration for Tez -->
+    <property>
+        <name>hive.tez.exec.print.summary</name>
+        <value>true</value>
+        <description>Whether to print a summary of the plan execution</description>
+    </property>
+
+    <property>
+        <name>tez.queue.name</name>
+        <value>default</value>
+        <description>YARN queue name for Tez jobs</description>
+    </property>
 </configuration>
