@@ -51,7 +51,7 @@ public class XMLUtils {
         try (InputStream input = getFileInputStream(configFileName)) {
             loadConfig(input, properties);
         } catch (Exception e) {
-            LOG.error("Error loading : ", e);
+            LOG.error("Error loading : {}", configFileName, e);
         }
     }
 
@@ -135,6 +135,9 @@ public class XMLUtils {
             }
         }
 
+        if (ret == null) {
+            throw new FileNotFoundException(path + " is not found");
+        }
         return ret;
     }
 }
