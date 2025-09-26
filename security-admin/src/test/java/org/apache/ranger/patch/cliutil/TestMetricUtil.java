@@ -216,7 +216,6 @@ public class TestMetricUtil {
         PList<RangerServiceDef> defs = new PList<>();
         defs.setList(Collections.singletonList(def));
         defs.setTotalCount(1L);
-        Mockito.when(svcStore.getPaginatedServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(defs);
 
         RangerPolicy policy = new RangerPolicy();
         policy.setDenyPolicyItems(Collections.singletonList(new RangerPolicy.RangerPolicyItem()));
@@ -224,10 +223,9 @@ public class TestMetricUtil {
         PList<RangerPolicy> policyList = new PList<>();
         policyList.setList(Collections.singletonList(policy));
         policyList.setTotalCount(1L);
-        Mockito.when(svcStore.getPaginatedPolicies(Mockito.any(SearchFilter.class))).thenReturn(policyList);
 
         metricUtil.execLoad();
 
-        Mockito.verify(svcStore, Mockito.atLeast(1)).getPaginatedServiceDefs(Mockito.any(SearchFilter.class));
+        Mockito.verify(svcStore, Mockito.atLeast(1)).getPolicyCountByDenyConditionsAndServiceDef();
     }
 }

@@ -107,23 +107,20 @@
         {
           "name": "test-finance-restricted",
           "resource": {"elements":{"path":"/finance/restricted"}},
-          "userPermissions": {},
           "groupPermissions": {"finance": {"read": {"result": 1, "isFinal": true}}},
-          "rolePermissions": {}
+          "userPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         },
         {
           "name": "test-finance-limited",
           "resource": {"elements":{"path":"/finance/limited"}},
-          "userPermissions": {},
           "groupPermissions": {"stewards": {"read": {"result": 1, "isFinal": true}}},
-          "rolePermissions": {}
+          "userPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         },
         {
           "name": "test-anything-under-public",
           "resource": {"elements":{"path":"/public/anything"}},
-          "userPermissions": {},
           "groupPermissions": {"public": {"read": {"result": 1, "isFinal": true}, "execute": {"result": 1, "isFinal": true}}},
-          "rolePermissions": {}
+          "userPermissions": {}, "rolePermissions": {}, "rowFilters": [], "dataMasks": []
         }
       ]
     }

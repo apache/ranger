@@ -606,6 +606,17 @@ public interface RangerPolicyEvaluator {
             }
         }
 
+        @Override
+        public String toString() {
+            return "PolicyACLSummary{" +
+                    "usersAccessInfo=" + usersAccessInfo +
+                    ", groupsAccessInfo=" + groupsAccessInfo +
+                    ", rolesAccessInfo=" + rolesAccessInfo +
+                    ", rowFilters=" + rowFilters +
+                    ", dataMasks=" + dataMasks +
+                    '}';
+        }
+
         private void addAccess(String accessorName, AccessorType accessorType, String accessType, Integer access, int policyItemType) {
             final Map<String, Map<String, AccessResult>> accessorsAccessInfo;
 
