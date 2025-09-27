@@ -457,6 +457,11 @@ public class XUserREST {
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) : hasRole;
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_USER) ? userRolesList.add(RangerConstants.ROLE_USER) : hasRole;
                 } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
+                    boolean hasOnlyUserRole = userRolesList.size() == 1 && userRolesList.contains(RangerConstants.ROLE_USER);
+                    if (!hasOnlyUserRole || !RangerConstants.ROLE_USER.equals(userRole)) {
+                        throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
+                    }
+
                     logger.info("Logged-In user having user role will be able to fetch his own user details.");
 
                     if (!searchCriteria.getParamList().containsKey("name")) {
