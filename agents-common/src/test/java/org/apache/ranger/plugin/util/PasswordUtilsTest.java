@@ -72,7 +72,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128() throws IOException, NoSuchAlgorithmException {
-        String freeTextPasswordMetaData = join("PBEWITHHMACSHA512ANDAES_128", "ENCRYPT_KEY", "SALTSALT", "4", PasswordUtils.generateIvIfNeeded("PBEWITHHMACSHA512ANDAES_128"));
+        String freeTextPasswordMetaData = join("PBEWithHmacSHA512AndAES_128", "ENCRYPT_KEY", "SALTSALT", "4", PasswordUtils.generateIvIfNeeded("PBEWithHmacSHA512AndAES_128"));
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, "secretPasswordNoOneWillEverKnow"));
 
         assertNotNull(encryptedPassword);
@@ -84,7 +84,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128WithMultipleComasInPass() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = "asd,qwe,123";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -97,7 +97,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128WithSingleComaInPass() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = "asd,123";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -110,7 +110,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128EndingWithSingleComa() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = "asd,";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -123,7 +123,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128StartingWithSingleComa() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = ",asd";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -136,7 +136,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128MultipleComasInTheEnd() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = "asd,,";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -149,7 +149,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128MultipleComasSurroundingText() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = ",,a,,";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -162,7 +162,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128MultipleComasBeforeText() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = ",,,a";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -175,7 +175,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128MultipleComasOnlyPassword() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = ",,,";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
@@ -188,7 +188,7 @@ public class PasswordUtilsTest {
 
     @Test
     public void testEncryptWithSHA512AndAES128SingleComaOnlyPassword() throws IOException {
-        String freeTextPasswordMetaData = "PBEWITHHMACSHA512ANDAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
+        String freeTextPasswordMetaData = "PBEWithHmacSHA512AndAES_128,tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV,f77aLYLo,1000,9f3vNL0ijeHF4RWN/yUo0A==";
         String freeTextPassword         = ",";
         String encryptedPassword        = PasswordUtils.encryptPassword(join(freeTextPasswordMetaData, freeTextPassword));
 
