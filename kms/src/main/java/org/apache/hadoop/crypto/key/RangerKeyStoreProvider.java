@@ -239,7 +239,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
                 try {
                     tempMK = masterKeyProvider.getMasterKey(password).toCharArray();
                 } catch (Throwable e) {
-                    throw new RuntimeException("Error while getting Ranger Master key, Error - " + e.getMessage());
+                    throw new RuntimeException("Error while getting Ranger Master key", e);
                 }
             }
 
