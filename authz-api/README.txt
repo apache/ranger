@@ -89,7 +89,7 @@
       "requestId": "9198b532-a386-4464-9770-d61a8e8bc206",
       "user":      { "name": "gary.adams", "groups": [ "fte", "mktg" ], "roles": [ "analyst" ] },
       "access":    { "resource": { "name": ""path:/warehouse/hive/mktg/visitors", "attributes": { "OWNER": "nancy.boxer" } }, "action": "LIST", "permissions": [ "list" ] },
-      "context":   { "accessTime": 1755543894, "clientIpAddress": "12.051.242", "forwardedIpAddresses": [], "additionalInfo": { "clientType": "CLI", "clusterName": "cl1", "clusterType": "onprem" } }
+      "context":   { "serviceName": "s3", "accessTime": 1755543894, "clientIpAddress": "172.16.45.59", "additionalInfo": { "clusterName": "cl1", "clusterType": "onprem" } }
     }
 
     result:
@@ -108,7 +108,7 @@
       "requestId": "0a4134c1-44af-42e1-8a27-f15f18e60850",
       "user":      { "name": "gary.adams", "groups": [ "fte", "mktg" ], "roles": [ "analyst" ] },
       "access":    { "resource": { "name": ""table:db1.tbl1", "subResources: [ "column:col1", "column:col2", "column:col3" ], "attributes": { "OWNER": "nancy.boxer" } }, "action": "QUERY", "permissions": [ "select" ] },
-      "context":   { "accessTime": 1755543894, "clientIpAddress": "12.051.242", "forwardedIpAddresses": [], "additionalInfo": { "clientType": "CLI", "clusterName": "cl1", "clusterType": "onprem" } }
+      "context":   { "serviceName": "hive", "accessTime": 1755543894, "clientIpAddress": "172.16.120.64", "additionalInfo": { "clientType": "beeline", "clusterName": "cl1", "clusterType": "onprem" } }
     }
 
     result:
@@ -120,11 +120,11 @@
           "rowFilter": { "filterExpr": "dept = 'mktg'", "policy": { "id": 11, "version": 3 } }
           "subResources": {
             "column:col1": { "access":   { "decision": "ALLOWED", "policy": { "id": 5, "version": 1 } },
-	                         "dataMask": { "maskType": "MASK_SHOW_LAST_4", "maskedValue": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')", "policy": { "id": 26, "version": 2 } } },
+                             "dataMask": { "maskType": "MASK_SHOW_LAST_4", "maskedValue": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')", "policy": { "id": 26, "version": 2 } } },
             "column:col2": { "access":   { "decision": "ALLOWED", "policy": { "id": 2, "version": 1 } },
-	                          "dataMask": { "maskType": "MASK_HASH", "maskedValue": "mask_hash({col})", "policy": { "id": 27, "version": 4 } } },
+                              "dataMask": { "maskType": "MASK_HASH", "maskedValue": "mask_hash({col})", "policy": { "id": 27, "version": 4 } } },
             "column:col3": { "access":   { "decision": "ALLOWED", "policy": { "id": 3, "version": 1 } },
-	                         "dataMask": { "maskType": "MASK_HASH", "maskedValue": "mask_hash({col})", "policy": { "id": 27, "version": 4 } } }
+                             "dataMask": { "maskType": "MASK_HASH", "maskedValue": "mask_hash({col})", "policy": { "id": 27, "version": 4 } } }
           }
         }
       }
@@ -140,7 +140,7 @@
         { "resource": { "name": "table:db1.tbl2", "attributes": { "OWNER": "nancy.boxer" } }, "action": "QUERY", "permissions": [ "select" ] },
         { "resource": { "name": "table:db1.vw1" },  "action": "CREATE", "permissions": [ "create" ] }
       ],
-      "context": { "accessTime": 1755543894, "clientIpAddress": "12.051.242", "forwardedIpAddresses": [], "additionalInfo": { "clientType": "CLI", "clusterName": "cl1", "clusterType": "onprem" } }
+      "context": { "serviceName": "hive", "accessTime": 1755543894, "clientIpAddress": "172.16.27.152", "additionalInfo": { "clientType": "jdbc", "clusterName": "cl1", "clusterType": "onprem" } }
     }
 
     result:
