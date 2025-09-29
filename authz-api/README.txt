@@ -87,8 +87,8 @@
     request:
     {
       "requestId": "9198b532-a386-4464-9770-d61a8e8bc206",
-      "user":      { "name": "gary.adams", "groups": [ "fte", "mktg" ], "roles": [ "analyst" ] }
-      "access":    { "resource": "path:/warehouse/hive/mktg/visitors", "action": "LIST", "permissions": [ "list" ], "attributes": { "OWNER": "nancy.boxer" } }
+      "user":      { "name": "gary.adams", "groups": [ "fte", "mktg" ], "roles": [ "analyst" ] },
+      "access":    { "resource": { "name": ""path:/warehouse/hive/mktg/visitors", "attributes": { "OWNER": "nancy.boxer" } }, "action": "LIST", "permissions": [ "list" ] },
       "context":   { "accessTime": 1755543894, "clientIpAddress": "12.051.242", "forwardedIpAddresses": [], "additionalInfo": { "clientType": "CLI", "clusterName": "cl1", "clusterType": "onprem" } }
     }
 
@@ -106,8 +106,8 @@
     request:
     {
       "requestId": "0a4134c1-44af-42e1-8a27-f15f18e60850",
-      "user":      { "name": "gary.adams", "groups": [ "fte", "mktg" ], "roles": [ "analyst" ] }
-      "access":    { "resource": "table:db1.tbl1", "subResources: [ "column:col1", "column:col2", "column:col3" ], "action": "QUERY", "permissions": [ "select" ], "attributes": { "OWNER": "nancy.boxer" } }
+      "user":      { "name": "gary.adams", "groups": [ "fte", "mktg" ], "roles": [ "analyst" ] },
+      "access":    { "resource": { "name": ""table:db1.tbl1", "subResources: [ "column:col1", "column:col2", "column:col3" ], "attributes": { "OWNER": "nancy.boxer" } }, "action": "QUERY", "permissions": [ "select" ] },
       "context":   { "accessTime": 1755543894, "clientIpAddress": "12.051.242", "forwardedIpAddresses": [], "additionalInfo": { "clientType": "CLI", "clusterName": "cl1", "clusterType": "onprem" } }
     }
 
@@ -136,9 +136,9 @@
       "requestId": "4aa68265-34f1-4115-b026-d88dff292669",
       "user":      { "name": "gary.adams", "groups": [ "fte", "mktg" ], "roles": [ "analyst" ] }
       "accesses": [
-        { "resource": "table:db1.tbl1", "action": "QUERY", "permissions": [ "select" ], "attributes": { "OWNER": "nancy.boxer" } },
-        { "resource": "table:db1.tbl2", "action": "QUERY", "permissions": [ "select" ], "attributes": { "OWNER": "nancy.boxer" } },
-        { "resource": "table:db1.vw1",  "action": "CREATE", "permissions": [ "create" ] }
+        { "resource": { "name": "table:db1.tbl1", "attributes": { "OWNER": "nancy.boxer" } }, "action": "QUERY", "permissions": [ "select" ] },
+        { "resource": { "name": "table:db1.tbl2", "attributes": { "OWNER": "nancy.boxer" } }, "action": "QUERY", "permissions": [ "select" ] },
+        { "resource": { "name": "table:db1.vw1" },  "action": "CREATE", "permissions": [ "create" ] }
       ],
       "context": { "accessTime": 1755543894, "clientIpAddress": "12.051.242", "forwardedIpAddresses": [], "additionalInfo": { "clientType": "CLI", "clusterName": "cl1", "clusterType": "onprem" } }
     }
