@@ -408,7 +408,7 @@
 
   <property>
         <name>ranger.ks.hsm.masterkey.alias</name>
-        <value></value>
+        <value>RangerKMSKey</value>
         <description>Custom alias for Luna HSM master key</description>
   </property>
   
