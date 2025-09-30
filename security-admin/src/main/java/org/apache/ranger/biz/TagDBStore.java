@@ -1129,15 +1129,18 @@ public class TagDBStore extends AbstractTagStore {
                         LOG.debug("TagDBStore.createServiceTagsDelta(): failed to read tag id={}", tagId, t);
                     } finally {
                         if (tag == null) {
-                            tag = new RangerTag();
-
-                            tag.setId(tagId);
+                            if (!isSupportsTagsDedup()) {
+                                // Indicating policy engine to remove this TAG
+                                tag = new RangerTag();
+                                tag.setId(tagId);
+                            }
                         }
                     }
 
-                    RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
-
-                    ret.getTags().put(tag.getId(), tag);
+                    if (tag != null) {
+                        RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+                        ret.getTags().put(tag.getId(), tag);
+                    }
                 }
 
                 XXTagDefDao tagDefDao = daoManager.getXXTagDef();
