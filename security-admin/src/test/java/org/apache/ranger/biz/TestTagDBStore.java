@@ -18,14 +18,17 @@
 package org.apache.ranger.biz;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerServiceTagsCache;
@@ -33,6 +36,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceResourceDao;
 import org.apache.ranger.db.XXServiceVersionInfoDao;
+import org.apache.ranger.db.XXTagChangeLogDao;
 import org.apache.ranger.db.XXTagDao;
 import org.apache.ranger.db.XXTagDefDao;
 import org.apache.ranger.db.XXTagResourceMapDao;
@@ -40,6 +44,8 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceResource;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTag;
+import org.apache.ranger.entity.XXTagChangeLog;
+import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -63,20 +69,19 @@ import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
 import org.apache.ranger.view.RangerServiceResourceWithTagsList;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestTagDBStore {
     private final static Long id                  = 1L;
     private final static String name              = "test";
@@ -111,9 +116,10 @@ public class TestTagDBStore {
 
     @Mock
     ServiceDBStore svcStore;
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+    @Mock
+    XXTagDefDao tagDefDao;
+    @Mock
+    XXServiceResourceDao  serviceResourceDao;
 
     @Test
     public void testCreateTagDef() throws Exception {
@@ -124,9 +130,9 @@ public class TestTagDBStore {
 
         RangerTagDef returnedRangerTagDef = tagDBStore.createTagDef(rangerTagDef);
 
-        Assert.assertNotNull(returnedRangerTagDef);
-        Assert.assertEquals(returnedRangerTagDef.getId(), id);
-        Assert.assertEquals(rangerTagDef.getName(), name);
+        Assertions.assertNotNull(returnedRangerTagDef);
+        Assertions.assertEquals(returnedRangerTagDef.getId(), id);
+        Assertions.assertEquals(rangerTagDef.getName(), name);
     }
 
     @Test
@@ -138,9 +144,9 @@ public class TestTagDBStore {
 
         RangerTagDef returnedRangerTagDef = tagDBStore.updateTagDef(rangerTagDef);
 
-        Assert.assertNotNull(returnedRangerTagDef);
-        Assert.assertEquals(returnedRangerTagDef.getId(), id);
-        Assert.assertEquals(rangerTagDef.getName(), name);
+        Assertions.assertNotNull(returnedRangerTagDef);
+        Assertions.assertEquals(returnedRangerTagDef.getId(), id);
+        Assertions.assertEquals(rangerTagDef.getName(), name);
     }
 
     @Test
@@ -149,9 +155,8 @@ public class TestTagDBStore {
 
         Mockito.when(rangerTagDefService.read(id)).thenReturn(null).thenReturn(rangerTagDef);
         Mockito.when(errorUtil.createRESTException(Mockito.anyString(), Mockito.any(MessageEnums.class))).thenThrow(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
 
-        tagDBStore.updateTagDef(rangerTagDef);
+        Assertions.assertThrows(WebApplicationException.class, () -> tagDBStore.updateTagDef(rangerTagDef));
     }
 
     @Test
@@ -163,9 +168,8 @@ public class TestTagDBStore {
 
         Mockito.when(rangerTagDefService.read(id)).thenReturn(rangerTagDefInDB);
         Mockito.when(errorUtil.createRESTException(Mockito.anyString(), Mockito.any(MessageEnums.class))).thenThrow(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
 
-        tagDBStore.updateTagDef(rangerTagDef);
+        Assertions.assertThrows(WebApplicationException.class, () -> tagDBStore.updateTagDef(rangerTagDef));
     }
 
     @Test
@@ -176,9 +180,9 @@ public class TestTagDBStore {
 
         RangerTagDef returnedRangerTagDef = tagDBStore.getTagDefByName(rangerTagDef.getName());
 
-        Assert.assertNotNull(returnedRangerTagDef);
-        Assert.assertEquals(returnedRangerTagDef.getId(), id);
-        Assert.assertEquals(rangerTagDef.getName(), name);
+        Assertions.assertNotNull(returnedRangerTagDef);
+        Assertions.assertEquals(returnedRangerTagDef.getId(), id);
+        Assertions.assertEquals(rangerTagDef.getName(), name);
     }
 
     @Test
@@ -189,10 +193,10 @@ public class TestTagDBStore {
 
         RangerTagDef returnedRangerTagDef = tagDBStore.getTagDefByGuid(rangerTagDef.getGuid());
 
-        Assert.assertNotNull(returnedRangerTagDef);
-        Assert.assertEquals(returnedRangerTagDef.getId(), id);
-        Assert.assertEquals(returnedRangerTagDef.getGuid(), gId);
-        Assert.assertEquals(rangerTagDef.getName(), name);
+        Assertions.assertNotNull(returnedRangerTagDef);
+        Assertions.assertEquals(returnedRangerTagDef.getId(), id);
+        Assertions.assertEquals(returnedRangerTagDef.getGuid(), gId);
+        Assertions.assertEquals(rangerTagDef.getName(), name);
     }
 
     @Test
@@ -203,10 +207,10 @@ public class TestTagDBStore {
 
         RangerTagDef returnedRangerTagDef = tagDBStore.getTagDef(rangerTagDef.getId());
 
-        Assert.assertNotNull(returnedRangerTagDef);
-        Assert.assertEquals(returnedRangerTagDef.getId(), id);
-        Assert.assertEquals(returnedRangerTagDef.getGuid(), gId);
-        Assert.assertEquals(rangerTagDef.getName(), name);
+        Assertions.assertNotNull(returnedRangerTagDef);
+        Assertions.assertEquals(returnedRangerTagDef.getId(), id);
+        Assertions.assertEquals(returnedRangerTagDef.getGuid(), gId);
+        Assertions.assertEquals(rangerTagDef.getName(), name);
     }
 
     @Test
@@ -238,13 +242,13 @@ public class TestTagDBStore {
 
         List<RangerTagDef> rangerTagDefList = tagDBStore.getTagDefs(searchFilter);
 
-        Assert.assertNotNull(rangerTagDefList);
+        Assertions.assertNotNull(rangerTagDefList);
 
         RangerTagDef rangerTagDef = rangerTagDefList.get(0);
 
-        Assert.assertEquals(rangerTagDef.getId(), id);
-        Assert.assertEquals(rangerTagDef.getGuid(), gId);
-        Assert.assertEquals(rangerTagDef.getName(), name);
+        Assertions.assertEquals(rangerTagDef.getId(), id);
+        Assertions.assertEquals(rangerTagDef.getGuid(), gId);
+        Assertions.assertEquals(rangerTagDef.getName(), name);
     }
 
     @Test
@@ -256,14 +260,14 @@ public class TestTagDBStore {
 
         PList<RangerTagDef> returnedRangerTagDefList = tagDBStore.getPaginatedTagDefs(searchFilter);
 
-        Assert.assertNotNull(returnedRangerTagDefList);
+        Assertions.assertNotNull(returnedRangerTagDefList);
 
         RangerTagDef rangerTagDef = returnedRangerTagDefList.getList().get(0);
 
-        Assert.assertEquals(returnedRangerTagDefList.getList().size(), 1);
-        Assert.assertEquals(rangerTagDef.getId(), id);
-        Assert.assertEquals(rangerTagDef.getGuid(), gId);
-        Assert.assertEquals(rangerTagDef.getName(), name);
+        Assertions.assertEquals(returnedRangerTagDefList.getList().size(), 1);
+        Assertions.assertEquals(rangerTagDef.getId(), id);
+        Assertions.assertEquals(rangerTagDef.getGuid(), gId);
+        Assertions.assertEquals(rangerTagDef.getName(), name);
     }
 
     @Test
@@ -275,9 +279,9 @@ public class TestTagDBStore {
 
         RangerTag returnedRangerTag = tagDBStore.createTag(rangerTag);
 
-        Assert.assertNotNull(returnedRangerTag);
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTag);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -289,9 +293,9 @@ public class TestTagDBStore {
 
         RangerTag returnedRangerTag = tagDBStore.updateTag(rangerTag);
 
-        Assert.assertNotNull(returnedRangerTag);
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTag);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -300,9 +304,8 @@ public class TestTagDBStore {
 
         Mockito.when(rangerTagService.read(id)).thenReturn(null).thenReturn(rangerTag);
         Mockito.when(errorUtil.createRESTException(Mockito.anyString(), Mockito.any(MessageEnums.class))).thenThrow(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
 
-        tagDBStore.updateTag(rangerTag);
+        Assertions.assertThrows(WebApplicationException.class, () -> tagDBStore.updateTag(rangerTag));
     }
 
     @Test
@@ -323,9 +326,9 @@ public class TestTagDBStore {
 
         RangerTag returnedRangerTag = tagDBStore.getTag(id);
 
-        Assert.assertNotNull(returnedRangerTag);
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTag);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -336,9 +339,9 @@ public class TestTagDBStore {
 
         RangerTag returnedRangerTag = tagDBStore.getTagByGuid(gId);
 
-        Assert.assertNotNull(returnedRangerTag);
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTag);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
 
@@ -354,12 +357,12 @@ public class TestTagDBStore {
 
         List<RangerTag> returnedRangerTags = tagDBStore.getTagsByType(type);
 
-        Assert.assertNotNull(returnedRangerTags);
+        Assertions.assertNotNull(returnedRangerTags);
 
         RangerTag returnedRangerTag = returnedRangerTags.get(0);
 
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -373,12 +376,12 @@ public class TestTagDBStore {
 
         List<RangerTag> returnedRangerTags = tagDBStore.getTagsForResourceId(id);
 
-        Assert.assertNotNull(returnedRangerTags);
+        Assertions.assertNotNull(returnedRangerTags);
 
         RangerTag returnedRangerTag = returnedRangerTags.get(0);
 
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -391,12 +394,12 @@ public class TestTagDBStore {
 
         List<RangerTag> returnedRangerTags = tagDBStore.getTagsForResourceGuid(gId);
 
-        Assert.assertNotNull(returnedRangerTags);
+        Assertions.assertNotNull(returnedRangerTags);
 
         RangerTag returnedRangerTag = returnedRangerTags.get(0);
 
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -408,12 +411,12 @@ public class TestTagDBStore {
 
         List<RangerTag> returnedRangerTags = tagDBStore.getTags(filter);
 
-        Assert.assertNotNull(returnedRangerTags);
+        Assertions.assertNotNull(returnedRangerTags);
 
         RangerTag returnedRangerTag = returnedRangerTags.get(0);
 
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -425,13 +428,13 @@ public class TestTagDBStore {
 
         PList<RangerTag> returnedRangerTagPList = tagDBStore.getPaginatedTags(filter);
 
-        Assert.assertNotNull(returnedRangerTagPList);
-        Assert.assertEquals(returnedRangerTagPList.getListSize(), 1);
+        Assertions.assertNotNull(returnedRangerTagPList);
+        Assertions.assertEquals(returnedRangerTagPList.getListSize(), 1);
 
         RangerTag returnedRangerTag = returnedRangerTagPList.getList().get(0);
 
-        Assert.assertEquals(returnedRangerTag.getId(), id);
-        Assert.assertEquals(returnedRangerTag.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerTag.getId(), id);
+        Assertions.assertEquals(returnedRangerTag.getGuid(), gId);
     }
 
     @Test
@@ -450,11 +453,11 @@ public class TestTagDBStore {
 
         RangerServiceResource returnedRangerServiceResource = tagDBStore.createServiceResource(rangerServiceResource);
 
-        Assert.assertNotNull(returnedRangerServiceResource);
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
-        Assert.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
+        Assertions.assertNotNull(returnedRangerServiceResource);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
     }
 
     @Test
@@ -466,11 +469,11 @@ public class TestTagDBStore {
 
         RangerServiceResource returnedRangerServiceResource = tagDBStore.updateServiceResource(rangerServiceResource);
 
-        Assert.assertNotNull(returnedRangerServiceResource);
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
-        Assert.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
+        Assertions.assertNotNull(returnedRangerServiceResource);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
     }
 
     @Test
@@ -479,9 +482,8 @@ public class TestTagDBStore {
 
         Mockito.when(rangerServiceResourceService.read(id)).thenReturn(null).thenReturn(rangerServiceResource);
         Mockito.when(errorUtil.createRESTException(Mockito.anyString(), Mockito.any(MessageEnums.class))).thenThrow(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
 
-        tagDBStore.updateServiceResource(rangerServiceResource);
+        Assertions.assertThrows(WebApplicationException.class, () -> tagDBStore.updateServiceResource(rangerServiceResource));
     }
 
     @Test
@@ -520,11 +522,11 @@ public class TestTagDBStore {
 
         RangerServiceResource returnedRangerServiceResource = tagDBStore.getServiceResourceByGuid(gId);
 
-        Assert.assertNotNull(returnedRangerServiceResource);
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
-        Assert.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
+        Assertions.assertNotNull(returnedRangerServiceResource);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
     }
 
     @Test
@@ -535,11 +537,11 @@ public class TestTagDBStore {
 
         RangerServiceResource returnedRangerServiceResource = tagDBStore.getServiceResource(id);
 
-        Assert.assertNotNull(returnedRangerServiceResource);
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
-        Assert.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
+        Assertions.assertNotNull(returnedRangerServiceResource);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
     }
 
     @Test
@@ -557,14 +559,14 @@ public class TestTagDBStore {
 
         List<RangerServiceResource> returnedRangerServiceResourceList = tagDBStore.getServiceResourcesByService(serviceName);
 
-        Assert.assertNotNull(returnedRangerServiceResourceList);
+        Assertions.assertNotNull(returnedRangerServiceResourceList);
 
         RangerServiceResource returnedRangerServiceResource = returnedRangerServiceResourceList.get(0);
 
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
-        Assert.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertEquals(returnedRangerServiceResource.getServiceName(), serviceName);
     }
 
     @Test
@@ -583,8 +585,8 @@ public class TestTagDBStore {
 
         List<String> returnedServiceResourceGuidsInServiceId = tagDBStore.getServiceResourceGuidsByService(serviceName);
 
-        Assert.assertNotNull(returnedServiceResourceGuidsInServiceId);
-        Assert.assertEquals(returnedServiceResourceGuidsInServiceId.get(0), gId);
+        Assertions.assertNotNull(returnedServiceResourceGuidsInServiceId);
+        Assertions.assertEquals(returnedServiceResourceGuidsInServiceId.get(0), gId);
     }
 
     @Test
@@ -598,10 +600,10 @@ public class TestTagDBStore {
 
         RangerServiceResource returnedRangerServiceResource = tagDBStore.getServiceResourceByServiceAndResourceSignature(serviceName, resourceSignature);
 
-        Assert.assertNotNull(returnedRangerServiceResource);
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertNotNull(returnedRangerServiceResource);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
     }
 
     @Test
@@ -613,14 +615,14 @@ public class TestTagDBStore {
 
         List<RangerServiceResource> returnedRangerServiceResourceList = tagDBStore.getServiceResources(searchFilter);
 
-        Assert.assertNotNull(returnedRangerServiceResourceList);
-        Assert.assertEquals(returnedRangerServiceResourceList.size(), 1);
+        Assertions.assertNotNull(returnedRangerServiceResourceList);
+        Assertions.assertEquals(returnedRangerServiceResourceList.size(), 1);
 
         RangerServiceResource returnedRangerServiceResource = returnedRangerServiceResourceList.get(0);
 
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
     }
 
     @Test
@@ -632,14 +634,14 @@ public class TestTagDBStore {
 
         PList<RangerServiceResource> returnedRangerServiceResourcePList = tagDBStore.getPaginatedServiceResources(searchFilter);
 
-        Assert.assertNotNull(returnedRangerServiceResourcePList);
-        Assert.assertEquals(returnedRangerServiceResourcePList.getList().size(), 1);
+        Assertions.assertNotNull(returnedRangerServiceResourcePList);
+        Assertions.assertEquals(returnedRangerServiceResourcePList.getList().size(), 1);
 
         RangerServiceResource returnedRangerServiceResource = returnedRangerServiceResourcePList.getList().get(0);
 
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerServiceResource.getResourceSignature(), resourceSignature);
     }
 
     @Test
@@ -659,9 +661,9 @@ public class TestTagDBStore {
 
         RangerTagResourceMap returnedRangerTagResourceMap = tagDBStore.createTagResourceMap(rangerTagResourceMap);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -695,9 +697,9 @@ public class TestTagDBStore {
 
         RangerTagResourceMap returnedRangerTagResourceMap = tagDBStore.getTagResourceMap(id);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -708,9 +710,9 @@ public class TestTagDBStore {
 
         RangerTagResourceMap returnedRangerTagResourceMap = tagDBStore.getTagResourceMapByGuid(gId);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -725,9 +727,9 @@ public class TestTagDBStore {
         List<RangerTagResourceMap> returnedRangerTagResourceMapList = tagDBStore.getTagResourceMapsForTagId(id);
         RangerTagResourceMap       returnedRangerTagResourceMap     = returnedRangerTagResourceMapList.get(0);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -742,9 +744,9 @@ public class TestTagDBStore {
         List<RangerTagResourceMap> returnedRangerTagResourceMapList = tagDBStore.getTagResourceMapsForTagGuid(gId);
         RangerTagResourceMap       returnedRangerTagResourceMap     = returnedRangerTagResourceMapList.get(0);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -757,9 +759,9 @@ public class TestTagDBStore {
 
         List<Long> returnedTagIdsList = tagDBStore.getTagIdsForResourceId(id);
 
-        Assert.assertNotNull(returnedTagIdsList);
-        Assert.assertEquals(returnedTagIdsList.size(), 1);
-        Assert.assertEquals(returnedTagIdsList.get(0), id);
+        Assertions.assertNotNull(returnedTagIdsList);
+        Assertions.assertEquals(returnedTagIdsList.size(), 1);
+        Assertions.assertEquals(returnedTagIdsList.get(0), id);
     }
 
 
@@ -775,9 +777,9 @@ public class TestTagDBStore {
         List<RangerTagResourceMap> returnedRangerTagResourceMapList = tagDBStore.getTagResourceMapsForResourceId(id);
         RangerTagResourceMap       returnedRangerTagResourceMap     = returnedRangerTagResourceMapList.get(0);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -792,9 +794,9 @@ public class TestTagDBStore {
         List<RangerTagResourceMap> returnedRangerTagResourceMapList = tagDBStore.getTagResourceMapsForResourceGuid(gId);
         RangerTagResourceMap       returnedRangerTagResourceMap     = returnedRangerTagResourceMapList.get(0);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
 
@@ -806,9 +808,9 @@ public class TestTagDBStore {
 
         RangerTagResourceMap returnedRangerTagResourceMap = tagDBStore.getTagResourceMapForTagAndResourceId(id,id);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -819,9 +821,9 @@ public class TestTagDBStore {
 
         RangerTagResourceMap returnedRangerTagResourceMap = tagDBStore.getTagResourceMapForTagAndResourceGuid(gId,gId);
 
-        Assert.assertNotNull(returnedRangerTagResourceMap);
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerTagResourceMap);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -833,13 +835,13 @@ public class TestTagDBStore {
 
         PList<RangerTagResourceMap> returnedRangerTagResourceMapPList = tagDBStore.getPaginatedTagResourceMaps(searchFilter);
 
-        Assert.assertNotNull(returnedRangerTagResourceMapPList);
-        Assert.assertEquals(returnedRangerTagResourceMapPList.getList().size(), 1);
+        Assertions.assertNotNull(returnedRangerTagResourceMapPList);
+        Assertions.assertEquals(returnedRangerTagResourceMapPList.getList().size(), 1);
 
         RangerTagResourceMap returnedRangerTagResourceMap = returnedRangerTagResourceMapPList.getList().get(0);
 
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -851,13 +853,13 @@ public class TestTagDBStore {
 
         List<RangerTagResourceMap> returnedRangerTagResourceMapList = tagDBStore.getTagResourceMaps(searchFilter);
 
-        Assert.assertNotNull(returnedRangerTagResourceMapList);
-        Assert.assertEquals(returnedRangerTagResourceMapList.size(), 1);
+        Assertions.assertNotNull(returnedRangerTagResourceMapList);
+        Assertions.assertEquals(returnedRangerTagResourceMapList.size(), 1);
 
         RangerTagResourceMap returnedRangerTagResourceMap = returnedRangerTagResourceMapList.get(0);
 
-        Assert.assertEquals(returnedRangerTagResourceMap.getId(), id);
-        Assert.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getId(), id);
+        Assertions.assertEquals(returnedRangerTagResourceMap.getGuid(), gId);
     }
 
     @Test
@@ -881,9 +883,9 @@ public class TestTagDBStore {
 
         ServiceTags serviceTags = tagDBStore.getServiceTagsIfUpdated(serviceName, -1L, true);
 
-        Assert.assertNotNull(serviceTags);
-        Assert.assertEquals(serviceTags.getTagVersion(), lastKnownVersion);
-        Assert.assertEquals(serviceTags.getServiceName(), serviceName);
+        Assertions.assertNotNull(serviceTags);
+        Assertions.assertEquals(serviceTags.getTagVersion(), lastKnownVersion);
+        Assertions.assertEquals(serviceTags.getServiceName(), serviceName);
     }
 
     @Test
@@ -906,9 +908,9 @@ public class TestTagDBStore {
 
         ServiceTags serviceTags = tagDBStore.getServiceTags(serviceName, -1L);
 
-        Assert.assertNotNull(serviceTags);
-        Assert.assertEquals(serviceTags.getTagVersion(), lastKnownVersion);
-        Assert.assertEquals(serviceTags.getServiceName(), serviceName);
+        Assertions.assertNotNull(serviceTags);
+        Assertions.assertEquals(serviceTags.getTagVersion(), lastKnownVersion);
+        Assertions.assertEquals(serviceTags.getServiceName(), serviceName);
     }
 
     @Test
@@ -950,21 +952,21 @@ public class TestTagDBStore {
     public void testGetServiceTagsDeltaWhenTagDeltaSupportsDisabled() throws Exception {
         ServiceTags serviceTags = tagDBStore.getServiceTagsDelta(serviceName, lastKnownVersion);
 
-        Assert.assertNull(serviceTags);
+        Assertions.assertNull(serviceTags);
     }
 
     @Test
     public void testIsSupportsTagDeltas() throws Exception {
         boolean isSupportsTagDeltas = tagDBStore.isSupportsTagDeltas();
 
-        Assert.assertFalse(isSupportsTagDeltas);
+        Assertions.assertFalse(isSupportsTagDeltas);
     }
 
     @Test
     public void testIsInPlaceTagUpdateSupported() throws Exception {
         boolean isInPlaceTagUpdateSupported = tagDBStore.isInPlaceTagUpdateSupported();
 
-        Assert.assertFalse(isInPlaceTagUpdateSupported);
+        Assertions.assertFalse(isInPlaceTagUpdateSupported);
     }
 
     @Test
@@ -977,8 +979,414 @@ public class TestTagDBStore {
 
         Long tagVersion =  tagDBStore.getTagVersion(serviceName);
 
-        Assert.assertEquals(tagVersion, lastKnownVersion);
+        Assertions.assertEquals(tagVersion, lastKnownVersion);
     }
+
+    /**
+     * Pre:
+     *   New tag created: this event will not trigger a policy download, as it will not increment policy version.
+     *
+     * Current:
+     *   Associate Resource: associate first resource. This event will trigger a version change. Total resources associated with Tag are before 0, after 1.
+     *
+     * Below method covers one delta case, when a new TAG (no resources) is associated with first resource (eg, hive table)
+     */
+    @Test
+    public void testGetServiceTagsDeltaWhenTagDeltaAndDedupEnabledAdditionOfFirstResource() throws Exception {
+        try (MockedStatic<TagDBStore> mockedTagDBStore = mockStatic(TagDBStore.class); MockedStatic<JsonUtils> mockedJsonUtil = mockStatic(JsonUtils.class)) {
+            final Long   tagId             = 4L;
+            final Long   tagTypeId         = 2L;
+            final String tagTypeName       = "ranger_atlas_tag1";
+            final String tagSource         = "Atlas";
+            final String serviceName       = "HIVE_SERVICE";
+            final Long   serviceId         = 6L;
+            final Long   resourceId        = 4L;
+            final Long   serviceTagVersion = 8L;
+
+            /*
+             * Given
+             */
+            TagDBStore            tagDBStoreSpy         = Mockito.spy(tagDBStore);
+            XXServiceDao          xxServiceDao          = Mockito.mock(XXServiceDao.class);
+            XXTagChangeLogDao     xxTagChangeLogDao     = Mockito.mock(XXTagChangeLogDao.class);
+            XXTagDao              tagDao                = Mockito.mock(XXTagDao.class);
+            XXTag                 xTag                  = createXXTag(tagId, 1L, tagTypeId);
+            RangerTag             rangerTag             = new RangerTag("6e248648-739a-434a-9c42-a74c8277638d", tagTypeName, Collections.emptyMap(), (short) 0);
+            XXTagDef              xxTagDef              = createXXTagDef(tagTypeId, 1L, tagTypeName);
+            RangerTagDef          rangerTagDef          = new RangerTagDef(tagTypeName, tagSource);
+            XXServiceResource     xServiceResource      = createXXServiceResource(resourceId, "8fa22999-06a4-4d5e-83e7-dc9872082dbc", 2L, serviceId);
+            RangerServiceResource rangerServiceResource = new RangerServiceResource("8fa22999-06a4-4d5e-83e7-dc9872082dbc", serviceName, Collections.emptyMap());
+            List<XXTagChangeLog>  changeLogRecords      = Collections.singletonList(new XXTagChangeLog(43L, 3, serviceTagVersion, resourceId, tagId));
+
+            rangerTag.setId(tagId);
+            rangerTagDef.setId(tagTypeId);
+            xServiceResource.setTags(tagTypeName);
+            rangerServiceResource.setId(resourceId);
+
+            Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+            Mockito.when(daoManager.getXXTagChangeLog()).thenReturn(xxTagChangeLogDao);
+            Mockito.when(xxTagChangeLogDao.findLaterThan(Mockito.anyLong(), Mockito.anyLong())).thenReturn(changeLogRecords);
+            Mockito.when(daoManager.getXXTag()).thenReturn(tagDao);
+            Mockito.when(tagDao.getById(Mockito.anyLong())).thenReturn(xTag);
+            Mockito.when(rangerTagService.getPopulatedViewObject(Mockito.any())).thenReturn(rangerTag);
+
+            mockedTagDBStore.when(TagDBStore::isSupportsTagsDedup).thenReturn(true);
+            mockedTagDBStore.when(TagDBStore::isSupportsTagDeltas).thenReturn(true);
+            mockedJsonUtil.when(() -> JsonUtils.jsonToObject(Mockito.anyString(), Mockito.any(RangerServiceResourceService.duplicatedDataType.getClass()))).thenReturn(Collections.singletonList(rangerTag));
+
+            Mockito.when(daoManager.getXXTagDef()).thenReturn(tagDefDao);
+            Mockito.when(tagDefDao.findByName(tagTypeName)).thenReturn(xxTagDef);
+            Mockito.when(rangerTagDefService.getPopulatedViewObject(Mockito.any())).thenReturn(rangerTagDef);
+
+            Mockito.when(daoManager.getXXServiceResource()).thenReturn(serviceResourceDao);
+            Mockito.when(serviceResourceDao.getById(Mockito.anyLong())).thenReturn(xServiceResource);
+            Mockito.when(rangerServiceResourceService.getPopulatedViewObject(Mockito.any())).thenReturn(rangerServiceResource);
+
+            /*
+             * When
+             */
+            ServiceTags serviceTags = tagDBStoreSpy.getServiceTagsDelta(serviceName, (serviceTagVersion - 1));
+
+            /*
+             * Then
+             */
+            Assertions.assertEquals("add_or_update", serviceTags.getOp());
+            Assertions.assertEquals(serviceName, serviceTags.getServiceName());
+            Assertions.assertEquals(serviceTagVersion, serviceTags.getTagVersion());
+            Assertions.assertTrue(serviceTags.getIsDelta());
+            Assertions.assertTrue(serviceTags.getIsTagsDeduped());
+            Assertions.assertEquals(ServiceTags.TagsChangeExtent.SERVICE_RESOURCE, serviceTags.getTagsChangeExtent());
+
+            // tagDefinitions
+            Assertions.assertEquals(1, serviceTags.getTagDefinitions().size());
+            Assertions.assertEquals(tagTypeId,  serviceTags.getTagDefinitions().get(tagTypeId).getId());
+            Assertions.assertTrue(serviceTags.getTagDefinitions().get(tagTypeId).getIsEnabled());
+            Assertions.assertEquals(tagTypeName,  serviceTags.getTagDefinitions().get(tagTypeId).getName());
+            Assertions.assertEquals(tagSource, serviceTags.getTagDefinitions().get(tagTypeId).getSource());
+
+            // tags
+            Assertions.assertEquals(1, serviceTags.getTags().size());
+            Assertions.assertEquals(tagId, serviceTags.getTags().get(tagId).getId());
+            Assertions.assertTrue(serviceTags.getTags().get(tagId).getIsEnabled());
+            Assertions.assertEquals(tagTypeName, serviceTags.getTags().get(tagId).getType());
+
+            // serviceResources
+            Assertions.assertEquals(1, serviceTags.getServiceResources().size());
+            Assertions.assertEquals(resourceId, serviceTags.getServiceResources().get(0).getId());
+            Assertions.assertTrue(serviceTags.getServiceResources().get(0).getIsEnabled());
+            Assertions.assertEquals(serviceName, serviceTags.getServiceResources().get(0).getServiceName());
+
+            // resourceToTagIds
+            Assertions.assertEquals(1, serviceTags.getResourceToTagIds().size());
+            Assertions.assertEquals(resourceId, serviceTags.getResourceToTagIds().get(serviceTags.getServiceResources().get(0).getId()).get(0));
+        }
+    }
+
+    /**
+     * Pre:
+     *   New tag created: this event will not trigger a policy download, as it will not increment policy version
+     *   Associate Resource: associate first resource.
+     *
+     * Current:
+     *   Associate Resource: associate second resource. This event will trigger a version change. Total resources associated with Tag are before 1, after 2.
+     *
+     * Below method covers one delta case, when a TAG (with 1 resource) is associated with second resource (eg, hive table)
+     */
+    @Test
+    public void testGetServiceTagsDeltaWhenTagDeltaAndDedupEnabledAdditionOfSecondResource() throws Exception {
+        try (MockedStatic<TagDBStore> mockedTagDBStore = mockStatic(TagDBStore.class); MockedStatic<JsonUtils> mockedJsonUtil = mockStatic(JsonUtils.class)) {
+            final Long   tagId             = 5L;
+            final Long   tagTypeId         = 2L;
+            final String tagTypeName       = "ranger_atlas_tag1";
+            final String tagSource         = "Atlas";
+            final String serviceName       = "HIVE_SERVICE";
+            final Long   serviceId         = 6L;
+            final Long   resourceId        = 5L;
+            final Long   serviceTagVersion = 9L;
+
+            /*
+             * Given
+             */
+            TagDBStore            tagDBStoreSpy         = Mockito.spy(tagDBStore);
+            XXServiceDao          xxServiceDao          = Mockito.mock(XXServiceDao.class);
+            XXTagChangeLogDao     xxTagChangeLogDao     = Mockito.mock(XXTagChangeLogDao.class);
+            XXTagDao              tagDao                = Mockito.mock(XXTagDao.class);
+            XXTag                 xTag                  = createXXTag(tagId, 1L, tagTypeId);
+            RangerTag             rangerTag             = new RangerTag("ef2401cb-f723-4663-a19e-51363efe71ea", tagTypeName, Collections.emptyMap(), (short) 0);
+            XXTagDef              xxTagDef              = createXXTagDef(tagTypeId, 1L, tagTypeName);
+            RangerTagDef          rangerTagDef          = new RangerTagDef(tagTypeName, tagSource);
+            XXServiceResource     xServiceResource      = createXXServiceResource(resourceId, "b6ef4baa-f38e-49ce-bac3-3b2243641d8a", 2L, serviceId);
+            RangerServiceResource rangerServiceResource = new RangerServiceResource("b6ef4baa-f38e-49ce-bac3-3b2243641d8a", serviceName, Collections.emptyMap());
+            List<XXTagChangeLog>  changeLogRecords      = Collections.singletonList(new XXTagChangeLog(44L, 3, serviceTagVersion, resourceId, tagId));
+
+            rangerTag.setId(tagId);
+            rangerTagDef.setId(tagTypeId);
+            xServiceResource.setTags(tagTypeName);
+            rangerServiceResource.setId(resourceId);
+
+            Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+            Mockito.when(daoManager.getXXTagChangeLog()).thenReturn(xxTagChangeLogDao);
+            Mockito.when(xxTagChangeLogDao.findLaterThan(Mockito.anyLong(), Mockito.anyLong())).thenReturn(changeLogRecords);
+            Mockito.when(daoManager.getXXTag()).thenReturn(tagDao);
+            Mockito.when(tagDao.getById(Mockito.anyLong())).thenReturn(xTag);
+            Mockito.when(rangerTagService.getPopulatedViewObject(Mockito.any())).thenReturn(rangerTag);
+
+            mockedTagDBStore.when(TagDBStore::isSupportsTagsDedup).thenReturn(true);
+            mockedTagDBStore.when(TagDBStore::isSupportsTagDeltas).thenReturn(true);
+            mockedJsonUtil.when(() -> JsonUtils.jsonToObject(Mockito.anyString(), Mockito.any(RangerServiceResourceService.duplicatedDataType.getClass()))).thenReturn(Collections.singletonList(rangerTag));
+
+            Mockito.when(daoManager.getXXTagDef()).thenReturn(tagDefDao);
+            Mockito.when(tagDefDao.findByName(tagTypeName)).thenReturn(xxTagDef);
+            Mockito.when(rangerTagDefService.getPopulatedViewObject(Mockito.any())).thenReturn(rangerTagDef);
+
+            Mockito.when(daoManager.getXXServiceResource()).thenReturn(serviceResourceDao);
+            Mockito.when(serviceResourceDao.getById(Mockito.anyLong())).thenReturn(xServiceResource);
+            Mockito.when(rangerServiceResourceService.getPopulatedViewObject(Mockito.any())).thenReturn(rangerServiceResource);
+
+            /*
+             * When
+             */
+            ServiceTags serviceTags = tagDBStoreSpy.getServiceTagsDelta(serviceName, (serviceTagVersion - 1));
+
+            /*
+             * Then
+             */
+            Assertions.assertEquals("add_or_update", serviceTags.getOp());
+            Assertions.assertEquals(serviceName, serviceTags.getServiceName());
+            Assertions.assertEquals(serviceTagVersion, serviceTags.getTagVersion());
+            Assertions.assertTrue(serviceTags.getIsDelta());
+            Assertions.assertTrue(serviceTags.getIsTagsDeduped());
+            Assertions.assertEquals(ServiceTags.TagsChangeExtent.SERVICE_RESOURCE, serviceTags.getTagsChangeExtent());
+
+            // tagDefinitions
+            Assertions.assertEquals(1, serviceTags.getTagDefinitions().size());
+            Assertions.assertEquals(tagTypeId,  serviceTags.getTagDefinitions().get(tagTypeId).getId());
+            Assertions.assertTrue(serviceTags.getTagDefinitions().get(tagTypeId).getIsEnabled());
+            Assertions.assertEquals(tagTypeName,  serviceTags.getTagDefinitions().get(tagTypeId).getName());
+            Assertions.assertEquals(tagSource, serviceTags.getTagDefinitions().get(tagTypeId).getSource());
+
+            // tags
+            Assertions.assertEquals(1, serviceTags.getTags().size());
+            Assertions.assertEquals(tagId, serviceTags.getTags().get(tagId).getId());
+            Assertions.assertTrue(serviceTags.getTags().get(tagId).getIsEnabled());
+            Assertions.assertEquals(tagTypeName, serviceTags.getTags().get(tagId).getType());
+
+            // serviceResources
+            Assertions.assertEquals(1, serviceTags.getServiceResources().size());
+            Assertions.assertEquals(resourceId, serviceTags.getServiceResources().get(0).getId());
+            Assertions.assertTrue(serviceTags.getServiceResources().get(0).getIsEnabled());
+            Assertions.assertEquals(serviceName, serviceTags.getServiceResources().get(0).getServiceName());
+
+            // resourceToTagIds
+            Assertions.assertEquals(1, serviceTags.getResourceToTagIds().size());
+            Assertions.assertEquals(resourceId, serviceTags.getResourceToTagIds().get(serviceTags.getServiceResources().get(0).getId()).get(0));
+        }
+    }
+
+    /**
+     * Pre:
+     *   New tag created: this event will not trigger a policy download, as it will not increment policy version
+     *   Associate Resource: associate first resource.
+     *   Associate Resource: associate second resource.
+     *
+     * Current:
+     *   De-associate resource: de-associate first resource. This event will trigger a version change. Total resources associated with Tag are before 2, after 1.
+     *
+     * Below method covers one delta case, when a TAG (with 2 resource) is de-associated with first resource (eg, hive table)
+     */
+    @Test
+    public void testGetServiceTagsDeltaWhenTagDeltaAndDedupEnabledRemovalOfFirstResource() throws Exception {
+        try (MockedStatic<TagDBStore> mockedTagDBStore = mockStatic(TagDBStore.class); MockedStatic<JsonUtils> mockedJsonUtil = mockStatic(JsonUtils.class)) {
+            final Long   tagId             = 4L;
+            final Long   tagTypeId         = 2L;
+            final String tagTypeName       = "ranger_atlas_tag1";
+            final String tagSource         = "Atlas";
+            final String serviceName       = "HIVE_SERVICE";
+            final Long   serviceId         = 6L;
+            final Long   resourceId        = 4L;
+            final Long   serviceTagVersion = 10L;
+
+            /*
+             * Given
+             */
+            TagDBStore            tagDBStoreSpy         = Mockito.spy(tagDBStore);
+            XXServiceDao          xxServiceDao          = Mockito.mock(XXServiceDao.class);
+            XXTagChangeLogDao     xxTagChangeLogDao     = Mockito.mock(XXTagChangeLogDao.class);
+            XXTagDao              tagDao                = Mockito.mock(XXTagDao.class);
+            RangerTag             rangerTag             = new RangerTag("6e248648-739a-434a-9c42-a74c8277638d", tagTypeName, Collections.emptyMap(), (short) 0);
+            RangerTagDef          rangerTagDef          = new RangerTagDef(tagTypeName, tagSource);
+            XXServiceResource     xServiceResource      = createXXServiceResource(resourceId, "8fa22999-06a4-4d5e-83e7-dc9872082dbc", 2L, serviceId);
+            RangerServiceResource rangerServiceResource = new RangerServiceResource("8fa22999-06a4-4d5e-83e7-dc9872082dbc", serviceName, Collections.emptyMap());
+            List<XXTagChangeLog>  changeLogRecords      = Collections.singletonList(new XXTagChangeLog(45L, 3, serviceTagVersion, resourceId, tagId));
+
+            rangerTag.setId(tagId);
+            rangerTagDef.setId(tagTypeId);
+            xServiceResource.setTags(tagTypeName);
+            rangerServiceResource.setId(resourceId);
+
+            Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+            Mockito.when(daoManager.getXXTagChangeLog()).thenReturn(xxTagChangeLogDao);
+            Mockito.when(xxTagChangeLogDao.findLaterThan(Mockito.anyLong(), Mockito.anyLong())).thenReturn(changeLogRecords);
+            Mockito.when(daoManager.getXXTag()).thenReturn(tagDao);
+
+            mockedTagDBStore.when(TagDBStore::isSupportsTagsDedup).thenReturn(true);
+            mockedTagDBStore.when(TagDBStore::isSupportsTagDeltas).thenReturn(true);
+            mockedJsonUtil.when(() -> JsonUtils.jsonToObject(Mockito.anyString(), Mockito.any(RangerServiceResourceService.duplicatedDataType.getClass()))).thenReturn(Collections.singletonList(rangerTag));
+
+            Mockito.when(daoManager.getXXTagDef()).thenReturn(tagDefDao);
+
+            Mockito.when(daoManager.getXXServiceResource()).thenReturn(serviceResourceDao);
+
+            /*
+             * When
+             */
+            ServiceTags serviceTags = tagDBStoreSpy.getServiceTagsDelta(serviceName, (serviceTagVersion - 1));
+
+            /*
+             * Then
+             */
+            Assertions.assertEquals("add_or_update", serviceTags.getOp());
+            Assertions.assertEquals(serviceName, serviceTags.getServiceName());
+            Assertions.assertEquals(serviceTagVersion, serviceTags.getTagVersion());
+            Assertions.assertTrue(serviceTags.getIsDelta());
+            Assertions.assertTrue(serviceTags.getIsTagsDeduped());
+            Assertions.assertEquals(ServiceTags.TagsChangeExtent.SERVICE_RESOURCE, serviceTags.getTagsChangeExtent());
+
+            // tagDefinitions
+            Assertions.assertEquals(0, serviceTags.getTagDefinitions().size());
+
+            // tags
+            Assertions.assertEquals(0, serviceTags.getTags().size());
+
+            // serviceResources
+            Assertions.assertEquals(1, serviceTags.getServiceResources().size());
+            Assertions.assertEquals(resourceId, serviceTags.getServiceResources().get(0).getId());
+            Assertions.assertTrue(serviceTags.getServiceResources().get(0).getIsEnabled());
+
+            // resourceToTagIds
+            Assertions.assertEquals(0, serviceTags.getResourceToTagIds().size());
+        }
+    }
+
+    /**
+     * Pre:
+     *   New tag created: this event will not trigger a policy download, as it will not increment policy version
+     *   Associate Resource: associate first resource.
+     *   Associate Resource: associate second resource.
+     *   De-associate resource: de-associate first resource.
+     *
+     * Current:
+     *   De-associate resource: de-associate second resource. This event will trigger a version change. Total resources associated with Tag are before 1, after 0.
+     *
+     * Below method covers one delta case, when a TAG (with 1 resource) is de-associated with second/ last resource (eg, hive table)
+     */
+    @Test
+    public void testGetServiceTagsDeltaWhenTagDeltaAndDedupEnabledRemovalOfSecondResource() throws Exception {
+        try (MockedStatic<TagDBStore> mockedTagDBStore = mockStatic(TagDBStore.class); MockedStatic<JsonUtils> mockedJsonUtil = mockStatic(JsonUtils.class)) {
+            final Long   tagId             = 5L;
+            final Long   tagTypeId         = 2L;
+            final String tagTypeName       = "ranger_atlas_tag1";
+            final String tagSource         = "Atlas";
+            final String serviceName       = "HIVE_SERVICE";
+            final Long   serviceId         = 6L;
+            final Long   resourceId        = 5L;
+            final Long   serviceTagVersion = 11L;
+
+            /*
+             * Given
+             */
+            TagDBStore            tagDBStoreSpy         = Mockito.spy(tagDBStore);
+            XXServiceDao          xxServiceDao          = Mockito.mock(XXServiceDao.class);
+            XXTagChangeLogDao     xxTagChangeLogDao     = Mockito.mock(XXTagChangeLogDao.class);
+            XXTagDao              tagDao                = Mockito.mock(XXTagDao.class);
+            RangerTag             rangerTag             = new RangerTag("6e248648-739a-434a-9c42-a74c8277638d", tagTypeName, Collections.emptyMap(), (short) 0);
+            RangerTagDef          rangerTagDef          = new RangerTagDef(tagTypeName, tagSource);
+            XXServiceResource     xServiceResource      = createXXServiceResource(resourceId, "b6ef4baa-f38e-49ce-bac3-3b2243641d8a", 2L, serviceId);
+            RangerServiceResource rangerServiceResource = new RangerServiceResource("b6ef4baa-f38e-49ce-bac3-3b2243641d8a", serviceName, Collections.emptyMap());
+            List<XXTagChangeLog>  changeLogRecords      = Collections.singletonList(new XXTagChangeLog(46L, 3, serviceTagVersion, resourceId, tagId));
+
+            rangerTag.setId(tagId);
+            rangerTagDef.setId(tagTypeId);
+            xServiceResource.setTags(tagTypeName);
+            rangerServiceResource.setId(resourceId);
+
+            Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+            Mockito.when(daoManager.getXXTagChangeLog()).thenReturn(xxTagChangeLogDao);
+            Mockito.when(xxTagChangeLogDao.findLaterThan(Mockito.anyLong(), Mockito.anyLong())).thenReturn(changeLogRecords);
+            Mockito.when(daoManager.getXXTag()).thenReturn(tagDao);
+
+            mockedTagDBStore.when(TagDBStore::isSupportsTagsDedup).thenReturn(true);
+            mockedTagDBStore.when(TagDBStore::isSupportsTagDeltas).thenReturn(true);
+            mockedJsonUtil.when(() -> JsonUtils.jsonToObject(Mockito.anyString(), Mockito.any(RangerServiceResourceService.duplicatedDataType.getClass()))).thenReturn(Collections.singletonList(rangerTag));
+
+            Mockito.when(daoManager.getXXTagDef()).thenReturn(tagDefDao);
+
+            Mockito.when(daoManager.getXXServiceResource()).thenReturn(serviceResourceDao);
+
+            /*
+             * When
+             */
+            ServiceTags serviceTags = tagDBStoreSpy.getServiceTagsDelta(serviceName, (serviceTagVersion - 1));
+
+            /*
+             * Then
+             */
+            Assertions.assertEquals("add_or_update", serviceTags.getOp());
+            Assertions.assertEquals(serviceName, serviceTags.getServiceName());
+            Assertions.assertEquals(serviceTagVersion, serviceTags.getTagVersion());
+            Assertions.assertTrue(serviceTags.getIsDelta());
+            Assertions.assertTrue(serviceTags.getIsTagsDeduped());
+            Assertions.assertEquals(ServiceTags.TagsChangeExtent.SERVICE_RESOURCE, serviceTags.getTagsChangeExtent());
+
+            // tagDefinitions
+            Assertions.assertEquals(0, serviceTags.getTagDefinitions().size());
+
+            // tags
+            Assertions.assertEquals(0, serviceTags.getTags().size());
+
+            // serviceResources
+            Assertions.assertEquals(1, serviceTags.getServiceResources().size());
+            Assertions.assertEquals(resourceId, serviceTags.getServiceResources().get(0).getId());
+            Assertions.assertTrue(serviceTags.getServiceResources().get(0).getIsEnabled());
+
+            // resourceToTagIds
+            Assertions.assertEquals(0, serviceTags.getResourceToTagIds().size());
+        }
+    }
+
+    private XXServiceResource createXXServiceResource(Long id, String gId, Long lastKnownVersion, Long serviceId) {
+        XXServiceResource xxServiceResource = new XXServiceResource();
+
+        xxServiceResource.setId(id);
+        xxServiceResource.setCreateTime(new Date());
+        xxServiceResource.setGuid(gId);
+        xxServiceResource.setVersion(lastKnownVersion);
+        xxServiceResource.setResourceSignature(resourceSignature);
+        xxServiceResource.setServiceId(serviceId);
+
+        return xxServiceResource;
+    }
+
+    private XXTagDef createXXTagDef(Long id, Long version, String name) {
+        XXTagDef ret = new XXTagDef();
+        ret.setId(id);
+        ret.setVersion(version);
+        ret.setGuid("6bd466f5-1ad0-428f-8a87-b89b4f21cc65");
+        ret.setName(name);
+        ret.setIsEnabled(true);
+
+        return ret;
+    }
+
+    private XXTag createXXTag(Long id, Long version, Long type) {
+        XXTag xxTag = new XXTag();
+        xxTag.setId(id);
+        xxTag.setVersion(version);
+        xxTag.setType(type);
+
+        return xxTag;
+    }
+
 
     private RangerTagDef createRangerTagDef() {
         RangerTagDef rangerTagDef = new RangerTagDef();
@@ -1204,15 +1612,15 @@ public class TestTagDBStore {
 
         RangerServiceResourceWithTagsList returnedRangerServiceResourcePList = tagDBStore.getPaginatedServiceResourcesWithTags(searchFilter);
 
-        Assert.assertNotNull(returnedRangerServiceResourcePList);
-        Assert.assertEquals(returnedRangerServiceResourcePList.getList().size(), 1);
+        Assertions.assertNotNull(returnedRangerServiceResourcePList);
+        Assertions.assertEquals(returnedRangerServiceResourcePList.getList().size(), 1);
 
         RangerServiceResourceWithTags returnedRangerServiceResource = returnedRangerServiceResourcePList.getResourceList().get(0);
 
-        Assert.assertEquals(returnedRangerServiceResource.getId(), id);
-        Assert.assertEquals(returnedRangerServiceResource.getGuid(), gId);
-        Assert.assertNotNull(returnedRangerServiceResource.getAssociatedTags());
-        Assert.assertEquals(rangerServiceResourceViewList.getResourceList().get(0).getAssociatedTags().size(), returnedRangerServiceResource.getAssociatedTags().size());
+        Assertions.assertEquals(returnedRangerServiceResource.getId(), id);
+        Assertions.assertEquals(returnedRangerServiceResource.getGuid(), gId);
+        Assertions.assertNotNull(returnedRangerServiceResource.getAssociatedTags());
+        Assertions.assertEquals(rangerServiceResourceViewList.getResourceList().get(0).getAssociatedTags().size(), returnedRangerServiceResource.getAssociatedTags().size());
     }
 
     private  RangerServiceResourceWithTagsList createRangerServiceResourceWithTagsViewList() {
@@ -1257,6 +1665,6 @@ public class TestTagDBStore {
         RangerServiceResource expectedResource = new RangerServiceResource(serviceName, resourceElements);
         RangerServiceResource actualResource   = tagDBStore.toRangerServiceResource(serviceName, resourceMap);
 
-        Assert.assertEquals(expectedResource.getResourceElements(), actualResource.getResourceElements());
+        Assertions.assertEquals(expectedResource.getResourceElements(), actualResource.getResourceElements());
     }
 }
