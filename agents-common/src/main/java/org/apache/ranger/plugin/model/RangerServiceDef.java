@@ -1380,6 +1380,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		private String              rbKeyValidationMessage = null;
 		private Set<String>         accessTypeRestrictions = null;
 		private Boolean             isValidLeaf            = null;
+		private String              rrnTemplate; // resource-name template. Examples: {database}.{table}.{column}, {container}@{storageaccount}/{relativepath}
 
 		public RangerResourceDef() {
 			this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -1407,6 +1408,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			setRbKeyValidationMessage(other.getRbKeyValidationMessage());
 			setAccessTypeRestrictions(other.getAccessTypeRestrictions());
 			setIsValidLeaf(other.getIsValidLeaf());
+			setRrnTemplate(other.getRrnTemplate());
 		}
 
 		public RangerResourceDef(Long itemId, String name, String type, Integer level, String parent, Boolean mandatory, Boolean lookupSupported, Boolean recursiveSupported, Boolean excludesSupported, String matcher, Map<String, String> matcherOptions, String validationRegEx, String validationMessage, String uiHint, String label, String description, String rbKeyLabel, String rbKeyDescription, String rbKeyValidationMessage, Set<String> accessTypeRestrictions, Boolean isValidLeaf) {
@@ -1713,6 +1715,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		    this.isValidLeaf = isValidLeaf;
         }
 
+		public String getRrnTemplate() {
+			return rrnTemplate;
+		}
+
+		public void setRrnTemplate(String rrnTemplate) {
+			this.rrnTemplate = rrnTemplate;
+		}
+
 		public void dedupStrings(Map<String, String> strTbl) {
 			name                   = StringUtil.dedupString(name, strTbl);
 			type                   = StringUtil.dedupString(type, strTbl);
@@ -1728,6 +1738,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			rbKeyDescription       = StringUtil.dedupString(rbKeyDescription, strTbl);
 			rbKeyValidationMessage = StringUtil.dedupString(rbKeyValidationMessage, strTbl);
 			accessTypeRestrictions = StringUtil.dedupStringsSet(accessTypeRestrictions, strTbl);
+			rrnTemplate            = StringUtil.dedupString(rrnTemplate, strTbl);
 		}
 
 		@Override
@@ -1762,6 +1773,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			sb.append("rbKeyValidationMessage={").append(rbKeyValidationMessage).append("} ");
 			sb.append("accessTypeRestrictions={").append(accessTypeRestrictions == null ? "null" : accessTypeRestrictions.toString()).append("} ");
 			sb.append("isValidLeaf={").append(isValidLeaf == null ? "null" : isValidLeaf.toString()).append("} ");
+			sb.append("rrnTemplate={").append(rrnTemplate == null ? "null" : rrnTemplate).append("} ");
 			sb.append("}");
 
 			return sb;
@@ -1824,6 +1836,9 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			result = prime
 					* result
 					+ ((isValidLeaf == null) ? 0 : isValidLeaf.hashCode());
+			result = prime
+					* result
+					+ ((rrnTemplate == null) ? 0 : rrnTemplate.hashCode());
 			return result;
 		}
 
@@ -1932,11 +1947,16 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 					return false;
 			} else if (!accessTypeRestrictions.equals(other.accessTypeRestrictions))
 				return false;
-            if (isValidLeaf == null) {
-                if (other.isValidLeaf != null)
-                    return false;
-            } else if (!isValidLeaf.equals(other.isValidLeaf))
-                return false;
+			if (isValidLeaf == null) {
+				if (other.isValidLeaf != null)
+					return false;
+			} else if (!isValidLeaf.equals(other.isValidLeaf))
+					return false;
+			if (rrnTemplate == null) {
+				if (other.rrnTemplate != null)
+					return false;
+			} else if (!rrnTemplate.equals(other.rrnTemplate))
+				return false;
             return true;
 		}
 		

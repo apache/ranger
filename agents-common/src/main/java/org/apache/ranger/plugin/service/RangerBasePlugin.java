@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
@@ -269,6 +270,12 @@ public class RangerBasePlugin {
 
 	public void setServiceAdmins(Set<String> users) {
 		pluginConfig.setServiceAdmins(users);
+	}
+
+	public RangerServiceDefHelper getServiceDefHelper() {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		return policyEngine != null ? policyEngine.getServiceDefHelper() : null;
 	}
 
 	public RangerServiceDef getServiceDef() {

@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 
@@ -141,6 +142,65 @@ public class RangerPluginConfig extends RangerConfiguration {
         enableImplicitUserStoreEnricher = useRangerGroups || convertEmailToUsername || this.getBoolean(propertyPrefix + ".enable.implicit.userstore.enricher", false);
 
         LOG.info("" + policyEngineOptions);
+    }
+
+    public RangerPluginConfig(String serviceType, String serviceName, String appId, Properties properties) {
+        super();
+
+        properties.forEach((key, value) -> {
+            if (key != null && value != null) {
+                this.set(String.valueOf(key), String.valueOf(value));
+            }
+        });
+
+        this.serviceType    = serviceType;
+        this.appId          = StringUtils.isEmpty(appId) ? serviceType : appId;
+        this.propertyPrefix = "ranger.plugin." + serviceType;
+        this.serviceName    = StringUtils.isEmpty(serviceName) ? this.get(propertyPrefix + ".service.name") : serviceName;
+
+        String trustedProxyAddressString = this.get(propertyPrefix + ".trusted.proxy.ipaddresses");
+        String clusterName               = this.get(propertyPrefix + ".access.cluster.name", "");
+        String clusterType               = this.get(propertyPrefix + ".access.cluster.type", "");
+
+        if (StringUtil.isEmpty(clusterName)) {
+            clusterName = this.get(propertyPrefix + ".ambari.cluster.name", "");
+        }
+
+        if (StringUtil.isEmpty(clusterType)) {
+            clusterType = this.get(propertyPrefix + ".ambari.cluster.type", "");
+        }
+
+        this.clusterName           = clusterName;
+        this.clusterType           = clusterType;
+        this.useForwardedIPAddress = this.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
+        this.trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
+
+        if (trustedProxyAddresses != null) {
+            for (int i = 0; i < trustedProxyAddresses.length; i++) {
+                trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("{}.use.x-forwarded-for.ipaddress:{}", propertyPrefix, useForwardedIPAddress);
+            LOG.debug("{}.trusted.proxy.ipaddresses:[{}]", propertyPrefix, StringUtils.join(trustedProxyAddresses, ", "));
+        }
+
+        if (useForwardedIPAddress && StringUtils.isBlank(trustedProxyAddressString)) {
+            LOG.warn("Property {}.use.x-forwarded-for.ipaddress is set to true, and Property {}.trusted.proxy.ipaddresses is not set", propertyPrefix, propertyPrefix);
+            LOG.warn("Ranger plugin will trust RemoteIPAddress and treat first X-Forwarded-Address in the access-request as the clientIPAddress");
+        }
+
+        policyEngineOptions = new RangerPolicyEngineOptions();
+
+        policyEngineOptions.configureForPlugin(this, propertyPrefix);
+
+        useRangerGroups                 = this.getBoolean(propertyPrefix + ".use.rangerGroups", false);
+        useOnlyRangerGroups             = this.getBoolean(propertyPrefix + ".use.only.rangerGroups", false);
+        convertEmailToUsername          = this.getBoolean(propertyPrefix + ".convert.emailToUser", false);
+        enableImplicitUserStoreEnricher = useRangerGroups || convertEmailToUsername || this.getBoolean(propertyPrefix + ".enable.implicit.userstore.enricher", false);
+
+        LOG.info("{}", policyEngineOptions);
     }
 
     protected RangerPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {

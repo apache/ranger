@@ -48,7 +48,12 @@ import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 
 public class RangerServiceDefHelper {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefHelper.class);
-	
+
+	public static final String RRN_RESOURCE_PREFIX   = "{";
+	public static final String RRN_RESOURCE_SUFFIX   = "}";
+	public static final String RRN_RESOURCE_SEP      = ".";
+	public static final String RRN_PATH_RESOURCE_SEP = "/";
+
 	static final Map<String, Delegate> _Cache = new ConcurrentHashMap<>();
 	final Delegate _delegate;
 
@@ -201,6 +206,26 @@ public class RangerServiceDefHelper {
 		return _delegate.getResourceHierarchyKeys(policyType);
 	}
 
+	public String getRrnTemplate(String resourceName) {
+		return _delegate.getRrnTemplate(resourceName);
+	}
+
+	public boolean isDataMaskSupported() {
+		return _delegate.isDataMaskSupported();
+	}
+
+	public boolean isDataMaskSupported(Set<String> resourceKeys) {
+		return _delegate.isDataMaskSupported(resourceKeys);
+	}
+
+	public boolean isRowFilterSupported() {
+		return _delegate.isRowFilterSupported();
+	}
+
+	public boolean isRowFilterSupported(Set<String> resourceKeys) {
+		return _delegate.isRowFilterSupported(resourceKeys);
+	}
+
 	public Set<List<RangerResourceDef>> filterHierarchies_containsOnlyMandatoryResources(Integer policyType) {
 		Set<List<RangerResourceDef>> hierarchies = getResourceHierarchies(policyType);
 		Set<List<RangerResourceDef>> result = new HashSet<List<RangerResourceDef>>(hierarchies.size());
@@ -329,6 +354,10 @@ public class RangerServiceDefHelper {
 		return _delegate.isResourceGraphValid();
 	}
 
+	public Set<String> getAllResourceNames() {
+		return _delegate.rrnTemplates.keySet();
+	}
+
 	public List<String> getOrderedResourceNames(Collection<String> resourceNames) {
 		final List<String> ret;
 		if (resourceNames != null) {
@@ -374,6 +403,10 @@ public class RangerServiceDefHelper {
 		final List<String> _orderedResourceNames;
 		final Map<String, Collection<String>> _impliedGrants;
 		final Set<String>                     _allAccessTypes;
+		final boolean                         isDataMaskSupported;
+		final boolean                         isRowFilterSupported;
+		final Map<String, String>             rrnTemplates = new HashMap<>();
+
 		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
 
@@ -414,9 +447,21 @@ public class RangerServiceDefHelper {
 
 			_impliedGrants  = computeImpliedGrants();
 			_allAccessTypes = Collections.unmodifiableSet(serviceDef.getAccessTypes().stream().map(RangerAccessTypeDef::getName).collect(Collectors.toSet()));
+			isDataMaskSupported = CollectionUtils.isNotEmpty(_hierarchyKeys.get(RangerPolicy.POLICY_TYPE_DATAMASK));
+			isRowFilterSupported = CollectionUtils.isNotEmpty(_hierarchyKeys.get(RangerPolicy.POLICY_TYPE_ROWFILTER));
 
 			if (isValid) {
 				_orderedResourceNames = buildSortedResourceNames();
+
+				for (RangerResourceDef resourceDef : serviceDef.getResources()) {
+					if (StringUtils.isBlank(resourceDef.getRrnTemplate())) {
+						resourceDef.setRrnTemplate(getDefaultRrnTemplate(resourceDef));
+
+						LOG.debug("No rrnTemplate was defined for resource {}.{}. It is now set to default: {}", _serviceName, resourceDef.getName(), resourceDef.getRrnTemplate());
+					}
+
+					this.rrnTemplates.put(resourceDef.getName(), resourceDef.getRrnTemplate());
+				}
 			} else {
 				_orderedResourceNames = new ArrayList<>();
 			}
@@ -487,6 +532,26 @@ public class RangerServiceDefHelper {
 			Set<Set<String>> ret = _hierarchyKeys.get(policyType);
 
 			return ret != null ? ret : Collections.emptySet();
+		}
+
+		public String getRrnTemplate(String resourceName) {
+			return rrnTemplates.get(resourceName);
+		}
+
+		public boolean isDataMaskSupported() {
+			return isDataMaskSupported;
+		}
+
+		public boolean isDataMaskSupported(Set<String> resourceKeys) {
+			return isDataMaskSupported && getResourceHierarchyKeys(RangerPolicy.POLICY_TYPE_DATAMASK).contains(resourceKeys);
+		}
+
+		public boolean isRowFilterSupported() {
+			return isRowFilterSupported;
+		}
+
+		public boolean isRowFilterSupported(Set<String> resourceKeys) {
+			return isRowFilterSupported && getResourceHierarchyKeys(RangerPolicy.POLICY_TYPE_ROWFILTER).contains(resourceKeys);
 		}
 
 		public String getServiceName() {
@@ -792,6 +857,34 @@ public class RangerServiceDefHelper {
 				}
 			}
 			return ret;
+		}
+
+		// create default resource-name template for the resource-def, like:
+		//  database:{database}
+		//  table:{database}.{table}
+		//  column:{database}.{table}.{column}
+		//  path:{bucket}/{path}
+		//  key:{volume}.{bucket}/{key}
+		private String getDefaultRrnTemplate(RangerResourceDef resourceDef) {
+			List<RangerResourceDef> path = new ArrayList<>();
+
+			for (RangerResourceDef resource = resourceDef; resource != null; resource = getResourceDef(resource.getParent(), RangerPolicy.POLICY_TYPE_ACCESS)) {
+				path.add(0, resource);
+			}
+
+			StringBuilder sb = new StringBuilder();
+
+			for (int i = 0; i < path.size(); i++) {
+				RangerResourceDef res = path.get(i);
+
+				if (i > 0) {
+					sb.append(StringUtils.equalsIgnoreCase(res.getType(), "path") ? RRN_PATH_RESOURCE_SEP : RRN_RESOURCE_SEP);
+				}
+
+				sb.append(RRN_RESOURCE_PREFIX).append(res.getName()).append(RRN_RESOURCE_SUFFIX);
+			}
+
+			return sb.toString();
 		}
 	}
 
