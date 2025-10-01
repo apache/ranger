@@ -4,11 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-hive
       args:
-        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
-        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - HIVE_HADOOP_VERSION=${HIVE_HADOOP_VERSION}
         - HIVE_VERSION=${HIVE_VERSION}
         - HIVE_PLUGIN_VERSION=${HIVE_PLUGIN_VERSION}
+        - TEZ_VERSION=${TEZ_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
     image: ranger-hive
     container_name: ranger-hive
@@ -19,6 +18,7 @@ services:
       - ranger
     ports:
       - "10000:10000"
+      - "9083:9083"
     depends_on:
       ranger:
         condition: service_started
@@ -30,6 +30,7 @@ services:
       - HIVE_HADOOP_VERSION
       - HIVE_VERSION
       - HIVE_PLUGIN_VERSION
+      - TEZ_VERSION
       - RANGER_DB_TYPE
 
 networks:

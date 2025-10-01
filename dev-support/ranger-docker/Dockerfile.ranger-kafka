@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
+FROM ranger
 
 ARG KAFKA_VERSION
 ARG KAFKA_PLUGIN_VERSION
@@ -30,6 +28,9 @@ COPY ./scripts/ranger-kafka-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-kafka.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-kafka-plugin-install.properties    /home/ranger/scripts/
 
+# Switch to root to create system directories
+USER root
+
 RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/ && \
     ln -s /opt/kafka_2.12-${KAFKA_VERSION} /opt/kafka && \
     rm -f /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz && \
@@ -39,7 +40,11 @@ RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/
     cp -f /home/ranger/scripts/ranger-kafka-plugin-install.properties /opt/ranger/ranger-kafka-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-kafka-setup.sh ${RANGER_SCRIPTS}/ranger-kafka.sh
 
+
 ENV KAFKA_HOME=/opt/kafka
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/kafka/bin
+
+# Ensure container runs as root for SSH and service management
+USER root
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-kafka.sh" ]

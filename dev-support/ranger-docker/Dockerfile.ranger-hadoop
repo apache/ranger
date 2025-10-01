@@ -14,19 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
+FROM ranger
 
 ARG HADOOP_VERSION
 ARG HDFS_PLUGIN_VERSION
 ARG YARN_PLUGIN_VERSION
+ARG TEZ_VERSION
 
 
 COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz /home/ranger/dist/
 COPY ./dist/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin.tar.gz /home/ranger/dist/
 COPY ./downloads/hadoop-${HADOOP_VERSION}.tar.gz             /home/ranger/dist/
+COPY ./downloads/apache-tez-${TEZ_VERSION}-bin.tar.gz        /home/ranger/dist/
 
 COPY ./scripts/ranger-hadoop-setup.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop.sh                         /home/ranger/scripts/
@@ -34,9 +34,14 @@ COPY ./scripts/ranger-hadoop-mkdir.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hdfs-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/ranger-yarn-plugin-install.properties    /home/ranger/scripts/
 
+# Switch to root to create system directories
+USER root
+
 RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/hadoop-${HADOOP_VERSION} /opt/hadoop && \
     rm -f /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz && \
+    tar xvfz /home/ranger/dist/apache-tez-${TEZ_VERSION}-bin.tar.gz --directory=/opt/ && \
+    ln -s /opt/apache-tez-${TEZ_VERSION}-bin /opt/tez && \
     tar xvfz /home/ranger/dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin /opt/ranger/ranger-hdfs-plugin && \
     rm -f /home/ranger/dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz && \
