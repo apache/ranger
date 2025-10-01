@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
+FROM ranger
 
 ARG KNOX_VERSION
 ARG KNOX_PLUGIN_VERSION
@@ -25,13 +23,15 @@ ARG KNOX_PLUGIN_VERSION
 COPY ./dist/version                                           /home/ranger/dist/
 COPY ./dist/ranger-${KNOX_PLUGIN_VERSION}-knox-plugin.tar.gz  /home/ranger/dist/
 COPY ./downloads/knox-${KNOX_VERSION}.tar.gz                  /home/ranger/dist/
-COPY ./scripts/create-users.sh                                /home/ranger/scripts/
 
 COPY ./scripts/ranger-knox-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-knox.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-knox-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/ranger-knox-expect.py                    /home/ranger/scripts/
 COPY ./scripts/ranger-knox-sandbox.xml                  /home/ranger/scripts/
+
+# Switch to root to create system directories
+USER root
 
 RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/knox-${KNOX_VERSION} /opt/knox && \
@@ -41,9 +41,7 @@ RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && 
     rm -f /home/ranger/dist/ranger-${KNOX_PLUGIN_VERSION}-knox-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-knox-plugin-install.properties /opt/ranger/ranger-knox-plugin/install.properties && \
     cp -f /home/ranger/scripts/ranger-knox-sandbox.xml /opt/knox/conf/topologies/sandbox.xml && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-knox-setup.sh ${RANGER_SCRIPTS}/ranger-knox.sh ${RANGER_SCRIPTS}/ranger-knox-expect.py && \
-    chmod +x ${RANGER_SCRIPTS}/create-users.sh && \
-    ${RANGER_SCRIPTS}/create-users.sh
+    chmod 744 ${RANGER_SCRIPTS}/ranger-knox-setup.sh ${RANGER_SCRIPTS}/ranger-knox.sh ${RANGER_SCRIPTS}/ranger-knox-expect.py
 
 ENV KNOX_HOME=/opt/knox
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/knox/bin
@@ -52,5 +50,8 @@ RUN chmod a+rwx /home/ranger/scripts/ranger-knox-expect.py
 
 RUN pip3 install pexpect
 RUN python3 /home/ranger/scripts/ranger-knox-expect.py
+
+# Ensure container runs as root for SSH and service management
+USER root
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-knox.sh" ]

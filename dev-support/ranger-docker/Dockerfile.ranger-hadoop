@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
+FROM ranger
 
 ARG HADOOP_VERSION
 ARG HDFS_PLUGIN_VERSION
@@ -35,7 +33,9 @@ COPY ./scripts/ranger-hadoop.sh                         /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop-mkdir.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hdfs-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/ranger-yarn-plugin-install.properties    /home/ranger/scripts/
-COPY ./scripts/create-users.sh                          /home/ranger/scripts/
+
+# Switch to root to create system directories
+USER root
 
 RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/hadoop-${HADOOP_VERSION} /opt/hadoop && \
@@ -51,8 +51,6 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     rm -f /home/ranger/dist/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-yarn-plugin-install.properties /opt/ranger/ranger-yarn-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
-    chmod +x ${RANGER_SCRIPTS}/create-users.sh && \
-    ${RANGER_SCRIPTS}/create-users.sh && \
     chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
 
 RUN apt-get update && \

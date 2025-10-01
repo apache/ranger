@@ -23,6 +23,10 @@ ARG RANGER_VERSION
 ARG RANGER_DB_TYPE
 ARG TARGETARCH
 
+# Set Ranger environment variables
+ENV RANGER_HOME=/opt/ranger
+ENV RANGER_SCRIPTS=/home/ranger/scripts
+
 COPY ./dist/version                               /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
 
@@ -30,6 +34,9 @@ COPY ./scripts/ranger.sh                                         ${RANGER_SCRIPT
 COPY ./scripts/ranger-admin-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-admin-install.properties
 COPY ./scripts/create-ranger-services.py                         ${RANGER_SCRIPTS}/
 COPY ./scripts/create-users.sh                                   ${RANGER_SCRIPTS}/
+
+# Switch to root to create system directories
+USER root
 
 RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} \
     && ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin \

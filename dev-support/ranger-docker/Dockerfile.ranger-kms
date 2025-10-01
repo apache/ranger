@@ -13,10 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG RANGER_DB_TYPE
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger-kms
+
+FROM ranger AS ranger-kms
 
 ARG KMS_VERSION
 ARG RANGER_DB_TYPE
@@ -26,7 +24,9 @@ COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                   /home/ranger/dist
 
 COPY ./scripts/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
-COPY ./scripts/create-users.sh                                  /home/ranger/scripts/
+
+# Switch to root to create system directories
+USER root
 
 RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \
@@ -39,9 +39,8 @@ RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RA
     ln -s /etc/init.d/ranger-kms /etc/rc3.d/S88ranger-kms && \
     ln -s /etc/init.d/ranger-kms /etc/rc3.d/K90ranger-kms && \
     ln -s ${RANGER_HOME}/kms/ranger-kms-services.sh /usr/bin/ranger-kms-services.sh && \
-    chown -R rangerkms:ranger ${RANGER_HOME}/kms/ ${RANGER_SCRIPTS}/ /var/run/ranger_kms/ /var/log/ranger/ && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-kms.sh && \
-    ${RANGER_SCRIPTS}/create-users.sh
+    chown -R rangerkms:ranger ${RANGER_HOME}/kms/ ${RANGER_SCRIPTS}/ /var/run/ranger_kms/ /var/log/ranger/ /etc/ranger && \
+    chmod 744 ${RANGER_SCRIPTS}/ranger-kms.sh
 
 FROM ranger-kms AS ranger_postgres
 COPY ./downloads/postgresql-42.2.16.jre7.jar          /home/ranger/dist/

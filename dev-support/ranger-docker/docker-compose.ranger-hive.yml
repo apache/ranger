@@ -4,8 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-hive
       args:
-        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
-        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - HIVE_HADOOP_VERSION=${HIVE_HADOOP_VERSION}
         - HIVE_VERSION=${HIVE_VERSION}
         - HIVE_PLUGIN_VERSION=${HIVE_PLUGIN_VERSION}

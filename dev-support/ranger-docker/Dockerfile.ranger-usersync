@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
+FROM ranger
 
 ARG USERSYNC_VERSION
 
@@ -26,16 +24,17 @@ COPY ./dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz /home/ranger/dist/
 COPY ./scripts/ranger-usersync.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-usersync-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/ugsync-file-source.csv             ${RANGER_SCRIPTS}/
-COPY ./scripts/create-users.sh                    ${RANGER_SCRIPTS}/
+
+# Switch to root to create system directories
+USER root
 
 RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${USERSYNC_VERSION}-usersync ${RANGER_HOME}/usersync && \
     rm -f /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz && \
     cp -f ${RANGER_SCRIPTS}/ranger-usersync-install.properties ${RANGER_HOME}/usersync/install.properties && \
-    mkdir -p /var/run/ranger /var/log/ranger/usersync /etc/ranger && \
-    mkdir /etc/init.d || true && \
-    mkdir /etc/rc2.d  || true && \
-    mkdir /etc/rc3.d  || true && \
+    mkdir -p /var/run/ranger /var/log/ranger/usersync && \
+    mkdir -p /etc/ranger && \
+    mkdir -p /etc/init.d /etc/rc2.d /etc/rc3.d && \
     touch /etc/init.d/ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc2.d/S99ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc2.d/K00ranger-usersync && \
@@ -43,9 +42,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --dire
     ln -s /etc/init.d/ranger-usersync /etc/rc3.d/K00ranger-usersync && \
     ln -s ${RANGER_HOME}/usersync/ranger-usersync-services.sh /usr/bin/ranger-usersync && \
     chown -R ranger:ranger ${RANGER_HOME}/usersync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-usersync.sh && \
-    chmod +x ${RANGER_SCRIPTS}/create-users.sh && \
-    ${RANGER_SCRIPTS}/create-users.sh
+    chmod 744 ${RANGER_SCRIPTS}/ranger-usersync.sh
 
 USER ranger
 

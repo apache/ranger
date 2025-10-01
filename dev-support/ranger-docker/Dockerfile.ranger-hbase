@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
+FROM ranger
 
 ARG HBASE_VERSION
 ARG HBASE_PLUGIN_VERSION
@@ -29,8 +27,10 @@ COPY ./downloads/hbase-${HBASE_VERSION}-bin.tar.gz              /home/ranger/dis
 COPY ./scripts/ranger-hbase-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hbase.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hbase-plugin-install.properties    /home/ranger/scripts/
-COPY ./scripts/create-users.sh                           /home/ranger/scripts/
 COPY ./scripts/hbase-site.xml                            /home/ranger/scripts/
+
+# Switch to root to create system directories
+USER root
 
 RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/hbase-${HBASE_VERSION} /opt/hbase && \
@@ -39,9 +39,7 @@ RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/op
     ln -s /opt/ranger/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin /opt/ranger/ranger-hbase-plugin && \
     rm -f /home/ranger/dist/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-hbase-plugin-install.properties /opt/ranger/ranger-hbase-plugin/install.properties && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh && \
-    chmod +x ${RANGER_SCRIPTS}/create-users.sh && \
-    ${RANGER_SCRIPTS}/create-users.sh
+    chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openssh-server && \
@@ -50,5 +48,8 @@ RUN apt-get update && \
 
 ENV HBASE_HOME=/opt/hbase
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hbase/bin
+
+# Ensure container runs as root for SSH and service management
+USER root
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hbase.sh" ]

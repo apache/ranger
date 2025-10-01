@@ -14,9 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
-FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
+FROM ranger
 
 ARG TAGSYNC_VERSION
 
@@ -26,7 +24,9 @@ COPY ./dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz /home/ranger/dist/
 COPY ./scripts/ranger-tagsync.sh                     ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-tagsync-install.properties     ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-tagsync-tags.json              ${RANGER_SCRIPTS}/
-COPY ./scripts/create-users.sh                       ${RANGER_SCRIPTS}/
+
+# Switch to root to create system directories
+USER root
 
 RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
@@ -44,9 +44,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --direct
     ln -s /etc/init.d/ranger-tagsync /etc/rc3.d/K00ranger-tagsync && \
     ln -s ${RANGER_HOME}/tagsync/ranger-tagsync-services.sh /usr/bin/ranger-tagsync-services.sh && \
     chown -R ranger:ranger ${RANGER_HOME}/tagsync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-tagsync && \
-    chmod 744 ${RANGER_SCRIPTS}/ranger-tagsync.sh && \
-    chmod +x ${RANGER_SCRIPTS}/create-users.sh && \
-    ${RANGER_SCRIPTS}/create-users.sh
+    chmod 744 ${RANGER_SCRIPTS}/ranger-tagsync.sh
 
 USER ranger
 
