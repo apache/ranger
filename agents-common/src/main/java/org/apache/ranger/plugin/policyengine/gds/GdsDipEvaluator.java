@@ -27,8 +27,6 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo.DatasetInProjectInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-
 public class GdsDipEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDipEvaluator.class);
 
@@ -79,12 +77,12 @@ public class GdsDipEvaluator {
         return ret;
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsSharedResourceEvaluator sharedResourceEvaluator, GdsDataShareEvaluator dshEvaluator, GdsDatasetEvaluator dsEvaluator) {
         LOG.debug("==> GdsDipEvaluator.getResourceACLs({}, {})", request, acls);
 
         isConditional = isConditional || scheduleEvaluator != null;
 
-        projectEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
+        projectEvaluator.getResourceACLs(request, acls, isConditional, dshEvaluator, sharedResourceEvaluator, this);
 
         LOG.debug("<== GdsDipEvaluator.getResourceACLs({}, {})", request, acls);
     }

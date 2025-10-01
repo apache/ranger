@@ -1,0 +1,24 @@
+{
+  "serviceName":"dev_s3", "tagVersion":2,
+  "op":"add_or_update",
+  "tagDefinitions": {
+    "0": { "name": "TAG-X" },
+    "1": { "name": "TAG1" },
+    "2": { "name": "TAG2" }
+  },
+  "tags": {
+    "0": { "type": "TAG-X" },
+    "1": { "type": "TAG1" },
+    "2": { "type": "TAG2" }
+  },
+  "serviceResources": [
+    { "id": 0, "serviceName": "dev_hive", "resourceElements": { "database": { "values": [ "mydb" ] }, "table": { "values": [ "tbl_tag-x" ] } } },
+    { "id": 1, "serviceName": "dev_hive", "resourceElements": { "database": { "values": [ "mydb" ] }, "table": { "values": [ "tbl_tag1" ] } } },
+    { "id": 2, "serviceName": "dev_hive", "resourceElements": { "database": { "values": [ "mydb" ] }, "table": { "values": [ "tbl_tag2" ] } } }
+  ],
+  "resourceToTagIds": {
+    "0": [ "0" ],
+    "1": [ "1" ],
+    "2": [ "2" ]
+  }
+}

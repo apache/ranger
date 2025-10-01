@@ -1,0 +1,139 @@
+{
+    "serviceId": 1, "serviceName": "dev_s3", "policyVersion": 15,
+    "policies": [
+        {
+            "id": 1, "name": "mybucket/path/path1", "version": 1,
+            "resources": { "bucket": { "values": [ "mybucket" ] }, "path": { "values": [ "data/path1" ], "isRecursive": true } },
+            "policyItems": [
+                { "accesses": [ { "type": "read" } ], "users": [ "path1-r-user" ] },
+                { "accesses": [ { "type": "read" },  { "type": "write" } ], "users": [ "path1-rw-user" ] }
+            ]
+        },
+        {
+            "id": 2, "name": "mybucket/path/path2", "version": 1,
+            "resources": { "bucket": { "values": [ "mybucket" ] }, "path": { "values": [ "data/path2" ], "isRecursive": true } },
+            "policyItems": [
+                { "accesses": [ { "type": "read" } ], "users": [ "path2-r-user" ] },
+                { "accesses": [ { "type": "read" },  { "type": "write" } ], "users": [ "path2-rw-user" ] }
+            ]
+        },
+        {
+            "id": 3, "name": "mybucket/*", "version": 2,
+            "resources": { "bucket": { "values": [ "mybucket" ] }, "path": { "values": [ "*" ], "isRecursive": true } },
+            "policyItems": [
+                { "accesses": [ { "type": "read" } ], "users": [ "all-path-r-user" ] }
+            ]
+        }
+    ],
+    "serviceDef": {
+        "id": 1, "name": "s3", "displayName": "s3", "label": "AWS S3", "description": "AWS S3", "implClass": "org.apache.ranger.services.s3.RangerServiceS3", "version": 1,
+        "resources": [
+            {
+                "itemId": 1, "name": "bucket", "description": "S3 Bucket", "label": "S3 Bucket", "type": "string", "level": 10,
+                "excludesSupported": false, "isValidLeaf": true, "lookupSupported": false, "mandatory": true, "recursiveSupported": false,
+                "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "ignoreCase": "true", "wildCard": "true" }
+            },
+            {
+                "itemId": 2, "name": "path", "description": "HDFS file or directory path", "label": "Resource Path", "type": "path", "parent": "bucket", "level": 20,
+                "excludesSupported": false, "isValidLeaf": true, "lookupSupported": false, "mandatory": true, "recursiveSupported": true, "rrnTemplate": "{bucket}/{path}",
+                "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher", "matcherOptions": { "ignoreCase": "true", "wildCard": "true" }
+            }
+        ],
+        "accessTypes": [
+            { "itemId": 1, "name": "read",   "label": "Read",   "category": "READ"},
+            { "itemId": 2, "name": "write",  "label": "Write",  "category": "UPDATE"},
+            { "itemId": 3, "name": "list",   "label": "List",   "category": "READ"},
+            { "itemId": 4, "name": "delete", "label": "Delete", "category": "DELETE"}
+        ],
+        "policyConditions": [
+            {
+                "itemId": 1, "name": "_expression", "description": "Boolean expression", "label": "Enter boolean expression",
+                "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator", "evaluatorOptions": { "engineName": "JavaScript", "ui.isMultiline": "true" },
+                "uiHint": "{ \"isMultiline\":true }"
+            }
+        ],
+        "configs": [
+            { "itemId": 1, "name": "ranger.plugin.audit.filters", "label": "Ranger Default Audit Filters", "mandatory": false, "type": "string", "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]" }
+        ],
+        "options": { "enableDenyAndExceptionsInPolicies": "true",  "enableTagBasedPolicies": "true" },
+        "markerAccessTypes": [
+            { "itemId": 101, "label": "_CREATE", "name": "_CREATE" },
+            { "itemId": 102, "label": "_READ",   "name": "_READ",   "impliedGrants": [ "read", "list" ] },
+            { "itemId": 103, "label": "_UPDATE", "name": "_UPDATE", "impliedGrants": [ "write" ] },
+            { "itemId": 104, "label": "_DELETE", "name": "_DELETE", "impliedGrants": [ "delete" ] },
+            { "itemId": 105, "label": "_MANAGE", "name": "_MANAGE" },
+            { "itemId": 106, "label": "_ALL",    "name": "_ALL",    "impliedGrants": [ "read", "write", "list", "delete" ] }
+        ]
+    },
+    "tagPolicies": {
+        "serviceId": 3, "serviceName": "dev_tag", "policyVersion": 3,
+        "policies": [
+            {
+                "id": 11, "name": "TAG1", "version": 1,
+                "resources": { "tag": { "values": [ "TAG1" ] } },
+                "policyItems": [
+                    { "accesses": [ { "type": "read" } ], "users": [ "all-tag-r-user", "tag1-r-user" ] },
+                    { "accesses": [ { "type": "read" }, { "type": "write" } ], "users": [ "tag1-rw-user" ] }
+                ]
+            },
+            {
+                "id": 12, "name": "TAG2", "version": 1,
+                "resources": { "tag": { "values": [ "TAG2" ] } },
+                "policyItems": [
+                    { "accesses": [ { "type": "read" } ], "users": [ "all-tag-r-user", "tag2-r-user" ] },
+                    { "accesses": [ { "type": "read" }, { "type": "write" } ], "users": [ "tag2-rw-user" ] }
+                ]
+            },
+            {
+                "id": 13, "name": "TAG-X", "version": 1,
+                "resources": { "tag": { "values": [ "TAG-X" ] } },
+                "policyItems": [
+                    { "accesses": [ { "isAllowed": true, "type": "read" } ], "users": [ "all-tag-r-user" ] }
+                ]
+            }
+        ],
+        "serviceDef": {
+            "id": 100, "name": "tag", "displayName": "tag", "label": "TAG", "description": "TAG Service Definition", "implClass": "org.apache.ranger.services.tag.RangerServiceTag", "version": 21,
+            "resources": [
+                {
+                    "itemId": 1, "name": "tag", "label": "TAG", "description": "TAG", "level": 1, "type": "string",
+                    "excludesSupported": false, "isValidLeaf": true, "lookupSupported": true, "mandatory": true, "recursiveSupported": false,
+                    "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "ignoreCase": "false", "wildCard": "false" },
+                    "uiHint": "{ \"singleValue\":true }"
+                }
+            ],
+            "accessTypes": [
+                { "itemId": 1001, "name": "read",   "label": "Read",   "category": "READ"},
+                { "itemId": 1002, "name": "write",  "label": "Write",  "category": "UPDATE"},
+                { "itemId": 1003, "name": "list",   "label": "List",   "category": "READ"},
+                { "itemId": 1004, "name": "delete", "label": "Delete", "category": "DELETE"}
+            ],
+            "policyConditions": [
+                {
+                    "itemId": 1, "name": "accessed-after-expiry", "label": "Accessed after expiry_date (yes/no)?", "description": "Accessed after expiry_date? (yes/no)",
+                    "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptTemplateConditionEvaluator", "evaluatorOptions": { "scriptTemplate": "ctx.isAccessedAfter('expiry_date');" },
+                    "uiHint": "{ \"singleValue\":true }"
+                },
+                {
+                    "itemId": 2, "name": "expression", "label": "Enter boolean expression", "description": "Boolean expression",
+                    "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator", "evaluatorOptions": { "engineName": "JavaScript", "ui.isMultiline": "true" },
+                    "uiHint": "{ \"isMultiline\":true }"
+                }
+            ],
+            "configs": [
+                { "itemId": 1, "name": "ranger.plugin.audit.filters", "label": "Ranger Default Audit Filters", "mandatory": false, "type": "string", "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]" }
+            ],
+            "contextEnrichers": [
+                { "itemId": 1, "name": "TagEnricher", "enricher": "org.apache.ranger.plugin.contextenricher.RangerTagEnricher", "enricherOptions": { "tagRetrieverClassName": "org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever", "tagRefresherPollingInterval": "60000" } }
+            ],
+            "markerAccessTypes": [
+                { "itemId": 205208, "label": "_CREATE", "name": "_CREATE" },
+                { "itemId": 205209, "label": "_READ", "name": "_READ", "impliedGrants": [ "read", "execute" ] },
+                { "itemId": 205210, "label": "_UPDATE", "name": "_UPDATE", "impliedGrants": [ "write" ] },
+                { "itemId": 205211, "label": "_DELETE", "name": "_DELETE" },
+                { "itemId": 205212, "label": "_MANAGE", "name": "_MANAGE" },
+                { "itemId": 205213, "label": "_ALL", "name": "_ALL", "impliedGrants": [ "read", "execute", "write" ] }
+            ]
+        }
+    }
+}

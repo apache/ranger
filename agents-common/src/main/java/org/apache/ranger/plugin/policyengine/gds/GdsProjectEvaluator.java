@@ -137,7 +137,21 @@ public class GdsProjectEvaluator {
         LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {})", request, result);
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsDataShareEvaluator dshEvaluator, GdsSharedResourceEvaluator sharedResourceEvaluator, GdsDipEvaluator dipEvaluator) {
+        if (isActive()) {
+            acls.getProjects().add(getName());
+
+            if (!policyEvaluators.isEmpty()) {
+                GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);
+
+                for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                    policyEvaluator.getResourceACLs(projectRequest, acls, isConditional, sharedResourceEvaluator.getAllowedAccessTypes(), RangerPolicyResourceMatcher.MatchType.SELF, null);
+                }
+            }
+        }
+    }
+
+    public void getResourceMasks(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
         if (isActive()) {
             acls.getProjects().add(getName());
 
