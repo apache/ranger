@@ -21,20 +21,20 @@ import React, { useEffect, useReducer } from "react";
 import { Button, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
-import { commonBreadcrumb, serverError } from "../../../utils/XAUtils";
+import { commonBreadcrumb, serverError } from "Utils/XAUtils";
 import { SyncSourceDetails } from "../SyncSourceDetails";
 import {
   Loader,
   scrollToError,
-  CustomTooltip
+  CustomTooltip,
+  BlockUi
 } from "Components/CommonComponents";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 import { fetchApi } from "Utils/fetchAPI";
-import { RegexValidation, GroupSource } from "../../../utils/XAEnums";
-import { BlockUi } from "../../../components/CommonComponents";
+import { RegexValidation, GroupSource } from "Utils/XAEnums";
 
-const initialState = {
+const INITIAL_STATE = {
   groupInfo: {},
   groupType: {},
   loader: true,
@@ -48,7 +48,7 @@ const PromtDialog = (props) => {
   return null;
 };
 
-const groupFormReducer = (state, action) => {
+const reducer = (state, action) => {
   switch (action.type) {
     case "SET_LOADER":
       return {
@@ -79,11 +79,11 @@ const groupFormReducer = (state, action) => {
 
 function GroupForm() {
   const params = useParams();
-  const [groupDetails, dispatch] = useReducer(groupFormReducer, initialState);
-  const { groupType, groupInfo, loader, preventUnBlock, blockUI } =
-    groupDetails;
-  const { state } = useLocation();
   const navigate = useNavigate();
+  const { state: navigateState } = useLocation();
+
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { groupType, groupInfo, loader, preventUnBlock, blockUI } = state;
 
   useEffect(() => {
     if (params?.groupID) {
@@ -119,6 +119,7 @@ function GroupForm() {
     let formData = {};
     formData.name = values.name;
     formData.description = values.description || "";
+
     let groupFormData = {
       ...groupInfo,
       ...formData
@@ -128,6 +129,7 @@ function GroupForm() {
       type: "SET_PREVENT_ALERT",
       preventUnBlock: true
     });
+
     if (params?.groupID) {
       try {
         dispatch({
@@ -164,14 +166,20 @@ function GroupForm() {
           method: "post",
           data: formData
         });
-        let tblpageData = {};
-        if (state && state != null) {
-          tblpageData = state.tblpageData;
-          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+        let tablePageData = {};
+        if (navigateState && navigateState != null) {
+          tablePageData = navigateState.tablePageData;
+          if (
+            navigateState.tablePageData.pageRecords %
+              navigateState.tablePageData.pageSize ==
+            0
+          ) {
+            tablePageData["totalPage"] =
+              navigateState.tablePageData.totalPage + 1;
           } else {
-            if (tblpageData !== undefined) {
-              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            if (tablePageData !== undefined) {
+              tablePageData["totalPage"] =
+                navigateState.tablePageData.totalPage;
             }
           }
         }
@@ -183,7 +191,7 @@ function GroupForm() {
         navigate("/users/grouptab", {
           state: {
             showLastPage: true,
-            addPageData: tblpageData
+            addPageData: tablePageData
           }
         });
       } catch (error) {

@@ -17,8 +17,7 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { omit, has } from "lodash";
+import React, { useCallback, useEffect, useReducer } from "react";
 import {
   Link,
   useParams,
@@ -30,8 +29,6 @@ import { Badge, Button, Col, Row, Modal, Alert } from "react-bootstrap";
 import moment from "moment-timezone";
 import { toast } from "react-toastify";
 import {
-  pick,
-  indexOf,
   isUndefined,
   isEmpty,
   map,
@@ -39,18 +36,13 @@ import {
   find,
   concat,
   camelCase,
-  union
+  union,
+  omit,
+  has
 } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import XATableLayout from "Components/XATableLayout";
-import {
-  showGroupsOrUsersOrRolesForPolicy,
-  QueryParamsName
-} from "Utils/XAUtils";
-import { MoreLess, scrollToNewData } from "Components/CommonComponents";
-import {} from "Utils/XAUtils";
-import PolicyViewDetails from "../AuditEvent/AdminLogs/PolicyViewDetails";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import {
   isAuditor,
   isKMSAuditor,
@@ -59,122 +51,67 @@ import {
   isKeyAdmin,
   isUser,
   parseSearchFilter,
-  getResourcesDefVal
-} from "../../utils/XAUtils";
+  getResourcesDefVal,
+  showGroupsOrUsersOrRolesForPolicy,
+  QueryParamsName
+} from "Utils/XAUtils";
 import {
   alertMessage,
   ResourcesOverrideInfoMsg,
   ServerAttrName
-} from "../../utils/XAEnums";
+} from "Utils/XAEnums";
 import {
   BlockUi,
   CustomPopover,
-  Loader
-} from "../../components/CommonComponents";
+  Loader,
+  MoreLess,
+  scrollToNewData
+} from "Components/CommonComponents";
+import AccessLogPolicyModal from "Views/AuditEvent/Access/AccessLogPolicyModal";
+import { ACTIONS } from "./action";
+import { reducer, INITIAL_STATE } from "./reducer";
 
 function PolicyListing(props) {
   const { serviceDef, serviceData, serviceZone } = props;
-  const { state } = useLocation();
-  const [policyListingData, setPolicyData] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [pageCount, setPageCount] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage : 0
-  );
-  const [currentpageIndex, setCurrentPageIndex] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage - 1 : 0
-  );
-  const [currentpageSize, setCurrentPageSize] = useState(
-    state && state.showLastPage ? state.addPageData.pageSize : 25
-  );
-  const [totalCount, setTotalCount] = useState(0);
-  const [tblpageData, setTblPageData] = useState({
-    totalPage: 0,
-    pageRecords: 0,
-    pageSize: 25
-  });
-  const fetchIdRef = useRef(0);
-  const [deletePolicyModal, setConfirmModal] = useState({
-    policyDetails: {},
-    showSyncDetails: false
-  });
-  const [policyviewmodal, setPolicyViewModal] = useState(false);
-  const [policyParamsData, setPolicyParamsData] = useState(null);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
+  const navigate = useNavigate();
+  const { state: navigateState, search } = useLocation();
+  const { serviceId, policyType } = useParams();
+
+  let initialArg = { navigateState: navigateState };
+
+  const [state, dispatch] = useReducer(reducer, initialArg, INITIAL_STATE);
+
   const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [pageLoader, setPageLoader] = useState(true);
-  const [resetPage, setResetpage] = useState({ page: 0 });
-  const [show, setShow] = useState(true);
-  const [blockUI, setBlockUI] = useState(false);
-  let navigate = useNavigate();
-  let { serviceId, policyType } = useParams();
 
-  const [showModal, setShowModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleFileSelection = (event) => {
+  const handlePolicyImportFile = (event) => {
     const file = event.target.files[0];
-    setSelectedFile(file); // Store selected file
-    setStatusMessage("");
+    dispatch({
+      type: ACTIONS.IMPORT_POLICY,
+      showImportPolicyModal: state.showImportPolicyModal,
+      importPolicyFile: file,
+      importPolicyStatusMsg: [],
+      importPolicyLoading: false
+    });
   };
 
   const importNewPolicy = () => {
-    setShowModal(true); // Show the modal when button is clicked
+    dispatch({
+      type: ACTIONS.IMPORT_POLICY,
+      showImportPolicyModal: true,
+      importPolicyFile: null,
+      importPolicyStatusMsg: [],
+      importPolicyLoading: false
+    });
   };
 
-  const handleCloseModal = () => {
-    setSelectedFile(null); // Reset the selected file
-    setStatusMessage("");
-    setShowModal(false);
-  };
-
-  const handleUpload = () => {
-    if (!selectedFile) {
-      setStatusMessage("No file selected !");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const json = JSON.parse(e.target.result);
-
-        if (has("service")) {
-          json["service"] = serviceData.name;
-        }
-
-        // Make API call with the processed JSON
-        setLoading(true); // Show loading spinner
-        await fetchApi({
-          url: "plugins/policies",
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json" // Set Content-Type header
-          },
-          data: JSON.stringify(json) // Serialize the JSON
-        });
-
-        setLoading(false); // Hide loading spinner
-        setStatusMessage("");
-        setShowModal(false);
-        setUpdateTable(moment.now());
-        toast.success("Successfully imported policy json file !");
-      } catch (error) {
-        setLoading(false);
-        setStatusMessage(
-          `Error parsing or processing JSON file: ${error.message}`
-        );
-        console.log(error);
-      }
-    };
-
-    reader.readAsText(selectedFile);
+  const closePolicyImportModal = () => {
+    dispatch({
+      type: ACTIONS.IMPORT_POLICY,
+      showImportPolicyModal: false,
+      importPolicyFile: null,
+      importPolicyStatusMsg: [],
+      importPolicyLoading: false
+    });
   };
 
   useEffect(() => {
@@ -211,30 +148,108 @@ function PolicyListing(props) {
     // Updating the states for search params, search filter and default search filter
     setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    setPageLoader(false);
-    localStorage.setItem("newDataAdded", state && state.showLastPage);
-  }, [searchParams]);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+    localStorage.setItem(
+      "newDataAdded",
+      navigateState && navigateState.showLastPage
+    );
+  }, [search]);
 
   useEffect(() => {
     if (localStorage.getItem("newDataAdded") == "true") {
-      scrollToNewData(policyListingData);
+      scrollToNewData(state.tableListingData);
     }
-  }, [totalCount]);
-  const getTableSortBy = (sortArr = []) => {
-    return sortArr
-      .map(({ id }) => {
-        return QueryParamsName(id);
-      })
-      .join(",");
-  };
+  }, [state.totalCount]);
 
-  const getTableSortType = (sortArr = []) => {
-    return sortArr.map(({ desc }) => (desc ? "desc" : "asc")).join(",");
+  const handlePolicyUpload = () => {
+    if (!state.importPolicyFile) {
+      dispatch({
+        type: ACTIONS.IMPORT_POLICY,
+        showImportPolicyModal: state.showImportPolicyModal,
+        importPolicyFile: state.importPolicyFile,
+        importPolicyStatusMsg: [
+          <p className="fw-bold" key="upload-no-file">
+            No file selected !
+          </p>
+        ],
+        importPolicyLoading: false
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const json = JSON.parse(e.target.result);
+
+        if (has("service")) {
+          json["service"] = serviceData.name;
+        }
+
+        // Make API call with the processed JSON
+        dispatch({
+          type: ACTIONS.IMPORT_POLICY,
+          showImportPolicyModal: state.showImportPolicyModal,
+          importPolicyFile: state.importPolicyFile,
+          importPolicyStatusMsg: state.importPolicyStatusMsg,
+          importPolicyLoading: true
+        });
+        await fetchApi({
+          url: "plugins/policies",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json" // Set Content-Type header
+          },
+          data: JSON.stringify(json) // Serialize the JSON
+        });
+
+        dispatch({
+          type: ACTIONS.IMPORT_POLICY,
+          showImportPolicyModal: false,
+          importPolicyFile: state.importPolicyFile,
+          importPolicyStatusMsg: [],
+          importPolicyLoading: false
+        });
+        refreshTable();
+        toast.success("Successfully imported policy json file !");
+      } catch (error) {
+        let errorMsg = [
+          <p className="fw-bold" key="upload-error">
+            Error parsing or processing JSON file: {error.message}
+          </p>
+        ];
+        if (error?.response?.data?.msgDesc) {
+          errorMsg.push([
+            <p className="connection-error" key="upload-error-message">
+              {error.response.data.msgDesc}
+            </p>
+          ]);
+        }
+        dispatch({
+          type: ACTIONS.IMPORT_POLICY,
+          showImportPolicyModal: state.showImportPolicyModal,
+          importPolicyFile: state.importPolicyFile,
+          importPolicyStatusMsg: errorMsg,
+          importPolicyLoading: false
+        });
+        console.log(error);
+      }
+    };
+
+    reader.readAsText(state.importPolicyFile);
   };
 
   const downloadPolicy = async (id) => {
@@ -296,123 +311,98 @@ function PolicyListing(props) {
     }
   };
 
-  const fetchPolicyInfo = useCallback(
+  const fetchPolicies = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
-      setLoader(true);
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
       let policyData = [];
-      let policyResp = [];
       let totalCount = 0;
       let page =
-        state && state.showLastPage
-          ? state.addPageData.totalPage - 1
+        navigateState && navigateState.showLastPage
+          ? navigateState.addPageData.totalPage - 1
           : pageIndex;
       let totalPageCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["page"] = page;
-        params["startIndex"] =
-          state && state.showLastPage
-            ? (state.addPageData.totalPage - 1) * pageSize
-            : pageIndex * pageSize;
-        params["pageSize"] = pageSize;
-        params["policyType"] = policyType;
-        if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
-          params["sortType"] = getTableSortType(sortBy);
-        }
+      let params = { ...state.searchFilterParams };
 
-        if (serviceZone !== null) {
-          params["zoneName"] = serviceZone.label;
-        }
-        try {
-          policyResp = await fetchApi({
-            url: `plugins/policies/service/${serviceId}`,
-            params: params
-          });
-          policyData = policyResp.data.policies;
-          totalCount = policyResp.data.totalCount;
-          totalPageCount = Math.ceil(totalCount / pageSize);
-        } catch (error) {
-          console.error(`Error occurred while fetching Policies ! ${error}`);
-        }
-        if (state) {
-          state["showLastPage"] = false;
-        }
-        setPolicyData(policyData);
-        setTblPageData({
-          totalPage: totalPageCount,
-          pageRecords: policyResp?.data?.totalCount,
-          pageSize: 25
-        });
-        setTotalCount(totalCount);
-        setPageCount(totalPageCount);
-        setCurrentPageIndex(page);
-        setCurrentPageSize(pageSize);
-        setResetpage({ page: gotoPage });
-        setLoader(false);
+      params["page"] = page;
+      params["startIndex"] =
+        navigateState && navigateState.showLastPage
+          ? (navigateState.addPageData.totalPage - 1) * pageSize
+          : pageIndex * pageSize;
+      params["pageSize"] = pageSize;
+      params["policyType"] = policyType;
+
+      if (sortBy.length > 0) {
+        params["sortBy"] = getTableSortBy(sortBy);
+        params["sortType"] = getTableSortType(sortBy);
       }
+
+      if (serviceZone !== null) {
+        params["zoneName"] = serviceZone.label;
+      }
+
+      try {
+        const response = await fetchApi({
+          url: `plugins/policies/service/${serviceId}`,
+          params: params
+        });
+        policyData = response.data?.policies || [];
+        totalCount = response.data?.totalCount || 0;
+        totalPageCount = Math.ceil(totalCount / pageSize);
+      } catch (error) {
+        console.error(`Error occurred while fetching policies : ${error}`);
+      }
+
+      if (navigateState) {
+        navigateState["showLastPage"] = false;
+      }
+
+      dispatch({
+        type: ACTIONS.SET_TABLE_DATA,
+        tableListingData: policyData,
+        totalCount: totalCount,
+        pageCount: totalPageCount,
+        currentPageIndex: page,
+        currentPageSize: pageSize,
+        resetPage: { page: gotoPage },
+        tablePageData: {
+          totalPage: totalPageCount,
+          pageRecords: totalCount,
+          pageSize: pageSize
+        }
+      });
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
-  const toggleConfirmModalForDelete = (policyID, policyName) => {
-    setConfirmModal({
-      policyDetails: { policyID: policyID, policyName: policyName },
-      showPopup: true
+  const policyDelete = (policyId, policyName) => {
+    dispatch({
+      type: ACTIONS.SHOW_DELETE_MODAL,
+      showDeleteModal: true,
+      policyDetail: { policyId: policyId, policyName: policyName }
     });
   };
 
-  const toggleClose = () => {
-    setConfirmModal({
-      policyDetails: {},
-      showPopup: false
+  const togglePolicyDeleteModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_DELETE_MODAL,
+      showDeleteModal: false,
+      policyDetail: { policyId: "", policyName: "" }
     });
   };
 
-  const handleClosePolicyId = () => setPolicyViewModal(false);
-
-  const openModal = (policyDetails) => {
-    let policyId = pick(policyDetails, ["id"]);
-    setPolicyViewModal(true);
-    setPolicyParamsData(policyDetails);
-    fetchVersions(policyId.id);
-  };
-
-  const fetchVersions = async (policyId) => {
-    let versionsResp = {};
+  const handlePolicyDelete = async (policyId) => {
+    togglePolicyDeleteModal();
     try {
-      versionsResp = await fetchApi({
-        url: `plugins/policy/${policyId}/versionList`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Policy Version or CSRF headers! ${error}`
-      );
-    }
-    setCurrentPage(
-      versionsResp.data.value
-        .split(",")
-        .map(Number)
-        .sort(function (a, b) {
-          return a - b;
-        })
-    );
-    setLoader(false);
-  };
-
-  const handleDeleteClick = async (policyID) => {
-    toggleClose();
-    try {
-      setBlockUI(true);
+      dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: true });
       await fetchApi({
-        url: `plugins/policies/${policyID}`,
+        url: `plugins/policies/${policyId}`,
         method: "DELETE"
       });
-      setBlockUI(false);
-      toast.success(" Success! Policy deleted successfully");
+      dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
+      toast.success("Policy deleted successfully !");
     } catch (error) {
-      setBlockUI(false);
+      dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
       let errorMsg = "Failed to delete policy : ";
       if (error?.response?.data?.msgDesc) {
         errorMsg += error.response.data.msgDesc;
@@ -420,61 +410,62 @@ function PolicyListing(props) {
       toast.error(errorMsg);
       console.error("Error occurred during deleting policy : " + error);
     }
-    if (policyListingData.length == 1 && currentpageIndex > 0) {
-      let page = currentpageIndex - currentpageIndex;
-      if (typeof resetPage?.page === "function") {
-        resetPage.page(page);
+    if (state.tableListingData.length == 1 && state.currentPageIndex > 0) {
+      if (typeof state.resetPage?.page === "function") {
+        state.resetPage.page(0);
       }
     } else {
-      setUpdateTable(moment.now());
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: state.searchFilterParams,
+        refreshTableData: moment.now()
+      });
     }
   };
 
-  const previousVersion = (e) => {
-    if (e.currentTarget.classList.contains("active")) {
-      let curr = policyParamsData && policyParamsData.version;
-      let policyVersionList = currentPage;
-      var previousVal =
-        policyVersionList[
-          (indexOf(policyVersionList, curr) - 1) % policyVersionList.length
-        ];
-    }
-    let prevVal = {};
-    prevVal.version = previousVal;
-    prevVal.id = policyParamsData.id;
-    prevVal.isChangeVersion = true;
-    setPolicyParamsData(prevVal);
+  const hidePolicyModal = () =>
+    dispatch({
+      type: ACTIONS.SHOW_POLICY_MODAL,
+      showPolicyModal: false,
+      policyData: null
+    });
+
+  const openPolicyModal = (policy) => {
+    let policyParams = {
+      policyId: policy.id,
+      policyVersion: policy.version
+    };
+    dispatch({
+      type: ACTIONS.SHOW_POLICY_MODAL,
+      showPolicyModal: true,
+      policyData: policyParams
+    });
   };
 
-  const nextVersion = (e) => {
-    if (e.currentTarget.classList.contains("active")) {
-      let curr = policyParamsData && policyParamsData.version;
-      let policyVersionList = currentPage;
-      var nextValue =
-        policyVersionList[
-          (indexOf(policyVersionList, curr) + 1) % policyVersionList.length
-        ];
-    }
-    let nextVal = {};
-    nextVal.version = nextValue;
-    nextVal.id = policyParamsData.id;
-    nextVal.isChangeVersion = true;
-    setPolicyParamsData(nextVal);
+  const refreshTable = () => {
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: state.searchFilterParams,
+      refreshTableData: moment.now()
+    });
   };
 
-  const revert = (e) => {
-    e.preventDefault();
-    let version = policyParamsData && policyParamsData.version;
-    let revertVal = {};
-    revertVal.version = version;
-    revertVal.id = policyParamsData.id;
-    revertVal.isRevert = true;
-    setPolicyParamsData(revertVal);
-    setPolicyViewModal(false);
+  const getTableSortBy = (sortArr = []) => {
+    return sortArr
+      .map(({ id }) => {
+        return QueryParamsName(id);
+      })
+      .join(",");
   };
 
-  const updateServices = () => {
-    setUpdateTable(moment.now());
+  const getTableSortType = (sortArr = []) => {
+    return sortArr.map(({ desc }) => (desc ? "desc" : "asc")).join(",");
+  };
+
+  const addPolicy = () => {
+    navigate(`/service/${serviceId}/policies/create/${policyType}`, {
+      state: { tablePageData: state.tablePageData }
+    });
   };
 
   const columns = React.useMemo(
@@ -675,7 +666,7 @@ function PolicyListing(props) {
                 title="View"
                 onClick={(e) => {
                   e.stopPropagation();
-                  openModal(original);
+                  openPolicyModal(original);
                 }}
                 data-name="viewPolicy"
                 data-id={original.id}
@@ -707,9 +698,7 @@ function PolicyListing(props) {
                     variant="danger"
                     size="sm"
                     title="Delete"
-                    onClick={() =>
-                      toggleConfirmModalForDelete(original.id, original.name)
-                    }
+                    onClick={() => policyDelete(original.id, original.name)}
                     data-name="deletePolicy"
                     data-id={original.id}
                     data-cy={original.id}
@@ -727,12 +716,6 @@ function PolicyListing(props) {
     ],
     []
   );
-
-  const addPolicy = () => {
-    navigate(`/service/${serviceId}/policies/create/${policyType}`, {
-      state: { tblpageData: tblpageData }
-    });
-  };
 
   const searchFilterOptions = [
     {
@@ -849,28 +832,40 @@ function PolicyListing(props) {
   };
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       getSearchFilterOptions()
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
   return (
     <div className="wrap">
-      {(serviceData.type == "hdfs" || serviceData.type == "yarn") && show && (
-        <Alert variant="warning" onClose={() => setShow(false)} dismissible>
-          <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
-          <p className="pd-l-10 d-inline">
-            {`By default, fallback to ${
-              alertMessage[serviceData.type].label
-            } ACLs are enabled. If access cannot be
+      {(serviceData.type == "hdfs" || serviceData.type == "yarn") &&
+        state.showAlert && (
+          <Alert
+            variant="warning"
+            onClose={() =>
+              dispatch({ type: ACTIONS.SHOW_ALERT, showAlert: false })
+            }
+            dismissible
+          >
+            <i className="fa-fw fa fa-info-circle d-inline text-dark"></i>
+            <p className="pd-l-10 d-inline">
+              {`By default, fallback to ${
+                alertMessage[serviceData.type].label
+              } ACLs are enabled. If access cannot be
               determined by Ranger policies, authorization will fall back to
               ${
                 alertMessage[serviceData.type].label
@@ -880,14 +875,14 @@ function PolicyListing(props) {
               plugin config - ${
                 alertMessage[serviceData.type].configs
               }-authorization.`}
-          </p>
-        </Alert>
-      )}
-      {pageLoader ? (
+            </p>
+          </Alert>
+        )}
+      {state.contentLoader ? (
         <Loader />
       ) : (
         <React.Fragment>
-          <BlockUi isUiBlock={blockUI} />
+          <BlockUi isUiBlock={state.blockUi} />
           <div className="policy-listing">
             <Row className="mb-3">
               <Col sm={9}>
@@ -897,7 +892,7 @@ function PolicyListing(props) {
                     placeholder="Search for your policy..."
                     options={getSearchFilterOptions()}
                     onChange={updateSearchFilter}
-                    defaultSelected={defaultSearchFilterParams}
+                    defaultSelected={state.defaultSearchFilterParams}
                   />
                   <CustomPopover
                     icon="fa-fw fa fa-info-circle info-icon"
@@ -943,143 +938,87 @@ function PolicyListing(props) {
             </Row>
 
             <XATableLayout
-              data={policyListingData}
+              data={state.tableListingData}
               columns={columns}
-              fetchData={fetchPolicyInfo}
-              totalCount={totalCount}
+              fetchData={fetchPolicies}
+              totalCount={state.totalCount}
               pagination
-              pageCount={pageCount}
-              currentpageIndex={currentpageIndex}
-              currentpageSize={currentpageSize}
-              loading={loader}
+              pageCount={state.pageCount}
+              currentpageIndex={state.currentPageIndex}
+              currentpageSize={state.currentPageSize}
+              loading={state.loader}
               columnSort={true}
             />
           </div>
 
-          {/* Modal for file upload */}
-          {showModal && (
-            <Modal show={showModal} onHide={handleCloseModal}>
-              <Modal.Header closeButton>
-                <Modal.Title>Upload JSON Policy</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <input
-                  type="file"
-                  accept="application/json"
-                  onChange={handleFileSelection}
-                />
-                {loading && <p>Uploading...</p>}
-                {!loading && statusMessage && <p>{statusMessage}</p>}
-              </Modal.Body>
-              <Modal.Footer>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={handleCloseModal}
-                >
-                  Close
-                </Button>
-                <Button size="sm" variant="primary" onClick={handleUpload}>
-                  Upload
-                </Button>
-              </Modal.Footer>
-            </Modal>
-          )}
+          <Modal
+            show={state.showImportPolicyModal}
+            onHide={closePolicyImportModal}
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Upload JSON Policy</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <input
+                type="file"
+                accept="application/json"
+                onChange={handlePolicyImportFile}
+              />
+              {state.importPolicyLoading && (
+                <p className="mt-2 fw-bold">Uploading...</p>
+              )}
+              {!state.importPolicyLoading &&
+                state.importPolicyStatusMsg.length > 0 && (
+                  <div className="mt-2">{state.importPolicyStatusMsg}</div>
+                )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={closePolicyImportModal}
+              >
+                Close
+              </Button>
+              <Button size="sm" variant="primary" onClick={handlePolicyUpload}>
+                Upload
+              </Button>
+            </Modal.Footer>
+          </Modal>
 
-          <Modal show={deletePolicyModal.showPopup} onHide={toggleClose}>
+          <Modal show={state.showDeleteModal} onHide={togglePolicyDeleteModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
                 Are you sure you want to delete policy&nbsp;&quot;
-                <b>{deletePolicyModal?.policyDetails?.policyName}</b>&quot; ?
+                <b>{state.policyDetail.policyName}</b>&quot; ?
               </span>
             </Modal.Header>
             <Modal.Footer>
-              <Button variant="secondary" size="sm" onClick={toggleClose}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={togglePolicyDeleteModal}
+              >
                 Close
               </Button>
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() =>
-                  handleDeleteClick(deletePolicyModal.policyDetails.policyID)
-                }
+                onClick={() => handlePolicyDelete(state.policyDetail.policyId)}
               >
                 OK
               </Button>
             </Modal.Footer>
           </Modal>
 
-          <Modal show={policyviewmodal} onHide={handleClosePolicyId} size="xl">
-            <Modal.Header closeButton>
-              <Modal.Title>Policy Details</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <PolicyViewDetails
-                paramsData={policyParamsData}
-                policyInfo={fetchPolicyInfo}
-                totalCount={totalCount}
-                policyView={true}
-                updateServices={updateServices}
-              />
-            </Modal.Body>
-            <Modal.Footer>
-              <div className="policy-version text-start">
-                <span>
-                  <i
-                    className={
-                      policyParamsData && policyParamsData.version > 1
-                        ? "fa-fw fa fa-chevron-left active"
-                        : "fa-fw fa fa-chevron-left"
-                    }
-                    onClick={(e) =>
-                      e.currentTarget.classList.contains("active") &&
-                      previousVersion(e)
-                    }
-                  ></i>
-                  <span>{`Version ${
-                    policyParamsData && policyParamsData.version
-                  }`}</span>
-                  <i
-                    className={
-                      !isUndefined(
-                        currentPage[
-                          indexOf(
-                            currentPage,
-                            policyParamsData && policyParamsData.version
-                          ) + 1
-                        ]
-                      )
-                        ? "fa-fw fa fa-chevron-right active"
-                        : "fa-fw fa fa-chevron-right"
-                    }
-                    onClick={(e) =>
-                      e.currentTarget.classList.contains("active") &&
-                      nextVersion(e)
-                    }
-                  ></i>
-                </span>
-                {!isUndefined(
-                  currentPage[
-                    indexOf(
-                      currentPage,
-                      policyParamsData && policyParamsData.version
-                    ) + 1
-                  ]
-                ) && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={(e) => revert(e)}
-                  >
-                    Revert
-                  </Button>
-                )}
-              </div>
-              <Button variant="primary" size="sm" onClick={handleClosePolicyId}>
-                OK
-              </Button>
-            </Modal.Footer>
-          </Modal>
+          <AccessLogPolicyModal
+            policyData={state.policyData}
+            policyView={true}
+            policyRevert={true}
+            refreshTable={refreshTable}
+            showPolicyModal={state.showPolicyModal}
+            hidePolicyModal={hidePolicyModal}
+          ></AccessLogPolicyModal>
         </React.Fragment>
       )}
     </div>

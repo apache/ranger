@@ -20,20 +20,21 @@
 import React, { useEffect, useReducer } from "react";
 import { Tab, Button, Nav, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
-import UserFormComp from "Views/UserGroupRoleListing/users_details/UserFormComp";
+import UserForm from "Views/UserGroupRoleListing/users_details/UserForm";
 import { Loader, scrollToError } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 import { has } from "lodash";
-import { commonBreadcrumb, InfoIcon } from "../../../utils/XAUtils";
+import { commonBreadcrumb, InfoIcon } from "Utils/XAUtils";
 
-const initialState = {
+const INITIAL_STATE = {
   userInfo: {},
   loader: true
 };
-const userFormReducer = (state, action) => {
+
+const reducer = (state, action) => {
   switch (action.type) {
     case "SET_LOADER":
       return {
@@ -51,11 +52,12 @@ const userFormReducer = (state, action) => {
   }
 };
 
-function AddUserView() {
+function EditUserView() {
   const params = useParams();
-  const [userDetails, dispatch] = useReducer(userFormReducer, initialState);
-  const { userInfo, loader } = userDetails;
   const navigate = useNavigate();
+
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { userInfo, loader } = state;
 
   useEffect(() => {
     if (params?.userID) {
@@ -140,11 +142,7 @@ function AddUserView() {
         <h3 className="wrap-header bold">User Detail</h3>
         {commonBreadcrumb(["Users", "UserEdit"], params.userID)}
       </div>
-      <UserFormComp
-        isEditView={true}
-        userID={params.userID}
-        userInfo={userInfo}
-      />
+      <UserForm isEditView={true} userID={params.userID} userInfo={userInfo} />
     </>
   ) : (
     <>
@@ -169,7 +167,7 @@ function AddUserView() {
           <div className="user-details">
             <Tab.Content>
               <Tab.Pane eventKey="edit-basic-info">
-                <UserFormComp
+                <UserForm
                   isEditView={true}
                   userID={params.userID}
                   userInfo={userInfo}
@@ -339,4 +337,4 @@ function AddUserView() {
     </>
   );
 }
-export default AddUserView;
+export default EditUserView;
