@@ -19,9 +19,9 @@
 
 import React from "react";
 import { Table, Badge } from "react-bootstrap";
-import { ClassTypes, UserRoles } from "../../../utils/XAEnums";
+import { ClassTypes, UserRoles } from "Utils/XAEnums";
 import { isEmpty, unionBy, difference, isEqual, without } from "lodash";
-import { currentTimeZone } from "../../../utils/XAUtils";
+import { currentTimeZone } from "Utils/XAUtils";
 
 export const UserLogs = ({ data, reportdata }) => {
   const { objectName, objectClassType, createDate, owner, action } = data;

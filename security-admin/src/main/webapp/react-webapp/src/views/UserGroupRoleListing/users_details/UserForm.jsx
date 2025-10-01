@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useReducer, useState } from "react";
+import React, { useReducer } from "react";
 import { Button, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import {
@@ -43,8 +43,9 @@ import { RegexMessage, roleChngWarning } from "Utils/XAMessages";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 
-const initialState = {
-  blockUI: false
+const INITIAL_STATE = {
+  blockUI: false,
+  preventUnBlock: false
 };
 
 const PromtDialog = (props) => {
@@ -60,18 +61,25 @@ function reducer(state, action) {
         ...state,
         blockUI: action.blockUI
       };
+    case "SET_PREVENT_ALERT":
+      return {
+        ...state,
+        preventUnBlock: action.preventUnBlock
+      };
     default:
       throw new Error();
   }
 }
 
-function UserFormComp(props) {
-  const { state } = useLocation();
+function UserForm(props) {
   const navigate = useNavigate();
-  const [userFormState, dispatch] = useReducer(reducer, initialState);
-  const { blockUI } = userFormState;
+  const { state: navigateState } = useLocation();
+
   const { isEditView, userInfo } = props;
-  const [preventUnBlock, setPreventUnblock] = useState(false);
+
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { blockUI, preventUnBlock } = state;
+
   const toastId = React.useRef(null);
   const isExternalOrFederatedUser =
     userInfo?.userSource == UserTypes.USER_EXTERNAL.value ||
@@ -97,7 +105,11 @@ function UserFormComp(props) {
 
     userFormData["status"] = ActivationStatus.ACT_STATUS_ACTIVE.value;
 
-    setPreventUnblock(true);
+    dispatch({
+      type: "SET_PREVENT_ALERT",
+      preventUnBlock: true
+    });
+
     if (isEditView) {
       let userEditData = { ...userInfo, ...userFormData };
       delete userEditData.password;
@@ -148,14 +160,20 @@ function UserFormComp(props) {
           data: userFormData
         });
 
-        let tblpageData = {};
-        if (state && state !== null) {
-          tblpageData = state.tblpageData;
-          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+        let tablePageData = {};
+        if (navigateState && navigateState !== null) {
+          tablePageData = navigateState.tablePageData;
+          if (
+            navigateState.tablePageData.pageRecords %
+              navigateState.tablePageData.pageSize ==
+            0
+          ) {
+            tablePageData["totalPage"] =
+              navigateState.tablePageData.totalPage + 1;
           } else {
-            if (state !== undefined) {
-              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            if (navigateState !== undefined) {
+              tablePageData["totalPage"] =
+                navigateState.tablePageData.totalPage;
             }
           }
         }
@@ -168,7 +186,7 @@ function UserFormComp(props) {
         navigate("/users/usertab", {
           state: {
             showLastPage: true,
-            addPageData: tblpageData
+            addPageData: tablePageData
           }
         });
       } catch (error) {
@@ -311,6 +329,7 @@ function UserFormComp(props) {
 
     input.onChange(e);
   };
+
   const validateForm = (values) => {
     const errors = {};
     if (!values.name) {
@@ -759,7 +778,10 @@ function UserFormComp(props) {
                     size="sm"
                     onClick={() => {
                       form.reset;
-                      setPreventUnblock(true);
+                      dispatch({
+                        type: "SET_PREVENT_ALERT",
+                        preventUnBlock: true
+                      });
                       closeForm();
                     }}
                     data-id="cancel"
@@ -777,4 +799,4 @@ function UserFormComp(props) {
     </>
   );
 }
-export default UserFormComp;
+export default UserForm;

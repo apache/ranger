@@ -19,8 +19,8 @@
 
 import React from "react";
 import { Table } from "react-bootstrap";
-import { ClassTypes } from "../../../utils/XAEnums";
-import { currentTimeZone } from "../../../utils/XAUtils";
+import { ClassTypes } from "Utils/XAEnums";
+import { currentTimeZone } from "Utils/XAUtils";
 
 export const PasswordLogs = ({ data, reportdata }) => {
   const { objectName, objectClassType, createDate, owner, action } = data;

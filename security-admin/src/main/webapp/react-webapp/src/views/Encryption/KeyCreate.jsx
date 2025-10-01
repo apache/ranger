@@ -17,32 +17,30 @@
  * under the License.
  */
 
-import React, { useReducer, useEffect, useState, useRef } from "react";
+import React, { useReducer, useEffect, useRef } from "react";
 import { Button, Table, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
 import { fetchApi } from "Utils/fetchAPI";
-import {
-  BlockUi,
-  Loader,
-  scrollToError
-} from "../../components/CommonComponents";
-import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
+import { BlockUi, Loader, scrollToError } from "Components/CommonComponents";
+import { commonBreadcrumb, serverError } from "Utils/XAUtils";
 import { cloneDeep, find, isEmpty, values } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 
-const initialState = {
+const INITIAL_STATE = {
   service: {},
   definition: {},
-  loader: true
+  loader: true,
+  preventUnBlock: false,
+  blockUI: false
 };
 
-const keyCreateReducer = (state, action) => {
+const reducer = (state, action) => {
   switch (action.type) {
     case "SET_LOADER":
       return {
@@ -56,6 +54,16 @@ const keyCreateReducer = (state, action) => {
         definition: action.definition,
         loader: action.loader
       };
+    case "SET_PREVENT_ALERT":
+      return {
+        ...state,
+        preventUnBlock: action.preventUnBlock
+      };
+    case "SET_BLOCK_UI":
+      return {
+        ...state,
+        blockUI: action.blockUI
+      };
     default:
       throw new Error();
   }
@@ -68,14 +76,14 @@ const PromtDialog = (props) => {
 };
 
 function KeyCreate(props) {
-  const [keyDetails, dispatch] = useReducer(keyCreateReducer, initialState);
-  const { loader, service, definition } = keyDetails;
-  const { state } = useLocation();
   const navigate = useNavigate();
-  const [preventUnBlock, setPreventUnblock] = useState(false);
-  const [blockUI, setBlockUI] = useState(false);
+  const { state: navigateState } = useLocation();
+
   const toastId = useRef(null);
   const { allServiceDefs } = cloneDeep(getServiceDef());
+
+  const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const { loader, service, definition, preventUnBlock, blockUI } = state;
 
   useEffect(() => {
     fetchInitialData();
@@ -124,9 +132,17 @@ function KeyCreate(props) {
           values.attributes[key].value;
       }
     }
-    setPreventUnblock(true);
+
+    dispatch({
+      type: "SET_PREVENT_ALERT",
+      preventUnBlock: true
+    });
+
     try {
-      setBlockUI(true);
+      dispatch({
+        type: "SET_BLOCK_UI",
+        blockUI: true
+      });
       await fetchApi({
         url: "keys/key",
         method: "post",
@@ -135,19 +151,26 @@ function KeyCreate(props) {
         },
         data: serviceJson
       });
-      setBlockUI(false);
-      toast.success(`Success! Key created successfully`);
-      navigate(`/kms/keys/edit/manage/${state.detail}`, {
+      dispatch({
+        type: "SET_BLOCK_UI",
+        blockUI: false
+      });
+      toast.success(`Key created successfully`);
+      navigate(`/kms/keys/edit/manage/${navigateState.detail}`, {
         state: {
-          detail: state.detail
+          detail: navigateState.detail
         }
       });
     } catch (error) {
-      setBlockUI(false);
+      dispatch({
+        type: "SET_BLOCK_UI",
+        blockUI: false
+      });
       serverError(error);
-      console.error(`Error occurred while creating key! ${error}`);
+      console.error(`Error occurred while creating key : ${error}`);
     }
   };
+
   const fetchKmsServices = async () => {
     let serviceResp;
     dispatch({
@@ -159,7 +182,7 @@ function KeyCreate(props) {
         url: `plugins/services/name/${props.params.serviceName}`
       });
     } catch (error) {
-      console.error(`Error occurred while fetching Services! ${error}`);
+      console.error(`Error occurred while fetching services : ${error}`);
     }
 
     dispatch({
@@ -173,6 +196,7 @@ function KeyCreate(props) {
   const closeForm = () => {
     navigate(`/kms/keys/edit/manage/${props.params.serviceName}`);
   };
+
   const validate = (values) => {
     const errors = {};
     if (!values.name) {
@@ -183,6 +207,7 @@ function KeyCreate(props) {
     }
     return errors;
   };
+
   const keyCreateBreadcrumb = () => {
     let serviceDetails = {};
     serviceDetails["serviceDefId"] = definition && definition?.id;
@@ -193,6 +218,7 @@ function KeyCreate(props) {
       serviceDetails
     );
   };
+
   return loader ? (
     <Loader />
   ) : (
@@ -295,6 +321,7 @@ function KeyCreate(props) {
                   </Row>
                 )}
               </Field>
+
               <Field name="description">
                 {({ input }) => (
                   <Row className="form-group">
@@ -313,6 +340,7 @@ function KeyCreate(props) {
                   </Row>
                 )}
               </Field>
+
               <Row className="form-group">
                 <Col xs={3}>
                   <label className="form-label float-end">Attributes</label>
@@ -410,7 +438,10 @@ function KeyCreate(props) {
                     size="sm"
                     onClick={() => {
                       form.reset;
-                      setPreventUnblock(true);
+                      dispatch({
+                        type: "SET_PREVENT_ALERT",
+                        preventUnBlock: true
+                      });
                       closeForm();
                     }}
                     disabled={submitting}

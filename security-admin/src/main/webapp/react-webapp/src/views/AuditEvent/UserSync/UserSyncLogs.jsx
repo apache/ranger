@@ -17,54 +17,61 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useCallback, useEffect, useReducer } from "react";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { Badge, Modal, Button, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { AuditFilterEntries, Loader } from "Components/CommonComponents";
-import { SyncSourceDetails } from "../UserGroupRoleListing/SyncSourceDetails";
+import { SyncSourceDetails } from "Views/UserGroupRoleListing/SyncSourceDetails";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
-import { sortBy, has } from "lodash";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
+import { fetchApi } from "Utils/fetchAPI";
+import { sortBy, has, pick } from "lodash";
 import {
   getTableSortBy,
   getTableSortType,
   fetchSearchFilterParams,
   parseSearchFilter,
   serverError
-} from "../../utils/XAUtils";
+} from "Utils/XAUtils";
+import { ACTIONS } from "Views/AuditEvent/action";
+import { reducer, USERSYNC_INITIAL_STATE } from "Views/AuditEvent/reducer";
 
-function User_Sync() {
-  const [userSyncListingData, setUserSyncLogs] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [pageCount, setPageCount] = React.useState(0);
-  const fetchIdRef = useRef(0);
-  const [entries, setEntries] = useState([]);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const [showTableSyncDetails, setTableSyncdetails] = useState({
-    syncDteails: {},
-    showSyncDetails: false
-  });
-  const [contentLoader, setContentLoader] = useState(true);
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
+function UserSync() {
+  const [state, dispatch] = useReducer(reducer, USERSYNC_INITIAL_STATE);
+
+  const location = useLocation();
+
   const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [resetPage, setResetpage] = useState({ page: null });
+
+  const openSyncTableModal = (data) => {
+    dispatch({
+      type: ACTIONS.SHOW_SYNC_TABLE_MODAL,
+      showSyncTableModal: true,
+      syncTableData: data
+    });
+  };
+
+  const closeSyncTableModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_SYNC_TABLE_MODAL,
+      showSyncTableModal: false,
+      syncTableData: {}
+    });
+  };
 
   useEffect(() => {
-    let currentDate = moment(moment()).format("MM/DD/YYYY");
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+    const currentDate = moment(moment()).format("MM/DD/YYYY");
+    const { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("userSync", searchParams, searchFilterOptions);
 
     if (
       !has(searchFilterParam, "startDate") &&
       !has(searchFilterParam, "endDate")
     ) {
-      searchParam["startDate"] = currentDate;
-      searchFilterParam["startDate"] = currentDate;
+      searchParam.startDate = currentDate;
+      searchFilterParam.startDate = currentDate;
       defaultSearchFilterParam.push({
         category: "startDate",
         value: currentDate
@@ -73,84 +80,93 @@ function User_Sync() {
 
     // Updating the states for search params, search filter, default search filter and localStorage
     setSearchParams(searchParam, { replace: true });
-    setSearchFilterParams(searchFilterParam);
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
     localStorage.setItem("userSync", JSON.stringify(searchParam));
-    setContentLoader(false);
   }, []);
 
   useEffect(() => {
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+    const { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("userSync", searchParams, searchFilterOptions);
 
     // Updating the states for search params, search filter, default search filter and localStorage
     setSearchParams(searchParam, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
     localStorage.setItem("userSync", JSON.stringify(searchParam));
-    setContentLoader(false);
-  }, [searchParams]);
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+  }, [location.search]);
 
   const fetchUserSyncInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
-      setLoader(true);
-      let logsResp = [];
-      let logs = [];
-      let totalCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["pageSize"] = pageSize;
-        params["startIndex"] = pageIndex * pageSize;
-        if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
-          params["sortType"] = getTableSortType(sortBy);
-        }
-        try {
-          const { fetchApi } = await import("Utils/fetchAPI");
-          logsResp = await fetchApi({
-            url: "assets/ugsyncAudits",
-            params: params
-          });
-          logs = logsResp.data.vxUgsyncAuditInfoList;
-          totalCount = logsResp.data.totalCount;
-        } catch (error) {
-          serverError(error);
-          console.error(
-            `Error occurred while fetching User Sync logs! ${error}`
-          );
-        }
-        setUserSyncLogs(logs);
-        setEntries(logsResp.data);
-        setPageCount(Math.ceil(totalCount / pageSize));
-        setResetpage({ page: gotoPage });
-        setLoader(false);
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+
+      const params = {
+        ...state.searchFilterParams,
+        pageSize,
+        startIndex: pageIndex * pageSize,
+        ...(sortBy.length > 0 && {
+          sortBy: getTableSortBy(sortBy),
+          sortType: getTableSortType(sortBy)
+        })
+      };
+
+      try {
+        const response = await fetchApi({
+          url: "assets/ugsyncAudits",
+          params: params
+        });
+
+        const logsEntries = pick(response.data, [
+          "startIndex",
+          "pageSize",
+          "totalCount",
+          "resultSize"
+        ]);
+        const logsResp = response.data?.vxUgsyncAuditInfoList || [];
+        const totalCount = response.data?.totalCount || 0;
+
+        dispatch({
+          type: ACTIONS.SET_TABLE_DATA,
+          tableListingData: logsResp,
+          entries: logsEntries,
+          pageCount: Math.ceil(totalCount / pageSize),
+          resetPage: { page: gotoPage }
+        });
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred while fetching User Sync logs! ${error}`);
       }
+
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
   const refreshTable = () => {
-    setUserSyncLogs([]);
-    setLoader(true);
-    setUpdateTable(moment.now());
-  };
-
-  const toggleTableSyncModal = (raw) => {
-    setTableSyncdetails({
-      syncDteails: raw,
-      showSyncDetails: true
-    });
-  };
-
-  const toggleTableSyncModalClose = () => {
-    setTableSyncdetails({
-      syncDteails: {},
-      showSyncDetails: false
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: state.searchFilterParams,
+      refreshTableData: moment.now()
     });
   };
 
@@ -270,7 +286,7 @@ function User_Sync() {
       {
         Header: "Sync Details",
         accessor: "syncSourceInfo",
-        Cell: (rawValue, model) => {
+        Cell: (rawValue) => {
           if (rawValue.value) {
             return (
               <div className="text-center">
@@ -279,9 +295,8 @@ function User_Sync() {
                   data-id="syncDetailes"
                   data-cy="syncDetailes"
                   title="Sync Details"
-                  id={model.id}
                   onClick={() => {
-                    toggleTableSyncModal(rawValue.value);
+                    openSyncTableModal(rawValue.value);
                   }}
                 >
                   <i className="fa-fw fa fa-eye"> </i>
@@ -299,17 +314,22 @@ function User_Sync() {
   );
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
     localStorage.setItem("userSync", JSON.stringify(searchParam));
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
@@ -347,7 +367,7 @@ function User_Sync() {
     }
   ];
 
-  return contentLoader ? (
+  return state.contentLoader ? (
     <Loader />
   ) : (
     <div className="wrap">
@@ -360,41 +380,43 @@ function User_Sync() {
                 placeholder="Search for your user sync audits..."
                 options={sortBy(searchFilterOptions, ["label"])}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
             </div>
           </Col>
         </Row>
-        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+
+        <AuditFilterEntries
+          entries={state.entries}
+          refreshTable={refreshTable}
+        />
+
         <XATableLayout
-          data={userSyncListingData}
+          data={state.tableListingData}
           columns={columns}
-          loading={loader}
-          totalCount={entries && entries.totalCount}
+          loading={state.loader}
+          totalCount={state.entries && state.entries.totalCount}
           fetchData={fetchUserSyncInfo}
-          pageCount={pageCount}
+          pageCount={state.pageCount}
           columnSort={true}
           defaultSort={getDefaultSort}
         />
+
         <Modal
-          show={showTableSyncDetails && showTableSyncDetails.showSyncDetails}
-          onHide={toggleTableSyncModalClose}
+          show={state.showSyncTableModal}
+          onHide={closeSyncTableModal}
           size="xl"
         >
-          <Modal.Header>
+          <Modal.Header closeButton>
             <Modal.Title>Sync Source Details</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <SyncSourceDetails
-              syncDetails={showTableSyncDetails.syncDteails}
+              syncDetails={state.syncTableData}
             ></SyncSourceDetails>
           </Modal.Body>
           <Modal.Footer>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={toggleTableSyncModalClose}
-            >
+            <Button variant="primary" size="sm" onClick={closeSyncTableModal}>
               OK
             </Button>
           </Modal.Footer>
@@ -404,4 +426,4 @@ function User_Sync() {
   );
 }
 
-export default User_Sync;
+export default UserSync;

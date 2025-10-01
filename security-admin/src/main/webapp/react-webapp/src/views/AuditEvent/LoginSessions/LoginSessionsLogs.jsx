@@ -17,18 +17,18 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useReducer } from "react";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Badge, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
-import { AuthStatus, AuthType } from "../../utils/XAEnums";
-import AdminModal from "./AdminModal";
+import { AuthStatus, AuthType } from "Utils/XAEnums";
+import AdminModal from "Views/AuditEvent/Admin/AdminModal";
 import dateFormat from "dateformat";
-import { AuditFilterEntries } from "Components/CommonComponents";
+import { AuditFilterEntries, Loader } from "Components/CommonComponents";
 import moment from "moment-timezone";
-import { sortBy } from "lodash";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
+import { pick, sortBy } from "lodash";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import {
   getTableSortBy,
   getTableSortType,
@@ -36,34 +36,42 @@ import {
   parseSearchFilter,
   serverError,
   currentTimeZone
-} from "../../utils/XAUtils";
-import { Loader } from "../../components/CommonComponents";
+} from "Utils/XAUtils";
+import { ACTIONS } from "Views/AuditEvent/action";
+import {
+  reducer,
+  LOGIN_SESSIONS_INITIAL_STATE
+} from "Views/AuditEvent/reducer";
 
-function LoginSessions() {
-  const [loginSessionListingData, setLoginSessionLogs] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [sessionId, setSessionId] = useState([]);
-  const [showmodal, setShowModal] = useState(false);
-  const [pageCount, setPageCount] = React.useState(0);
-  const [entries, setEntries] = useState([]);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const fetchIdRef = useRef(0);
-  const [contentLoader, setContentLoader] = useState(true);
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [resetPage, setResetpage] = useState({ page: null });
-  const handleClose = () => setShowModal(false);
+function LoginSessionsLogs() {
+  const [state, dispatch] = useReducer(reducer, LOGIN_SESSIONS_INITIAL_STATE);
+
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const hideSessionModal = () =>
+    dispatch({
+      type: ACTIONS.SHOW_SESSION_MODAL,
+      showSessionModal: false,
+      sessionId: undefined
+    });
+
+  const openSessionModal = (id) => {
+    dispatch({
+      type: ACTIONS.SHOW_SESSION_MODAL,
+      showSessionModal: true,
+      sessionId: id
+    });
+  };
 
   const updateSessionId = (id) => {
     navigate(`/reports/audit/admin?sessionId=${id}`);
   };
 
   useEffect(() => {
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+    const { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams(
         "loginSession",
         searchParams,
@@ -73,52 +81,70 @@ function LoginSessions() {
     // Updating the states for search params, search filter, default search filter and localStorage
     setSearchParams(searchParam, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
     localStorage.setItem("loginSession", JSON.stringify(searchParam));
-    setContentLoader(false);
-  }, [searchParams]);
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+  }, [location.search]);
 
   const fetchLoginSessionLogsInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
-      setLoader(true);
-      let logsResp = [];
-      let logs = [];
-      let totalCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["pageSize"] = pageSize;
-        params["startIndex"] = pageIndex * pageSize;
-        if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
-          params["sortType"] = getTableSortType(sortBy);
-        }
-        try {
-          logsResp = await fetchApi({
-            url: "xusers/authSessions",
-            params: params,
-            skipNavigate: true
-          });
-          logs = logsResp.data.vXAuthSessions;
-          totalCount = logsResp.data.totalCount;
-        } catch (error) {
-          serverError(error);
-          console.error(
-            `Error occurred while fetching Login Session logs! ${error}`
-          );
-        }
-        setLoginSessionLogs(logs);
-        setEntries(logsResp.data);
-        setPageCount(Math.ceil(totalCount / pageSize));
-        setResetpage({ page: gotoPage });
-        setLoader(false);
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+
+      const params = {
+        ...state.searchFilterParams,
+        pageSize,
+        startIndex: pageIndex * pageSize,
+        ...(sortBy.length > 0 && {
+          sortBy: getTableSortBy(sortBy),
+          sortType: getTableSortType(sortBy)
+        })
+      };
+
+      try {
+        const response = await fetchApi({
+          url: "xusers/authSessions",
+          params: params,
+          skipNavigate: true
+        });
+
+        const logsEntries = pick(response.data, [
+          "startIndex",
+          "pageSize",
+          "totalCount",
+          "resultSize"
+        ]);
+        const logsResp = response.data?.vXAuthSessions || [];
+        const totalCount = response.data?.totalCount || 0;
+
+        dispatch({
+          type: ACTIONS.SET_TABLE_DATA,
+          tableListingData: logsResp,
+          entries: logsEntries,
+          pageCount: Math.ceil(totalCount / pageSize),
+          resetPage: { page: gotoPage }
+        });
+      } catch (error) {
+        serverError(error);
+        console.error(
+          `Error occurred while fetching Login Session logs! ${error}`
+        );
       }
+
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
   const getDefaultSort = React.useMemo(
@@ -132,14 +158,11 @@ function LoginSessions() {
   );
 
   const refreshTable = () => {
-    setLoginSessionLogs([]);
-    setLoader(true);
-    setUpdateTable(moment.now());
-  };
-
-  const openModal = (id) => {
-    setShowModal(true);
-    setSessionId(id);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: state.searchFilterParams,
+      refreshTableData: moment.now()
+    });
   };
 
   const columns = React.useMemo(
@@ -156,7 +179,7 @@ function LoginSessions() {
                   role="button"
                   className="text-primary"
                   onClick={() => {
-                    openModal(id);
+                    openSessionModal(id);
                   }}
                   data-id={id}
                   data-cy={id}
@@ -291,17 +314,22 @@ function LoginSessions() {
   );
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
     localStorage.setItem("loginSession", JSON.stringify(searchParam));
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
@@ -374,7 +402,7 @@ function LoginSessions() {
     }
   ];
 
-  return contentLoader ? (
+  return state.contentLoader ? (
     <Loader />
   ) : (
     <div className="wrap">
@@ -387,26 +415,32 @@ function LoginSessions() {
                 placeholder="Search for your login sessions..."
                 options={sortBy(searchFilterOptions, ["label"])}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
             </div>
           </Col>
         </Row>
-        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+
+        <AuditFilterEntries
+          entries={state.entries}
+          refreshTable={refreshTable}
+        />
+
         <XATableLayout
-          data={loginSessionListingData}
+          data={state.tableListingData}
           columns={columns}
           fetchData={fetchLoginSessionLogsInfo}
-          totalCount={entries && entries.totalCount}
-          loading={loader}
-          pageCount={pageCount}
+          totalCount={state.entries && state.entries.totalCount}
+          loading={state.loader}
+          pageCount={state.pageCount}
           columnSort={true}
           defaultSort={getDefaultSort}
         />
+
         <AdminModal
-          show={showmodal}
-          data={sessionId}
-          onHide={handleClose}
+          show={state.showSessionModal}
+          data={state.sessionId}
+          onHide={hideSessionModal}
           updateSessionId={updateSessionId}
         ></AdminModal>
       </React.Fragment>
@@ -414,4 +448,4 @@ function LoginSessions() {
   );
 }
 
-export default LoginSessions;
+export default LoginSessionsLogs;

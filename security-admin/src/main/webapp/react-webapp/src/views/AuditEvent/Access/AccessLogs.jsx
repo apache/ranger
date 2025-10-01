@@ -17,24 +17,31 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useSearchParams, useOutletContext, Link } from "react-router-dom";
-import { Badge, Button, Row, Col, Table, Modal } from "react-bootstrap";
+import React, { useState, useCallback, useEffect, useReducer } from "react";
+import {
+  useSearchParams,
+  useOutletContext,
+  useLocation
+} from "react-router-dom";
+import { Badge, Row, Col, Table } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import dateFormat from "dateformat";
 import { fetchApi } from "Utils/fetchAPI";
 import {
+  AccessMoreLess,
   AuditFilterEntries,
+  CustomTooltip,
   CustomPopoverOnClick,
-  CustomPopoverTagOnClick
+  CustomPopoverTagOnClick,
+  Loader
 } from "Components/CommonComponents";
 import moment from "moment-timezone";
-import AccessLogsTable from "./AccessLogsTable";
+import AccessLogModal from "./AccessLogModal";
+import AccessLogPolicyModal from "./AccessLogPolicyModal";
 import {
   isEmpty,
   isUndefined,
   pick,
-  indexOf,
   map,
   sortBy,
   toString,
@@ -47,9 +54,7 @@ import {
 } from "lodash";
 import { toast } from "react-toastify";
 import qs from "qs";
-import { AccessMoreLess } from "Components/CommonComponents";
-import { PolicyViewDetails } from "./AdminLogs/PolicyViewDetails";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import {
   isKeyAdmin,
   isKMSAuditor,
@@ -59,165 +64,145 @@ import {
   requestDataTitle,
   fetchSearchFilterParams,
   parseSearchFilter
-} from "../../utils/XAUtils";
-import { CustomTooltip, Loader } from "../../components/CommonComponents";
+} from "Utils/XAUtils";
 import {
   ServiceRequestDataRangerAcl,
   ServiceRequestDataHadoopAcl
-} from "../../utils/XAEnums";
-import { getServiceDef } from "../../utils/appState";
+} from "Utils/XAEnums";
+import { getServiceDef } from "Utils/appState";
+import { ACTIONS } from "Views/AuditEvent/action";
+import { reducer, ACCESS_INITIAL_STATE } from "Views/AuditEvent/reducer";
 
-function Access() {
-  const context = useOutletContext();
-  const services = context.services;
-  const servicesAvailable = context.servicesAvailable;
-  const isKMSRole = isKeyAdmin() || isKMSAuditor();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [accessListingData, setAccessLogs] = useState([]);
-  const [zones, setZones] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [pageCount, setPageCount] = React.useState(0);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const [entries, setEntries] = useState([]);
-  const [showrowmodal, setShowRowModal] = useState(false);
-  const [policyviewmodal, setPolicyViewModal] = useState(false);
-  const [policyParamsData, setPolicyParamsData] = useState(null);
-  const [rowdata, setRowData] = useState([]);
-  const [checked, setChecked] = useState(() => {
-    let urlParam = Object.fromEntries([...searchParams]);
-    if (urlParam?.excludeServiceUser) {
-      return urlParam.excludeServiceUser == "true" ? true : false;
-    } else {
-      return localStorage?.excludeServiceUser == "true" ? true : false;
-    }
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const fetchIdRef = useRef(0);
-  const [contentLoader, setContentLoader] = useState(true);
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [resetPage, setResetpage] = useState({ page: 0 });
-  const [policyDetails, setPolicyDetails] = useState({});
+function AccessLogs() {
+  const [state, dispatch] = useReducer(reducer, ACCESS_INITIAL_STATE);
+
+  const location = useLocation();
+
+  const { services, servicesAvailable } = useOutletContext();
+
   const { allServiceDefs } = cloneDeep(getServiceDef());
+  const isKMSRole = isKeyAdmin() || isKMSAuditor();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [excludeServiceUser, setExcludeServiceUser] = useState(() => {
+    return localStorage?.excludeServiceUser === "true" ? true : false;
+  });
 
   useEffect(() => {
     if (!isKMSRole) {
-      fetchZones();
+      fetchSecurityZones();
     }
 
-    let currentDate = moment(moment()).format("MM/DD/YYYY");
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+    const currentDate = moment(moment()).format("MM/DD/YYYY");
+    const { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
 
     if (
       !has(searchFilterParam, "startDate") &&
       !has(searchFilterParam, "endDate")
     ) {
-      searchParam["startDate"] = currentDate;
-      searchFilterParam["startDate"] = currentDate;
+      searchParam.startDate = currentDate;
+      searchFilterParam.startDate = currentDate;
       defaultSearchFilterParam.push({
         category: "startDate",
         value: currentDate
       });
     }
 
-    // Add excludeServiceUser if not present in the search param with default state value of checked
-    if (!has(searchParam, "excludeServiceUser")) {
-      searchParam["excludeServiceUser"] = checked;
-    }
-    localStorage.setItem("excludeServiceUser", checked);
-
     // Updating the states for search params, search filter, default search filter and localStorage
     setSearchParams(searchParam, { replace: true });
-    setSearchFilterParams(searchFilterParam);
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
     localStorage.setItem("bigData", JSON.stringify(searchParam));
   }, []);
 
   useEffect(() => {
     if (servicesAvailable !== null) {
-      let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+      const { searchFilterParam, defaultSearchFilterParam, searchParam } =
         fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
-
-      // Update excludeServiceUser in the search param and in the localStorage
-      if (searchParam?.excludeServiceUser) {
-        setChecked(searchParam?.excludeServiceUser == "true" ? true : false);
-        localStorage.setItem(
-          "excludeServiceUser",
-          searchParam?.excludeServiceUser
-        );
-      }
 
       // Updating the states for search params, search filter, default search filter and localStorage
       setSearchParams(searchParam, { replace: true });
       if (
-        JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+        JSON.stringify(state.searchFilterParams) !==
+        JSON.stringify(searchFilterParam)
       ) {
-        setSearchFilterParams(searchFilterParam);
+        dispatch({
+          type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+          searchFilterParams: searchFilterParam,
+          refreshTableData: moment.now()
+        });
       }
-      setDefaultSearchFilterParams(defaultSearchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+        defaultSearchFilterParams: defaultSearchFilterParam
+      });
       localStorage.setItem("bigData", JSON.stringify(searchParam));
-
-      setContentLoader(false);
+      dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
     }
-  }, [searchParams, servicesAvailable]);
+  }, [location.search, servicesAvailable]);
 
   const fetchAccessLogsInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
-      setLoader(true);
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
       if (servicesAvailable !== null) {
-        let logsResp = [];
-        let logs = [];
-        let totalCount = 0;
-        const fetchId = ++fetchIdRef.current;
-        let params = { ...searchFilterParams };
-        if (fetchId === fetchIdRef.current) {
-          params["pageSize"] = pageSize;
-          params["startIndex"] = pageIndex * pageSize;
-          if (Object.fromEntries([...searchParams])?.excludeServiceUser) {
-            params["excludeServiceUser"] =
-              Object.fromEntries([...searchParams])?.excludeServiceUser ==
-              "true"
-                ? true
-                : false;
-          } else {
-            params["excludeServiceUser"] = checked;
-          }
-          if (sortBy.length > 0) {
-            params["sortBy"] = getTableSortBy(sortBy);
-            params["sortType"] = getTableSortType(sortBy);
-          }
-          try {
-            logsResp = await fetchApi({
-              url: "assets/accessAudit",
-              params: params,
-              skipNavigate: true,
-              paramsSerializer: function (params) {
-                return qs.stringify(params, { arrayFormat: "repeat" });
-              }
-            });
-            logs = logsResp.data.vXAccessAudits;
-            totalCount = logsResp.data.totalCount;
-          } catch (error) {
-            serverError(error);
-            console.error(
-              `Error occurred while fetching Access logs! ${error}`
-            );
-          }
-          setAccessLogs(logs);
-          setEntries(logsResp.data);
-          setPageCount(Math.ceil(totalCount / pageSize));
-          setResetpage({ page: gotoPage });
-          setLoader(false);
+        const params = {
+          ...state.searchFilterParams,
+          pageSize,
+          startIndex: pageIndex * pageSize,
+          excludeServiceUser: excludeServiceUser,
+          ...(sortBy.length > 0 && {
+            sortBy: getTableSortBy(sortBy),
+            sortType: getTableSortType(sortBy)
+          })
+        };
+
+        try {
+          const response = await fetchApi({
+            url: "assets/accessAudit",
+            params: params,
+            skipNavigate: true,
+            paramsSerializer: function (params) {
+              return qs.stringify(params, { arrayFormat: "repeat" });
+            }
+          });
+
+          const logsEntries = pick(response.data, [
+            "startIndex",
+            "pageSize",
+            "totalCount",
+            "resultSize"
+          ]);
+          const logsResp = response.data?.vXAccessAudits || [];
+          const totalCount = response.data?.totalCount || 0;
+
+          dispatch({
+            type: ACTIONS.SET_TABLE_DATA,
+            tableListingData: logsResp,
+            entries: logsEntries,
+            pageCount: Math.ceil(totalCount / pageSize),
+            resetPage: { page: gotoPage }
+          });
+        } catch (error) {
+          serverError(error);
+          console.error(`Error occurred while fetching access logs : ${error}`);
         }
+
+        dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
       }
     },
-    [updateTable, checked, searchFilterParams, servicesAvailable]
+    [state.refreshTableData, excludeServiceUser, servicesAvailable]
   );
 
-  const fetchZones = async () => {
+  const fetchSecurityZones = async () => {
     let zonesResp = [];
     try {
       const response = await fetchApi({
@@ -226,14 +211,17 @@ function Access() {
 
       zonesResp = response?.data || [];
     } catch (error) {
-      console.error(`Error occurred while fetching Zones! ${error}`);
+      console.error(`Error occurred while fetching security zones : ${error}`);
     }
 
-    setZones(sortBy(zonesResp, ["name"]));
+    dispatch({
+      type: ACTIONS.SET_SECURITY_ZONES,
+      securityZones: sortBy(zonesResp, ["name"])
+    });
   };
 
-  const toggleChange = (chkVal) => {
-    let checkBoxValue = chkVal?.target?.checked;
+  const toggleChange = (e) => {
+    let checkboxValue = e?.target?.checked;
     let searchParam = {};
 
     for (const [key, value] of searchParams.entries()) {
@@ -262,67 +250,54 @@ function Access() {
       }
     }
 
-    searchParam["excludeServiceUser"] = checkBoxValue;
-    localStorage.setItem("excludeServiceUser", checkBoxValue);
+    localStorage.setItem("excludeServiceUser", checkboxValue);
 
-    setSearchParams(searchParam, { replace: true });
-    setAccessLogs([]);
-    setChecked(chkVal?.target?.checked);
-    setLoader(true);
-    setUpdateTable(moment.now());
+    setExcludeServiceUser(checkboxValue);
+    dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
   };
 
-  const handleClosePolicyId = () => setPolicyViewModal(false);
-  const handleClose = () => setShowRowModal(false);
+  const hidePolicyModal = () =>
+    dispatch({
+      type: ACTIONS.SHOW_POLICY_MODAL,
+      showPolicyModal: false,
+      policyData: null
+    });
 
-  const rowModal = (row) => {
-    setShowRowModal(true);
-    setRowData(row.original);
+  const hideRowModal = () =>
+    dispatch({
+      type: ACTIONS.SHOW_ROW_MODAL,
+      showRowModal: false,
+      rowData: {}
+    });
+
+  const openRowModal = (row) => {
+    dispatch({
+      type: ACTIONS.SHOW_ROW_MODAL,
+      showRowModal: true,
+      rowData: row.original
+    });
   };
 
-  const openModal = (policyDetails) => {
-    let policyParams = pick(policyDetails, [
-      "eventTime",
-      "policyId",
-      "policyVersion"
-    ]);
-    setPolicyViewModal(true);
-    setPolicyDetails(policyDetails);
-    setPolicyParamsData(policyParams);
-    fetchVersions(policyDetails.policyId);
-  };
-
-  const fetchVersions = async (policyId) => {
-    let versionsResp = {};
-    try {
-      versionsResp = await fetchApi({
-        url: `plugins/policy/${policyId}/versionList`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Policy Version or CSRF headers! ${error}`
-      );
-    }
-    setCurrentPage(
-      versionsResp.data.value
-        .split(",")
-        .map(Number)
-        .sort(function (a, b) {
-          return a - b;
-        })
-    );
-    setLoader(false);
+  const openPolicyModal = (policy) => {
+    let policyParams = pick(policy, ["eventTime", "policyId", "policyVersion"]);
+    dispatch({
+      type: ACTIONS.SHOW_POLICY_MODAL,
+      showPolicyModal: true,
+      policyData: policyParams
+    });
   };
 
   const refreshTable = () => {
-    setAccessLogs([]);
-    setLoader(true);
-    setUpdateTable(moment.now());
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: state.searchFilterParams,
+      refreshTableData: moment.now()
+    });
   };
 
   const requestDataContent = (requestData) => {
     const copyText = (val) => {
-      !isEmpty(val) && toast.success("Copied successfully!!");
+      !isEmpty(val) && toast.success("Copied successfully !!");
       return val;
     };
     return (
@@ -347,7 +322,7 @@ function Access() {
     );
   };
 
-  const rsrcTagContent = (requestData) => {
+  const requestTagContent = (requestData) => {
     return (
       <>
         <Table bordered hover>
@@ -407,38 +382,6 @@ function Access() {
     );
   };
 
-  const previousVersion = (e) => {
-    if (e.currentTarget.classList.contains("active")) {
-      let curr = policyParamsData && policyParamsData.policyVersion;
-      let policyVersionList = currentPage;
-      var previousVal =
-        policyVersionList[
-          (indexOf(policyVersionList, curr) - 1) % policyVersionList.length
-        ];
-    }
-    let prevVal = {};
-    prevVal.policyVersion = previousVal;
-    prevVal.policyId = policyParamsData.policyId;
-    prevVal.isChangeVersion = true;
-    setPolicyParamsData(prevVal);
-  };
-
-  const nextVersion = (e) => {
-    if (e.currentTarget.classList.contains("active")) {
-      let curr = policyParamsData && policyParamsData.policyVersion;
-      let policyVersionList = currentPage;
-      var nextValue =
-        policyVersionList[
-          (indexOf(policyVersionList, curr) + 1) % policyVersionList.length
-        ];
-    }
-    let nextVal = {};
-    nextVal.policyVersion = nextValue;
-    nextVal.policyId = policyParamsData.policyId;
-    nextVal.isChangeVersion = true;
-    setPolicyParamsData(nextVal);
-  };
-
   const columns = React.useMemo(
     () => [
       {
@@ -455,7 +398,7 @@ function Access() {
                 className="text-primary"
                 onClick={(e) => {
                   e.stopPropagation();
-                  openModal(rawValue.row.original);
+                  openPolicyModal(rawValue.row.original);
                 }}
               >
                 {rawValue.value}
@@ -666,7 +609,7 @@ function Access() {
                 {rawValue.value}
               </div>
             );
-          } else return "--";
+          } else return <div className="text-center">--</div>;
         },
         width: 150,
         disableResizing: true,
@@ -742,16 +685,16 @@ function Access() {
         Header: "Tags",
         accessor: "tags",
         Cell: (rawValue) => {
-          let Tags = [];
+          let tags = [];
           if (!isEmpty(rawValue.value)) {
-            Tags = sortBy(JSON.parse(rawValue.value), "type")?.map((tag) => {
+            tags = sortBy(JSON.parse(rawValue.value), "type")?.map((tag) => {
               if (tag.attributes && !isEmpty(tag.attributes)) {
                 return (
                   <CustomPopoverTagOnClick
                     icon="text-info"
                     data={tag.type}
                     title={"Atrribute Details"}
-                    content={rsrcTagContent(tag.attributes)}
+                    content={requestTagContent(tag.attributes)}
                     placement="left"
                     trigger={["click", "focus"]}
                   ></CustomPopoverTagOnClick>
@@ -763,7 +706,7 @@ function Access() {
           } else {
             return <div className="text-center">--</div>;
           }
-          return <AccessMoreLess Data={Tags} />;
+          return <AccessMoreLess Data={tags} />;
         },
         width: 140,
         disableResizing: true,
@@ -810,10 +753,10 @@ function Access() {
     }));
   };
 
-  const getZones = () => {
+  const getSecurityZones = () => {
     let zonesName = [];
 
-    zonesName = map(zones, function (zone) {
+    zonesName = map(state.securityZones, function (zone) {
       return { label: zone.name, value: zone.name };
     });
 
@@ -821,19 +764,22 @@ function Access() {
   };
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    searchParam["excludeServiceUser"] = checked;
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
 
-    setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam, { replace: true });
     localStorage.setItem("bigData", JSON.stringify(searchParam));
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
@@ -962,7 +908,7 @@ function Access() {
       label: "Zone Name",
       urlLabel: "zoneName",
       type: "textoptions",
-      options: getZones
+      options: getSecurityZones
     },
     {
       category: "excludeResourceName",
@@ -972,7 +918,7 @@ function Access() {
     }
   ];
 
-  return contentLoader ? (
+  return state.contentLoader ? (
     <Loader />
   ) : (
     <div className="wrap">
@@ -985,7 +931,7 @@ function Access() {
                 placeholder="Search for your access audits..."
                 options={sortBy(searchFilterOptions, ["label"])}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
 
               <span className="info-icon">
@@ -1030,6 +976,7 @@ function Access() {
             </div>
           </Col>
         </Row>
+
         <div className="position-relative">
           <Row className="mb-2">
             <Col sm={2}>
@@ -1037,7 +984,7 @@ function Access() {
               <input
                 type="checkbox"
                 className="align-middle"
-                checked={checked}
+                checked={excludeServiceUser}
                 onChange={toggleChange}
                 data-id="serviceUsersExclude"
                 data-cy="serviceUsersExclude"
@@ -1045,22 +992,23 @@ function Access() {
             </Col>
             <Col sm={9}>
               <AuditFilterEntries
-                entries={entries}
+                entries={state.entries}
                 refreshTable={refreshTable}
               />
             </Col>
           </Row>
+
           <XATableLayout
-            data={accessListingData}
+            data={state.tableListingData}
             columns={columns}
             fetchData={fetchAccessLogsInfo}
-            totalCount={entries && entries.totalCount}
-            loading={loader}
-            pageCount={pageCount}
+            totalCount={state.entries && state.entries.totalCount}
+            loading={state.loader}
+            pageCount={state.pageCount}
             getRowProps={(row) => ({
               onClick: (e) => {
                 e.stopPropagation();
-                rowModal(row);
+                openRowModal(row);
               }
             })}
             columnHide={{ tableName: "bigData", isVisible: true }}
@@ -1069,85 +1017,23 @@ function Access() {
             defaultSort={getDefaultSort}
           />
         </div>
-        <Modal show={showrowmodal} size="lg" onHide={handleClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>
-              <h4>
-                Audit Access Log Detail
-                <Link
-                  className="text-info"
-                  target="_blank"
-                  title="Show log details in next tab"
-                  to={{
-                    pathname: `/reports/audit/eventlog/${rowdata.eventId}`
-                  }}
-                >
-                  <i className="fa-fw fa fa-external-link float-end text-info"></i>
-                </Link>
-              </h4>
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 me-md-3">
-            <AccessLogsTable data={rowdata}></AccessLogsTable>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="primary" onClick={handleClose}>
-              OK
-            </Button>
-          </Modal.Footer>
-        </Modal>
-        <Modal show={policyviewmodal} onHide={handleClosePolicyId} size="xl">
-          <Modal.Header closeButton>
-            <Modal.Title>Policy Details</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <PolicyViewDetails
-              paramsData={policyParamsData}
-              policyView={false}
-            />
-          </Modal.Body>
-          <Modal.Footer>
-            <div className="policy-version pull-left">
-              <i
-                className={
-                  policyParamsData && policyParamsData.policyVersion > 1
-                    ? "fa-fw fa fa-chevron-left active"
-                    : "fa-fw fa fa-chevron-left"
-                }
-                onClick={(e) =>
-                  e.currentTarget.classList.contains("active") &&
-                  previousVersion(e)
-                }
-              ></i>
-              <span>{`Version ${
-                policyParamsData && policyParamsData.policyVersion
-              }`}</span>
-              <i
-                className={
-                  !isUndefined(
-                    currentPage[
-                      indexOf(
-                        currentPage,
-                        policyParamsData && policyParamsData.policyVersion
-                      ) + 1
-                    ]
-                  )
-                    ? "fa-fw fa fa-chevron-right active"
-                    : "fa-fw fa fa-chevron-right"
-                }
-                onClick={(e) =>
-                  e.currentTarget.classList.contains("active") && nextVersion(e)
-                }
-              ></i>
-            </div>
-            <Button variant="primary" onClick={handleClosePolicyId}>
-              OK
-            </Button>
-          </Modal.Footer>
-        </Modal>
+
+        <AccessLogModal
+          rowData={state.rowData}
+          showRowModal={state.showRowModal}
+          hideRowModal={hideRowModal}
+        ></AccessLogModal>
+
+        <AccessLogPolicyModal
+          policyData={state.policyData}
+          policyView={false}
+          policyRevert={false}
+          showPolicyModal={state.showPolicyModal}
+          hidePolicyModal={hidePolicyModal}
+        ></AccessLogPolicyModal>
       </React.Fragment>
     </div>
   );
 }
 
-export default Access;
+export default AccessLogs;

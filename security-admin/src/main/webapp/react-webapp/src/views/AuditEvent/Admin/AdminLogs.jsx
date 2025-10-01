@@ -17,19 +17,19 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useReducer } from "react";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { Badge, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
-import { ClassTypes, enumValueToLabel } from "../../utils/XAEnums";
+import { ClassTypes, enumValueToLabel } from "Utils/XAEnums";
 import dateFormat from "dateformat";
 import AdminModal from "./AdminModal";
-import { AuditFilterEntries } from "Components/CommonComponents";
 import OperationAdminModal from "./OperationAdminModal";
+import { AuditFilterEntries, Loader } from "Components/CommonComponents";
 import moment from "moment-timezone";
-import { capitalize, startCase, sortBy, toLower } from "lodash";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
+import { capitalize, startCase, sortBy, toLower, pick } from "lodash";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import {
   getTableSortBy,
   getTableSortType,
@@ -37,105 +37,131 @@ import {
   parseSearchFilter,
   serverError,
   currentTimeZone
-} from "../../utils/XAUtils";
-import { Loader } from "../../components/CommonComponents";
+} from "Utils/XAUtils";
+import { ACTIONS } from "Views/AuditEvent/action";
+import { reducer, ADMIN_INITIAL_STATE } from "Views/AuditEvent/reducer";
 
-function Admin() {
-  const [adminListingData, setAdminLogs] = useState([]);
-  const [sessionId, setSessionId] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [pageCount, setPageCount] = useState(0);
-  const [showmodal, setShowModal] = useState(false);
-  const [entries, setEntries] = useState([]);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const [showrowmodal, setShowRowModal] = useState(false);
-  const [rowdata, setRowData] = useState([]);
-  const fetchIdRef = useRef(0);
-  const [contentLoader, setContentLoader] = useState(true);
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [resetPage, setResetpage] = useState({ page: null });
-  const handleClose = () => setShowModal(false);
-  const handleClosed = () => setShowRowModal(false);
+function AdminLogs() {
+  const [state, dispatch] = useReducer(reducer, ADMIN_INITIAL_STATE);
+
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const hideRowModal = () =>
+    dispatch({
+      type: ACTIONS.SHOW_ROW_MODAL,
+      showRowModal: false,
+      rowData: {}
+    });
+
+  const hideSessionModal = () =>
+    dispatch({
+      type: ACTIONS.SHOW_SESSION_MODAL,
+      showSessionModal: false,
+      sessionId: undefined
+    });
+
+  const openRowModal = async (row) => {
+    const { original = {} } = row;
+
+    dispatch({
+      type: ACTIONS.SHOW_ROW_MODAL,
+      showRowModal: true,
+      rowData: original
+    });
+  };
+
+  const openSessionModal = (sessionId) => {
+    dispatch({
+      type: ACTIONS.SHOW_SESSION_MODAL,
+      showSessionModal: true,
+      sessionId: sessionId
+    });
+  };
 
   const updateSessionId = (id) => {
     navigate(`/reports/audit/admin?sessionId=${id}`);
     setSearchParams({ sessionId: id }, { replace: true });
-    setContentLoader(true);
-  };
-
-  const rowModal = async (row) => {
-    const { original = {} } = row;
-    original.objectId;
-    setShowRowModal(true);
-    setRowData(original);
   };
 
   useEffect(() => {
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+    const { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("admin", searchParams, searchFilterOptions);
 
     // Updating the states for search params, search filter, default search filter and localStorage
     setSearchParams(searchParam, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
     localStorage.setItem("admin", JSON.stringify(searchParam));
-    setContentLoader(false);
-  }, [searchParams]);
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+  }, [location.search]);
 
   const fetchAdminLogsInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
-      setLoader(true);
-      let logsResp = [];
-      let adminlogs = [];
-      let totalCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["pageSize"] = pageSize;
-        params["startIndex"] = pageIndex * pageSize;
-        if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
-          params["sortType"] = getTableSortType(sortBy);
-        }
-        try {
-          logsResp = await fetchApi({
-            url: "assets/report",
-            params: params
-          });
-          adminlogs = logsResp.data.vXTrxLogs;
-          totalCount = logsResp.data.totalCount;
-        } catch (error) {
-          serverError(error);
-          console.error(`Error occurred while fetching Admin logs! ${error}`);
-        }
-        setAdminLogs(adminlogs);
-        setEntries(logsResp.data);
-        setPageCount(Math.ceil(totalCount / pageSize));
-        setResetpage({ page: gotoPage });
-        setLoader(false);
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+
+      const params = {
+        ...state.searchFilterParams,
+        pageSize,
+        startIndex: pageIndex * pageSize,
+        ...(sortBy.length > 0 && {
+          sortBy: getTableSortBy(sortBy),
+          sortType: getTableSortType(sortBy)
+        })
+      };
+
+      try {
+        const response = await fetchApi({
+          url: "assets/report",
+          params: params
+        });
+
+        const logsEntries = pick(response.data, [
+          "startIndex",
+          "pageSize",
+          "totalCount",
+          "resultSize"
+        ]);
+        const logsResp = response.data?.vXTrxLogs || [];
+        const totalCount = response.data?.totalCount || 0;
+
+        dispatch({
+          type: ACTIONS.SET_TABLE_DATA,
+          tableListingData: logsResp,
+          entries: logsEntries,
+          pageCount: Math.ceil(totalCount / pageSize),
+          resetPage: { page: gotoPage }
+        });
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred while fetching Admin logs! ${error}`);
       }
+
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
   const refreshTable = () => {
-    setAdminLogs([]);
-    setLoader(true);
-    setUpdateTable(moment.now());
-  };
-
-  const openModal = (sessionId) => {
-    setShowModal(true);
-    setSessionId(sessionId);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: state.searchFilterParams,
+      refreshTableData: moment.now()
+    });
   };
 
   const columns = React.useMemo(
@@ -337,7 +363,7 @@ function Admin() {
                   className="text-primary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    openModal(sessionId);
+                    openSessionModal(sessionId);
                   }}
                   data-id={sessionId}
                   data-cy={sessionId}
@@ -368,17 +394,22 @@ function Admin() {
   );
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
     localStorage.setItem("admin", JSON.stringify(searchParam));
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
@@ -447,7 +478,7 @@ function Admin() {
     }
   ];
 
-  return contentLoader ? (
+  return state.contentLoader ? (
     <Loader />
   ) : (
     <div className="wrap">
@@ -460,43 +491,49 @@ function Admin() {
                 placeholder="Search for your access logs..."
                 options={sortBy(searchFilterOptions, ["label"])}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
             </div>
           </Col>
         </Row>
 
-        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+        <AuditFilterEntries
+          entries={state.entries}
+          refreshTable={refreshTable}
+        />
 
         <XATableLayout
-          data={adminListingData}
+          data={state.tableListingData}
           columns={columns}
           fetchData={fetchAdminLogsInfo}
-          totalCount={entries && entries.totalCount}
-          pageCount={pageCount}
-          loading={loader}
+          totalCount={state.entries && state.entries.totalCount}
+          pageCount={state.pageCount}
+          loading={state.loader}
           columnSort={true}
           defaultSort={getDefaultSort}
           getRowProps={(row) => ({
-            onClick: () => rowModal(row)
+            onClick: (e) => {
+              e.stopPropagation();
+              openRowModal(row);
+            }
           })}
         />
 
         <AdminModal
-          show={showmodal}
-          data={sessionId}
-          onHide={handleClose}
+          show={state.showSessionModal}
+          data={state.sessionId}
+          onHide={hideSessionModal}
           updateSessionId={updateSessionId}
         ></AdminModal>
 
         <OperationAdminModal
-          show={showrowmodal}
-          data={rowdata}
-          onHide={handleClosed}
+          data={state.rowData}
+          show={state.showRowModal}
+          onHide={hideRowModal}
         ></OperationAdminModal>
       </React.Fragment>
     </div>
   );
 }
 
-export default Admin;
+export default AdminLogs;

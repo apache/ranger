@@ -20,28 +20,28 @@
 import React, { useState, useEffect } from "react";
 import { fetchApi } from "Utils/fetchAPI";
 import { Table, Badge, Row, Col } from "react-bootstrap";
-import { RangerPolicyType, DefStatus } from "../../../utils/XAEnums";
+import { RangerPolicyType, DefStatus } from "Utils/XAEnums";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
 import { cloneDeep, find, isEmpty, map, sortBy } from "lodash";
-import { getResourcesDefVal, serverError } from "../../../utils/XAUtils";
-import { ModalLoader } from "../../../components/CommonComponents";
-import { getServiceDef } from "../../../utils/appState";
+import { getResourcesDefVal, serverError } from "Utils/XAUtils";
+import { ModalLoader } from "Components/CommonComponents";
+import { getServiceDef } from "Utils/appState";
 
 export function PolicyViewDetails(props) {
   const isMultiResources = true;
   const [access, setAccess] = useState([]);
-  const [loader, SetLoader] = useState(true);
+  const [loader, setLoader] = useState(true);
   const [serviceDef, setServiceDef] = useState({});
-  const { updateServices } = props;
+
   let { allServiceDefs } = cloneDeep(getServiceDef());
 
   useEffect(() => {
     if (props.paramsData.isRevert) {
-      fetchPolicyVersions();
+      revertPolicyVersion();
     } else {
       if (props.paramsData.isChangeVersion) {
-        fetchByVersion();
+        fetchPolicyByVersion();
       } else {
         fetchInitialData();
       }
@@ -53,70 +53,65 @@ export function PolicyViewDetails(props) {
   ]);
 
   const fetchInitialData = async () => {
-    await fetchByEventTime();
+    await fetchPolicyByEventTime();
   };
 
-  const fetchByEventTime = async () => {
+  const fetchPolicyByEventTime = async () => {
     let accesslogs;
-    let { policyView, paramsData } = props;
-    let paramsVal = !policyView
-      ? {
-          eventTime: paramsData.eventTime,
-          policyId: paramsData.policyId,
-          versionNo: paramsData.policyVersion
-        }
-      : "";
+    let paramsVal = !props.policyView ? props.paramsData : "";
     let accessLogsServiceDef;
 
     try {
       accesslogs = await fetchApi({
-        url: policyView
-          ? `plugins/policies/${paramsData.id}`
+        url: props.policyView
+          ? `plugins/policies/${props.paramsData.policyId}`
           : "plugins/policies/eventTime",
         params: paramsVal
       });
     } catch (error) {
-      console.error(`eventTime can not be undefined ${error}`);
+      console.error(`Error occurred while fetching policy : ${error}`);
     }
     accessLogsServiceDef = allServiceDefs?.find((servicedef) => {
       return servicedef.name == accesslogs?.data?.serviceType;
     });
     setAccess(accesslogs?.data);
     setServiceDef(accessLogsServiceDef);
-    SetLoader(false);
+    setLoader(false);
   };
 
-  const fetchByVersion = async () => {
+  const fetchPolicyByVersion = async () => {
     let accesslogs;
+
     try {
       accesslogs = await fetchApi({
-        url: `plugins/policy/${
-          props.paramsData.id || props.paramsData.policyId
-        }/version/${props.paramsData.version || props.paramsData.policyVersion}`
+        url: `plugins/policy/${props.paramsData.policyId}/version/${props.paramsData.policyVersion}`
       });
     } catch (error) {
-      console.error(`versionNo can not be undefined ${error}`);
+      console.error(
+        `Error occurred while fetching policy by version : ${error}`
+      );
     }
+
     setAccess(accesslogs?.data);
   };
 
-  const fetchPolicyVersions = async () => {
+  const revertPolicyVersion = async () => {
     let accesslogs;
-    let policyId = props.paramsData.id;
+    let policyId = props.paramsData.policyId;
+
     try {
       accesslogs = await fetchApi({
         url: `plugins/policies/${policyId}`,
         method: "PUT",
         data: access
       });
-      updateServices();
       toast.success("Policy reverted successfully");
+      props.refreshTable();
     } catch (error) {
-      console.error(
-        `Error occurred while fetching Policy Version or CSRF headers! ${error}`
-      );
+      console.error(`Error occurred while reverting policy : ${error}`);
       serverError(error);
     }
+
     setAccess(accesslogs?.data);
   };
 
@@ -149,7 +144,9 @@ export function PolicyViewDetails(props) {
     zoneName,
     additionalResources
   } = access;
+
   let additionalResourcesVal = [];
+
   if (isMultiResources) {
     additionalResourcesVal = [resources, ...(additionalResources || [])];
   }
@@ -639,6 +636,7 @@ export function PolicyViewDetails(props) {
           </p>
         </div>
       </div>
+
       <p className="form-header">Policy Details :</p>
       <div className="overflow-auto">
         <Table bordered size="sm" className="table-audit-filter-ready-only">

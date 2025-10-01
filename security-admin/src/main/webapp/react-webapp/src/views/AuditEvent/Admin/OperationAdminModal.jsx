@@ -18,8 +18,8 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { ClassTypes } from "../../utils/XAEnums";
-import { Modal, Button, Table } from "react-bootstrap";
+import { ClassTypes } from "Utils/XAEnums";
+import { Modal, Button } from "react-bootstrap";
 import { fetchApi } from "Utils/fetchAPI";
 import SecurityZonelogs from "./AdminLogs/SecurityZonelogs";
 import UserLogs from "./AdminLogs/UserLogs";
@@ -30,13 +30,13 @@ import ServiceLogs from "./AdminLogs/ServiceLogs";
 import PolicyLogs from "./AdminLogs/PolicyLogs";
 import PasswordLogs from "./AdminLogs/PasswordLogs";
 import UserprofileLogs from "./AdminLogs/UserprofileLogs";
-import { ModalLoader } from "../../components/CommonComponents";
+import { ModalLoader } from "Components/CommonComponents";
 
 export const OperationAdminModal = ({ onHide, show, data = {} }) => {
   const [reportdata, setReportData] = useState([]);
   const [loader, setLoader] = useState(false);
-  const [showview, setShowview] = useState(null);
-  const { objectClassType, action, objectId, transactionId } = data;
+
+  const { objectClassType, action, transactionId } = data;
 
   useEffect(() => {
     show && rowModal();
@@ -55,7 +55,6 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
       console.error(`Error occurred while fetching Admin logs! ${error}`);
     }
 
-    setShowview(objectId);
     setReportData(authlogs);
     setLoader(false);
   };
@@ -63,7 +62,7 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
   return (
     <Modal show={show} size="lg" onHide={onHide}>
       <Modal.Header closeButton>
-        <Modal.Title>Operation :{action || ""}</Modal.Title>
+        <Modal.Title>Operation : {action || ""}</Modal.Title>
       </Modal.Header>
 
       <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 me-md-3">

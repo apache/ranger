@@ -424,7 +424,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
     if (
       JSON.stringify(Object.keys(oldVal)) == JSON.stringify(Object.keys(newVal))
     ) {
-      Object.keys(oldVal)?.map((key, index) => {
+      Object.keys(oldVal)?.map((key) => {
         return tablerow.push(
           <>
             {!isEqual(oldVal[key]?.values, newVal[key]?.values) && (
@@ -497,7 +497,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
       JSON.stringify(Object.keys(oldVal)) !==
       JSON.stringify(Object.keys(newVal))
     ) {
-      Object.keys(newVal)?.map((key, index) => {
+      Object.keys(newVal)?.map((key) => {
         return tablerow.push(
           <>
             {!isEqual(newVal[key]?.values, oldVal[key]?.values) && (
@@ -549,7 +549,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
         );
       });
 
-      Object.keys(oldVal)?.map((key, index) => {
+      Object.keys(oldVal)?.map((key) => {
         return tablerow.push(
           <>
             {!isEqual(oldVal[key]?.values, newVal[key]?.values) && (
@@ -1738,7 +1738,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
       keynew = !isEmpty(obj.previousValue) && JSON.parse(obj.previousValue);
     });
 
-    Object.keys(keynew).map((key, index) => {
+    Object.keys(keynew).map((key) => {
       return tablerow.push(
         <>
           <tr>

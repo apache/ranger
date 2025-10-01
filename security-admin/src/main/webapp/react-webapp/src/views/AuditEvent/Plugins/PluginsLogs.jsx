@@ -17,15 +17,19 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSearchParams, useOutletContext } from "react-router-dom";
+import React, { useCallback, useEffect, useReducer } from "react";
+import {
+  useSearchParams,
+  useOutletContext,
+  useLocation
+} from "react-router-dom";
 import { Badge, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
-import { AuditFilterEntries } from "Components/CommonComponents";
+import { AuditFilterEntries, Loader } from "Components/CommonComponents";
 import moment from "moment-timezone";
 import dateFormat from "dateformat";
-import { sortBy, filter, isEmpty } from "lodash";
-import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
+import { sortBy, filter, isEmpty, pick } from "lodash";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
 import {
   getTableSortBy,
@@ -36,101 +40,98 @@ import {
   isKeyAdmin,
   isKMSAuditor,
   currentTimeZone
-} from "../../utils/XAUtils";
-import { Loader } from "../../components/CommonComponents";
+} from "Utils/XAUtils";
+import { ACTIONS } from "Views/AuditEvent/action";
+import { reducer, PLUGINS_INITIAL_STATE } from "Views/AuditEvent/reducer";
 
-function Plugins() {
-  const context = useOutletContext();
-  const services = context.services;
-  const [pluginsListingData, setPluginsLogs] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [pageCount, setPageCount] = React.useState(0);
-  const [entries, setEntries] = useState([]);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const fetchIdRef = useRef(0);
-  //const [services, setServices] = useState([]);
-  const [contentLoader, setContentLoader] = useState(true);
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [resetPage, setResetpage] = useState({ page: null });
+function PluginsLogs() {
+  const [state, dispatch] = useReducer(reducer, PLUGINS_INITIAL_STATE);
+
+  const location = useLocation();
+
+  const { services } = useOutletContext();
+
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+    const { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("agent", searchParams, searchFilterOptions);
 
     // Updating the states for search params, search filter, default search filter and localStorage
     setSearchParams(searchParam, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
-    }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    localStorage.setItem("agent", JSON.stringify(searchParam));
-    setContentLoader(false);
-  }, [searchParams]);
-
-  /* const fetchServices = async () => {
-    let servicesResp = [];
-    try {
-      servicesResp = await fetchApi({
-        url: "plugins/services"
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
       });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Services or CSRF headers! ${error}`
-      );
     }
-
-    setServices(servicesResp.data.services);
-    setLoader(false);
-  }; */
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
+    localStorage.setItem("agent", JSON.stringify(searchParam));
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+  }, [location.search]);
 
   const fetchPluginsInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
-      setLoader(true);
-      let logsResp = [];
-      let logs = [];
-      let totalCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["pageSize"] = pageSize;
-        params["startIndex"] = pageIndex * pageSize;
-        if (sortBy.length > 0) {
-          params["sortBy"] = getTableSortBy(sortBy);
-          params["sortType"] = getTableSortType(sortBy);
-        }
-        try {
-          logsResp = await fetchApi({
-            url: "assets/exportAudit",
-            params: params,
-            skipNavigate: true
-          });
-          logs = logsResp.data.vXPolicyExportAudits;
-          totalCount = logsResp.data.totalCount;
-        } catch (error) {
-          serverError(error);
-          console.error(`Error occurred while fetching Plugins logs! ${error}`);
-        }
-        setPluginsLogs(logs);
-        setEntries(logsResp.data);
-        setPageCount(Math.ceil(totalCount / pageSize));
-        setResetpage({ page: gotoPage });
-        setLoader(false);
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+
+      const params = {
+        ...state.searchFilterParams,
+        pageSize,
+        startIndex: pageIndex * pageSize,
+        ...(sortBy.length > 0 && {
+          sortBy: getTableSortBy(sortBy),
+          sortType: getTableSortType(sortBy)
+        })
+      };
+
+      try {
+        const response = await fetchApi({
+          url: "assets/exportAudit",
+          params: params,
+          skipNavigate: true
+        });
+
+        const logsEntries = pick(response.data, [
+          "startIndex",
+          "pageSize",
+          "totalCount",
+          "resultSize"
+        ]);
+        const logsResp = response.data?.vXPolicyExportAudits || [];
+        const totalCount = response.data?.totalCount || 0;
+
+        dispatch({
+          type: ACTIONS.SET_TABLE_DATA,
+          tableListingData: logsResp,
+          entries: logsEntries,
+          pageCount: Math.ceil(totalCount / pageSize),
+          resetPage: { page: gotoPage }
+        });
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred while fetching Plugins logs! ${error}`);
       }
+
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
   const refreshTable = () => {
-    setPluginsLogs([]);
-    setLoader(true);
-    setUpdateTable(moment.now());
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: state.searchFilterParams,
+      refreshTableData: moment.now()
+    });
   };
 
   const columns = React.useMemo(
@@ -248,17 +249,22 @@ function Plugins() {
   );
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
     localStorage.setItem("agent", JSON.stringify(searchParam));
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
@@ -322,7 +328,7 @@ function Plugins() {
     }
   ];
 
-  return contentLoader ? (
+  return state.contentLoader ? (
     <Loader />
   ) : (
     <div className="wrap">
@@ -335,19 +341,24 @@ function Plugins() {
                 placeholder="Search for your plugins..."
                 options={sortBy(searchFilterOptions, ["label"])}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
             </div>
           </Col>
         </Row>
-        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+
+        <AuditFilterEntries
+          entries={state.entries}
+          refreshTable={refreshTable}
+        />
+
         <XATableLayout
-          data={pluginsListingData}
+          data={state.tableListingData}
           columns={columns}
-          loading={loader}
-          totalCount={entries && entries.totalCount}
+          loading={state.loader}
+          totalCount={state.entries && state.entries.totalCount}
           fetchData={fetchPluginsInfo}
-          pageCount={pageCount}
+          pageCount={state.pageCount}
           columnSort={true}
           defaultSort={getDefaultSort}
         />
@@ -356,4 +367,4 @@ function Plugins() {
   );
 }
 
-export default Plugins;
+export default PluginsLogs;

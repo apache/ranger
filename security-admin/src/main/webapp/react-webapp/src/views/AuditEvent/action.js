@@ -17,22 +17,15 @@
  * under the License.
  */
 
-import React, { Component } from "react";
-import UserForm from "Views/UserGroupRoleListing/users_details/UserForm";
-import { commonBreadcrumb } from "Utils/XAUtils";
-
-class AddUserView extends Component {
-  render() {
-    return (
-      <>
-        <div className="header-wraper">
-          <h3 className="wrap-header bold">User Detail</h3>
-          {commonBreadcrumb(["Users", "UserCreate"])}
-        </div>
-        <UserForm />
-      </>
-    );
-  }
-}
-
-export default AddUserView;
+export const ACTIONS = {
+  SET_TABLE_LOADER: "set-table-loader",
+  SET_CONTENT_LOADER: "set-content-loader",
+  SET_SEARCH_FILTER_PARAMS: "set-search-filter-params",
+  SET_DEFAULT_SEARCH_FILTER_PARAMS: "set-default-search-filter-params",
+  SET_TABLE_DATA: "set-table-data",
+  SHOW_POLICY_MODAL: "show-policy-modal",
+  SHOW_ROW_MODAL: "show-row-modal",
+  SHOW_SESSION_MODAL: "show-session-modal",
+  SHOW_SYNC_TABLE_MODAL: "show-sync-table-modal",
+  SET_SECURITY_ZONES: "set-security-zones"
+};

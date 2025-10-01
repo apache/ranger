@@ -18,11 +18,11 @@
  */
 
 import React, { useState, useEffect } from "react";
-import AccessLogsTable from "./AccessLogsTable";
-import { PolicyViewDetails } from "./AdminLogs/PolicyViewDetails";
+import AccessLogTable from "./AccessLogTable";
+import { PolicyViewDetails } from "Views/AuditEvent/Admin/AdminLogs/PolicyViewDetails";
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
-import { isEmpty } from "lodash";
+import { isEmpty, pick } from "lodash";
 import { Loader } from "Components/CommonComponents";
 import { useParams } from "react-router-dom";
 
@@ -48,15 +48,17 @@ function AccessLogDetail() {
       });
     } catch (error) {
       console.error(
-        `Error occurred while fetching Access or CSRF headers! ${error}`
+        `Error occurred while fetching audit access logs : ${error}`
       );
       toast.error(error?.response?.data?.msgDesc);
     }
-    if (!isEmpty(accessResp)) {
+
+    if (!isEmpty(accessResp.data?.vXAccessAudits)) {
       accessResp.data.vXAccessAudits.map((obj) => {
         accessData = obj;
       });
     }
+
     setAccess(accessData);
     setLoader(false);
   };
@@ -69,17 +71,24 @@ function AccessLogDetail() {
         <>
           <h5 className="heading-without-wrap">
             {params.eventId !== undefined
-              ? "Ranger – audit log"
+              ? "Ranger - Audit Access Log Detail"
               : "Audit Access Log Detail"}
           </h5>
           <div className="wrap">
-            <AccessLogsTable data={access}></AccessLogsTable>
+            <AccessLogTable data={access}></AccessLogTable>
           </div>
           {access?.policyId !== undefined && access?.policyId > 0 && (
             <>
               <h5 className="heading-without-wrap">Policy Details</h5>
               <div className="wrap">
-                <PolicyViewDetails paramsData={access} policyView={false} />
+                <PolicyViewDetails
+                  paramsData={pick(access, [
+                    "eventTime",
+                    "policyId",
+                    "policyVersion"
+                  ])}
+                  policyView={false}
+                />
               </div>
             </>
           )}

@@ -25,10 +25,10 @@ import { toast } from "react-toastify";
 import {
   ServiceRequestDataRangerAcl,
   ServiceRequestDataHadoopAcl
-} from "../../utils/XAEnums";
-import { requestDataTitle } from "../../utils/XAUtils";
+} from "Utils/XAEnums";
+import { requestDataTitle } from "Utils/XAUtils";
 
-export const AccessLogsTable = ({ data = {} }) => {
+export const AccessLogTable = ({ data = {} }) => {
   const {
     eventTime,
     eventId,
@@ -55,7 +55,7 @@ export const AccessLogsTable = ({ data = {} }) => {
   } = data;
 
   const copyText = (val) => {
-    !isEmpty(val) && toast.success("Copied successfully!!");
+    !isEmpty(val) && toast.success("Copied successfully !!");
     return val;
   };
 
@@ -221,4 +221,4 @@ export const AccessLogsTable = ({ data = {} }) => {
     </Table>
   );
 };
-export default AccessLogsTable;
+export default AccessLogTable;

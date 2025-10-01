@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useCallback, useRef, useEffect, useReducer } from "react";
 import {
   Badge,
   Button,
@@ -51,47 +51,25 @@ import {
 } from "Utils/XAUtils";
 import { find, isEmpty, isUndefined, sortBy } from "lodash";
 import { getUserAccessRoleList } from "Utils/XAUtils";
-import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
-import { BlockUi, Loader } from "../../../components/CommonComponents";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
+import { BlockUi, Loader } from "Components/CommonComponents";
+import { ACTIONS } from "./action";
+import { reducer, INITIAL_STATE } from "./reducer";
 
-function Users() {
+function UserListing() {
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const [loader, setLoader] = useState(true);
-  const [userListingData, setUserData] = useState([]);
-  const fetchIdRef = useRef(0);
+  const { state: navigateState, search } = useLocation();
+
+  const isKMSRole = isKeyAdmin() || isKMSAuditor();
+
+  let initialArg = { navigateState: navigateState };
+
+  const [state, dispatch] = useReducer(reducer, initialArg, INITIAL_STATE);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const selectedRows = useRef([]);
   const toastId = useRef(null);
-  const [showModal, setConfirmModal] = useState(false);
-  const [showUserSyncDetails, setUserSyncdetails] = useState({
-    syncDteails: {},
-    showSyncDetails: false
-  });
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageCount, setPageCount] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage : 0
-  );
-  const [currentpageIndex, setCurrentPageIndex] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage - 1 : 0
-  );
-  const [currentpageSize, setCurrentPageSize] = useState(
-    state && state.showLastPage ? state.addPageData.pageSize : 25
-  );
-  const [resetPage, setResetPage] = useState({ page: 0 });
-  const [tblpageData, setTblPageData] = useState({
-    totalPage: 0,
-    pageRecords: 0,
-    pageSize: 0
-  });
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const isKMSRole = isKeyAdmin() || isKMSAuditor();
-  const [pageLoader, setPageLoader] = useState(true);
-  const [blockUI, setBlockUI] = useState(false);
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -127,87 +105,164 @@ function Users() {
     // Updating the states for search params, search filter and default search filter
     setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    setPageLoader(false);
-    localStorage.setItem("newDataAdded", state && state.showLastPage);
-  }, [searchParams]);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+    localStorage.setItem(
+      "newDataAdded",
+      navigateState && navigateState.showLastPage
+    );
+  }, [search]);
+
   useEffect(() => {
     if (localStorage.getItem("newDataAdded") == "true") {
-      scrollToNewData(userListingData);
+      scrollToNewData(state.tableListingData);
     }
-  }, [totalCount]);
-  const fetchUserInfo = useCallback(
+  }, [state.totalCount]);
+
+  const fetchUsers = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
-      setLoader(true);
-      let userData = [],
-        userResp = [];
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+      let userData = [];
       let totalCount = 0;
       let page =
-        state && state.showLastPage
-          ? state.addPageData.totalPage - 1
+        navigateState && navigateState.showLastPage
+          ? navigateState.addPageData.totalPage - 1
           : pageIndex;
 
       let totalPageCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
+      let params = { ...state.searchFilterParams };
+
       const userRoleListData = getUserAccessRoleList().map((m) => {
         return m.value;
       });
 
-      if (fetchId === fetchIdRef.current) {
-        params["page"] = page;
+      params["page"] = page;
+      params["startIndex"] =
+        navigateState && navigateState.showLastPage
+          ? (navigateState.addPageData.totalPage - 1) * pageSize
+          : page * pageSize;
+      params["pageSize"] = pageSize;
+      params["userRoleList"] = userRoleListData;
 
-        params["startIndex"] =
-          state && state.showLastPage
-            ? (state.addPageData.totalPage - 1) * pageSize
-            : page * pageSize;
-        params["pageSize"] = pageSize;
-        params["userRoleList"] = userRoleListData;
-        try {
-          userResp = await fetchApi({
-            url: "xusers/users",
-            params: params,
-            paramsSerializer: function (params) {
-              return qs.stringify(params, { arrayFormat: "repeat" });
-            }
-          });
-          userData = userResp.data.vXUsers;
-          totalCount = userResp.data.totalCount;
-          totalPageCount = Math.ceil(totalCount / pageSize);
-        } catch (error) {
-          serverError(error);
-          console.error(`Error occurred while fetching User list! ${error}`);
-        }
-        if (state) {
-          state["showLastPage"] = false;
-        }
-
-        setUserData(userData);
-        setTblPageData({
-          totalPage: totalPageCount,
-          pageRecords: userResp && userResp.data && userResp.data.totalCount,
-          pageSize: pageSize
+      try {
+        const response = await fetchApi({
+          url: "xusers/users",
+          params: params,
+          paramsSerializer: function (params) {
+            return qs.stringify(params, { arrayFormat: "repeat" });
+          }
         });
-        setTotalCount(totalCount);
-        setPageCount(totalPageCount);
-        setCurrentPageIndex(page);
-        setCurrentPageSize(pageSize);
-        setResetPage({ page: gotoPage });
-        setLoader(false);
+        userData = response.data.vXUsers || [];
+        totalCount = response.data.totalCount || 0;
+        totalPageCount = Math.ceil(totalCount / pageSize);
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred while fetching users ! ${error}`);
       }
+
+      if (navigateState) {
+        navigateState["showLastPage"] = false;
+      }
+
+      dispatch({
+        type: ACTIONS.SET_TABLE_DATA,
+        tableListingData: userData,
+        totalCount: totalCount,
+        pageCount: totalPageCount,
+        currentPageIndex: page,
+        currentPageSize: pageSize,
+        resetPage: { page: gotoPage },
+        tablePageData: {
+          totalPage: totalPageCount,
+          pageRecords: totalCount,
+          pageSize: pageSize
+        }
+      });
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
-  const handleDeleteBtnClick = () => {
+  const userDelete = () => {
     if (selectedRows.current.length > 0) {
-      toggleConfirmModal();
+      toggleUserDeleteModal();
     } else {
-      toast.warning("Please select atleast one user!!");
+      toast.warning("Please select atleast one user !!");
+    }
+  };
+
+  const toggleUserDeleteModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_DELETE_MODAL,
+      showDeleteModal: !state.showDeleteModal
+    });
+  };
+
+  const confirmUserDelete = () => {
+    handleUserDelete();
+  };
+
+  const handleUserDelete = async () => {
+    const selectedData = selectedRows.current;
+    let errorMsg = "";
+    if (selectedData.length > 0) {
+      toggleUserDeleteModal();
+      for (const { original } of selectedData) {
+        try {
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: true });
+          await fetchApi({
+            url: `xusers/secure/users/id/${original.id}`,
+            method: "DELETE",
+            params: {
+              forceDelete: true
+            }
+          });
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
+        } catch (error) {
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
+          if (error?.response?.data?.msgDesc) {
+            errorMsg += error.response.data.msgDesc + "\n";
+          } else {
+            errorMsg +=
+              `Error occurred during deleting user: ${original.name}` + "\n";
+          }
+          console.error(errorMsg);
+        }
+      }
+      if (errorMsg) {
+        toast.dismiss(toastId.current);
+        toastId.current = toast.error(errorMsg);
+      } else {
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success("User deleted successfully !");
+        if (
+          (state.tableListingData.length == 1 ||
+            state.tableListingData.length == selectedRows.current.length) &&
+          state.currentPageIndex > 0
+        ) {
+          if (typeof state.resetPage?.page === "function") {
+            state.resetPage.page(0);
+          }
+        } else {
+          dispatch({
+            type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+            searchFilterParams: state.searchFilterParams,
+            refreshTableData: moment.now()
+          });
+        }
+      }
     }
   };
 
@@ -225,10 +280,10 @@ function Users() {
         toastId.current = toast.warning(
           e == VisibilityStatus.STATUS_VISIBLE.value
             ? `Selected ${
-                selectedRows.current.length === 1 ? "User is" : "Users are"
+                selectedRows.current.length === 1 ? "user is" : "users are"
               } already visible`
             : `Selected ${
-                selectedRows.current.length === 1 ? "User is " : "Users are"
+                selectedRows.current.length === 1 ? "user is " : "users are"
               } already hidden`
         );
         return;
@@ -242,66 +297,42 @@ function Users() {
         toast.dismiss(toastId.current);
         toastId.current = toast.success(
           `Sucessfully updated ${
-            selectedRows.current.length === 1 ? "User" : "Users"
-          } visibility!!`
+            selectedRows.current.length === 1 ? "user" : "users"
+          } visibility !!`
         );
-        setUpdateTable(moment.now());
+        dispatch({
+          type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+          searchFilterParams: state.searchFilterParams,
+          refreshTableData: moment.now()
+        });
       } catch (error) {
         serverError(error);
-        console.error(`Error occurred during set User visibility! ${error}`);
+        console.error(`Error occurred during set user visibility ! ${error}`);
       }
     } else {
       toast.dismiss(toastId.current);
-      toastId.current = toast.warning("Please select atleast one user!!");
+      toastId.current = toast.warning("Please select atleast one user !!");
     }
   };
 
-  const handleDeleteClick = async () => {
-    const selectedData = selectedRows.current;
-    let errorMsg = "";
-    if (selectedData.length > 0) {
-      toggleConfirmModal();
-      for (const { original } of selectedData) {
-        try {
-          setBlockUI(true);
-          await fetchApi({
-            url: `xusers/secure/users/id/${original.id}`,
-            method: "DELETE",
-            params: {
-              forceDelete: true
-            }
-          });
-          setBlockUI(false);
-        } catch (error) {
-          setBlockUI(false);
-          if (error?.response?.data?.msgDesc) {
-            errorMsg += error.response.data.msgDesc + "\n";
-          } else {
-            errorMsg +=
-              `Error occurred during deleting Users: ${original.name}` + "\n";
-          }
-          console.error(errorMsg);
-        }
-      }
-      if (errorMsg) {
-        toast.dismiss(toastId.current);
-        toastId.current = toast.error(errorMsg);
-      } else {
-        toast.dismiss(toastId.current);
-        toastId.current = toast.success("User deleted successfully!");
-        if (
-          (userListingData.length == 1 ||
-            userListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 0
-        ) {
-          if (typeof resetPage?.page === "function") {
-            resetPage.page(0);
-          }
-        } else {
-          setUpdateTable(moment.now());
-        }
-      }
-    }
+  const addUser = () => {
+    navigate("/user/create", { state: { tablePageData: state.tablePageData } });
+  };
+
+  const openSyncDetailsModal = (value) => {
+    dispatch({
+      type: ACTIONS.SHOW_SYNC_DETAILS_MODAL,
+      showSyncDetailsModal: true,
+      syncDetailsData: !isEmpty(value) && JSON.parse(value)
+    });
+  };
+
+  const hideSyncDetailsModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_SYNC_DETAILS_MODAL,
+      showSyncDetailsModal: false,
+      syncDetailsData: {}
+    });
   };
 
   const columns = React.useMemo(
@@ -331,7 +362,7 @@ function Users() {
       },
       {
         Header: "Email Address",
-        accessor: "emailAddress", // accessor is the "key" in the data
+        accessor: "emailAddress",
         Cell: (rawValue) => {
           if (rawValue.value) {
             return (
@@ -443,7 +474,7 @@ function Users() {
       {
         Header: "Sync Details",
         accessor: "otherAttributes",
-        Cell: (rawValue, model) => {
+        Cell: (rawValue) => {
           if (rawValue.value) {
             return (
               <div className="text-center">
@@ -453,9 +484,8 @@ function Users() {
                   data-cy="syncDetailes"
                   data-for="users"
                   title="Sync Details"
-                  id={model.id}
                   onClick={() => {
-                    toggleUserSyncModal(rawValue.value);
+                    openSyncDetailsModal(rawValue.value);
                   }}
                 >
                   <i className="fa-fw fa fa-eye"> </i>
@@ -471,32 +501,6 @@ function Users() {
     ],
     []
   );
-
-  const addUser = () => {
-    navigate("/user/create", { state: { tblpageData: tblpageData } });
-  };
-
-  const toggleConfirmModal = () => {
-    setConfirmModal((state) => !state);
-  };
-
-  const toggleUserSyncModal = (raw) => {
-    setUserSyncdetails({
-      syncDteails: !isEmpty(raw) && JSON.parse(raw),
-      showSyncDetails: true
-    });
-  };
-
-  const toggleUserSyncModalClose = () => {
-    setUserSyncdetails({
-      syncDteails: {},
-      showSyncDetails: false
-    });
-  };
-
-  const handleConfirmClick = () => {
-    handleDeleteClick();
-  };
 
   const searchFilterOptions = [
     {
@@ -585,26 +589,31 @@ function Users() {
   ];
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
   return (
     <div className="wrap">
-      {pageLoader ? (
+      {state.contentLoader ? (
         <Loader />
       ) : (
         <React.Fragment>
-          <BlockUi isUiBlock={blockUI} />
+          <BlockUi isUiBlock={state.blockUi} />
           <Row className="mb-4">
             <Col sm={8} className="usr-grp-role-search-width">
               <StructuredFilter
@@ -612,7 +621,7 @@ function Users() {
                 placeholder="Search for your users..."
                 options={sortBy(searchFilterOptions, ["label"])}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
             </Col>
             {isSystemAdmin() && (
@@ -642,7 +651,7 @@ function Users() {
                   variant="danger"
                   size="sm"
                   title="Delete"
-                  onClick={handleDeleteBtnClick}
+                  onClick={userDelete}
                   className="ms-1 btn-sm"
                   data-id="deleteUserGroup"
                   data-cy="deleteUserGroup"
@@ -654,15 +663,15 @@ function Users() {
           </Row>
 
           <XATableLayout
-            data={userListingData}
+            data={state.tableListingData}
             columns={columns}
-            fetchData={fetchUserInfo}
-            totalCount={totalCount}
-            pageCount={pageCount}
-            currentpageIndex={currentpageIndex}
-            currentpageSize={currentpageSize}
+            fetchData={fetchUsers}
+            totalCount={state.totalCount}
+            pageCount={state.pageCount}
+            currentpageIndex={state.currentPageIndex}
+            currentpageSize={state.currentPageSize}
             pagination
-            loading={loader}
+            loading={state.loader}
             rowSelectOp={
               (isSystemAdmin() || isKeyAdmin()) && {
                 position: "first",
@@ -674,7 +683,7 @@ function Users() {
             })}
           />
 
-          <Modal show={showModal} onHide={toggleConfirmModal}>
+          <Modal show={state.showDeleteModal} onHide={toggleUserDeleteModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
                 Are you sure you want to delete the&nbsp;
@@ -694,18 +703,18 @@ function Users() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={toggleConfirmModal}
+                onClick={toggleUserDeleteModal}
               >
                 Close
               </Button>
-              <Button variant="primary" size="sm" onClick={handleConfirmClick}>
+              <Button variant="primary" size="sm" onClick={confirmUserDelete}>
                 OK
               </Button>
             </Modal.Footer>
           </Modal>
           <Modal
-            show={showUserSyncDetails && showUserSyncDetails.showSyncDetails}
-            onHide={toggleUserSyncModalClose}
+            show={state.showSyncDetailsModal}
+            onHide={hideSyncDetailsModal}
             size="xl"
           >
             <Modal.Header>
@@ -713,14 +722,14 @@ function Users() {
             </Modal.Header>
             <Modal.Body>
               <SyncSourceDetails
-                syncDetails={showUserSyncDetails.syncDteails}
+                syncDetails={state.syncDetailsData}
               ></SyncSourceDetails>
             </Modal.Body>
             <Modal.Footer>
               <Button
                 variant="primary"
                 size="sm"
-                onClick={toggleUserSyncModalClose}
+                onClick={hideSyncDetailsModal}
               >
                 OK
               </Button>
@@ -732,4 +741,4 @@ function Users() {
   );
 }
 
-export default Users;
+export default UserListing;

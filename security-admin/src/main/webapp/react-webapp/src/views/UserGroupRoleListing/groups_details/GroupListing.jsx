@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useCallback, useRef, useEffect, useReducer } from "react";
 import {
   Badge,
   Button,
@@ -28,8 +28,8 @@ import {
   Dropdown
 } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
-import { GroupSource } from "../../../utils/XAEnums";
-import { GroupTypes } from "../../../utils/XAEnums";
+import { GroupSource } from "Utils/XAEnums";
+import { GroupTypes } from "Utils/XAEnums";
 import { VisibilityStatus } from "Utils/XAEnums";
 import {
   useNavigate,
@@ -50,52 +50,24 @@ import {
   serverError,
   parseSearchFilter
 } from "Utils/XAUtils";
-import { find, isUndefined, isEmpty } from "lodash";
-import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
-import {
-  BlockUi,
-  Loader,
-  scrollToNewData
-} from "../../../components/CommonComponents";
+import { find, isUndefined, isEmpty, pick } from "lodash";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
+import { BlockUi, Loader, scrollToNewData } from "Components/CommonComponents";
+import { ACTIONS } from "./action";
+import { reducer, INITIAL_STATE } from "./reducer";
 
-function Groups() {
+function GroupListing() {
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const [groupListingData, setGroupData] = useState([]);
-  const [loader, setLoader] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
-  const fetchIdRef = useRef(0);
+  const { state: navigateState, search } = useLocation();
+
+  let initialArg = { navigateState: navigateState };
+
+  const [state, dispatch] = useReducer(reducer, initialArg, INITIAL_STATE);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const selectedRows = useRef([]);
   const toastId = useRef(null);
-  const [showModal, setConfirmModal] = useState(false);
-  const [updateTable, setUpdateTable] = useState(moment.now());
-  const [showGroupSyncDetails, setGroupSyncdetails] = useState({
-    syncDteails: {},
-    showSyncDetails: false
-  });
-  const [showAssociateUserModal, setAssociateUserModal] = useState(false);
-  const [pageCount, setPageCount] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage : 0
-  );
-  const [currentpageIndex, setCurrentPageIndex] = useState(
-    state && state.showLastPage ? state.addPageData.totalPage - 1 : 0
-  );
-  const [currentpageSize, setCurrentPageSize] = useState(
-    state && state.showLastPage ? state.addPageData.pageSize : 25
-  );
-  const [resetPage, setResetPage] = useState({ page: 0 });
-  const [tblpageData, setTblPageData] = useState({
-    totalPage: 0,
-    pageRecords: 0,
-    pageSize: 25
-  });
-  const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
-    []
-  );
-  const [pageLoader, setPageLoader] = useState(true);
-  const [blockUI, setBlockUI] = useState(false);
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -131,96 +103,115 @@ function Groups() {
     // Updating the states for search params, search filter and default search filter
     setSearchParams({ ...currentParams, ...searchParam }, { replace: true });
     if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      JSON.stringify(state.searchFilterParams) !==
+      JSON.stringify(searchFilterParam)
     ) {
-      setSearchFilterParams(searchFilterParam);
+      dispatch({
+        type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+        searchFilterParams: searchFilterParam,
+        refreshTableData: moment.now()
+      });
     }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    setPageLoader(false);
-    localStorage.setItem("newDataAdded", state && state.showLastPage);
-  }, [searchParams]);
+    dispatch({
+      type: ACTIONS.SET_DEFAULT_SEARCH_FILTER_PARAMS,
+      defaultSearchFilterParams: defaultSearchFilterParam
+    });
+    dispatch({ type: ACTIONS.SET_CONTENT_LOADER, contentLoader: false });
+    localStorage.setItem(
+      "newDataAdded",
+      navigateState && navigateState.showLastPage
+    );
+  }, [search]);
+
   useEffect(() => {
     if (localStorage.getItem("newDataAdded") == "true") {
-      scrollToNewData(groupListingData);
+      scrollToNewData(state.tableListingData);
     }
-  }, [totalCount]);
-  const fetchGroupInfo = useCallback(
+  }, [state.totalCount]);
+
+  const fetchGroups = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
-      setLoader(true);
-      let groupData = [],
-        groupResp = [];
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: true });
+      let groupData = [];
       let totalCount = 0;
       let page =
-        state && state.showLastPage
-          ? state.addPageData.totalPage - 1
+        navigateState && navigateState.showLastPage
+          ? navigateState.addPageData.totalPage - 1
           : pageIndex;
       let totalPageCount = 0;
-      const fetchId = ++fetchIdRef.current;
-      let params = { ...searchFilterParams };
-      if (fetchId === fetchIdRef.current) {
-        params["page"] = page;
-        params["startIndex"] =
-          state && state.showLastPage
-            ? (state.addPageData.totalPage - 1) * pageSize
-            : pageIndex * pageSize;
-        params["pageSize"] = pageSize;
-        try {
-          groupResp = await fetchApi({
-            url: "xusers/groups",
-            params: params
-          });
-          groupData = groupResp.data.vXGroups;
-          totalCount = groupResp.data.totalCount;
-          totalPageCount = Math.ceil(totalCount / pageSize);
-        } catch (error) {
-          serverError(error);
-          console.error(`Error occurred while fetching User list! ${error}`);
-        }
-        if (state) {
-          state["showLastPage"] = false;
-        }
-        setGroupData(groupData);
-        setTblPageData({
-          totalPage: totalPageCount,
-          pageRecords: groupResp && groupResp.data && groupResp.data.totalCount,
-          pageSize: pageSize
+      let params = { ...state.searchFilterParams };
+
+      params["page"] = page;
+      params["startIndex"] =
+        navigateState && navigateState.showLastPage
+          ? (navigateState.addPageData.totalPage - 1) * pageSize
+          : pageIndex * pageSize;
+      params["pageSize"] = pageSize;
+
+      try {
+        const response = await fetchApi({
+          url: "xusers/groups",
+          params: params
         });
-        setTotalCount(totalCount);
-        setPageCount(totalPageCount);
-        setCurrentPageIndex(page);
-        setCurrentPageSize(pageSize);
-        setResetPage({ page: gotoPage });
-        setLoader(false);
+        groupData = response.data?.vXGroups || [];
+        totalCount = response.data?.totalCount || 0;
+        totalPageCount = Math.ceil(totalCount / pageSize);
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred while fetching groups ! ${error}`);
       }
+
+      if (navigateState) {
+        navigateState["showLastPage"] = false;
+      }
+
+      dispatch({
+        type: ACTIONS.SET_TABLE_DATA,
+        tableListingData: groupData,
+        totalCount: totalCount,
+        pageCount: totalPageCount,
+        currentPageIndex: page,
+        currentPageSize: pageSize,
+        resetPage: { page: gotoPage },
+        tablePageData: {
+          totalPage: totalPageCount,
+          pageRecords: totalCount,
+          pageSize: pageSize
+        }
+      });
+      dispatch({ type: ACTIONS.SET_TABLE_LOADER, loader: false });
     },
-    [updateTable, searchFilterParams]
+    [state.refreshTableData]
   );
 
-  const handleDeleteBtnClick = () => {
+  const groupDelete = () => {
     if (selectedRows.current.length > 0) {
-      toggleConfirmModal();
+      toggleGroupDeleteModal();
     } else {
       toast.dismiss(toastId.current);
-      toastId.current = toast.warning("Please select atleast one group!!");
+      toastId.current = toast.warning("Please select atleast one group !!");
     }
   };
 
-  const toggleConfirmModal = () => {
-    setConfirmModal((state) => !state);
+  const toggleGroupDeleteModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_DELETE_MODAL,
+      showDeleteModal: !state.showDeleteModal
+    });
   };
 
-  const handleConfirmClick = () => {
-    handleDeleteClick();
+  const confirmGroupDelete = () => {
+    handleGroupDelete();
   };
 
-  const handleDeleteClick = async () => {
+  const handleGroupDelete = async () => {
     const selectedData = selectedRows.current;
     let errorMsg = "";
     if (selectedData.length > 0) {
-      toggleConfirmModal();
+      toggleGroupDeleteModal();
       for (const { original } of selectedData) {
         try {
-          setBlockUI(true);
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: true });
           await fetchApi({
             url: `xusers/secure/groups/id/${original.id}`,
             method: "DELETE",
@@ -228,14 +219,14 @@ function Groups() {
               forceDelete: true
             }
           });
-          setBlockUI(false);
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
         } catch (error) {
-          setBlockUI(false);
+          dispatch({ type: ACTIONS.SET_BLOCK_UI, blockUi: false });
           if (error?.response?.data?.msgDesc) {
             errorMsg += error.response.data.msgDesc + "\n";
           } else {
             errorMsg +=
-              `Error occurred during deleting Groups: ${original.name}` + "\n";
+              `Error occurred during deleting group: ${original.name}` + "\n";
           }
           console.error(errorMsg);
         }
@@ -245,17 +236,21 @@ function Groups() {
         toastId.current = toast.error(errorMsg);
       } else {
         toast.dismiss(toastId.current);
-        toastId.current = toast.success("Group deleted successfully!");
+        toastId.current = toast.success("Group deleted successfully !");
         if (
-          (groupListingData.length == 1 ||
-            groupListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 0
+          (state.tableListingData.length == 1 ||
+            state.tableListingData.length == selectedRows.current.length) &&
+          state.currentPageIndex > 0
         ) {
-          if (typeof resetPage?.page === "function") {
-            resetPage.page(0);
+          if (typeof state.resetPage?.page === "function") {
+            state.resetPage.page(0);
           }
         } else {
-          setUpdateTable(moment.now());
+          dispatch({
+            type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+            searchFilterParams: state.searchFilterParams,
+            refreshTableData: moment.now()
+          });
         }
       }
     }
@@ -275,10 +270,10 @@ function Groups() {
         toastId.current = toast.warning(
           e == VisibilityStatus.STATUS_VISIBLE.value
             ? `Selected ${
-                selectedRows.current.length === 1 ? "Group is" : "Groups are"
+                selectedRows.current.length === 1 ? "group is" : "groups are"
               } already visible`
             : `Selected ${
-                selectedRows.current.length === 1 ? "Group is " : "Groups are"
+                selectedRows.current.length === 1 ? "group is " : "groups are"
               } already hidden`
         );
         return;
@@ -292,18 +287,62 @@ function Groups() {
         toast.dismiss(toastId.current);
         toastId.current = toast.success(
           `Sucessfully updated ${
-            selectedRows.current.length === 1 ? "Group" : "Groups"
-          } visibility!!`
+            selectedRows.current.length === 1 ? "group" : "groups"
+          } visibility !!`
         );
-        setUpdateTable(moment.now());
+        dispatch({
+          type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+          searchFilterParams: state.searchFilterParams,
+          refreshTableData: moment.now()
+        });
       } catch (error) {
         serverError(error);
-        console.error(`Error occurred during set Group visibility! ${error}`);
+        console.error(`Error occurred during set group visibility ! ${error}`);
       }
     } else {
       toast.dismiss(toastId.current);
-      toastId.current = toast.warning("Please select atleast one group!!");
+      toastId.current = toast.warning("Please select atleast one group !!");
     }
+  };
+
+  const addGroup = () => {
+    navigate("/group/create", {
+      state: { tablePageData: state.tablePageData }
+    });
+  };
+
+  const openSyncDetailsModal = (value) => {
+    dispatch({
+      type: ACTIONS.SHOW_SYNC_DETAILS_MODAL,
+      showSyncDetailsModal: true,
+      syncDetailsData: JSON.parse(value)
+    });
+  };
+
+  const hideSyncDetailsModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_SYNC_DETAILS_MODAL,
+      showSyncDetailsModal: false,
+      syncDetailsData: {}
+    });
+  };
+
+  const openGroupUsersModal = (group) => {
+    let groupParams = pick(group, ["id", "name"]);
+
+    dispatch({
+      type: ACTIONS.SHOW_GROUP_USERS_MODAL,
+      showGroupUsersModal: true,
+      groupData: groupParams
+    });
+  };
+
+  const hideGroupUsersModal = () => {
+    dispatch({
+      type: ACTIONS.SHOW_GROUP_USERS_MODAL,
+      showGroupUsersModal: false,
+      groupData: { id: "", name: "" }
+    });
   };
 
   const columns = React.useMemo(
@@ -416,7 +455,7 @@ function Groups() {
                 title="View Users"
                 data-js="showUserList"
                 onClick={() => {
-                  showGroupAssociateUser(rawValue.row.original);
+                  openGroupUsersModal(rawValue.row.original);
                 }}
                 data-cy="showUserList"
               >
@@ -430,7 +469,7 @@ function Groups() {
       {
         Header: "Sync Details",
         accessor: "otherAttributes",
-        Cell: (rawValue, model) => {
+        Cell: (rawValue) => {
           if (rawValue.value) {
             return (
               <div className="text-center">
@@ -440,9 +479,8 @@ function Groups() {
                   data-cy="syncDetailes"
                   data-for="group"
                   title="Sync Details"
-                  id={model.id}
                   onClick={() => {
-                    toggleGroupSyncModal(rawValue.value);
+                    openSyncDetailsModal(rawValue.value);
                   }}
                 >
                   <i className="fa-fw fa fa-eye"> </i>
@@ -458,34 +496,6 @@ function Groups() {
     ],
     []
   );
-  const addGroup = () => {
-    navigate("/group/create", { state: { tblpageData: tblpageData } });
-  };
-  const toggleGroupSyncModal = (raw) => {
-    setGroupSyncdetails({
-      syncDteails: JSON.parse(raw),
-      showSyncDetails: true
-    });
-  };
-  const toggleGroupSyncModalClose = () => {
-    setGroupSyncdetails({
-      syncDteails: {},
-      showSyncDetails: false
-    });
-  };
-  const showGroupAssociateUser = (raw) => {
-    setAssociateUserModal({
-      groupID: raw.id,
-      groupName: raw.name,
-      showAssociateUserDetails: true
-    });
-  };
-  const toggleAssociateUserClose = () => {
-    setAssociateUserModal({
-      groupID: "",
-      showAssociateUserDetails: false
-    });
-  };
 
   const searchFilterOptions = [
     {
@@ -534,26 +544,31 @@ function Groups() {
   ];
 
   const updateSearchFilter = (filter) => {
-    let { searchFilterParam, searchParam } = parseSearchFilter(
+    const { searchFilterParam, searchParam } = parseSearchFilter(
       filter,
       searchFilterOptions
     );
 
-    setSearchFilterParams(searchFilterParam);
+    dispatch({
+      type: ACTIONS.SET_SEARCH_FILTER_PARAMS,
+      searchFilterParams: searchFilterParam,
+      refreshTableData: moment.now()
+    });
+
     setSearchParams(searchParam, { replace: true });
 
-    if (typeof resetPage?.page === "function") {
-      resetPage.page(0);
+    if (typeof state.resetPage?.page === "function") {
+      state.resetPage.page(0);
     }
   };
 
   return (
     <div className="wrap">
-      {pageLoader ? (
+      {state.contentLoader ? (
         <Loader />
       ) : (
         <React.Fragment>
-          <BlockUi isUiBlock={blockUI} />
+          <BlockUi isUiBlock={state.blockUi} />
           <Row className="mb-4">
             <Col md={8} className="usr-grp-role-search-width">
               <StructuredFilter
@@ -561,7 +576,7 @@ function Groups() {
                 placeholder="Search for your groups..."
                 options={searchFilterOptions}
                 onChange={updateSearchFilter}
-                defaultSelected={defaultSearchFilterParams}
+                defaultSelected={state.defaultSearchFilterParams}
               />
             </Col>
             {isSystemAdmin() && (
@@ -591,7 +606,7 @@ function Groups() {
                   size="sm"
                   title="Delete"
                   className="ms-2"
-                  onClick={handleDeleteBtnClick}
+                  onClick={groupDelete}
                   data-id="deleteUserGroup"
                   data-cy="deleteUserGroup"
                 >
@@ -602,14 +617,14 @@ function Groups() {
           </Row>
 
           <XATableLayout
-            data={groupListingData}
+            data={state.tableListingData}
             columns={columns}
-            fetchData={fetchGroupInfo}
-            totalCount={totalCount}
-            pageCount={pageCount}
-            currentpageIndex={currentpageIndex}
-            currentpageSize={currentpageSize}
-            loading={loader}
+            fetchData={fetchGroups}
+            totalCount={state.totalCount}
+            pageCount={state.pageCount}
+            currentpageIndex={state.currentPageIndex}
+            currentpageSize={state.currentPageSize}
+            loading={state.loader}
             pagination
             rowSelectOp={
               (isSystemAdmin() || isKeyAdmin()) && {
@@ -622,7 +637,7 @@ function Groups() {
             })}
           />
 
-          <Modal show={showModal} onHide={toggleConfirmModal}>
+          <Modal show={state.showDeleteModal} onHide={toggleGroupDeleteModal}>
             <Modal.Header closeButton>
               <span className="text-word-break">
                 Are you sure you want to delete the&nbsp;
@@ -642,44 +657,43 @@ function Groups() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={toggleConfirmModal}
+                onClick={toggleGroupDeleteModal}
               >
                 Close
               </Button>
-              <Button variant="primary" size="sm" onClick={handleConfirmClick}>
+              <Button variant="primary" size="sm" onClick={confirmGroupDelete}>
                 OK
               </Button>
             </Modal.Footer>
           </Modal>
+
           <Modal
-            show={showGroupSyncDetails && showGroupSyncDetails.showSyncDetails}
-            onHide={toggleGroupSyncModalClose}
+            show={state.showSyncDetailsModal}
+            onHide={hideSyncDetailsModal}
             size="xl"
           >
-            <Modal.Header>
+            <Modal.Header closeButton>
               <Modal.Title>Sync Source Details</Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <SyncSourceDetails
-                syncDetails={showGroupSyncDetails.syncDteails}
+                syncDetails={state.syncDetailsData}
               ></SyncSourceDetails>
             </Modal.Body>
             <Modal.Footer>
               <Button
                 variant="primary"
                 size="sm"
-                onClick={toggleGroupSyncModalClose}
+                onClick={hideSyncDetailsModal}
               >
                 OK
               </Button>
             </Modal.Footer>
           </Modal>
+
           <Modal
-            show={
-              showAssociateUserModal &&
-              showAssociateUserModal.showAssociateUserDetails
-            }
-            onHide={toggleAssociateUserClose}
+            show={state.showGroupUsersModal}
+            onHide={hideGroupUsersModal}
             size="lg"
           >
             <Modal.Header closeButton>
@@ -688,24 +702,20 @@ function Groups() {
                   User&apos;s List :
                   <div
                     className="ps-2 more-less-width text-truncate"
-                    title={showAssociateUserModal?.groupName}
+                    title={state.groupData.name}
                   >
-                    {showAssociateUserModal.groupName}
+                    {state.groupData.name}
                   </div>
                 </div>
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
               <GroupAssociateUserDetails
-                groupID={showAssociateUserModal.groupID}
+                groupId={state.groupData.id}
               ></GroupAssociateUserDetails>
             </Modal.Body>
             <Modal.Footer>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={toggleAssociateUserClose}
-              >
+              <Button variant="primary" size="sm" onClick={hideGroupUsersModal}>
                 OK
               </Button>
             </Modal.Footer>
@@ -716,4 +726,4 @@ function Groups() {
   );
 }
 
-export default Groups;
+export default GroupListing;
