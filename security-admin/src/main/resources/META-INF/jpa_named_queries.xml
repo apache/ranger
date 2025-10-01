@@ -2263,12 +2263,14 @@
 	</named-query>
 
 	<named-query name="XXGdsProject.findProjectsWithDataShareInStatus">
-		<query>SELECT DISTINCT obj FROM XXGdsProject obj, XXGdsDatasetInProject dip, XXGdsDataShareInDataset dshid
-			WHERE dshid.dataShareId = :dataShareId
-			  AND dshid.status      = :status
-			  AND dip.datasetId     = dshid.datasetId
-			  AND dip.projectId     = obj.id
-			  AND dip.status        = :status</query>
+		<query>SELECT obj FROM XXGdsProject obj
+			WHERE EXISTS (
+				SELECT 1 FROM XXGdsDatasetInProject dip, XXGdsDataShareInDataset dshid
+				  WHERE dshid.dataShareId = :dataShareId
+				    AND dshid.status      = :status
+				    AND dip.datasetId     = dshid.datasetId
+				    AND dip.projectId     = obj.id
+				    AND dip.status        = :status)</query>
 	</named-query>
 
 	<named-query name="XXGdsProject.findServiceIds">
