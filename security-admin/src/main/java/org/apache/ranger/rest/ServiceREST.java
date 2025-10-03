@@ -3969,6 +3969,48 @@ public class ServiceREST {
 		return ret;
 	}
 
+	@DELETE
+	@Path("/plugins/info")
+	@Produces("application/json")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deletePluginsInfo(@Context HttpServletRequest request) {
+		LOG.debug("==> ServiceREST.deletePluginsInfo()");
+
+		RangerPluginInfoList ret    = null;
+		SearchFilter         filter = searchUtil.getSearchFilter(request, pluginInfoService.getSortFields());
+
+		try {
+			PList<RangerPluginInfo> paginatedPluginsInfo = pluginInfoService.searchRangerPluginInfo(filter);
+			if (paginatedPluginsInfo != null) {
+				for (RangerPluginInfo rangerPluginInfo : paginatedPluginsInfo.getList()) {
+					if (rangerPluginInfo != null) {
+						deletePluginsInfo(rangerPluginInfo.getId());
+						LOG.debug("Deleted rangerPluginInfo:[{}]", rangerPluginInfo);
+					}
+				}
+			}
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("deletePluginsInfo() failed", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+
+		LOG.debug("<== ServiceREST.deletePluginsInfo()");
+	}
+
+	@DELETE
+	@Path("/plugins/info/{id}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deletePluginsInfo(@PathParam("id") Long id) {
+		LOG.debug("==> ServiceREST.deletePluginsInfo({})", id);
+
+		assetMgr.doDeleteXXPluginInfo(id);
+
+		LOG.debug("<== ServiceREST.deletePluginsInfo() - [id={}]", id);
+	}
+
 	public List<RangerPolicy> getBulkPolicies(@Context HttpServletRequest request) {
 		LOG.debug("==> ServiceREST.getBulkPolicies()");
 

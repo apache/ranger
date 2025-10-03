@@ -1023,6 +1023,14 @@ public class AssetMgr extends AssetMgrBase {
 		}
 	}
 
+
+	public void doDeleteXXPluginInfo(Long id) {
+		XXPluginInfo xObj = rangerDaoManager.getXXPluginInfo().getById(id);
+		if (xObj != null) {
+			rangerDaoManager.getXXPluginInfo().remove(xObj.getId());
+		}
+	}
+
 	private String getRemoteAddress(final HttpServletRequest request) {
 		String ret = null;
 
