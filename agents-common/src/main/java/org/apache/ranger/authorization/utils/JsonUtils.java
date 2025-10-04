@@ -276,13 +276,14 @@ public class JsonUtils {
     }
 
     public static List<RangerGdsMaskInfo> jsonToListGdsMaskInfo(String jsonStr) {
-        try {
-            return getMapper().readValue(jsonStr, TYPE_LIST_RANGER_GDS_MASK_INFO);
-        } catch (Exception e) {
-            LOG.error("Cannot get Map<String, RangerPolicyItemDataMaskInfo> from {}", jsonStr, e);
-
-            return null;
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            try {
+                return getMapper().readValue(jsonStr, TYPE_LIST_RANGER_GDS_MASK_INFO);
+            } catch (Exception e) {
+                LOG.error("Cannot get List<RangerGdsMaskInfo> from {}", jsonStr, e);
+            }
         }
+        return null;
     }
 
     public static Map<String, RangerPolicyResource> jsonToMapPolicyResource(String jsonStr) {
