@@ -431,23 +431,23 @@ public class RangerRequestScriptEvaluatorTest {
         RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
         RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, false);
 
-        Assert.assertNull("test: java.lang.System.out.println(\"test\");", evaluator.evaluateScript("java.lang.System.out.println(\"test\");"));
-        Assert.assertNull("test: java.lang.Runtime.getRuntime().exec(\"bash\");", evaluator.evaluateScript("java.lang.Runtime.getRuntime().exec(\"bash\");"));
-
         String fileName = "/tmp/ctest1-" + System.currentTimeMillis();
-        String script   = "var file = new java.io.File('" + fileName +  "'); file.createNewFile()";
 
-        Assert.assertNull("test file access using: " + script, evaluator.evaluateScript(script));
+        String[] scripts = new String[] {
+                "java.lang.System.out.println(\"test\");",
+                "java.lang.Runtime.getRuntime().exec(\"bash\");",
+                "var newBindings=loadWithNewGlobal({'script':'this','name':'ctest'});this.context.setBindings(newBindings,100);var newEngine = this.__noSuchProperty__('engine');var e=newEngine.getFactory().getScriptEngine('-Dnashorn.args=--no-java=False');e.eval('java.lang.Runtime.getRuntime().exec(\"touch /tmp/ctest1\")')",
+                "engine.eval('malicious code')",
+                "var str = new java.lang.String('test'); str.length()",
+                "var file = new java.io.File('" + fileName +  "'); file.createNewFile()",
+        };
+
+        for (String script : scripts) {
+            Assert.assertNull("test: " + script, evaluator.evaluateScript(script));
+        }
 
         File testFile = new File(fileName);
         Assert.assertFalse(fileName + ": file should not have been created", testFile.exists());
-
-        script = "engine.eval('malicious code')";
-
-        Assert.assertNull("test engine access using: " + script, evaluator.evaluateScript(script));
-
-        script = "var str = new java.lang.String('test'); str.length()";
-        Assert.assertNull("test Java String class access using: " + script, evaluator.evaluateScript(script));
     }
 
     @Test
