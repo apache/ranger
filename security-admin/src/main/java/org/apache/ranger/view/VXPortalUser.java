@@ -20,14 +20,17 @@
  package org.apache.ranger.view;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.json.JsonDateSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -94,6 +97,9 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	 *
 	 */
 	protected String syncSource;
+
+	@JsonSerialize(using = JsonDateSerializer.class)
+	protected Date lastLoginTime;
 
 	/**
 	 * Configuration properties.
@@ -348,6 +354,14 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		this.syncSource = syncSource;
 	}
 
+    public Date getLastLoginTime() {
+        return lastLoginTime;
+    }
+
+    public void setLastLoginTime(Date lastLoginTime) {
+        this.lastLoginTime = lastLoginTime;
+    }
+
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -366,6 +380,7 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		str += "userRoleList={" + userRoleList + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
 		str += "syncSource={" + syncSource + "} ";
+		str += "lastLoginTime={" + lastLoginTime + "} ";
 		str += "}";
 		return str;
 	}

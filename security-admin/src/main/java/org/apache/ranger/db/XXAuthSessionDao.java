@@ -71,6 +71,23 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 		}
 	}
 
+    public XXAuthSession getLastSuccessLoginAuthSessionByUserId(String loginId) {
+        if (loginId == null) {
+            return null;
+        }
+        try {
+            List<XXAuthSession> sessions = getEntityManager()
+                    .createNamedQuery("XXAuthSession.getSuccessAuthSessionsByUserId", tClass)
+                    .setParameter("loginId", loginId)
+                    .setParameter("authStatus", XXAuthSession.AUTH_STATUS_SUCCESS)
+                    .setMaxResults(2)
+                    .getResultList();
+            return sessions.size() >= 2 ? sessions.get(1) : null;
+        } catch (NoResultException ignoreNoResultFound) {
+            return null;
+        }
+    }
+
 	public long getRecentAuthFailureCountByLoginId(String loginId, int timeRangezSecond){
 		Date authWindowStartTime = new Date(DateUtil.getUTCDate().getTime() - timeRangezSecond * 1000);
 

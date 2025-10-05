@@ -125,7 +125,7 @@ export const SideBar = () => {
 
   const userProps = getUserProfile();
   const loginId = (
-    <span className="login-id user-name">{userProps?.loginId}</span>
+    <span className="login-id user-name p-0">{userProps?.loginId}</span>
   );
 
   let location = useLocation();
