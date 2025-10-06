@@ -150,8 +150,6 @@ public class GdsDatasetEvaluator {
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsDataShareEvaluator dshEvaluator, GdsSharedResourceEvaluator sharedResourceEvaluator, GdsDshidEvaluator dshidEvaluator) {
-        System.out.format("getResourceACLs(%s, %s, %s, %s): policyEvaluators.size()=%d\n", request.getResource().getAsString(), acls, isConditional, sharedResourceEvaluator.getAllowedAccessTypes(), policyEvaluators.size());
-
         if (isActive()) {
             acls.getDatasets().add(getName());
 
@@ -170,8 +168,6 @@ public class GdsDatasetEvaluator {
     }
 
     public void getResourceMasks(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsSharedResourceEvaluator sharedResourceEvaluator, GdsDataShareEvaluator dshEvaluator) {
-        System.out.format("getResourceMasks(%s, %s, %s): policyEvaluators.size()=%d\n", request.getResource().getAsString(), acls, isConditional, policyEvaluators.size());
-
         if (isActive()) {
             acls.getDatasets().add(getName());
 
