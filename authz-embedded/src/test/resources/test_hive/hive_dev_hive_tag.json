@@ -1,5 +1,5 @@
 {
-  "serviceName":"dev_s3", "tagVersion":2,
+  "serviceName":"dev_hive", "tagVersion":2,
   "op":"add_or_update",
   "tagDefinitions": {
     "0": { "name": "TAG-X" },

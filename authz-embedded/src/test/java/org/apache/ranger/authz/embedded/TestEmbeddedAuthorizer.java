@@ -174,17 +174,17 @@ public class TestEmbeddedAuthorizer {
     private List<TestMultiAuthzData> loadTestMultiAuthzData(String resourcePath) throws Exception {
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        InputStream in = getClass().getResourceAsStream(resourcePath);
-
-        return in != null ? mapper.readValue(in, TYPE_LIST_TEST_MULTI_AUTHZ_DATA) : Collections.emptyList();
+        try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
+            return in != null ? mapper.readValue(in, TYPE_LIST_TEST_MULTI_AUTHZ_DATA) : Collections.emptyList();
+        }
     }
 
     private List<TestResourcePermissionsData> loadTestResourcePermissionsData(String resourcePath) throws Exception {
         ObjectMapper mapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        InputStream in = getClass().getResourceAsStream(resourcePath);
-
-        return in != null ? mapper.readValue(in, TYPE_LIST_TEST_RESOURCE_PERMISSIONS_DATA) : Collections.emptyList();
+        try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
+            return in != null ? mapper.readValue(in, TYPE_LIST_TEST_RESOURCE_PERMISSIONS_DATA) : Collections.emptyList();
+        }
     }
 
     private static class TestAuthzData {
