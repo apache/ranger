@@ -432,6 +432,8 @@ public final class RangerRequestScriptEvaluator {
     }
 
     public Set<String> getAllTagTypes() {
+        init();
+
         return Collections.unmodifiableSet(tags.keySet());
     }
 
