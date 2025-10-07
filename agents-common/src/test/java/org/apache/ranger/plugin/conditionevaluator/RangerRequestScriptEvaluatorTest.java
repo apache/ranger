@@ -513,6 +513,24 @@ public class RangerRequestScriptEvaluatorTest {
         }
     }
 
+    @Test
+    public void testGetAllTagTypes() {
+        RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, false);
+
+        Assert.assertEquals(Collections.emptySet(), evaluator.evaluateScript("ctx.getAllTagTypes()"));
+
+        request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.singletonList(new RangerTag("PII", Collections.emptyMap())));
+        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, false);
+
+        Assert.assertEquals(Collections.singleton("PII"), evaluator.evaluateScript("ctx.getAllTagTypes()"));
+
+        request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Arrays.asList(new RangerTag("PII", Collections.emptyMap()), new RangerTag("PCI", Collections.emptyMap())));
+        evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, false);
+
+        Assert.assertEquals(new HashSet<>(Arrays.asList("PCI", "PII")), evaluator.evaluateScript("ctx.getAllTagTypes()"));
+    }
+
     RangerAccessRequest createRequest(String userName, Set<String> userGroups, Set<String> userRoles, List<RangerTag> resourceTags) {
         RangerAccessResource resource = mock(RangerAccessResource.class);
 
