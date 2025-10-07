@@ -1051,8 +1051,8 @@
                         <configuration>
                             <workingDirectory>${project.build.directory}/react-webapp</workingDirectory>
                             <installDirectory>${project.build.directory}/react-build</installDirectory>
-                            <nodeVersion>v16.0.0</nodeVersion>
-                            <npmVersion>7.10.0</npmVersion>
+                            <nodeVersion>v20.19.5</nodeVersion>
+                            <npmVersion>10.8.2</npmVersion>
                         </configuration>
                     </execution>
                     <execution>
