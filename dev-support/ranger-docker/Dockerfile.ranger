@@ -33,7 +33,6 @@ COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
 COPY ./scripts/ranger.sh                                         ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-admin-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-admin-install.properties
 COPY ./scripts/create-ranger-services.py                         ${RANGER_SCRIPTS}/
-COPY ./scripts/create-users.sh                                   ${RANGER_SCRIPTS}/
 
 # Switch to root to create system directories
 USER root
@@ -45,8 +44,6 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && mkdir -p /var/run/ranger \
     && mkdir -p /var/log/ranger \
     && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
-    && chmod +x ${RANGER_SCRIPTS}/create-users.sh \
-    && ${RANGER_SCRIPTS}/create-users.sh \
     && chmod 755 ${RANGER_SCRIPTS}/ranger.sh \
     && mkdir -p /usr/share/java/
 

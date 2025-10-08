@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger AS ranger-kms
+ARG RANGER_DB_TYPE
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger-kms
 
 ARG KMS_VERSION
 ARG RANGER_DB_TYPE
