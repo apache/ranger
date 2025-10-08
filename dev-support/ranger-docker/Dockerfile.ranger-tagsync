@@ -27,9 +27,6 @@ COPY ./scripts/ranger-tagsync.sh                     ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-tagsync-install.properties     ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-tagsync-tags.json              ${RANGER_SCRIPTS}/
 
-# Switch to root to create system directories
-USER root
-
 RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
     rm -f /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz && \

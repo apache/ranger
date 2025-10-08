@@ -28,9 +28,6 @@ COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                   /home/ranger/dist
 COPY ./scripts/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
 
-# Switch to root to create system directories
-USER root
-
 RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \
     rm -f /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz && \

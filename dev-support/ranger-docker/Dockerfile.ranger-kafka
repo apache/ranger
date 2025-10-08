@@ -30,9 +30,6 @@ COPY ./scripts/ranger-kafka-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-kafka.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-kafka-plugin-install.properties    /home/ranger/scripts/
 
-# Switch to root to create system directories
-USER root
-
 RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/ && \
     ln -s /opt/kafka_2.12-${KAFKA_VERSION} /opt/kafka && \
     rm -f /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz && \
@@ -45,8 +42,5 @@ RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/
 
 ENV KAFKA_HOME=/opt/kafka
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/kafka/bin
-
-# Ensure container runs as root for SSH and service management
-USER root
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-kafka.sh" ]

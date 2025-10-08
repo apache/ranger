@@ -40,9 +40,6 @@ COPY ./scripts/ranger-hive.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hive-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hive-site.xml
 
-# Switch to root to create system directories
-USER root
-
 RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     ln -s /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
     rm -f /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
@@ -66,8 +63,5 @@ ENV HADOOP_HOME=/opt/hadoop
 ENV TEZ_HOME=/opt/tez
 ENV TEZ_CONF_DIR=/opt/tez/conf
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hive/bin:/opt/hadoop/bin:/opt/tez/bin
-
-# Ensure container runs as root for SSH and service management
-USER root
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hive.sh" ]

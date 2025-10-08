@@ -31,9 +31,6 @@ COPY ./scripts/ranger-hbase.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hbase-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hbase-site.xml                            /home/ranger/scripts/
 
-# Switch to root to create system directories
-USER root
-
 RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/hbase-${HBASE_VERSION} /opt/hbase && \
     rm -f /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz && \
@@ -50,8 +47,5 @@ RUN apt-get update && \
 
 ENV HBASE_HOME=/opt/hbase
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hbase/bin
-
-# Ensure container runs as root for SSH and service management
-USER root
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hbase.sh" ]
