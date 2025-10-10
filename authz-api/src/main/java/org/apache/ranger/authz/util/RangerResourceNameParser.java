@@ -118,7 +118,7 @@ public class RangerResourceNameParser {
             throw new RangerAuthzException(INVALID_RESOURCE_VALUE, resourceName, template);
         }
 
-        LOG.debug("resourceName(resource='{}', template='{}'): ret={}", resourceName, template, ret);
+        LOG.debug("parseToArray(resource='{}', template='{}'): ret={}", resourceName, template, ret);
 
         return ret;
     }
@@ -131,7 +131,7 @@ public class RangerResourceNameParser {
             ret.put(resources[i], arr[i]);
         }
 
-        LOG.debug("parse(resourceName='{}', template='{}'): ret={}", resourceName, template, ret);
+        LOG.debug("parseToMap(resourceName='{}', template='{}'): ret={}", resourceName, template, ret);
 
         return ret;
     }
@@ -202,7 +202,7 @@ public class RangerResourceNameParser {
     public String toString() {
         return "RangerResourceTemplate{" +
                 "template=" + template +
-                ", resources='" + String.join(",", resources) + "'" +
+                ", resources='" + String.join(SEPARATOR_STRING, resources) + "'" +
                 "}";
     }
 

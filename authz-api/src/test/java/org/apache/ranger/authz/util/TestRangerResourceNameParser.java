@@ -38,26 +38,26 @@ public class TestRangerResourceNameParser {
     @Test
     public void testValidTemplates() throws Exception {
         Object[][] testData = {
-                { "database", "database", 1, "database" },
-                { "database/table", "table", 2, "database", "table" },
-                { "database/table/column", "column", 3, "database", "table", "column" },
-                { "bucket", "bucket", 1, "bucket" },
-                { "bucket/path", "path", 2, "bucket", "path" },
-                { "storageaccount", "storageaccount", 1, "storageaccount" },
-                { "storageaccount/container", "container", 2, "storageaccount", "container" },
-                { "storageaccount/container/relativepath", "relativepath", 3, "storageaccount", "container", "relativepath" },
-                { "catalog", "catalog", 1, "catalog" },
-                { "catalog/schema", "schema", 2, "catalog", "schema" },
-                { "catalog/schema/table", "table", 3, "catalog", "schema", "table" },
-                { "catalog/schema/table/column", "column", 4, "catalog", "schema", "table", "column" },
-                { "catalog/schema/procedure", "procedure", 3, "catalog", "schema", "procedure" },
-                { "catalog/schema/schemafunction", "schemafunction", 3, "catalog", "schema", "schemafunction" },
-                { "catalog/sessionproperty", "sessionproperty", 2, "catalog", "sessionproperty" },
+                {"database", "database", 1, "database"},
+                {"database/table", "table", 2, "database", "table"},
+                {"database/table/column", "column", 3, "database", "table", "column"},
+                {"bucket", "bucket", 1, "bucket"},
+                {"bucket/path", "path", 2, "bucket", "path"},
+                {"storageaccount", "storageaccount", 1, "storageaccount"},
+                {"storageaccount/container", "container", 2, "storageaccount", "container"},
+                {"storageaccount/container/relativepath", "relativepath", 3, "storageaccount", "container", "relativepath"},
+                {"catalog", "catalog", 1, "catalog"},
+                {"catalog/schema", "schema", 2, "catalog", "schema"},
+                {"catalog/schema/table", "table", 3, "catalog", "schema", "table"},
+                {"catalog/schema/table/column", "column", 4, "catalog", "schema", "table", "column"},
+                {"catalog/schema/procedure", "procedure", 3, "catalog", "schema", "procedure"},
+                {"catalog/schema/schemafunction", "schemafunction", 3, "catalog", "schema", "schemafunction"},
+                {"catalog/sessionproperty", "sessionproperty", 2, "catalog", "sessionproperty"},
         };
 
         for (Object[] test : testData) {
-            String               template         = (String) test[0];
-            String               resourceType     = (String) test[1];
+            String                   template         = (String) test[0];
+            String                   resourceType     = (String) test[1];
             int                      resourceCount    = (Integer) test[2];
             RangerResourceNameParser resourceTemplate = new RangerResourceNameParser(template);
 
@@ -158,8 +158,8 @@ public class TestRangerResourceNameParser {
         Map<String, RangerResourceNameParser> templates = getAdlsGen2Templates();
 
         TestData[] tests = {
-                new TestData("container:mycontainer/myaccount", "storageaccount", "myaccount", "container", "mycontainer"),
-                new TestData("relativepath:mycontainer/myaccount/p1/p2/f1.txt", "storageaccount", "myaccount", "container", "mycontainer", "relativepath", "p1/p2/f1.txt"),
+                new TestData("container:myaccount/mycontainer", "storageaccount", "myaccount", "container", "mycontainer"),
+                new TestData("relativepath:myaccount/mycontainer/p1/p2/f1.txt", "storageaccount", "myaccount", "container", "mycontainer", "relativepath", "p1/p2/f1.txt"),
         };
 
         for (TestData test : tests) {
@@ -297,7 +297,6 @@ public class TestRangerResourceNameParser {
         assertEquals("mybucket//myfolder/myfile.txt", templates.get("path").toResourceName(toArray("mybucket", "/myfolder/myfile.txt")));
     }
 
-
     private static Map<String, RangerResourceNameParser> getHiveTemplates() throws Exception {
         Map<String, RangerResourceNameParser> ret = new HashMap<>();
 
@@ -324,8 +323,8 @@ public class TestRangerResourceNameParser {
     private static Map<String, RangerResourceNameParser> getAdlsGen2Templates() throws Exception {
         Map<String, RangerResourceNameParser> ret = new HashMap<>();
 
-        ret.put("container", new RangerResourceNameParser("container/storageaccount"));
-        ret.put("relativepath", new RangerResourceNameParser("container/storageaccount/relativepath"));
+        ret.put("container", new RangerResourceNameParser("storageaccount/container"));
+        ret.put("relativepath", new RangerResourceNameParser("storageaccount/container/relativepath"));
 
         return ret;
     }
