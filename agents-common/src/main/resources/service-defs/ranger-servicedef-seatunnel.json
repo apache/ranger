@@ -1,0 +1,253 @@
+{
+	"id": 207,
+	"name": "seatunnel",
+	"displayName": "seatunnel",
+	"implClass": "org.apache.ranger.services.seatunnel.RangerServiceSeatunnel",
+	"label": "Seatunnel",
+	"description": "Seatunnel is high-performance, distributed SQL data integration tool.",
+	"guid": "a124c5ed-3daf-46be-b0e0-8266048d54c5",
+	"resources": [
+		{
+			"itemId": 1,
+			"name": "workspace",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"isValidLeaf": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": true,
+				"ignoreCase": true
+			},
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel workspace",
+			"description": "Seatunnel workspace"
+		},
+		{
+			"itemId": 2,
+			"name": "datasource",
+			"type": "string",
+			"level": 20,
+			"parent": "workspace",
+			"mandatory": true,
+			"isValidLeaf": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": true,
+				"ignoreCase": true
+			},
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel datasource",
+			"description": "Seatunnel datasource"
+		},
+		{
+			"itemId": 3,
+			"name": "job",
+			"type": "string",
+			"level": 20,
+			"parent": "workspace",
+			"mandatory": true,
+			"isValidLeaf": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": true,
+				"ignoreCase": true
+			},
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel job definition",
+			"description": "Seatunnel job definition"
+		},
+		{
+			"itemId": 4,
+			"name": "user",
+			"type": "string",
+			"level": 10,
+			"parent": "",
+			"mandatory": true,
+			"lookupSupported": false,
+			"recursiveSupported": false,
+			"excludesSupported": false,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": true,
+				"ignoreCase": true
+			},
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel user",
+			"description": "Seatunnel User",
+			"accessTypeRestrictions": ["impersonate"]
+		},
+		{
+			"itemId": 5,
+			"name": "virtual_table",
+			"type": "string",
+			"level": 20,
+			"parent": "workspace",
+			"mandatory": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": true,
+				"ignoreCase": true
+			},
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel Virtual Table",
+			"description": "Seatunnel Virtual Table"
+		}
+
+	],
+	"accessTypes": [
+		{
+			"itemId": 1,
+			"name": "create",
+			"label": "Create"
+		},
+		{
+			"itemId": 2,
+			"name": "read",
+			"label": "Read"
+		},
+		{
+			"itemId": 3,
+			"name": "update",
+			"label": "Update"
+		},
+		{
+			"itemId": 4,
+			"name": "delete",
+			"label": "Delete"
+		},
+		{
+			"itemId": 5,
+			"name": "execute",
+			"label": "Execute"
+		},
+		{
+			"itemId": 12,
+			"name": "all",
+			"label": "All",
+			"impliedGrants": [
+				"create",
+				"read",
+				"update",
+				"delete",
+				"execute"
+			]
+		}
+	],
+	"configs": [
+		{
+			"itemId": 1,
+			"name": "username",
+			"type": "string",
+			"mandatory": true,
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel-web Username"
+		},
+		{
+			"itemId": 2,
+			"name": "password",
+			"type": "password",
+			"mandatory": false,
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel-web Password"
+		},
+		{
+			"itemId": 3,
+			"name": "seatunnel.web.url",
+			"type": "string",
+			"mandatory": true,
+			"defaultValue": "",
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"eg. 'http://&lt;ipaddr&gt;:8801/seatunnel/api/v1/'\"}",
+			"label": "Seatunnel-web URL"
+		},
+		{
+			"itemId": 4,
+			"name": "commonNameForCertificate",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Common Name for Certificate"
+		},
+		{
+			"itemId": 5,
+			"name": "seatunnel.web.ssl.truststore",
+			"type": "string",
+			"mandatory": false,
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel-web SSL Truststore Path"
+		},
+		{
+			"itemId": 6,
+			"name": "seatunnel.web.ssl.truststore.password",
+			"type": "password",
+			"mandatory": false,
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel-web SSL Truststore Password"
+		},
+		{
+			"itemId": 7,
+			"name": "seatunnel.web.ssl.truststore.type",
+			"type": "string",
+			"mandatory": false,
+			"defaultValue": "JKS",
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel-web SSL Truststore Type"
+		},
+		{
+			"itemId": 8,
+			"name": "seatunnel.web.ssl.protocol",
+			"type": "string",
+			"mandatory": false,
+			"defaultValue": "TLSv1.2",
+			"validationRegEx": "",
+			"validationMessage": "",
+			"uiHint": "",
+			"label": "Seatunnel-web SSL Protocol"
+		}
+	],
+	"enums": [
+	],
+	"contextEnrichers": [
+	],
+	"policyConditions":
+	[
+	]
+}
