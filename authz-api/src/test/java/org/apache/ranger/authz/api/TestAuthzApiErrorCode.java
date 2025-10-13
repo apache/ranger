@@ -36,7 +36,7 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUES
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_NOT_FOUND;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_TYPE_NOT_FOUND;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_USER_INFO_MISSING;
-import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOURCE_TEMPLATE_EMPTY_VALUE;
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF;
 import static org.apache.ranger.authz.model.RangerResourceInfo.ResourceMatchScope.SELF_OR_ANY_CHILD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,12 +59,10 @@ public class TestAuthzApiErrorCode {
         assertEquals("AUTHZ-400-00-011: mypermission: permission not found", INVALID_REQUEST_PERMISSION_NOT_FOUND.getFormattedMessage("mypermission"));
         assertEquals("AUTHZ-400-00-012: permissions is empty. Nothing to authorize", INVALID_REQUEST_PERMISSIONS_EMPTY.getFormattedMessage());
         assertEquals("AUTHZ-400-00-013: service name or service type is mandatory", INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY.getFormattedMessage());
-        assertEquals("AUTHZ-400-00-014: invalid resource template: {database}.{table}}. Unexpected marker \"}\" at position 18", INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT.getFormattedMessage("{database}.{table}}", "}", 18));
+        assertEquals("AUTHZ-400-00-014: invalid resource template - empty", INVALID_RESOURCE_TEMPLATE_EMPTY_VALUE.getFormattedMessage());
 
         assertEquals("AUTHZ-400-00-015: invalid resource \"mytype:myresource\" - unknown type \"mytype\"", RangerAuthzApiErrorCode.INVALID_RESOURCE_TYPE_NOT_VALID.getFormattedMessage("mytype:myresource", "mytype"));
         assertEquals("AUTHZ-400-00-016: invalid resource - empty", RangerAuthzApiErrorCode.INVALID_RESOURCE_EMPTY_VALUE.getFormattedMessage());
-        assertEquals("AUTHZ-400-00-017: invalid resource \"mytype:myresource\" - prefix \"myprefix\" not found", RangerAuthzApiErrorCode.INVALID_RESOURCE_PREFIX_MISMATCH.getFormattedMessage("mytype:myresource", "myprefix"));
-        assertEquals("AUTHZ-400-00-018: invalid resource \"mytype:myresource\" - suffix \"mysuffix\" not found", RangerAuthzApiErrorCode.INVALID_RESOURCE_SUFFIX_MISMATCH.getFormattedMessage("mytype:myresource", "mysuffix"));
-        assertEquals("AUTHZ-400-00-019: invalid resource \"mytype:myresource\" - does not match template \"{res1}.{res2}\"", RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE.getFormattedMessage("mytype:myresource", "{res1}.{res2}"));
+        assertEquals("AUTHZ-400-00-017: invalid resource \"mytype:myresource\" - does not match template \"{res1}/{res2}\"", RangerAuthzApiErrorCode.INVALID_RESOURCE_VALUE.getFormattedMessage("mytype:myresource", "{res1}/{res2}"));
     }
 }
