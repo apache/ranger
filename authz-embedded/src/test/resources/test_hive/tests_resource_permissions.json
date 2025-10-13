@@ -1,9 +1,9 @@
 [
   {
-    "resource": { "name": "table:mydb.tbl1" },
+    "resource": { "name": "table:mydb/tbl1" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "table:mydb.tbl1" },
+      "resource": { "name": "table:mydb/tbl1" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -19,10 +19,10 @@
     }
   },
   {
-    "resource": { "name": "table:mydb.tbl2" },
+    "resource": { "name": "table:mydb/tbl2" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "table:mydb.tbl2" },
+      "resource": { "name": "table:mydb/tbl2" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -38,10 +38,10 @@
     }
   },
   {
-    "resource": { "name": "table:mydb.tbl_tag1" },
+    "resource": { "name": "table:mydb/tbl_tag1" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "table:mydb.tbl_tag1" },
+      "resource": { "name": "table:mydb/tbl_tag1" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -60,10 +60,10 @@
     }
   },
   {
-    "resource": { "name": "table:mydb.tbl_tag2" },
+    "resource": { "name": "table:mydb/tbl_tag2" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "table:mydb.tbl_tag2" },
+      "resource": { "name": "table:mydb/tbl_tag2" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -82,10 +82,10 @@
     }
   },
   {
-    "resource": { "name": "table:mydb.tbl_ds1" },
+    "resource": { "name": "table:mydb/tbl_ds1" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "table:mydb.tbl_ds1" },
+      "resource": { "name": "table:mydb/tbl_ds1" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -97,10 +97,10 @@
     }
   },
   {
-    "resource": { "name": "table:mydb.tbl_ds2" },
+    "resource": { "name": "table:mydb/tbl_ds2" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "table:mydb.tbl_ds2" },
+      "resource": { "name": "table:mydb/tbl_ds2" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -112,10 +112,10 @@
     }
   },
   {
-    "resource": { "name": "table:mydb.tbl_ds3" },
+    "resource": { "name": "table:mydb/tbl_ds3" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "table:mydb.tbl_ds3" },
+      "resource": { "name": "table:mydb/tbl_ds3" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -124,10 +124,10 @@
     }
   },
   {
-    "resource": { "name": "column:mydb.tbl_ds3.col1" },
+    "resource": { "name": "column:mydb/tbl_ds3/col1" },
     "context":   { "serviceName": "dev_hive" },
     "permissions": {
-      "resource": { "name": "column:mydb.tbl_ds3.col1" },
+      "resource": { "name": "column:mydb/tbl_ds3/col1" },
       "users": {
         "all-tbl-r-user": {
           "select": { "permission": "select", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }

@@ -39,9 +39,9 @@
     }
   ],
   "dataShares": [
-    { "id": 1, "name": "hive-ds1",     "defaultAccessTypes": [ "select" ] },
-    { "id": 2, "name": "hive-ds2",     "defaultAccessTypes": [ "select" ] },
-    { "id": 3, "name": "hive-ds3",     "defaultAccessTypes": [ "select" ] }
+    { "id": 1, "name": "hive-ds1", "defaultAccessTypes": [ "select" ] },
+    { "id": 2, "name": "hive-ds2", "defaultAccessTypes": [ "select" ] },
+    { "id": 3, "name": "hive-ds3", "defaultAccessTypes": [ "select" ] }
   ],
   "dshids": [
     { "dataShareId": 1, "datasetId": 1, "status": "ACTIVE" },

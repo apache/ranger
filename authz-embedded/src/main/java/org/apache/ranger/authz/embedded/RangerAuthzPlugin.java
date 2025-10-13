@@ -33,14 +33,14 @@ import org.apache.ranger.authz.model.RangerAuthzResult.AccessResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.DataMaskResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PermissionResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PolicyInfo;
+import org.apache.ranger.authz.model.RangerAuthzResult.ResultInfo;
 import org.apache.ranger.authz.model.RangerAuthzResult.RowFilterResult;
 import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
 import org.apache.ranger.authz.model.RangerUserInfo;
-import org.apache.ranger.authz.util.RangerResourceTemplate;
+import org.apache.ranger.authz.util.RangerResourceNameParser;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
@@ -66,10 +67,10 @@ import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACC
 public class RangerAuthzPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAuthzPlugin.class);
 
-    private final RangerBasePlugin                    plugin;
-    private final Map<String, RangerResourceTemplate> rrnTemplates = new HashMap<>();
+    private final RangerBasePlugin                      plugin;
+    private final Map<String, RangerResourceNameParser> rrnTemplates = new HashMap<>();
 
-    public RangerAuthzPlugin(String serviceType, String serviceName, Properties properties) throws RangerAuthzException {
+    public RangerAuthzPlugin(String serviceType, String serviceName, Properties properties) {
         plugin = new RangerBasePlugin(getPluginConfig(serviceType, serviceName, properties)) {
             @Override
             public void setPolicies(ServicePolicies policies) {
@@ -105,23 +106,22 @@ public class RangerAuthzPlugin {
             accessRequest.setAccessType(permission);
             accessRequest.setContext(new HashMap<>(context.getAdditionalInfo()));
 
-            PermissionResult permResult = evaluate(accessRequest, auditHandler);
+            ResultInfo       result     = evaluate(accessRequest, auditHandler);
+            PermissionResult permResult = new PermissionResult(permission, result);
 
             if (CollectionUtils.isNotEmpty(access.getResource().getSubResources())) {
-                permResult.setAccess(new AccessResult());
+                permResult.setAccess(new AccessResult()); // when sub-resources are evaluated, top-level resource's access is derived from sub-resources
                 permResult.setSubResources(new HashMap<>(access.getResource().getSubResources().size()));
 
                 for (String subResourceName : access.getResource().getSubResources()) {
-                    RangerAccessResource subResource = getSubResource(resource, subResourceName);
-
-                    accessRequest.setResource(subResource);
+                    accessRequest.setResource(getSubResource(resource, subResourceName));
                     accessRequest.setContext(new HashMap<>(context.getAdditionalInfo())); // reset the context
 
-                    PermissionResult subResPermResult = evaluate(accessRequest, auditHandler);
+                    ResultInfo subResourceResult = evaluate(accessRequest, auditHandler);
 
-                    updateResult(subResPermResult.getAccess(), permResult.getAccess());
+                    updateResult(subResourceResult.getAccess(), permResult.getAccess());
 
-                    permResult.getSubResources().put(subResourceName, subResPermResult);
+                    permResult.getSubResources().put(subResourceName, subResourceResult);
                 }
             }
 
@@ -174,7 +174,7 @@ public class RangerAuthzPlugin {
                         String                          permission = aclEntry.getKey();
                         RangerResourceACLs.AccessResult acl        = aclEntry.getValue();
 
-                        ret.setUserPermission(userName, permission, new PermissionResult(permission, toAccessResult(acl)));
+                        ret.setUserPermission(userName, permission, new PermissionResult(permission, new ResultInfo(toAccessResult(acl), null, null, null)));
                     }
                 }
             }
@@ -188,7 +188,7 @@ public class RangerAuthzPlugin {
                         String                          permission = aclEntry.getKey();
                         RangerResourceACLs.AccessResult acl        = aclEntry.getValue();
 
-                        ret.setGroupPermission(groupName, permission, new PermissionResult(permission, toAccessResult(acl)));
+                        ret.setGroupPermission(groupName, permission, new PermissionResult(permission, new ResultInfo(toAccessResult(acl), null, null, null)));
                     }
                 }
             }
@@ -202,7 +202,7 @@ public class RangerAuthzPlugin {
                         String                          permission = aclEntry.getKey();
                         RangerResourceACLs.AccessResult acl        = aclEntry.getValue();
 
-                        ret.setRolePermission(roleName, permission, new PermissionResult(permission, toAccessResult(acl)));
+                        ret.setRolePermission(roleName, permission, new PermissionResult(permission, new ResultInfo(toAccessResult(acl), null, null, null)));
                     }
                 }
             }
@@ -282,8 +282,8 @@ public class RangerAuthzPlugin {
         }
     }
 
-    private PermissionResult toPermissionResult(RangerAccessResult result) {
-        PermissionResult ret = new PermissionResult(result.getAccessRequest().getAccessType(), toAccessResult(result));
+    private ResultInfo toPermissionResult(RangerAccessResult result) {
+        ResultInfo ret = new ResultInfo(toAccessResult(result), null, null, null);
 
         if (result.getPolicyType() == RangerPolicy.POLICY_TYPE_DATAMASK) {
             ret.setDataMask(new DataMaskResult(result.getMaskType(), result.getMaskedValue(), ret.getAccess().getPolicy()));
@@ -340,9 +340,9 @@ public class RangerAuthzPlugin {
         return new PolicyInfo(result.getPolicyId(), result.getPolicyVersion());
     }
 
-    private PermissionResult evaluate(RangerAccessRequest request, RangerAuthzAuditHandler auditHandler) {
-        RangerAccessResult result = plugin.isAccessAllowed(request, auditHandler);
-        PermissionResult   ret    = toPermissionResult(result);
+    private ResultInfo evaluate(RangerAccessRequest request, RangerAuthzAuditHandler auditHandler) {
+        RangerAccessResult           result = plugin.isAccessAllowed(request, auditHandler);
+        ResultInfo ret    = toPermissionResult(result);
 
         if (plugin.getServiceDefHelper().isRowFilterSupported(request.getResource().getKeys())) {
             RangerAccessResult rowFilterResult = plugin.evalRowFilterPolicies(request, auditHandler);
@@ -364,16 +364,16 @@ public class RangerAuthzPlugin {
     }
 
     private Map<String, Object> getResourceAsMap(String resource) throws RangerAuthzException {
-        String[]               resourceParts = resource.split(":", 2);
-        String                 resourceType  = resourceParts.length > 0 ? resourceParts[0] : null;
-        String                 resourceValue = resourceParts.length > 1 ? resourceParts[1] : null;
-        RangerResourceTemplate template      = rrnTemplates.get(resourceType);
+        String[]                 resourceParts = resource.split(":", 2);
+        String                   resourceType  = resourceParts.length > 0 ? resourceParts[0] : null;
+        String                   resourceValue = resourceParts.length > 1 ? resourceParts[1] : null;
+        RangerResourceNameParser template      = rrnTemplates.get(resourceType);
 
         if (template == null) {
             throw new RangerAuthzException(RangerAuthzApiErrorCode.INVALID_REQUEST_RESOURCE_TYPE_NOT_FOUND, resourceType);
         }
 
-        Map ret = template.parse(resourceValue);
+        Map ret = template.parseToMap(resourceValue);
 
         if (ret == null) {
             throw new RangerAuthzException(RangerAuthzApiErrorCode.INVALID_REQUEST_RESOURCE_VALUE_FOR_TYPE, resourceValue, resourceType);
@@ -383,14 +383,21 @@ public class RangerAuthzPlugin {
     }
 
     private void updateResourceTemplates() {
-        RangerServiceDef serviceDef = plugin.getServiceDef();
+        RangerServiceDefHelper serviceDefHelper = plugin.getServiceDefHelper();
 
-        if (serviceDef != null) {
-            for (RangerResourceDef resourceDef : serviceDef.getResources()) {
-                try {
-                    rrnTemplates.put(resourceDef.getName(), new RangerResourceTemplate(resourceDef.getRrnTemplate()));
-                } catch (RangerAuthzException excp) {
-                    LOG.warn("failed to create resource template for resourceType={}, rrnTemplate={}", resourceDef.getName(), resourceDef.getRrnTemplate(), excp);
+        if (serviceDefHelper != null) {
+            for (String resourceType : serviceDefHelper.getAllResourceNames()) {
+                String                   rrnTemplate = serviceDefHelper.getRrnTemplate(resourceType);
+                RangerResourceNameParser existing    = rrnTemplates.get(resourceType);
+
+                if (existing == null || !Objects.equals(existing.getTemplate(), rrnTemplate)) {
+                    LOG.info("updateResourceTemplates(): resourceType={} updated to rrnTemplate={}", resourceType, rrnTemplate);
+
+                    try {
+                        rrnTemplates.put(resourceType, new RangerResourceNameParser(rrnTemplate));
+                    } catch (RangerAuthzException excp) {
+                        LOG.warn("updateResourceTemplates(): failed to create resource template for resourceType={}, rrnTemplate={}", resourceType, rrnTemplate, excp);
+                    }
                 }
             }
         }

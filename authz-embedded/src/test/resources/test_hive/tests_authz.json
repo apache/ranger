@@ -4,13 +4,13 @@
   },
   {
     "request": {
-      "requestId": "tbl1-r-user select mydb.tbl1",
+      "requestId": "tbl1-r-user select mydb/tbl1",
       "user":      { "name": "tbl1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl1-r-user select mydb.tbl1",
+      "requestId": "tbl1-r-user select mydb/tbl1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 1, "version": 1 } } }
@@ -19,13 +19,13 @@
   },
   {
     "request": {
-      "requestId": "tbl1-r-user update mydb.tbl1",
+      "requestId": "tbl1-r-user update mydb/tbl1",
       "user":      { "name": "tbl1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl1-r-user update mydb.tbl1",
+      "requestId": "tbl1-r-user update mydb/tbl1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -34,13 +34,13 @@
   },
   {
     "request": {
-      "requestId": "tbl1-r-user select,update mydb.tbl1",
+      "requestId": "tbl1-r-user select,update mydb/tbl1",
       "user":      { "name": "tbl1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl1-r-user select,update mydb.tbl1",
+      "requestId": "tbl1-r-user select,update mydb/tbl1",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  1, "version": 1 } } },
@@ -50,13 +50,13 @@
   },
   {
     "request": {
-      "requestId": "tbl1-rw-user update mydb.tbl1",
+      "requestId": "tbl1-rw-user update mydb/tbl1",
       "user":      { "name": "tbl1-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl1-rw-user update mydb.tbl1",
+      "requestId": "tbl1-rw-user update mydb/tbl1",
       "decision":  "ALLOW",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "ALLOW", "policy": { "id":  1, "version": 1 } } }
@@ -65,13 +65,13 @@
   },
   {
     "request": {
-      "requestId": "tbl1-rw-user select,update mydb.tbl1",
+      "requestId": "tbl1-rw-user select,update mydb/tbl1",
       "user":      { "name": "tbl1-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl1-rw-user select,update mydb.tbl1",
+      "requestId": "tbl1-rw-user select,update mydb/tbl1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  1, "version": 1 } } },
@@ -81,13 +81,13 @@
   },
   {
     "request": {
-      "requestId": "tbl2-r-user select mydb.tbl1",
+      "requestId": "tbl2-r-user select mydb/tbl1",
       "user":      { "name": "tbl2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl2-r-user select mydb.tbl1",
+      "requestId": "tbl2-r-user select mydb/tbl1",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -96,13 +96,13 @@
   },
   {
     "request": {
-      "requestId": "tbl2-r-user update mydb.tbl1",
+      "requestId": "tbl2-r-user update mydb/tbl1",
       "user":      { "name": "tbl2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl2-r-user update mydb.tbl1",
+      "requestId": "tbl2-r-user update mydb/tbl1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -111,13 +111,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user select mydb.tbl1",
+      "requestId": "all-tbl-r-user select mydb/tbl1",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user select mydb.tbl1",
+      "requestId": "all-tbl-r-user select mydb/tbl1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -126,13 +126,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user update mydb.tbl1",
+      "requestId": "all-tbl-r-user update mydb/tbl1",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user update mydb.tbl1",
+      "requestId": "all-tbl-r-user update mydb/tbl1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -141,17 +141,17 @@
   },
 
   {
-    "comment": "tests for tbl mydb.tbl2"
+    "comment": "tests for tbl mydb/tbl2"
   },
   {
     "request": {
-      "requestId": "tbl2-r-user select mydb.tbl2",
+      "requestId": "tbl2-r-user select mydb/tbl2",
       "user":      { "name": "tbl2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl2-r-user select mydb.tbl2",
+      "requestId": "tbl2-r-user select mydb/tbl2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 2, "version": 1 } } }
@@ -160,13 +160,13 @@
   },
   {
     "request": {
-      "requestId": "tbl2-r-user update mydb.tbl2",
+      "requestId": "tbl2-r-user update mydb/tbl2",
       "user":      { "name": "tbl2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl2-r-user update mydb.tbl2",
+      "requestId": "tbl2-r-user update mydb/tbl2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -175,13 +175,13 @@
   },
   {
     "request": {
-      "requestId": "tbl2-r-user select,update mydb.tbl2",
+      "requestId": "tbl2-r-user select,update mydb/tbl2",
       "user":      { "name": "tbl2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl2-r-user select,update mydb.tbl2",
+      "requestId": "tbl2-r-user select,update mydb/tbl2",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  2, "version": 1 } } },
@@ -191,13 +191,13 @@
   },
   {
     "request": {
-      "requestId": "tbl2-rw-user update mydb.tbl2",
+      "requestId": "tbl2-rw-user update mydb/tbl2",
       "user":      { "name": "tbl2-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl2-rw-user update mydb.tbl2",
+      "requestId": "tbl2-rw-user update mydb/tbl2",
       "decision":  "ALLOW",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "ALLOW", "policy": { "id":  2, "version": 1 } } }
@@ -206,13 +206,13 @@
   },
   {
     "request": {
-      "requestId": "tbl2-rw-user select,update mydb.tbl2",
+      "requestId": "tbl2-rw-user select,update mydb/tbl2",
       "user":      { "name": "tbl2-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl2-rw-user select,update mydb.tbl2",
+      "requestId": "tbl2-rw-user select,update mydb/tbl2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  2, "version": 1 } } },
@@ -222,13 +222,13 @@
   },
   {
     "request": {
-      "requestId": "tbl1-r-user select mydb.tbl2",
+      "requestId": "tbl1-r-user select mydb/tbl2",
       "user":      { "name": "tbl1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl1-r-user select mydb.tbl2",
+      "requestId": "tbl1-r-user select mydb/tbl2",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -237,13 +237,13 @@
   },
   {
     "request": {
-      "requestId": "tbl1-r-user update mydb.tbl2",
+      "requestId": "tbl1-r-user update mydb/tbl2",
       "user":      { "name": "tbl1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tbl1-r-user update mydb.tbl2",
+      "requestId": "tbl1-r-user update mydb/tbl2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -252,13 +252,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user select mydb.tbl2",
+      "requestId": "all-tbl-r-user select mydb/tbl2",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user select mydb.tbl2",
+      "requestId": "all-tbl-r-user select mydb/tbl2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -267,13 +267,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user update mydb.tbl2",
+      "requestId": "all-tbl-r-user update mydb/tbl2",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user update mydb.tbl2",
+      "requestId": "all-tbl-r-user update mydb/tbl2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -282,17 +282,17 @@
   },
 
   {
-    "comment": "tests for tbl mydb.tbl_tag1"
+    "comment": "tests for tbl mydb/tbl_tag1"
   },
   {
     "request": {
-      "requestId": "tag1-r-user select mydb.tbl_tag1",
+      "requestId": "tag1-r-user select mydb/tbl_tag1",
       "user":      { "name": "tag1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag1-r-user select mydb.tbl_tag1",
+      "requestId": "tag1-r-user select mydb/tbl_tag1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 11, "version": 1 } } }
@@ -301,13 +301,13 @@
   },
   {
     "request": {
-      "requestId": "tag1-r-user update mydb.tbl_tag1",
+      "requestId": "tag1-r-user update mydb/tbl_tag1",
       "user":      { "name": "tag1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag1-r-user update mydb.tbl_tag1",
+      "requestId": "tag1-r-user update mydb/tbl_tag1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -316,13 +316,13 @@
   },
   {
     "request": {
-      "requestId": "tag1-r-user select,update mydb.tbl_tag1",
+      "requestId": "tag1-r-user select,update mydb/tbl_tag1",
       "user":      { "name": "tag1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag1-r-user select,update mydb.tbl_tag1",
+      "requestId": "tag1-r-user select,update mydb/tbl_tag1",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  11, "version": 1 } } },
@@ -332,13 +332,13 @@
   },
   {
     "request": {
-      "requestId": "tag1-rw-user update mydb.tbl_tag1",
+      "requestId": "tag1-rw-user update mydb/tbl_tag1",
       "user":      { "name": "tag1-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag1-rw-user update mydb.tbl_tag1",
+      "requestId": "tag1-rw-user update mydb/tbl_tag1",
       "decision":  "ALLOW",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "ALLOW", "policy": { "id":  11, "version": 1 } } }
@@ -347,13 +347,13 @@
   },
   {
     "request": {
-      "requestId": "tag1-rw-user select,update mydb.tbl_tag1",
+      "requestId": "tag1-rw-user select,update mydb/tbl_tag1",
       "user":      { "name": "tag1-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag1-rw-user select,update mydb.tbl_tag1",
+      "requestId": "tag1-rw-user select,update mydb/tbl_tag1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  11, "version": 1 } } },
@@ -363,13 +363,13 @@
   },
   {
     "request": {
-      "requestId": "tag2-r-user select mydb.tbl_tag1",
+      "requestId": "tag2-r-user select mydb/tbl_tag1",
       "user":      { "name": "tag2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag2-r-user select mydb.tbl_tag1",
+      "requestId": "tag2-r-user select mydb/tbl_tag1",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -378,13 +378,13 @@
   },
   {
     "request": {
-      "requestId": "tag2-r-user update mydb.tbl_tag1",
+      "requestId": "tag2-r-user update mydb/tbl_tag1",
       "user":      { "name": "tag2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag2-r-user update mydb.tbl_tag1",
+      "requestId": "tag2-r-user update mydb/tbl_tag1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -393,13 +393,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user select mydb.tbl_tag1",
+      "requestId": "all-tbl-r-user select mydb/tbl_tag1",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user select mydb.tbl_tag1",
+      "requestId": "all-tbl-r-user select mydb/tbl_tag1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -408,13 +408,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user update mydb.tbl_tag1",
+      "requestId": "all-tbl-r-user update mydb/tbl_tag1",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user update mydb.tbl_tag1",
+      "requestId": "all-tbl-r-user update mydb/tbl_tag1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -424,17 +424,17 @@
 
 
   {
-    "comment": "tests for tbl mydb.tbl_tag2"
+    "comment": "tests for tbl mydb/tbl_tag2"
   },
   {
     "request": {
-      "requestId": "tag2-r-user select mydb.tbl_tag2",
+      "requestId": "tag2-r-user select mydb/tbl_tag2",
       "user":      { "name": "tag2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag2-r-user select mydb.tbl_tag2",
+      "requestId": "tag2-r-user select mydb/tbl_tag2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 12, "version": 1 } } }
@@ -443,13 +443,13 @@
   },
   {
     "request": {
-      "requestId": "tag2-r-user update mydb.tbl_tag2",
+      "requestId": "tag2-r-user update mydb/tbl_tag2",
       "user":      { "name": "tag2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag2-r-user update mydb.tbl_tag2",
+      "requestId": "tag2-r-user update mydb/tbl_tag2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -458,13 +458,13 @@
   },
   {
     "request": {
-      "requestId": "tag2-r-user select,update mydb.tbl_tag2",
+      "requestId": "tag2-r-user select,update mydb/tbl_tag2",
       "user":      { "name": "tag2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag2-r-user select,update mydb.tbl_tag2",
+      "requestId": "tag2-r-user select,update mydb/tbl_tag2",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  12, "version": 1 } } },
@@ -474,13 +474,13 @@
   },
   {
     "request": {
-      "requestId": "tag2-rw-user update mydb.tbl_tag2",
+      "requestId": "tag2-rw-user update mydb/tbl_tag2",
       "user":      { "name": "tag2-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag2-rw-user update mydb.tbl_tag2",
+      "requestId": "tag2-rw-user update mydb/tbl_tag2",
       "decision":  "ALLOW",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "ALLOW", "policy": { "id":  12, "version": 1 } } }
@@ -489,13 +489,13 @@
   },
   {
     "request": {
-      "requestId": "tag2-rw-user select,update mydb.tbl_tag2",
+      "requestId": "tag2-rw-user select,update mydb/tbl_tag2",
       "user":      { "name": "tag2-rw-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag2-rw-user select,update mydb.tbl_tag2",
+      "requestId": "tag2-rw-user select,update mydb/tbl_tag2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  12, "version": 1 } } },
@@ -505,13 +505,13 @@
   },
   {
     "request": {
-      "requestId": "tag1-r-user select mydb.tbl_tag2",
+      "requestId": "tag1-r-user select mydb/tbl_tag2",
       "user":      { "name": "tag1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag1-r-user select mydb.tbl_tag2",
+      "requestId": "tag1-r-user select mydb/tbl_tag2",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -520,13 +520,13 @@
   },
   {
     "request": {
-      "requestId": "tag1-r-user update mydb.tbl_tag2",
+      "requestId": "tag1-r-user update mydb/tbl_tag2",
       "user":      { "name": "tag1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "tag1-r-user update mydb.tbl_tag2",
+      "requestId": "tag1-r-user update mydb/tbl_tag2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -535,13 +535,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user select mydb.tbl_tag2",
+      "requestId": "all-tbl-r-user select mydb/tbl_tag2",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user select mydb.tbl_tag2",
+      "requestId": "all-tbl-r-user select mydb/tbl_tag2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -550,13 +550,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user update mydb.tbl_tag2",
+      "requestId": "all-tbl-r-user update mydb/tbl_tag2",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_tag2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user update mydb.tbl_tag2",
+      "requestId": "all-tbl-r-user update mydb/tbl_tag2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -566,17 +566,17 @@
 
 
   {
-    "comment": "tests for tbl mydb.tbl_ds1"
+    "comment": "tests for tbl mydb/tbl_ds1"
   },
   {
     "request": {
-      "requestId": "ds1-r-user select mydb.tbl_ds1",
+      "requestId": "ds1-r-user select mydb/tbl_ds1",
       "user":      { "name": "ds1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds1-r-user select mydb.tbl_ds1",
+      "requestId": "ds1-r-user select mydb/tbl_ds1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 41, "version": 1 } } }
@@ -585,13 +585,13 @@
   },
   {
     "request": {
-      "requestId": "ds1-r-user update mydb.tbl_ds1",
+      "requestId": "ds1-r-user update mydb/tbl_ds1",
       "user":      { "name": "ds1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds1-r-user update mydb.tbl_ds1",
+      "requestId": "ds1-r-user update mydb/tbl_ds1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -600,13 +600,13 @@
   },
   {
     "request": {
-      "requestId": "ds1-r-user select,update mydb.tbl_ds1",
+      "requestId": "ds1-r-user select,update mydb/tbl_ds1",
       "user":      { "name": "ds1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds1" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds1" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds1-r-user select,update mydb.tbl_ds1",
+      "requestId": "ds1-r-user select,update mydb/tbl_ds1",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  41, "version": 1 } } },
@@ -616,13 +616,13 @@
   },
   {
     "request": {
-      "requestId": "ds2-r-user select mydb.tbl_ds1",
+      "requestId": "ds2-r-user select mydb/tbl_ds1",
       "user":      { "name": "ds2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds2-r-user select mydb.tbl_ds1",
+      "requestId": "ds2-r-user select mydb/tbl_ds1",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -631,13 +631,13 @@
   },
   {
     "request": {
-      "requestId": "ds2-r-user update mydb.tbl_ds1",
+      "requestId": "ds2-r-user update mydb/tbl_ds1",
       "user":      { "name": "ds2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds2-r-user update mydb.tbl_ds1",
+      "requestId": "ds2-r-user update mydb/tbl_ds1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -646,13 +646,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user select mydb.tbl_ds1",
+      "requestId": "all-tbl-r-user select mydb/tbl_ds1",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds1" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds1" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user select mydb.tbl_ds1",
+      "requestId": "all-tbl-r-user select mydb/tbl_ds1",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -661,13 +661,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user update mydb.tbl_ds1",
+      "requestId": "all-tbl-r-user update mydb/tbl_ds1",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds1" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds1" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user update mydb.tbl_ds1",
+      "requestId": "all-tbl-r-user update mydb/tbl_ds1",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -677,17 +677,17 @@
 
 
   {
-    "comment": "tests for tbl mydb.tbl_ds2"
+    "comment": "tests for tbl mydb/tbl_ds2"
   },
   {
     "request": {
-      "requestId": "ds2-r-user select mydb.tbl_ds2",
+      "requestId": "ds2-r-user select mydb/tbl_ds2",
       "user":      { "name": "ds2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds2-r-user select mydb.tbl_ds2",
+      "requestId": "ds2-r-user select mydb/tbl_ds2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 42, "version": 1 } } }
@@ -696,13 +696,13 @@
   },
   {
     "request": {
-      "requestId": "ds2-r-user update mydb.tbl_ds2",
+      "requestId": "ds2-r-user update mydb/tbl_ds2",
       "user":      { "name": "ds2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds2-r-user update mydb.tbl_ds2",
+      "requestId": "ds2-r-user update mydb/tbl_ds2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -711,13 +711,13 @@
   },
   {
     "request": {
-      "requestId": "ds2-r-user select,update mydb.tbl_ds2",
+      "requestId": "ds2-r-user select,update mydb/tbl_ds2",
       "user":      { "name": "ds2-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds2" }, "action": "update", "permissions": [ "select", "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds2" }, "action": "update", "permissions": [ "select", "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds2-r-user select,update mydb.tbl_ds2",
+      "requestId": "ds2-r-user select,update mydb/tbl_ds2",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id":  42, "version": 1 } } },
@@ -727,13 +727,13 @@
   },
   {
     "request": {
-      "requestId": "ds1-r-user select mydb.tbl_ds2",
+      "requestId": "ds1-r-user select mydb/tbl_ds2",
       "user":      { "name": "ds1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds1-r-user select mydb.tbl_ds2",
+      "requestId": "ds1-r-user select mydb/tbl_ds2",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -742,13 +742,13 @@
   },
   {
     "request": {
-      "requestId": "ds1-r-user update mydb.tbl_ds2",
+      "requestId": "ds1-r-user update mydb/tbl_ds2",
       "user":      { "name": "ds1-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds1-r-user update mydb.tbl_ds2",
+      "requestId": "ds1-r-user update mydb/tbl_ds2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -757,13 +757,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user select mydb.tbl_ds2",
+      "requestId": "all-tbl-r-user select mydb/tbl_ds2",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds2" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds2" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user select mydb.tbl_ds2",
+      "requestId": "all-tbl-r-user select mydb/tbl_ds2",
       "decision":  "ALLOW",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
@@ -772,13 +772,13 @@
   },
   {
     "request": {
-      "requestId": "all-tbl-r-user update mydb.tbl_ds2",
+      "requestId": "all-tbl-r-user update mydb/tbl_ds2",
       "user":      { "name": "all-tbl-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds2" }, "action": "update", "permissions": [ "update" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds2" }, "action": "update", "permissions": [ "update" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "all-tbl-r-user update mydb.tbl_ds2",
+      "requestId": "all-tbl-r-user update mydb/tbl_ds2",
       "decision":  "DENY",
       "permissions": {
         "update": { "permission": "update", "access": { "decision": "DENY", "policy": { "id":  -1 } } }
@@ -787,17 +787,17 @@
   },
 
   {
-    "comment": "tests for tbl mydb.tbl_ds3"
+    "comment": "tests for tbl mydb/tbl_ds3"
   },
   {
     "request": {
-      "requestId": "ds3-r-user select mydb.tbl_ds3",
+      "requestId": "ds3-r-user select mydb/tbl_ds3",
       "user":      { "name": "ds3-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds3" }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds3" }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds3-r-user select mydb.tbl_ds3",
+      "requestId": "ds3-r-user select mydb/tbl_ds3",
       "decision":  "DENY",
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "DENY", "policy": { "id": -1 } } }
@@ -806,13 +806,13 @@
   },
   {
     "request": {
-      "requestId": "ds3-r-user select mydb.tbl_ds3 col1,col2,col3",
+      "requestId": "ds3-r-user select mydb/tbl_ds3 col1,col2,col3",
       "user":      { "name": "ds3-r-user" },
-      "access":    { "resource": { "name": "table:mydb.tbl_ds3", "subResources": [ "column:col1", "column:col2", "column:col3" ] }, "action": "select", "permissions": [ "select" ] },
+      "access":    { "resource": { "name": "table:mydb/tbl_ds3", "subResources": [ "column:col1", "column:col2", "column:col3" ] }, "action": "select", "permissions": [ "select" ] },
       "context":   { "serviceName": "dev_hive" }
     },
     "result": {
-      "requestId": "ds3-r-user select mydb.tbl_ds3 col1,col2,col3",
+      "requestId": "ds3-r-user select mydb/tbl_ds3 col1,col2,col3",
       "decision":  "ALLOW",
       "permissions": {
         "select": {
