@@ -327,19 +327,12 @@ public class TestRangerServiceDefHelper {
 		RangerServiceDef       svcDef       = JsonUtils.jsonToObject(reader, RangerServiceDef.class);
 		RangerServiceDefHelper svcDefHelper = new RangerServiceDefHelper(svcDef);
 
-		String rrnDatabase = svcDefHelper.getRrnTemplate("database");
-		String rrnTable    = svcDefHelper.getRrnTemplate("table");
-		String rrnColumn   = svcDefHelper.getRrnTemplate("column");
-		String rrnUdf      = svcDefHelper.getRrnTemplate("udf");
-		String rrnUrl      = svcDefHelper.getRrnTemplate("url");
-		String rrnUnknown  = svcDefHelper.getRrnTemplate("unknown-resource");
-
-		assertEquals("{database}", rrnDatabase);
-		assertEquals("{database}.{table}", rrnTable);
-		assertEquals("{database}.{table}.{column}", rrnColumn);
-		assertEquals("{database}.{udf}", rrnUdf);
-		assertEquals("{url}", rrnUrl);
-		assertNull(rrnUnknown);
+		assertEquals("database", svcDefHelper.getRrnTemplate("database"));
+		assertEquals("database/table", svcDefHelper.getRrnTemplate("table"));
+		assertEquals("database/table/column", svcDefHelper.getRrnTemplate("column"));
+		assertEquals("database/udf", svcDefHelper.getRrnTemplate("udf"));
+		assertEquals("url", svcDefHelper.getRrnTemplate("url"));
+		assertNull(svcDefHelper.getRrnTemplate("unknown-resource"));
 	}
 
 	@Test
@@ -348,11 +341,8 @@ public class TestRangerServiceDefHelper {
 		RangerServiceDef       svcDef       = JsonUtils.jsonToObject(reader, RangerServiceDef.class);
 		RangerServiceDefHelper svcDefHelper = new RangerServiceDefHelper(svcDef);
 
-		String rrnBucket = svcDefHelper.getRrnTemplate("bucket");
-		String rrnPath   = svcDefHelper.getRrnTemplate("path");
-
-		assertEquals("{bucket}", rrnBucket);
-		assertEquals("{bucket}/{path}", rrnPath);
+		assertEquals("bucket", svcDefHelper.getRrnTemplate("bucket"));
+		assertEquals("bucket/path", svcDefHelper.getRrnTemplate("path"));
 	}
 
 	RangerResourceDef createResourceDef(String name, String parent) {
