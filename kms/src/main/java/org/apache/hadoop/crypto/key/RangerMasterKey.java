@@ -362,7 +362,7 @@ public class RangerMasterKey implements RangerKMSMKI {
             String savedKey           = saveEncryptedMK(paddingString + "," + encryptedMasterKey);
 
             if (savedKey != null && !savedKey.trim().equals("")) {
-                logger.debug("Master Key Created with id = " + savedKey);
+                logger.debug("Master Key Created with id = {}", savedKey);
             }
         } else {
             logger.debug("Ranger Master Key already exists in the DB, returning.");

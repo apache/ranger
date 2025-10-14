@@ -35,13 +35,11 @@ public enum RangerAuthzApiErrorCode implements RangerAuthzErrorCode {
     INVALID_REQUEST_PERMISSION_NOT_FOUND(400, "00-011", "{0}: permission not found"),
     INVALID_REQUEST_PERMISSIONS_EMPTY(400, "00-012", "permissions is empty. Nothing to authorize"),
     INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY(400, "00-013", "service name or service type is mandatory"),
-    INVALID_RESOURCE_TEMPLATE_UNEXPECTED_MARKER_AT(400, "00-014", "invalid resource template: {0}. Unexpected marker \"{1}\" at position {2}"),
+    INVALID_RESOURCE_TEMPLATE_EMPTY_VALUE(400, "00-014", "invalid resource template - empty"),
 
     INVALID_RESOURCE_TYPE_NOT_VALID(400, "00-015", "invalid resource \"{0}\" - unknown type \"{1}\""),
     INVALID_RESOURCE_EMPTY_VALUE(400, "00-016", "invalid resource - empty"),
-    INVALID_RESOURCE_PREFIX_MISMATCH(400, "00-017", "invalid resource \"{0}\" - prefix \"{1}\" not found"),
-    INVALID_RESOURCE_SUFFIX_MISMATCH(400, "00-018", "invalid resource \"{0}\" - suffix \"{1}\" not found"),
-    INVALID_RESOURCE_VALUE(400, "00-019", "invalid resource \"{0}\" - does not match template \"{1}\"");
+    INVALID_RESOURCE_VALUE(400, "00-017", "invalid resource \"{0}\" - does not match template \"{1}\"");
 
     private static final String ERROR_CODE_MODULE_PREFIX = "AUTHZ";
 
