@@ -172,7 +172,7 @@
         <mockito.version>3.12.4</mockito.version>
         <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
-        <netty-all.version>4.1.100.Final</netty-all.version>
+        <netty-all.version>4.1.124.Final</netty-all.version>
         <nimbus-jose-jwt.version>10.0.1</nimbus-jose-jwt.version>
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.6.7</orc.core.version>
@@ -216,7 +216,7 @@
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <testng.version>7.5.1</testng.version>
-        <tomcat.embed.version>8.5.94</tomcat.embed.version>
+        <tomcat.embed.version>9.0.109</tomcat.embed.version>
 
         <!-- trino plugin deps -->
         <trino.airlift.version>0.192</trino.airlift.version>
