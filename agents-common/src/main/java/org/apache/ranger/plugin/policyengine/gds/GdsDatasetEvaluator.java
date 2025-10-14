@@ -144,6 +144,8 @@ public class GdsDatasetEvaluator {
             }
 
             dipEvaluators.stream().filter(e -> e.isAllowed(request) && e.getProjectEvaluator().isActive()).forEach(dip -> projectsToEval.add(dip.getProjectEvaluator()));
+        } else  {
+            result.addDataset(getName());
         }
 
         LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {}, {})", request, result, projectsToEval);
