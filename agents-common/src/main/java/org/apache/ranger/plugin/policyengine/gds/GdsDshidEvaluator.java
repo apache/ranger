@@ -27,8 +27,6 @@ import org.apache.ranger.plugin.util.ServiceGdsInfo.DataShareInDatasetInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
-
 public class GdsDshidEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(GdsDshidEvaluator.class);
 
@@ -79,13 +77,23 @@ public class GdsDshidEvaluator {
         return ret;
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsDataShareEvaluator dshEvaluator, GdsSharedResourceEvaluator sharedResourceEvaluator) {
         LOG.debug("==> GdsDshidEvaluator.getResourceACLs({}, {})", request, acls);
 
         isConditional = isConditional || scheduleEvaluator != null;
 
-        datasetEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
+        datasetEvaluator.getResourceACLs(request, acls, isConditional, dshEvaluator, sharedResourceEvaluator, this);
 
         LOG.debug("<== GdsDshidEvaluator.getResourceACLs({}, {})", request, acls);
+    }
+
+    public void getResourceMasks(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsSharedResourceEvaluator sharedResourceEvaluator, GdsDataShareEvaluator dshEvaluator) {
+        LOG.debug("==> GdsDshidEvaluator.getResourceMasks({}, {})", request, acls);
+
+        isConditional = isConditional || scheduleEvaluator != null;
+
+        datasetEvaluator.getResourceMasks(request, acls, isConditional, sharedResourceEvaluator, dshEvaluator);
+
+        LOG.debug("<== GdsDshidEvaluator.getResourceMasks({}, {})", request, acls);
     }
 }

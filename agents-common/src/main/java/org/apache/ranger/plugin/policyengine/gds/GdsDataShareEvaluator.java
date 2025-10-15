@@ -127,7 +127,7 @@ public class GdsDataShareEvaluator {
             boolean isConditional = conditionEvaluator != null;
 
             for (GdsSharedResourceEvaluator evaluator : evaluators) {
-                evaluator.getResourceACLs(request, acls, isConditional, dshidEvaluators);
+                evaluator.getResourceACLs(request, acls, isConditional, this, dshidEvaluators);
             }
         }
 
