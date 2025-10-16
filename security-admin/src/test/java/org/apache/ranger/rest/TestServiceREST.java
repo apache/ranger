@@ -39,6 +39,7 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.TagDBStore;
+import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -224,7 +225,8 @@ public class TestServiceREST {
 	
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
-
+	@Mock
+	UserMgr           userMgrGrantor;
 	private String capabilityVector;
 
 	private final String grantor = "test-grantor-1";
@@ -2304,6 +2306,7 @@ public class TestServiceREST {
 		Mockito.when(xUserService.getXUserByUserName(Mockito.anyString())).thenReturn(Mockito.mock(VXUser.class));
 		Mockito.when(svcStore.getServiceByName(Mockito.anyString())).thenReturn(Mockito.mock(RangerService.class));
 		Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
+		Mockito.when(userMgrGrantor.getRolesByLoginId(Mockito.anyString())).thenReturn(Arrays.asList("ROLE_SYS_ADMIN"));
 		RESTResponse restResponse = serviceREST.grantAccess(serviceName,
 				grantRequestObj, request);
 		Mockito.verify(svcStore, Mockito.times(1)).createPolicy(Mockito.any(RangerPolicy.class));
@@ -2326,6 +2329,7 @@ public class TestServiceREST {
 		mockValidateGrantRevokeRequest();
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
 		Mockito.when(bizUtil.isUserServiceAdmin(Mockito.any(RangerService.class), Mockito.anyString())).thenReturn(true);
+		Mockito.when(userMgrGrantor.getRolesByLoginId(Mockito.anyString())).thenReturn(Arrays.asList("ROLE_SYS_ADMIN"));
 		RESTResponse restResponse;
 		try {
 			restResponse = serviceREST.secureGrantAccess(serviceName, grantRequestObj, request);

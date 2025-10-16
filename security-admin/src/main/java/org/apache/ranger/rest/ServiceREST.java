@@ -63,6 +63,7 @@ import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.biz.ServiceMgr;
+import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.AppConstants;
@@ -239,7 +240,10 @@ public class ServiceREST {
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
-	
+
+	@Autowired
+	UserMgr userMgrGrantor;
+
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
 	private RangerPolicyEngineOptions defaultAdminOptions;
@@ -1280,6 +1284,9 @@ public class ServiceREST {
 	
 						if(policyUpdated) {
 							policy.setZoneName(zoneName);
+
+							ensureAdminAccess(policy, userName);
+
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processGrantRequest processing failed");
@@ -1316,6 +1323,8 @@ public class ServiceREST {
 	
 						policy.addPolicyItem(policyItem);
 						policy.setZoneName(zoneName);
+
+						ensureAdminAccess(policy, userName);
 
 						svcStore.createPolicy(policy);
 					}
@@ -1394,6 +1403,9 @@ public class ServiceREST {
 
 							if(policyUpdated) {
 								policy.setZoneName(zoneName);
+
+								ensureAdminAccess(policy, userName);
+
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureGrantRequest processing failed");
@@ -1430,6 +1442,8 @@ public class ServiceREST {
 
 							policy.addPolicyItem(policyItem);
 							policy.setZoneName(zoneName);
+
+							ensureAdminAccess(policy, userName);
 
 							svcStore.createPolicy(policy);
 						}
@@ -1512,6 +1526,9 @@ public class ServiceREST {
 
 						if(policyUpdated) {
 							policy.setZoneName(zoneName);
+
+							ensureAdminAccess(policy, userName);
+
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processRevokeRequest processing failed");
@@ -1594,6 +1611,9 @@ public class ServiceREST {
 
 							if(policyUpdated) {
 								policy.setZoneName(zoneName);
+
+								ensureAdminAccess(policy, userName);
+
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureRevokeRequest processing failed");
@@ -3629,9 +3649,26 @@ public class ServiceREST {
 	}
 
 	void ensureAdminAccess(RangerPolicy policy) {
-		boolean isAdmin = bizUtil.isAdmin();
-		boolean isKeyAdmin = bizUtil.isKeyAdmin();
-		String userName = bizUtil.getCurrentUserLoginId();
+		ensureAdminAccess(policy, null);
+	}
+
+	void ensureAdminAccess(RangerPolicy policy, String grantor) {
+		final String userName;
+		final boolean isAdmin;
+		final boolean isKeyAdmin;
+
+		if (StringUtils.isEmpty(grantor)) {
+			userName   = bizUtil.getCurrentUserLoginId();
+			isAdmin    = bizUtil.isAdmin();
+			isKeyAdmin = bizUtil.isKeyAdmin();
+		} else {
+			Collection<String> userRoles = userMgrGrantor.getRolesByLoginId(grantor);
+
+			userName   = grantor;
+			isAdmin    = userRoles.contains(RangerConstants.ROLE_SYS_ADMIN);
+			isKeyAdmin = userRoles.contains(RangerConstants.ROLE_KEY_ADMIN);
+		}
+
 		boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName);
 
 		if (!isAdmin && !isKeyAdmin && !isSvcAdmin) {
