@@ -226,7 +226,7 @@ public class EmbeddedServer {
         valve.setMaxDays(EmbeddedServerUtil.getIntConfig(ACCESS_LOG_ROTATE_MAX_DAYS, 15));
         valve.setRenameOnRotate(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ROTATE_RENAME_ON_ROTATE, false));
 
-        String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b %D" : "%h %l %u %t \"%r\" %s %b %D";
+        String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b %D %{eek_op}r" : "%h %l %u %t \"%r\" %s %b %D";
         String logPattern              = EmbeddedServerUtil.getConfig(ACCESS_LOG_PATTERN, defaultAccessLogPattern);
 
         valve.setPattern(logPattern);
