@@ -6,6 +6,7 @@ services:
       args:
         - TRINO_PLUGIN_VERSION=${TRINO_PLUGIN_VERSION}
         - TRINO_VERSION=${TRINO_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-trino
     hostname: ranger-trino
     container_name: ranger-trino
@@ -21,6 +22,7 @@ services:
     environment:
       - TRINO_PLUGIN_VERSION
       - TRINO_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

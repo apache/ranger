@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KEYTABS_DIR=/opt/hbase/keytabs
+
 if [ ! -e ${HBASE_HOME}/.setupDone ]
 then
   su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hbase
@@ -28,6 +30,10 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    /etc/keytabs/create_keytab.sh hbase ${KEYTABS_DIR} hbase:hadoop
+  fi
 
   if "${RANGER_SCRIPTS}"/ranger-hbase-setup.sh;
   then

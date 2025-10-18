@@ -17,6 +17,7 @@
 # limitations under the License.
 
 CREATE_HDFS_DIR=false
+KEYTABS_DIR=/opt/hadoop/keytabs
 
 if [ ! -e ${HADOOP_HOME}/.setupDone ]
 then
@@ -34,6 +35,11 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    /etc/keytabs/create_keytab.sh hdfs ${KEYTABS_DIR} hdfs:hadoop
+    /etc/keytabs/create_keytab.sh yarn ${KEYTABS_DIR} yarn:hadoop
+  fi
 
   if "${RANGER_SCRIPTS}"/ranger-hadoop-setup.sh;
   then

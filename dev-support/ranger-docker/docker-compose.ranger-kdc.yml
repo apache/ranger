@@ -1,0 +1,24 @@
+services:
+  ranger-kdc:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-kdc
+      args:
+        - REALM=${KERBEROS_REALM}
+        - KDC_HOST=${KERBEROS_KDC_HOST}
+        - MASTER_PASSWORD=${KERBEROS_MASTER_PASSWORD}
+        - ADMIN_PRINCIPAL=${KERBEROS_ADMIN_PRINCIPAL}
+        - ADMIN_PASSWORD=${KERBEROS_ADMIN_PASSWORD}
+    image: ranger-kdc:latest
+    container_name: ranger-kdc
+    hostname: ranger-kdc.example.com
+    networks:
+      - ranger
+    ports:
+      - "88:88"
+      - "88:88/udp"
+      - "749:749"
+
+networks:
+  ranger:
+    name: rangernw

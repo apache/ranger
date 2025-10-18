@@ -8,6 +8,7 @@ services:
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger:latest
     container_name: ranger
     hostname: ranger.example.com
@@ -27,6 +28,7 @@ services:
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
+      - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
     command:
       - /home/ranger/scripts/ranger.sh
@@ -42,13 +44,18 @@ services:
       dockerfile: Dockerfile.ranger-zk
       args:
         - ZK_VERSION=${ZK_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-zk
     container_name: ranger-zk
     hostname: ranger-zk.example.com
+    volumes:
+      - ./config/kdc/keytabs:/etc/keytabs
     networks:
       - ranger
     ports:
       - "2181:2181"
+    environment:
+      - KERBEROS_ENABLED
 
   ranger-solr:
     build:
@@ -56,13 +63,18 @@ services:
       dockerfile: Dockerfile.ranger-solr
       args:
         - SOLR_VERSION=${SOLR_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-solr
     container_name: ranger-solr
     hostname: ranger-solr.example.com
+    volumes:
+      - ./config/kdc/keytabs:/etc/keytabs
     networks:
       - ranger
     ports:
       - "8983:8983"
+    environment:
+      - KERBEROS_ENABLED
     command:
       - solr-precreate
       - ranger_audits

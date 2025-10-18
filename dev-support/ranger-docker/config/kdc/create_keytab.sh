@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,19 +16,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG SOLR_VERSION
-FROM solr:${SOLR_VERSION}
+ADMIN_PRINCIPAL=admin/admin
+ADMIN_PASSWORD=rangerR0cks!
 
-# Copy audit config set
-USER 0
-RUN  mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf
-COPY config/solr-ranger_audits/* /opt/solr/server/solr/configsets/ranger_audits/conf/
-RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
+PRINCIPAL_NAME=$1
+KEYTAB_DIR=$2
+KEYTAB_OWNER=$3
 
-RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs
+PRINCIPAL=${PRINCIPAL_NAME}/`hostname -f`
+KEYTAB=${KEYTAB_DIR}/${PRINCIPAL_NAME}.keytab
 
-COPY config/kdc/krb5.conf /etc/krb5.conf
-COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
-RUN chmod +x /etc/keytabs/create_keytab.sh
+echo "Creating Kerberos principal ${PRINCIPAL} .."
+echo ${ADMIN_PASSWORD} | kadmin -p ${ADMIN_PRINCIPAL} -q "addprinc -randkey ${PRINCIPAL}"
 
-USER solr
+mkdir -p ${KEYTAB_DIR}
+
+echo "Creating keytab for principal ${PRINCIPAL} .."
+echo ${ADMIN_PASSWORD} | kadmin -p ${ADMIN_PRINCIPAL} -q "ktadd -k ${KEYTAB} ${PRINCIPAL}"
+
+if [ "${KEYTAB_OWNER}" != "" ]
+then
+    chmod 400 ${KEYTAB}
+    chown ${KEYTAB_OWNER} ${KEYTAB}
+fi
