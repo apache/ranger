@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KEYTABS_DIR=/opt/knox/keytabs
+
 if [ "${OS_NAME}" = "UBUNTU" ]; then
   service ssh start
 fi
@@ -34,6 +36,10 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    /etc/keytabs/create_keytab.sh knox ${KEYTABS_DIR} knox:knox
+  fi
 
   if "${RANGER_SCRIPTS}"/ranger-knox-setup.sh;
   then

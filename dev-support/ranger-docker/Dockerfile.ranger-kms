@@ -39,7 +39,12 @@ RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RA
     ln -s /etc/init.d/ranger-kms /etc/rc3.d/K90ranger-kms && \
     ln -s ${RANGER_HOME}/kms/ranger-kms-services.sh /usr/bin/ranger-kms-services.sh && \
     chown -R rangerkms:ranger ${RANGER_HOME}/kms/ ${RANGER_SCRIPTS}/ /var/run/ranger_kms/ /var/log/ranger/ && \
+    apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-kms.sh
+
+COPY config/kdc/krb5.conf /etc/krb5.conf
+COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
+RUN chmod +x /etc/keytabs/create_keytab.sh
 
 FROM ranger-kms AS ranger_postgres
 COPY ./downloads/postgresql-42.2.16.jre7.jar          /home/ranger/dist/

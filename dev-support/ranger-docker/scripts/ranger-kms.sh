@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KEYTABS_DIR=/opt/ranger/kms/keytabs
 
 if [ ! -e ${RANGER_HOME}/.setupDone ]
 then
@@ -26,6 +27,11 @@ fi
 
 if [ "${SETUP_RANGER}" == "true" ]
 then
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    /etc/keytabs/create_keytab.sh rangerkms ${KEYTABS_DIR} rangerkms:ranger
+  fi
+
   cd "${RANGER_HOME}"/kms || exit
   if ./setup.sh;
   then

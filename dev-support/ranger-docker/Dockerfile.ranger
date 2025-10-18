@@ -38,7 +38,12 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && mkdir -p /var/log/ranger \
     && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
     && chmod 755 ${RANGER_SCRIPTS}/ranger.sh \
+    && apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs \
     && mkdir -p /usr/share/java/
+
+COPY config/kdc/krb5.conf /etc/krb5.conf
+COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
+RUN chmod +x /etc/keytabs/create_keytab.sh
 
 FROM ranger AS ranger_postgres
 COPY ./downloads/postgresql-42.2.16.jre7.jar      /home/ranger/dist/

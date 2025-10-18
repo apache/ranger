@@ -43,7 +43,12 @@ RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --direct
     ln -s /etc/init.d/ranger-tagsync /etc/rc3.d/K00ranger-tagsync && \
     ln -s ${RANGER_HOME}/tagsync/ranger-tagsync-services.sh /usr/bin/ranger-tagsync-services.sh && \
     chown -R ranger:ranger ${RANGER_HOME}/tagsync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-tagsync && \
+    apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-tagsync.sh
+
+COPY config/kdc/krb5.conf /etc/krb5.conf
+COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
+RUN chmod +x /etc/keytabs/create_keytab.sh
 
 USER ranger
 

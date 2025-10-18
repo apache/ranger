@@ -42,7 +42,12 @@ RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --dire
     ln -s /etc/init.d/ranger-usersync /etc/rc3.d/K00ranger-usersync && \
     ln -s ${RANGER_HOME}/usersync/ranger-usersync-services.sh /usr/bin/ranger-usersync && \
     chown -R ranger:ranger ${RANGER_HOME}/usersync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync && \
+    apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-usersync.sh
+
+COPY config/kdc/krb5.conf /etc/krb5.conf
+COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
+RUN chmod +x /etc/keytabs/create_keytab.sh
 
 USER ranger
 

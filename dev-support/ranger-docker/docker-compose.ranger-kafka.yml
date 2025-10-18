@@ -8,6 +8,7 @@ services:
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - KAFKA_VERSION=${KAFKA_VERSION}
         - KAFKA_PLUGIN_VERSION=${KAFKA_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-kafka
     container_name: ranger-kafka
     hostname: ranger-kafka.example.com
@@ -25,6 +26,7 @@ services:
     environment:
       - KAFKA_VERSION
       - KAFKA_PLUGIN_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

@@ -14,19 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG SOLR_VERSION
-FROM solr:${SOLR_VERSION}
+ARG RANGER_BASE_JAVA_VERSION=8
 
-# Copy audit config set
-USER 0
-RUN  mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf
-COPY config/solr-ranger_audits/* /opt/solr/server/solr/configsets/ranger_audits/conf/
-RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
+FROM eclipse-temurin:${RANGER_BASE_JAVA_VERSION}-jdk-jammy
 
-RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs
+ENV DEBIAN_FRONTEND=noninteractive
+ENV REALM=EXAMPLE.COM
+ENV KDC_HOST=kdc.example.com
+ENV ADMIN_PRINCIPAL=admin/admin
+ENV ADMIN_PASSWORD=rangerR0cks!
+ENV MASTER_PASSWORD=rangerR0cks!
 
+# Install Kerberos components
+RUN apt-get update && \
+    apt-get install -y krb5-kdc krb5-admin-server krb5-user && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy configuration files
 COPY config/kdc/krb5.conf /etc/krb5.conf
-COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
-RUN chmod +x /etc/keytabs/create_keytab.sh
+COPY config/kdc/kdc.conf /etc/krb5kdc/kdc.conf
+COPY config/kdc/kadm5.acl /etc/krb5kdc/kadm5.acl
+COPY config/kdc/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-USER solr
+EXPOSE 88/tcp 88/udp 749/tcp
+
+ENTRYPOINT ["/entrypoint.sh"]
