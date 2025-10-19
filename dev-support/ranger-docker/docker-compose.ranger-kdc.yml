@@ -11,7 +11,7 @@ services:
         - ADMIN_PASSWORD=${KERBEROS_ADMIN_PASSWORD}
     image: ranger-kdc:latest
     container_name: ranger-kdc
-    hostname: ranger-kdc.example.com
+    hostname: ranger-kdc.rangernw
     networks:
       - ranger
     ports:

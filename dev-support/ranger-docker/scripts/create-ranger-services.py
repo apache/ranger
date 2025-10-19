@@ -29,7 +29,7 @@ hive = RangerService({'name': 'dev_hive', 'type': 'hive',
 
 kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                        'configs': {'username': 'kafka', 'password': 'kafka',
-                                   'zookeeper.connect': 'ranger-zk.example.com:2181',
+                                   'zookeeper.connect': 'ranger-zk.rangernw:2181',
                                    'ranger.plugin.kafka.policy.refresh.synchronous':'true'}})
 
 knox = RangerService({'name': 'dev_knox', 'type': 'knox',

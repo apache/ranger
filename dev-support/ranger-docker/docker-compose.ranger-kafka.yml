@@ -11,7 +11,7 @@ services:
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-kafka
     container_name: ranger-kafka
-    hostname: ranger-kafka.example.com
+    hostname: ranger-kafka.rangernw
     stdin_open: true
     tty: true
     networks:

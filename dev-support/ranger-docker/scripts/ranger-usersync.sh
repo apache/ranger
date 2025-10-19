@@ -35,6 +35,11 @@ then
   cd "${RANGER_HOME}"/usersync || exit
   if ./setup.sh;
   then
+    if [ "${KERBEROS_ENABLED}" == "true" ]
+    then
+      cp ${RANGER_SCRIPTS}/core-site-kerberos.xml ${RANGER_HOME}/usersync/conf/core-site.xml
+    fi
+
     touch "${RANGER_HOME}"/.setupDone
   else
     echo "Ranger UserSync Setup Script didn't complete proper execution."
