@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<configuration>
+  <property>
+    <name>hadoop.security.authentication</name>
+    <value>kerberos</value>
+  </property>
+  <property>
+    <name>hadoop.security.auth_to_local</name>
+    <value>DEFAULT</value>
+  </property>
+</configuration>

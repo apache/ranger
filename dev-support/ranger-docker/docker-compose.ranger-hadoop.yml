@@ -12,7 +12,7 @@ services:
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-hadoop
     container_name: ranger-hadoop
-    hostname: ranger-hadoop.example.com
+    hostname: ranger-hadoop.rangernw
     stdin_open: true
     tty: true
     networks:

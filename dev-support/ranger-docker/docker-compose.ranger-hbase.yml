@@ -11,7 +11,7 @@ services:
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-hbase
     container_name: ranger-hbase
-    hostname: ranger-hbase.example.com
+    hostname: ranger-hbase.rangernw
     stdin_open: true
     tty: true
     networks:

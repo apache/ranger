@@ -43,10 +43,10 @@
   </property>
   <property>
     <name>hbase.rootdir</name>
-    <value>hdfs://ranger-hadoop.example.com:9000/hbase</value>
+    <value>hdfs://ranger-hadoop.rangernw:9000/hbase</value>
   </property>
   <property>
     <name>hbase.zookeeper.quorum</name>
-    <value>ranger-zk.example.com</value>
+    <value>ranger-zk.rangernw</value>
   </property>
 </configuration>

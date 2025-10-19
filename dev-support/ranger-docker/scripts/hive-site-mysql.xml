@@ -43,7 +43,7 @@
 
     <property>
         <name>hive.zookeeper.quorum</name>
-        <value>ranger-zk.example.com</value>
+        <value>ranger-zk.rangernw</value>
     </property>
     <property>
         <name>hive.zookeeper.client.port</name>

@@ -35,6 +35,11 @@ then
   cd "${RANGER_HOME}"/kms || exit
   if ./setup.sh;
   then
+    if [ "${KERBEROS_ENABLED}" == "true" ]
+    then
+      cp ${RANGER_SCRIPTS}/core-site-kerberos.xml ${RANGER_HOME}/kms/ews/webapp/WEB-INF/classes/conf/core-site.xml
+    fi
+
     touch "${RANGER_HOME}"/.setupDone
   else
     echo "Ranger KMS Setup Script didn't complete proper execution."

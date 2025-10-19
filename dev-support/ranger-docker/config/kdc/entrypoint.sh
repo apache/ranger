@@ -19,7 +19,7 @@
 set -e
 
 REALM="${REALM:-EXAMPLE.COM}"
-KDC_HOST="${KDC_HOST:-ranger-kdc.example.com}"
+KDC_HOST="${KDC_HOST:-ranger-kdc.rangernw}"
 MASTER_PASSWORD="${MASTER_PASSWORD:-masterpassword}"
 ADMIN_PRINC="${ADMIN_PRINCIPAL:-admin/admin}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-adminpassword}"

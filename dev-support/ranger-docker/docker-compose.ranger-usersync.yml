@@ -10,7 +10,7 @@ services:
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-usersync
     container_name: ranger-usersync
-    hostname: ranger-usersync.example.com
+    hostname: ranger-usersync.rangernw
     stdin_open: true
     tty: true
     networks:

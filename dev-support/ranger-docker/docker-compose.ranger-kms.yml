@@ -11,7 +11,7 @@ services:
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-kms:latest
     container_name: ranger-kms
-    hostname: ranger-kms.example.com
+    hostname: ranger-kms.rangernw
     stdin_open: true
     tty: true
     networks:

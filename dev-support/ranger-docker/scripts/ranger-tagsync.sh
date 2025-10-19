@@ -35,6 +35,11 @@ then
   cd "${RANGER_HOME}"/tagsync || exit
   if ./setup.sh;
   then
+    if [ "${KERBEROS_ENABLED}" == "true" ]
+    then
+      cp ${RANGER_SCRIPTS}/core-site-kerberos.xml ${RANGER_HOME}/tagsync/conf/core-site.xml
+    fi
+
     touch "${RANGER_HOME}"/.setupDone
   else
     echo "Ranger TagSync Setup Script didn't complete proper execution."

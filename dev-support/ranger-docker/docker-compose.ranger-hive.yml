@@ -13,7 +13,7 @@ services:
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-hive
     container_name: ranger-hive
-    hostname: ranger-hive.example.com
+    hostname: ranger-hive.rangernw
     stdin_open: true
     tty: true
     networks:
