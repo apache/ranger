@@ -115,6 +115,6 @@
     <property>
         <name>tez.queue.name</name>
         <value>default</value>
-        <description>YARN configuration for Tez jobs</description>
+        <description>YARN queue name for Tez jobs</description>
     </property>
 </configuration>
