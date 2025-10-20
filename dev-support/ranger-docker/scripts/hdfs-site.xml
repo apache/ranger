@@ -49,6 +49,10 @@
     <value>/opt/hadoop/keytabs/dn.keytab</value>
   </property>
   <property>
+    <name>ignore.secure.ports.for.testing</name>
+    <value>true</value>
+  </property>
+  <property>
     <name>dfs.web.authentication.kerberos.principal</name>
     <value>HTTP/ranger-hadoop.rangernw@EXAMPLE.COM</value>
   </property>

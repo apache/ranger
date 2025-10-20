@@ -36,6 +36,6 @@ echo ${ADMIN_PASSWORD} | kadmin -p ${ADMIN_PRINCIPAL} -q "ktadd -k ${KEYTAB} ${P
 
 if [ "${KEYTAB_OWNER}" != "" ]
 then
-    chmod 400 ${KEYTAB}
+    chmod 440 ${KEYTAB}
     chown ${KEYTAB_OWNER} ${KEYTAB}
 fi

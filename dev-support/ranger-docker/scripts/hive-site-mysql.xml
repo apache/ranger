@@ -37,6 +37,30 @@
     </property>
 
     <property>
+        <name>hive.server2.authentication</name>
+        <value>KERBEROS</value>
+    </property>
+    <property>
+        <name>hive.server2.authentication.kerberos.principal</name>
+        <value>hive/ranger-hive.rangernw@EXAMPLE.COM</value>
+    </property>
+    <property>
+        <name>hive.server2.authentication.kerberos.keytab</name>
+        <value>/opt/hive/keytabs/hive.keytab</value>
+    </property>
+    <property>
+        <name>hive.metastore.sasl.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>hive.metastore.kerberos.principal</name>
+        <value>hive/ranger-hive.rangernw@EXAMPLE.COM</value>
+    </property>
+    <property>
+        <name>hive.metastore.kerberos.keytab.file</name>
+        <value>/opt/hive/keytabs/hive.keytab</value>
+    </property>
+    <property>
         <name>hive.server2.enable.doAs</name>
         <value>false</value>
     </property>

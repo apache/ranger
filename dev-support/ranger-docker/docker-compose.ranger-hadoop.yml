@@ -24,7 +24,7 @@ services:
       ranger:
         condition: service_started
     healthcheck:
-      test: "hdfs dfs -ls /hbase"
+      test: ["CMD-SHELL", "kinit -kt /opt/hadoop/keytabs/healthcheck.keytab healthcheck/ranger-hadoop.rangernw@EXAMPLE.COM && hdfs dfs -ls /hbase > /dev/null"]
       interval: 1m30s
       timeout: 10s
       retries: 30
