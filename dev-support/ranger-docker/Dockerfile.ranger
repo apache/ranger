@@ -29,7 +29,7 @@ COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
 COPY ./scripts/ranger.sh                                         ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-admin-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-admin-install.properties
 COPY ./scripts/create-ranger-services.py                         ${RANGER_SCRIPTS}/
-COPY ./scripts/core-site-kerberos.xml                            ${RANGER_SCRIPTS}/
+COPY ./scripts/core-site.xml                                     ${RANGER_SCRIPTS}/
 
 RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} \
     && ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin \

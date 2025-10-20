@@ -37,7 +37,7 @@ then
   then
     if [ "${KERBEROS_ENABLED}" == "true" ]
     then
-      cp ${RANGER_SCRIPTS}/core-site-kerberos.xml ${RANGER_HOME}/usersync/conf/core-site.xml
+      cp ${RANGER_SCRIPTS}/core-site.xml ${RANGER_HOME}/usersync/conf/core-site.xml
     fi
 
     touch "${RANGER_HOME}"/.setupDone

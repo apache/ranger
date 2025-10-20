@@ -33,6 +33,9 @@ COPY ./scripts/ranger-hadoop.sh                         /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop-mkdir.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hdfs-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/ranger-yarn-plugin-install.properties    /home/ranger/scripts/
+COPY ./scripts/core-site.xml                            /home/ranger/scripts/
+COPY ./scripts/hdfs-site.xml                            /home/ranger/scripts/
+COPY ./scripts/yarn-site.xml                            /home/ranger/scripts/
 
 RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/hadoop-${HADOOP_VERSION} /opt/hadoop && \

@@ -24,40 +24,9 @@ Host *
    UserKnownHostsFile=/dev/null
 EOF
 
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/core-site.xml
-<configuration>
-  <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://ranger-hadoop:9000</value>
-  </property>
-</configuration>
-EOF
-
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
-<configuration>
-  <property>
-    <name>dfs.replication</name>
-    <value>1</value>
-  </property>
-  <property>
-    <name>dfs.webhdfs.enabled</name>
-    <value>true</value>
-  </property>
-</configuration>
-EOF
-
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
-<configuration>
-  <property>
-    <name>yarn.nodemanager.aux-services</name>
-    <value>mapreduce_shuffle</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.env-whitelist</name>
-    <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
-  </property>
-</configuration>
-EOF
+cp ${RANGER_SCRIPTS}/core-site.xml ${HADOOP_HOME}/etc/hadoop/core-site.xml
+cp ${RANGER_SCRIPTS}/hdfs-site.xml ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
+cp ${RANGER_SCRIPTS}/yarn-site.xml ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
 mkdir -p /opt/hadoop/logs
 chown -R hdfs:hadoop /opt/hadoop/

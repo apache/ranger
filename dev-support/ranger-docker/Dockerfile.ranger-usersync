@@ -26,7 +26,7 @@ COPY ./dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz /home/ranger/dist/
 COPY ./scripts/ranger-usersync.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-usersync-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/ugsync-file-source.csv             ${RANGER_SCRIPTS}/
-COPY ./scripts/core-site-kerberos.xml             ${RANGER_SCRIPTS}/
+COPY ./scripts/core-site.xml                      ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${USERSYNC_VERSION}-usersync ${RANGER_HOME}/usersync && \

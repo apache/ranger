@@ -26,7 +26,7 @@ COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                   /home/ranger/dist
 
 COPY ./scripts/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
-COPY ./scripts/core-site-kerberos.xml                          ${RANGER_SCRIPTS}/
+COPY ./scripts/core-site.xml                                   ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \

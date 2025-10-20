@@ -39,6 +39,11 @@ then
   then
     /etc/keytabs/create_keytab.sh hdfs ${KEYTABS_DIR} hdfs:hadoop
     /etc/keytabs/create_keytab.sh yarn ${KEYTABS_DIR} yarn:hadoop
+    /etc/keytabs/create_keytab.sh nn ${KEYTABS_DIR} hdfs:hadoop
+    /etc/keytabs/create_keytab.sh dn ${KEYTABS_DIR} hdfs:hadoop
+    /etc/keytabs/create_keytab.sh nm ${KEYTABS_DIR} yarn:hadoop
+    /etc/keytabs/create_keytab.sh rm ${KEYTABS_DIR} yarn:hadoop
+    /etc/keytabs/create_keytab.sh HTTP ${KEYTABS_DIR} hdfs:hadoop
   fi
 
   if "${RANGER_SCRIPTS}"/ranger-hadoop-setup.sh;
