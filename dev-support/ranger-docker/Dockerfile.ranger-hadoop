@@ -41,6 +41,7 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     rm -f /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz && \
     tar xvfz /home/ranger/dist/apache-tez-${TEZ_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/apache-tez-${TEZ_VERSION}-bin /opt/tez && \
+    rm -f /home/ranger/dist/apache-tez-${TEZ_VERSION}-bin.tar.gz && \
     tar xvfz /home/ranger/dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin /opt/ranger/ranger-hdfs-plugin && \
     rm -f /home/ranger/dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz && \
