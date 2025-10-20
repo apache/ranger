@@ -18,7 +18,10 @@
 
 # setup directories for Ranger audits
 
-kinit -kt /opt/hadoop/keytabs/nn.keytab nn/ranger-hadoop.rangernw@EXAMPLE.COM
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kinit -kt /opt/hadoop/keytabs/nn.keytab nn/`hostname -f`@EXAMPLE.COM
+fi
 
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hdfs
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/yarn
@@ -46,4 +49,7 @@ ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive
 ${HADOOP_HOME}/bin/hdfs dfs -chown -R hive:hadoop /tmp/hive /user/hive
 ${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp/hive
 
-kdestroy
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kdestroy
+fi

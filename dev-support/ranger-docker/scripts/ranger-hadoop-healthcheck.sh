@@ -16,17 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "export JAVA_HOME=${JAVA_HOME}" >> ${HBASE_HOME}/conf/hbase-env.sh
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kinit -kt /opt/hadoop/keytabs/nn.keytab nn/`hostname -f`@EXAMPLE.COM
+fi
 
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
+${HADOOP_HOME}/bin/hdfs dfs -stat /hbase
+ret=$?
 
-cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml
-cp ${RANGER_SCRIPTS}/core-site.xml  /opt/hbase/conf/core-site.xml
-chown -R hbase:hadoop /opt/hbase/
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kdestroy
+fi
 
-cd ${RANGER_HOME}/ranger-hbase-plugin
-./enable-hbase-plugin.sh
+exit ${ret}

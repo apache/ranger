@@ -2,7 +2,7 @@
 <configuration>
   <property>
     <name>fs.defaultFS</name>
-    <value>hdfs://ranger-hadoop:9000</value>
+    <value>hdfs://ranger-hadoop.rangernw:9000</value>
   </property>
   <property>
     <name>hadoop.security.authentication</name>

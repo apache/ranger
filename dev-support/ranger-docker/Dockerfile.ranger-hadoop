@@ -31,6 +31,7 @@ COPY ./downloads/hadoop-${HADOOP_VERSION}.tar.gz             /home/ranger/dist/
 COPY ./scripts/ranger-hadoop-setup.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop.sh                         /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop-mkdir.sh                   /home/ranger/scripts/
+COPY ./scripts/ranger-hadoop-healthcheck.sh             /home/ranger/scripts/
 COPY ./scripts/ranger-hdfs-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/ranger-yarn-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/core-site.xml                            /home/ranger/scripts/
@@ -49,6 +50,9 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     rm -f /home/ranger/dist/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-yarn-plugin-install.properties /opt/ranger/ranger-yarn-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
+    useradd -g hadoop -ms /bin/bash healthcheck && \
+    chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
+    chown healthcheck:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
     apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs && \
     chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
 

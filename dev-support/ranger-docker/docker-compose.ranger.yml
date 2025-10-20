@@ -19,6 +19,8 @@ services:
     ports:
       - "6080:6080"
     depends_on:
+      ranger-kdc:
+        condition: service_started
       ranger-zk:
         condition: service_started
       ranger-db:
@@ -32,6 +34,26 @@ services:
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
     command:
       - /home/ranger/scripts/ranger.sh
+
+  ranger-kdc:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-kdc
+      args:
+        - REALM=${KERBEROS_REALM}
+        - KDC_HOST=${KERBEROS_KDC_HOST}
+        - MASTER_PASSWORD=${KERBEROS_MASTER_PASSWORD}
+        - ADMIN_PRINCIPAL=${KERBEROS_ADMIN_PRINCIPAL}
+        - ADMIN_PASSWORD=${KERBEROS_ADMIN_PASSWORD}
+    image: ranger-kdc:latest
+    container_name: ranger-kdc
+    hostname: ranger-kdc.rangernw
+    networks:
+      - ranger
+    ports:
+      - "88:88"
+      - "88:88/udp"
+      - "749:749"
 
   ranger-db:
     extends:
@@ -48,8 +70,6 @@ services:
     image: ranger-zk
     container_name: ranger-zk
     hostname: ranger-zk.rangernw
-    volumes:
-      - ./config/kdc/keytabs:/etc/keytabs
     networks:
       - ranger
     ports:
@@ -67,8 +87,6 @@ services:
     image: ranger-solr
     container_name: ranger-solr
     hostname: ranger-solr.rangernw
-    volumes:
-      - ./config/kdc/keytabs:/etc/keytabs
     networks:
       - ranger
     ports:

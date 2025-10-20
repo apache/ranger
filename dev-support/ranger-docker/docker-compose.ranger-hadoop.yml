@@ -24,11 +24,11 @@ services:
       ranger:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "kinit -kt /opt/hadoop/keytabs/healthcheck.keytab healthcheck/ranger-hadoop.rangernw@EXAMPLE.COM && hdfs dfs -ls /hbase > /dev/null"]
-      interval: 1m30s
+      test: 'su -c "/home/ranger/scripts/ranger-hadoop-healthcheck.sh" healthcheck'
+      interval: 15s
       timeout: 10s
       retries: 30
-      start_period: 40s
+      start_period: 1m30s
     environment:
       - HADOOP_VERSION
       - HDFS_PLUGIN_VERSION
