@@ -29,6 +29,8 @@ COPY ./downloads/kafka_2.12-${KAFKA_VERSION}.tgz               /home/ranger/dist
 COPY ./scripts/ranger-kafka-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-kafka.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-kafka-plugin-install.properties    /home/ranger/scripts/
+COPY ./scripts/kafka-server-jaas.conf                    /home/ranger/scripts/
+COPY ./scripts/core-site.xml                             /home/ranger/scripts/
 
 RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/ && \
     ln -s /opt/kafka_2.12-${KAFKA_VERSION} /opt/kafka && \

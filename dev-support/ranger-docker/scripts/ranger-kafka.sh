@@ -16,8 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KEYTABS_DIR=/opt/kafka/keytabs
-
 if [ "${OS_NAME}" = "UBUNTU" ]; then
   service ssh start
 fi
@@ -36,11 +34,6 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
-  if [ "${KERBEROS_ENABLED}" == "true" ]
-  then
-    /etc/keytabs/create_keytab.sh kafka ${KEYTABS_DIR} kafka:hadoop
-  fi
-
   if "${RANGER_SCRIPTS}"/ranger-kafka-setup.sh;
   then
     touch "${KAFKA_HOME}"/.setupDone
@@ -49,4 +42,4 @@ then
   fi
 fi
 
-su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config ./bin/kafka-server-start.sh config/server.properties" kafka
+su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config KAFKA_OPTS='-Djava.security.krb5.conf=/etc/krb5.conf -Djava.security.auth.login.config=/opt/kafka/config/kafka-server-jaas.conf' ./bin/kafka-server-start.sh config/server.properties" kafka
