@@ -16,6 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KEYTABS_DIR=/opt/ranger/tagsync/keytabs
 
 if [ ! -e ${RANGER_HOME}/.setupDone ]
 then
@@ -26,9 +27,19 @@ fi
 
 if [ "${SETUP_RANGER}" == "true" ]
 then
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    /etc/keytabs/create_keytab.sh rangertagsync ${KEYTABS_DIR} rangertagsync:ranger
+  fi
+
   cd "${RANGER_HOME}"/tagsync || exit
   if ./setup.sh;
   then
+    if [ "${KERBEROS_ENABLED}" == "true" ]
+    then
+      cp ${RANGER_SCRIPTS}/core-site.xml ${RANGER_HOME}/tagsync/conf/core-site.xml
+    fi
+
     touch "${RANGER_HOME}"/.setupDone
   else
     echo "Ranger TagSync Setup Script didn't complete proper execution."

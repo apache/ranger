@@ -7,7 +7,7 @@ services:
         - POSTGRES_VERSION=${POSTGRES_VERSION}
     image: ranger-postgres
     container_name: ranger-postgres
-    hostname: ranger-db.example.com
+    hostname: ranger-db.rangernw
     ports:
       - "5432:5432"
     networks:
@@ -27,7 +27,7 @@ services:
     image: ranger-mysql
     command: --default-authentication-plugin=mysql_native_password
     container_name: ranger-mysql
-    hostname: ranger-db.example.com
+    hostname: ranger-db.rangernw
     ports:
       - "3306:3306"
     networks:
@@ -47,7 +47,7 @@ services:
         - ORACLE_VERSION=${ORACLE_VERSION}
     image: ranger-oracle
     container_name: ranger-oracle
-    hostname: ranger-db.example.com
+    hostname: ranger-db.rangernw
     ports:
       - "1521:1521"
     networks:
@@ -66,7 +66,7 @@ services:
         - SQLSERVER_VERSION=${SQLSERVER_VERSION}
     image: ranger-sqlserver
     container_name: ranger-sqlserver
-    hostname: ranger-db.example.com
+    hostname: ranger-db.rangernw
     ports:
       - "1433:1433"
     networks:

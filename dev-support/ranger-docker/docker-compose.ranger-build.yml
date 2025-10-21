@@ -8,7 +8,7 @@ services:
         - RANGER_BASE_BUILD_VERSION=${RANGER_BASE_BUILD_VERSION}
     image: ranger-build
     container_name: ranger-build
-    hostname: ranger-build.example.com
+    hostname: ranger-build.rangernw
     networks:
       - ranger
     volumes:

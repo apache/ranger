@@ -9,9 +9,10 @@ services:
         - HADOOP_VERSION=${HADOOP_VERSION}
         - HDFS_PLUGIN_VERSION=${HDFS_PLUGIN_VERSION}
         - YARN_PLUGIN_VERSION=${YARN_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-hadoop
     container_name: ranger-hadoop
-    hostname: ranger-hadoop.example.com
+    hostname: ranger-hadoop.rangernw
     stdin_open: true
     tty: true
     networks:
@@ -23,15 +24,16 @@ services:
       ranger:
         condition: service_started
     healthcheck:
-      test: "hdfs dfs -ls /hbase"
-      interval: 1m30s
+      test: 'su -c "/home/ranger/scripts/ranger-hadoop-healthcheck.sh" healthcheck'
+      interval: 15s
       timeout: 10s
       retries: 30
-      start_period: 40s
+      start_period: 1m30s
     environment:
       - HADOOP_VERSION
       - HDFS_PLUGIN_VERSION
       - YARN_PLUGIN_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

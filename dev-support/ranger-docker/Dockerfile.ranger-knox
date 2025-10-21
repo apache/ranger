@@ -40,7 +40,12 @@ RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && 
     rm -f /home/ranger/dist/ranger-${KNOX_PLUGIN_VERSION}-knox-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-knox-plugin-install.properties /opt/ranger/ranger-knox-plugin/install.properties && \
     cp -f /home/ranger/scripts/ranger-knox-sandbox.xml /opt/knox/conf/topologies/sandbox.xml && \
+    apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-knox-setup.sh ${RANGER_SCRIPTS}/ranger-knox.sh ${RANGER_SCRIPTS}/ranger-knox-expect.py
+
+COPY config/kdc/krb5.conf /etc/krb5.conf
+COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
+RUN chmod +x /etc/keytabs/create_keytab.sh
 
 ENV KNOX_HOME=/opt/knox
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/knox/bin

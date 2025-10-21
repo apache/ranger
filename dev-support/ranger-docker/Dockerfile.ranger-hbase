@@ -30,6 +30,7 @@ COPY ./scripts/ranger-hbase-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hbase.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hbase-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hbase-site.xml                            /home/ranger/scripts/
+COPY ./scripts/core-site.xml                             /home/ranger/scripts/
 
 RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/hbase-${HBASE_VERSION} /opt/hbase && \
@@ -42,8 +43,13 @@ RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/op
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openssh-server && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs && \
     mkdir -p /var/run/sshd && \
     rm -rf /var/lib/apt/lists/*
+
+COPY config/kdc/krb5.conf /etc/krb5.conf
+COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
+RUN chmod +x /etc/keytabs/create_keytab.sh
 
 ENV HBASE_HOME=/opt/hbase
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hbase/bin

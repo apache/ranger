@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,19 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG SOLR_VERSION
-FROM solr:${SOLR_VERSION}
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kinit -kt /opt/hadoop/keytabs/nn.keytab nn/`hostname -f`@EXAMPLE.COM
+fi
 
-# Copy audit config set
-USER 0
-RUN  mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf
-COPY config/solr-ranger_audits/* /opt/solr/server/solr/configsets/ranger_audits/conf/
-RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
+${HADOOP_HOME}/bin/hdfs dfs -stat /hbase
+ret=$?
 
-RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user && mkdir -p /etc/keytabs
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kdestroy
+fi
 
-COPY config/kdc/krb5.conf /etc/krb5.conf
-COPY config/kdc/create_keytab.sh /etc/keytabs/create_keytab.sh
-RUN chmod +x /etc/keytabs/create_keytab.sh
-
-USER solr
+exit ${ret}

@@ -17,6 +17,12 @@
 # limitations under the License.
 
 # setup directories for Ranger audits
+
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kinit -kt /opt/hadoop/keytabs/nn.keytab nn/`hostname -f`@EXAMPLE.COM
+fi
+
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hdfs
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/yarn
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hbaseMaster
@@ -42,3 +48,8 @@ ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive/warehouse
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive
 ${HADOOP_HOME}/bin/hdfs dfs -chown -R hive:hadoop /tmp/hive /user/hive
 ${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp/hive
+
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kdestroy
+fi

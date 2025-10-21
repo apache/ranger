@@ -16,6 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KEYTABS_DIR=/opt/hive/keytabs
+
 if [ "${OS_NAME}" = "UBUNTU" ]; then
   service ssh start
 fi
@@ -38,6 +40,10 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    /etc/keytabs/create_keytab.sh hive ${KEYTABS_DIR} hive:hadoop
+  fi
 
   if "${RANGER_SCRIPTS}"/ranger-hive-setup.sh;
   then
