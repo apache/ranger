@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 ARG RANGER_DB_TYPE
 ARG RANGER_BASE_IMAGE
 ARG RANGER_BASE_VERSION
@@ -38,7 +39,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RA
     ln -s /etc/init.d/ranger-kms /etc/rc3.d/S88ranger-kms && \
     ln -s /etc/init.d/ranger-kms /etc/rc3.d/K90ranger-kms && \
     ln -s ${RANGER_HOME}/kms/ranger-kms-services.sh /usr/bin/ranger-kms-services.sh && \
-    chown -R rangerkms:ranger ${RANGER_HOME}/kms/ ${RANGER_SCRIPTS}/ /var/run/ranger_kms/ /var/log/ranger/ && \
+    chown -R rangerkms:ranger ${RANGER_HOME}/kms/ ${RANGER_SCRIPTS}/ /var/run/ranger_kms/ /var/log/ranger/ /etc/ranger && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-kms.sh
 
 FROM ranger-kms AS ranger_postgres

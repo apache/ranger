@@ -9,6 +9,7 @@ services:
         - HADOOP_VERSION=${HADOOP_VERSION}
         - HDFS_PLUGIN_VERSION=${HDFS_PLUGIN_VERSION}
         - YARN_PLUGIN_VERSION=${YARN_PLUGIN_VERSION}
+        - TEZ_VERSION=${TEZ_VERSION}
     image: ranger-hadoop
     container_name: ranger-hadoop
     hostname: ranger-hadoop.example.com
@@ -32,6 +33,7 @@ services:
       - HADOOP_VERSION
       - HDFS_PLUGIN_VERSION
       - YARN_PLUGIN_VERSION
+      - TEZ_VERSION
 
 networks:
   ranger:
