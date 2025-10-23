@@ -37,7 +37,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1,2 ], "allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "table: finance.invoices, user: ds1-user, access: select",
@@ -45,7 +45,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "ds1-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ],  "datasetIds": [ 1,2 ], "allowedByDatasets": [ "dataset-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByDatasets": [ "dataset-1" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "table: finance.invoices, user: ds2-user, access: select",
@@ -53,7 +53,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "ds2-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ],  "datasetIds": [ 1,2 ], "allowedByDatasets": [ "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2002, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByDatasets": [ "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2002, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "table: finance.payments, user: ds-user, access: select",
@@ -61,7 +61,7 @@
         "resource":   { "elements": { "database": "finance", "table": "payments" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1,2 ], "allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "database: finance, user: ds-user, access: _any",
@@ -69,7 +69,7 @@
         "resource":   { "elements": { "database": "finance" } },
         "accessType": "", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1,2 ], "allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": null }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001, "rowFilters": null }
     },
     {
       "name":    "table: shipping.shipments, user: ds-user, access: select",
@@ -93,7 +93,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'", "country = 'US'" ] }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'", "country = 'US'" ] }
     },
     {
       "name":    "table: customers.contact_info, user: ds3-user, access: select",
@@ -101,7 +101,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "ds3-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByDatasets": [ "dataset-3" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "table: customers.contact_info, user: ds6-user, access: select",
@@ -109,7 +109,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "ds6-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByDatasets": [ "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2006, "rowFilters": [ "country = 'US'" ] }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2006, "rowFilters": [ "country = 'US'" ] }
     },
     {
       "name":    "database: customers, user: ds-user, access: _any",
@@ -117,7 +117,7 @@
         "resource":   { "elements": { "database": "customers" } },
         "accessType": "", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": null }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": null }
     },
 
     {
@@ -150,7 +150,7 @@
         "resource":   { "elements": { "database": "customers" } },
         "accessType": "", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": null }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003, "rowFilters": null }
     },
 
 
@@ -194,7 +194,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1,2 ], "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "table: finance.payments, user: proj-user, access: select",
@@ -202,7 +202,7 @@
         "resource":   { "elements": { "database": "finance", "table": "payments" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1,2 ], "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "table: shipping.shipments, user: proj-user, access: select",
@@ -218,7 +218,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByProjects": [ "project-2", "project-4" ], "isAllowed": true, "isAudited": true, "policyId": 3002, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'", "country = 'US'" ] }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByProjects": [ "project-2", "project-4" ], "isAllowed": true, "isAudited": true, "policyId": 3002, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'", "country = 'US'" ] }
     },
     {
       "name":    "table: customers.contact_info, user: proj2-user, access: select",
@@ -226,7 +226,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "proj2-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByProjects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 3002, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByProjects": [ "project-2" ], "isAllowed": true, "isAudited": true, "policyId": 3002, "rowFilters": [ "created_time >= '2023-01-01' and created_time < '2024-01-01'" ] }
     },
     {
       "name":    "table: customers.contact_info, user: proj4-user, access: select",
@@ -234,7 +234,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "proj4-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "allowedByProjects": [ "project-4" ], "isAllowed": true, "isAudited": true, "policyId": 3004, "rowFilters": [ "country = 'US'" ] }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByProjects": [ "project-4" ], "isAllowed": true, "isAudited": true, "policyId": 3004, "rowFilters": [ "country = 'US'" ] }
     },
     {
       "name":    "table: operations.facilities, user: proj-user, access: select",
@@ -268,7 +268,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ],  "datasetIds": [ 1,2 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name":    "table: finance.payments, user: scott, access: select",
@@ -276,7 +276,7 @@
         "resource":   { "elements": { "database": "finance", "table": "payments" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1,2 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name":    "table: shipping.shipments, user: scott, access: select",
@@ -292,7 +292,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3,6 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     {
       "name":    "table: operations.facilities, user: scott, access: select",
