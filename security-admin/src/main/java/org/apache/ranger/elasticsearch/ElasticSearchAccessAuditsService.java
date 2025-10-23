@@ -333,6 +333,15 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
             }
         }
 
+        value = source.get("datasetIds");
+        if (value != null) {
+            try {
+                accessAudit.setDatasetIds(JsonUtilsV2.nonSerializableObjToJson(value));
+            } catch (Exception e) {
+                LOGGER.warn("Failed to convert datasetIds to json", e);
+            }
+        }
+
         return accessAudit;
     }
 }

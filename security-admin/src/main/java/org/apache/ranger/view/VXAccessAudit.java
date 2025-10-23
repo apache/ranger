@@ -141,6 +141,8 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 
     protected String projects;
 
+    protected String datasetIds;
+
     protected String clusterName;
 
     // Security Zone
@@ -571,6 +573,14 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
         this.projects = projects;
     }
 
+    public String getDatasetIds() {
+        return datasetIds;
+    }
+
+    public void setDatasetIds(String datasetIds) {
+        this.datasetIds = datasetIds;
+    }
+
     /**
      * @return the clusterName
      */
@@ -626,6 +636,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
         str += "tags={" + tags + "}";
         str += "datasets={" + datasets + "}";
         str += "projects={" + projects + "}";
+        str += "datasetIds={" + datasetIds + "}";
         str += "clusterName={" + clusterName + "}";
         str += "zoneName={" + zoneName + "}";
         str += "agentHost={" + agentHost + "}";

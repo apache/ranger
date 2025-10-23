@@ -35,6 +35,7 @@ public class GdsAccessResult {
     private List<String> rowFilters;
     private Set<String>  datasets;
     private Set<String>  projects;
+    private Set<Long>    datasetIds;
     private Set<String>  allowedByDatasets;
     private Set<String>  allowedByProjects;
 
@@ -113,6 +114,10 @@ public class GdsAccessResult {
         return projects;
     }
 
+    public Set<Long> getDatasetIds() {
+        return datasetIds;
+    }
+
     public Set<String> getAllowedByDatasets() {
         return allowedByDatasets;
     }
@@ -137,6 +142,14 @@ public class GdsAccessResult {
         projects.add(name);
     }
 
+    public void addDatasetId(Long id) {
+        if (datasetIds == null) {
+            datasetIds = new HashSet<>();
+        }
+
+        datasetIds.add(id);
+    }
+
     public void addAllowedByDataset(String name) {
         if (allowedByDatasets == null) {
             allowedByDatasets = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -155,7 +168,7 @@ public class GdsAccessResult {
 
     @Override
     public int hashCode() {
-        return Objects.hash(isAllowed, isAudited, policyId, policyVersion, maskType, maskedValue, maskCondition, rowFilters, datasets, projects, allowedByDatasets, allowedByProjects);
+        return Objects.hash(isAllowed, isAudited, policyId, policyVersion, maskType, maskedValue, maskCondition, rowFilters, datasets, projects, datasetIds, allowedByDatasets, allowedByProjects);
     }
 
     @Override
@@ -177,6 +190,7 @@ public class GdsAccessResult {
                     Objects.equals(rowFilters, other.rowFilters) &&
                     Objects.equals(datasets, other.datasets) &&
                     Objects.equals(projects, other.projects) &&
+                    Objects.equals(datasetIds, other.datasetIds) &&
                     Objects.equals(allowedByDatasets, other.allowedByDatasets) &&
                     Objects.equals(allowedByProjects, other.allowedByProjects);
         }
@@ -203,6 +217,7 @@ public class GdsAccessResult {
         sb.append(", rowFilters={").append(rowFilters).append("}");
         sb.append(", datasets={").append(datasets).append("}");
         sb.append(", projects={").append(projects).append("}");
+        sb.append(", datasetIds={").append(datasetIds).append("}");
         sb.append(", allowedByDatasets={").append(allowedByDatasets).append("}");
         sb.append(", allowedByProjects={").append(allowedByProjects).append("}");
         sb.append("}");

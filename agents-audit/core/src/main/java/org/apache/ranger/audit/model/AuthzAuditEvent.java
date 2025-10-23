@@ -116,6 +116,9 @@ public class AuthzAuditEvent extends AuditEventBase {
     @JsonProperty("projects")
     protected Set<String> projects;
 
+    @JsonProperty("datasetIds")
+    protected Set<Long> datasetIds;
+
     @JsonProperty("additional_info")
     protected String additionalInfo;
 
@@ -467,6 +470,14 @@ public class AuthzAuditEvent extends AuditEventBase {
 
     public void setProjects(Set<String> projects) {
         this.projects = projects;
+    }
+
+    public Set<Long> getDatasetIds() {
+        return datasetIds;
+    }
+
+    public void setDatasetIds(Set<Long> datasetIds) {
+        this.datasetIds = datasetIds;
     }
 
     public String getClusterName() {
