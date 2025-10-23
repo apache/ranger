@@ -111,6 +111,7 @@ public class GdsDatasetEvaluator {
 
         if (isActive()) {
             result.addDataset(getName());
+            result.addDatasetId(getId());
 
             if (!policyEvaluators.isEmpty()) {
                 GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);

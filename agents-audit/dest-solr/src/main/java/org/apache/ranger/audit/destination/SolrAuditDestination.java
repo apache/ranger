@@ -316,6 +316,7 @@ public class SolrAuditDestination extends AuditDestination {
         doc.setField("tags", auditEvent.getTags());
         doc.addField("datasets", auditEvent.getDatasets());
         doc.addField("projects", auditEvent.getProjects());
+        doc.addField("datasetIds", auditEvent.getDatasetIds());
         doc.setField("cluster", auditEvent.getClusterName());
         doc.setField("zoneName", auditEvent.getZoneName());
         doc.setField("agentHost", auditEvent.getAgentHostname());
