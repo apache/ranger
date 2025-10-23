@@ -300,7 +300,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-4" ], "projects": null, "datasetIds": [ 4 ],  "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-4" ], "projects": null, "datasetIds": [ 4 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
     
 
@@ -310,7 +310,7 @@
         "resource":   { "elements": { "database": "operations", "table": "facilities" } },
         "accessType": "select", "user": "scott", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-4" ], "projects": null, "datasetIds": [ 4 ],  "isAllowed": false, "isAudited": true, "policyId": -1 }
+      "result": { "datasets": [ "dataset-4" ], "projects": null, "datasetIds": [ 4 ], "isAllowed": false, "isAudited": true, "policyId": -1 }
     },
 
     {

@@ -45,7 +45,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ],"allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByDatasets": [ "dataset-1", "dataset-2" ], "isAllowed": true, "isAudited": true, "policyId": 2001 }
     },
     {
       "name":    "table: finance.invoices, user: ds1-user, access: select",
@@ -117,7 +117,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "ds6-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2006 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2006 }
     },
     {
       "name":    "database: customers, user: ds-user, access: _any",
@@ -125,7 +125,7 @@
         "resource":   { "elements": { "database": "customers" } },
         "accessType": "", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ],  "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
     },
     {
       "name":    "table: operations.facilities, user: ds-user, access: select",

@@ -125,7 +125,7 @@
         "resource":   { "elements": { "database": "customers", "table": "contact_info" } },
         "accessType": "select", "user": "ds-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ],  "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
+      "result": { "datasets": [ "dataset-3", "dataset-6" ], "projects": [ "project-2", "project-4" ], "datasetIds": [ 3, 6 ], "allowedByDatasets": [ "dataset-3", "dataset-6" ], "isAllowed": true, "isAudited": true, "policyId": 2003 }
     },
     {
       "name":    "table: customers.contact_info, user: ds3-user, access: select",
@@ -191,7 +191,7 @@
         "resource":   { "elements": { "database": "finance", "table": "invoices" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ],  "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
     },
     {
       "name":    "table: finance.payments, user: proj-user, access: select",
@@ -199,7 +199,7 @@
         "resource":   { "elements": { "database": "finance", "table": "payments" } },
         "accessType": "select", "user": "proj-user", "userGroups": []
       },
-      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ],  "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
+      "result": { "datasets": [ "dataset-1", "dataset-2" ], "projects": [ "project-1" ], "datasetIds": [ 1, 2 ], "allowedByProjects": [ "project-1" ], "isAllowed": true, "isAudited": true, "policyId": 3001 }
     },
     {
       "name":    "table: shipping.shipments, user: proj-user, access: select",
