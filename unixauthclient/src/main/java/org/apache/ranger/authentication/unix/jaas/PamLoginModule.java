@@ -61,9 +61,9 @@ public class PamLoginModule implements LoginModule {
 
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map<String, ?> sharedState, Map<String, ?> options) {
-        subject         = subject;
-        callbackHandler = callbackHandler;
-        options         = new HashMap<>(options);
+        this.subject         = subject;
+        this.callbackHandler = callbackHandler;
+        this.options         = new HashMap<>(options);
     }
 
     @Override
