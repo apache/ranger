@@ -266,7 +266,7 @@ updatePropertyToFilePy(){
 #Update Properties to File if value is not empty
 #$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
 updatePropertyToFilePyIfNotEmpty(){
-    if [ "${2}" != "" ]
+    if [ -n "${2}" ]
     then
         $PYTHON_COMMAND_INVOKER update_property.py $1 "${2}" $3
         check_ret_status $? "Update property failed for: " $1
