@@ -263,6 +263,16 @@ updatePropertyToFilePy(){
         check_ret_status $? "Update property failed for: " $1
 }
 
+#Update Properties to File if value is not empty
+#$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
+updatePropertyToFilePyIfNotEmpty(){
+    if [ -n "${2}" ]
+    then
+        $PYTHON_COMMAND_INVOKER update_property.py $1 "${2}" $3
+        check_ret_status $? "Update property failed for: " $1
+    fi
+}
+
 init_variables(){
 	curDt=`date '+%Y%m%d%H%M%S'`
 	VERSION=`cat ${PWD}/version`
@@ -974,6 +984,15 @@ update_properties() {
 			fi
 		fi
 	fi
+
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.loginModuleName' "$(get_prop_or_default 'audit_jaas_client_loginModuleName' $PROPFILE '')" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.loginModuleControlFlag' "$(get_prop_or_default 'audit_jaas_client_loginModuleControlFlag' $PROPFILE '')" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.useKeyTab' "$(get_prop_or_default 'audit_jaas_client_option_useKeyTab' $PROPFILE '')" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.storeKey' "$(get_prop_or_default 'audit_jaas_client_option_storeKey' $PROPFILE '')" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.useTicketCache' "$(get_prop_or_default 'audit_jaas_client_option_useTicketCache' $PROPFILE '')" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.serviceName' "$(get_prop_or_default 'audit_jaas_client_option_serviceName' $PROPFILE '')" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.keyTab' "$(get_prop_or_default 'audit_jaas_client_option_keyTab' $PROPFILE '')" $to_file_ranger
+	updatePropertyToFilePyIfNotEmpty 'xasecure.audit.jaas.Client.option.principal' "$(get_prop_or_default 'audit_jaas_client_option_principal' $PROPFILE '')" $to_file_ranger
 
 	if [ "${sso_enabled}" == "" ]
 	then
