@@ -111,6 +111,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -457,13 +458,31 @@ public class XUserREST {
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) ? userRolesList.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR) : hasRole;
                     hasRole = !userRolesList.contains(RangerConstants.ROLE_USER) ? userRolesList.add(RangerConstants.ROLE_USER) : hasRole;
                 } else if (loggedInVXUser.getUserRoleList().contains(RangerConstants.ROLE_USER)) {
-                    logger.info("Logged-In user having user role will be able to fetch his own user details.");
-
-                    if (!searchCriteria.getParamList().containsKey("name")) {
-                        searchCriteria.addParam("name", loggedInVXUser.getName());
-                    } else if (searchCriteria.getParamList().containsKey("name") && !stringUtil.isEmpty(searchCriteria.getParamValue("name").toString()) && !searchCriteria.getParamValue("name").toString().equalsIgnoreCase(loggedInVXUser.getName())) {
+                    if ((CollectionUtils.isNotEmpty(userRolesList) && (userRolesList.size() != 1 || !userRolesList.contains(RangerConstants.ROLE_USER)))
+                            || (userRole != null && !RangerConstants.ROLE_USER.equals(userRole))) {
                         throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
                     }
+
+                    logger.info("Logged-In user having user role will be able to fetch his own user details.");
+
+                    if (searchCriteria.getParamList().containsKey("name") && !stringUtil.isEmpty(searchCriteria.getParamValue("name").toString()) && !searchCriteria.getParamValue("name").toString().equalsIgnoreCase(loggedInVXUser.getName())) {
+                        throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
+                    }
+
+                    if (loggedInVXUser != null && !xUserMgr.hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)) {
+                        loggedInVXUser = xUserMgr.getMaskedVXUser(loggedInVXUser);
+                    }
+
+                    VXUserList vXUserList = new VXUserList();
+                    vXUserList.setVXUsers(Collections.singletonList(loggedInVXUser));
+                    vXUserList.setStartIndex(searchCriteria.getStartIndex());
+                    vXUserList.setResultSize(vXUserList.getVXUsers().size());
+                    vXUserList.setTotalCount(vXUserList.getVXUsers().size());
+                    vXUserList.setPageSize(searchCriteria.getMaxRows());
+                    vXUserList.setSortBy(searchCriteria.getSortBy());
+                    vXUserList.setSortType(searchCriteria.getSortType());
+
+                    return vXUserList;
                 }
             }
         }
