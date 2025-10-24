@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.jvnet.libpam.PAM;
+import org.jvnet.libpam.PAMException;
 import org.jvnet.libpam.UnixUser;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -96,16 +97,31 @@ public class TestPamLoginModule {
     }
 
     @Test
-    public void test03_login_throwsLoginException_withRealPam() throws Exception {
+    public void test03_login_fullFlow_throwsFailedLoginException() throws Exception {
         PamLoginModule      m       = new PamLoginModule();
         Subject             subject = new Subject();
         Map<String, Object> opts    = new HashMap<>();
         opts.put(PamLoginModule.SERVICE_KEY, "sshd");
         CallbackHandler cb = creds("alice", "bad");
         m.initialize(subject, cb, new HashMap<>(), opts);
-        setField(m, "options", opts);
+
+        setField(m, "subject", subject);
         setField(m, "callbackHandler", cb);
-        assertThrows(LoginException.class, m::login);
+        setField(m, "options", opts);
+
+        PAM mockPam = Mockito.mock(PAM.class);
+        Mockito.when(mockPam.authenticate(Mockito.eq("alice"), Mockito.eq("bad")))
+                .thenThrow(new PAMException("Authentication failed"));
+
+        setField(m, "pam", mockPam);
+
+        Method obtainUserAndPassword = PamLoginModule.class.getDeclaredMethod("obtainUserAndPassword");
+        obtainUserAndPassword.setAccessible(true);
+        obtainUserAndPassword.invoke(m);
+
+        Method performLogin = PamLoginModule.class.getDeclaredMethod("performLogin");
+        performLogin.setAccessible(true);
+        assertThrows(FailedLoginException.class, () -> invokeAndRethrowLoginException(m, performLogin));
     }
 
     @Test
