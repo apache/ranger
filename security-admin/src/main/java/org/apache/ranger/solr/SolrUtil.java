@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -79,7 +80,8 @@ public class SolrUtil {
                 QueryRequest req      = new QueryRequest(solrQuery, METHOD.POST);
                 String       username = PropertiesUtil.getProperty("ranger.solr.audit.user");
                 String       password = PropertiesUtil.getProperty("ranger.solr.audit.user.password");
-                if (username != null && password != null) {
+
+                if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
                     req.setBasicAuthCredentials(username, password);
                 }
 
