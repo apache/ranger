@@ -45,7 +45,7 @@
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
         <atlas.version>2.4.0</atlas.version>
         <aws-java-sdk.version>1.12.765</aws-java-sdk.version>
-        <bouncycastle.version>1.70</bouncycastle.version>
+        <bouncycastle.version>1.79</bouncycastle.version>
         <cglib.version>2.2.0-b23</cglib.version>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
         <checkstyle.version>8.29</checkstyle.version>
@@ -174,8 +174,8 @@
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.6.7</orc.core.version>
         <orc.version>1.5.8</orc.version>
-        <org.bouncycastle.bcpkix-jdk15on>1.70</org.bouncycastle.bcpkix-jdk15on>
-        <org.bouncycastle.bcprov-jdk15on>1.70</org.bouncycastle.bcprov-jdk15on>
+        <org.bouncycastle.bcpkix-jdk18on>1.79</org.bouncycastle.bcpkix-jdk18on>
+        <org.bouncycastle.bcprov-jdk18on>1.79</org.bouncycastle.bcprov-jdk18on>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
         <ozone.version>1.4.0</ozone.version>
         <paranamer.version>2.3</paranamer.version>

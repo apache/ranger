@@ -469,13 +469,13 @@
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk15on</artifactId>
-            <version>${org.bouncycastle.bcpkix-jdk15on}</version>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>${org.bouncycastle.bcpkix-jdk18on}</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>${org.bouncycastle.bcprov-jdk15on}</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${org.bouncycastle.bcprov-jdk18on}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
