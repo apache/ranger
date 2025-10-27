@@ -16,10 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 source /tmp/trino-setup-env.sh
 
-TRINO_PLUGIN_HOME=/opt/ranger/ranger-trino-plugin
+TRINO_PLUGIN_HOME=/usr/lib/trino/plugin/ranger/
 
 ssh-keygen -A
 /usr/sbin/sshd
@@ -36,9 +35,6 @@ Host *
    UserKnownHostsFile=/dev/null
 EOF
 
-  cd ${TRINO_PLUGIN_HOME} || exit
-  ./enable-trino-plugin.sh
-
   touch ${TRINO_PLUGIN_HOME}/.setupDone
-  echo "Ranger Trino Plugin Installation is complete!"
+  echo "Ranger Trino Plugin Setup is complete!"
 fi

@@ -7,7 +7,7 @@ services:
         - TRINO_PLUGIN_VERSION=${TRINO_PLUGIN_VERSION}
         - TRINO_VERSION=${TRINO_VERSION}
     image: ranger-trino
-    hostname: ranger-trino
+    hostname: trino
     container_name: ranger-trino
     stdin_open: true
     tty: true
