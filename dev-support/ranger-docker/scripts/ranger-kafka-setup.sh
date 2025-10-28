@@ -22,12 +22,42 @@ Host *
    UserKnownHostsFile=/dev/null
 EOF
 
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  KEYTABS_DIR=/opt/kafka/keytabs
+
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh kafka ${KEYTABS_DIR} kafka:hadoop
+fi
+
+cp ${RANGER_SCRIPTS}/core-site.xml          ${KAFKA_HOME}/config/
+cp ${RANGER_SCRIPTS}/kafka-server-jaas.conf ${KAFKA_HOME}/config/
+
 chown -R kafka:hadoop /opt/kafka/
 
 cd ${RANGER_HOME}/ranger-kafka-plugin
 ./enable-kafka-plugin.sh
 
-sed -i 's/localhost:2181/ranger-zk.example.com:2181/' ${KAFKA_HOME}/config/server.properties
+sed -i 's/localhost:2181/ranger-zk.rangernw:2181/' ${KAFKA_HOME}/config/server.properties
 
-echo >> ${KAFKA_HOME}/config/server.properties
-echo "authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer" >> ${KAFKA_HOME}/config/server.properties
+cat <<EOF >> ${KAFKA_HOME}/config/server.properties
+# Enable SASL/GSSAPI mechanism
+sasl.enabled.mechanisms=GSSAPI
+sasl.mechanism.inter.broker.protocol=GSSAPI
+security.inter.broker.protocol=SASL_PLAINTEXT
+
+# Listener configuration
+listeners=SASL_PLAINTEXT://:9092
+advertised.listeners=SASL_PLAINTEXT://ranger-kafka.rangernw:9092
+
+# JAAS configuration for Kerberos
+listener.name.sasl_plaintext.gssapi.sasl.jaas.config=com.sun.security.auth.module.Krb5LoginModule required \
+useKeyTab=true \
+storeKey=true \
+keyTab="/opt/kafka/keytabs/kafka.keytab" \
+principal="kafka/ranger-kafka.rangernw@EXAMPLE.COM";
+
+# Kerberos service name
+sasl.kerberos.service.name=kafka
+
+authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer
+EOF

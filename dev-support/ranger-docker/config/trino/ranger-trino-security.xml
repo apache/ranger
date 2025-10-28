@@ -42,7 +42,7 @@
 
   <property>
     <name>ranger.plugin.trino.policy.rest.ssl.config.file</name>
-    <value>/etc/hadoop/conf/ranger-policymgr-ssl.xml</value>
+    <value>/etc/trino/ranger-policymgr-ssl.xml</value>
     <description>
       Path to the file containing SSL details to contact Ranger Admin
     </description>

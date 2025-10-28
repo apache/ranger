@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 if [ ! -e ${RANGER_HOME}/.setupDone ]
 then
   SETUP_RANGER=true
@@ -26,9 +25,21 @@ fi
 
 if [ "${SETUP_RANGER}" == "true" ]
 then
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    KEYTABS_DIR=/opt/ranger/kms/keytabs
+
+    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rangerkms ${KEYTABS_DIR} rangerkms:ranger
+  fi
+
   cd "${RANGER_HOME}"/kms || exit
   if ./setup.sh;
   then
+    if [ "${KERBEROS_ENABLED}" == "true" ]
+    then
+      cp ${RANGER_SCRIPTS}/core-site.xml ${RANGER_HOME}/kms/ews/webapp/WEB-INF/classes/conf/core-site.xml
+    fi
+
     touch "${RANGER_HOME}"/.setupDone
   else
     echo "Ranger KMS Setup Script didn't complete proper execution."

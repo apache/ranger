@@ -4,4 +4,17 @@
     <name>fs.defaultFS</name>
     <value>hdfs://ranger-hadoop.rangernw:9000</value>
   </property>
+  <property>
+    <name>hadoop.security.authentication</name>
+    <value>kerberos</value>
+  </property>
+  <property>
+    <name>hadoop.security.auth_to_local</name>
+    <value>
+      RULE:[2:$1/$2@$0]([ndj]n/.*@EXAMPLE\.COM)s/.*/hdfs/
+      RULE:[2:$1/$2@$0]([rn]m/.*@EXAMPLE\.COM)s/.*/yarn/
+      RULE:[2:$1/$2@$0](jhs/.*@EXAMPLE\.COM)s/.*/mapred/
+      DEFAULT
+    </value>
+  </property>
 </configuration>

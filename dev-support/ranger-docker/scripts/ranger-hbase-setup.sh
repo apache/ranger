@@ -24,7 +24,15 @@ Host *
    UserKnownHostsFile=/dev/null
 EOF
 
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  KEYTABS_DIR=/opt/hbase/keytabs
+
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh hbase ${KEYTABS_DIR} hbase:hadoop
+fi
+
 cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml
+cp ${RANGER_SCRIPTS}/core-site.xml  /opt/hbase/conf/core-site.xml
 chown -R hbase:hadoop /opt/hbase/
 
 cd ${RANGER_HOME}/ranger-hbase-plugin

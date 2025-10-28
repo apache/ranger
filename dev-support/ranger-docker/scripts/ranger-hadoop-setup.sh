@@ -24,84 +24,23 @@ Host *
    UserKnownHostsFile=/dev/null
 EOF
 
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/core-site.xml
-<configuration>
-  <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://ranger-hadoop:9000</value>
-  </property>
-</configuration>
-EOF
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  KEYTABS_DIR=/opt/hadoop/keytabs
 
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
-<configuration>
-  <property>
-    <name>dfs.replication</name>
-    <value>1</value>
-  </property>
-  <property>
-    <name>dfs.webhdfs.enabled</name>
-    <value>true</value>
-  </property>
-</configuration>
-EOF
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh hdfs ${KEYTABS_DIR} hdfs:hadoop
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh nn ${KEYTABS_DIR} hdfs:hadoop
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh dn ${KEYTABS_DIR} hdfs:hadoop
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh HTTP ${KEYTABS_DIR} hdfs:hadoop
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh nm ${KEYTABS_DIR} yarn:hadoop
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rm ${KEYTABS_DIR} yarn:hadoop
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh yarn ${KEYTABS_DIR} yarn:hadoop
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh healthcheck ${KEYTABS_DIR} hdfs:hadoop
+fi
 
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
-<configuration>
-  <property>
-    <name>yarn.nodemanager.aux-services</name>
-    <value>mapreduce_shuffle</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.aux-services.mapreduce_shuffle.class</name>
-    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.env-whitelist</name>
-    <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
-  </property>
-  <property>
-    <name>yarn.resourcemanager.hostname</name>
-    <value>ranger-hadoop</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.resource.memory-mb</name>
-    <value>4096</value>
-  </property>
-  <property>
-    <name>yarn.scheduler.maximum-allocation-mb</name>
-    <value>4096</value>
-  </property>
-  <property>
-    <name>yarn.scheduler.minimum-allocation-mb</name>
-    <value>256</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.vmem-check-enabled</name>
-    <value>false</value>
-  </property>
-  <property>
-    <name>yarn.log-aggregation-enable</name>
-    <value>true</value>
-  </property>
-  <property>
-    <name>yarn.timeline-service.enabled</name>
-    <value>true</value>
-  </property>
-  <property>
-    <name>yarn.timeline-service.hostname</name>
-    <value>ranger-hadoop</value>
-  </property>
-  <property>
-    <name>yarn.timeline-service.http-cross-origin.enabled</name>
-    <value>true</value>
-  </property>
-  <property>
-    <name>yarn.resourcemanager.system-metrics-publisher.enabled</name>
-    <value>true</value>
-  </property>
-</configuration>
-EOF
+cp ${RANGER_SCRIPTS}/core-site.xml ${HADOOP_HOME}/etc/hadoop/core-site.xml
+cp ${RANGER_SCRIPTS}/hdfs-site.xml ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
+cp ${RANGER_SCRIPTS}/yarn-site.xml ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 
 mkdir -p /opt/hadoop/logs
 chown -R hdfs:hadoop /opt/hadoop/

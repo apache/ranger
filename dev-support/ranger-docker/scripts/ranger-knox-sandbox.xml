@@ -88,22 +88,22 @@
 
     <service>
         <role>NAMENODE</role>
-        <url>hdfs://ranger-hadoop.example.com:8020</url>
+        <url>hdfs://ranger-hadoop.rangernw:8020</url>
     </service>
 
     <service>
         <role>JOBTRACKER</role>
-        <url>rpc://ranger-hadoop.example.com:8050</url>
+        <url>rpc://ranger-hadoop.rangernw:8050</url>
     </service>
 
     <service>
         <role>WEBHDFS</role>
-        <url>http://ranger-hadoop.example.com:9870/webhdfs</url>
+        <url>http://ranger-hadoop.rangernw:9870/webhdfs</url>
     </service>
 
     <service>
         <role>WEBHCAT</role>
-        <url>http://ranger-hive.example.com:50111/templeton</url>
+        <url>http://ranger-hive.rangernw:50111/templeton</url>
     </service>
 
     <service>
@@ -117,7 +117,7 @@
 
     <service>
         <role>WEBHBASE</role>
-        <url>http://ranger-hbase.example.com:60080</url>
+        <url>http://ranger-hbase.rangernw:60080</url>
         <param>
             <name>replayBufferSize</name>
             <value>8</value>
@@ -126,7 +126,7 @@
 
     <service>
         <role>HIVE</role>
-        <url>http://ranger-hive.example.com:10001/cliservice</url>
+        <url>http://ranger-hive.rangernw:10001/cliservice</url>
         <param>
             <name>replayBufferSize</name>
             <value>8</value>
@@ -135,7 +135,7 @@
 
     <service>
         <role>RESOURCEMANAGER</role>
-        <url>http://ranger-hadoop.example.com:8088/ws</url>
+        <url>http://ranger-hadoop.rangernw:8088/ws</url>
     </service>
 
     <service>

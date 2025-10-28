@@ -8,9 +8,10 @@ services:
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - KNOX_VERSION=${KNOX_VERSION}
         - KNOX_PLUGIN_VERSION=${KNOX_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-knox
     container_name: ranger-knox
-    hostname: ranger-knox.example.com
+    hostname: ranger-knox.rangernw
     stdin_open: true
     tty: true
     networks:
@@ -25,6 +26,7 @@ services:
     environment:
       - KNOX_VERSION
       - KNOX_PLUGIN_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

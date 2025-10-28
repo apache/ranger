@@ -79,7 +79,6 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
-
   if "${RANGER_SCRIPTS}"/ranger-hive-setup.sh;
   then
     touch "${HIVE_HOME}"/.setupDone

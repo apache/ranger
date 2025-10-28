@@ -43,10 +43,38 @@
   </property>
   <property>
     <name>hbase.rootdir</name>
-    <value>hdfs://ranger-hadoop.example.com:9000/hbase</value>
+    <value>hdfs://ranger-hadoop.rangernw:9000/hbase</value>
   </property>
   <property>
     <name>hbase.zookeeper.quorum</name>
-    <value>ranger-zk.example.com</value>
+    <value>ranger-zk.rangernw</value>
+  </property>
+  <property>
+    <name>hbase.security.authentication</name>
+    <value>kerberos</value>
+  </property>
+  <property>
+    <name>hbase.security.authorization</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hbase.master.kerberos.principal</name>
+    <value>hbase/ranger-hbase.rangernw@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>hbase.master.keytab.file</name>
+    <value>/opt/hbase/keytabs/hbase.keytab</value>
+  </property>
+  <property>
+    <name>hbase.regionserver.kerberos.principal</name>
+    <value>hbase/ranger-hbase.rangernw@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>hbase.regionserver.keytab.file</name>
+    <value>/opt/hbase/keytabs/hbase.keytab</value>
+  </property>
+  <property>
+    <name>hbase.coprocessor.region.classes</name>
+    <value>org.apache.hadoop.hbase.security.token.TokenProvider</value>
   </property>
 </configuration>

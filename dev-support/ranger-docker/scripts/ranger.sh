@@ -16,7 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 if [ ! -e ${RANGER_HOME}/.setupDone ]
 then
   SETUP_RANGER=true
@@ -26,9 +25,23 @@ fi
 
 if [ "${SETUP_RANGER}" == "true" ]
 then
+  if [ "${KERBEROS_ENABLED}" == "true" ]
+  then
+    KEYTABS_DIR=/opt/ranger/admin/keytabs
+
+    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rangeradmin ${KEYTABS_DIR} ranger:ranger
+    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rangerlookup ${KEYTABS_DIR} ranger:ranger
+    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh HTTP ${KEYTABS_DIR} ranger:ranger
+  fi
+
   cd "${RANGER_HOME}"/admin || exit
   if ./setup.sh;
   then
+    if [ "${KERBEROS_ENABLED}" == "true" ]
+    then
+      cp ${RANGER_SCRIPTS}/core-site.xml ${RANGER_HOME}/admin/conf/core-site.xml
+    fi
+
     touch "${RANGER_HOME}"/.setupDone
   else
     echo "Ranger Admin Setup Script didn't complete proper execution."

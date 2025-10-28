@@ -34,7 +34,6 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
-
   if "${RANGER_SCRIPTS}"/ranger-kafka-setup.sh;
   then
     touch "${KAFKA_HOME}"/.setupDone
@@ -43,4 +42,4 @@ then
   fi
 fi
 
-su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config ./bin/kafka-server-start.sh config/server.properties" kafka
+su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config KAFKA_OPTS='-Djava.security.krb5.conf=/etc/krb5.conf -Djava.security.auth.login.config=/opt/kafka/config/kafka-server-jaas.conf' ./bin/kafka-server-start.sh config/server.properties" kafka

@@ -57,7 +57,7 @@
 
     <property>
         <name>xasecure.audit.destination.solr.force.use.inmemory.jaas.config</name>
-        <value>false</value>
+        <value>true</value>
     </property>
     <property>
         <name>xasecure.audit.jaas.Client.loginModuleName</name>

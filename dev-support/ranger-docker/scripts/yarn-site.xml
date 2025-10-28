@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration>
+  <property>
+    <name>yarn.nodemanager.aux-services</name>
+    <value>mapreduce_shuffle</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.env-whitelist</name>
+    <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
+  </property>
+  <property>
+    <name>yarn.acl.enable</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>yarn.authorization-provider</name>
+    <value>org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.principal</name>
+    <value>rm/ranger-hadoop.rangernw@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.keytab</name>
+    <value>/opt/hadoop/keytabs/rm.keytab</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.principal</name>
+    <value>nm/ranger-hadoop.rangernw@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.keytab</name>
+    <value>/opt/hadoop/keytabs/nm.keytab</value>
+  </property>
+</configuration>

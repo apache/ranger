@@ -16,24 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  kinit -kt /opt/hadoop/keytabs/nn.keytab nn/`hostname -f`@EXAMPLE.COM
+fi
+
+${HADOOP_HOME}/bin/hdfs dfs -stat /hbase
+ret=$?
 
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  KEYTABS_DIR=/opt/knox/keytabs
-
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh knox ${KEYTABS_DIR} knox:knox
+  kdestroy
 fi
 
-chown -R knox:knox /opt/knox/
-
-mkdir -p /opt/knox/logs
-chown -R knox:knox /opt/knox/
-chmod g+w /opt/knox/logs
-
-cd ${RANGER_HOME}/ranger-knox-plugin
-./enable-knox-plugin.sh
+exit ${ret}

@@ -39,6 +39,9 @@ COPY ./scripts/ranger-hive-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hive.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hive-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hive-site.xml
+COPY ./scripts/core-site.xml                            /home/ranger/scripts/
+COPY ./scripts/create_principal_and_keytab.sh           /home/ranger/scripts/
+COPY ./config/kdc/krb5.conf                             /etc/krb5.conf
 
 RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     ln -s /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
@@ -56,6 +59,7 @@ RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz 
     ln -s /opt/ranger/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin /opt/ranger/ranger-hive-plugin && \
     rm -f /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties && \
+    chmod 755 ${RANGER_SCRIPTS}/create_principal_and_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hive-setup.sh ${RANGER_SCRIPTS}/ranger-hive.sh
 
 ENV HIVE_HOME=/opt/hive

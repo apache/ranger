@@ -34,7 +34,6 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
-
   if "${RANGER_SCRIPTS}"/ranger-knox-setup.sh;
   then
     touch "${KNOX_HOME}"/.setupDone

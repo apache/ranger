@@ -15,30 +15,55 @@ def service_not_exists(service):
 
 hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
                       'configs': {'username': 'hdfs', 'password': 'hdfs',
-                                  'fs.default.name': 'hdfs://ranger-hadoop:9000',
+                                  'fs.default.name': 'hdfs://ranger-hadoop.rangernw:9000',
                                   'hadoop.security.authentication': 'simple',
                                   'hadoop.security.authorization': 'true',
+                                  'policy.download.auth.users': 'hdfs',
+                                  'tag.download.auth.users': 'hdfs',
+                                  'userstore.download.auth.users': 'hdfs',
                                   'ranger.plugin.hdfs.policy.refresh.synchronous':'true'}})
 
 hive = RangerService({'name': 'dev_hive', 'type': 'hive',
                       'configs': {'username': 'hive', 'password': 'hive',
                                   'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver',
-                                  'jdbc.url': 'jdbc:hive2://ranger-hive:10000',
+                                  'jdbc.url': 'jdbc:hive2://ranger-hive.rangernw:10000',
                                   'hadoop.security.authorization': 'true',
+                                  'policy.download.auth.users': 'hive',
+                                  'tag.download.auth.users': 'hive',
+                                  'userstore.download.auth.users': 'hive',
                                   'ranger.plugin.hive.policy.refresh.synchronous':'true'}})
 
 kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                        'configs': {'username': 'kafka', 'password': 'kafka',
-                                   'zookeeper.connect': 'ranger-zk.example.com:2181',
+                                   'zookeeper.connect': 'ranger-zk.rangernw:2181',
+                                   'policy.download.auth.users': 'kafka',
+                                   'tag.download.auth.users': 'kafka',
+                                   'setup.additional.default.policies': 'true',
+                                   'default-policy.1.name': 'topic: ATLAS_ENTITIES',
+                                   'default-policy.1.resource.topic': 'ATLAS_ENTITIES',
+                                   'default-policy.1.policyItem.1.users': 'rangertagsync',
+                                   'default-policy.1.policyItem.1.accessTypes': 'create,consume',
+                                   'default-policy.2.name': 'consumergroup: ranger_entities_consumer',
+                                   'default-policy.2.resource.consumergroup': 'ranger_entities_consumer',
+                                   'default-policy.2.policyItem.1.users': 'rangertagsync',
+                                   'default-policy.2.policyItem.1.accessTypes': 'consume,describe',
+                                   'ranger.plugin.audit.filters': "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['create','consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['ranger_entities_consumer']}},'users':['rangertagsync'],'actions':['consume'],'isAudited':false}]",
+                                   'userstore.download.auth.users': 'kafka',
                                    'ranger.plugin.kafka.policy.refresh.synchronous':'true'}})
 
 knox = RangerService({'name': 'dev_knox', 'type': 'knox',
-                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'https://ranger-knox:8443',
+                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'https://ranger-knox.rangernw:8443',
+                      'policy.download.auth.users': 'knox',
+                      'tag.download.auth.users': 'knox',
+                      'userstore.download.auth.users': 'knox',
                       'ranger.plugin.knox.policy.refresh.synchronous':'true'}})
 
 yarn = RangerService({'name': 'dev_yarn', 'type': 'yarn',
                       'configs': {'username': 'yarn', 'password': 'yarn',
-                                  'yarn.url': 'http://ranger-hadoop:8088',
+                                  'yarn.url': 'http://ranger-hadoop.rangernw:8088',
+                                  'policy.download.auth.users': 'yarn',
+                                  'tag.download.auth.users': 'yarn',
+                                  'userstore.download.auth.users': 'yarn',
                                   'ranger.plugin.yarn.policy.refresh.synchronous':'true'}})
 
 hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
@@ -47,13 +72,19 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                                    'hbase.security.authentication': 'simple',
                                    'hadoop.security.authorization': 'true',
                                    'hbase.zookeeper.property.clientPort': '2181',
-                                   'hbase.zookeeper.quorum': 'ranger-zk',
+                                   'hbase.zookeeper.quorum': 'ranger-zk.rangernw',
                                    'zookeeper.znode.parent': '/hbase',
+                                   'policy.download.auth.users': 'hbase',
+                                   'tag.download.auth.users': 'hbase',
+                                   'userstore.download.auth.users': 'hbase',
                                    'ranger.plugin.hbase.policy.refresh.synchronous':'true'}})
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
-                                 'provider': 'http://ranger-kms:9292',
+                                 'provider': 'http://ranger-kms.rangernw:9292',
+                                 'policy.download.auth.users': 'rangerkms',
+                                 'tag.download.auth.users': 'rangerkms',
+                                 'userstore.download.auth.users': 'rangerkms',
                                  'ranger.plugin.kms.policy.refresh.synchronous':'true'}})
 
 trino = RangerService({'name': 'dev_trino',
@@ -62,7 +93,10 @@ trino = RangerService({'name': 'dev_trino',
                            'username': 'trino',
                            'password': 'trino',
                            'jdbc.driverClassName': 'io.trino.jdbc.TrinoDriver',
-                           'jdbc.url': 'jdbc:trino://ranger-trino:8080',
+                           'jdbc.url': 'jdbc:trino://ranger-trino.rangernw:8080',
+                           'policy.download.auth.users': 'trino',
+                           'tag.download.auth.users': 'trino',
+                           'userstore.download.auth.users': 'trino',
                            'ranger.plugin.trino.policy.refresh.synchronous':'true'
                        }})
 
@@ -72,6 +106,9 @@ ozone = RangerService({'name': 'dev_ozone',
                        'configs': {'username': 'hdfs', 'password': 'hdfs',
                                    'ozone.om.http-address': 'http://om:9874',
                                    'hadoop.security.authentication': 'simple',
+                                   'policy.download.auth.users': 'ozone',
+                                   'tag.download.auth.users': 'ozone',
+                                   'userstore.download.auth.users': 'ozone',
                                    'ranger.plugin.ozone.policy.refresh.synchronous':'true'}})
 
 services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone]

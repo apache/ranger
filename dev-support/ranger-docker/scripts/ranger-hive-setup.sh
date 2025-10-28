@@ -24,14 +24,12 @@ Host *
    UserKnownHostsFile=/dev/null
 EOF
 
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/core-site.xml
-<configuration>
-  <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://ranger-hadoop:9000</value>
-  </property>
-</configuration>
-EOF
+if [ "${KERBEROS_ENABLED}" == "true" ]
+then
+  KEYTABS_DIR=/opt/hive/keytabs
+
+  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh hive ${KEYTABS_DIR} hive:hadoop
+fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
@@ -41,6 +39,8 @@ mkdir -p ${TEZ_HOME}/conf
 
 # Create Tez configuration directory for Hadoop
 mkdir -p ${HADOOP_HOME}/etc/hadoop
+
+cp ${RANGER_SCRIPTS}/core-site.xml ${HADOOP_HOME}/etc/hadoop/core-site.xml
 
 # Create mapred-site.xml for YARN integration
 cat <<EOF > ${HADOOP_HOME}/etc/hadoop/mapred-site.xml

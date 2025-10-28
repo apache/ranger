@@ -66,7 +66,6 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
-
   if "${RANGER_SCRIPTS}"/ranger-hadoop-setup.sh;
   then
     su -c "${HADOOP_HOME}/bin/hdfs namenode -format" hdfs

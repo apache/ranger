@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,24 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
+ARG RANGER_BASE_JAVA_VERSION=8
 
-if [ "${KERBEROS_ENABLED}" == "true" ]
-then
-  KEYTABS_DIR=/opt/knox/keytabs
+FROM eclipse-temurin:${RANGER_BASE_JAVA_VERSION}-jdk-jammy
 
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh knox ${KEYTABS_DIR} knox:knox
-fi
+ENV DEBIAN_FRONTEND=noninteractive
+ENV REALM=EXAMPLE.COM
+ENV KDC_HOST=kdc.example.com
+ENV ADMIN_PRINCIPAL=admin/admin
+ENV ADMIN_PASSWORD=rangerR0cks!
+ENV MASTER_PASSWORD=rangerR0cks!
 
-chown -R knox:knox /opt/knox/
+# Install Kerberos components
+RUN apt-get update && \
+    apt-get install -y krb5-kdc krb5-admin-server krb5-user && \
+    rm -rf /var/lib/apt/lists/*
 
-mkdir -p /opt/knox/logs
-chown -R knox:knox /opt/knox/
-chmod g+w /opt/knox/logs
+# Copy configuration files
+COPY config/kdc/krb5.conf /etc/krb5.conf
+COPY config/kdc/kdc.conf /etc/krb5kdc/kdc.conf
+COPY config/kdc/kadm5.acl /etc/krb5kdc/kadm5.acl
+COPY config/kdc/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-cd ${RANGER_HOME}/ranger-knox-plugin
-./enable-knox-plugin.sh
+EXPOSE 88/tcp 88/udp 749/tcp
+
+ENTRYPOINT ["/entrypoint.sh"]

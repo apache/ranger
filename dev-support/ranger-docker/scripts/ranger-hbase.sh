@@ -28,7 +28,6 @@ then
   # pdsh is unavailable with microdnf in rhel based image.
   echo "ssh" > /etc/pdsh/rcmd_default
 
-
   if "${RANGER_SCRIPTS}"/ranger-hbase-setup.sh;
   then
     touch "${HBASE_HOME}"/.setupDone

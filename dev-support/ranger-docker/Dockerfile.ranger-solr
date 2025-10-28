@@ -19,8 +19,18 @@ FROM solr:${SOLR_VERSION}
 
 # Copy audit config set
 USER 0
-RUN  mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf
+RUN  mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf /home/ranger/scripts
 COPY config/solr-ranger_audits/* /opt/solr/server/solr/configsets/ranger_audits/conf/
+COPY config/solr-jaas.conf /opt/solr/server/etc/jaas.conf
+COPY config/solr-security.json /var/solr/data/security.json
 RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
 
-USER solr
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user
+
+COPY scripts/ranger-solr.sh                 /home/ranger/scripts/
+COPY scripts/create_principal_and_keytab.sh /home/ranger/scripts/
+COPY config/kdc/krb5.conf                   /etc/krb5.conf
+RUN chmod +x /home/ranger/scripts/ranger-solr.sh /home/ranger/scripts/create_principal_and_keytab.sh
+
+ENTRYPOINT [ "/home/ranger/scripts/ranger-solr.sh" ]
+CMD ["solr-foreground"]
