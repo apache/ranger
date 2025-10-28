@@ -60,7 +60,7 @@
     <name>ranger.plugin.trino.policy.rest.client.connection.timeoutMs</name>
     <value>30000</value>
     <description>
-      S3 Plugin RangerRestClient Connection Timeout in Milli Seconds
+      RangerRestClient Connection Timeout in Milli Seconds
     </description>
   </property>
 
@@ -68,7 +68,7 @@
     <name>ranger.plugin.trino.policy.rest.client.read.timeoutMs</name>
     <value>30000</value>
     <description>
-      S3 Plugin RangerRestClient read Timeout in Milli Seconds
+      RangerRestClient read Timeout in Milli Seconds
     </description>
   </property>
 
