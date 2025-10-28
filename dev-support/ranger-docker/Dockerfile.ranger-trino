@@ -17,35 +17,6 @@
 ARG TRINO_VERSION
 FROM trinodb/trino:${TRINO_VERSION}
 
-# trino base image layer has undergone changes in base os image with time.
-##########################################
-#   Trino Versions  |      OS Layer      #
-#    359 - 369      |     centos 11      #
-#    370 - 389      |       ubi8         #
-#    390 - 391      |    azul openjdk    #
-#       392         |       ubi8         #
-#    393 - 431      |   eclipse-temurin  #
-#    432 - current  |       ubi9         #
-##########################################
-
-USER root
-
-ARG TRINO_VERSION
-ARG TRINO_PLUGIN_VERSION
-
-RUN mkdir -p /home/ranger/scripts/
-
-COPY ./scripts/access-control.properties    /etc/trino/
-COPY ./scripts/ranger-trino-audit.xml       /etc/trino/
-COPY ./scripts/ranger-trino-security.xml    /etc/trino/
-COPY ./scripts/core-site.xml                /etc/trino/
-COPY ./scripts/ranger-trino-hive.properties /etc/trino/catalog/hive.properties
-
-COPY ./scripts/ranger-trino.sh                /home/ranger/scripts/
-COPY ./scripts/ranger-trino-setup.sh          /home/ranger/scripts/
-
-RUN chmod 744 /home/ranger/scripts/ranger-trino-setup.sh /home/ranger/scripts/ranger-trino.sh
-
 USER trino
 
-ENTRYPOINT ["/home/ranger/scripts/ranger-trino.sh"]
+COPY ./config/trino/*  /etc/trino/
