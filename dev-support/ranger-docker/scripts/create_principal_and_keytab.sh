@@ -29,7 +29,7 @@ KEYTAB=${KEYTAB_DIR}/${PRINCIPAL_NAME}.keytab
 # if keytab file already exists, do nothing
 if [ -f ${KEYTAB} ]
 then
-  return 0
+  exit 0
 fi
 
 mkdir -p ${KEYTAB_DIR}
