@@ -31,10 +31,11 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy configuration files
-COPY config/kdc/krb5.conf /etc/krb5.conf
-COPY config/kdc/kdc.conf /etc/krb5kdc/kdc.conf
-COPY config/kdc/kadm5.acl /etc/krb5kdc/kadm5.acl
-COPY config/kdc/entrypoint.sh /entrypoint.sh
+COPY ./scripts/kdc/krb5.conf     /etc/krb5.conf
+COPY ./scripts/kdc/kdc.conf      /etc/krb5kdc/kdc.conf
+COPY ./scripts/kdc/kadm5.acl     /etc/krb5kdc/kadm5.acl
+COPY ./scripts/kdc/entrypoint.sh /entrypoint.sh
+
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 88/tcp 88/udp 749/tcp

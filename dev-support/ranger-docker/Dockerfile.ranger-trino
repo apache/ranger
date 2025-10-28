@@ -19,4 +19,4 @@ FROM trinodb/trino:${TRINO_VERSION}
 
 USER trino
 
-COPY ./config/trino/*  /etc/trino/
+COPY ./scripts/trino/* /etc/trino/

@@ -11,7 +11,7 @@ services:
       - 9864
     command: ["/opt/hadoop/bin/ozone","datanode"]
     env_file:
-      - ./config/ozone/docker-config
+      - ./scripts/ozone/docker-config
     environment:
       OZONE_OPTS:
   om:
@@ -46,7 +46,7 @@ services:
       OZONE_PLUGIN_VERSION: ${OZONE_PLUGIN_VERSION}
       OZONE_VERSION: ${OZONE_VERSION}
     env_file:
-      - ./config/ozone/docker-config
+      - ./scripts/ozone/docker-config
     command: bash -c "/opt/hadoop/ranger-ozone-plugin/ranger-ozone-setup.sh && /opt/hadoop/bin/ozone om"
   scm:
     image: ${OZONE_RUNNER_IMAGE}:${OZONE_RUNNER_VERSION}
@@ -60,7 +60,7 @@ services:
       - 9876:9876
       - 9860:9860
     env_file:
-      - ./config/ozone/docker-config
+      - ./scripts/ozone/docker-config
     environment:
       ENSURE_SCM_INITIALIZED: /data/metadata/scm/current/VERSION
       OZONE-SITE.XML_hdds.scm.safemode.min.datanode: "${OZONE_SAFEMODE_MIN_DATANODES:-1}"

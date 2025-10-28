@@ -26,12 +26,12 @@ ARG TARGETARCH
 COPY ./dist/version                               /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
 
-COPY ./scripts/ranger.sh                                         ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-admin-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-admin-install.properties
-COPY ./scripts/create-ranger-services.py                         ${RANGER_SCRIPTS}/
-COPY ./scripts/core-site.xml                                     ${RANGER_SCRIPTS}/
-COPY ./scripts/create_principal_and_keytab.sh                    ${RANGER_SCRIPTS}/
-COPY ./config/kdc/krb5.conf                                      /etc/krb5.conf
+COPY ./scripts/admin/ranger.sh                                         ${RANGER_SCRIPTS}/
+COPY ./scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-admin-install.properties
+COPY ./scripts/admin/create-ranger-services.py                         ${RANGER_SCRIPTS}/
+COPY ./scripts/hadoop/core-site.xml                                    ${RANGER_SCRIPTS}/
+COPY ./scripts/kdc/create_principal_and_keytab.sh                      ${RANGER_SCRIPTS}/
+COPY ./scripts/kdc/krb5.conf                                           /etc/krb5.conf
 
 RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} \
     && ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin \

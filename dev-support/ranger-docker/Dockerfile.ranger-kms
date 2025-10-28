@@ -25,11 +25,11 @@ ARG RANGER_DB_TYPE
 COPY ./dist/version                                            /home/ranger/dist/
 COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                   /home/ranger/dist/
 
-COPY ./scripts/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
-COPY ./scripts/core-site.xml                                   ${RANGER_SCRIPTS}/
-COPY ./scripts/create_principal_and_keytab.sh                  ${RANGER_SCRIPTS}/
-COPY ./config/kdc/krb5.conf                                    /etc/krb5.conf
+COPY ./scripts/kms/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
+COPY ./scripts/kms/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
+COPY ./scripts/hadoop/core-site.xml                                ${RANGER_SCRIPTS}/
+COPY ./scripts/kdc/create_principal_and_keytab.sh                  ${RANGER_SCRIPTS}/
+COPY ./scripts/kdc/krb5.conf                                       /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \
