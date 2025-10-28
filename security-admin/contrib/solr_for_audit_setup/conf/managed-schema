@@ -94,4 +94,5 @@
   <field name="policyVersion" type="tlong" multiValued="false"/>
   <field name="datasets" type="key_lower_case" multiValued="true"/>
   <field name="projects" type="key_lower_case" multiValued="true"/>
+  <field name="datasetIds" type="tlongs" multiValued="true" docValues="true"/>
 </schema>

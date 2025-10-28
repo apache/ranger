@@ -407,4 +407,36 @@
 			</name>
 			<value>0</value>
 		</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.loginModuleName</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.loginModuleControlFlag</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.useKeyTab</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.storeKey</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.useTicketCache</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.serviceName</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.keyTab</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.principal</name>
+		<value></value>
+	</property>
 </configuration>

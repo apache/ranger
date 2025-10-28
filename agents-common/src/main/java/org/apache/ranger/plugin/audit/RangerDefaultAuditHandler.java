@@ -137,6 +137,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 
             ret.setDatasets(getDatasets(request));
             ret.setProjects(getProjects(request));
+            ret.setDatasetIds(getDatasetIds(request));
             ret.setAdditionalInfo(getAdditionalInfo(request));
             ret.setClusterName(request.getClusterName());
             ret.setZoneName(result.getZoneName());
@@ -221,6 +222,12 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
         GdsAccessResult gdsResult = RangerAccessRequestUtil.getGdsResultFromContext(request.getContext());
 
         return gdsResult != null ? gdsResult.getProjects() : null;
+    }
+
+    public final Set<Long> getDatasetIds(RangerAccessRequest request) {
+        GdsAccessResult gdsResult = RangerAccessRequestUtil.getGdsResultFromContext(request.getContext());
+
+        return gdsResult != null ? gdsResult.getDatasetIds() : null;
     }
 
     public String getAdditionalInfo(RangerAccessRequest request) {
