@@ -106,7 +106,7 @@ Similarly, check the `depends` section of the `docker-compose.ranger-service.yam
 
 #### Bring up all containers
 ~~~
-./scripts/ozone-plugin-docker-setup.sh
+./scripts/ozone/ozone-plugin-docker-setup.sh
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
           

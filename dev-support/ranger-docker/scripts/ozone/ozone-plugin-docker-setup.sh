@@ -22,7 +22,7 @@ then
   tar xvfz dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin.tar.gz --directory=dist/
 fi
 
-cp -f config/ozone/ranger-ozone-plugin-install.properties dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/install.properties
-cp -f config/ozone/ranger-ozone-setup.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
-cp -f config/ozone/enable-ozone-plugin.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
+cp -f scripts/ozone/ranger-ozone-plugin-install.properties dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/install.properties
+cp -f scripts/ozone/ranger-ozone-setup.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
+cp -f scripts/ozone/enable-ozone-plugin.sh dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/
 chmod +x dist/ranger-${OZONE_PLUGIN_VERSION}-ozone-plugin/ranger-ozone-setup.sh
