@@ -37,10 +37,12 @@ public class RolePredicateUtil extends AbstractPredicateUtil {
         addPredicateForRoleId(filter.getParam(SearchFilter.ROLE_ID), predicates);
         addPredicateForGroupName(filter.getParam(SearchFilter.GROUP_NAME), predicates);
         addPredicateForUserName(filter.getParam(SearchFilter.USER_NAME), predicates);
+        addPredicateForRoleName(filter.getParam(SearchFilter.SUB_ROLE_NAME), predicates);
 
         addPredicateForPartialRoleName(filter.getParam(SearchFilter.ROLE_NAME_PARTIAL), predicates);
         addPredicateForPartialGroupName(filter.getParam(SearchFilter.GROUP_NAME_PARTIAL), predicates);
         addPredicateForPartialUserName(filter.getParam(SearchFilter.USER_NAME_PARTIAL), predicates);
+        addPredicateForPartialRoleName(filter.getParam(SearchFilter.SUB_ROLE_NAME_PARTIAL), predicates);
     }
 
     private Predicate addPredicateForRoleName(final String roleName, List<Predicate> predicates) {
