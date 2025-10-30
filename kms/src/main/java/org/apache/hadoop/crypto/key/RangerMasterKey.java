@@ -94,22 +94,23 @@ public class RangerMasterKey implements RangerKMSMKI {
         if (encryptedPwd != null && encryptedPwd.length >= 7) {
             int index = 0;
 
-            mkCipher       = encryptedPwd[index];
-            mkKeySize      = Integer.parseInt(encryptedPwd[++index]);
-            saltSize       = Integer.parseInt(encryptedPwd[++index]);
-            pbeAlgo        = encryptedPwd[++index];
-            mdAlgo         = encryptedPwd[++index];
-            iterationCount = Integer.parseInt(encryptedPwd[++index]);
-            salt           = encryptedPwd[++index];
-            password       = encryptedPwd[++index];
+            mkCipher            = encryptedPwd[index];
+            mkKeySize           = Integer.parseInt(encryptedPwd[++index]);
+            int tempSaltSize    = Integer.parseInt(encryptedPwd[++index]);
+            pbeAlgo             = encryptedPwd[++index];
+            saltSize            = calculateCompliantSaltSize(tempSaltSize, SupportedPBECryptoAlgo.valueOf(pbeAlgo));
+            mdAlgo              = encryptedPwd[++index];
+            iterationCount      = Integer.parseInt(encryptedPwd[++index]);
+            salt                = encryptedPwd[++index];
+            password            = encryptedPwd[++index];
         } else {
-            mkCipher  = DEFAULT_MK_CIPHER;
-            mkKeySize = DEFAULT_MK_KeySize;
-            saltSize  = DEFAULT_SALT_SIZE;
-            pbeAlgo   = isFipsEnabled ? SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES.getAlgoName() : defaultCryptAlgo.getAlgoName();
-            mdAlgo    = defaultMdAlgo;
-            password  = paddedEncryptedPwd;
-            salt      = password;
+            mkCipher            = DEFAULT_MK_CIPHER;
+            mkKeySize           = DEFAULT_MK_KeySize;
+            pbeAlgo             = isFipsEnabled ? SupportedPBECryptoAlgo.PBEWithMD5AndTripleDES.getAlgoName() : defaultCryptAlgo.getAlgoName();
+            saltSize            = calculateCompliantSaltSize(DEFAULT_SALT_SIZE, SupportedPBECryptoAlgo.valueOf(pbeAlgo));
+            mdAlgo              = defaultMdAlgo;
+            password            = paddedEncryptedPwd;
+            salt                = password;
 
             if (password != null) {
                 iterationCount = password.toCharArray().length + 1;
@@ -181,17 +182,16 @@ public class RangerMasterKey implements RangerKMSMKI {
         defaultCryptAlgo    = isFipsEnabled ? SupportedPBECryptoAlgo.PBKDF2WithHmacSHA256 : defaultCryptAlgo;
         mkCipher            = getConfig("ranger.kms.service.masterkey.password.cipher", DEFAULT_MK_CIPHER);
         mkKeySize           = getIntConfig("ranger.kms.service.masterkey.password.size", DEFAULT_MK_KeySize);
-        saltSize            = getIntConfig("ranger.kms.service.masterkey.password.salt.size", DEFAULT_SALT_SIZE);
-        salt                = getConfig("ranger.kms.service.masterkey.password.salt", DEFAULT_SALT);
         pbeAlgo             = getConfig("ranger.kms.service.masterkey.password.encryption.algorithm", defaultCryptAlgo.getAlgoName());
         encrCryptoAlgo      = SupportedPBECryptoAlgo.valueOf(pbeAlgo);
+        saltSize            = calculateCompliantSaltSize(getIntConfig("ranger.kms.service.masterkey.password.salt.size", DEFAULT_SALT_SIZE), encrCryptoAlgo);
+        salt                = getConfig("ranger.kms.service.masterkey.password.salt", DEFAULT_SALT);
         mdAlgo              = getConfig("ranger.kms.service.masterkey.password.md.algorithm", defaultMdAlgo);
         iterationCount      = getIntConfig("ranger.kms.service.masterkey.password.iteration.count", DEFAULT_ITERATION_COUNT);
         paddingString       = Joiner.on(",").skipNulls().join(mkCipher, mkKeySize, saltSize, pbeAlgo, mdAlgo, iterationCount, salt);
 
         logger.info("Selected DEFAULT_CRYPT_ALGO={}", defaultCryptAlgo);
-        logger.info("Selected MD_ALGO={}", mdAlgo);
-        logger.info("Selected ENCR_CRYPTO_ALGO={}", encrCryptoAlgo);
+        logger.info("MK metadata={}", paddingString);
         logger.debug("<== RangerMasterKey.init()");
     }
 
@@ -541,15 +541,12 @@ public class RangerMasterKey implements RangerKMSMKI {
         logger.debug("==> RangerMasterKey.getPBEParameterSpec()");
 
         PBEKeySpec pbeKeySpec;
+        char[] compliantPwd = getCompliantPassword(password, encrAlgo).toCharArray();
+
         if (SupportedPBECryptoAlgo.isFIPSCompliantAlgorithm(encrAlgo)) {
-            // For FIPS, salt size must be at least 128 bits, that is, at least 16 in length.
-            int saltSize = RangerMasterKey.saltSize;
-            while (saltSize < 16) {
-                saltSize = saltSize * 2;
-            }
-            pbeKeySpec = new PBEKeySpec(getFIPSCompliantPassword(password).toCharArray(), generateSalt(saltSize), iterationCount, encrAlgo.getKeyLength());
+            pbeKeySpec = new PBEKeySpec(compliantPwd, generateSalt(saltSize), iterationCount, encrAlgo.getKeyLength());
         } else {
-            pbeKeySpec = new PBEKeySpec(password.toCharArray(), generateSalt(RangerMasterKey.saltSize), iterationCount);
+            pbeKeySpec = new PBEKeySpec(compliantPwd, generateSalt(saltSize), iterationCount);
         }
         return pbeKeySpec;
     }
@@ -570,12 +567,30 @@ public class RangerMasterKey implements RangerKMSMKI {
         If provided password is less than 14, this method appends the same password till it reaches the minimum length of 14.
         And it is for FIPS only.
      */
-    private String getFIPSCompliantPassword(String password) {
+    private String getCompliantPassword(String password, SupportedPBECryptoAlgo encrAlgo) {
         String newPwd = password;
-        while (newPwd.length() < 14) {
-            newPwd = newPwd.concat(password);
+
+        if (encrAlgo.getMinPwdLength().isPresent()) {
+            int requiredPwdLength = encrAlgo.getMinPwdLength().get();
+            while (newPwd.length() < requiredPwdLength) {
+                newPwd = newPwd.concat(password);
+            }
         }
+
         return newPwd;
+    }
+
+    // For FIPS, salt size must be at least 128 bits, that is, at least 16 in length.
+    private static int calculateCompliantSaltSize(int saltSize, SupportedPBECryptoAlgo encrAlgo) {
+        int compliantSaltSize = saltSize;
+        if (encrAlgo.getMinSaltSize().isPresent()) {
+            int minSaltSize = encrAlgo.getMinSaltSize().get();
+            while (compliantSaltSize < minSaltSize) {
+                compliantSaltSize = compliantSaltSize * 2;
+            }
+        }
+
+        return compliantSaltSize;
     }
 
     private byte[] encryptKey(byte[] data, PBEKeySpec keyspec) throws Throwable {

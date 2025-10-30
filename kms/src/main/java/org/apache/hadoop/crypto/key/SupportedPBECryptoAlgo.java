@@ -22,29 +22,34 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Optional;
 import java.util.function.Function;
 
 public enum SupportedPBECryptoAlgo {
     @Deprecated
     PBEWithMD5AndTripleDES("PBEWithMD5AndTripleDES",
       "PBEWithMD5AndTripleDES",
-      0, keySpec -> new PBEParameterSpec(keySpec.getSalt(), keySpec.getIterationCount())),
+      0, Optional.empty(),  Optional.empty(), keySpec -> new PBEParameterSpec(keySpec.getSalt(), keySpec.getIterationCount())),
     @Deprecated
     PBEWithMD5AndDES("PBEWithMD5AndDES",
       "PBEWithMD5AndDES",
-      0, keySpec -> new PBEParameterSpec(keySpec.getSalt(), keySpec.getIterationCount())),
+      0, Optional.empty(),  Optional.empty(), keySpec -> new PBEParameterSpec(keySpec.getSalt(), keySpec.getIterationCount())),
     PBKDF2WithHmacSHA256("PBKDF2WithHmacSHA256",
       "AES/CBC/PKCS7Padding",
-      64 * 4, keySpec -> new IvParameterSpec(keySpec.getSalt()));
+      64 * 4, Optional.of(16), Optional.of(14),  keySpec -> new IvParameterSpec(keySpec.getSalt()));
     private final String encrAlgoName;
     private final String  cipherTransformation;
-    private final int     keyLength;
+    private final int               keyLength;
+    private final Optional<Integer> minSaltSize;
+    private final Optional<Integer> minPwdLength;
     private final Function<PBEKeySpec, AlgorithmParameterSpec> algoParamSpecFunc;
 
-    SupportedPBECryptoAlgo(String encrAlgoName, String cipherTransformation, int keyLength, Function<PBEKeySpec, AlgorithmParameterSpec> algoParamSpecFunc) {
+    SupportedPBECryptoAlgo(String encrAlgoName, String cipherTransformation, int keyLength, Optional<Integer> minSaltSize, Optional<Integer> minPwdLength, Function<PBEKeySpec, AlgorithmParameterSpec> algoParamSpecFunc) {
         this.encrAlgoName         = encrAlgoName;
         this.cipherTransformation = cipherTransformation;
         this.keyLength            = keyLength;
+        this.minSaltSize          = minSaltSize;
+        this.minPwdLength         = minPwdLength;
         this.algoParamSpecFunc    = algoParamSpecFunc;
     }
 
@@ -58,6 +63,14 @@ public enum SupportedPBECryptoAlgo {
 
     public String getCipherTransformation() {
         return this.cipherTransformation;
+    }
+
+    public Optional<Integer> getMinSaltSize() {
+        return this.minSaltSize;
+    }
+
+    public Optional<Integer> getMinPwdLength() {
+        return this.minPwdLength;
     }
 
     public AlgorithmParameterSpec getAlgoParamSpec(PBEKeySpec keySpec) {
