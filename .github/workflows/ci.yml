@@ -177,7 +177,9 @@ jobs:
                   echo "Container $container is running!";
               else
                   flag=false;
-                  echo "Container $container is NOT running!";
+                  echo "Container $container is NOT running! Status: $(docker inspect -f '{{.State.Status}}' $container 2>/dev/null)";
+                  echo "docker logs $container:";
+                  docker logs $container
               fi
           done
           
