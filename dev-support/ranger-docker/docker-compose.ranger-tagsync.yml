@@ -7,9 +7,10 @@ services:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - TAGSYNC_VERSION=${TAGSYNC_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-tagsync
     container_name: ranger-tagsync
-    hostname: ranger-tagsync.example.com
+    hostname: ranger-tagsync.rangernw
     stdin_open: true
     tty: true
     networks:
@@ -20,6 +21,7 @@ services:
     environment:
       - TAGSYNC_VERSION
       - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

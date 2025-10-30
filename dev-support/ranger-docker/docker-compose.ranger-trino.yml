@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile.ranger-trino
       args:
         - TRINO_VERSION=${TRINO_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-trino
     hostname: trino
     container_name: ranger-trino
@@ -19,6 +20,7 @@ services:
         condition: service_started
     environment:
       - TRINO_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

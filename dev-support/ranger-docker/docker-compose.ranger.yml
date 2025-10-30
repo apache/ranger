@@ -8,9 +8,10 @@ services:
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger:latest
     container_name: ranger
-    hostname: ranger.example.com
+    hostname: ranger.rangernw
     stdin_open: true
     tty: true
     networks:
@@ -18,6 +19,8 @@ services:
     ports:
       - "6080:6080"
     depends_on:
+      ranger-kdc:
+        condition: service_started
       ranger-zk:
         condition: service_started
       ranger-db:
@@ -27,9 +30,30 @@ services:
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
+      - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
     command:
       - /home/ranger/scripts/ranger.sh
+
+  ranger-kdc:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-kdc
+      args:
+        - REALM=${KERBEROS_REALM}
+        - KDC_HOST=${KERBEROS_KDC_HOST}
+        - MASTER_PASSWORD=${KERBEROS_MASTER_PASSWORD}
+        - ADMIN_PRINCIPAL=${KERBEROS_ADMIN_PRINCIPAL}
+        - ADMIN_PASSWORD=${KERBEROS_ADMIN_PASSWORD}
+    image: ranger-kdc:latest
+    container_name: ranger-kdc
+    hostname: ranger-kdc.rangernw
+    networks:
+      - ranger
+    ports:
+      - "88:88"
+      - "88:88/udp"
+      - "749:749"
 
   ranger-db:
     extends:
@@ -42,13 +66,16 @@ services:
       dockerfile: Dockerfile.ranger-zk
       args:
         - ZK_VERSION=${ZK_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-zk
     container_name: ranger-zk
-    hostname: ranger-zk.example.com
+    hostname: ranger-zk.rangernw
     networks:
       - ranger
     ports:
       - "2181:2181"
+    environment:
+      - KERBEROS_ENABLED
 
   ranger-solr:
     build:
@@ -56,13 +83,22 @@ services:
       dockerfile: Dockerfile.ranger-solr
       args:
         - SOLR_VERSION=${SOLR_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-solr
     container_name: ranger-solr
-    hostname: ranger-solr.example.com
+    hostname: ranger-solr.rangernw
     networks:
       - ranger
     ports:
       - "8983:8983"
+    depends_on:
+      ranger-kdc:
+        condition: service_started
+      ranger-zk:
+        condition: service_started
+    environment:
+      - KERBEROS_ENABLED
+      - KRB5_CONFIG=/etc/krb5.conf
     command:
       - solr-precreate
       - ranger_audits
