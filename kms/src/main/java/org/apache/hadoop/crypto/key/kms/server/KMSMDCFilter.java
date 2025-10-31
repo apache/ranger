@@ -20,6 +20,8 @@ package org.apache.hadoop.crypto.key.kms.server;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.delegation.web.HttpUserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -31,7 +33,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Servlet filter that captures context of the HTTP request to be use in the
@@ -39,6 +43,8 @@ import java.net.URLDecoder;
  */
 @InterfaceAudience.Private
 public class KMSMDCFilter implements Filter {
+    static final Logger logger = LoggerFactory.getLogger(KMSMDCFilter.class);
+
     static final String RANGER_KMS_REST_API_PATH = "/kms/api/status";
 
     private static final String EEK_OP_CODE = "eek_op";
@@ -88,7 +94,12 @@ public class KMSMDCFilter implements Filter {
                     for (String param : queryString.split("&")) {
                         String[] kv = param.split("=", 2);
                         if (kv.length == 2 && "eek_op".equals(kv[0])) {
-                            operation = URLDecoder.decode(kv[1], "UTF-8");
+                            try {
+                                operation = URLDecoder.decode(kv[1], StandardCharsets.UTF_8.name());
+                            } catch (UnsupportedEncodingException | IllegalArgumentException e) {
+                                logger.error("encoding issue in UTF-8 for eek_op value: {}", kv[1], e);
+                                throw new ServletException("Unexpected encoding issue with UTF-8");
+                            }
                             break;
                         }
                     }
