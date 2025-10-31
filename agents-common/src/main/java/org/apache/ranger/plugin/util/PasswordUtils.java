@@ -26,11 +26,10 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.PBEParameterSpec;
 
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -41,14 +40,14 @@ public class PasswordUtils {
     private static final Logger LOG = LoggerFactory.getLogger(PasswordUtils.class);
 
     public static final String PBE_SHA512_AES_128      = "PBEWITHHMACSHA512ANDAES_128";
-    public static final String DEFAULT_CRYPT_ALGO      = "PBEWithMD5AndDES";
+    public static final RangerSupportedCryptoAlgo DEFAULT_CRYPT_ALGO      = RangerSupportedCryptoAlgo.PBEWithMD5AndDES;
     public static final String DEFAULT_ENCRYPT_KEY     = "tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV";
     public static final String DEFAULT_SALT            = "f77aLYLo";
     public static final int    DEFAULT_ITERATION_COUNT = 17;
     public static final byte[] DEFAULT_INITIAL_VECTOR  = new byte[16];
     private static final String LEN_SEPARATOR_STR = ":";
 
-    private final String cryptAlgo;
+    private final RangerSupportedCryptoAlgo cryptAlgo;
     private final int    iterationCount;
     private final char[] encryptKey;
     private final byte[] salt;
@@ -67,12 +66,12 @@ public class PasswordUtils {
         if (cryptAlgoArray != null && cryptAlgoArray.length > 4) {
             int index = 0;
 
-            cryptAlgo      = cryptAlgoArray[index++]; // 0
+            cryptAlgo      = RangerSupportedCryptoAlgo.valueOf(cryptAlgoArray[index++]); // 0
             lEncryptKey    = cryptAlgoArray[index++].toCharArray(); // 1
             lSalt          = cryptAlgoArray[index++].getBytes(); // 2
             iterationCount = Integer.parseInt(cryptAlgoArray[index++]); // 3
 
-            if (needsIv(cryptAlgo)) {
+            if (needsIv(cryptAlgo.getAlgoName())) {
                 iv = Base64.decode(cryptAlgoArray[index++]);
             } else {
                 iv = DEFAULT_INITIAL_VECTOR;
@@ -130,7 +129,7 @@ public class PasswordUtils {
         }
 
         return PBE_SHA512_AES_128.equalsIgnoreCase(cryptoAlgo)
-                || cryptoAlgo.toLowerCase().contains("aes_128") || cryptoAlgo.toLowerCase().contains("aes_256");
+                || cryptoAlgo.toLowerCase().contains("aes_128") || cryptoAlgo.toLowerCase().contains("aes_256") || RangerSupportedCryptoAlgo.PBKDF2WithHmacSHA256.getAlgoName().equalsIgnoreCase(cryptoAlgo);
     }
 
     public static String generateIvIfNeeded(String cryptAlgo) throws NoSuchAlgorithmException {
@@ -158,7 +157,7 @@ public class PasswordUtils {
     }
 
     public String getCryptAlgo() {
-        return cryptAlgo;
+        return cryptAlgo.getAlgoName();
     }
 
     public String getPassword() {
@@ -196,12 +195,12 @@ public class PasswordUtils {
         }
 
         try {
-            Cipher           engine  = Cipher.getInstance(cryptAlgo);
-            PBEKeySpec       keySpec = new PBEKeySpec(encryptKey);
-            SecretKeyFactory skf     = SecretKeyFactory.getInstance(cryptAlgo);
+            Cipher           engine  = Cipher.getInstance(this.cryptAlgo.getCipherTransformation());
+            PBEKeySpec       keySpec = getPBEParameterSpec(encryptKey, cryptAlgo);
+            SecretKeyFactory skf     = SecretKeyFactory.getInstance(cryptAlgo.getAlgoName());
             SecretKey        key     = skf.generateSecret(keySpec);
 
-            engine.init(Cipher.ENCRYPT_MODE, key, new PBEParameterSpec(salt, iterationCount, new IvParameterSpec(iv)));
+            engine.init(Cipher.ENCRYPT_MODE, key, cryptAlgo.getAlgoParamSpec(new PBEParams(keySpec.getSalt() != null ? keySpec.getSalt() : this.salt, this.iterationCount, iv)));
 
             byte[] encryptedStr = engine.doFinal(strToEncrypt.getBytes());
 
@@ -220,12 +219,12 @@ public class PasswordUtils {
 
         try {
             byte[]           decodedPassword = Base64.decode(password);
-            Cipher           engine          = Cipher.getInstance(cryptAlgo);
-            PBEKeySpec       keySpec         = new PBEKeySpec(encryptKey);
-            SecretKeyFactory skf             = SecretKeyFactory.getInstance(cryptAlgo);
+            Cipher           engine          = Cipher.getInstance(cryptAlgo.getCipherTransformation());
+            PBEKeySpec       keySpec         = getPBEParameterSpec(encryptKey, cryptAlgo);
+            SecretKeyFactory skf             = SecretKeyFactory.getInstance(cryptAlgo.getAlgoName());
             SecretKey        key             = skf.generateSecret(keySpec);
 
-            engine.init(Cipher.DECRYPT_MODE, key, new PBEParameterSpec(salt, iterationCount, new IvParameterSpec(iv)));
+            engine.init(Cipher.DECRYPT_MODE, key, cryptAlgo.getAlgoParamSpec(new PBEParams(keySpec.getSalt() != null ? keySpec.getSalt() : this.salt, this.iterationCount, iv)));
 
             String decrypted = new String(engine.doFinal(decodedPassword));
             int    foundAt   = decrypted.indexOf(LEN_SEPARATOR_STR);
@@ -372,6 +371,81 @@ public class PasswordUtils {
             public PasswordGenerator build() {
                 return new PasswordGenerator(this);
             }
+        }
+    }
+
+    private PBEKeySpec getPBEParameterSpec(char[] password, RangerSupportedCryptoAlgo encrAlgo) throws Throwable {
+        PBEKeySpec pbeKeySpec;
+        if (RangerSupportedCryptoAlgo.isFIPSCompliantAlgorithm(encrAlgo)) {
+            pbeKeySpec = new PBEKeySpec(getCompliantPassword(String.copyValueOf(password), encrAlgo).toCharArray(), generateSalt(calculateCompliantSaltSize(salt.length, encrAlgo)), iterationCount, encrAlgo.getKeyLength());
+        } else {
+            pbeKeySpec = new PBEKeySpec(password);
+        }
+        return pbeKeySpec;
+    }
+
+    // For FIPS, salt size must be at least 128 bits, that is, at least 16 in length.
+    private static int calculateCompliantSaltSize(int saltSize, RangerSupportedCryptoAlgo encrAlgo) {
+        int compliantSaltSize = saltSize;
+        if (encrAlgo.getMinSaltSize().isPresent()) {
+            int minSaltSize = encrAlgo.getMinSaltSize().get();
+            while (compliantSaltSize < minSaltSize) {
+                compliantSaltSize = compliantSaltSize * 2;
+            }
+        }
+
+        return compliantSaltSize;
+    }
+
+    /*
+        For FIPS, salt size must be at least 128 bits, that is, at least 16 in length.
+     */
+    private byte[] generateSalt(int saltSize) throws Throwable {
+        MessageDigest md      = MessageDigest.getInstance("SHA-512");
+        byte[]        saltGen = md.digest(salt);
+        byte[] salt = new byte[saltSize];
+        System.arraycopy(saltGen, 0, salt, 0, this.salt.length);
+        return salt;
+    }
+
+    /*
+        For FIPS Algo, InApprovedOnlyMode requires password to be at least 112 bits, that is minimum length should be 14
+        If provided password is less than 14, this method appends the same password till it reaches the minimum length of 14.
+        And it is for FIPS only.
+     */
+    private String getCompliantPassword(String password, RangerSupportedCryptoAlgo encrAlgo) {
+        String newPwd = password;
+
+        if (encrAlgo.getMinPwdLength().isPresent()) {
+            int requiredPwdLength = encrAlgo.getMinPwdLength().get();
+            while (newPwd.length() < requiredPwdLength) {
+                newPwd = newPwd.concat(password);
+            }
+        }
+        return newPwd;
+    }
+
+    public static class PBEParams {
+        private byte[] salt;
+        private int iterationCount;
+        private byte[] iv;
+
+        public PBEParams(byte[] salt, int iterationCount, byte[] iv) {
+            this.salt = salt;
+            this.iterationCount = iterationCount;
+            this.iv = iv;
+        }
+
+        public byte[] getSalt() {
+            return salt;
+        }
+
+        public int getIterationCount() {
+            return iterationCount;
+        }
+
+        public byte[] getIv() {
+            return iv;
         }
     }
 }
