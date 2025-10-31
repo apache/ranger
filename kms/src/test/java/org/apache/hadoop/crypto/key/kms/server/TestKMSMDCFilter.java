@@ -29,7 +29,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -83,6 +87,81 @@ public class TestKMSMDCFilter {
         } catch (Exception e) {
             // optional logging/assertion
         }
+
+        verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    public void testDoFilter_withEekOpParameter() throws Exception {
+        KMSMDCFilter filter = new KMSMDCFilter();
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain chain = mock(FilterChain.class);
+
+        when(request.getRequestURI()).thenReturn("/kms/v1/_eek");
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/kms/v1/_eek"));
+        when(request.getQueryString()).thenReturn("eek_op=generate");
+
+        filter.doFilter(request, response, chain);
+
+        verify(request).setAttribute("eek_op", "generate");
+        verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    public void testDoFilter_withEekPathWithoutEekOp() throws Exception {
+        KMSMDCFilter filter = new KMSMDCFilter();
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain chain = mock(FilterChain.class);
+
+        when(request.getRequestURI()).thenReturn("/kms/v1/_eek");
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/kms/v1/_eek"));
+        when(request.getQueryString()).thenReturn("other_param=value");
+
+        filter.doFilter(request, response, chain);
+
+        verify(request, never()).setAttribute(eq("eek_op"), any());
+        verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    public void testDoFilter_withMalformedEekOpEncoding() throws Exception {
+        KMSMDCFilter filter = new KMSMDCFilter();
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain chain = mock(FilterChain.class);
+
+        when(request.getRequestURI()).thenReturn("/kms/v1/_eek");
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/kms/v1/_eek"));
+        // Malformed percent encoding
+        when(request.getQueryString()).thenReturn("eek_op=%E0%A4%A");
+
+        assertThrows(ServletException.class, () -> {
+            filter.doFilter(request, response, chain);
+        });
+    }
+
+    @Test
+    public void testDoFilter_withOtherPathAndQueryString() throws Exception {
+        KMSMDCFilter filter = new KMSMDCFilter();
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain chain = mock(FilterChain.class);
+
+        when(request.getRequestURI()).thenReturn("/kms/v1/keys");
+        when(request.getMethod()).thenReturn("GET");
+        when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/kms/v1/keys"));
+        when(request.getQueryString()).thenReturn("foo=bar");
+
+        filter.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
     }
