@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.ranger.plugin.model.RangerInlinePolicy;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -72,6 +74,10 @@ public interface RangerAccessRequest {
 
     default Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
         return Collections.emptyMap();
+    }
+
+    default RangerInlinePolicy getInlinePolicy() {
+        return null;
     }
 
     enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS }

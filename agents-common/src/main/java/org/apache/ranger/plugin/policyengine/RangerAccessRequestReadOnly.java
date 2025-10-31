@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.ranger.plugin.model.RangerInlinePolicy;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -152,5 +154,10 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
     @Override
     public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
         return source.getResourceElementMatchingScopes();
+    }
+
+    @Override
+    public RangerInlinePolicy getInlinePolicy() {
+        return source.getInlinePolicy();
     }
 }
