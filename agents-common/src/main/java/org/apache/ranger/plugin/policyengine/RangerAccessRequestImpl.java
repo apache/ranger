@@ -404,7 +404,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
         sb.append("resourceElementMatchingScopes={").append(resourceElementMatchingScopes).append("} ");
         sb.append("clusterName={").append(clusterName).append("} ");
         sb.append("clusterType={").append(clusterType).append("} ");
-        sb.append("inlinePolicy=").append(inlinePolicy).append("} ");
+        sb.append("inlinePolicy={").append(inlinePolicy).append("} ");
 
         sb.append("context={");
         if (context != null) {
