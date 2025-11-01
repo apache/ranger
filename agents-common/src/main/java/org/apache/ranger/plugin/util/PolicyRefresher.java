@@ -130,21 +130,29 @@ public class PolicyRefresher extends Thread {
     public void startRefresher() {
         loadRoles();
         loadPolicy();
+        initRefresher();
+    }
 
-        super.start();
-
+    private void initRefresher() {
+        LOG.debug("==> PolicyRefresher(serviceName={}).initRefresher()", serviceName);
+        try {
+            super.start();
+        } catch (IllegalStateException e) {
+            LOG.error("Failed to start PolicyRefresher thread for serviceName={}", serviceName, e);
+            throw e;
+        }
         policyDownloadTimer = new Timer("policyDownloadTimer", true);
-
         try {
             policyDownloadTimer.schedule(new DownloaderTask(policyDownloadQueue), pollingIntervalMs, pollingIntervalMs);
-
             LOG.debug("Scheduled policyDownloadRefresher to download policies every {} milliseconds", pollingIntervalMs);
-        } catch (IllegalStateException exception) {
-            LOG.error("Error scheduling policyDownloadTimer:", exception);
+        } catch (IllegalArgumentException | IllegalStateException | NullPointerException e) {
+            LOG.error("Error scheduling policyDownloadTimer:", e);
             LOG.error("*** Policies will NOT be downloaded every {} milliseconds ***", pollingIntervalMs);
-
+            policyDownloadTimer.cancel();
             policyDownloadTimer = null;
+            throw e;
         }
+        LOG.debug("<== PolicyRefresher(serviceName={}).initRefresher()", serviceName);
     }
 
     public void stopRefresher() {
@@ -229,8 +237,9 @@ public class PolicyRefresher extends Thread {
                     cacheFile = new File(realCacheDirName + File.separator + realCacheFileName);
                 } else {
                     try {
-                        cacheDirTmp.mkdirs();
-
+                        if (!cacheDirTmp.mkdirs() && !cacheDirTmp.exists()) {
+                            LOG.error("Cannot create cache directory: {}", realCacheDirName);
+                        }
                         cacheFile = new File(realCacheDirName + File.separator + realCacheFileName);
                     } catch (SecurityException ex) {
                         LOG.error("Cannot create cache directory", ex);
@@ -248,24 +257,11 @@ public class PolicyRefresher extends Thread {
                 if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
                     perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
                 }
-
-                Writer writer = null;
-
-                try {
-                    writer = new FileWriter(cacheFile);
-
+                try (Writer writer = new FileWriter(cacheFile)) {
                     JsonUtils.objectToWriter(writer, policies);
+                    deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
                 } catch (Exception excp) {
                     LOG.error("failed to save policies to cache file '{}'", cacheFile.getAbsolutePath(), excp);
-                } finally {
-                    if (writer != null) {
-                        try {
-                            writer.close();
-                            deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
-                        } catch (Exception excp) {
-                            LOG.error("error while closing opened cache file '{}'", cacheFile.getAbsolutePath(), excp);
-                        }
-                    }
                 }
 
                 RangerPerfTracer.log(perf);
@@ -468,10 +464,17 @@ public class PolicyRefresher extends Thread {
             for (File f : filesInParent) {
                 String fileName         = f.getName();
                 int    policyVersionIdx = fileName.lastIndexOf("json_"); // Extract the part after json_
+                if (policyVersionIdx == -1 || policyVersionIdx + 5 >= fileName.length()) {
+                    LOG.warn("Invalid cache file name format: {}", fileName);
+                    continue;
+                }
                 String policyVersionStr = fileName.substring(policyVersionIdx + 5);
-                Long   policyVersion    = Long.valueOf(policyVersionStr);
-
-                policyVersions.add(policyVersion);
+                try {
+                    Long policyVersion = Long.valueOf(policyVersionStr);
+                    policyVersions.add(policyVersion);
+                } catch (NumberFormatException e) {
+                    LOG.warn("Cannot parse version from file: {}", fileName, e);
+                }
             }
         } else {
             LOG.info("No files matching '.+json_*' found");
