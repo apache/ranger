@@ -63,7 +63,7 @@
   </property>
   <property>
     <name>hbase.master.keytab.file</name>
-    <value>/opt/hbase/keytabs/hbase.keytab</value>
+    <value>/etc/keytabs/hbase.keytab</value>
   </property>
   <property>
     <name>hbase.regionserver.kerberos.principal</name>
@@ -71,7 +71,7 @@
   </property>
   <property>
     <name>hbase.regionserver.keytab.file</name>
-    <value>/opt/hbase/keytabs/hbase.keytab</value>
+    <value>/etc/keytabs/hbase.keytab</value>
   </property>
   <property>
     <name>hbase.coprocessor.region.classes</name>

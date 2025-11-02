@@ -34,7 +34,7 @@
   </property>
   <property>
     <name>dfs.namenode.keytab.file</name>
-    <value>/opt/hadoop/keytabs/nn.keytab</value>
+    <value>/etc/keytabs/nn.keytab</value>
   </property>
   <property>
     <name>dfs.namenode.kerberos.internal.spnego.principal</name>
@@ -46,7 +46,7 @@
   </property>
   <property>
     <name>dfs.datanode.keytab.file</name>
-    <value>/opt/hadoop/keytabs/dn.keytab</value>
+    <value>/etc/keytabs/dn.keytab</value>
   </property>
   <property>
     <name>ignore.secure.ports.for.testing</name>
@@ -58,6 +58,6 @@
   </property>
   <property>
     <name>dfs.web.authentication.kerberos.keytab</name>
-    <value>/opt/hadoop/keytabs/HTTP.keytab</value>
+    <value>/etc/keytabs/HTTP.keytab</value>
   </property>
 </configuration>

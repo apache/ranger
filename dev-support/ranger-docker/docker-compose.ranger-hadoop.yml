@@ -14,6 +14,8 @@ services:
     image: ranger-hadoop
     container_name: ranger-hadoop
     hostname: ranger-hadoop.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-hadoop:/etc/keytabs
     stdin_open: true
     tty: true
     networks:

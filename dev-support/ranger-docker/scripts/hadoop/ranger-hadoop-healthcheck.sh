@@ -18,7 +18,7 @@
 
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  kinit -kt /opt/hadoop/keytabs/nn.keytab nn/`hostname -f`@EXAMPLE.COM
+  kinit -kt /etc/keytabs/nn.keytab nn/`hostname -f`@EXAMPLE.COM
 fi
 
 ${HADOOP_HOME}/bin/hdfs dfs -stat /hbase

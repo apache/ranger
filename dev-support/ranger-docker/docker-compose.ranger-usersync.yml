@@ -11,6 +11,8 @@ services:
     image: ranger-usersync
     container_name: ranger-usersync
     hostname: ranger-usersync.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-usersync:/etc/keytabs
     stdin_open: true
     tty: true
     networks:

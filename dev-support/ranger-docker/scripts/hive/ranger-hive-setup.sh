@@ -26,9 +26,7 @@ EOF
 
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  KEYTABS_DIR=/opt/hive/keytabs
-
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh hive ${KEYTABS_DIR} hive:hadoop
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh hive.keytab
 fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml

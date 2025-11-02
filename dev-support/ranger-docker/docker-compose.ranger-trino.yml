@@ -8,6 +8,8 @@ services:
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-trino
     hostname: trino
+    volumes:
+      - ./dist/keytabs/ranger-trino:/etc/keytabs
     container_name: ranger-trino
     stdin_open: true
     tty: true

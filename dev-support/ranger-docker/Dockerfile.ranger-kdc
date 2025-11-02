@@ -38,6 +38,8 @@ COPY ./scripts/kdc/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
 
+VOLUME /etc/keytabs
+
 EXPOSE 88/tcp 88/udp 749/tcp
 
 ENTRYPOINT ["/entrypoint.sh"]

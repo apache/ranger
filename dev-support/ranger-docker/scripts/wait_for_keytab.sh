@@ -16,22 +16,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
+KEYTABS_DIR=/etc/keytabs
 
-if [ "${KERBEROS_ENABLED}" == "true" ]
+KEYTAB=${KEYTABS_DIR}/$1
+
+for i in {1..5}; do
+  if [ -f ${KEYTAB} ]
+  then
+    break
+  else
+    echo [INFO] "Waiting for keytab ${KEYTAB}.."
+    sleep 5
+  fi
+done
+
+if [ -f ${KEYTAB} ]
 then
-  ${RANGER_SCRIPTS}/wait_for_keytab.sh knox.keytab
+  echo "[INFO] Found keytab ${KEYTAB}"
+  exit 0
+else
+  echo "[ERROR] Keytab not found: ${KEYTAB}"
+  exit 1
 fi
-
-chown -R knox:knox /opt/knox/
-
-mkdir -p /opt/knox/logs
-chown -R knox:knox /opt/knox/
-chmod g+w /opt/knox/logs
-
-cd ${RANGER_HOME}/ranger-knox-plugin
-./enable-knox-plugin.sh

@@ -27,9 +27,7 @@ if [ "${SETUP_RANGER}" == "true" ]
 then
   if [ "${KERBEROS_ENABLED}" == "true" ]
   then
-    KEYTABS_DIR=/opt/ranger/tagsync/keytabs
-
-    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rangertagsync ${KEYTABS_DIR} rangertagsync:ranger
+    ${RANGER_SCRIPTS}/wait_for_keytab.sh rangertagsync.keytab
   fi
 
   cd "${RANGER_HOME}"/tagsync || exit

@@ -22,7 +22,7 @@
   </property>
   <property>
     <name>yarn.resourcemanager.keytab</name>
-    <value>/opt/hadoop/keytabs/rm.keytab</value>
+    <value>/etc/keytabs/rm.keytab</value>
   </property>
   <property>
     <name>yarn.nodemanager.principal</name>
@@ -30,6 +30,6 @@
   </property>
   <property>
     <name>yarn.nodemanager.keytab</name>
-    <value>/opt/hadoop/keytabs/nm.keytab</value>
+    <value>/etc/keytabs/nm.keytab</value>
   </property>
 </configuration>

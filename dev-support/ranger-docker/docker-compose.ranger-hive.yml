@@ -15,6 +15,8 @@ services:
     image: ranger-hive
     container_name: ranger-hive
     hostname: ranger-hive.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-hive:/etc/keytabs
     stdin_open: true
     tty: true
     networks:

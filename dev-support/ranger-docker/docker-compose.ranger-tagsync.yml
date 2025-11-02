@@ -11,6 +11,8 @@ services:
     image: ranger-tagsync
     container_name: ranger-tagsync
     hostname: ranger-tagsync.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-tagsync:/etc/keytabs
     stdin_open: true
     tty: true
     networks:

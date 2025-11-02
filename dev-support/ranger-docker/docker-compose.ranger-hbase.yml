@@ -12,6 +12,8 @@ services:
     image: ranger-hbase
     container_name: ranger-hbase
     hostname: ranger-hbase.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-hbase:/etc/keytabs
     stdin_open: true
     tty: true
     networks:

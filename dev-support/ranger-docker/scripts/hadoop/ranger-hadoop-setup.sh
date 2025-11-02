@@ -26,16 +26,14 @@ EOF
 
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  KEYTABS_DIR=/opt/hadoop/keytabs
-
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh hdfs ${KEYTABS_DIR} hdfs:hadoop
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh nn ${KEYTABS_DIR} hdfs:hadoop
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh dn ${KEYTABS_DIR} hdfs:hadoop
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh HTTP ${KEYTABS_DIR} hdfs:hadoop
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh nm ${KEYTABS_DIR} yarn:hadoop
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rm ${KEYTABS_DIR} yarn:hadoop
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh yarn ${KEYTABS_DIR} yarn:hadoop
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh healthcheck ${KEYTABS_DIR} hdfs:hadoop
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh hdfs.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh nn.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh dn.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh nm.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh rm.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh yarn.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh healthcheck.keytab
 fi
 
 cp ${RANGER_SCRIPTS}/core-site.xml ${HADOOP_HOME}/etc/hadoop/core-site.xml

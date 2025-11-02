@@ -12,6 +12,8 @@ services:
     image: ranger:latest
     container_name: ranger
     hostname: ranger.rangernw
+    volumes:
+      - ./dist/keytabs/ranger:/etc/keytabs
     stdin_open: true
     tty: true
     networks:
@@ -48,6 +50,8 @@ services:
     image: ranger-kdc:latest
     container_name: ranger-kdc
     hostname: ranger-kdc.rangernw
+    volumes:
+      - ./dist/keytabs:/etc/keytabs
     networks:
       - ranger
     ports:
@@ -87,6 +91,8 @@ services:
     image: ranger-solr
     container_name: ranger-solr
     hostname: ranger-solr.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-solr:/etc/keytabs
     networks:
       - ranger
     ports:

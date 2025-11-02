@@ -26,9 +26,7 @@ EOF
 
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  KEYTABS_DIR=/opt/hbase/keytabs
-
-  ${RANGER_SCRIPTS}/create_principal_and_keytab.sh hbase ${KEYTABS_DIR} hbase:hadoop
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh hbase.keytab
 fi
 
 cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml

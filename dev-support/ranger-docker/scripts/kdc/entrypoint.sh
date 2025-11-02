@@ -25,6 +25,80 @@ ADMIN_PRINC="${ADMIN_PRINCIPAL:-admin/admin}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-adminpassword}"
 
 DB_DIR=/var/kerberos/krb5kdc
+KEYTABS_DIR=/etc/keytabs
+
+function create_principal_and_keytab() {
+  principal_name=$1
+  container_name=$2
+
+  principal=${principal_name}/${container_name}.rangernw
+  keytab=${KEYTABS_DIR}/${container_name}/${principal_name}.keytab
+
+  mkdir -p ${KEYTABS_DIR}/${container_name}
+
+  rm -f ${keytab}
+
+  echo "Creating kerberos principal ${principal} .."
+  for i in {1..5}; do
+    kadmin.local -q "addprinc -randkey ${principal}"
+
+    if [ $? -ne 0 ]; then
+      echo "[ERROR] Failed to create kerberos principal..will retry after 5 seconds"
+      sleep 5
+    else
+      echo "[INFO] created kerberos principal ${principal}"
+      break
+    fi
+  done
+
+
+  echo "Creating keytab for principal ${principal} .."
+  for i in {1..5}; do
+    kadmin.local -q "ktadd -k ${keytab} ${principal}"
+
+    if [ $? -ne 0 ]; then
+      echo "[ERROR] Failed to create keytab for principal..will retry after 5 seconds"
+      sleep 5
+    else
+      echo "[INFO] created keytab kerberos principal ${principal} in ${keytab}"
+      ls -lFa ${keytab}
+      break
+    fi
+  done
+
+  chmod 444 ${keytab}
+}
+
+function create_keytabs() {
+  create_principal_and_keytab HTTP         ranger
+  create_principal_and_keytab rangeradmin  ranger
+  create_principal_and_keytab rangerlookup ranger
+
+  create_principal_and_keytab rangertagsync ranger-tagsync
+
+  create_principal_and_keytab rangerusersync ranger-usersync
+
+  create_principal_and_keytab rangerkms ranger-kms
+
+  create_principal_and_keytab dn          ranger-hadoop
+  create_principal_and_keytab hdfs        ranger-hadoop
+  create_principal_and_keytab healthcheck ranger-hadoop
+  create_principal_and_keytab HTTP        ranger-hadoop
+  create_principal_and_keytab nm          ranger-hadoop
+  create_principal_and_keytab nn          ranger-hadoop
+  create_principal_and_keytab rm          ranger-hadoop
+  create_principal_and_keytab yarn        ranger-hadoop
+
+  create_principal_and_keytab hbase ranger-hbase
+
+  create_principal_and_keytab hive ranger-hive
+
+  create_principal_and_keytab kafka ranger-kafka
+
+  create_principal_and_keytab knox ranger-knox
+
+  create_principal_and_keytab HTTP ranger-solr
+}
 
 # ensure directories
 mkdir -p $DB_DIR
@@ -40,6 +114,8 @@ if [ ! -f $DB_DIR/principal ]; then
   # add kadmind keytab
   kadmin.local -q "ktadd -k /etc/krb5kdc/kadm5.keytab kadmin/admin@$REALM"
   echo "Database initialized"
+
+  create_keytabs
 else
   echo "KDC DB already exists; skipping create"
 fi
@@ -55,6 +131,7 @@ KDC_PID=$!
 
 echo "Starting kadmind..."
 /usr/sbin/kadmind -nofork
+
 # if kadmind exits, bring down krb5kdc
 kill $KDC_PID || true
 wait $KDC_PID || true

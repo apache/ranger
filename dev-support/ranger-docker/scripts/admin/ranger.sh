@@ -27,11 +27,9 @@ if [ "${SETUP_RANGER}" == "true" ]
 then
   if [ "${KERBEROS_ENABLED}" == "true" ]
   then
-    KEYTABS_DIR=/opt/ranger/admin/keytabs
-
-    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rangeradmin ${KEYTABS_DIR} ranger:ranger
-    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh rangerlookup ${KEYTABS_DIR} ranger:ranger
-    ${RANGER_SCRIPTS}/create_principal_and_keytab.sh HTTP ${KEYTABS_DIR} ranger:ranger
+    ${RANGER_SCRIPTS}/wait_for_keytab.sh rangeradmin.keytab
+    ${RANGER_SCRIPTS}/wait_for_keytab.sh rangerlookup.keytab
+    ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
   fi
 
   cd "${RANGER_HOME}"/admin || exit

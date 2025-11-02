@@ -45,7 +45,7 @@
     </property>
     <property>
         <name>hive.server2.authentication.kerberos.keytab</name>
-        <value>/opt/hive/keytabs/hive.keytab</value>
+        <value>/etc/keytabs/hive.keytab</value>
     </property>
     <property>
         <name>hive.metastore.sasl.enabled</name>
@@ -57,7 +57,7 @@
     </property>
     <property>
         <name>hive.metastore.kerberos.keytab.file</name>
-        <value>/opt/hive/keytabs/hive.keytab</value>
+        <value>/etc/keytabs/hive.keytab</value>
     </property>
     <property>
         <name>hive.server2.enable.doAs</name>

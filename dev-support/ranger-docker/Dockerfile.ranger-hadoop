@@ -23,6 +23,7 @@ ARG HDFS_PLUGIN_VERSION
 ARG YARN_PLUGIN_VERSION
 ARG TEZ_VERSION
 
+VOLUME /etc/keytabs
 
 COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz /home/ranger/dist/
@@ -39,7 +40,7 @@ COPY ./scripts/hadoop/ranger-yarn-plugin-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/core-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/hdfs-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/yarn-site.xml                         ${RANGER_SCRIPTS}/
-COPY ./scripts/kdc/create_principal_and_keytab.sh           ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_keytab.sh                           ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf                                /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
@@ -59,7 +60,7 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
     useradd -g hadoop -ms /bin/bash healthcheck && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/create_principal_and_keytab.sh && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
     chown healthcheck:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
     chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
 

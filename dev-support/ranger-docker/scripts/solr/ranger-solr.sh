@@ -22,9 +22,7 @@ if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
 then
   if [ "${KERBEROS_ENABLED}" == "true" ]
   then
-    KEYTABS_DIR=/opt/solr/keytabs
-
-    /home/ranger/scripts/create_principal_and_keytab.sh HTTP ${KEYTABS_DIR} solr
+    /home/ranger/scripts/wait_for_keytab.sh HTTP.keytab
   fi
 
   touch "${SOLR_INSTALL_DIR}"/.setupDone
@@ -33,7 +31,7 @@ fi
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
   export SOLR_AUTH_TYPE=kerberos
-  export SOLR_AUTHENTICATION_OPTS="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf -Dsolr.kerberos.jaas.appname=Client -Djava.security.krb5.conf=/etc/krb5.conf -Dsolr.kerberos.keytab=/opt/solr/keytabs/HTTP.keytab -Dsolr.kerberos.principal=HTTP/ranger-solr.rangernw@EXAMPLE.COM -Dsolr.kerberos.cookie.domain=ranger-solr -Dsolr.kerberos.name.rules=RULE:[2:\$1/\$2@\$0]([ndj]n/.*@EXAMPLE\.COM)s/.*/hdfs/\
+  export SOLR_AUTHENTICATION_OPTS="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf -Dsolr.kerberos.jaas.appname=Client -Djava.security.krb5.conf=/etc/krb5.conf -Dsolr.kerberos.keytab=/etc/keytabs/HTTP.keytab -Dsolr.kerberos.principal=HTTP/ranger-solr.rangernw@EXAMPLE.COM -Dsolr.kerberos.cookie.domain=ranger-solr -Dsolr.kerberos.name.rules=RULE:[2:\$1/\$2@\$0]([ndj]n/.*@EXAMPLE\.COM)s/.*/hdfs/\
 RULE:[2:\$1/\$2@\$0]([rn]m/.*@EXAMPLE\.COM)s/.*/yarn/\
 RULE:[2:\$1/\$2@\$0](jhs/.*@EXAMPLE\.COM)s/.*/mapred/\
 DEFAULT"
