@@ -16,7 +16,6 @@
  */
 package org.apache.hadoop.crypto.key.kms.server;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -33,7 +32,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestKMSExceptionsProvider {
     @Test
     public void testGetOneLineMessage() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
