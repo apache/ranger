@@ -97,8 +97,8 @@ public class KMSMDCFilter implements Filter {
                             try {
                                 operation = URLDecoder.decode(kv[1], StandardCharsets.UTF_8.name());
                             } catch (UnsupportedEncodingException | IllegalArgumentException e) {
-                                logger.error("encoding issue in UTF-8 for eek_op value: {}", kv[1], e);
-                                throw new ServletException("Unexpected encoding issue with UTF-8");
+                                logger.error("Failed to decode eek_op parameter value using UTF-8 encoding: {}", kv[1], e);
+                                throw new ServletException("Failed to decode eek_op parameter: '" + kv[1] + "'. " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
                             }
                             break;
                         }
