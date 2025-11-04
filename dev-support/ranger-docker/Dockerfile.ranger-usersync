@@ -20,12 +20,17 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
 ARG USERSYNC_VERSION
 
+VOLUME /etc/keytabs
+
 COPY ./dist/version                                    /home/ranger/dist/
 COPY ./dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz /home/ranger/dist/
 
-COPY ./scripts/ranger-usersync.sh                 ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-usersync-install.properties ${RANGER_SCRIPTS}/
-COPY ./scripts/ugsync-file-source.csv             ${RANGER_SCRIPTS}/
+COPY ./scripts/usersync/ranger-usersync.sh                 ${RANGER_SCRIPTS}/
+COPY ./scripts/usersync/ranger-usersync-install.properties ${RANGER_SCRIPTS}/
+COPY ./scripts/usersync/ugsync-file-source.csv             ${RANGER_SCRIPTS}/
+COPY ./scripts/hadoop/core-site.xml                        ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_keytab.sh                          ${RANGER_SCRIPTS}/
+COPY ./scripts/kdc/krb5.conf                               /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${USERSYNC_VERSION}-usersync ${RANGER_HOME}/usersync && \
@@ -42,6 +47,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${USERSYNC_VERSION}-usersync.tar.gz --dire
     ln -s /etc/init.d/ranger-usersync /etc/rc3.d/K00ranger-usersync && \
     ln -s ${RANGER_HOME}/usersync/ranger-usersync-services.sh /usr/bin/ranger-usersync && \
     chown -R ranger:ranger ${RANGER_HOME}/usersync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-usersync.sh
 
 USER ranger

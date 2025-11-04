@@ -21,8 +21,10 @@ FROM mariadb:${MARIADB_VERSION}
 USER 0
 
 RUN mkdir -p /docker-entrypoint-initdb.d /home/mysql
-COPY config/init_mysql.sql /docker-entrypoint-initdb.d/
-COPY config/my.cnf /home/mysql/.my.cnf
+
+COPY ./scripts/rdbms/init_mysql.sql /docker-entrypoint-initdb.d/
+COPY ./scripts/rdbms/my.cnf        /home/mysql/.my.cnf
+
 RUN sed -i "s/skip-name-resolve/# skip-name-resolve/" /etc/mysql/mariadb.cnf
 RUN chown -R mysql:mysql /docker-entrypoint-initdb.d/ /home/mysql
 
