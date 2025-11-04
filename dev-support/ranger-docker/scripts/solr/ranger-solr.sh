@@ -30,11 +30,18 @@ fi
 
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  export SOLR_AUTH_TYPE=kerberos
-  export SOLR_AUTHENTICATION_OPTS="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf -Dsolr.kerberos.jaas.appname=Client -Djava.security.krb5.conf=/etc/krb5.conf -Dsolr.kerberos.keytab=/etc/keytabs/HTTP.keytab -Dsolr.kerberos.principal=HTTP/ranger-solr.rangernw@EXAMPLE.COM -Dsolr.kerberos.cookie.domain=ranger-solr -Dsolr.kerberos.name.rules=RULE:[2:\$1/\$2@\$0]([ndj]n/.*@EXAMPLE\.COM)s/.*/hdfs/\
+  JAAS_CONFIG="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf"
+  JAAS_APPNAME="-Dsolr.kerberos.jaas.appname=Client"
+  KRB5_CONF="-Djava.security.krb5.conf=/etc/krb5.conf"
+  KERBEROS_KEYTAB="-Dsolr.kerberos.keytab=/etc/keytabs/HTTP.keytab"
+  KERBEROS_PRINCIPAL="-Dsolr.kerberos.principal=HTTP/ranger-solr.rangernw@EXAMPLE.COM"
+  COOKIE_DOMAIN="-Dsolr.kerberos.cookie.domain=ranger-solr"
+  KERBEROS_NAME_RULES="-Dsolr.kerberos.name.rules=RULE:[2:\$1/\$2@\$0]([ndj]n/.*@EXAMPLE\.COM)s/.*/hdfs/\
 RULE:[2:\$1/\$2@\$0]([rn]m/.*@EXAMPLE\.COM)s/.*/yarn/\
 RULE:[2:\$1/\$2@\$0](jhs/.*@EXAMPLE\.COM)s/.*/mapred/\
 DEFAULT"
+
+  export SOLR_AUTHENTICATION_OPTS="${JAAS_CONFIG} ${JAAS_APPNAME} ${KRB5_CONF} ${KERBEROS_KEYTAB} ${KERBEROS_PRINCIPAL} ${COOKIE_DOMAIN} ${KERBEROS_NAME_RULES}"
 fi
 
 su -p -c "export PATH=${PATH} && /opt/docker-solr/scripts/docker-entrypoint.sh $*" solr

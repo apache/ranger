@@ -16,11 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+RETRY_COUNT="${KEYTAB_RETRY_COUNT:-5}"
 KEYTABS_DIR=/etc/keytabs
 
 KEYTAB=${KEYTABS_DIR}/$1
 
-for i in {1..5}; do
+for i in {1..RETRY_COUNT}; do
   if [ -f ${KEYTAB} ]
   then
     break
