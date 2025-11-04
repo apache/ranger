@@ -8,9 +8,12 @@ services:
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - KMS_VERSION=${KMS_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-kms:latest
     container_name: ranger-kms
-    hostname: ranger-kms.example.com
+    hostname: ranger-kms.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-kms:/etc/keytabs
     stdin_open: true
     tty: true
     networks:
@@ -23,6 +26,7 @@ services:
     environment:
       - KMS_VERSION
       - RANGER_DB_TYPE
+      - KERBEROS_ENABLED
     command:
       - /home/ranger/scripts/ranger-kms.sh
 

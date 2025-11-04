@@ -25,6 +25,7 @@ ARG HIVE_PLUGIN_VERSION
 ARG TEZ_VERSION
 ARG RANGER_DB_TYPE
 
+VOLUME /etc/keytabs
 
 COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz /home/ranger/dist/
@@ -35,10 +36,13 @@ COPY ./downloads/postgresql-42.2.16.jre7.jar                 /home/ranger/dist/
 COPY ./downloads/mysql-connector-java-8.0.28.jar             /home/ranger/dist/
 COPY ./downloads/ojdbc8.jar                                  /home/ranger/dist/
 
-COPY ./scripts/ranger-hive-setup.sh                     /home/ranger/scripts/
-COPY ./scripts/ranger-hive.sh                           /home/ranger/scripts/
-COPY ./scripts/ranger-hive-plugin-install.properties    /home/ranger/scripts/
-COPY ./scripts/hive-site-${RANGER_DB_TYPE}.xml          /home/ranger/scripts/hive-site.xml
+COPY ./scripts/hive/ranger-hive-setup.sh                  ${RANGER_SCRIPTS}/
+COPY ./scripts/hive/ranger-hive.sh                        ${RANGER_SCRIPTS}/
+COPY ./scripts/hive/ranger-hive-plugin-install.properties ${RANGER_SCRIPTS}/
+COPY ./scripts/hive/hive-site-${RANGER_DB_TYPE}.xml       ${RANGER_SCRIPTS}/hive-site.xml
+COPY ./scripts/hadoop/core-site.xml                       ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_keytab.sh                         ${RANGER_SCRIPTS}/
+COPY ./scripts/kdc/krb5.conf                              /etc/krb5.conf
 
 RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
     ln -s /opt/apache-hive-${HIVE_VERSION}-bin /opt/hive && \
@@ -55,7 +59,8 @@ RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz 
     tar xvfz /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin /opt/ranger/ranger-hive-plugin && \
     rm -f /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz && \
-    cp -f /home/ranger/scripts/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties && \
+    cp -f ${RANGER_SCRIPTS}/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hive-setup.sh ${RANGER_SCRIPTS}/ranger-hive.sh
 
 ENV HIVE_HOME=/opt/hive
