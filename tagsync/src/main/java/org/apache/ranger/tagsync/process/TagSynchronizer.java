@@ -21,7 +21,7 @@ package org.apache.ranger.tagsync.process;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.tagsync.ha.TagSyncHAInitializerImpl;

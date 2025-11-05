@@ -18,7 +18,7 @@
 package org.apache.ranger.authorization.elasticsearch.authorizer;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;

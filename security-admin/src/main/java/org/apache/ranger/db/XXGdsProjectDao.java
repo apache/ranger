@@ -19,7 +19,7 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGdsProject;

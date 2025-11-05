@@ -26,7 +26,7 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceResource;

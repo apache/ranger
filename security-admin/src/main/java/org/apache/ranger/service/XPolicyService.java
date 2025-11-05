@@ -19,7 +19,7 @@
 
 package org.apache.ranger.service;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.MessageEnums;

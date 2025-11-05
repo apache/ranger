@@ -19,7 +19,7 @@
 
 package org.apache.ranger.biz;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.amazon.cloudwatch.CloudWatchAccessAuditsService;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;

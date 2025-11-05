@@ -19,7 +19,7 @@
 
 package org.apache.ranger.ha;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessReadWriteLock;
 import org.apache.hadoop.conf.Configuration;

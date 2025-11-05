@@ -22,7 +22,7 @@
  */
 package org.apache.ranger.common;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;

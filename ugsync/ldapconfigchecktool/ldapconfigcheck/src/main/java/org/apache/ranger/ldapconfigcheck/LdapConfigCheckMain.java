@@ -19,7 +19,6 @@
 
 package org.apache.ranger.ldapconfigcheck;
 
-import org.apache.commons.lang.NullArgumentException;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -159,11 +158,11 @@ public class LdapConfigCheckMain {
         auth.discoverAuthProperties();
 
         if (config.getAuthUsername() == null || config.getAuthUsername().isEmpty()) {
-            throw new NullArgumentException("ranger.admin.auth.sampleuser ");
+        	throw new IllegalArgumentException("ranger.admin.auth.sampleuser must not be null or empty");
         }
 
         if (config.getAuthPassword() == null || config.getAuthPassword().isEmpty()) {
-            throw new NullArgumentException("ranger.admin.auth.samplepassword ");
+            throw new IllegalArgumentException("ranger.admin.auth.samplepassword must not be null or empty");
         }
 
         if (auth.isAuthenticated(config.getLdapUrl(), config.getLdapBindDn(), config.getLdapBindPassword(), config.getAuthUsername(), config.getAuthPassword())) {
@@ -175,7 +174,7 @@ public class LdapConfigCheckMain {
 
     private static void retrieveUsersGroups(LdapContext ldapContext, UserSync userSyncObj, String retrieve) throws Throwable {
         if (retrieve == null || userSyncObj == null || ldapContext == null) {
-            throw new NullArgumentException("Input validation failed while retrieving Users or Groups");
+            throw new IllegalArgumentException("Input validation failed while retrieving Users or Groups");
         }
 
         if (retrieve.equalsIgnoreCase("users")) {
@@ -191,15 +190,15 @@ public class LdapConfigCheckMain {
 
     private static void retrieveUsers(LdapContext ldapContext, UserSync userSyncObj) throws Throwable {
         if (userSyncObj.getUserNameAttribute() == null || userSyncObj.getUserNameAttribute().isEmpty()) {
-            throw new NullArgumentException("ranger.usersync.ldap.user.nameattribute ");
+            throw new IllegalArgumentException("ranger.usersync.ldap.user.nameattribute must not be null or empty");
         }
 
         if (userSyncObj.getUserObjClassName() == null || userSyncObj.getUserObjClassName().isEmpty()) {
-            throw new NullArgumentException("ranger.usersync.ldap.user.objectclass ");
+            throw new IllegalArgumentException("ranger.usersync.ldap.user.objectclass must not be null or empty");
         }
 
         if ((userSyncObj.getUserSearchBase() == null || userSyncObj.getUserSearchBase().isEmpty()) && (userSyncObj.getSearchBase() == null || userSyncObj.getSearchBase().isEmpty())) {
-            throw new NullArgumentException("ranger.usersync.ldap.user.searchbase and ranger.usersync.ldap.searchBase");
+            throw new IllegalArgumentException("ranger.usersync.ldap.user.searchbase and ranger.usersync.ldap.searchBase must not be null or empty");
         }
 
         userSyncObj.getAllUsers(ldapContext);
@@ -207,19 +206,19 @@ public class LdapConfigCheckMain {
 
     private static void retrieveGroups(LdapContext ldapContext, UserSync userSyncObj) throws Throwable {
         if (userSyncObj.getGroupNameAttrName() == null || userSyncObj.getGroupNameAttrName().isEmpty()) {
-            throw new NullArgumentException("ranger.usersync.group.nameattribute ");
+            throw new IllegalArgumentException("ranger.usersync.group.nameattribute must not be null or empty");
         }
 
         if (userSyncObj.getGroupObjClassName() == null || userSyncObj.getGroupObjClassName().isEmpty()) {
-            throw new NullArgumentException("ranger.usersync.group.objectclass ");
+            throw new IllegalArgumentException("ranger.usersync.group.objectclass must not be null or empty");
         }
 
         if (userSyncObj.getGroupMemberName() == null || userSyncObj.getGroupMemberName().isEmpty()) {
-            throw new NullArgumentException("ranger.usersync.group.memberattributename ");
+            throw new IllegalArgumentException("ranger.usersync.group.memberattributename must not be null or empty");
         }
 
         if ((userSyncObj.getGroupSearchBase() == null || userSyncObj.getGroupSearchBase().isEmpty()) && (userSyncObj.getSearchBase() == null || userSyncObj.getSearchBase().isEmpty())) {
-            throw new NullArgumentException("ranger.usersync.group.searchbase and ranger.usersync.ldap.searchBase");
+            throw new IllegalArgumentException("ranger.usersync.group.searchbase and ranger.usersync.ldap.searchBase must not be null or empty");
         }
 
         userSyncObj.getAllGroups(ldapContext);

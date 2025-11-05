@@ -17,7 +17,7 @@
 
 package org.apache.ranger.authorization.kylin.authorizer;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.util.Pair;

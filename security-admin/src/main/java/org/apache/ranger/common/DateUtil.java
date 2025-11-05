@@ -22,7 +22,7 @@
  */
 package org.apache.ranger.common;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;

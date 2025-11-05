@@ -30,7 +30,7 @@ import io.prestosql.spi.security.SystemAccessControl;
 import io.prestosql.spi.security.SystemSecurityContext;
 import io.prestosql.spi.security.ViewExpression;
 import io.prestosql.spi.type.Type;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;

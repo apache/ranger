@@ -23,7 +23,7 @@ import be.ceau.chart.LineChart;
 import be.ceau.chart.color.Color;
 import be.ceau.chart.data.LineData;
 import be.ceau.chart.dataset.LineDataset;
-import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
 import org.apache.hadoop.thirdparty.com.google.common.base.Splitter;
 import org.apache.hadoop.thirdparty.com.google.common.cache.CacheBuilder;

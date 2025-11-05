@@ -18,7 +18,7 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hbase.security.AccessDeniedException;
 import org.apache.hadoop.hbase.security.User;
 import org.apache.hadoop.thirdparty.com.google.common.base.MoreObjects;

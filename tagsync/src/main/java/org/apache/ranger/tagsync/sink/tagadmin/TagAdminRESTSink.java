@@ -20,7 +20,7 @@
 package org.apache.ranger.tagsync.sink.tagadmin;
 
 import com.sun.jersey.api.client.ClientResponse;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.RangerRESTClient;

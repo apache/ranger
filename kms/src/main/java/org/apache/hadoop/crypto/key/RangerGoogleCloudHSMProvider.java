@@ -29,7 +29,7 @@ import com.google.cloud.kms.v1.KeyRing;
 import com.google.cloud.kms.v1.KeyRingName;
 import com.google.cloud.kms.v1.ProtectionLevel;
 import com.google.protobuf.ByteString;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.slf4j.Logger;
