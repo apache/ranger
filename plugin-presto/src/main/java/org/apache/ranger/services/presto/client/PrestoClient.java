@@ -552,12 +552,11 @@ public class PrestoClient extends BaseClient implements Closeable {
             LOG.error("Unable to close Presto SQL connection", e);
         }
     }
-    
+
     private static String escapeSql(String str) {
         if (str == null) {
             return null;
         }
         return StringUtils.replace(str, "'", "''");
     }
-
 }
