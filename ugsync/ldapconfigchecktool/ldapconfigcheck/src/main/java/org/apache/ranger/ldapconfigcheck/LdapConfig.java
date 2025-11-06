@@ -97,7 +97,7 @@ public class LdapConfig {
         String val = prop.getProperty(LGSYNC_LDAP_BIND_DN);
 
         if (val == null || val.trim().isEmpty()) {
-        	 throw new IllegalArgumentException(LGSYNC_LDAP_BIND_DN + " must not be null or empty");
+            throw new IllegalArgumentException(LGSYNC_LDAP_BIND_DN + " must not be null or empty");
         }
 
         return val;
