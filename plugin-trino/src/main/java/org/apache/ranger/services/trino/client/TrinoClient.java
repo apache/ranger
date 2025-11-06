@@ -14,7 +14,6 @@
 package org.apache.ranger.services.trino.client;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
@@ -572,6 +571,7 @@ public class TrinoClient
             LOG.error("Unable to close Trino SQL connection", e);
         }
     }
+
     private static String escapeSql(String str) {
         if (str == null) {
             return null;
