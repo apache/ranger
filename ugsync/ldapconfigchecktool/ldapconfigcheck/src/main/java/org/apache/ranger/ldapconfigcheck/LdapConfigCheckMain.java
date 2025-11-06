@@ -19,7 +19,6 @@
 
 package org.apache.ranger.ldapconfigcheck;
 
-
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.ldap.Control;
@@ -158,7 +157,7 @@ public class LdapConfigCheckMain {
         auth.discoverAuthProperties();
 
         if (config.getAuthUsername() == null || config.getAuthUsername().isEmpty()) {
-        	throw new IllegalArgumentException("ranger.admin.auth.sampleuser must not be null or empty");
+            throw new IllegalArgumentException("ranger.admin.auth.sampleuser must not be null or empty");
         }
 
         if (config.getAuthPassword() == null || config.getAuthPassword().isEmpty()) {
