@@ -41,7 +41,7 @@
             <include>commons-collections:commons-collections</include>
             <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
             <include>commons-io:commons-io:jar:${commons.io.version}</include>
-            <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
+            <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
             <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
             <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
             <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
