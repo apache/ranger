@@ -98,7 +98,7 @@ public class RangerBasePlugin {
     private final List<RangerChainedPlugin>   chainedPlugins;
     private final boolean                     dedupStrings;
     private       PolicyRefresher             refresher;
-    private       RangerPolicyEngine          policyEngine;
+    private volatile RangerPolicyEngine       policyEngine;
     private       RangerAuthContext           currentAuthContext;
     private       RangerAccessResultProcessor resultProcessor;
     private       RangerRoles                 roles;
