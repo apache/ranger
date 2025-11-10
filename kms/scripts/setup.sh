@@ -36,8 +36,8 @@ usage() {
 
 log() {
    local prefix="$(date +%Y-%m-%d\ %H:%M:%S,%3N) "
-   echo "${prefix} $@" >> $LOGFILE
-   echo "${prefix} $@"
+   echo "${prefix} $*" >> $LOGFILE
+   echo "${prefix} $*"
 }
 #eval `grep -v '^XAAUDIT.' ${PROPFILE} | grep -v '^$' | grep -v '^#'`
 get_prop(){
@@ -1148,7 +1148,7 @@ EOF
 	else
 	    useringroup=`id ${unix_user}`
         useringrouparr=(${useringroup// / })
-	    if [[  ${useringrouparr[1]} =~ "(${unix_group})" ]]
+	    if [[  ${useringrouparr[1]} =~ \(${unix_group}\) ]]
 		then
 			log "[I] the ${unix_user} user already exists and belongs to group ${unix_group}"
 		else
@@ -1289,7 +1289,7 @@ setup_install_files(){
 		then
 			DB_SSL_PARAM="' -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		else
-			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.keyStoreType={javax_net_ssl_keyStore_type} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
+			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.keyStoreType=${javax_net_ssl_keyStore_type} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		fi
 		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
