@@ -20,7 +20,7 @@
 package org.apache.ranger.plugin.store;
 
 import org.apache.commons.collections.Predicate;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
 

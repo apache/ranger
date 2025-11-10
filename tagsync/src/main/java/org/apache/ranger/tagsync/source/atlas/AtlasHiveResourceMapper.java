@@ -19,7 +19,7 @@
 
 package org.apache.ranger.tagsync.source.atlas;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;

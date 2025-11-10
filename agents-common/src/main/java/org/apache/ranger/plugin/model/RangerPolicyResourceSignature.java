@@ -22,7 +22,7 @@ package org.apache.ranger.plugin.model;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;

@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;

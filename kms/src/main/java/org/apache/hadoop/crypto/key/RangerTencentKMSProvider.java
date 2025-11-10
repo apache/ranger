@@ -27,7 +27,7 @@ import com.tencentcloudapi.kms.v20190118.models.DescribeKeyResponse;
 import com.tencentcloudapi.kms.v20190118.models.EncryptRequest;
 import com.tencentcloudapi.kms.v20190118.models.EncryptResponse;
 import com.tencentcloudapi.kms.v20190118.models.KeyMetadata;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -23,7 +23,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerGds.RangerGdsMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;

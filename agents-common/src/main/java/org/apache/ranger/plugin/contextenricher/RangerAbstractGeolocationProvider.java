@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.geo.RangerGeolocationData;
 import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;

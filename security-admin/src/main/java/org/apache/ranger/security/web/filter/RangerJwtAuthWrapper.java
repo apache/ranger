@@ -18,7 +18,7 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.UserSessionBase;

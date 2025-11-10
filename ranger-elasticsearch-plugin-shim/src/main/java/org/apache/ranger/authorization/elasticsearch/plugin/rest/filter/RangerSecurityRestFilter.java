@@ -17,7 +17,7 @@
 
 package org.apache.ranger.authorization.elasticsearch.plugin.rest.filter;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.elasticsearch.plugin.authc.user.UsernamePasswordToken;
 import org.apache.ranger.authorization.elasticsearch.plugin.utils.RequestUtils;
 import org.elasticsearch.ElasticsearchStatusException;

@@ -22,7 +22,7 @@ package org.apache.ranger.plugin.policyengine;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.junit.Test;

@@ -263,7 +263,7 @@ public class RangerGdsEnricher extends RangerAbstractContextEnricher {
             LOG.debug("==> RangerGdsInfoRefresher(serviceName={}).loadFromCache()", getServiceName());
 
             ServiceGdsInfo ret       = null;
-            File           cacheFile = org.apache.commons.lang.StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
+            File           cacheFile = org.apache.commons.lang3.StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
 
             if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
                 try (Reader reader = new FileReader(cacheFile)) {

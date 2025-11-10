@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;

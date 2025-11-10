@@ -17,7 +17,7 @@
 
 package org.apache.ranger.services.yarn;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;

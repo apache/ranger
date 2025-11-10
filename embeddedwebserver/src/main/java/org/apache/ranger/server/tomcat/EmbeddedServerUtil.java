@@ -19,7 +19,7 @@
 
 package org.apache.ranger.server.tomcat;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.util.XMLUtils;
 
 import java.util.ArrayList;

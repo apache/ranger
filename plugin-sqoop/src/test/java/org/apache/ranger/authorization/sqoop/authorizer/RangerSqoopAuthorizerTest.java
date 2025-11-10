@@ -17,7 +17,7 @@
 
 package org.apache.ranger.authorization.sqoop.authorizer;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.core.ConfigurationConstants;
 import org.apache.sqoop.core.SqoopConfiguration;

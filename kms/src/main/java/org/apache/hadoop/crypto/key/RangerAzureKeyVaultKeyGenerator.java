@@ -25,7 +25,7 @@ import com.microsoft.azure.keyvault.models.custom.KeyBundle;
 import com.microsoft.azure.keyvault.requests.CreateKeyRequest;
 import com.microsoft.azure.keyvault.webkey.JsonWebKeyEncryptionAlgorithm;
 import com.microsoft.azure.keyvault.webkey.JsonWebKeyType;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;

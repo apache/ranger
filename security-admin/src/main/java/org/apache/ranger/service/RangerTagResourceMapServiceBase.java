@@ -19,7 +19,7 @@
 
 package org.apache.ranger.service;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;

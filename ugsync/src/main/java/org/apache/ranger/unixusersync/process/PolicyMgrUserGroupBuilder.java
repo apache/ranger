@@ -22,7 +22,7 @@ package org.apache.ranger.unixusersync.process;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;

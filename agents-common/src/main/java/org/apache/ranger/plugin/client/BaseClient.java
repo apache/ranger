@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.client;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.slf4j.Logger;

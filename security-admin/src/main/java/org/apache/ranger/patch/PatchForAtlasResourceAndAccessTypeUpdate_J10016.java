@@ -18,7 +18,7 @@
 
 package org.apache.ranger.patch;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;

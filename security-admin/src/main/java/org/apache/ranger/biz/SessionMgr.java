@@ -20,8 +20,8 @@
 package org.apache.ranger.biz;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.HTTPUtil;
 import org.apache.ranger.common.MessageEnums;

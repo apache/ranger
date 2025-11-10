@@ -17,7 +17,7 @@
 
 package org.apache.ranger.db;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceDef;
 import org.springframework.stereotype.Service;

@@ -18,7 +18,7 @@
 package org.apache.hadoop.crypto.key;
 
 import com.sun.org.apache.xml.internal.security.utils.Base64;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.slf4j.Logger;

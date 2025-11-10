@@ -18,7 +18,7 @@
 package org.apache.ranger.biz;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;

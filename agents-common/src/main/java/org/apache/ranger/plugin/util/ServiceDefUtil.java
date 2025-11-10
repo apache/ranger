@@ -21,7 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;

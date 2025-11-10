@@ -17,7 +17,7 @@
 
 package org.apache.ranger.services.elasticsearch.privilege;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.LinkedList;

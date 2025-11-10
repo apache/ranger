@@ -19,7 +19,7 @@
 package org.apache.ranger.authorization.presto.authorizer;
 
 import io.prestosql.spi.connector.SchemaTableName;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
 import java.util.Optional;

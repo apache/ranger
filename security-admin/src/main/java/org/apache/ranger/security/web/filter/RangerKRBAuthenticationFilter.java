@@ -20,7 +20,7 @@
 package org.apache.ranger.security.web.filter;
 
 import org.apache.commons.collections.iterators.IteratorEnumeration;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SaslRpcServer;
 import org.apache.hadoop.security.SecureClientLogin;

@@ -19,7 +19,7 @@
 
 package org.apache.ranger.audit.destination;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthSchemeProvider;
