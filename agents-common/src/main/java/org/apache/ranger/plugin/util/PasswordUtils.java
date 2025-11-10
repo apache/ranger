@@ -36,11 +36,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.ranger.plugin.util.RangerSupportedCryptoAlgo.PBEWITHHMACSHA512ANDAES_128;
+
 public class PasswordUtils {
     private static final Logger LOG = LoggerFactory.getLogger(PasswordUtils.class);
 
-    public static final String PBE_SHA512_AES_128      = "PBEWITHHMACSHA512ANDAES_128";
-    public static final RangerSupportedCryptoAlgo DEFAULT_CRYPT_ALGO      = RangerSupportedCryptoAlgo.PBEWithMD5AndDES;
+    public static final RangerSupportedCryptoAlgo DEFAULT_CRYPT_ALGO      = RangerSupportedCryptoAlgo.PBEWITHMD5ANDDES;
     public static final String DEFAULT_ENCRYPT_KEY     = "tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV";
     public static final String DEFAULT_SALT            = "f77aLYLo";
     public static final int    DEFAULT_ITERATION_COUNT = 17;
@@ -66,7 +67,7 @@ public class PasswordUtils {
         if (cryptAlgoArray != null && cryptAlgoArray.length > 4) {
             int index = 0;
 
-            cryptAlgo      = RangerSupportedCryptoAlgo.valueOf(cryptAlgoArray[index++]); // 0
+            cryptAlgo      = RangerSupportedCryptoAlgo.getValueOf(cryptAlgoArray[index++]); // 0
             lEncryptKey    = cryptAlgoArray[index++].toCharArray(); // 1
             lSalt          = cryptAlgoArray[index++].getBytes(); // 2
             iterationCount = Integer.parseInt(cryptAlgoArray[index++]); // 3
@@ -128,8 +129,8 @@ public class PasswordUtils {
             return false;
         }
 
-        return PBE_SHA512_AES_128.equalsIgnoreCase(cryptoAlgo)
-                || cryptoAlgo.toLowerCase().contains("aes_128") || cryptoAlgo.toLowerCase().contains("aes_256") || RangerSupportedCryptoAlgo.PBKDF2WithHmacSHA256.getAlgoName().equalsIgnoreCase(cryptoAlgo);
+        return PBEWITHHMACSHA512ANDAES_128.getAlgoName().equalsIgnoreCase(cryptoAlgo)
+                || cryptoAlgo.toLowerCase().contains("aes_128") || cryptoAlgo.toLowerCase().contains("aes_256") || RangerSupportedCryptoAlgo.PBKDF2WITHHMACSHA256.getAlgoName().equalsIgnoreCase(cryptoAlgo);
     }
 
     public static String generateIvIfNeeded(String cryptAlgo) throws NoSuchAlgorithmException {

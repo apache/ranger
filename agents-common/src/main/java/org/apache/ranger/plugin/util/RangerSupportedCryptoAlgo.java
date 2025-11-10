@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public enum RangerSupportedCryptoAlgo {
-    PBEWithHmacSHA512AndAES_128("PBEWithHmacSHA512AndAES_128",
+    PBEWITHHMACSHA512ANDAES_128("PBEWithHmacSHA512AndAES_128",
             "PBEWithHmacSHA512AndAES_128",
             0,
             Optional.empty(),
@@ -33,7 +33,7 @@ public enum RangerSupportedCryptoAlgo {
             pbeParams -> new PBEParameterSpec(pbeParams.getSalt(), pbeParams.getIterationCount(), new IvParameterSpec(pbeParams.getIv()))),
 
     @Deprecated
-    PBEWithMD5AndDES("PBEWithMD5AndDES",
+    PBEWITHMD5ANDDES("PBEWithMD5AndDES",
             "PBEWithMD5AndDES",
             0,
             Optional.empty(),
@@ -41,20 +41,20 @@ public enum RangerSupportedCryptoAlgo {
             pbeParams -> new PBEParameterSpec(pbeParams.getSalt(), pbeParams.getIterationCount(), new IvParameterSpec(pbeParams.getIv()))),
 
     @Deprecated
-    PBEWithMD5AndTripleDES("PBEWithMD5AndTripleDES",
+    PBEWITHMD5ANDTRIPLEDES("PBEWithMD5AndTripleDES",
             "PBEWithMD5AndTripleDES",
             0,
             Optional.empty(),
             Optional.empty(),
             pbeParams -> new PBEParameterSpec(pbeParams.getSalt(), pbeParams.getIterationCount(), new IvParameterSpec(pbeParams.getIv()))),
 
-    PBEWithSHA1AndDESede("PBEWithSHA1AndDESede",
+    PBEWITHSHA1ANDDESEDE("PBEWithSHA1AndDESede",
             "PBEWithSHA1AndDESede",
             0,
             Optional.empty(),
             Optional.empty(),
             pbeParams -> new PBEParameterSpec(pbeParams.getSalt(), pbeParams.getIterationCount(), new IvParameterSpec(pbeParams.getIv()))),
-    PBKDF2WithHmacSHA256("PBKDF2WithHmacSHA256",
+    PBKDF2WITHHMACSHA256("PBKDF2WithHmacSHA256",
             "AES/CBC/PKCS7Padding",
             64 * 4,
             Optional.of(16),
@@ -107,10 +107,14 @@ public enum RangerSupportedCryptoAlgo {
     }
 
     public static RangerSupportedCryptoAlgo getFIPSCompliantAlgorithm() {
-        return RangerSupportedCryptoAlgo.PBKDF2WithHmacSHA256;
+        return RangerSupportedCryptoAlgo.PBKDF2WITHHMACSHA256;
     }
 
     public static boolean isFIPSCompliantAlgorithm(RangerSupportedCryptoAlgo encrAlgo) {
-        return RangerSupportedCryptoAlgo.PBKDF2WithHmacSHA256.equals(encrAlgo);
+        return RangerSupportedCryptoAlgo.PBKDF2WITHHMACSHA256.equals(encrAlgo);
+    }
+
+    public static RangerSupportedCryptoAlgo getValueOf(String val) {
+        return RangerSupportedCryptoAlgo.valueOf(val.toUpperCase());
     }
 }
