@@ -13,6 +13,11 @@ services:
     hostname: ranger-usersync.rangernw
     volumes:
       - ./dist/keytabs/ranger-usersync:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/usersync/ugsync-file-source.csv:/home/ranger/scripts/ugsync-file-source.csv
+      - ./scripts/usersync/ranger-usersync-install.properties:/opt/ranger/usersync/install.properties
     stdin_open: true
     tty: true
     networks:

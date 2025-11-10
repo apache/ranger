@@ -13,6 +13,11 @@ services:
     hostname: ranger-tagsync.rangernw
     volumes:
       - ./dist/keytabs/ranger-tagsync:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/tagsync/ranger-tagsync-tags.json:/home/ranger/scripts/ranger-tagsync-tags.json
+      - ./scripts/tagsync/ranger-tagsync-install.properties:/opt/ranger/tagsync/install.properties
     stdin_open: true
     tty: true
     networks:
