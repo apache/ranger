@@ -100,8 +100,8 @@ jobs:
         with:
           name: target-11
           path: target/*
-  
-  docker-build:
+
+  services-docker-build:
     needs:
       - build-8
     runs-on: ubuntu-22.04
@@ -112,11 +112,89 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: target-8
-      
+
       - name: Copy artifacts for docker build
         run: |
-          cp ranger-*.tar.gz dev-support/ranger-docker/dist
-          cp version dev-support/ranger-docker/dist
+          mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-usersync.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-tagsync.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-kms.tar.gz dev-support/ranger-docker/dist
+          mv version dev-support/ranger-docker/dist
+          rm -f ranger-*.tar.gz # clean up workspace
+
+      - name: Free up disk space
+        run: docker system prune --all --force --volumes
+
+      - name: Download DB and Log4J connectors
+        run: |
+          cd dev-support/ranger-docker
+          ./download-archives.sh none
+
+      - name: Build all ranger-service images
+        run: |
+          cd dev-support/ranger-docker
+          export RANGER_DB_TYPE=postgres
+          docker compose \
+          -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-usersync.yml \
+          -f docker-compose.ranger-tagsync.yml \
+          -f docker-compose.ranger-kms.yml build
+
+      - name: Bring up ranger-service containers
+        run: |
+          cd dev-support/ranger-docker
+          export RANGER_DB_TYPE=postgres
+          docker compose \
+          -f docker-compose.ranger.yml \
+          -f docker-compose.ranger-usersync.yml \
+          -f docker-compose.ranger-tagsync.yml \
+          -f docker-compose.ranger-kms.yml up -d
+
+      - name: Check status of containers and remove them
+        run: |
+          sleep 60
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms);
+          flag=true;
+          for container in "${containers[@]}"; do
+              if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
+                  echo "Container $container is running!";
+              else
+                  flag=false;
+                  echo "Container $container is NOT running! Status: $(docker inspect -f '{{.State.Status}}' $container 2>/dev/null)";
+                  echo "docker logs $container:";
+                  docker logs $container
+              fi
+          done
+
+          if [[ $flag == true ]]; then
+              echo "All required containers are up and running";
+              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
+          else
+              docker stop $(docker ps -q) && docker rm $(docker ps -aq);
+              exit 1;
+          fi
+
+  plugins-docker-build:
+    needs:
+      - build-8
+    runs-on: ubuntu-24.04 # bumping os version for more disk space
+    timeout-minutes: 60 # bumping timeout to allow containers to come up
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download build-8 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: target-8
+
+      - name: Copy artifacts for docker build
+        run: |
+          mv ranger-*-admin.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-plugin.tar.gz dev-support/ranger-docker/dist
+          mv version dev-support/ranger-docker/dist
+          rm -f ranger-*.tar.gz # clean up workspace
+
+      - name: Free up disk space
+        run: docker system prune --all --force --volumes
 
       - name: Cache downloaded archives
         uses: actions/cache@v4
@@ -129,21 +207,14 @@ jobs:
       - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
-          rm -rf downloads/ozone-*
           ./download-archives.sh hadoop hive hbase kafka knox ozone
-      
-      - name: Clean up Docker space
-        run: docker system prune --all --force --volumes
-      
-      - name: Build all ranger-service images
+
+      - name: Build all ranger-plugin images
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-usersync.yml \
-          -f docker-compose.ranger-tagsync.yml \
-          -f docker-compose.ranger-kms.yml \
           -f docker-compose.ranger-hadoop.yml \
           -f docker-compose.ranger-hbase.yml \
           -f docker-compose.ranger-kafka.yml \
@@ -151,16 +222,13 @@ jobs:
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml build
 
-      - name: Bring up containers
+      - name: Bring up ranger-plugin containers
         run: |
           cd dev-support/ranger-docker
           ./scripts/ozone/ozone-plugin-docker-setup.sh
           export RANGER_DB_TYPE=postgres
           docker compose \
           -f docker-compose.ranger.yml \
-          -f docker-compose.ranger-usersync.yml \
-          -f docker-compose.ranger-tagsync.yml \
-          -f docker-compose.ranger-kms.yml \
           -f docker-compose.ranger-hadoop.yml \
           -f docker-compose.ranger-hbase.yml \
           -f docker-compose.ranger-kafka.yml \
@@ -171,7 +239,7 @@ jobs:
       - name: Check status of containers and remove them
         run: |
           sleep 60
-          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-usersync ranger-tagsync ranger-kms ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
+          containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
           for container in "${containers[@]}"; do
               if [[ $(docker inspect -f '{{.State.Running}}' $container 2>/dev/null) == "true" ]]; then
@@ -183,7 +251,7 @@ jobs:
                   docker logs $container
               fi
           done
-          
+
           if [[ $flag == true ]]; then
               echo "All required containers are up and running";
               docker stop $(docker ps -q) && docker rm $(docker ps -aq);
