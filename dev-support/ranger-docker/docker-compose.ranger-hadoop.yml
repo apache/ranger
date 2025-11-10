@@ -27,10 +27,10 @@ services:
       ranger:
         condition: service_started
     healthcheck:
-      test: 'su -c "/home/ranger/scripts/ranger-hadoop-healthcheck.sh" healthcheck'
-      interval: 15s
+      test: ["CMD-SHELL", "/home/ranger/scripts/ranger-hadoop-healthcheck.sh"]
+      interval: 20s
       timeout: 10s
-      retries: 30
+      retries: 40
       start_period: 40s
     environment:
       - HADOOP_VERSION
