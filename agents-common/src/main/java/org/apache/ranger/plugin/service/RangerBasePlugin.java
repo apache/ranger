@@ -99,11 +99,11 @@ public class RangerBasePlugin {
     private final boolean                     dedupStrings;
     private       PolicyRefresher             refresher;
     private volatile RangerPolicyEngine       policyEngine;
-    private       RangerAuthContext           currentAuthContext;
+    private volatile RangerAuthContext        currentAuthContext;
     private       RangerAccessResultProcessor resultProcessor;
-    private       RangerRoles                 roles;
+    private volatile RangerRoles              roles;
     private       boolean                     isUserStoreEnricherAddedImplcitly;
-    private       Map<String, String>         serviceConfigs;
+    private volatile Map<String, String>      serviceConfigs;
     private       boolean                     synchronousPolicyRefresh;
 
     public RangerBasePlugin(String serviceType, String appId) {
