@@ -305,13 +305,13 @@ public class RangerPluginInfoService {
                 Date lastGdsUpdateTime    = xxServiceVersionInfo.getGdsUpdateTime();
 
                 ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_POLICY_VERSION, Long.toString(latestPolicyVersion));
-                ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_POLICY_UPDATE_TIME, Long.toString(lastPolicyUpdateTime.getTime()));
+                ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_POLICY_UPDATE_TIME, lastPolicyUpdateTime == null ? "" : Long.toString(lastPolicyUpdateTime.getTime()));
                 ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_GDS_VERSION, Long.toString(latestGdsVersion));
-                ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_GDS_UPDATE_TIME, Long.toString(lastGdsUpdateTime.getTime()));
+                ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_GDS_UPDATE_TIME, lastGdsUpdateTime == null ? "" : Long.toString(lastGdsUpdateTime.getTime()));
 
                 if (hasAssociatedTagService) {
                     ret.put(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION, Long.toString(latestTagVersion));
-                    ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME, Long.toString(lastTagUpdateTime.getTime()));
+                    ret.put(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME, lastTagUpdateTime == null ? "" : Long.toString(lastTagUpdateTime.getTime()));
                 } else {
                     ret.remove(RangerPluginInfo.RANGER_ADMIN_LATEST_TAG_VERSION);
                     ret.remove(RangerPluginInfo.RANGER_ADMIN_LAST_TAG_UPDATE_TIME);
