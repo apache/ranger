@@ -18,7 +18,7 @@
  */
 package org.apache.ranger.services.presto;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;

@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;

@@ -58,7 +58,6 @@
                     <include>commons-collections:commons-collections</include>
                     <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
@@ -112,7 +111,6 @@
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 		            <include>com.sun.xml.bind:jaxb-impl</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
@@ -123,6 +121,7 @@
                     <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
                     <include>org.elasticsearch.plugin:rank-eval-client</include>
                     <include>org.elasticsearch.plugin:lang-mustache-client</include>
+                    <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
                     <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
                     <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
                     <include>org.apache.lucene:lucene-core</include>

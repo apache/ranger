@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.db.RangerDaoManager;

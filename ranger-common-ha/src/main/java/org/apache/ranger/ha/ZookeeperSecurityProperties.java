@@ -22,7 +22,7 @@ package org.apache.ranger.ha;
 import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
 import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.apache.zookeeper.data.ACL;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.AuthInfo;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.Id;

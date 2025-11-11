@@ -70,7 +70,7 @@ import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.crypto.key.KeyProvider.Metadata;
 import org.apache.hadoop.crypto.key.RangerKeyStoreProvider.KeyMetadata;
 import org.apache.ranger.entity.XXRangerKeyStore;

@@ -17,7 +17,7 @@
 */
 package org.apache.ranger.tagsync.nestedstructureplugin;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasResourceMapper;

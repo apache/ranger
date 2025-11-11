@@ -26,7 +26,7 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.util.XMLUtils;
 
 public class EmbeddedServerUtil {

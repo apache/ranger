@@ -31,7 +31,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.hadoop.thirdparty.com.google.common.base.Charsets;
 import org.apache.hadoop.thirdparty.com.google.common.base.Function;
 import org.apache.hadoop.thirdparty.com.google.common.base.Splitter;

@@ -19,7 +19,7 @@ package org.apache.ranger.audit.provider;
  * under the License.
  */
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.audit.utils.RangerAuditWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -20,7 +20,7 @@
 package org.apache.ranger.plugin.service;
 
 import com.google.gson.*;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.util.*;

@@ -20,7 +20,7 @@
 package org.apache.ranger.authorization.hive.authorizer;
 
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
 import java.io.File;

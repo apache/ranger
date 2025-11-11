@@ -19,7 +19,7 @@
 
 package org.apache.ranger.rest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.common.RESTErrorUtil;

@@ -22,7 +22,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.ranger.authz.handler.RangerAuth;
 

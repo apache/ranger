@@ -62,7 +62,6 @@
 					<include>commons-collections:commons-collections</include>
 					<include>com.sun.jersey:jersey-bundle</include>
 					<include>commons-logging:commons-logging</include>
-					<include>commons-lang:commons-lang</include>
 					<include>commons-io:commons-io</include>
 					<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
 					<include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
@@ -88,6 +87,7 @@
 					<include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
 					<include>org.elasticsearch.plugin:rank-eval-client</include>
 					<include>org.elasticsearch.plugin:lang-mustache-client</include>
+                                        <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
 					<include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
 					<include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
 					<include>org.apache.lucene:lucene-core</include>
@@ -119,7 +119,6 @@
 					<include>commons-cli:commons-cli</include>
 					<include>commons-collections:commons-collections</include>
 					<include>commons-io:commons-io:jar:${commons.io.version}</include>
-					<include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
 					<include>commons-logging:commons-logging</include>
 					<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
 					<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>

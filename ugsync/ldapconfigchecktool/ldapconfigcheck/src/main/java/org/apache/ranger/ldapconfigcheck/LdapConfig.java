@@ -31,7 +31,6 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.lang.NullArgumentException;
 
 public class LdapConfig {
 
@@ -183,7 +182,7 @@ public class LdapConfig {
     public String getLdapUrl() throws Throwable {
         String val = prop.getProperty(LGSYNC_LDAP_URL);
         if (val == null || val.trim().isEmpty()) {
-            throw new NullArgumentException(LGSYNC_LDAP_URL);
+            throw new IllegalArgumentException(LGSYNC_LDAP_URL + " must not be null or empty");
         }
         return val;
     }
@@ -192,7 +191,7 @@ public class LdapConfig {
     public String getLdapBindDn() throws Throwable {
         String val = prop.getProperty(LGSYNC_LDAP_BIND_DN);
         if (val == null || val.trim().isEmpty()) {
-            throw new NullArgumentException(LGSYNC_LDAP_BIND_DN);
+            throw new IllegalArgumentException(LGSYNC_LDAP_BIND_DN + " must not be null or empty");
         }
         return val;
     }

@@ -22,7 +22,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.AbstractRangerAdminClient;
 import org.apache.ranger.plugin.util.ServicePolicies;

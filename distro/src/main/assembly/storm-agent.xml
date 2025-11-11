@@ -74,7 +74,6 @@
               <include>org.apache.hadoop:hadoop-hdfs</include>
               <include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
               <include>commons-cli:commons-cli:jar:${commons.cli.version}</include>
-              <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
               <include>commons-io:commons-io:jar:${commons.io.version}</include>
               <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
@@ -95,6 +94,7 @@
               <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
               <include>org.elasticsearch.plugin:rank-eval-client</include>
               <include>org.elasticsearch.plugin:lang-mustache-client</include>
+              <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
               <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
               <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
               <include>org.apache.lucene:lucene-core</include>
@@ -118,7 +118,6 @@
               <include>commons-collections:commons-collections</include>
               <include>commons-configuration:commons-configuration</include>
               <include>commons-io:commons-io:jar:${commons.io.version}</include>
-              <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
               <include>commons-logging:commons-logging</include>
               <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
               <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>

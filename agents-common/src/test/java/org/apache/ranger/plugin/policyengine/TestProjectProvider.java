@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerAbstractContextEnricher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

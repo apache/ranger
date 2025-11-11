@@ -21,7 +21,7 @@ package org.apache.ranger.tagsync.source.atlas;
 
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 import org.slf4j.Logger;

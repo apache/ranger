@@ -21,7 +21,7 @@ package org.apache.ranger.audit.utils;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class RollingTimeUtil {
 	public static final String MINUTES 	="m"; //minutes

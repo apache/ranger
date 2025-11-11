@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.util.DownloaderTask;

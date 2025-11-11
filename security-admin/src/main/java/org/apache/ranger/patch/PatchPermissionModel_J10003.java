@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.service.XPortalUserService;

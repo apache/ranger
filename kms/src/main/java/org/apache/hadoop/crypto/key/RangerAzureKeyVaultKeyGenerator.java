@@ -28,7 +28,7 @@ import com.microsoft.azure.keyvault.webkey.JsonWebKeyType;
 
 import java.security.Key;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;

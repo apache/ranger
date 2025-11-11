@@ -33,7 +33,7 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.KrbPasswordSaverLoginModule;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;

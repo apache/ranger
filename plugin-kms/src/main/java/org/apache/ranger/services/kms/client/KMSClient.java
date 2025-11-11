@@ -32,7 +32,7 @@ import java.util.Map;
 
 import javax.security.auth.Subject;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.HadoopKerberosName;
 import org.apache.hadoop.security.ProviderUtils;

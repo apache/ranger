@@ -31,7 +31,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 //import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
 import org.apache.ranger.credentialapi.CredentialReader;

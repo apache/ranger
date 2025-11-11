@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.db.XXServiceVersionInfoDao;

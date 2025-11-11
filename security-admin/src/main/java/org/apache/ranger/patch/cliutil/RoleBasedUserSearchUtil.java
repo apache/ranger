@@ -32,7 +32,7 @@ import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.util.CLIUtil;

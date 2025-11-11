@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.store.file;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.geo.GeolocationMetadata;
 import org.apache.ranger.plugin.store.GeolocationStore;
 import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;

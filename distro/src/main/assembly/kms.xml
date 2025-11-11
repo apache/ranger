@@ -221,7 +221,6 @@
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-lang3</include>
                     <include>org.apache.commons:commons-configuration2</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>commons-collections:commons-collections</include>
                     <include>commons-logging:commons-logging</include>
                     <include>org.slf4j:slf4j-api</include>
@@ -340,7 +339,6 @@
                             <include>commons-cli:commons-cli</include>
                             <include>commons-collections:commons-collections</include>
                             <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                            <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                             <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                             <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -386,7 +384,6 @@
                     <include>commons-collections:commons-collections</include>
                     <include>org.apache.commons:commons-configuration2</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging</include>
                     <include>org.slf4j:slf4j-api</include>
                     <include>org.apache.hadoop:hadoop-common</include>

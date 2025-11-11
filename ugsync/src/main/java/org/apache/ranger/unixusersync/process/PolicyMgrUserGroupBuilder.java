@@ -41,7 +41,7 @@ import javax.ws.rs.core.NewCookie;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;

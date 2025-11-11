@@ -21,7 +21,7 @@ package org.apache.ranger.ha;
 
 import java.net.InetSocketAddress;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.NetUtils;
 import org.slf4j.Logger;

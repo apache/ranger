@@ -37,7 +37,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.db.RangerDaoManager;

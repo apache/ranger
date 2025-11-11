@@ -56,7 +56,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConstants;

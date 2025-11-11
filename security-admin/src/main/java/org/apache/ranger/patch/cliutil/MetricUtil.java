@@ -26,7 +26,7 @@ import java.util.Date;
 
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.DateUtil;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;

@@ -22,7 +22,7 @@ package org.apache.ranger.plugin.contextenricher;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

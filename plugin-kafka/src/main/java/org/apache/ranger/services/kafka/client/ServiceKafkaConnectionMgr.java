@@ -19,7 +19,7 @@
 
 package org.apache.ranger.services.kafka.client;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import java.util.Map;
 

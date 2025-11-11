@@ -23,7 +23,7 @@ package org.apache.ranger.plugin.util;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import com.kstruct.gethostname4j.Hostname;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

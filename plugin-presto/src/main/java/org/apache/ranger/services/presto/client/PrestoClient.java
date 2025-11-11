@@ -19,7 +19,7 @@
 package org.apache.ranger.services.presto.client;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
@@ -181,7 +181,7 @@ public class PrestoClient extends BaseClient implements Closeable {
       try {
         if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
           // Cannot use a prepared statement for this as presto does not support that
-          sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+          sql += " LIKE '" + escapeSql(needle) + "%'";
         }
         stat = con.createStatement();
         rs = stat.executeQuery(sql);
@@ -244,11 +244,11 @@ public class PrestoClient extends BaseClient implements Closeable {
       try {
         if (catalogs != null && !catalogs.isEmpty()) {
           for (String catalog : catalogs) {
-            sql = "SHOW SCHEMAS FROM \"" + StringEscapeUtils.escapeSql(catalog) + "\"";
+            sql = "SHOW SCHEMAS FROM \"" + escapeSql(catalog) + "\"";
 
             try {
               if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
-                sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                sql += " LIKE '" + escapeSql(needle) + "%'";
               }
               stat = con.createStatement();
               rs = stat.executeQuery(sql);
@@ -327,10 +327,10 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           for (String catalog : catalogs) {
             for (String schema : schemas) {
-              sql = "SHOW tables FROM \"" + StringEscapeUtils.escapeSql(catalog) + "\".\"" + StringEscapeUtils.escapeSql(schema) + "\"";
+              sql = "SHOW tables FROM \"" + escapeSql(catalog) + "\".\"" + escapeSql(schema) + "\"";
               try {
                 if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
-                  sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
+                  sql += " LIKE '" + escapeSql(needle) + "%'";
                 }
                 stat = con.createStatement();
                 rs = stat.executeQuery(sql);
@@ -418,9 +418,9 @@ public class PrestoClient extends BaseClient implements Closeable {
           for (String catalog : catalogs) {
             for (String schema : schemas) {
               for (String table : tables) {
-                sql = "SHOW COLUMNS FROM \"" + StringEscapeUtils.escapeSql(catalog) + "\"." +
-                  "\"" + StringEscapeUtils.escapeSql(schema) + "\"." +
-                  "\"" + StringEscapeUtils.escapeSql(table) + "\"";
+                sql = "SHOW COLUMNS FROM \"" + escapeSql(catalog) + "\"." +
+                  "\"" + escapeSql(schema) + "\"." +
+                  "\"" + escapeSql(table) + "\"";
 
                 try {
                   stat = con.createStatement();
@@ -566,5 +566,12 @@ public class PrestoClient extends BaseClient implements Closeable {
     } catch (SQLException e) {
       LOG.error("Unable to close ResultSet", e);
     }
+  }
+
+  private static String escapeSql(String str) {
+    if (str == null) {
+      return null;
+    }
+    return StringUtils.replace(str, "'", "''");
   }
 }

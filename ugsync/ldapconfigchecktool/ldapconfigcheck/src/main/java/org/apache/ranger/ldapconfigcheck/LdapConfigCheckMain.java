@@ -31,8 +31,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Properties;
 
-import org.apache.commons.lang.NullArgumentException;
-
 public class LdapConfigCheckMain {
 
     private static final String LOG_FILE = "ldapConfigCheck.log";
@@ -162,12 +160,12 @@ public class LdapConfigCheckMain {
         String msg;
         if (config.getAuthUsername() == null || config.getAuthUsername().isEmpty()) {
             msg = "ranger.admin.auth.sampleuser ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
 
         if (config.getAuthPassword() == null || config.getAuthPassword().isEmpty()) {
             msg = "ranger.admin.auth.samplepassword ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
 
         if (auth.isAuthenticated(config.getLdapUrl(), config.getLdapBindDn(), config.getLdapBindPassword(),
@@ -183,7 +181,7 @@ public class LdapConfigCheckMain {
         String msg;
         if (retrieve == null || userSyncObj == null || ldapContext == null) {
             msg = "Input validation failed while retrieving Users or Groups";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
 
         if (retrieve.equalsIgnoreCase("users")) {
@@ -201,17 +199,17 @@ public class LdapConfigCheckMain {
         String msg;
         if (userSyncObj.getUserNameAttribute() == null || userSyncObj.getUserNameAttribute().isEmpty()) {
             msg = "ranger.usersync.ldap.user.nameattribute ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
         if (userSyncObj.getUserObjClassName() == null || userSyncObj.getUserObjClassName().isEmpty()) {
             msg = "ranger.usersync.ldap.user.objectclass ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
         if ((userSyncObj.getUserSearchBase() == null || userSyncObj.getUserSearchBase().isEmpty()) &&
                 (userSyncObj.getSearchBase() == null || userSyncObj.getSearchBase().isEmpty())) {
             msg = "ranger.usersync.ldap.user.searchbase and " +
                     "ranger.usersync.ldap.searchBase ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
         userSyncObj.getAllUsers(ldapContext);
     }
@@ -220,21 +218,21 @@ public class LdapConfigCheckMain {
         String msg;
         if (userSyncObj.getGroupNameAttrName() == null || userSyncObj.getGroupNameAttrName().isEmpty()) {
             msg = "ranger.usersync.group.nameattribute ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
         if (userSyncObj.getGroupObjClassName() == null || userSyncObj.getGroupObjClassName().isEmpty()) {
             msg = "ranger.usersync.group.objectclass ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
         if (userSyncObj.getGroupMemberName() == null || userSyncObj.getGroupMemberName().isEmpty()) {
             msg = "ranger.usersync.group.memberattributename ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
         if ((userSyncObj.getGroupSearchBase() == null || userSyncObj.getGroupSearchBase().isEmpty()) &&
                 (userSyncObj.getSearchBase() == null || userSyncObj.getSearchBase().isEmpty())) {
             msg = "ranger.usersync.group.searchbase and " +
                     "ranger.usersync.ldap.searchBase ";
-            throw new NullArgumentException(msg);
+            throw new IllegalArgumentException(msg + " must not be null or empty");
         }
         userSyncObj.getAllGroups(ldapContext);
     }

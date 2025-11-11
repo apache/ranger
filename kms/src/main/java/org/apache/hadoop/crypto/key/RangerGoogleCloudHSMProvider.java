@@ -20,7 +20,7 @@ import java.lang.reflect.Field;
 import java.security.Key;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.slf4j.Logger;

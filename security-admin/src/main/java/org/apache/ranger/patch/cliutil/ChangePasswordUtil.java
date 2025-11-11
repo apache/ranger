@@ -26,7 +26,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.util.CLIUtil;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

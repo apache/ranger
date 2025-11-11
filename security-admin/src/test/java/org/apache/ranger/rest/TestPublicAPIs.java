@@ -25,7 +25,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RESTErrorUtil;

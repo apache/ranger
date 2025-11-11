@@ -22,8 +22,8 @@ package org.apache.ranger.authorization.hive.authorizer;
 import java.util.*;
 import org.apache.commons.collections.CollectionUtils;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;

@@ -19,7 +19,7 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.slf4j.Logger;
