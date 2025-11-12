@@ -64,21 +64,23 @@ import org.slf4j.LoggerFactory;
 public class RangerBasePlugin {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerBasePlugin.class);
 
-	private final RangerPluginConfig          pluginConfig;
-	private final RangerPluginContext         pluginContext;
-	private final Map<String, LogHistory>     logHistoryList = new Hashtable<>();
-	private final int                         logInterval    = 30000; // 30 seconds
-	private final DownloadTrigger             accessTrigger  = new DownloadTrigger();
-	private       PolicyRefresher             refresher;
-	private       RangerPolicyEngine          policyEngine;
-	private       RangerAuthContext           currentAuthContext;
-	private       RangerAccessResultProcessor resultProcessor;
-	private       RangerRoles                 roles;
-	private final List<RangerChainedPlugin>   chainedPlugins;
-	private final boolean                     dedupStrings;
-	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
-	private       Map<String, String>         serviceConfigs;
-	private       boolean                     synchronousPolicyRefresh;
+	private final RangerPluginConfig        pluginConfig;
+	private final RangerPluginContext       pluginContext;
+	private final Map<String, LogHistory>   logHistoryList = new Hashtable<>();
+	private final int                       logInterval    = 30000; // 30 seconds
+	private final DownloadTrigger           accessTrigger  = new DownloadTrigger();
+	private final List<RangerChainedPlugin> chainedPlugins;
+	private final boolean                   dedupStrings;
+
+	private volatile RangerPolicyEngine  policyEngine;
+	private volatile RangerAuthContext   currentAuthContext;
+	private volatile RangerRoles         roles;
+	private volatile Map<String, String> serviceConfigs;
+
+	private PolicyRefresher             refresher;
+	private RangerAccessResultProcessor resultProcessor;
+	private boolean                     isUserStoreEnricherAddedImplcitly = false;
+	private boolean                     synchronousPolicyRefresh;
 
 	public RangerBasePlugin(String serviceType, String appId) {
 		this(new RangerPluginConfig(serviceType, null, appId, null, null, null));
