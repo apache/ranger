@@ -18,13 +18,13 @@
  */
 
 package org.apache.ranger.plugin.util;
+
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
 
 public class TestRangerRESTClient {
-
     private static final String SERVICE_TYPE = "hive";
     private static final String SERVICE_NAME = "test-service";
     private static final String APP_ID = "test-app";

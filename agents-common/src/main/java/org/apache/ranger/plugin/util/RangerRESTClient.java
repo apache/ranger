@@ -111,7 +111,7 @@ public class RangerRESTClient {
         mSslConfigFileName = sslConfigFileName;
         configuredURLs     = StringUtil.getURLs(mUrl);
         int size = getConfiguredURLs().size();
-        if (size == 0){
+        if (size == 0) {
             LOG.warn("No REST URL configured");
             setLastKnownActiveUrlIndex(0);
         } else {
