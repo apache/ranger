@@ -3220,16 +3220,16 @@ public class ServiceREST {
         final boolean isAdmin;
         final boolean isKeyAdmin;
 
-        if (StringUtils.isEmpty(grantor)) {
-            userName   = bizUtil.getCurrentUserLoginId();
-            isAdmin    = bizUtil.isAdmin();
-            isKeyAdmin = bizUtil.isKeyAdmin();
-        } else {
+        if (StringUtils.isEmpty(bizUtil.getCurrentUserLoginId()) && StringUtils.isNotEmpty(grantor)) {
             Collection<String> userRoles = userMgrGrantor.getRolesByLoginId(grantor);
 
             userName   = grantor;
             isAdmin    = userRoles.contains(RangerConstants.ROLE_SYS_ADMIN);
             isKeyAdmin = userRoles.contains(RangerConstants.ROLE_KEY_ADMIN);
+        } else {
+            userName   = bizUtil.getCurrentUserLoginId();
+            isAdmin    = bizUtil.isAdmin();
+            isKeyAdmin = bizUtil.isKeyAdmin();
         }
         boolean isSvcAdmin = isAdmin || svcStore.isServiceAdminUser(policy.getService(), userName);
 
