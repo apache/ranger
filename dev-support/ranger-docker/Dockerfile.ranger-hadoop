@@ -23,26 +23,12 @@ ARG HDFS_PLUGIN_VERSION
 ARG YARN_PLUGIN_VERSION
 ARG TEZ_VERSION
 
-VOLUME /etc/keytabs
-
-COPY ./dist/version                                          /home/ranger/dist/
 COPY ./dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz /home/ranger/dist/
 COPY ./dist/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin.tar.gz /home/ranger/dist/
 COPY ./downloads/hadoop-${HADOOP_VERSION}.tar.gz             /home/ranger/dist/
 COPY ./downloads/apache-tez-${TEZ_VERSION}-bin.tar.gz        /home/ranger/dist/
 
-COPY ./scripts/hadoop/ranger-hadoop-setup.sh                ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/ranger-hadoop.sh                      ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/ranger-hadoop-mkdir.sh                ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/ranger-hadoop-healthcheck.sh          ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/ranger-hdfs-plugin-install.properties ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/ranger-yarn-plugin-install.properties ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/core-site.xml                         ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/hdfs-site.xml                         ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/yarn-site.xml                         ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_keytab.sh                           ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_testusers_keytab.sh                 ${RANGER_SCRIPTS}/
-COPY ./scripts/kdc/krb5.conf                                /etc/krb5.conf
+COPY ./scripts/hadoop/*.sh                                   ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/hadoop-${HADOOP_VERSION} /opt/hadoop && \
@@ -53,16 +39,14 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     tar xvfz /home/ranger/dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin /opt/ranger/ranger-hdfs-plugin && \
     rm -f /home/ranger/dist/ranger-${HDFS_PLUGIN_VERSION}-hdfs-plugin.tar.gz && \
-    cp -f ${RANGER_SCRIPTS}/ranger-hdfs-plugin-install.properties /opt/ranger/ranger-hdfs-plugin/install.properties && \
+    rm -f /opt/ranger/ranger-hdfs-plugin/install.properties && \
     tar xvfz /home/ranger/dist/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin /opt/ranger/ranger-yarn-plugin && \
     rm -f /home/ranger/dist/ranger-${YARN_PLUGIN_VERSION}-yarn-plugin.tar.gz && \
-    cp -f ${RANGER_SCRIPTS}/ranger-yarn-plugin-install.properties /opt/ranger/ranger-yarn-plugin/install.properties && \
+    rm -f /opt/ranger/ranger-yarn-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
     useradd -g hadoop -ms /bin/bash healthcheck && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chown healthcheck:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
     chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
 

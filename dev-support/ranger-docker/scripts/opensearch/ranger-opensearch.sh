@@ -18,7 +18,7 @@
 
 if [ ! -e ${OPENSEARCH_HOME}/.setupDone ]
 then
-  if "${RANGER_SCRIPTS}"/ranger-opensearch-setup.sh;
+  if /opt/ranger/ranger-opensearch-setup.sh;
   then
     touch "${OPENSEARCH_HOME}"/.setupDone
   else

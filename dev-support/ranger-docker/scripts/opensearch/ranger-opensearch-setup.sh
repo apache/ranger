@@ -27,12 +27,6 @@ else
   echo "Kerberos is disabled"
 fi
 
-# Copy configuration files
-cp ${RANGER_SCRIPTS}/opensearch.yml          ${OPENSEARCH_HOME}/config/
-cp ${RANGER_SCRIPTS}/opensearch-jaas.conf    ${OPENSEARCH_HOME}/config/
-
 # Set ownership
 chown -R opensearch:hadoop ${OPENSEARCH_HOME}/
-
 echo "OpenSearch setup completed successfully"
-
