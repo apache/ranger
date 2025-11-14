@@ -22,22 +22,15 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger-kms
 ARG KMS_VERSION
 ARG RANGER_DB_TYPE
 
-VOLUME /etc/keytabs
-
-COPY ./dist/version                                            /home/ranger/dist/
-COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                   /home/ranger/dist/
-
+COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                       /home/ranger/dist/
 COPY ./scripts/kms/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
-COPY ./scripts/kms/ranger-kms-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-kms-install.properties
-COPY ./scripts/hadoop/core-site.xml                                ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                                  ${RANGER_SCRIPTS}/
-COPY ./scripts/kdc/krb5.conf                                       /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \
     rm -f /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz && \
+    rm -f ${RANGER_HOME}/kms/install.properties && \
     mkdir -p /var/run/ranger_kms /var/log/ranger/kms /etc/ranger /usr/share/java/ && \
-    cp -f ${RANGER_SCRIPTS}/ranger-kms-install.properties ${RANGER_HOME}/kms/install.properties && \
     touch /etc/init.d/ranger-kms && \
     ln -s /etc/init.d/ranger-kms /etc/rc2.d/S88ranger-kms && \
     ln -s /etc/init.d/ranger-kms /etc/rc2.d/K90ranger-kms && \

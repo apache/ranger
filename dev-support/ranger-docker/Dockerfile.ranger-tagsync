@@ -20,21 +20,14 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
 ARG TAGSYNC_VERSION
 
-VOLUME /etc/keytabs
-
-COPY ./dist/version                                  /home/ranger/dist/
-COPY ./dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz /home/ranger/dist/
-
+COPY ./dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz     /home/ranger/dist/
 COPY ./scripts/tagsync/ranger-tagsync.sh                 ${RANGER_SCRIPTS}/
-COPY ./scripts/tagsync/ranger-tagsync-install.properties ${RANGER_SCRIPTS}/
-COPY ./scripts/tagsync/ranger-tagsync-tags.json          ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/core-site.xml                      ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                        ${RANGER_SCRIPTS}/
-COPY ./scripts/kdc/krb5.conf                             /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
     rm -f /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz && \
+    rm -f ${RANGER_HOME}/tagsync/install.properties && \
     mkdir -p /opt/ranger/tagsync/data /var/run/ranger /var/log/ranger/tagsync /etc/ranger && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-install.properties ${RANGER_HOME}/tagsync/install.properties && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-tags.json ${RANGER_HOME}/tagsync/data/tags.json && \

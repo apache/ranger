@@ -14,6 +14,10 @@ services:
     hostname: ranger.rangernw
     volumes:
       - ./dist/keytabs/ranger:/etc/keytabs
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./scripts/admin/ranger-admin-install-${RANGER_DB_TYPE}.properties:/opt/ranger/admin/install.properties
     stdin_open: true
     tty: true
     networks:
