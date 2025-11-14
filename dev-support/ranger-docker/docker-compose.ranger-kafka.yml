@@ -14,6 +14,11 @@ services:
     hostname: ranger-kafka.rangernw
     volumes:
       - ./dist/keytabs/ranger-kafka:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml
+      - ./scripts/kafka/kafka-server-jaas.conf:/home/ranger/scripts/kafka-server-jaas.conf
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/kafka/ranger-kafka-plugin-install.properties:/opt/ranger/ranger-kafka-plugin/install.properties
     stdin_open: true
     tty: true
     networks:
