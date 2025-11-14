@@ -550,18 +550,22 @@ def main():
 
     fixPermList = [".", usersyncBaseDirFullName, confFolderName, certFolderName]
 
+    def _safe_chown_chmod(path, uid, gid, mode):
+        try:
+            os.chown(path, uid, gid)
+            os.chmod(path, mode)
+        except PermissionError as e:
+            print(f"Skipping {path}: Permission denied ({e})")
+        except OSError as e:
+            print(f"Skipping {path}: OS error ({e})")
+
     for dir in fixPermList:
         for root, dirs, files in os.walk(dir):
-            os.chown(root, ownerId, groupId)
-            os.chmod(root, 0o755)
+            _safe_chown_chmod(root, ownerId, groupId, 0o755)
             for obj in dirs:
-                dn = join(root, obj)
-                os.chown(dn, ownerId, groupId)
-                os.chmod(dn, 0o755)
+                _safe_chown_chmod(join(root, obj), ownerId, groupId, 0o755)
             for obj in files:
-                fn = join(root, obj)
-                os.chown(fn, ownerId, groupId)
-                os.chmod(fn, 0o750)
+                _safe_chown_chmod(join(root, obj), ownerId, groupId, 0o750)
 
     if isfile(nativeAuthProgramName):
         try:
