@@ -270,7 +270,9 @@ public class RangerKeyStoreProvider extends KeyProvider {
 		if (dbStore.engineContainsAlias(name) || cache.containsKey(name)) {
 			throw new IOException("Key " + name + " already exists");
 		}
-
+		if(name.length() > 255){
+			throw new IOException("Key " + name + " length exceeds the limit of 255 characters.");
+		}
 		Metadata meta = new Metadata(options.getCipher(),
 				options.getBitLength(), options.getDescription(),
 				options.getAttributes(), new Date(), 1);
