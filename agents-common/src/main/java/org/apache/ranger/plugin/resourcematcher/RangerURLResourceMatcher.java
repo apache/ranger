@@ -268,13 +268,21 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
     }
 
     abstract static class RecursiveMatcher extends AbstractStringResourceMatcher {
-        final char levelSeparatorChar;
-        String valueWithoutSeparator;
-        String valueWithSeparator;
+        final char   levelSeparatorChar;
+        final String valueWithoutSeparator;
+        final String valueWithSeparator;
 
         RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
             super(value, options);
             this.levelSeparatorChar = levelSeparatorChar;
+
+            if (this.value == null || getNeedsDynamicEval()) {
+                valueWithoutSeparator = null;
+                valueWithSeparator    = null;
+            } else {
+                valueWithoutSeparator = getStringToCompare(this.value);
+                valueWithSeparator    = valueWithoutSeparator + levelSeparatorChar;
+            }
         }
 
         String getStringToCompare(String policyValue) {
@@ -300,11 +308,6 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
 
                 noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
             } else {
-                if (valueWithoutSeparator == null && value != null) {
-                    valueWithoutSeparator = getStringToCompare(value);
-                    valueWithSeparator    = valueWithoutSeparator + levelSeparatorChar;
-                }
-
                 noSeparator = valueWithoutSeparator;
             }
 
@@ -343,11 +346,6 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
 
                 noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
             } else {
-                if (valueWithoutSeparator == null && value != null) {
-                    valueWithoutSeparator = getStringToCompare(value);
-                    valueWithSeparator    = valueWithoutSeparator + levelSeparatorChar;
-                }
-
                 noSeparator = valueWithoutSeparator;
             }
 
