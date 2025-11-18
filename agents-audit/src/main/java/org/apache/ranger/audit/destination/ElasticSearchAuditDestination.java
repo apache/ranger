@@ -22,6 +22,7 @@ package org.apache.ranger.audit.destination;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedActionException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,6 +67,7 @@ import javax.security.auth.kerberos.KerberosTicket;
 
 public class ElasticSearchAuditDestination extends AuditDestination {
     private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchAuditDestination.class);
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
     public static final String CONFIG_URLS = "urls";
     public static final String CONFIG_PORT = "port";
@@ -339,7 +341,14 @@ public class ElasticSearchAuditDestination extends AuditDestination {
         doc.put("resType", auditEvent.getResourceType());
         doc.put("reason", auditEvent.getResultReason());
         doc.put("action", auditEvent.getAction());
-        doc.put("evtTime", auditEvent.getEventTime());
+        Date eventTime = auditEvent.getEventTime();
+        if (eventTime != null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+            dateFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            doc.put("evtTime", dateFormat.format(eventTime));
+        } else {
+            doc.put("evtTime", null);
+        }
         doc.put("seq_num", auditEvent.getSeqNum());
         doc.put("event_count", auditEvent.getEventCount());
         doc.put("event_dur_ms", auditEvent.getEventDurationMS());
