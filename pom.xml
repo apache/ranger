@@ -136,7 +136,7 @@
         <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.4</jersey-bundle.version>
-        <jersey-client.version>2.35</jersey-client.version>
+        <jersey-client.version>2.46</jersey-client.version>
         <jersey-core.version>1.19.4</jersey-core.version>
         <jersey-server.version>1.19.4</jersey-server.version>
         <jersey-spring.version>1.19.4</jersey-spring.version>
