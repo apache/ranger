@@ -276,13 +276,21 @@ final class CaseInsensitiveURLRecursiveWildcardMatcher extends AbstractStringRes
 }
 
 abstract class RecursiveMatcher extends AbstractStringResourceMatcher {
-    final char levelSeparatorChar;
-    String valueWithoutSeparator;
-    String valueWithSeparator;
+    final char   levelSeparatorChar;
+    final String valueWithoutSeparator;
+    final String valueWithSeparator;
 
     RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
         super(value, options);
         this.levelSeparatorChar = levelSeparatorChar;
+
+        if (this.value == null || getNeedsDynamicEval()) {
+            valueWithoutSeparator = null;
+            valueWithSeparator    = null;
+        } else {
+            valueWithoutSeparator = getStringToCompare(this.value);
+            valueWithSeparator    = valueWithoutSeparator + Character.toString(levelSeparatorChar);
+        }
     }
 
     String getStringToCompare(String policyValue) {
@@ -307,10 +315,6 @@ final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
             String expandedPolicyValue = getExpandedValue(evalContext);
             noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
         } else {
-            if (valueWithoutSeparator == null && value != null) {
-                valueWithoutSeparator = getStringToCompare(value);
-                valueWithSeparator = valueWithoutSeparator + Character.toString(levelSeparatorChar);
-            }
             noSeparator = valueWithoutSeparator;
         }
 
@@ -345,10 +349,6 @@ final class CaseInsensitiveURLRecursiveMatcher extends RecursiveMatcher {
             String expandedPolicyValue = getExpandedValue(evalContext);
             noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
         } else {
-            if (valueWithoutSeparator == null && value != null) {
-                valueWithoutSeparator = getStringToCompare(value);
-                valueWithSeparator = valueWithoutSeparator + Character.toString(levelSeparatorChar);
-            }
             noSeparator = valueWithoutSeparator;
         }
 

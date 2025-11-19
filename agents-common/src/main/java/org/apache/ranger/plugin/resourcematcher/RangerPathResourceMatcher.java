@@ -644,12 +644,12 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 	}
 
 	static class RecursivePathResourceMatcher extends AbstractPathResourceMatcher {
-		String valueWithoutSeparator;
-		String valueWithSeparator;
-
 		final IOCase                              ioCase;
 		final BiFunction<String, String, Boolean> primaryFunction;
 		final BiFunction<String, String, Boolean> fallbackFunction;
+		final String                              valueWithoutSeparator;
+		final String                              valueWithSeparator;
+
 
 		RecursivePathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, int priority) {
 			super(value, options, pathSeparatorChar, true, priority);
@@ -657,6 +657,14 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 			this.ioCase           = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
 			this.primaryFunction  = optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals;
 			this.fallbackFunction = optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith;
+
+			if (this.value == null || getNeedsDynamicEval()) {
+				valueWithoutSeparator = null;
+				valueWithSeparator    = null;
+			} else {
+				valueWithoutSeparator = getStringToCompare(this.value);
+				valueWithSeparator    = valueWithoutSeparator + pathSeparatorChar;
+			}
 		}
 
 		String getStringToCompare(String policyValue) {
@@ -677,10 +685,6 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 				String expandedPolicyValue = getExpandedValue(evalContext);
 				noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
 			} else {
-				if (valueWithoutSeparator == null && value != null) {
-					valueWithoutSeparator = getStringToCompare(value);
-					valueWithSeparator = valueWithoutSeparator + pathSeparatorChar;
-				}
 				noSeparator = valueWithoutSeparator;
 			}
 
@@ -721,10 +725,6 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 				String expandedPolicyValue = getExpandedValue(evalContext);
 				noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
 			} else {
-				if (valueWithoutSeparator == null && value != null) {
-					valueWithoutSeparator = getStringToCompare(value);
-					valueWithSeparator = valueWithoutSeparator + pathSeparatorChar;
-				}
 				noSeparator = valueWithoutSeparator;
 			}
 			final int lastLevelSeparatorIndex = noSeparator != null ? noSeparator.lastIndexOf(pathSeparatorChar) : -1;
