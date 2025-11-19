@@ -175,12 +175,29 @@ public class RangerSearchUtil extends SearchUtil {
 				"Invalid value for parameter startIndex", MessageEnums.INVALID_INPUT_DATA, null,
 				SearchFilter.START_INDEX);
 		startIndex = startIndex < 0 ? 0 : startIndex;
+		logger.info("==> setStartIndex=" + startIndex);
 		ret.setStartIndex(startIndex);
 
 		int pageSize = restErrorUtil.parseInt(request.getParameter(SearchFilter.PAGE_SIZE),
 				configUtil.getDefaultMaxRows(), "Invalid value for parameter pageSize",
 				MessageEnums.INVALID_INPUT_DATA, null, SearchFilter.PAGE_SIZE);
+		logger.info("==> setMaxRows=" + pageSize);
+		logger.info("==> DefaultMaxRows=" + configUtil.getDefaultMaxRows());
 		ret.setMaxRows(validatePageSize(pageSize));
+
+		int beginIndex = restErrorUtil.parseInt(request.getParameter(SearchFilter.BEGIN_INDEX), 0,
+				"Invalid value for parameter beginIndex", MessageEnums.INVALID_INPUT_DATA, null,
+				SearchFilter.BEGIN_INDEX);
+		beginIndex = beginIndex < 0 ? startIndex : beginIndex;
+		logger.info("==> setBeginIndex=" + beginIndex);
+		ret.setBeginIndex(beginIndex);
+
+		int offsetSize = restErrorUtil.parseInt(request.getParameter(SearchFilter.OFFSET_INDEX), 0,
+				"Invalid value for parameter offset", MessageEnums.INVALID_INPUT_DATA, null,
+				SearchFilter.OFFSET_INDEX);
+		logger.info("==> setOffsetIndex=" + offsetSize);
+		offsetSize = offsetSize < 0 ? pageSize : offsetSize;
+		ret.setOffsetIndex(offsetSize);
 
 		ret.setGetCount(restErrorUtil.parseBoolean(request.getParameter("getCount"), true));
 		String sortBy = restErrorUtil.validateString(request.getParameter(SearchFilter.SORT_BY),
