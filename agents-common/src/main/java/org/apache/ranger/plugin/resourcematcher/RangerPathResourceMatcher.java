@@ -596,8 +596,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
         final IOCase                              ioCase;
         final BiFunction<String, String, Boolean> primaryFunction;
         final BiFunction<String, String, Boolean> fallbackFunction;
-        String valueWithoutSeparator;
-        String valueWithSeparator;
+        final String                              valueWithoutSeparator;
+        final String                              valueWithSeparator;
 
         RecursivePathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, int priority) {
             super(value, options, pathSeparatorChar, true, priority);
@@ -605,6 +605,14 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
             this.ioCase           = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
             this.primaryFunction  = optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals;
             this.fallbackFunction = optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith;
+
+            if (this.value == null || getNeedsDynamicEval()) {
+                valueWithoutSeparator = null;
+                valueWithSeparator    = null;
+            } else {
+                valueWithoutSeparator = getStringToCompare(this.value);
+                valueWithSeparator    = valueWithoutSeparator + pathSeparatorChar;
+            }
         }
 
         String getStringToCompare(String policyValue) {
@@ -626,11 +634,6 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
                 noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
             } else {
-                if (valueWithoutSeparator == null && value != null) {
-                    valueWithoutSeparator = getStringToCompare(value);
-                    valueWithSeparator    = valueWithoutSeparator + pathSeparatorChar;
-                }
-
                 noSeparator = valueWithoutSeparator;
             }
 
@@ -669,11 +672,6 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
                 noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
             } else {
-                if (valueWithoutSeparator == null && value != null) {
-                    valueWithoutSeparator = getStringToCompare(value);
-                    valueWithSeparator    = valueWithoutSeparator + pathSeparatorChar;
-                }
-
                 noSeparator = valueWithoutSeparator;
             }
 
