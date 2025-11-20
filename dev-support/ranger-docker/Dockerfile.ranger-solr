@@ -17,8 +17,6 @@
 ARG SOLR_VERSION
 FROM solr:${SOLR_VERSION}
 
-VOLUME /etc/keytabs
-
 # Copy audit config set
 USER 0
 

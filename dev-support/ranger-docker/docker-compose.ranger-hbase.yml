@@ -14,6 +14,11 @@ services:
     hostname: ranger-hbase.rangernw
     volumes:
       - ./dist/keytabs/ranger-hbase:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/hbase/ranger-hbase-plugin-install.properties:/opt/ranger/ranger-hbase-plugin/install.properties
+      - ./scripts/hbase/hbase-site.xml:/home/ranger/scripts/hbase-site.xml:ro
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
     stdin_open: true
     tty: true
     networks:
