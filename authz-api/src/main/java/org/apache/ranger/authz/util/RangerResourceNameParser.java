@@ -36,24 +36,34 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOUR
 public class RangerResourceNameParser {
     private static final Logger LOG = LoggerFactory.getLogger(RangerResourceNameParser.class);
 
-    public static final char ESCAPE_CHAR    = '\\';
-    public static final char SEPARATOR_CHAR = '/';
+    public static final String[] EMPTY_ARRAY           = new String[0];
+    public static final char     RRN_RESOURCE_TYPE_SEP = ':';
 
-    private static final String   SEPARATOR_STRING  = String.valueOf(SEPARATOR_CHAR);
-    private static final String   ESCAPED_SEPARATOR = "\\\\" + SEPARATOR_STRING;
-    private static final Pattern  SEPARATOR_PATTERN = Pattern.compile(SEPARATOR_STRING);
-    private static final String[] EMPTY_ARRAY       = new String[0];
+    private static final char   ESCAPE_CHAR   = '\\';
+    private static final String ESCAPE_STRING = "\\\\";
 
+    private final char     separatorChar;
+    private final String   separatorString;
+    private final String   escapedSeparator;
+    private final Pattern  separatorPattern;
     private final String   template;   // examples: database/table/column, bucket/volume/path
     private final String[] resources;  // examples: [database, table, column],   [bucket, volume, path]
 
-    public RangerResourceNameParser(String template) throws RangerAuthzException {
+    public RangerResourceNameParser(String[] resourcePath, char separatorChar) throws RangerAuthzException {
+        this(StringUtils.join(resourcePath, separatorChar), separatorChar);
+    }
+
+    public RangerResourceNameParser(String template, char separatorChar) throws RangerAuthzException {
         if (StringUtils.isBlank(template)) {
             throw new RangerAuthzException(INVALID_RESOURCE_TEMPLATE_EMPTY_VALUE);
         }
 
-        this.template  = template;
-        this.resources = template.split(SEPARATOR_STRING); // assumption: '/' is not a valid character in resource names
+        this.separatorChar    = separatorChar;
+        this.separatorString  = String.valueOf(separatorChar);
+        this.escapedSeparator = ESCAPE_STRING + separatorString;
+        this.separatorPattern = Pattern.compile(separatorString);
+        this.template         = template;
+        this.resources        = template.split(separatorString); // assumption: separatorChar is not a valid character in resource names
     }
 
     public String getTemplate() {
@@ -93,9 +103,9 @@ public class RangerResourceNameParser {
 
                     continue;
                 }
-            } else if (c == SEPARATOR_CHAR) {
+            } else if (c == separatorChar) {
                 if (!isInEscape) {
-                    if (!isLastToken) { // for last token, '/' is not a separator
+                    if (!isLastToken) { // for last token, separatorChar is not a separator
                         ret[idxToken++] = token.toString();
 
                         token.setLength(0);
@@ -151,12 +161,12 @@ public class RangerResourceNameParser {
                 value = "";
             }
 
-            if (!isLast) { // escape '/' in all but the last resource
+            if (!isLast) { // escape separatorChar in all but the last resource
                 value = escapeIfNeeded(value);
             }
 
             if (i > 0) {
-                ret.append(SEPARATOR_CHAR);
+                ret.append(separatorChar);
             }
 
             ret.append(value);
@@ -182,12 +192,12 @@ public class RangerResourceNameParser {
                 value = "";
             }
 
-            if (!isLast) { // escape '/' in all but the last resource
+            if (!isLast) { // escape separatorChar in all but the last resource
                 value = escapeIfNeeded(value);
             }
 
             if (i > 0) {
-                ret.append(SEPARATOR_CHAR);
+                ret.append(separatorChar);
             }
 
             ret.append(value);
@@ -202,13 +212,13 @@ public class RangerResourceNameParser {
     public String toString() {
         return "RangerResourceTemplate{" +
                 "template=" + template +
-                ", resources='" + String.join(SEPARATOR_STRING, resources) + "'" +
+                ", resources='" + String.join(separatorString, resources) + "'" +
                 "}";
     }
 
     private String escapeIfNeeded(String value) {
-        if (value.contains(SEPARATOR_STRING)) {
-            return SEPARATOR_PATTERN.matcher(value).replaceAll(ESCAPED_SEPARATOR);
+        if (value.contains(separatorString)) {
+            return separatorPattern.matcher(value).replaceAll(escapedSeparator);
         } else {
             return value;
         }

@@ -39,11 +39,13 @@ import java.util.Map;
 import java.util.Stack;
 
 abstract class ResourceMatcher {
-    static final         int                       DYNAMIC_EVALUATION_PENALTY = 8;
-    private static final Logger                    LOG                        = LoggerFactory.getLogger(ResourceMatcher.class);
-    protected final      String                    value;
-    protected final      RangerRequestExprResolver exprResolver;
-    protected            StringTokenReplacer       tokenReplacer;
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceMatcher.class);
+
+    static final int DYNAMIC_EVALUATION_PENALTY = 8;
+
+    protected final String                    value;
+    protected final RangerRequestExprResolver exprResolver;
+    protected       StringTokenReplacer       tokenReplacer;
 
     ResourceMatcher(String value, Map<String, String> options) {
         this.value = value;
@@ -53,6 +55,81 @@ abstract class ResourceMatcher {
         } else {
             exprResolver = null;
         }
+    }
+
+    abstract boolean isMatch(String resourceValue, Map<String, Object> evalContext);
+
+    abstract boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext);
+
+    abstract boolean isChildMatch(String resourceValue, Map<String, Object> evalContext);
+
+    abstract int getPriority();
+
+    @Override
+    public String toString() {
+        return this.getClass().getName() + "(" + this.value + ")";
+    }
+
+    final boolean isMatch(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        final ResourceElementMatchType matchType = getMatchType(resourceValue, matchingScope, evalContext);
+
+        return isMatch(matchType, matchingScope);
+    }
+
+    final ResourceElementMatchType getMatchType(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        ResourceElementMatchType ret = ResourceElementMatchType.NONE;
+
+        if (isMatch(resourceValue, evalContext)) {
+            ret = ResourceElementMatchType.SELF;
+        } else {
+            if (matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX) {
+                if (isPrefixMatch(resourceValue, evalContext)) {
+                    ret = ResourceElementMatchType.PREFIX;
+                }
+            } else if (matchingScope == ResourceElementMatchingScope.SELF_OR_CHILD) {
+                if (isChildMatch(resourceValue, evalContext)) {
+                    ret = ResourceElementMatchType.CHILD;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    boolean isMatchAny() {
+        return value != null && value.isEmpty();
+    }
+
+    boolean getNeedsDynamicEval() {
+        return exprResolver != null || tokenReplacer != null;
+    }
+
+    void setDelimiters(char startDelimiterChar, char endDelimiterChar, char escapeChar, String tokenPrefix) {
+        LOG.debug("==> setDelimiters(value= {}, startDelimiter={}, endDelimiter={}, escapeChar={}, prefix={}", value, startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+
+        if (exprResolver != null || StringTokenReplacer.hasToken(value, startDelimiterChar, endDelimiterChar, escapeChar)) {
+            tokenReplacer = new StringTokenReplacer(startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+        }
+
+        LOG.debug("<== setDelimiters(value= {}, startDelimiter={}, endDelimiter={}, escapeChar={}, prefix={}", value, startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
+    }
+
+    String getExpandedValue(Map<String, Object> evalContext) {
+        String ret = value;
+
+        if (exprResolver != null) {
+            RangerAccessRequest accessRequest = RangerAccessRequestUtil.getRequestFromContext(evalContext);
+
+            if (accessRequest != null) {
+                ret = exprResolver.resolveExpressions(accessRequest);
+            }
+        }
+
+        if (tokenReplacer != null) {
+            ret = tokenReplacer.replaceTokens(ret, evalContext);
+        }
+
+        return ret;
     }
 
     public static boolean startsWithAnyChar(String value, String startChars) {
@@ -211,81 +288,6 @@ abstract class ResourceMatcher {
 
             return list;
         }
-    }
-
-    @Override
-    public String toString() {
-        return this.getClass().getName() + "(" + this.value + ")";
-    }
-
-    abstract boolean isMatch(String resourceValue, Map<String, Object> evalContext);
-
-    abstract boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext);
-
-    abstract boolean isChildMatch(String resourceValue, Map<String, Object> evalContext);
-
-    final boolean isMatch(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
-        final ResourceElementMatchType matchType = getMatchType(resourceValue, matchingScope, evalContext);
-
-        return isMatch(matchType, matchingScope);
-    }
-
-    final ResourceElementMatchType getMatchType(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
-        ResourceElementMatchType ret = ResourceElementMatchType.NONE;
-
-        if (isMatch(resourceValue, evalContext)) {
-            ret = ResourceElementMatchType.SELF;
-        } else {
-            if (matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX) {
-                if (isPrefixMatch(resourceValue, evalContext)) {
-                    ret = ResourceElementMatchType.PREFIX;
-                }
-            } else if (matchingScope == ResourceElementMatchingScope.SELF_OR_CHILD) {
-                if (isChildMatch(resourceValue, evalContext)) {
-                    ret = ResourceElementMatchType.CHILD;
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    abstract int getPriority();
-
-    boolean isMatchAny() {
-        return value != null && value.isEmpty();
-    }
-
-    boolean getNeedsDynamicEval() {
-        return exprResolver != null || tokenReplacer != null;
-    }
-
-    void setDelimiters(char startDelimiterChar, char endDelimiterChar, char escapeChar, String tokenPrefix) {
-        LOG.debug("==> setDelimiters(value= {}, startDelimiter={}, endDelimiter={}, escapeChar={}, prefix={}", value, startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
-
-        if (exprResolver != null || StringTokenReplacer.hasToken(value, startDelimiterChar, endDelimiterChar, escapeChar)) {
-            tokenReplacer = new StringTokenReplacer(startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
-        }
-
-        LOG.debug("<== setDelimiters(value= {}, startDelimiter={}, endDelimiter={}, escapeChar={}, prefix={}", value, startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
-    }
-
-    String getExpandedValue(Map<String, Object> evalContext) {
-        String ret = value;
-
-        if (exprResolver != null) {
-            RangerAccessRequest accessRequest = RangerAccessRequestUtil.getRequestFromContext(evalContext);
-
-            if (accessRequest != null) {
-                ret = exprResolver.resolveExpressions(accessRequest);
-            }
-        }
-
-        if (tokenReplacer != null) {
-            ret = tokenReplacer.replaceTokens(ret, evalContext);
-        }
-
-        return ret;
     }
 
     public static class PriorityComparator implements Comparator<ResourceMatcher>, Serializable {

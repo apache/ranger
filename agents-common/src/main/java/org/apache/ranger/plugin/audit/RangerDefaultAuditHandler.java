@@ -128,7 +128,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
             ret.setClientIP(request.getClientIPAddress());
             ret.setClientType(request.getClientType());
             ret.setSessionId(request.getSessionId());
-            ret.setAclEnforcer(moduleName);
+            ret.setAclEnforcer(RangerAccessRequestUtil.getAclEnforcerOrDefault(request.getContext(), moduleName));
 
             Set<String> tags = getTags(request);
             if (tags != null) {
