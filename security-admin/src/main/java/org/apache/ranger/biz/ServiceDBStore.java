@@ -225,7 +225,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     public static final     String                        SERVICE_ADMIN_USERS               = "service.admin.users";
     public static final     String                        SERVICE_ADMIN_GROUPS              = "service.admin.groups";
     public static final     String                        GDS_SERVICE_NAME                  = "_gds";
-    public static final     String                        CRYPT_ALGO                        = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO);
+    public static final     String                        CRYPT_ALGO                        = PropertiesUtil.getProperty("ranger.password.encryption.algorithm", PasswordUtils.DEFAULT_CRYPT_ALGO.getAlgoName());
     public static final     String                        ENCRYPT_KEY                       = PropertiesUtil.getProperty("ranger.password.encryption.key", PasswordUtils.DEFAULT_ENCRYPT_KEY);
     public static final     String                        SALT                              = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
     public static final     Integer                       ITERATION_COUNT                   = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
