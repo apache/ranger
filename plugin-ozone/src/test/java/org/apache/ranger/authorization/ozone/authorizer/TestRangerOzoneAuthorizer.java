@@ -1,0 +1,153 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+package org.apache.ranger.authorization.ozone.authorizer;
+
+import org.apache.hadoop.ozone.om.exceptions.OMException;
+import org.apache.hadoop.ozone.security.acl.AssumeRoleRequest;
+import org.apache.hadoop.ozone.security.acl.AssumeRoleRequest.OzoneGrant;
+import org.apache.hadoop.ozone.security.acl.IAccessAuthorizer;
+import org.apache.hadoop.ozone.security.acl.OzoneObj;
+import org.apache.hadoop.ozone.security.acl.OzoneObjInfo;
+import org.apache.hadoop.ozone.security.acl.RequestContext;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.model.RangerInlinePolicy;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+public class TestRangerOzoneAuthorizer {
+    static RangerOzoneAuthorizer ozoneAuthorizer;
+
+    private final String               hostname  = "localhost";
+    private final InetAddress          ipAddress = InetAddress.getLoopbackAddress();
+    private final UserGroupInformation user1     = UserGroupInformation.createRemoteUser("user1");
+    private final UserGroupInformation user2     = UserGroupInformation.createRemoteUser("user2");
+    private final String               role1     = "role1";
+
+    private final OzoneObj vol1  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.VOLUME).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").build();
+    private final OzoneObj buck1 = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.BUCKET).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").setBucketName("buck1").build();
+    private final OzoneObj key1  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.KEY).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").setBucketName("buck1").setKeyName("key1").build();
+    private final OzoneObj vol2  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.VOLUME).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol2").build();
+
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("ozone", null, "om", null, null, null));
+        RangerBasePlugin    plugin        = new RangerBasePlugin(pluginContext.getConfig());
+
+        plugin.init();
+
+        ozoneAuthorizer = new RangerOzoneAuthorizer(plugin);
+
+        assertNotNull(ozoneAuthorizer);
+    }
+
+    @Test
+    public void testAssumeRoleDeny() throws Exception {
+        // user1 should not be allowed to assume role1
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, null);
+
+        assertThrows(OMException.class, () -> ozoneAuthorizer.generateAssumeRoleSessionPolicy(request));
+    }
+
+    @Test
+    public void testAssumeRoleWithNoGrants() throws Exception {
+        // user2 should be allowed to assume role1
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user2, role1, Collections.emptySet());
+
+        String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+        assertNotNull(sessionPolicy);
+        assertNotEquals("", sessionPolicy);
+
+        RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
+
+        assertEquals("r:role1", inlinePolicy.getGrantor());
+        assertNotNull("user1", inlinePolicy.getCreatedBy());
+        assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
+        assertNull(inlinePolicy.getGrants());
+
+        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone");
+        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone");
+        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+
+        // user2 doesn't have access without session-policy
+        assertFalse("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy));
+        assertFalse("session-policy should not allow list on vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy));
+
+        // user2 should have access with session-policy
+        assertTrue("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
+        assertTrue("session-policy should allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
+        assertTrue("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));
+        assertTrue("session-policy should allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy));
+    }
+
+    @Test
+    public void testAssumeRoleWithGrants() throws Exception {
+        OzoneGrant grant1 = new OzoneGrant(new HashSet<>(Arrays.asList(vol1, buck1)), Collections.singleton(IAccessAuthorizer.ACLType.LIST));
+        OzoneGrant grant2 = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.READ));
+
+        // user2 should be allowed to assume role1
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user2, role1, new HashSet<>(Arrays.asList(grant1, grant2)));
+
+        String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+        assertNotNull(sessionPolicy);
+        assertNotEquals("", sessionPolicy);
+
+        RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
+
+        assertEquals("r:role1", inlinePolicy.getGrantor());
+        assertNotNull("user1", inlinePolicy.getCreatedBy());
+        assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
+        assertNotNull(inlinePolicy.getGrants());
+        assertEquals(2, inlinePolicy.getGrants().size());
+
+        assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, new HashSet<>(Arrays.asList("volume:vol1", "bucket:vol1/buck1")), Collections.singleton("list"))));
+        assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, Collections.singleton("key:vol1/buck1/key1"), Collections.singleton("read"))));
+
+        RequestContext ctxListWithSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+
+        // user2 should have access with sessionPolicy
+        assertTrue("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
+        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
+        assertTrue("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));
+        assertTrue("session-policy should allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy));
+    }
+}
