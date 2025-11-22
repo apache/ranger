@@ -76,7 +76,7 @@ public class RangerInlinePolicyEvaluator {
                 evalInlinePolicy = true; // request must be allowed by the inline policy
             } else if (policy.getMode() == RangerInlinePolicy.Mode.RANGER_AND_INLINE) {
                 evalInlinePolicy = isAllowed; // if not allowed by Ranger policies, no need to evaluate inline policy
-            } else { // RANGER_OR_ONLINE
+            } else { // RANGER_OR_INLINE
                 evalInlinePolicy = !isAllowed; // if already allowed by Ranger policies, no need to evaluate inline policy
             }
 
