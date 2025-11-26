@@ -2604,6 +2604,8 @@ public class ServiceREST {
 		List<String> serviceTypeList = null;
 		List<String> serviceNameInServiceTypeList = new ArrayList<String>();
 		boolean isServiceExists = false;
+		int begin = -1;
+		int offset = -1;
 		
 		if (request.getParameter(PARAM_SERVICE_NAME) != null){
 			serviceNames = request.getParameter(PARAM_SERVICE_NAME);
@@ -2623,6 +2625,9 @@ public class ServiceREST {
 		List<RangerPolicy> policyListByServiceName = new ArrayList<RangerPolicy>();
 		
 		if (filter != null) {
+			begin = filter.getBeginIndex();
+			offset = filter.getOffsetIndex();
+			LOG.info("==> beginIndex: " + begin + " offsetIndex: " + offset);
 			filter.setStartIndex(0);
 			filter.setMaxRows(Integer.MAX_VALUE);
 			
@@ -2689,6 +2694,12 @@ public class ServiceREST {
 				policyLists.clear();
 				policyLists.addAll(orderedPolicies.values());
 			}
+		}
+		LOG.info("<==policyLists size:" + policyLists.size());
+
+		if(begin>=0 && offset >0) {
+			policyLists = cutRangerPolicyList(policyLists, filter);
+			LOG.info("<==policyLists size after cut:" + policyLists.size());
 		}
 		return policyLists;
 	}
@@ -3887,6 +3898,45 @@ public class ServiceREST {
 		}
 
 		return ret;
+	}
+
+	private List<RangerPolicy> cutRangerPolicyList(List<RangerPolicy> policyList, SearchFilter filter) {
+		List<RangerPolicy> retList = null;
+		if (CollectionUtils.isNotEmpty(policyList)) {
+			int totalCount = policyList.size();
+			int startIndex = filter.getBeginIndex();
+			int pageSize = filter.getOffsetIndex();
+			int toIndex = Math.min(startIndex + pageSize, totalCount);
+			LOG.info("==>totalCount: " + totalCount  + " startIndex: " + startIndex + " pageSize: " +pageSize + " toIndex: " + toIndex);
+			String sortType = filter.getSortType();
+			String sortBy = filter.getSortBy();
+
+			if (StringUtils.isNotEmpty(sortBy) && StringUtils.isNotEmpty(sortType)) {
+				// By default policyList is sorted by policyId in asc order, So handling only desc case.
+				if (SearchFilter.POLICY_ID.equalsIgnoreCase(sortBy)) {
+					if (SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+						policyList.sort(this.getPolicyComparator(sortBy, sortType));
+					}
+				} else if (SearchFilter.POLICY_NAME.equalsIgnoreCase(sortBy)) {
+					if (SORT_ORDER.ASC.name().equalsIgnoreCase(sortType)) {
+						policyList.sort(this.getPolicyComparator(sortBy, sortType));
+					} else if (SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+						policyList.sort(this.getPolicyComparator(sortBy, sortType));
+					} else {
+						LOG.info("Invalid or Unsupported sortType : " + sortType);
+					}
+				} else {
+					LOG.info("Invalid or Unsupported sortBy property : " + sortBy);
+				}
+			}
+
+			retList = new ArrayList<RangerPolicy>();
+			for (int i = startIndex; i < toIndex; i++) {
+				retList.add(policyList.get(i));
+			}
+
+		}
+		return retList;
 	}
 
 	private Comparator<RangerPolicy> getPolicyComparator(String sortBy, String sortType) {
