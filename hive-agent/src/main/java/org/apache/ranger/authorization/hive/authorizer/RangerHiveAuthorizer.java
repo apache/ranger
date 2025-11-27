@@ -2566,7 +2566,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             ret = hiveOpType == HiveOperationType.EXPORT;
 
             if (!ret) {
-                if (request.getHiveAccessType() == HiveAccessType.UPDATE && RangerHivePlugin.blockUpdateIfRowfilterColumnMaskSpecified) {
+                if ((request.getHiveAccessType() == HiveAccessType.UPDATE || request.getHiveAccessType() == HiveAccessType.ALTER) && RangerHivePlugin.blockUpdateIfRowfilterColumnMaskSpecified) {
                     ret = true;
                 }
             }
