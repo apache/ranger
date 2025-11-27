@@ -76,14 +76,14 @@ public class DB2HSMMKUtil {
             String      password    = conf.get(ENCRYPTION_KEY);
 
             // Get Master Key from Ranger DB
-            RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+            RangerKMSMKI rangerMasterKey    = new RangerMasterKey(daoManager);
             String          mkey            = rangerMasterKey.getMasterKey(password);
             byte[]          key             = Base64.decode(mkey);
 
             // Put Master Key in HSM
-            RangerHSM rangerHSM = new RangerHSM(conf);
+            RangerKMSMKI rangerHSM = new RangerHSM(conf);
 
-            return rangerHSM.setMasterKey(password, key);
+            return rangerHSM.setExternalKeyAsMK(password, key);
         } catch (Throwable t) {
             throw new RuntimeException("Unable to import Master key from Ranger DB to HSM ", t);
         } finally {

@@ -332,43 +332,31 @@ public class RangerMasterKey implements RangerKMSMKI {
         return isMKReencrypted;
     }
 
-    public void generateMKFromHSMMK(String password, byte[] key) throws Throwable {
-        logger.debug("==> RangerMasterKey.generateMKFromHSMMK()");
+    @Override
+    public boolean setExternalKeyAsMK(String password, byte[] key)throws Throwable {
+        logger.debug("==> RangerMasterKey.useExternalKeyAsMK()");
+
+        boolean keySetAsMK = false;
 
         if (!checkMKExistence(this.masterKeyDao)) {
-            logger.info("Master Key doesn't exist in DB, Generating the Master Key");
+            logger.info("Master Key doesn't exist in DB, encrypting and storing the provided Master Key");
 
             String encryptedMasterKey = encryptMasterKey(password, key);
             String savedKey           = saveEncryptedMK(paddingString + "," + encryptedMasterKey);
 
             if (savedKey != null && !savedKey.trim().equals("")) {
-                logger.debug("Master Key Created with id = {}", savedKey);
-                logger.debug("<== RangerMasterKey.generateMKFromHSMMK()");
+                keySetAsMK = true;
+                logger.info("Master Key Created with id = {}", savedKey);
+                logger.debug("<== RangerMasterKey.useExternalKeyAsMK()");
             }
         } else {
-            logger.debug("Ranger Master Key already exists in the DB, returning.");
+            String errMsg = "Ranger Master Key already exists in the DB, returning.";
+            logger.warn(errMsg);
         }
 
-        logger.debug("<== RangerMasterKey.generateMKFromHSMMK()");
-    }
+        logger.debug("<== RangerMasterKey.useExternalKeyAsMK()");
 
-    public void generateMKFromKeySecureMK(String password, byte[] key) throws Throwable {
-        logger.debug("==> RangerMasterKey.generateMKFromKeySecureMK()");
-
-        if (!checkMKExistence(this.masterKeyDao)) {
-            logger.info("Master Key doesn't exist in DB, Generating the Master Key");
-
-            String encryptedMasterKey = encryptMasterKey(password, key);
-            String savedKey           = saveEncryptedMK(paddingString + "," + encryptedMasterKey);
-
-            if (savedKey != null && !savedKey.trim().equals("")) {
-                logger.debug("Master Key Created with id = {}", savedKey);
-            }
-        } else {
-            logger.debug("Ranger Master Key already exists in the DB, returning.");
-        }
-
-        logger.debug("<== RangerMasterKey.generateMKFromKeySecureMK()");
+        return keySetAsMK;
     }
 
     private String decryptMasterKey(byte[] masterKey, String password, String encryptedPassString) throws Throwable {

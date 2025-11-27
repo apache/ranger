@@ -72,9 +72,12 @@ public class KeySecureToRangerDBMKUtil {
             RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
             String                 mKey                   = rangerSafenetKeySecure.getMasterKey(password);
             byte[]                 key                    = Base64.decode(mKey);
-            RangerMasterKey        rangerMasterKey        = new RangerMasterKey(daoManager); // Put Master Key in Ranger DB
+            RangerKMSMKI        rangerMasterKey        = new RangerMasterKey(daoManager); // Put Master Key in Ranger DB
 
-            rangerMasterKey.generateMKFromKeySecureMK(password, key);
+            boolean isMKSet = rangerMasterKey.setExternalKeyAsMK(password, key);
+            if (!isMKSet) {
+                throw new Exception("MK import from KeySecure to KMS-DB failed");
+            }
         } catch (Throwable t) {
             throw new RuntimeException("Unable to migrate Master key from KeySecure to Ranger DB", t);
         }
