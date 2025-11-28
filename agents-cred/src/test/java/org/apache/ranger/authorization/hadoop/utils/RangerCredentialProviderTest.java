@@ -23,14 +23,21 @@ import org.apache.hadoop.security.alias.CredentialShell;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class RangerCredentialProviderTest {
     private final File     ksFile;
     private final String[] argsCreate;
@@ -126,6 +133,13 @@ public class RangerCredentialProviderTest {
         System.out.println("(3) Number of active Threads : " + Thread.activeCount());
 
         listThreads();
+    }
+
+    @Test
+    public void testGetInstanceSingleton() {
+        RangerCredentialProvider first  = RangerCredentialProvider.getInstance();
+        RangerCredentialProvider second = RangerCredentialProvider.getInstance();
+        assertSame(first, second);
     }
 
     @After
