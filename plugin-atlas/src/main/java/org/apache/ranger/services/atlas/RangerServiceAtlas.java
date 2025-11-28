@@ -160,7 +160,10 @@ public class RangerServiceAtlas extends RangerBaseService {
             }
 
             // 2. add a policy-item for rangertagsync user with 'entity-read' permission in the policy for 'entity-type'
-            if (policyResources.containsKey(RESOURCE_ENTITY_TYPE) && !policyResources.containsKey(RESOURCE_CLASSIFICATION)) {
+            final boolean isNonEntityResourceType = policyResources.containsKey(RESOURCE_CLASSIFICATION)
+                    || policyResources.containsKey(RESOURCE_ENTITY_LABEL) || policyResources.containsKey(RESOURCE_ENTITY_BUSINESS_METADATA);
+
+            if (policyResources.containsKey(RESOURCE_ENTITY_TYPE) && !isNonEntityResourceType) {
                 RangerPolicyItem policyItemForTagSyncUser = new RangerPolicyItem();
 
                 policyItemForTagSyncUser.setUsers(Collections.singletonList(tagSyncUser));
@@ -181,7 +184,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 
             if (defaultPolicy.getName().contains("all")
                     && policyResources.containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)
-                    && StringUtils.isNotBlank(lookUpUser) && !policyResources.containsKey(RESOURCE_CLASSIFICATION)) {
+                    && StringUtils.isNotBlank(lookUpUser) && !isNonEntityResourceType) {
                 RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
 
                 policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));

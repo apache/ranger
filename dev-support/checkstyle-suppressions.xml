@@ -90,4 +90,5 @@
   <suppress files="PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053" checks="TypeName"/>
   <suppress files="PatchSetAccessTypeCategory_J10061" checks="TypeName"/>
   <suppress files="PatchTagModulePermission_J10005" checks="TypeName"/>
+  <suppress files="PatchForAtlasPolicyUpdateForEntityRead_J10064" checks="TypeName"/>
 </suppressions>
