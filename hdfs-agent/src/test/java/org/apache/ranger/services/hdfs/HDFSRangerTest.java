@@ -34,11 +34,19 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
 import org.junit.Assert;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivilegedExceptionAction;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Here we plug the Ranger AccessControlEnforcer into HDFS.
@@ -51,6 +59,8 @@ import java.security.PrivilegedExceptionAction;
  * with the tag called "TmpdirTag". A "hdfs_path" entity was created in Apache Atlas + then associated with the "TmpdirTag". This was
  * then imported into Ranger using the TagSyncService. The policies were then downloaded locally and saved for testing off-line.
  */
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class HDFSRangerTest {
     private static final File baseDir = new File("./target/hdfs/").getAbsoluteFile();
 
@@ -138,10 +148,10 @@ public class HDFSRangerTest {
                 try {
                     fs.append(file);
 
-                    Assert.fail("Failure expected on an incorrect permission");
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -181,7 +191,7 @@ public class HDFSRangerTest {
             try (FileSystem fs = FileSystem.get(conf)) {
                 RemoteIterator<LocatedFileStatus> iter = fs.listFiles(file.getParent(), false);
 
-                Assert.assertTrue(iter.hasNext());
+                assertTrue(iter.hasNext());
             }
 
             return null;
@@ -197,7 +207,7 @@ public class HDFSRangerTest {
             try (FileSystem fs = FileSystem.get(conf)) {
                 RemoteIterator<LocatedFileStatus> iter = fs.listFiles(file.getParent(), false);
 
-                Assert.assertTrue(iter.hasNext());
+                assertTrue(iter.hasNext());
             }
 
             return null;
@@ -215,11 +225,11 @@ public class HDFSRangerTest {
                 try {
                     RemoteIterator<LocatedFileStatus> iter = fs.listFiles(file.getParent(), false);
 
-                    Assert.assertTrue(iter.hasNext());
-                    Assert.fail("Failure expected on an incorrect permission");
+                    assertTrue(iter.hasNext());
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -259,9 +269,9 @@ public class HDFSRangerTest {
 
                 IOUtils.copy(in, output);
 
-                String content = new String(output.toByteArray());
+                String content = new String(output.toByteArray(), StandardCharsets.UTF_8);
 
-                Assert.assertTrue(content.startsWith("data0"));
+                assertTrue(content.startsWith("data0"));
             }
 
             return null;
@@ -282,9 +292,9 @@ public class HDFSRangerTest {
 
                 IOUtils.copy(in, output);
 
-                String content = new String(output.toByteArray());
+                String content = new String(output.toByteArray(), StandardCharsets.UTF_8);
 
-                Assert.assertTrue(content.startsWith("data0"));
+                assertTrue(content.startsWith("data0"));
             }
 
             return null;
@@ -303,10 +313,10 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
 
-                    Assert.fail("Failure expected on an incorrect permission");
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -325,10 +335,10 @@ public class HDFSRangerTest {
                 // Read the file
                 try {
                     fs.open(file);
-                    Assert.fail("Failure expected on an incorrect permission");
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -386,9 +396,9 @@ public class HDFSRangerTest {
 
                 IOUtils.copy(in, output);
 
-                String content = new String(output.toByteArray());
+                String content = new String(output.toByteArray(), StandardCharsets.UTF_8);
 
-                Assert.assertTrue(content.startsWith("data0"));
+                assertTrue(content.startsWith("data0"));
             }
 
             return null;
@@ -409,9 +419,9 @@ public class HDFSRangerTest {
 
                 IOUtils.copy(in, output);
 
-                String content = new String(output.toByteArray());
+                String content = new String(output.toByteArray(), StandardCharsets.UTF_8);
 
-                Assert.assertTrue(content.startsWith("data0"));
+                assertTrue(content.startsWith("data0"));
             }
 
             return null;
@@ -429,10 +439,10 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
 
-                    Assert.fail("Failure expected on an incorrect permission");
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -469,10 +479,10 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
 
-                    Assert.fail("Failure expected on an incorrect permission");
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -492,10 +502,10 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
 
-                    Assert.fail("Failure expected on an incorrect permission");
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -514,10 +524,10 @@ public class HDFSRangerTest {
                 // Read the file
                 try {
                     fs.open(file);
-                    Assert.fail("Failure expected on an incorrect permission");
+                    fail("Failure expected on an incorrect permission");
                 } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
+                    assertEquals(AccessControlException.class.getName(), ex.getClass().getName());
                 }
             }
 
@@ -547,7 +557,7 @@ public class HDFSRangerTest {
 
                     Assert.assertEquals("Found unexpected number of directories; expected-count=3, actual-count=" + directoryCount, 3, directoryCount);
                 } catch (Exception e) {
-                    Assert.fail("Failed to getContentSummary, exception=" + e);
+                    fail("Failed to getContentSummary, exception=" + e);
                 }
             }
 

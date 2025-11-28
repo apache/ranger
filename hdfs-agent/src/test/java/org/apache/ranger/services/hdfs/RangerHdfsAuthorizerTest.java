@@ -17,7 +17,7 @@
 
 package org.apache.ranger.services.hdfs;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.server.namenode.INode;
@@ -62,6 +62,8 @@ public class RangerHdfsAuthorizerTest {
 
             file.deleteOnExit();
 
+            String resourceDir = RangerHdfsAuthorizerTest.class.getResource("/hdfs_version_3.0").getPath();
+
             try (FileOutputStream outStream = new FileOutputStream(file);
                     OutputStreamWriter writer = new OutputStreamWriter(outStream, StandardCharsets.UTF_8)) {
                 writer.write("<configuration>\n" +
@@ -72,6 +74,18 @@ public class RangerHdfsAuthorizerTest {
                         "        <property>\n" +
                         "                <name>xasecure.add-hadoop-authorization</name>\n" +
                         "                <value>true</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>ranger.plugin.hdfs.service.name</name>\n" +
+                        "                <value>cl1_hadoop</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>ranger.plugin.hdfs.policy.source.impl</name>\n" +
+                        "                <value>org.apache.ranger.services.hdfs.RangerAdminClientImpl</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>ranger.plugin.hdfs.policy.cache.dir</name>\n" +
+                        "                <value>" + resourceDir + "</value>\n" +
                         "        </property>\n" +
                         "</configuration>\n");
             }
@@ -86,6 +100,8 @@ public class RangerHdfsAuthorizerTest {
         AccessControlEnforcer accessControlEnforcer = null;
 
         rangerControlEnforcer = authorizer.getExternalAccessControlEnforcer(accessControlEnforcer);
+
+        Assert.assertNotNull("rangerControlEnforcer should not be null", rangerControlEnforcer);
     }
 
     @AfterClass
@@ -213,6 +229,7 @@ public class RangerHdfsAuthorizerTest {
         INode  mock     = Mockito.mock(INode.class);
 
         when(mock.getLocalNameBytes()).thenReturn(name.getBytes(StandardCharsets.UTF_8));
+        when(mock.getLocalName()).thenReturn(name);
         when(mock.getUserName()).thenReturn(owner);
         when(mock.getGroupName()).thenReturn(group);
         when(mock.getFullPathName()).thenReturn(fullPath);
