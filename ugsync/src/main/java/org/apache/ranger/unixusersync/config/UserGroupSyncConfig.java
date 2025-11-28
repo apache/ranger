@@ -37,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.XMLUtils;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
@@ -247,19 +248,6 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_REFERRAL = "ranger.usersync.ldap.referral";
 	private static final String DEFAULT_LGSYNC_REFERRAL = "follow";
 
-	public static final String SYNC_MAPPING_USERNAME = "ranger.usersync.mapping.username.regex";
-
-	public static final String SYNC_MAPPING_GROUPNAME = "ranger.usersync.mapping.groupname.regex";
-
-	private static final String SYNC_MAPPING_USERNAME_HANDLER = "ranger.usersync.mapping.username.handler";
-	private static final String DEFAULT_SYNC_MAPPING_USERNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
-
-	private static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
-	private static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
-
-	private static final String SYNC_MAPPING_SEPARATOR = "ranger.usersync.mapping.regex.separator";
-
-	private static final String DEFAULT_MAPPING_SEPARATOR = "/";
     private static final String ROLE_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.role.assignment.list.delimiter";
 
     private static final String USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.users.groups.assignment.list.delimiter";
@@ -1068,19 +1056,19 @@ public class UserGroupSyncConfig  {
 	}
 
 	public String getUserSyncMappingUserNameHandler() {
-		String val =  prop.getProperty(SYNC_MAPPING_USERNAME_HANDLER);
+		String val =  prop.getProperty(UgsyncCommonConstants.SYNC_MAPPING_USERNAME_HANDLER);
 
 		if(val == null) {
-			val = DEFAULT_SYNC_MAPPING_USERNAME_HANDLER;
+			val = UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_USERNAME_HANDLER;
 		}
 		return val;
 	}
 
 	public String getUserSyncMappingGroupNameHandler() {
-		String val =  prop.getProperty(SYNC_MAPPING_GROUPNAME_HANDLER);
+		String val =  prop.getProperty(UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME_HANDLER);
 
 		if(val == null) {
-			val = DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER;
+			val = UgsyncCommonConstants.DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER;
 		}
 		return val;
 	}
@@ -1168,14 +1156,10 @@ public class UserGroupSyncConfig  {
 	}
 
 	public boolean isDeltaSyncEnabled() {
-		boolean deltaSyncEnabled;
 		String val = prop.getProperty(LGSYNC_LDAP_DELTASYNC_ENABLED);
-		if(val == null || val.trim().isEmpty()) {
-			deltaSyncEnabled = DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED;
-		} else {
-			deltaSyncEnabled  = Boolean.valueOf(val);
-		}
-		return deltaSyncEnabled;
+
+		return StringUtils.isBlank(val) ? DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED : Boolean.parseBoolean(val);
+
 	}
 
 	/* Used only for unit testing */
@@ -1368,8 +1352,8 @@ public class UserGroupSyncConfig  {
 	}
 
 	public String getRegexSeparator() {
-		String ret = DEFAULT_MAPPING_SEPARATOR;
-		String val = prop.getProperty(SYNC_MAPPING_SEPARATOR);
+		String ret = UgsyncCommonConstants.DEFAULT_MAPPING_SEPARATOR;
+		String val = prop.getProperty(UgsyncCommonConstants.SYNC_MAPPING_SEPARATOR);
 		if(StringUtils.isNotEmpty(val)) {
 			if (val.length() == 1) {
 				ret = val;

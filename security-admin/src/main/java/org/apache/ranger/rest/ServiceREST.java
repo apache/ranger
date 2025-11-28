@@ -3281,6 +3281,7 @@ public class ServiceREST {
 			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
 			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
 		}
+		LOG.debug("ServiceREST.getSecureServicePoliciesIfUpdated(): configs ={}", ret == null ? ret : ret.getServiceConfig());
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + clusterName + ", " + supportsPolicyDeltas + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}

@@ -17,10 +17,24 @@
  * under the License.
  */
 
-package org.apache.ranger.usergroupsync;
+package org.apache.ranger.ugsyncutil.transform;
 
-public interface Mapper {
-	void init(String baseProperty);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-    String transform(String attrValue);
+import java.util.List;
+
+public abstract class AbstractMapper implements Mapper {
+    protected static final Logger logger = LoggerFactory.getLogger(AbstractMapper.class);
+
+    @Override
+    public void init(String baseProperty, List<String> regexPatterns, String regexSeparator) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public String transform(String attrValue) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }
