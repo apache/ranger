@@ -51,6 +51,8 @@ import javax.security.auth.kerberos.KerberosTicket;
 import java.io.File;
 import java.io.IOException;
 import java.security.PrivilegedActionException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,6 +61,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -66,6 +69,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ElasticSearchAuditDestination extends AuditDestination {
     private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchAuditDestination.class);
+    private static final ThreadLocal<DateFormat> DATE_FORMAT = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return format;
+    });
 
     public static final String CONFIG_URLS     = "urls";
     public static final String CONFIG_PORT     = "port";
@@ -300,7 +308,12 @@ public class ElasticSearchAuditDestination extends AuditDestination {
         doc.put("resType", auditEvent.getResourceType());
         doc.put("reason", auditEvent.getResultReason());
         doc.put("action", auditEvent.getAction());
-        doc.put("evtTime", auditEvent.getEventTime());
+        Date eventTime = auditEvent.getEventTime();
+        if (eventTime != null) {
+            doc.put("evtTime", DATE_FORMAT.get().format(eventTime));
+        } else {
+            doc.put("evtTime", null);
+        }
         doc.put("seq_num", auditEvent.getSeqNum());
         doc.put("event_count", auditEvent.getEventCount());
         doc.put("event_dur_ms", auditEvent.getEventDurationMS());
