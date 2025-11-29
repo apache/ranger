@@ -267,6 +267,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
 	public static final String RANGER_PLUGIN_AUDIT_FILTERS  = "ranger.plugin.audit.filters";
+	public static final String RANGER_PLUGINS_CONFIG_CONF_PREFIX = "ranger.plugins.conf.";
 
 	private static final String  DEFAULT_CSV_SANITIZATION_PATTERN = "^[=+\\-@\\t\\r]";
 	private static final Pattern CSV_SANITIZATION_PATTERN = Pattern.compile(PropertiesUtil.getProperty("ranger.admin.csv.sanitization.pattern", DEFAULT_CSV_SANITIZATION_PATTERN));
@@ -366,6 +367,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
+	private final String  optionUgsyncConfigChange = "ugsyncConfigChange";
 
 	public static final String HIDDEN_PASSWORD_STR = "*****";
 	public static final String CONFIG_KEY_PASSWORD = "password";
@@ -1739,8 +1741,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setGuid(existing.getGuid());
 			service.setVersion(existing.getVersion());
 			service = svcService.update(service);
-
-			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
+			Boolean isUgsyncConfigChange = options != null && options.get(optionUgsyncConfigChange) != null ? (Boolean) options.get(optionUgsyncConfigChange) : Boolean.FALSE;
+			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged || isUgsyncConfigChange) {
 				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null,false);
 			}
 		}
@@ -3056,8 +3058,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 
 		}
-
 		if (LOG.isDebugEnabled()) {
+			LOG.debug("getServicePoliciesIfUpdated({}, {}, {}): configs = {}", serviceName, lastKnownVersion, needsBackwardCompatibility, ret == null ? null : ret.getServiceConfig());
 			LOG.debug("<== ServiceDBStore.getServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
 		}
 
@@ -3091,7 +3093,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 			ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS, cachedPolicyVersion);
 		}
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceDBStore.getServicePolicyDeltas({}, {}): ret = {}", serviceName, lastKnownVersion, ret == null ? ret : ret.getServiceConfig());
+		}
 		return ret;
 	}
 
@@ -3160,6 +3164,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (ret != null) {
 			ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
 			ret.setAuditMode(auditMode);
+			ret.setServiceConfig(getServiceConfigForPlugin(serviceDbObj.getId()));
 			if (ret.getTagPolicies() != null) {
 				ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
 				ret.getTagPolicies().setAuditMode(auditMode);
@@ -3173,6 +3178,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				tagPolicies.setServiceId(tagServiceDbObj.getId());
 				tagPolicies.setServiceName(tagServiceDbObj.getName());
+				tagPolicies.setServiceConfig(getServiceConfigForPlugin(tagServiceDbObj.getId()));
 				tagPolicies.setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
 				tagPolicies.setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
 				tagPolicies.setPolicies(getServicePoliciesFromDb(tagServiceDbObj));
@@ -3185,6 +3191,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			ret.setServiceId(serviceDbObj.getId());
 			ret.setServiceName(serviceDbObj.getName());
+			ret.setServiceConfig(getServiceConfigForPlugin(ret.getServiceId()));
 			ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
 			ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
 			ret.setPolicies(policies);
@@ -3194,6 +3201,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
+			LOG.debug("ServiceDBStore.getServicePolicies({}, {}): ret = {}", serviceName, lastKnownVersion, ret == null ? null : ret.getServiceConfig());
 			LOG.debug("<== ServiceDBStore.getServicePolicies(" + serviceName + ", " + lastKnownVersion + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()) + ", delta-count=" + ((ret == null || ret.getPolicyDeltas() == null) ? 0 : ret.getPolicyDeltas().size()));
 		}
 
@@ -6059,6 +6067,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Override
 	public Map<String, String> getServiceConfigForPlugin(Long serviceId) {
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> ServiceDBStore.getServiceConfigForPlugin({})", serviceId);
+		}
 		Map<String, String> configs = new HashMap<>();
 		List<XXServiceConfigMap> xxServiceConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(serviceId);
 		if (CollectionUtils.isNotEmpty(xxServiceConfigMaps)) {
@@ -6067,6 +6078,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 					configs.put(svcConfMap.getConfigkey(), svcConfMap.getConfigvalue());
 				}
 			}
+		}
+		Map<String, String> rangerPluginsPrefixConfig = PropertiesUtil.getConfigMapWithPrefix(RANGER_PLUGINS_CONFIG_CONF_PREFIX);
+
+		if (MapUtils.isNotEmpty(rangerPluginsPrefixConfig)) {
+			configs.putAll(rangerPluginsPrefixConfig);
+		}
+		if(LOG.isDebugEnabled()){
+			LOG.debug("<== ServiceDBStore.getServiceConfigForPlugin({}): configs = {}", serviceId, configs.keySet());
 		}
 		return configs;
 	}

@@ -45,7 +45,6 @@ import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
-import org.apache.ranger.plugin.util.RangerUserStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,9 +212,7 @@ public class PolicyEngine {
             }
         }
 
-        RangerAuthContext currAuthContext = pluginContext.getAuthContext();
-        RangerUserStore   userStore       = currAuthContext != null ? currAuthContext.getUserStoreUtil().getUserStore() : null;
-        RangerAuthContext authContext     = new RangerAuthContext(null, zoneMatcher, roles, userStore);
+        RangerAuthContext authContext = new RangerAuthContext(pluginContext.getAuthContext(), zoneMatcher, roles);
 
         this.pluginContext.setAuthContext(authContext);
 

@@ -21,6 +21,7 @@ package org.apache.ranger.unixusersync.process;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.PolicyMgrUserGroupBuilderTest;
 import org.junit.Test;
@@ -90,7 +91,8 @@ public class TestFileSourceUserGroupBuilder {
         sink.init();
         fileBuilder.updateSink(sink);
 
-        assertEquals(4, sink.getTotalUsers());
+        assertEquals(4,
+                sink.getTotalUsers());
         assertEquals(2, sink.getTotalGroups());
 
         assertTrue(sink.getAllUsers().contains("user1"));
@@ -135,10 +137,10 @@ public class TestFileSourceUserGroupBuilder {
         config.setProperty(UserGroupSyncConfig.UGSYNC_SOURCE_FILE_PROC, "src/test/resources/usergroups-dns.csv");
         config.setProperty(UserGroupSyncConfig.UGSYNC_SOURCE_FILE_DELIMITERER, "|");
 
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_USERNAME, "s/[=]/_/g");
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_USERNAME + ".1", "s/[,]//g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_USERNAME, "s/[=]/_/g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_USERNAME + ".1", "s/[,]//g");
 
-        config.setProperty(UserGroupSyncConfig.SYNC_MAPPING_GROUPNAME, "s/[=]//g");
+        config.setProperty(UgsyncCommonConstants.SYNC_MAPPING_GROUPNAME, "s/[=]//g");
 
         FileSourceUserGroupBuilder fileBuilder = new FileSourceUserGroupBuilder();
         fileBuilder.init();

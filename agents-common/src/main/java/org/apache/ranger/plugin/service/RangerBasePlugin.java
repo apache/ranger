@@ -356,7 +356,6 @@ public class RangerBasePlugin {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> setPolicies(" + policies + ")");
 		}
-		this.serviceConfigs = (policies != null && policies.getServiceConfig() != null) ? policies.getServiceConfig() : new HashMap<>();
 		if (pluginConfig.isEnableImplicitUserStoreEnricher() && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
 			String retrieverClassName = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
 			String retrieverPollIntMs = pluginConfig.get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
@@ -370,8 +369,8 @@ public class RangerBasePlugin {
 				isUserStoreEnricherAddedImplcitly = ServiceDefUtil.addUserStoreEnricherIfNeeded(policies, retrieverClassName, retrieverPollIntMs);
 			}
 		}
-
-		String isSyncPolicyRefresh = this.pluginConfig == null ? null : this.serviceConfigs.get(this.pluginConfig.getPropertyPrefix() + ".policy.refresh.synchronous");
+//		String isSyncPolicyRefresh = this.pluginConfig == null ? null : this.serviceConfigs.get(this.pluginConfig.getPropertyPrefix() + ".policy.refresh.synchronous");
+		String isSyncPolicyRefresh = this.pluginConfig == null ? null : (this.serviceConfigs == null ? null : this.serviceConfigs.get(this.pluginConfig.getPropertyPrefix() + ".policy.refresh.synchronous"));
 		this.synchronousPolicyRefresh = Boolean.parseBoolean(isSyncPolicyRefresh);
 		if (this.synchronousPolicyRefresh) {
 			LOG.info("synchronousPolicyRefresh = {}", this.synchronousPolicyRefresh);
@@ -499,6 +498,8 @@ public class RangerBasePlugin {
 						newPolicyEngine.setUseForwardedIPAddress(pluginConfig.isUseForwardedIPAddress());
 						newPolicyEngine.setTrustedProxyAddresses(pluginConfig.getTrustedProxyAddresses());
 					}
+
+                    setServiceConfigs(policies.getServiceConfig());
 
 					LOG.info("Switching policy engine from [" + getPolicyVersion() + "]");
 					this.policyEngine       = newPolicyEngine;
@@ -1421,6 +1422,18 @@ public class RangerBasePlugin {
 			LOG.debug("<== RangerBasePlugin.mergeACLsOneWay(isUser=" + userType.name() + ")");
 		}
 	}
+
+    private void setServiceConfigs(Map<String, String> serviceConfigs) {
+        Map<String, String> oldServiceConfigs = this.serviceConfigs;
+
+        this.serviceConfigs = serviceConfigs != null ? serviceConfigs : new HashMap<>();
+
+        RangerAuthContext authContext = this.pluginContext.getAuthContext();
+
+        if (authContext != null && !Objects.equals(oldServiceConfigs, this.serviceConfigs)) {
+            authContext.onServiceConfigsUpdate(this.serviceConfigs);
+        }
+    }
 
 	private static AuditProviderFactory getAuditProviderFactory(String serviceName) {
 		AuditProviderFactory ret = AuditProviderFactory.getInstance();

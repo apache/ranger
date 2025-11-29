@@ -52,6 +52,7 @@
         <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
         <include>org.apache.ranger:ranger-plugins-cred</include>
         <include>org.apache.ranger:ranger-plugins-common</include>
+        <include>org.apache.ranger:ugsync-util</include>
         <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
       </includes>
       <binaries>
