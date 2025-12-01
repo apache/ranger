@@ -22,6 +22,7 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -161,9 +162,19 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 
 	protected T populateEntityBeanForCreate(T entityObj, V vObj) {
 		if(!populateExistingBaseFields) {
+			Long addedByUserId = ContextUtil.getCurrentUserId();
+
+			if (addedByUserId == null) {
+				XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getCreatedBy());
+
+				if (createdByUser != null) {
+					addedByUserId = createdByUser.getId();
+				}
+			}
+
 			entityObj.setCreateTime(DateUtil.getUTCDate());
 			entityObj.setUpdateTime(entityObj.getCreateTime());
-			entityObj.setAddedByUserId(ContextUtil.getCurrentUserId());
+			entityObj.setAddedByUserId(addedByUserId);
 			entityObj.setUpdatedByUserId(entityObj.getAddedByUserId());
 		} else if(populateExistingBaseFields) {
 			XXPortalUser createdByUser = daoMgr.getXXPortalUser().findByLoginId(vObj.getCreatedBy());
@@ -197,8 +208,13 @@ public abstract class RangerBaseModelService<T extends XXDBBase, V extends Range
 		}
 
 		if(!populateExistingBaseFields) {
+			Long currentUserId = ContextUtil.getCurrentUserId();
+
 			ret.setUpdateTime(DateUtil.getUTCDate());
-			ret.setUpdatedByUserId(ContextUtil.getCurrentUserId());
+
+			if (Objects.nonNull(currentUserId)) {
+				ret.setUpdatedByUserId(currentUserId);
+			}
 		}
 
 		return ret;
