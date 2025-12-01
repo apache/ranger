@@ -1890,7 +1890,7 @@ public class TestXUserREST {
 	@SuppressWarnings({ "unchecked", "static-access" })
 	@Test
 	public void test113ErrorWhenRoleUserIsTryingToFetchAnotherUserDetails() {
-	
+
 		destroySession();
 		String userLoginID = "testuser";
 		Long userId = 8L;
@@ -1935,7 +1935,7 @@ public class TestXUserREST {
 	@SuppressWarnings({ "unchecked", "static-access" })
 	@Test
 	public void test114RoleUserWillGetOnlyHisOwnUserDetails() {
-	
+
 		destroySession();
 		String userLoginID = "testuser";
 		Long userId = 8L;
@@ -1977,8 +1977,8 @@ public class TestXUserREST {
 		Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
 		Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null,null)).thenReturn(new ArrayList<String>());
 		Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
+		Mockito.when(xUserMgr.hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)).thenReturn(true);
 		Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
-		Mockito.when(xUserMgr.searchXUsers(testSearchCriteria)).thenReturn(expecteUserList);
 		VXUserList gotVXUserList=xUserRest.searchXUsers(request, null, null);
 		
 		assertEquals(gotVXUserList.getList().size(), 1);
@@ -2017,7 +2017,7 @@ public class TestXUserREST {
 		assertEquals(retVXGroupPermission.getClass(), testVXGroupPermission.getClass());
 
 	}
-	
+
 	@After
 	public void destroySession() {
 		RangerSecurityContext context = new RangerSecurityContext();
