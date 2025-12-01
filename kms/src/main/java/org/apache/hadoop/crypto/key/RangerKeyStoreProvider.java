@@ -40,8 +40,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.crypto.CipherSuite;
 import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableReadLock;
 import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableTryWriteLock;
 import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableWriteLock;
@@ -240,6 +242,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
         }
 
         KeyVersion ret;
+        validateKeyCiphers(options.getCipher());
 
         try (AutoClosableWriteLock ignored = new AutoClosableWriteLock(lock)) {
             reloadKeys();
@@ -602,6 +605,16 @@ public class RangerKeyStoreProvider extends KeyProvider {
         }
 
         return conf;
+    }
+
+    private void validateKeyCiphers(String ciphers) throws IOException {
+        if (StringUtils.isNotEmpty(ciphers)) {
+            try {
+                CipherSuite.convert(ciphers);
+            }  catch (Exception e) {
+                throw new IOException("Invalid ciphers: " + ciphers, e);
+            }
+        }
     }
 
     private static void getFromJceks(Configuration conf, String path, String alias, String key) {
