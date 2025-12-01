@@ -301,6 +301,7 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
                 SearchFilter filter = new SearchFilter();
 
                 filter.setParam(SearchFilter.SERVICE_NAME, dbService.getName());
+                filter.setParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES, "true");
 
                 updateTagPolicies(svcDBStore.getServicePolicies(dbService.getId(), filter));
             }
