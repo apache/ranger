@@ -114,8 +114,8 @@
                     <include>com.sun.mail:javax.mail</include>
                     <include>com.nimbusds:nimbus-jose-jwt</include>
                     <include>com.microsoft.azure:azure-keyvault-webkey</include>
-                    <include>org.bouncycastle:bcprov-jdk15on</include>
-                    <include>org.bouncycastle:bcpkix-jdk15on</include>
+                    <include>org.bouncycastle:bcprov-jdk18on</include>
+                    <include>org.bouncycastle:bcpkix-jdk18on</include>
                     <include>com.microsoft.azure:azure-mgmt-resources</include>
                     <include>com.microsoft.azure:azure-client-authentication</include>
                     <include>com.microsoft.azure:azure-mgmt-graph-rbac</include>
