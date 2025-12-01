@@ -31,6 +31,8 @@ fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
+cp ${RANGER_SCRIPTS}/hive-log4j2.properties ${HIVE_HOME}/conf/hive-log4j2.properties
+cp ${RANGER_SCRIPTS}/hive-metastore-log4j2.properties ${HIVE_HOME}/conf/hive-metastore-log4j2.properties
 
 # Configure Tez
 mkdir -p ${TEZ_HOME}/conf
@@ -76,6 +78,10 @@ cat <<EOF > ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
   <property>
     <name>yarn.resourcemanager.address</name>
     <value>ranger-hadoop:8032</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.principal</name>
+    <value>rm/ranger-hadoop.rangernw@EXAMPLE.COM</value>
   </property>
 </configuration>
 EOF
