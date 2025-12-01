@@ -91,11 +91,11 @@ cd "${HIVE_HOME}" || exit
 
 # Start Hive MetaStore
 echo "Starting Hive MetaStore..."
-su -c "nohup ${HIVE_HOME}/bin/hive --service metastore > metastore.log 2>&1 &" hive
+su -c "export HADOOP_CLIENT_OPTS='${HADOOP_CLIENT_OPTS} -Dlog4j2.configurationFile=file:${HIVE_HOME}/conf/hive-metastore-log4j2.properties' && nohup ${HIVE_HOME}/bin/hive --service metastore &" hive
 
 # Start HiveServer2
 echo "Starting HiveServer2..."
-su -c "nohup ${HIVE_HOME}/bin/hiveserver2 > hive-server2.log 2>&1 &" hive
+su -c "export HADOOP_CLIENT_OPTS='${HADOOP_CLIENT_OPTS} -Dlog4j2.configurationFile=file:${HIVE_HOME}/conf/hive-log4j2.properties' && nohup ${HIVE_HOME}/bin/hiveserver2 &" hive
 
 # Wait for services to initialize
 echo "Waiting for Hive services to initialize..."
