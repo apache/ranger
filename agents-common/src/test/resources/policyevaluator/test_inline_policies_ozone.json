@@ -1,0 +1,233 @@
+{
+  "servicePolicies": {
+    "serviceName": "dev_ozone", "serviceId": 1,
+
+    "serviceDef":{
+      "id": 1, "name":"ozone",
+      "resources":[
+        { "name": "volume", "level": 1, "parent": "",       "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true },  "label": "Volume", "description": "Volume" },
+        { "name": "bucket", "level": 2, "parent": "volume", "matcher":"org.apache.ranger.plugin.resourcematcher.RangerURLResourceMatcher",     "matcherOptions": { "wildCard": true, "ignoreCase": true },  "label": "Bucket", "description": "Bucket" },
+        { "name": "key",    "level": 3, "parent": "bucket", "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true },  "label": "Key",    "description": "Key" },
+        { "name": "role",   "level": 4, "parent": "",       "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": false }, "label": "Role",   "description": "Role" }
+      ],
+      "accessTypes":[
+        { "name": "read",        "label": "Read" },
+        { "name": "write",       "label": "Write" },
+        { "name": "create",      "label": "Create" },
+        { "name": "list",        "label": "List" },
+        { "name": "delete",      "label": "Delete" },
+        { "name": "read_acl",    "label": "Read_ACL" },
+        { "name": "write_acl",   "label": "Write_ACL" },
+        { "name": "all",         "label": "All", "impliedGrants": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl" ] },
+        { "name": "assume_role", "label": "Assume_Role" }
+      ]
+    },
+    "policies": [
+      { "id": 100, "name": "role: data-reader", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "role": { "values": [ "data-reader" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "assume_role" } ], "users":[ "svc-iceberg-rest-catalog" ] }
+        ]
+      },
+      { "id": 101, "name": "role: data-all-access", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "role": { "values": [ "data-all-access" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "assume_role" } ], "users":[ "svc-iceberg-rest-catalog" ] }
+        ]
+      },
+      { "id": 200, "name": "iceberg-data", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "volume": { "values": [ "s3v" ] }, "bucket": { "values": [ "iceberg" ] }, "key": { "values":  [ "*" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "read" }, { "type": "list" }, { "type": "read_acl" } ], "users": [ "analyst" ], "roles":[ "data-reader" ] },
+          { "accesses": [ { "type": "all" } ], "users":  [ "svc-etl" ], "roles":[ "data-all-access" ] }
+        ]
+      }
+    ],
+    "tagPolicies": { },
+    "securityZones": { }
+  },
+
+  "tests":[
+    { "name": "ALLOW 'assume_role data-reader;' for svc-iceberg-rest-catalog",
+      "request": {
+        "resource": { "elements": { "role": "data-reader" } }, "accessType": "assume_role", "user": "svc-iceberg-rest-catalog"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 100}
+    },
+    { "name": "ALLOW 'assume_role data-all-access;' for svc-iceberg-rest-catalog",
+      "request": {
+        "resource": { "elements": { "role": "data-all-access" } }, "accessType": "assume_role", "user": "svc-iceberg-rest-catalog"
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 101}
+    },
+    { "name": "DENY 'assume_role data-reader;' for user1",
+      "request": {
+        "resource": { "elements": { "role": "data-reader" } }, "accessType": "assume_role", "user": "user1"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "DENY 'assume_role data-all-access;' for user1",
+      "request": {
+        "resource": { "elements": { "role": "data-all-access" } }, "accessType": "assume_role", "user": "user1"
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "ALLOW 'read s3v/iceberg/key1;' for inline-policy-reader",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "accessType": "read",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "INLINE" }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": -1}
+    },
+    { "name": "DENY 'write s3v/iceberg/key1;' for inline-policy-reader",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "INLINE" }
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "DENY 'write s3v/warehouse/key1;' for inline-policy-reader",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "warehouse", "key": "key1" } }, "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "INLINE" }
+      },
+      "result": { "isAudited": false, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "ALLOW 'read s3v/iceberg/key1;' for inline-policy-all-access",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "accessType": "read",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "INLINE" }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": -1}
+    },
+    { "name": "ALLOW 'write s3v/iceberg/key1;' for inline-policy-all-access",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "INLINE" }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": -1}
+    },
+    { "name": "DENY 'write s3v/warehouse/key1;' for inline-policy-all-access",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "warehouse", "key": "key1" } }, "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "INLINE" }
+      },
+      "result": { "isAudited": false, "isAllowed": false, "policyId": -1}
+    },
+
+
+    { "name": "ALLOW 'read s3v/iceberg/key1;' for user=analyst; inline-policy for key2 with mode RANGER_OR_INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "user": "analyst", "accessType": "read",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "RANGER_OR_INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2"], "permissions": [ "read", "list", "read_acl" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 200 }
+    },
+    { "name": "DENY 'read s3v/iceberg/key1;' for user=analyst; inline-policy for key2 with mode RANGER_AND_INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "user": "analyst", "accessType": "read",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "RANGER_AND_INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2"], "permissions": [ "read", "list", "read_acl" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "DENY 'read s3v/iceberg/key1;' for user=analyst; inline-policy for key2 with mode INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "user": "analyst", "accessType": "read",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2"], "permissions": [ "read", "list", "read_acl" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "ALLOW 'read s3v/iceberg/key2;' for user=analyst; inline-policy for key2 with mode RANGER_AND_INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key2" } }, "user": "analyst", "accessType": "read",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "RANGER_OR_INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2"], "permissions": [ "read", "list", "read_acl" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 200 }
+    },
+    { "name": "ALLOW 'read s3v/iceberg/key2;' for user=analyst; inline-policy for key2 with mode INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key2" } }, "user": "analyst", "accessType": "read",
+        "inlinePolicy": { "grantor":  "r:data-reader", "mode": "INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2" ], "permissions": [ "read", "list", "read_acl" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": -1 }
+    },
+
+
+    { "name": "ALLOW 'write s3v/iceberg/key1;' for user=svc-etl; inline-policy for key2 with mode RANGER_OR_INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "user": "svc-etl", "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "RANGER_OR_INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2"], "permissions": [ "all" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 200 }
+    },
+    { "name": "DENY 'write s3v/iceberg/key1;' for user=svc-etl; inline-policy for key2 with mode RANGER_AND_INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "user": "svc-etl", "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "RANGER_AND_INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2"], "permissions": [ "all" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "DENY 'read s3v/iceberg/key1;' for user=svc-etl; inline-policy for key2 with mode INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key1" } }, "user": "svc-etl", "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "INLINE",
+          "grants": [
+            { "principals": [ "u:analyst" ], "resources": [ "key:s3v/iceberg/key2"], "permissions": [ "all" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1}
+    },
+    { "name": "ALLOW 'write s3v/iceberg/key2;' for user=svc-etl; inline-policy for key2 with mode RANGER_AND_INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key2" } }, "user": "svc-etl", "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "RANGER_OR_INLINE",
+          "grants": [
+            { "principals": [ "u:svc-etl" ], "resources": [ "key:s3v/iceberg/key2" ], "permissions": [ "all" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 200 }
+    },
+    { "name": "ALLOW 'write s3v/iceberg/key2;' for user=svc-etl; inline-policy for key2 with mode INLINE",
+      "request": {
+        "resource": { "elements": { "volume": "s3v", "bucket": "iceberg", "key": "key2" } }, "user": "svc-etl", "accessType": "write",
+        "inlinePolicy": { "grantor":  "r:data-all-access", "mode": "INLINE",
+          "grants": [
+            { "principals": [ "u:svc-etl" ], "resources": [ "key:s3v/iceberg/key2" ], "permissions": [ "all" ] }
+          ]
+        }
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": -1 }
+    }
+  ]
+}
+

@@ -26,10 +26,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
+import org.apache.ranger.plugin.model.RangerInlinePolicy;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
+import org.apache.ranger.plugin.policyevaluator.RangerInlinePolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.service.RangerDefaultRequestProcessor;
@@ -617,6 +619,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
         updateFromGdsResult(ret);
 
+        evaluateInlinePolicy(request, ret);
+
         LOG.debug("<== RangerPolicyEngineImpl.zoneAwareAccessEvaluationWithNoAudit({}, policyType ={}): {}", request, policyType, ret);
 
         return ret;
@@ -1114,6 +1118,22 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
             result.setPolicyId(gdsResult.getPolicyId());
             result.setPolicyVersion(gdsResult.getPolicyVersion());
             result.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+        }
+    }
+
+    private void evaluateInlinePolicy(RangerAccessRequest request, RangerAccessResult result) {
+        if (request != null && result != null) {
+            RangerInlinePolicy inlinePolicy = request.getInlinePolicy();
+
+            if (inlinePolicy != null) {
+                LOG.debug("Evaluating inline policy: {}", inlinePolicy);
+
+                RangerInlinePolicyEvaluator evaluator = new RangerInlinePolicyEvaluator(inlinePolicy, this);
+
+                result.incrementEvaluatedPoliciesCount();
+
+                evaluator.evaluate(request, result);
+            }
         }
     }
 

@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.plugin.model.RangerInlinePolicy;
 
 import java.util.Date;
 import java.util.List;
@@ -147,5 +148,10 @@ public class RangerAccessRequestWrapper implements RangerAccessRequest {
     @Override
     public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
         return request.getResourceElementMatchingScopes();
+    }
+
+    @Override
+    public RangerInlinePolicy getInlinePolicy() {
+        return request.getInlinePolicy();
     }
 }

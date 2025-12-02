@@ -37,6 +37,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class RangerAccessRequestUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestUtil.class);
+
     public static final  String KEY_CONTEXT_TAGS                             = "TAGS";
     public static final  String KEY_CONTEXT_TAG_OBJECT                       = "TAG_OBJECT";
     public static final  String KEY_CONTEXT_RESOURCE                         = "RESOURCE";
@@ -56,7 +58,7 @@ public class RangerAccessRequestUtil {
     public static final  String KEY_CONTEXT_GDS_RESULT                       = "_GDS_RESULT";
     public static final  String KEY_CONTEXT_IS_REQUEST_PREPROCESSED          = "ISREQUESTPREPROCESSED";
     public static final  String KEY_CONTEXT_RESOURCE_ZONE_NAMES              = "RESOURCE_ZONE_NAMES";
-    private static final Logger LOG                                          = LoggerFactory.getLogger(RangerAccessRequestUtil.class);
+    public static final  String KEY_CONTEXT_ACL_ENFORCER                     = "_ACL_ENFORCER";
 
     private RangerAccessRequestUtil() {
         // to avoid instantiation
@@ -449,6 +451,22 @@ public class RangerAccessRequestUtil {
             }
 
             results.putIfAbsent(accessType, result);
+        }
+    }
+
+    public static String getAclEnforcerOrDefault(Map<String, Object> context, String defaultValue) {
+        Object ret = context != null ? context.get(KEY_CONTEXT_ACL_ENFORCER) : null;
+
+        return ret instanceof String ? (String) ret : defaultValue;
+    }
+
+    public static void setAclEnforcer(Map<String, Object> context, String aclEnforcer) {
+        if (context != null) {
+            if (aclEnforcer != null) {
+                context.put(KEY_CONTEXT_ACL_ENFORCER, aclEnforcer);
+            } else {
+                context.remove(KEY_CONTEXT_ACL_ENFORCER);
+            }
         }
     }
 }
