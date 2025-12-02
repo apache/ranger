@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.plugin.model.RangerInlinePolicy;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +60,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private boolean                                   isAccessTypeDelegatedAdmin;
 	private ResourceMatchingScope                     resourceMatchingScope         = ResourceMatchingScope.SELF;
 	private Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes = Collections.emptyMap();
+	private RangerInlinePolicy                        inlinePolicy;
 
 	public RangerAccessRequestImpl() {
 		this(null, null, null, null, null);
@@ -201,6 +203,11 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		return isAccessTypeDelegatedAdmin;
 	}
 
+	@Override
+	public RangerInlinePolicy getInlinePolicy() {
+		return inlinePolicy;
+	}
+
 	public void setResource(RangerAccessResource resource) {
 		this.resource = resource;
 		if (context != null) {
@@ -307,6 +314,10 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		}
 	}
 
+	public void setInlinePolicy(RangerInlinePolicy inlinePolicy) {
+		this.inlinePolicy = inlinePolicy;
+	}
+
 	public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[] trustedProxyAddresses) {
 		String ip = getRemoteIPAddress();
 		if (ip == null) {
@@ -389,6 +400,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("resourceElementMatchingScopes={").append(resourceElementMatchingScopes).append("} ");
 		sb.append("clusterName={").append(clusterName).append("} ");
 		sb.append("clusterType={").append(clusterType).append("} ");
+		sb.append("inlinePolicy={").append(inlinePolicy).append("} ");
 
 		sb.append("context={");
 		if (context != null) {

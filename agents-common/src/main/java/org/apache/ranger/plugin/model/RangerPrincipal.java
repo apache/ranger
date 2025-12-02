@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -36,7 +37,9 @@ import java.util.Objects;
 public class RangerPrincipal implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
-    public enum PrincipalType { USER, GROUP, ROLE }
+    public static final String PREFIX_USER  = "u:";
+    public static final String PREFIX_GROUP = "g:";
+    public static final String PREFIX_ROLE  = "r:";
 
     private PrincipalType type;
     private String        name;
@@ -93,5 +96,21 @@ public class RangerPrincipal implements java.io.Serializable {
     @Override
     public String toString() {
         return "{type=" + type + ", name=" + name + "}";
+    }
+
+    public enum PrincipalType { USER, GROUP, ROLE }
+
+    public static RangerPrincipal toPrincipal(String name) {
+        if (StringUtils.isBlank(name)) {
+            return null;
+        } else if (name.startsWith(PREFIX_USER)) {
+            return new RangerPrincipal(PrincipalType.USER, name.substring(PREFIX_USER.length()));
+        } else if (name.startsWith(PREFIX_GROUP)) {
+            return new RangerPrincipal(PrincipalType.GROUP, name.substring(PREFIX_GROUP.length()));
+        } else if (name.startsWith(PREFIX_ROLE)) {
+            return new RangerPrincipal(PrincipalType.ROLE, name.substring(PREFIX_ROLE.length()));
+        } else {
+            return new RangerPrincipal(PrincipalType.USER, name);
+        }
     }
 }

@@ -51,7 +51,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES              = "RESOURCE_ZONE_NAMES";
 	public static final String KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS            = "ALLACCESSTYPEGROUPS";
 	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS      = "ALL_ACCESS_TYPE_ACL_RESULTS";
-
+	public static final String KEY_CONTEXT_ACL_ENFORCER                     = "_ACL_ENFORCER";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if (CollectionUtils.isEmpty(tags)) {
@@ -414,6 +414,22 @@ public class RangerAccessRequestUtil {
 			}
 
 			results.putIfAbsent(accessType, result);
+		}
+	}
+
+	public static String getAclEnforcerOrDefault(Map<String, Object> context, String defaultValue) {
+		Object ret = context != null ? context.get(KEY_CONTEXT_ACL_ENFORCER) : null;
+
+		return ret instanceof String ? (String) ret : defaultValue;
+	}
+
+	public static void setAclEnforcer(Map<String, Object> context, String aclEnforcer) {
+		if (context != null) {
+			if (aclEnforcer != null) {
+				context.put(KEY_CONTEXT_ACL_ENFORCER, aclEnforcer);
+			} else {
+				context.remove(KEY_CONTEXT_ACL_ENFORCER);
+			}
 		}
 	}
 }
