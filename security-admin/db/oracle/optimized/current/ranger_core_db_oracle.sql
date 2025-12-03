@@ -2145,6 +2145,29 @@ CREATE VIEW vx_principal as
         (SELECT g.group_name AS principal_name, 1 AS principal_type, g.status AS status, g.is_visible AS is_visible, g.other_attributes AS other_attributes, g.create_time AS create_time, g.update_time AS update_time, g.added_by_id AS added_by_id, g.upd_by_id AS upd_by_id FROM x_group g) UNION ALL
         (SELECT r.name       AS principal_name, 2 AS principal_type, 1        AS status, 1            AS is_visible, null               AS other_attributes, r.create_time AS create_time, r.update_time AS update_time, r.added_by_id AS added_by_id, r.upd_by_id AS upd_by_id FROM x_role r);
 
+DROP VIEW vx_security_zone_user;
+CREATE OR REPLACE VIEW vx_security_zone_user AS
+        (SELECT sz.id AS zone_id, sz.name AS zone_name, refu.user_id AS user_id, 0 AS access_type
+         FROM x_security_zone sz INNER JOIN x_security_zone_ref_user refu ON sz.id = refu.zone_id
+         WHERE refu.user_id IS NOT NULL) UNION
+        (SELECT sz.id AS zone_id, sz.name AS zone_name, gu.user_id AS user_id, 1 AS access_type
+         FROM x_security_zone sz INNER JOIN x_security_zone_ref_group refg ON sz.id = refg.zone_id
+         INNER JOIN x_group_users gu ON refg.group_id = gu.p_group_id
+         WHERE gu.user_id IS NOT NULL) UNION
+        (SELECT sz.id AS zone_id, sz.name AS zone_name, rru.user_id AS user_id, 2 AS access_type
+         FROM x_security_zone sz INNER JOIN x_security_zone_ref_role refr ON sz.id = refr.zone_id
+         INNER JOIN x_role_ref_user rru ON refr.role_id = rru.role_id
+         WHERE rru.user_id IS NOT NULL) UNION
+        (SELECT sz.id AS zone_id, sz.name AS zone_name, gu.user_id AS user_id, 3 AS access_type
+         FROM x_security_zone sz INNER JOIN x_security_zone_ref_role refr ON sz.id = refr.zone_id
+         INNER JOIN x_role_ref_group rrg ON refr.role_id = rrg.role_id
+         INNER JOIN x_group_users gu ON rrg.group_id = gu.p_group_id
+         WHERE gu.user_id IS NOT NULL) UNION
+        (SELECT sz.id AS zone_id, sz.name AS zone_name, u.id AS user_id, 4 AS access_type
+         FROM x_security_zone sz INNER JOIN x_security_zone_ref_group refg ON sz.id = refg.zone_id
+         CROSS JOIN x_user u
+         WHERE refg.group_name = 'public');
+
 commit;
 
 insert into x_portal_user (id,CREATE_TIME, UPDATE_TIME,FIRST_NAME, LAST_NAME, PUB_SCR_NAME, LOGIN_ID, PASSWORD, EMAIL, STATUS) values (X_PORTAL_USER_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), 'Admin', '', 'Admin', 'admin', 'ceb4f32325eda6142bd65215f4c0f371', '', 1);

@@ -20,6 +20,7 @@ package org.apache.ranger.biz;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -181,12 +182,25 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
     @Override
     public List<RangerSecurityZone> getSecurityZones(SearchFilter filter) {
-        List<RangerSecurityZone> ret             = new ArrayList<>();
-        List<XXSecurityZone>     xxSecurityZones = daoMgr.getXXSecurityZoneDao().getAll();
+        List<RangerSecurityZone> ret = new ArrayList<>();
+        List<Long>               zones;
 
-        for (XXSecurityZone xxSecurityZone : xxSecurityZones) {
-            if (!xxSecurityZone.getId().equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
-                ret.add(securityZoneService.read(xxSecurityZone.getId()));
+        if (bizUtil.isAdmin()) {
+            zones = daoMgr.getXXSecurityZoneDao().findAllZoneForAdmin();
+        } else {
+            Long xUserId = daoMgr.getXXUser().findIdByUserName(ContextUtil.getCurrentUserLoginId());
+            if (xUserId == null) {
+                return Collections.emptyList();
+            }
+            zones = daoMgr.getXXSecurityZoneDao().findAllZoneForUser(xUserId);
+        }
+
+        for (Long zone : zones) {
+            RangerSecurityZone securityzone = securityZoneService.read(zone);
+            if (securityzone != null) {
+                ret.add(securityzone);
+            } else {
+                LOG.warn("Security zone not found for Id Number: {}", zone);
             }
         }
 
@@ -239,12 +253,27 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         String  namePrefix         = request.getParameter(SearchFilter.ZONE_NAME_PREFIX);
         boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
 
-        List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
+        List<RangerSecurityZoneHeaderInfo> ret;
 
-        if (!ret.isEmpty() && filterByNamePrefix) {
-            ret.removeIf(zoneHeader -> !StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix));
+        if (bizUtil.isAdmin()) {
+            if (filterByNamePrefix) {
+                ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosWithNamePrefix(namePrefix);
+            } else {
+                ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
+            }
+        } else {
+            Long xUserId = daoMgr.getXXUser().findIdByUserName(ContextUtil.getCurrentUserLoginId());
+
+            if (xUserId == null) {
+                return Collections.emptyList();
+            }
+
+            if (filterByNamePrefix) {
+                ret = daoMgr.getXXSecurityZoneDao().findZoneHeaderInfosForUserWithNamePrefix(xUserId, namePrefix);
+            } else {
+                ret = daoMgr.getXXSecurityZoneDao().findZoneHeaderInfosForUser(xUserId);
+            }
         }
-
         return ret;
     }
 
@@ -272,16 +301,32 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
 
     public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(Long serviceId, Boolean isTagService, HttpServletRequest request) {
         if (serviceId == null) {
-            throw restErrorUtil.createRESTException("Invalid value for serviceId", MessageEnums.INVALID_INPUT_DATA);
+            return Collections.emptyList();
         }
 
         String  namePrefix         = request.getParameter(SearchFilter.ZONE_NAME_PREFIX);
         boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
 
-        List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId, isTagService);
+        List<RangerSecurityZoneHeaderInfo> ret;
 
-        if (!ret.isEmpty() && filterByNamePrefix) {
-            ret.removeIf(zoneHeader -> !StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix));
+        if (bizUtil.isAdmin()) {
+            if (filterByNamePrefix) {
+                ret = daoMgr.getXXSecurityZoneDao().findZoneHeaderInfosByServiceIdWithNamePrefix(serviceId, isTagService, namePrefix);
+            } else {
+                ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId, isTagService);
+            }
+        } else {
+            Long xUserId = daoMgr.getXXUser().findIdByUserName(ContextUtil.getCurrentUserLoginId());
+
+            if (xUserId == null) {
+                return Collections.emptyList();
+            }
+
+            if (filterByNamePrefix) {
+                ret = daoMgr.getXXSecurityZoneDao().findZoneHeaderInfosByServiceIdForUserWithNamePrefix(serviceId, isTagService, xUserId, namePrefix);
+            } else {
+                ret = daoMgr.getXXSecurityZoneDao().findZoneHeaderInfosByServiceIdForUser(serviceId, isTagService, xUserId);
+            }
         }
 
         return ret;

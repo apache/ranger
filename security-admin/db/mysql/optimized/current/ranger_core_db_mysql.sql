@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+DROP VIEW IF EXISTS `vx_security_zone_user`;
 DROP VIEW IF EXISTS `vx_principal`;
 DROP TABLE IF EXISTS `x_rms_mapping_provider`;
 DROP TABLE IF EXISTS `x_rms_resource_mapping`;
@@ -1613,6 +1614,33 @@ CREATE INDEX x_policy_label_label_name ON x_policy_label(label_name);
 CREATE INDEX x_policy_label_label_map_id ON x_policy_label_map(id);
 
 CREATE VIEW vx_principal as (SELECT u.user_name AS principal_name, 0 AS principal_type, u.status status, u.is_visible is_visible, u.other_attributes other_attributes, u.create_time create_time, u.update_time update_time, u.added_by_id added_by_id, u.upd_by_id upd_by_id FROM x_user u) UNION (SELECT g.group_name principal_name, 1 AS principal_type, g.status status, g.is_visible is_visible, g.other_attributes other_attributes, g.create_time create_time, g.update_time update_time, g.added_by_id added_by_id, g.upd_by_id upd_by_id FROM x_group g) UNION (SELECT r.name principal_name, 2 AS principal_name, 1 status, 1 is_visible, null other_attributes, r.create_time create_time, r.update_time update_time, r.added_by_id added_by_id, r.upd_by_id upd_by_id FROM x_role r);
+
+DROP VIEW IF EXISTS `vx_security_zone_user`;
+CREATE VIEW vx_security_zone_user AS
+SELECT DISTINCT sz.id AS zone_id, sz.name AS zone_name, refu.user_id AS user_id, 0 AS access_type
+FROM x_security_zone sz INNER JOIN x_security_zone_ref_user refu ON sz.id = refu.zone_id
+WHERE refu.user_id IS NOT NULL
+UNION
+SELECT DISTINCT sz.id AS zone_id, sz.name AS zone_name, gu.user_id AS user_id, 1 AS access_type
+FROM x_security_zone sz INNER JOIN x_security_zone_ref_group refg ON sz.id = refg.zone_id
+INNER JOIN x_group_users gu ON refg.group_id = gu.p_group_id
+WHERE gu.user_id IS NOT NULL
+UNION
+SELECT DISTINCT sz.id AS zone_id, sz.name AS zone_name, rru.user_id AS user_id, 2 AS access_type
+FROM x_security_zone sz INNER JOIN x_security_zone_ref_role refr ON sz.id = refr.zone_id
+INNER JOIN x_role_ref_user rru ON refr.role_id = rru.role_id
+WHERE rru.user_id IS NOT NULL
+UNION
+SELECT DISTINCT sz.id AS zone_id, sz.name AS zone_name, gu.user_id AS user_id, 3 AS access_type
+FROM x_security_zone sz INNER JOIN x_security_zone_ref_role refr ON sz.id = refr.zone_id
+INNER JOIN x_role_ref_group rrg ON refr.role_id = rrg.role_id
+INNER JOIN x_group_users gu ON rrg.group_id = gu.p_group_id
+WHERE gu.user_id IS NOT NULL
+UNION
+SELECT DISTINCT sz.id AS zone_id, sz.name AS zone_name, u.id AS user_id, 4 AS access_type
+FROM x_security_zone sz INNER JOIN x_security_zone_ref_group refg ON sz.id = refg.zone_id
+CROSS JOIN x_user u
+WHERE refg.group_name = 'public';
 
 DELIMITER $$
 DROP PROCEDURE if exists getXportalUIdByLoginId$$
