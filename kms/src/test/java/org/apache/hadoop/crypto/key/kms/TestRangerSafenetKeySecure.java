@@ -18,7 +18,6 @@ package org.apache.hadoop.crypto.key.kms;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.RangerSafenetKeySecure;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -40,7 +39,6 @@ import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestRangerSafenetKeySecure {
     @Test
     public void testGenerateMasterKey_WithNullKeystore_ShouldReturnFalse() throws Exception {
@@ -48,7 +46,7 @@ public class TestRangerSafenetKeySecure {
 
         Field storeField = RangerSafenetKeySecure.class.getDeclaredField("myStore");
         storeField.setAccessible(true);
-        storeField.set(secure, null);  // force myStore to null
+        storeField.set(secure, null);
 
         boolean result = secure.generateMasterKey("password");
         assertFalse(result);
@@ -134,8 +132,7 @@ public class TestRangerSafenetKeySecure {
         storeField.setAccessible(true);
         storeField.set(secure, dummyKeystore);
 
-        // Now call methods that use provider & keystore
         boolean result = secure.generateMasterKey("pass");
-        assertFalse(result); // because it won't actually generate anything, but still executes lines
+        assertFalse(result);
     }
 }

@@ -18,7 +18,6 @@ package org.apache.hadoop.crypto.key.kms;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.DBToAzureKeyVault;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -39,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestDBToAzureKeyVault {
     @Test
     public void testShowUsage() {
@@ -83,24 +81,20 @@ public class TestDBToAzureKeyVault {
 
     @Test
     void testDoExportMKToAzureKeyVault_WhenMasterKeyMissing_ShouldThrow() throws Exception {
-        // 1. Instance of the class under test
         DBToAzureKeyVault vault = new DBToAzureKeyVault();
 
-        // 2. Grab the private method via reflection
         Method m = DBToAzureKeyVault.class.getDeclaredMethod(
                 "doExportMKToAzureKeyVault",
-                boolean.class,                       // sslEnabled
-                String.class, String.class, String.class, // key name/type/algo
-                String.class, String.class,               // clientId + vault‑URL
-                String.class, String.class,               // pwd/cert + certPwd
-                Configuration.class);                     // Hadoop conf
+                boolean.class,
+                String.class, String.class, String.class,
+                String.class, String.class,
+                String.class, String.class,
+                Configuration.class);
         m.setAccessible(true);
 
-        // 3. Build a Configuration that will FAIL the very first check
         Configuration conf = new Configuration();
-        conf.set("ranger.db.encrypt.key.password", "crypted");   // triggers IOException path
+        conf.set("ranger.db.encrypt.key.password", "crypted");
 
-        // 4. Parameters – values after the first three don’t matter for this test
         Object[] params = {
                 false,                       // sslEnabled
                 "testKey",                   // masterKeyName
@@ -113,12 +107,10 @@ public class TestDBToAzureKeyVault {
                 conf                         // Hadoop conf
         };
 
-        // ---- act / assert -------------------------------------------------------------
         InvocationTargetException ite = assertThrows(
                 InvocationTargetException.class,
                 () -> m.invoke(vault, params));
 
-        // unwrap and assert message
         Throwable cause = ite.getCause();
         assertInstanceOf(RuntimeException.class, cause);
         assertTrue(cause.getMessage()

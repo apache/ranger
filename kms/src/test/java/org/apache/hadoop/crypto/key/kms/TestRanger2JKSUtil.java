@@ -18,7 +18,6 @@ package org.apache.hadoop.crypto.key.kms;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.Ranger2JKSUtil;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -31,27 +30,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestRanger2JKSUtil {
     @Test
     public void testShowUsage() {
         Ranger2JKSUtil ranger2JKSUtil = new Ranger2JKSUtil();
         Ranger2JKSUtil.showUsage();
-    }
-
-    @Test
-    public void testDoExportKeysFromJKS() throws NoSuchMethodException {
-        Ranger2JKSUtil ranger2JKSUtil = new Ranger2JKSUtil();
-        String[]       args           = {"-jks", "test.jks", "-out", "output.txt"};
-
-        Method method = Ranger2JKSUtil.class.getDeclaredMethod(
-                "doExportKeysFromJKS", String.class, String.class);
-        method.setAccessible(true);
-        try {
-            method.invoke(ranger2JKSUtil, args[1], args[3]);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
