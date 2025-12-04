@@ -4313,9 +4313,9 @@ public class ServiceREST {
         if (CollectionUtils.isNotEmpty(policyList)) {
             int totalCount = policyList.size();
             int startIndex = filter.getBeginIndex();
-            int pageSize = filter.getOffset();
-            int toIndex = Math.min(startIndex + pageSize, totalCount);
-            LOG.info("==>totalCount: {}, startIndex:{}, pageSize: {}, toIndex: {}" , totalCount, startIndex, pageSize, toIndex);
+            int offset = filter.getOffset();
+            int toIndex = Math.min(startIndex + offset, totalCount);
+            LOG.info("==>totalCount: {}, startIndex:{}, offsetSize: {}, toIndex: {}" , totalCount, startIndex, offset, toIndex);
             String sortType = filter.getSortType();
             String sortBy = filter.getSortBy();
 
@@ -4326,9 +4326,7 @@ public class ServiceREST {
                         policyList.sort(this.getPolicyComparator(sortBy, sortType));
                     }
                 } else if (SearchFilter.POLICY_NAME.equalsIgnoreCase(sortBy)) {
-                    if (SORT_ORDER.ASC.name().equalsIgnoreCase(sortType)) {
-                        policyList.sort(this.getPolicyComparator(sortBy, sortType));
-                    } else if (SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+                    if (SORT_ORDER.ASC.name().equalsIgnoreCase(sortType) || SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
                         policyList.sort(this.getPolicyComparator(sortBy, sortType));
                     } else {
                         LOG.info("Invalid or Unsupported sortType : {}", sortType);
@@ -4338,10 +4336,7 @@ public class ServiceREST {
                 }
             }
 
-            retList = new ArrayList<RangerPolicy>();
-            for (int i = startIndex; i < toIndex; i++) {
-                retList.add(policyList.get(i));
-            }
+            retList = new ArrayList<>(policyList.subList(startIndex, toIndex));
 
         }
         return retList;
