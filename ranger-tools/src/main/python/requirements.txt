@@ -19,4 +19,4 @@ requests==2.32.3
 scipy==1.13.0
 seaborn==0.11.2
 six==1.16.0
-urllib3==1.26.19
+urllib3==2.6.0
