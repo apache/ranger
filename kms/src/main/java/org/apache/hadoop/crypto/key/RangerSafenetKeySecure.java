@@ -165,7 +165,8 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         return null;
     }
 
-    public boolean setMasterKey(String password, byte[] key, Configuration conf) {
+    @Override
+    public boolean setExternalKeyAsMK(String password, byte[] key) {
         if (myStore != null) {
             try {
                 Key aesKey = new SecretKeySpec(key, MK_ALGO);
