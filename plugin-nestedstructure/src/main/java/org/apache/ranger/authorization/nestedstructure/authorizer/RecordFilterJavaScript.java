@@ -18,13 +18,16 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
-import jdk.nashorn.api.scripting.ClassFilter;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Executes an injected javascript command to determine if the user has access to the selected record
@@ -54,8 +57,25 @@ public class RecordFilterJavaScript {
             throw new MaskingException("cannot process filter expression due to security concern \"this.engine\": " + filterExpr);
         }
 
-        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
-        ScriptEngine               engine  = factory.getScriptEngine(securityFilter);
+        ClassLoader clsLoader = Thread.currentThread().getContextClassLoader();
+        ScriptEngineManager mgr = new ScriptEngineManager(clsLoader);
+        ScriptEngine engine = mgr.getEngineByName("graal.js");
+
+        if (engine != null) {
+            try {
+                Map<String, Boolean> graalVmConfigs = new HashMap<>();
+
+                graalVmConfigs.put("polyglot.js.allowHostAccess", Boolean.TRUE); // default is true for backward(Nashorn) compatibility
+                graalVmConfigs.put("polyglot.js.nashorn-compat", Boolean.TRUE); // default is true for backward(Nashorn) compatibility
+
+                // enable configured script features
+                Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+                bindings.putAll(graalVmConfigs);
+                engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+            } catch (Throwable t) {
+                logger.debug("RecordFilterJavaScript.filterRow(): failed to create engine type {}", "graal.js", t);
+            }
+        }
 
         logger.debug("filterExpr: {}", filterExpr);
 
@@ -83,12 +103,8 @@ public class RecordFilterJavaScript {
      * Helps keep javascript clean of injections.  It also contains other checks to ensure that injected
      * javascript is reasonably safe.
      */
-    static class SecurityFilter implements ClassFilter {
-        @Override
-        public boolean exposeToScripts(String s) {
-            return false;
-        }
 
+    static class SecurityFilter {
         /**
          *
          * @param filterExpr the javascript to check if it contains potentially harmful commands

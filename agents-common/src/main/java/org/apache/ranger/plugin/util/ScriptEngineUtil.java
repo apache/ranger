@@ -28,10 +28,9 @@ import javax.script.ScriptEngine;
 public class ScriptEngineUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ScriptEngineUtil.class);
 
-    private static final String   SCRIPT_ENGINE_CREATOR_NASHHORN = "org.apache.ranger.plugin.util.NashornScriptEngineCreator";
     private static final String   SCRIPT_ENGINE_CREATOR_GRAAL    = "org.apache.ranger.plugin.util.GraalScriptEngineCreator";
     private static final String   SCRIPT_ENGINE_CREATOR_JS       = "org.apache.ranger.plugin.util.JavaScriptEngineCreator";
-    private static final String[] SCRIPT_ENGINE_CREATORS         = new String[] {SCRIPT_ENGINE_CREATOR_NASHHORN, SCRIPT_ENGINE_CREATOR_GRAAL, SCRIPT_ENGINE_CREATOR_JS};
+    private static final String[] SCRIPT_ENGINE_CREATORS         = new String[] {SCRIPT_ENGINE_CREATOR_GRAAL, SCRIPT_ENGINE_CREATOR_JS};
     private static final int      JVM_MAJOR_CLASS_VERSION_JDK8   = 52;
     private static final int      JVM_MAJOR_CLASS_VERSION_JDK15  = 59;
     private static final int      JVM_MAJOR_CLASS_VERSION        = getJVMMajorClassVersion();
@@ -108,9 +107,7 @@ public class ScriptEngineUtil {
             } catch (Throwable t) {
                 boolean logWarn;
 
-                if (creatorClsName.equals(SCRIPT_ENGINE_CREATOR_NASHHORN)) { // not available JDK15 onwards
-                    logWarn = JVM_MAJOR_CLASS_VERSION < JVM_MAJOR_CLASS_VERSION_JDK15;
-                } else if (creatorClsName.equals(SCRIPT_ENGINE_CREATOR_GRAAL)) { // available only after JDK15 onwards
+                if (creatorClsName.equals(SCRIPT_ENGINE_CREATOR_GRAAL)) { // available only after JDK15 onwards
                     logWarn = JVM_MAJOR_CLASS_VERSION >= JVM_MAJOR_CLASS_VERSION_JDK15;
                 } else {
                     logWarn = true;
