@@ -33,7 +33,10 @@ import org.apache.ranger.plugin.util.ScriptEngineUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import java.io.File;
 import java.util.Arrays;
@@ -427,9 +430,15 @@ public class RangerRequestScriptEvaluatorTest {
     }
 
     @Test
-    public void testBlockJavaClassReferences() {
+    public void testBlockJavaClassReferencesWithHostAccessBlocked() {
+        Map<String, Boolean> graalVmConfigs = new HashMap<>();
+        graalVmConfigs.put("polyglot.js.nashorn-compat", Boolean.TRUE);
+        graalVmConfigs.put("polyglot.js.allowHostAccess", Boolean.FALSE);
+
+        ScriptEngine graalEngine = getEngine(graalVmConfigs);
+
         RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
-        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, scriptEngine, false);
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, graalEngine, false);
 
         String fileName = "/tmp/ctest1-" + System.currentTimeMillis();
 
@@ -448,6 +457,21 @@ public class RangerRequestScriptEvaluatorTest {
 
         File testFile = new File(fileName);
         Assertions.assertFalse(testFile.exists(), fileName + ": file should not have been created");
+    }
+
+    @Test
+    public void testBlockJavaClassReferencesWithHostAccessAllowed() {
+        Map<String, Boolean> graalVmConfigs = new HashMap<>();
+        graalVmConfigs.put("polyglot.js.nashorn-compat", Boolean.TRUE);
+        graalVmConfigs.put("polyglot.js.allowHostAccess", Boolean.TRUE);
+
+        ScriptEngine graalEngine = getEngine(graalVmConfigs);
+
+        RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, graalEngine, false);
+
+        Assert.assertNull("test: java.lang.System.out.println(\"test\");", evaluator.evaluateScript("java.lang.System.out.println(\"test\");"));
+        Assert.assertNotNull("test: java.lang.Runtime.getRuntime().exec(\"bash\");", evaluator.evaluateScript("java.lang.Runtime.getRuntime().exec(\"bash\");"));
     }
 
     @Test
@@ -595,5 +619,17 @@ public class RangerRequestScriptEvaluatorTest {
         when(userStore.getGroupAttrMapping()).thenReturn(groupAttrMapping);
 
         return request;
+    }
+
+    public ScriptEngine getEngine(Map<String, Boolean> graalVmConfigs) {
+        ScriptEngine graalEngine = new ScriptEngineManager().getEngineByName("graal.js");
+
+        if (graalEngine != null) {
+            Bindings bindings = graalEngine.getBindings(ScriptContext.ENGINE_SCOPE);
+            bindings.putAll(graalVmConfigs);
+            graalEngine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+        }
+
+        return graalEngine;
     }
 }
