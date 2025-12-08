@@ -381,6 +381,7 @@
                     <configuration>
                         <argLine>${argLine} -Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"
                             --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED
+                            --add-opens java.xml.crypto/com.sun.org.apache.xml.internal.security.utils=ALL-UNNAMED
                             --add-opens java.base/com.sun.crypto.provider=ALL-UNNAMED</argLine>
                         <skipTests>${skipTests}</skipTests>
                         <encoding>UTF-8</encoding>
