@@ -39,7 +39,7 @@ const rangerLogo = `<svg width="130" height="40" viewBox="0 0 130 40" fill="none
 
 window.onload = function() {
     const ui = SwaggerUIBundle({
-        url: getSwaggerBaseUrl(window.location.pathname) + "/swagger.json",
+        url: getSwaggerBaseUrl(window.location.pathname) + "/openapi.json",
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [
@@ -51,7 +51,7 @@ window.onload = function() {
         ],
         layout: "StandaloneLayout",
         requestInterceptor: function(request) {
-              if (!request.url.includes("swagger.json")) {
+              if (!request.url.includes("openapi.json")) {
                     request.url = getAPIUrl(request.url);
               }
               if (request.method != "GET") {
