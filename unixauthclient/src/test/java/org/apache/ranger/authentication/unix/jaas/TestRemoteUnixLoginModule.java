@@ -18,20 +18,17 @@
  */
 package org.apache.ranger.authentication.unix.jaas;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sun.security.x509.AlgorithmId;
-import sun.security.x509.CertificateAlgorithmId;
-import sun.security.x509.CertificateSerialNumber;
-import sun.security.x509.CertificateValidity;
-import sun.security.x509.CertificateVersion;
-import sun.security.x509.CertificateX509Key;
-import sun.security.x509.X500Name;
-import sun.security.x509.X509CertImpl;
-import sun.security.x509.X509CertInfo;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -387,19 +384,22 @@ public class TestRemoteUnixLoginModule {
             Date from = new Date(now - 60000);
             Date to   = new Date(now + 86400000L);
 
-            X509CertInfo info = new X509CertInfo();
-            info.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
-            info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(new BigInteger(64, new SecureRandom())));
-            X500Name owner = new X500Name(dn);
-            info.set(X509CertInfo.SUBJECT, owner);
-            info.set(X509CertInfo.ISSUER, owner);
-            info.set(X509CertInfo.VALIDITY, new CertificateValidity(from, to));
-            info.set(X509CertInfo.KEY, new CertificateX509Key(keyPair.getPublic()));
-            info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(AlgorithmId.get("SHA256withRSA")));
+            X500Name   issuer       = new X500Name(dn);
+            X500Name   subject      = new X500Name(dn);
+            BigInteger serialNumber = new BigInteger(64, new SecureRandom());
 
-            X509CertImpl cert = new X509CertImpl(info);
-            cert.sign(keyPair.getPrivate(), "SHA256withRSA");
-            return cert;
+            X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
+                    issuer,
+                    serialNumber,
+                    from,
+                    to,
+                    subject,
+                    SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
+
+            ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
+                    .build(keyPair.getPrivate());
+
+            return new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
         }
     }
 }
