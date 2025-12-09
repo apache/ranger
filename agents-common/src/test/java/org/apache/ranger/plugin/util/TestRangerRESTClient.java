@@ -19,20 +19,32 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
 
 public class TestRangerRESTClient {
     private static final String SERVICE_TYPE = "hive";
     private static final String SERVICE_NAME = "test-service";
     private static final String APP_ID = "test-app";
+    private static final String ERR_MESSAGE = "Ranger URL is null or empty.";
 
     @Test
-    public void testPluginInit_WithNoUrl_DoesNotCrash() {
+    public void testPluginInit_WithNoUrl_ThrowsException() {
         RangerBasePlugin plugin = new RangerBasePlugin(SERVICE_TYPE, SERVICE_NAME, APP_ID);
+        IllegalArgumentException exception = Assert.assertThrows(IllegalArgumentException.class, plugin::init);
+        Assert.assertTrue(exception.getMessage().contains(ERR_MESSAGE));
+    }
+
+    @Test
+    public void testPluginInit_WithValidUrl_Succeeds() {
+        RangerPolicyEngineOptions peOptions = new RangerPolicyEngineOptions();
+        RangerPluginConfig pluginConfig = new RangerPluginConfig(SERVICE_TYPE, SERVICE_NAME, APP_ID, "cl1", "on-perm", peOptions);
+        pluginConfig.set("ranger.plugin.hive.policy.rest.url", "http://dummy:1234");
+        RangerBasePlugin plugin = new RangerBasePlugin(pluginConfig);
         plugin.init();
-        assertNotNull("RangerBasePlugin should be initialized successfully", plugin);
+        Assert.assertNotNull("RangerBasePlugin should be initialized successfully", plugin);
     }
 }
