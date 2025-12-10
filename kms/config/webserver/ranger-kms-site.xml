@@ -73,5 +73,14 @@
         <name>ranger.service.https.attrib.keystore.credential.alias</name>
         <value>keyStoreCredentialAlias</value>
     </property>
+    <!-- Embedded Web-Server properties  -->
+    <property>
+        <name>ranger.valve.errorreportvalve.showserverinfo</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>ranger.valve.errorreportvalve.showreport</name>
+        <value>false</value>
+    </property>
 
 </configuration>
