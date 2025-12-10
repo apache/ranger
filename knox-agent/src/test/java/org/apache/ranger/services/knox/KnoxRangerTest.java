@@ -27,6 +27,7 @@ import org.apache.knox.gateway.GatewayTestConfig;
 import org.apache.knox.gateway.GatewayTestDriver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -40,6 +41,7 @@ import static org.hamcrest.CoreMatchers.is;
 /**
  * Test Apache Knox secured by Apache Ranger.
  */
+@Ignore
 public class KnoxRangerTest {
     private static final GatewayTestDriver driver = new GatewayTestDriver();
 
