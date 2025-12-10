@@ -63,6 +63,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     public static final String ACCESS_TYPE_READ_ACL    = "read_acl";
     public static final String ACCESS_TYPE_WRITE_ACL   = "write_acl";
     public static final String ACCESS_TYPE_ASSUME_ROLE = "assume_role";
+    public static final String ACCESS_TYPE_ALL         = "all";
 
     public static final String KEY_RESOURCE_VOLUME = "volume";
     public static final String KEY_RESOURCE_BUCKET = "bucket";
@@ -359,21 +360,21 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     private static String toRangerPermission(ACLType acl) {
         switch (acl) {
             case READ:
-                return "read";
+                return ACCESS_TYPE_READ;
             case WRITE:
-                return "write";
+                return ACCESS_TYPE_WRITE;
             case CREATE:
-                return "create";
+                return ACCESS_TYPE_CREATE;
             case LIST:
-                return "list";
+                return ACCESS_TYPE_LIST;
             case DELETE:
-                return "delete";
+                return ACCESS_TYPE_DELETE;
             case READ_ACL:
-                return "read_acl";
+                return ACCESS_TYPE_READ_ACL;
             case WRITE_ACL:
-                return "write_acl";
+                return ACCESS_TYPE_WRITE_ACL;
             case ALL:
-                return "all";
+                return ACCESS_TYPE_ALL;
             case NONE:
             case ASSUME_ROLE: // ASSUME_ROLE is not supported in session policy
                 return null;
