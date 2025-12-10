@@ -95,7 +95,7 @@ public class TestRangerOzoneAuthorizer {
         RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
 
         assertEquals("r:role1", inlinePolicy.getGrantor());
-        assertNotNull("user1", inlinePolicy.getCreatedBy());
+        assertEquals("user2", inlinePolicy.getCreatedBy());
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNull(inlinePolicy.getGrants());
 
@@ -133,7 +133,7 @@ public class TestRangerOzoneAuthorizer {
         RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
 
         assertEquals("r:role1", inlinePolicy.getGrantor());
-        assertNotNull("user1", inlinePolicy.getCreatedBy());
+        assertEquals("user2", inlinePolicy.getCreatedBy());
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNotNull(inlinePolicy.getGrants());
         assertEquals(2, inlinePolicy.getGrants().size());
