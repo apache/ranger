@@ -243,6 +243,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
                 if (CollectionUtils.isNotEmpty(assumeRoleRequest.getGrants())) {
                     inlinePolicy.setGrants(assumeRoleRequest.getGrants().stream().map(g -> toRangerGrant(g, plugin)).filter(Objects::nonNull).collect(Collectors.toList()));
+                } else if (assumeRoleRequest.getGrants() != null && assumeRoleRequest.getGrants().isEmpty()) { // empty grants list => no permission via session policy
+                    inlinePolicy.setGrants(Collections.singletonList(new RangerInlinePolicy.Grant()));
                 }
 
                 String ret = JsonUtilsV2.objToJson(inlinePolicy);

@@ -39,6 +39,7 @@ import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -57,10 +58,12 @@ public class TestRangerOzoneAuthorizer {
     private final UserGroupInformation user2     = UserGroupInformation.createRemoteUser("user2");
     private final String               role1     = "role1";
 
-    private final OzoneObj vol1  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.VOLUME).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").build();
-    private final OzoneObj buck1 = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.BUCKET).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").setBucketName("buck1").build();
-    private final OzoneObj key1  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.KEY).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").setBucketName("buck1").setKeyName("key1").build();
-    private final OzoneObj vol2  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.VOLUME).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol2").build();
+    private final OzoneObj   vol1  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.VOLUME).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").build();
+    private final OzoneObj   buck1 = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.BUCKET).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").setBucketName("buck1").build();
+    private final OzoneObj   key1  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.KEY).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol1").setBucketName("buck1").setKeyName("key1").build();
+    private final OzoneObj   vol2  = new OzoneObjInfo.Builder().setResType(OzoneObj.ResourceType.VOLUME).setStoreType(OzoneObj.StoreType.OZONE).setVolumeName("vol2").build();
+    private final OzoneGrant grantList = new OzoneGrant(new HashSet<>(Arrays.asList(vol1, buck1)), Collections.singleton(IAccessAuthorizer.ACLType.LIST));
+    private final OzoneGrant grantRead = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.READ));
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -76,17 +79,18 @@ public class TestRangerOzoneAuthorizer {
 
     @Test
     public void testAssumeRoleDeny() throws Exception {
-        // user1 should not be allowed to assume role1
-        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, null);
+        // user2 should not be allowed to assume role1 - no Ranger policy grants this permission
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user2, role1, null);
 
         assertThrows(OMException.class, () -> ozoneAuthorizer.generateAssumeRoleSessionPolicy(request));
     }
 
     @Test
-    public void testAssumeRoleWithNoGrants() throws Exception {
-        // user2 should be allowed to assume role1
-        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user2, role1, Collections.emptySet());
+    public void testAssumeRoleWithEmptyGrants() throws Exception {
+        Set<OzoneGrant>   grants  = Collections.emptySet();
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
 
+        // user1 should be allowed to assume role1 - Ranger policy #100 grants this permission
         String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
 
         assertNotNull(sessionPolicy);
@@ -95,22 +99,58 @@ public class TestRangerOzoneAuthorizer {
         RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
 
         assertEquals("r:role1", inlinePolicy.getGrantor());
-        assertEquals("user2", inlinePolicy.getCreatedBy());
+        assertEquals("user1", inlinePolicy.getCreatedBy());
+        assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
+        assertNotNull(inlinePolicy.getGrants());
+
+        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone");
+        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone");
+        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+
+        // user1 doesn't have access without session-policy
+        assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should not allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should not allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy));
+
+        // user1 should not have access with session-policy as well, due to empty grants
+        assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
+        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
+        assertFalse("session-policy should not allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));
+        assertFalse("session-policy should not allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy));
+    }
+
+    @Test
+    public void testAssumeRoleWithNullGrants() throws Exception {
+        Set<OzoneGrant>   grants  = null;
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
+
+        // user1 should be allowed to assume role1 - Ranger policy #100 grants this permission
+        String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
+
+        assertNotNull(sessionPolicy);
+        assertNotEquals("", sessionPolicy);
+
+        RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
+
+        assertEquals("r:role1", inlinePolicy.getGrantor());
+        assertEquals("user1", inlinePolicy.getCreatedBy());
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNull(inlinePolicy.getGrants());
 
-        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone");
-        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone");
-        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone");
+        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone");
+        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
 
-        // user2 doesn't have access without session-policy
-        assertFalse("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy));
-        assertFalse("session-policy should not allow list on vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy));
+        // user1 doesn't have access without session-policy
+        assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should not allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy));
+        assertFalse("session-policy should not allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy));
 
-        // user2 should have access with session-policy
+        // user1 should have access with session-policy, due to null grants which allows all accesses granted to role1
         assertTrue("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
         assertTrue("session-policy should allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
         assertTrue("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));
@@ -119,12 +159,10 @@ public class TestRangerOzoneAuthorizer {
 
     @Test
     public void testAssumeRoleWithGrants() throws Exception {
-        OzoneGrant grant1 = new OzoneGrant(new HashSet<>(Arrays.asList(vol1, buck1)), Collections.singleton(IAccessAuthorizer.ACLType.LIST));
-        OzoneGrant grant2 = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.READ));
+        Set<OzoneGrant>   grants  = new HashSet<>(Arrays.asList(grantList, grantRead));
+        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user1, role1, grants);
 
-        // user2 should be allowed to assume role1
-        AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user2, role1, new HashSet<>(Arrays.asList(grant1, grant2)));
-
+        // user1 should be allowed to assume role1 - Ranger policy #100 grants this permission
         String sessionPolicy = ozoneAuthorizer.generateAssumeRoleSessionPolicy(request);
 
         assertNotNull(sessionPolicy);
@@ -133,7 +171,7 @@ public class TestRangerOzoneAuthorizer {
         RangerInlinePolicy inlinePolicy = JsonUtilsV2.jsonToObj(sessionPolicy, RangerInlinePolicy.class);
 
         assertEquals("r:role1", inlinePolicy.getGrantor());
-        assertEquals("user2", inlinePolicy.getCreatedBy());
+        assertEquals("user1", inlinePolicy.getCreatedBy());
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNotNull(inlinePolicy.getGrants());
         assertEquals(2, inlinePolicy.getGrants().size());
@@ -141,10 +179,10 @@ public class TestRangerOzoneAuthorizer {
         assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, new HashSet<>(Arrays.asList("volume:vol1", "bucket:vol1/buck1")), Collections.singleton("list"))));
         assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, Collections.singleton("key:vol1/buck1/key1"), Collections.singleton("read"))));
 
-        RequestContext ctxListWithSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy = new RequestContext(hostname, ipAddress, user2, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+        RequestContext ctxListWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
 
-        // user2 should have access with sessionPolicy
+        // user1 should have access with sessionPolicy
         assertTrue("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
         assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
         assertTrue("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));

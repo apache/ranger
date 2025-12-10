@@ -24,7 +24,7 @@
     { "id": 100, "name": "role: role1", "isEnabled": true, "isAuditEnabled": true,
       "resources": { "role": { "values": [ "role1" ] } },
       "policyItems":[
-        { "accesses": [ { "type": "assume_role" } ], "users": [ "user2" ] }
+        { "accesses": [ { "type": "assume_role" } ], "users": [ "user1" ] }
       ]
     },
     { "id": 101, "name": "volume: vol1, bucket: vol1/buck1", "isEnabled": true, "isAuditEnabled": true,
