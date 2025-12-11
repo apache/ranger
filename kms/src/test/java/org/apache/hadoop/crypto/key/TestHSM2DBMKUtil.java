@@ -18,7 +18,6 @@ package org.apache.hadoop.crypto.key;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -35,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestHSM2DBMKUtil {
     private final PrintStream     originalOut             = System.out;
     private final PrintStream     originalErr             = System.err;

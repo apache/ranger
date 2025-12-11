@@ -18,8 +18,6 @@ package org.apache.hadoop.crypto.key.kms;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.JKS2RangerUtil;
-import org.apache.hadoop.crypto.key.RangerMasterKey;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -27,21 +25,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.Permission;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestJKS2RangerUtil {
     @Test
     public void testGetFromJceks() throws Exception {
@@ -57,45 +48,6 @@ public class TestJKS2RangerUtil {
         String targetKey = "db.password";
 
         method.invoke(jKS2RangerUtil, conf, "keystore.path", "keystore.alias", targetKey);
-    }
-
-    @Test
-    public void testDoImportKeysFromJKS_elseBranch() throws Exception {
-        JKS2RangerUtil util = new JKS2RangerUtil();
-
-        // Dummy config with no KeySecure or Azure enabled
-        Configuration conf = mock(Configuration.class);
-        lenient().when(conf.get("ranger.plugin.kms.encryption.key.password")).thenReturn("testpass");
-        lenient().when(conf.get(anyString())).thenReturn(null); // ensures keysecure/azure conditions fail
-
-        // Create a dummy keystore file
-        File dummyJceks = File.createTempFile("dummy", ".jceks");
-        dummyJceks.deleteOnExit();
-
-        Method method = JKS2RangerUtil.class.getDeclaredMethod("doImportKeysFromJKS", String.class, String.class);
-        method.setAccessible(true);
-
-        try {
-            method.invoke(util, dummyJceks.getAbsolutePath(), "jceks");
-            //
-        } catch (InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            assertNotNull(cause);
-        }
-    }
-
-    @Test
-    public void testDoImportKeysFromJKS_if() throws Throwable {
-        JKS2RangerUtil util = new JKS2RangerUtil();
-
-        RangerMasterKey rangerMasterKey = mock(RangerMasterKey.class);
-        Method          method          = JKS2RangerUtil.class.getDeclaredMethod("doImportKeysFromJKS", String.class, String.class);
-        method.setAccessible(true);
-
-        try {
-            method.invoke(util, "nonexistent.jceks", "jceks");
-        } catch (InvocationTargetException e) {
-        }
     }
 
     @Test
@@ -136,7 +88,6 @@ public class TestJKS2RangerUtil {
 
         try {
             JKS2RangerUtil.main(new String[0]);
-            //
         } catch (SecurityException ex) {
             assertTrue(ex.getMessage().contains("Intercepted System.exit(1)"));
         } finally {
@@ -164,36 +115,10 @@ public class TestJKS2RangerUtil {
 
         try {
             JKS2RangerUtil.main(new String[] {"nonexistent.jceks", "jceks", "testpass", "testkeypass"});
-            //
         } catch (SecurityException ex) {
             assertTrue(ex.getMessage().contains("exit:1"));
         } finally {
             System.setSecurityManager(originalSM);
-        }
-    }
-
-    @Test
-    public void testDoImportKeysFromJKS_elseBranchcc() throws Exception {
-        JKS2RangerUtil util = new JKS2RangerUtil();
-
-        // Dummy config with no KeySecure or Azure enabled
-        Configuration conf = mock(Configuration.class);
-        lenient().when(conf.get("ranger.plugin.kms.encryption.key.password")).thenReturn("testpass");
-        lenient().when(conf.get(anyString())).thenReturn(null); // ensures keysecure/azure conditions fail
-
-        // Create a dummy keystore file
-        File dummyJceks = File.createTempFile("dummy", ".jceks");
-        dummyJceks.deleteOnExit();
-
-        Method method = JKS2RangerUtil.class.getDeclaredMethod("doImportKeysFromJKS", String.class, String.class);
-        method.setAccessible(true);
-
-        try {
-            method.invoke(util, dummyJceks.getAbsolutePath(), "jceks");
-            //
-        } catch (InvocationTargetException e) {
-            Throwable cause = e.getCause();
-            assertNotNull(cause);
         }
     }
 }

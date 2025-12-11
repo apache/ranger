@@ -18,9 +18,9 @@
 package org.apache.hadoop.crypto.key;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.kms.dao.DaoManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
-@Disabled
 public class RangerKMSDBTest {
     private static final String PROPERTY_PREFIX                = "ranger.ks.";
     private static final String DB_DIALECT                     = "jpa.jdbc.dialect";
@@ -72,21 +71,17 @@ public class RangerKMSDBTest {
     public void setUp() throws Exception {
         conf = new Configuration();
 
-        // Set basic database properties required for RangerKMSDB constructor
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "org.eclipse.persistence.platform.database.H2Platform");
         conf.set(PROPERTY_PREFIX + DB_DRIVER, "org.h2.Driver");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:h2:mem:testdb");
         conf.set(PROPERTY_PREFIX + DB_USER, "test");
         conf.set(PROPERTY_PREFIX + DB_PASSWORD, "test");
 
-        // Save original system properties
         originalSystemProperties = new Properties();
         originalSystemProperties.putAll(System.getProperties());
 
-        // Create temporary files for testing
         createTempFiles();
 
-        // Get private method and field using reflection
         updateDBSSLURLMethod = RangerKMSDB.class.getDeclaredMethod("updateDBSSLURL");
         updateDBSSLURLMethod.setAccessible(true);
 
@@ -96,10 +91,8 @@ public class RangerKMSDBTest {
 
     @AfterEach
     public void tearDown() {
-        // Restore original system properties
         System.setProperties(originalSystemProperties);
 
-        // Clean up temporary files
         cleanupTempFiles();
 
         if (rangerKMSDB != null) {
@@ -112,30 +105,26 @@ public class RangerKMSDBTest {
         Configuration nullConf = null;
         rangerKMSDB = new RangerKMSDB(nullConf) {
             @Override
-            public org.apache.ranger.kms.dao.DaoManager getDaoManager() {
+            public DaoManager getDaoManager() {
                 return null;
             }
         };
 
-        // Should not throw exception
         assertDoesNotThrow(() -> updateDBSSLURLMethod.invoke(rangerKMSDB));
     }
 
     @Test
     public void testUpdateDBSSLURL_NoSSLEnabledProperty() throws Exception {
-        // Don't set DB_SSL_ENABLED property
         createRangerKMSDBWithoutSSL();
 
         String originalUrl = conf.get(PROPERTY_PREFIX + DB_URL);
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
-        // URL should remain unchanged
         assertEquals(originalUrl, conf.get(PROPERTY_PREFIX + DB_URL));
     }
 
     @Test
     public void testUpdateDBSSLURL_MySQLSSLEnabled_NoQueryParams() throws Exception {
-        // Setup MySQL configuration
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -157,7 +146,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_MySQLSSLEnabled_WithQueryParams() throws Exception {
-        // Setup MySQL configuration with existing query parameters
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger?charset=utf8");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -166,13 +154,11 @@ public class RangerKMSDBTest {
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
         String updatedUrl = conf.get(PROPERTY_PREFIX + DB_URL);
-        // Should not modify URL if it already has query parameters
         assertEquals("jdbc:mysql://localhost:3306/ranger?charset=utf8", updatedUrl);
     }
 
     @Test
     public void testUpdateDBSSLURL_MySQLSSLDisabled() throws Exception {
-        // Setup MySQL configuration with SSL disabled
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "false");
@@ -186,7 +172,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_PostgreSQLSSLEnabled_WithCertificateFile() throws Exception {
-        // Setup PostgreSQL configuration
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "postgresql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:postgresql://localhost:5432/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -203,7 +188,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_PostgreSQLSSLEnabled_WithVerification_NoCertFile() throws Exception {
-        // Setup PostgreSQL configuration
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "postgresql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:postgresql://localhost:5432/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -220,7 +204,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_PostgreSQLSSLEnabled_NoVerification() throws Exception {
-        // Setup PostgreSQL configuration
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "postgresql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:postgresql://localhost:5432/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -237,7 +220,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_PostgreSQLSSLDisabled() throws Exception {
-        // Setup PostgreSQL configuration with SSL disabled
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "postgresql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:postgresql://localhost:5432/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "false");
@@ -247,13 +229,11 @@ public class RangerKMSDBTest {
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
         String updatedUrl = conf.get(PROPERTY_PREFIX + DB_URL);
-        // PostgreSQL URL should not be modified when SSL is disabled
         assertEquals(originalUrl, updatedUrl);
     }
 
     @Test
     public void testUpdateDBSSLURL_OracleDatabase() throws Exception {
-        // Setup Oracle configuration (should not modify URL)
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "oracle");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:oracle:thin:@localhost:1521:ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -263,13 +243,11 @@ public class RangerKMSDBTest {
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
         String updatedUrl = conf.get(PROPERTY_PREFIX + DB_URL);
-        // Oracle URL should not be modified
         assertEquals(originalUrl, updatedUrl);
     }
 
     @Test
     public void testUpdateDBSSLURL_KeystoreAndTruststoreSetup() throws Exception {
-        // Setup MySQL configuration with SSL verification and keystore/truststore
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -284,7 +262,6 @@ public class RangerKMSDBTest {
         createRangerKMSDBWithoutSSL();
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
-        // Verify system properties are set
         assertEquals(tempKeystore.getAbsolutePath(), System.getProperty("javax.net.ssl.keyStore"));
         assertEquals("keystore-password", System.getProperty("javax.net.ssl.keyStorePassword"));
         assertEquals(tempTruststore.getAbsolutePath(), System.getProperty("javax.net.ssl.trustStore"));
@@ -293,7 +270,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_OneWaySSL() throws Exception {
-        // Setup MySQL configuration with 1-way SSL (should not set keystore)
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -307,15 +283,12 @@ public class RangerKMSDBTest {
         createRangerKMSDBWithoutSSL();
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
-        // Verify keystore is not set for 1-way SSL
         assertNull(System.getProperty("javax.net.ssl.keyStore"));
-        // But truststore should still be set
         assertEquals(tempTruststore.getAbsolutePath(), System.getProperty("javax.net.ssl.trustStore"));
     }
 
     @Test
     public void testUpdateDBSSLURL_NonExistentKeystoreFile() throws Exception {
-        // Setup configuration with non-existent keystore file
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -327,13 +300,11 @@ public class RangerKMSDBTest {
         createRangerKMSDBWithoutSSL();
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
-        // Should not set system property for non-existent file
         assertNull(System.getProperty("javax.net.ssl.keyStore"));
     }
 
     @Test
     public void testUpdateDBSSLURL_EmptyKeystoreProperty() throws Exception {
-        // Setup configuration with empty keystore property
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -344,13 +315,11 @@ public class RangerKMSDBTest {
         createRangerKMSDBWithoutSSL();
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
-        // Should not set system property for empty keystore
         assertNull(System.getProperty("javax.net.ssl.keyStore"));
     }
 
     @Test
     public void testUpdateDBSSLURL_VariousBooleanValues() throws Exception {
-        // Test various boolean value formats
         String[] trueValues  = {"true", "TRUE", "True"};
         String[] falseValues = {"false", "FALSE", "False", "", null, "invalid"};
 
@@ -392,7 +361,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_SQLServerDatabase() throws Exception {
-        // Test SQL Server (should not modify URL for SSL)
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "sqlserver");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:sqlserver://localhost:1433;database=ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -402,13 +370,11 @@ public class RangerKMSDBTest {
         updateDBSSLURLMethod.invoke(rangerKMSDB);
 
         String updatedUrl = conf.get(PROPERTY_PREFIX + DB_URL);
-        // SQL Server URL should not be modified
         assertEquals(originalUrl, updatedUrl);
     }
 
     @Test
     public void testUpdateDBSSLURL_PostgreSQLSSLRequired() throws Exception {
-        // Setup PostgreSQL configuration with SSL required
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "postgresql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:postgresql://localhost:5432/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -425,7 +391,6 @@ public class RangerKMSDBTest {
 
     @Test
     public void testUpdateDBSSLURL_ComplexScenario() throws Exception {
-        // Test complex scenario with multiple properties set
         conf.set(PROPERTY_PREFIX + DB_DIALECT, "mysql");
         conf.set(PROPERTY_PREFIX + DB_URL, "jdbc:mysql://localhost:3306/ranger");
         conf.set(PROPERTY_PREFIX + DB_SSL_ENABLED, "true");
@@ -445,7 +410,6 @@ public class RangerKMSDBTest {
         assertTrue(updatedUrl.contains("requireSSL=false"));
         assertTrue(updatedUrl.contains("verifyServerCertificate=false"));
 
-        // System properties should not be set when verification is false
         assertNull(System.getProperty("javax.net.ssl.keyStore"));
         assertNull(System.getProperty("javax.net.ssl.trustStore"));
     }
@@ -455,7 +419,6 @@ public class RangerKMSDBTest {
         tempTruststore  = File.createTempFile("test-truststore", ".jks");
         tempCertificate = File.createTempFile("test-cert", ".pem");
 
-        // Write some dummy content to make files readable
         Files.write(tempKeystore.toPath(), "dummy content".getBytes());
         Files.write(tempTruststore.toPath(), "dummy content".getBytes());
         Files.write(tempCertificate.toPath(), "dummy content".getBytes());
@@ -476,7 +439,6 @@ public class RangerKMSDBTest {
     private void createRangerKMSDBWithoutSSL() {
         try {
             rangerKMSDB = new RangerKMSDB(conf) {
-                // Override to prevent actual DB connection
                 @Override
                 public org.apache.ranger.kms.dao.DaoManager getDaoManager() {
                     return null;

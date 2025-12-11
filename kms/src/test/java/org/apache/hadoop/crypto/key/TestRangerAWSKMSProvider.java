@@ -29,7 +29,6 @@ import com.amazonaws.services.kms.model.ListAliasesRequest;
 import com.amazonaws.services.kms.model.ListAliasesResult;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -56,7 +55,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestRangerAWSKMSProvider {
     @Test
     public void testCreateKMSClient() throws Exception {
@@ -91,11 +89,9 @@ public class TestRangerAWSKMSProvider {
 
     @Test
     void testDecryptZoneKey_happyPath() throws Exception {
-        /* ---------- 1.  Test data --------------------------------------------------- */
         byte[] ciphertext    = {0, 1, 2, 3, 4};
         byte[] expectedPlain = {10, 11, 12};
 
-        /* ---------- 2.  Stub AWSKMS.decrypt(...) ------------------------------------ */
         AWSKMS kmsMock = mock(AWSKMS.class);
         DecryptResult decryptResult = new DecryptResult()
                 .withPlaintext(ByteBuffer.wrap(expectedPlain));
@@ -105,7 +101,6 @@ public class TestRangerAWSKMSProvider {
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
 
-        /* ---------- 3.  Build provider with regular ctor --------------------------- */
         Configuration conf = new Configuration();
         conf.set("ranger.kms.awskms.masterkey.id", "your-master-key-id");
         conf.set("ranger.kms.aws.client.accesskey", "your-access-key");
@@ -113,7 +108,6 @@ public class TestRangerAWSKMSProvider {
         conf.set("ranger.kms.aws.client.region", "us-west-2");
         RangerAWSKMSProvider provider = new RangerAWSKMSProvider(conf);
 
-        /* ---------- 4.  Inject mock client via reflection -------------------------- */
         Field clientField = null;
         for (Field f : RangerAWSKMSProvider.class.getDeclaredFields()) {
             if (AWSKMS.class.isAssignableFrom(f.getType())) {
@@ -125,24 +119,20 @@ public class TestRangerAWSKMSProvider {
         clientField.setAccessible(true);
         clientField.set(provider, kmsMock);
 
-        /* ---------- 5.  Call and assert -------------------------------------------- */
         byte[] actualPlain = provider.decryptZoneKey(ciphertext);
         assertArrayEquals(expectedPlain, actualPlain,
                 "Returned plaintext must match stubbed value");
 
-        /* ---------- 6.  Verify interaction ----------------------------------------- */
         verify(kmsMock, times(1))
                 .decrypt(Mockito.any(DecryptRequest.class));
     }
 
     @Test
     void testEncryptZoneKey_happyPath() throws Exception {
-        /* ---------- 1. Test data -------------------------------------------------- */
         byte[] plainBytes     = {10, 11, 12, 13, 14, 15};
         Key    zoneKey        = new SecretKeySpec(plainBytes, "AES");
         byte[] expectedCipher = {1, 2, 3, 4};
 
-        /* ---------- 2. Stub AWSKMS.encrypt(...) ---------------------------------- */
         AWSKMS kmsMock = mock(AWSKMS.class);
         EncryptResult encrypted = new EncryptResult()
                 .withCiphertextBlob(ByteBuffer.wrap(expectedCipher));
@@ -151,7 +141,6 @@ public class TestRangerAWSKMSProvider {
         Path configDir = Paths.get("src/test/resources/kms");
         System.setProperty(KMSConfiguration.KMS_CONFIG_DIR, configDir.toFile().getAbsolutePath());
 
-        /* ---------- 3. Build provider & inject mock client ----------------------- */
         Configuration conf = new Configuration();
         conf.set("ranger.kms.awskms.masterkey.id", "your-master-key-id");
         conf.set("ranger.kms.aws.client.accesskey", "your-access-key");
@@ -170,10 +159,8 @@ public class TestRangerAWSKMSProvider {
         clientField.setAccessible(true);
         clientField.set(provider, kmsMock);
 
-        /* ---------- 4. Call encryptZoneKey(...) ---------------------------------- */
         byte[] actualCipher = provider.encryptZoneKey(zoneKey);
 
-        /* ---------- 5. Assertions & verifications -------------------------------- */
         assertArrayEquals(expectedCipher, actualCipher,
                 "Returned ciphertext must match stubbed value");
         verify(kmsMock, times(1)).encrypt(any(EncryptRequest.class));
@@ -181,11 +168,9 @@ public class TestRangerAWSKMSProvider {
 
     @Test
     void testGenerateMasterKey_success() throws Exception {
-        // Dummy inputs and expected values
         String password    = "testPassword";
         String masterKeyId = "your-master-key-id";
 
-        // 1. Stub DescribeKey → returns DescribeKeyResult with KeyMetadata
         KeyMetadata keyMetadata = new KeyMetadata()
                 .withKeyId(masterKeyId)
                 .withArn("dummy-arn")
@@ -193,19 +178,16 @@ public class TestRangerAWSKMSProvider {
         DescribeKeyResult describeKeyResult = new DescribeKeyResult()
                 .withKeyMetadata(keyMetadata);
 
-        // 2. Stub ListAliases → returns alias that matches masterKeyId
         AliasListEntry aliasEntry = new AliasListEntry()
                 .withAliasName(masterKeyId)
                 .withTargetKeyId(masterKeyId);
         ListAliasesResult aliasesResult = new ListAliasesResult()
                 .withAliases(aliasEntry);
 
-        // 3. Mock AWSKMS client
         AWSKMS kmsMock = mock(AWSKMS.class);
         when(kmsMock.describeKey(any(DescribeKeyRequest.class))).thenReturn(describeKeyResult);
         when(kmsMock.listAliases(any(ListAliasesRequest.class))).thenReturn(aliasesResult);
 
-        // 4. Prepare configuration and inject mocked client
         Configuration conf = new Configuration(false);
         conf.set("ranger.kms.awskms.masterkey.id", masterKeyId);
         conf.set("ranger.kms.aws.client.accesskey", "dummy-access-key");
@@ -214,7 +196,6 @@ public class TestRangerAWSKMSProvider {
 
         RangerAWSKMSProvider provider = new RangerAWSKMSProvider(conf);
 
-        // Inject the mocked AWSKMS client into provider
         Field clientField = null;
         for (Field f : RangerAWSKMSProvider.class.getDeclaredFields()) {
             if (AWSKMS.class.isAssignableFrom(f.getType())) {
@@ -226,11 +207,9 @@ public class TestRangerAWSKMSProvider {
         clientField.setAccessible(true);
         clientField.set(provider, kmsMock);
 
-        // 5. Call generateMasterKey and assert result
         boolean result = provider.generateMasterKey(password);
         assertTrue(result, "Expected generateMasterKey to return true");
 
-        // 6. Verify calls
         verify(kmsMock, times(1)).describeKey(any(DescribeKeyRequest.class));
         verify(kmsMock, times(1)).listAliases(any(ListAliasesRequest.class));
     }
