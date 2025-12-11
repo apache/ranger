@@ -44,7 +44,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -170,23 +169,17 @@ public class TestKnoxClient {
 
     @Test
     public void test09_timedTask_success() throws Exception {
-        String value = KnoxClient.timedTask(new Callable<String>() {
-            @Override
-            public String call() {
-                return "ok";
-            }
-        }, 1L, TimeUnit.SECONDS);
+        String value = KnoxClient.timedTask(() -> "ok", 1L, TimeUnit.SECONDS);
         Assertions.assertEquals("ok", value);
     }
 
     @Test
     public void test10_timedTask_throws() {
-        Assertions.assertThrows(Exception.class, () -> KnoxClient.timedTask(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
+        Assertions.assertThrows(Exception.class, () -> {
+            KnoxClient.timedTask(() -> {
                 throw new Exception("x");
-            }
-        }, 1L, TimeUnit.SECONDS));
+            }, 1L, TimeUnit.SECONDS);
+        });
     }
 
     @Test

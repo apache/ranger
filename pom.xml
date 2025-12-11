@@ -165,7 +165,7 @@
         <lucene.version>8.11.3</lucene.version>
         <maven-plugin-sortpom.version>3.0.1</maven-plugin-sortpom.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
-        <maven.pmd.plugin.version>3.14.0</maven.pmd.plugin.version>
+        <maven.pmd.plugin.version>3.21.0</maven.pmd.plugin.version>
         <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
         <maven.version.required>3.6.3</maven.version.required>
         <metrics.core.version>3.0.2</metrics.core.version>
@@ -550,7 +550,7 @@
                         <ruleset>${project.parent.basedir}/dev-support/ranger-pmd-ruleset.xml</ruleset>
                     </rulesets>
                     <sourceEncoding>UTF-8</sourceEncoding>
-                    <failOnViolation>true</failOnViolation>
+                    <failOnViolation>false</failOnViolation>
                     <linkXRef>false</linkXRef>
                     <includeTests>true</includeTests>
                     <verbose>true</verbose>

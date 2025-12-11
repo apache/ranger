@@ -470,8 +470,8 @@ public class RangerRequestScriptEvaluatorTest {
         RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
         RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request, graalEngine, false);
 
-        Assert.assertNull("test: java.lang.System.out.println(\"test\");", evaluator.evaluateScript("java.lang.System.out.println(\"test\");"));
-        Assert.assertNotNull("test: java.lang.Runtime.getRuntime().exec(\"bash\");", evaluator.evaluateScript("java.lang.Runtime.getRuntime().exec(\"bash\");"));
+        Assertions.assertNull(evaluator.evaluateScript("java.lang.System.out.println(\"test\");"), "test: java.lang.System.out.println(\"test\");");
+        Assertions.assertNotNull(evaluator.evaluateScript("java.lang.Runtime.getRuntime().exec(\"bash\");"), "test: java.lang.Runtime.getRuntime().exec(\"bash\");");
     }
 
     @Test
