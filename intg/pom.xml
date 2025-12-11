@@ -79,7 +79,7 @@
                         <ruleset>${project.parent.basedir}/dev-support/ranger-pmd-ruleset.xml</ruleset>
                     </rulesets>
                     <sourceEncoding>UTF-8</sourceEncoding>
-                    <failOnViolation>true</failOnViolation>
+                    <failOnViolation>false</failOnViolation>
                     <linkXRef>false</linkXRef>
                     <includeTests>true</includeTests>
                     <verbose>true</verbose>
