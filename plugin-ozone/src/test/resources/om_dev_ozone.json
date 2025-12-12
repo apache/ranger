@@ -1,0 +1,46 @@
+{
+  "serviceName": "dev_ozone", "serviceId": 1,
+  "serviceDef": {
+    "id": 1, "name":"ozone",
+    "resources":[
+      { "name": "volume", "level": 1, "parent": "",       "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true },  "label": "Volume", "description": "Volume" },
+      { "name": "bucket", "level": 2, "parent": "volume", "matcher":"org.apache.ranger.plugin.resourcematcher.RangerURLResourceMatcher",     "matcherOptions": { "wildCard": true, "ignoreCase": true },  "label": "Bucket", "description": "Bucket" },
+      { "name": "key",    "level": 3, "parent": "bucket", "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true },  "label": "Key",    "description": "Key" },
+      { "name": "role",   "level": 4, "parent": "",       "matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": false }, "label": "Role",   "description": "Role" }
+    ],
+    "accessTypes":[
+      { "name": "read",        "label": "Read" },
+      { "name": "write",       "label": "Write" },
+      { "name": "create",      "label": "Create" },
+      { "name": "list",        "label": "List" },
+      { "name": "delete",      "label": "Delete" },
+      { "name": "read_acl",    "label": "Read_ACL" },
+      { "name": "write_acl",   "label": "Write_ACL" },
+      { "name": "all",         "label": "All", "impliedGrants": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl" ] },
+      { "name": "assume_role", "label": "Assume_Role" }
+    ]
+  },
+  "policies": [
+    { "id": 100, "name": "role: role1", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "role": { "values": [ "role1" ] } },
+      "policyItems":[
+        { "accesses": [ { "type": "assume_role" } ], "users": [ "user1" ] }
+      ]
+    },
+    { "id": 101, "name": "volume: vol1, bucket: vol1/buck1", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "volume": { "values": [ "vol1", "vol2" ] } },
+      "additionalResources": [
+        { "volume": { "values": [ "vol1" ] }, "bucket": { "values": [ "buck1" ] } }
+      ],
+      "policyItems":[
+        { "accesses": [ { "type": "list" } ], "roles": [ "role1" ] }
+      ]
+    },
+    { "id": 102, "name": "key: vol1/buck1/key1", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "volume": { "values": [ "vol1" ] }, "bucket": { "values": [ "buck1" ] }, "key": { "values": [ "key1" ] } },
+      "policyItems":[
+        { "accesses": [ { "type": "read" } ], "roles": [ "role1" ] }
+      ]
+    }
+  ]
+}
