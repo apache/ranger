@@ -31,8 +31,8 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerInlinePolicy;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;
 import java.util.Arrays;
@@ -40,13 +40,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRangerOzoneAuthorizer {
     private static final String RANGER_SERVICE_TYPE = "ozone";
@@ -69,7 +69,7 @@ public class TestRangerOzoneAuthorizer {
     private final OzoneGrant grantList = new OzoneGrant(new HashSet<>(Arrays.asList(vol1, buck1)), Collections.singleton(IAccessAuthorizer.ACLType.LIST));
     private final OzoneGrant grantRead = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.READ));
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() {
         RangerPluginConfig pluginConfig = new RangerPluginConfig(RANGER_SERVICE_TYPE, null, RANGER_APP_ID, null, null, null); // loads ranger-ozone-security.xml
         RangerBasePlugin   plugin       = new RangerBasePlugin(pluginConfig);
@@ -114,16 +114,16 @@ public class TestRangerOzoneAuthorizer {
         RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
 
         // user1 doesn't have access without session-policy
-        assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should not allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should not allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy));
+        assertFalse(ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy), "session-policy should not allow list on volume vol1");
+        assertFalse(ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy), "session-policy should not allow list on volume vol2");
+        assertFalse(ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy), "session-policy should not allow list on bucket vol1/buck1");
+        assertFalse(ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy), "session-policy should not allow read on key vol1/buck1/key1");
 
         // user1 should not have access with session-policy as well, due to empty grants
-        assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
-        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
-        assertFalse("session-policy should not allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));
-        assertFalse("session-policy should not allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy));
+        assertFalse(ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy), "session-policy should not allow list on volume vol1");
+        assertFalse(ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy), "session-policy should not allow list on volume vol2");
+        assertFalse(ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy), "session-policy should not allow list on bucket vol1/buck1");
+        assertFalse(ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy), "session-policy should not allow read on key vol1/buck1/key1");
     }
 
     @Test
@@ -150,16 +150,16 @@ public class TestRangerOzoneAuthorizer {
         RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
 
         // user1 doesn't have access without session-policy
-        assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should not allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy));
-        assertFalse("session-policy should not allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy));
+        assertFalse(ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy), "session-policy should not allow list on volume vol1");
+        assertFalse(ozoneAuthorizer.checkAccess(vol2, ctxListWithoutSessionPolicy), "session-policy should not allow list on volume vol2");
+        assertFalse(ozoneAuthorizer.checkAccess(buck1, ctxListWithoutSessionPolicy), "session-policy should not allow list on bucket vol1/buck1");
+        assertFalse(ozoneAuthorizer.checkAccess(key1, ctxReadWithoutSessionPolicy), "session-policy should not allow read on key vol1/buck1/key1");
 
         // user1 should have access with session-policy, due to null grants which allows all accesses granted to role1
-        assertTrue("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
-        assertTrue("session-policy should allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
-        assertTrue("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));
-        assertTrue("session-policy should allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy));
+        assertTrue(ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy), "session-policy should allow list on volume vol1");
+        assertTrue(ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy), "session-policy should allow list on volume vol2");
+        assertTrue(ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy), "session-policy should allow list on bucket vol1/buck1");
+        assertTrue(ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy), "session-policy should allow read on key vol1/buck1/key1");
     }
 
     @Test
@@ -188,9 +188,9 @@ public class TestRangerOzoneAuthorizer {
         RequestContext ctxReadWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
 
         // user1 should have access with sessionPolicy
-        assertTrue("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));
-        assertFalse("session-policy should not allow list on volume vol2", ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy));
-        assertTrue("session-policy should allow list on bucket vol1/buck1", ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy));
-        assertTrue("session-policy should allow read on key vol1/buck1/key1", ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy));
+        assertTrue(ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy), "session-policy should allow list on volume vol1");
+        assertFalse(ozoneAuthorizer.checkAccess(vol2, ctxListWithSessionPolicy), "session-policy should not allow list on volume vol2");
+        assertTrue(ozoneAuthorizer.checkAccess(buck1, ctxListWithSessionPolicy), "session-policy should allow list on bucket vol1/buck1");
+        assertTrue(ozoneAuthorizer.checkAccess(key1, ctxReadWithSessionPolicy), "session-policy should allow read on key vol1/buck1/key1");
     }
 }
