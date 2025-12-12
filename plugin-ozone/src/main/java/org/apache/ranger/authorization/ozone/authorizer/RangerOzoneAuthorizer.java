@@ -20,10 +20,10 @@
 
 package org.apache.ranger.authorization.ozone.authorizer;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.ozone.om.exceptions.OMException;
 import org.apache.hadoop.ozone.security.acl.AssumeRoleRequest;
+import org.apache.hadoop.ozone.security.acl.AssumeRoleRequest.OzoneGrant;
 import org.apache.hadoop.ozone.security.acl.IAccessAuthorizer;
 import org.apache.hadoop.ozone.security.acl.IOzoneObj;
 import org.apache.hadoop.ozone.security.acl.OzoneObj;
@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -240,15 +241,18 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             RangerAccessResult result = plugin.isAccessAllowed(request);
 
             if (result != null && result.getIsAccessDetermined() && result.getIsAllowed()) {
-                RangerInlinePolicy inlinePolicy = new RangerInlinePolicy(RangerPrincipal.PREFIX_ROLE + assumeRoleRequest.getTargetRoleName(), RangerInlinePolicy.Mode.INLINE, null, ugi.getShortUserName());
+                final List<RangerInlinePolicy.Grant> inlineGrants;
 
-                if (CollectionUtils.isNotEmpty(assumeRoleRequest.getGrants())) {
-                    inlinePolicy.setGrants(assumeRoleRequest.getGrants().stream().map(g -> toRangerGrant(g, plugin)).filter(Objects::nonNull).collect(Collectors.toList()));
-                } else if (assumeRoleRequest.getGrants() != null && assumeRoleRequest.getGrants().isEmpty()) { // empty grants list => no permission via session policy
-                    inlinePolicy.setGrants(Collections.singletonList(new RangerInlinePolicy.Grant()));
+                if (assumeRoleRequest.getGrants() == null) { // inlinePolicy allows all permissions
+                    inlineGrants = null;
+                } else if (assumeRoleRequest.getGrants().isEmpty()) { // inlinePolicy doesn't allow any permission
+                    inlineGrants = Collections.singletonList(new RangerInlinePolicy.Grant());
+                } else { // inlinePolicy allows explicitly specified permissions
+                    inlineGrants = assumeRoleRequest.getGrants().stream().map(g -> toRangerGrant(g, plugin)).collect(Collectors.toList());
                 }
 
-                String ret = JsonUtilsV2.objToJson(inlinePolicy);
+                RangerInlinePolicy inlinePolicy = new RangerInlinePolicy(RangerPrincipal.PREFIX_ROLE + assumeRoleRequest.getTargetRoleName(), RangerInlinePolicy.Mode.INLINE, inlineGrants, ugi.getShortUserName());
+                String             ret          = JsonUtilsV2.objToJson(inlinePolicy);
 
                 LOG.debug("<== RangerOzoneAuthorizer.generateAssumeRoleSessionPolicy(assumeRoleRequest={}): ret={}", assumeRoleRequest, ret);
 
@@ -299,21 +303,15 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         return rangerAccessType;
     }
 
-    private static RangerInlinePolicy.Grant toRangerGrant(AssumeRoleRequest.OzoneGrant ozoneGrant, RangerBasePlugin plugin) {
-        RangerInlinePolicy.Grant ret;
+    private static RangerInlinePolicy.Grant toRangerGrant(OzoneGrant ozoneGrant, RangerBasePlugin plugin) {
+        RangerInlinePolicy.Grant ret = new RangerInlinePolicy.Grant();
 
-        if (CollectionUtils.isEmpty(ozoneGrant.getObjects()) && CollectionUtils.isEmpty(ozoneGrant.getPermissions())) {
-            ret = null;
-        } else {
-            ret = new RangerInlinePolicy.Grant();
+        if (ozoneGrant.getObjects() != null) {
+            ret.setResources(ozoneGrant.getObjects().stream().map(o -> toRrn(o, plugin)).filter(Objects::nonNull).collect(Collectors.toSet()));
+        }
 
-            if (ozoneGrant.getObjects() != null) {
-                ret.setResources(ozoneGrant.getObjects().stream().map(o -> toRrn(o, plugin)).filter(Objects::nonNull).collect(Collectors.toSet()));
-            }
-
-            if (ozoneGrant.getPermissions() != null) {
-                ret.setPermissions(ozoneGrant.getPermissions().stream().map(RangerOzoneAuthorizer::toRangerPermission).filter(Objects::nonNull).collect(Collectors.toSet()));
-            }
+        if (ozoneGrant.getPermissions() != null) {
+            ret.setPermissions(ozoneGrant.getPermissions().stream().map(RangerOzoneAuthorizer::toRangerPermission).filter(Objects::nonNull).collect(Collectors.toSet()));
         }
 
         LOG.debug("toRangerGrant(ozoneGrant={}): ret={}", ozoneGrant, ret);
