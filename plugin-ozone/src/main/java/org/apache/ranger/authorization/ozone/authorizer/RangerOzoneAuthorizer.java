@@ -72,6 +72,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     public static final String KEY_RESOURCE_KEY    = "key";
     public static final String KEY_RESOURCE_ROLE   = "role";
 
+    private static final String S3_VOLUME_NAME = "s3Vol";
+
     private static volatile RangerBasePlugin rangerPlugin;
 
     public RangerOzoneAuthorizer() {
@@ -173,12 +175,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         if (ozoneObj.getResourceType() == OzoneObj.ResourceType.VOLUME) {
             rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
         } else if (ozoneObj.getResourceType() == OzoneObj.ResourceType.BUCKET || ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
-            if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3) {
-                rangerResource.setValue(KEY_RESOURCE_VOLUME, "s3Vol");
-            } else {
-                rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
-            }
-
+            rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getStoreType() == OzoneObj.StoreType.S3 ? S3_VOLUME_NAME : ozoneObj.getVolumeName());
             rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
 
             if (ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
@@ -336,14 +333,14 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             case BUCKET:
                 resType = KEY_RESOURCE_BUCKET;
 
-                resource.put(KEY_RESOURCE_VOLUME, ozoneObj.getStoreType() == OzoneObj.StoreType.S3 ? "s3Vol" : ozoneObj.getVolumeName());
+                resource.put(KEY_RESOURCE_VOLUME, ozoneObj.getStoreType() == OzoneObj.StoreType.S3 ? S3_VOLUME_NAME : ozoneObj.getVolumeName());
                 resource.put(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
                 break;
 
             case KEY:
                 resType = KEY_RESOURCE_KEY;
 
-                resource.put(KEY_RESOURCE_VOLUME, ozoneObj.getStoreType() == OzoneObj.StoreType.S3 ? "s3Vol" : ozoneObj.getVolumeName());
+                resource.put(KEY_RESOURCE_VOLUME, ozoneObj.getStoreType() == OzoneObj.StoreType.S3 ? S3_VOLUME_NAME : ozoneObj.getVolumeName());
                 resource.put(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
                 resource.put(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
                 break;

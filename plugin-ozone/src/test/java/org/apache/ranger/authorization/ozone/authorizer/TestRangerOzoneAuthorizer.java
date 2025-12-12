@@ -70,7 +70,7 @@ public class TestRangerOzoneAuthorizer {
     private final OzoneGrant grantRead = new OzoneGrant(Collections.singleton(key1), Collections.singleton(IAccessAuthorizer.ACLType.READ));
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpBeforeClass() {
         RangerPluginConfig pluginConfig = new RangerPluginConfig(RANGER_SERVICE_TYPE, null, RANGER_APP_ID, null, null, null); // loads ranger-ozone-security.xml
         RangerBasePlugin   plugin       = new RangerBasePlugin(pluginConfig);
 
@@ -83,7 +83,7 @@ public class TestRangerOzoneAuthorizer {
     }
 
     @Test
-    public void testAssumeRoleDeny() throws Exception {
+    public void testAssumeRoleDeny() {
         // user2 should not be allowed to assume role1 - no Ranger policy grants this permission
         AssumeRoleRequest request = new AssumeRoleRequest(hostname, ipAddress, user2, role1, null);
 
