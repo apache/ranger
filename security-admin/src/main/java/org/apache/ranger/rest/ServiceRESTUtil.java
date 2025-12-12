@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class ServiceRESTUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceRESTUtil.class);
@@ -70,13 +71,175 @@ public class ServiceRESTUtil {
 
         appliedPolicy.addPolicyItem(policyItem);
 
-        processApplyPolicy(policy, appliedPolicy);
+        processApplyPolicyWithDelegateAdminCheck(policy, appliedPolicy);
 
         boolean policyUpdated = true;
 
         LOG.debug("<== ServiceRESTUtil.processGrantRequest() : {}", policyUpdated);
 
         return policyUpdated;
+    }
+
+    public static void processApplyPolicyWithDelegateAdminCheck(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {
+        LOG.debug("==> ServiceRESTUtil.processApplyPolicyWithDelegateAdminCheck()");
+
+        List<RangerPolicy.RangerPolicyItem> appliedPolicyItems = appliedPolicy.getPolicyItems();
+
+        // If there are no existing policy items, treat this as a new request
+        if (existingPolicy.getPolicyItems() == null || existingPolicy.getPolicyItems().isEmpty()) {
+            processApplyPolicy(existingPolicy, appliedPolicy);
+            return;
+        }
+
+        // Process each applied policy item
+        for (RangerPolicy.RangerPolicyItem appliedPolicyItem : appliedPolicyItems) {
+            boolean newRequestDelegateAdmin = appliedPolicyItem.getDelegateAdmin();
+            Set<String> appliedAccessTypes = appliedPolicyItem.getAccesses().stream().map(RangerPolicy.RangerPolicyItemAccess::getType).collect(Collectors.toSet());
+
+            // First, remove conflicting access types from policy items with different delegateAdmin flags
+            removeConflictingAccesses(existingPolicy, appliedPolicyItem, appliedAccessTypes, newRequestDelegateAdmin);
+
+            // Find existing policy item with same delegateAdmin flag for the same users
+            RangerPolicy.RangerPolicyItem matchingPolicyItem = findMatchingPolicyItemByDelegateAdmin(existingPolicy, appliedPolicyItem, newRequestDelegateAdmin);
+
+            if (matchingPolicyItem != null) {
+                // Merge with existing policy item that has the same delegateAdmin flag
+                mergeAccessesWithCompatibleItem(matchingPolicyItem, appliedPolicyItem);
+            } else {
+                // No matching policy item found - create new one
+                RangerPolicy.RangerPolicyItem newPolicyItem = new RangerPolicy.RangerPolicyItem();
+                newPolicyItem.setUsers(new ArrayList<>(appliedPolicyItem.getUsers()));
+                newPolicyItem.setGroups(appliedPolicyItem.getGroups() != null ? new ArrayList<>(appliedPolicyItem.getGroups()) : new ArrayList<>());
+                newPolicyItem.setRoles(appliedPolicyItem.getRoles() != null ? new ArrayList<>(appliedPolicyItem.getRoles()) : new ArrayList<>());
+                newPolicyItem.setAccesses(new ArrayList<>(appliedPolicyItem.getAccesses()));
+                newPolicyItem.setDelegateAdmin(newRequestDelegateAdmin);
+                newPolicyItem.setConditions(appliedPolicyItem.getConditions() != null ? new ArrayList<>(appliedPolicyItem.getConditions()) : new ArrayList<>());
+
+                existingPolicy.getPolicyItems().add(newPolicyItem);
+            }
+        }
+
+        // Clean up empty policy items
+        cleanupEmptyPolicyItems(existingPolicy);
+
+        LOG.debug("<== ServiceRESTUtil.processApplyPolicyWithDelegateAdminCheck()");
+    }
+
+    /**
+     * Remove conflicting access types from existing policy items that have different delegateAdmin flags
+     */
+    private static void removeConflictingAccesses(RangerPolicy existingPolicy, RangerPolicy.RangerPolicyItem appliedPolicyItem, Set<String> appliedAccessTypes, boolean newRequestDelegateAdmin) {
+        if (existingPolicy.getPolicyItems() == null) {
+            return;
+        }
+
+        Set<String> appliedUsers = new HashSet<>(appliedPolicyItem.getUsers());
+
+        // Find existing policy items with different delegateAdmin flags but overlapping users
+        for (RangerPolicy.RangerPolicyItem existingItem : existingPolicy.getPolicyItems()) {
+            if (existingItem.getDelegateAdmin() != newRequestDelegateAdmin) {
+                // Check if there's any user overlap
+                boolean hasUserOverlap = existingItem.getUsers().stream().anyMatch(appliedUsers::contains);
+
+                if (hasUserOverlap) {
+                    // Privilege-aware conflict resolution:
+                    if (newRequestDelegateAdmin && !existingItem.getDelegateAdmin()) {
+                        // New request has delegateAdmin=true, existing has delegateAdmin=false
+                        // Remove conflicting access types from existing item (lower privilege)
+                        existingItem.getAccesses().removeIf(access -> appliedAccessTypes.contains(access.getType()));
+                    } else if (!newRequestDelegateAdmin && existingItem.getDelegateAdmin()) {
+                        // New request has delegateAdmin=false, existing has delegateAdmin=true
+                        // Don't remove from existing item (preserve higher privilege)
+                        // Instead, remove conflicting access types from the applied item
+                        appliedPolicyItem.getAccesses().removeIf(access -> existingItem.getAccesses().stream().anyMatch(existingAccess -> existingAccess.getType().equals(access.getType())));
+                    }
+                    // If both have same delegateAdmin flag, this method shouldn't be called
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove policy items that have no access types left
+     */
+    private static void cleanupEmptyPolicyItems(RangerPolicy existingPolicy) {
+        if (existingPolicy.getPolicyItems() != null) {
+            existingPolicy.getPolicyItems().removeIf(item -> item.getAccesses() == null || item.getAccesses().isEmpty());
+        }
+    }
+
+    /**
+     * Find existing policy item that has the same delegateAdmin flag and overlapping users
+     */
+    private static RangerPolicy.RangerPolicyItem findMatchingPolicyItemByDelegateAdmin(RangerPolicy existingPolicy, RangerPolicy.RangerPolicyItem appliedPolicyItem, boolean targetDelegateAdmin) {
+        if (existingPolicy.getPolicyItems() == null) {
+            return null;
+        }
+
+        Set<String> appliedUsers = new HashSet<>(appliedPolicyItem.getUsers());
+
+        // Look for existing policy item with same delegateAdmin flag and overlapping users
+        for (RangerPolicy.RangerPolicyItem existingItem : existingPolicy.getPolicyItems()) {
+            if (existingItem.getDelegateAdmin() == targetDelegateAdmin) {
+                // Check if there's any user overlap
+                for (String user : existingItem.getUsers()) {
+                    if (appliedUsers.contains(user)) {
+                        return existingItem; // Found matching policy item
+                    }
+                }
+            }
+        }
+
+        return null; // No matching policy item found
+    }
+
+    /**
+     * Merge accesses from appliedPolicyItem into the compatible existing policy item
+     */
+    private static void mergeAccessesWithCompatibleItem(RangerPolicy.RangerPolicyItem existingItem, RangerPolicy.RangerPolicyItem appliedItem) {
+        // Get existing access types
+        Set<String> existingAccessTypes = existingItem.getAccesses().stream().map(RangerPolicy.RangerPolicyItemAccess::getType).collect(Collectors.toSet());
+
+        // Add new accesses that don't already exist
+        for (RangerPolicy.RangerPolicyItemAccess appliedAccess : appliedItem.getAccesses()) {
+            if (!existingAccessTypes.contains(appliedAccess.getType())) {
+                existingItem.getAccesses().add(new RangerPolicy.RangerPolicyItemAccess(appliedAccess.getType(), appliedAccess.getIsAllowed()));
+            }
+        }
+
+        // Merge users (avoid duplicates)
+        Set<String> existingUsers = new HashSet<>(existingItem.getUsers());
+        for (String user : appliedItem.getUsers()) {
+            if (!existingUsers.contains(user)) {
+                existingItem.getUsers().add(user);
+            }
+        }
+
+        // Merge groups (avoid duplicates)
+        if (appliedItem.getGroups() != null) {
+            if (existingItem.getGroups() == null) {
+                existingItem.setGroups(new ArrayList<>());
+            }
+            Set<String> existingGroups = new HashSet<>(existingItem.getGroups());
+            for (String group : appliedItem.getGroups()) {
+                if (!existingGroups.contains(group)) {
+                    existingItem.getGroups().add(group);
+                }
+            }
+        }
+
+        // Merge roles (avoid duplicates)
+        if (appliedItem.getRoles() != null) {
+            if (existingItem.getRoles() == null) {
+                existingItem.setRoles(new ArrayList<>());
+            }
+            Set<String> existingRoles = new HashSet<>(existingItem.getRoles());
+            for (String role : appliedItem.getRoles()) {
+                if (!existingRoles.contains(role)) {
+                    existingItem.getRoles().add(role);
+                }
+            }
+        }
     }
 
     public static boolean processRevokeRequest(RangerPolicy existingRangerPolicy, GrantRevokeRequest revokeRequest) {
