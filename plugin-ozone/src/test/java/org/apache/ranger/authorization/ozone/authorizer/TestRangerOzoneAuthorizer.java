@@ -29,7 +29,6 @@ import org.apache.hadoop.ozone.security.acl.RequestContext;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerInlinePolicy;
-import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.junit.BeforeClass;
@@ -67,9 +66,10 @@ public class TestRangerOzoneAuthorizer {
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("ozone", null, "om", null, null, null));
-        RangerBasePlugin    plugin        = new RangerBasePlugin(pluginContext.getConfig());
+        RangerPluginConfig pluginConfig = new RangerPluginConfig("ozone", null, "om", null, null, null); // loads ranger-ozone-security.xml
+        RangerBasePlugin   plugin       = new RangerBasePlugin(pluginConfig);
 
+        // loads policies from om_dev_ozone.json, by EmbeddedResourcePolicySource configured in ranger-ozone-security.xml
         plugin.init();
 
         ozoneAuthorizer = new RangerOzoneAuthorizer(plugin);
