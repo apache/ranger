@@ -494,7 +494,7 @@ public class TestAssetREST {
         Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
-        Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil, Mockito.times(4)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(assetMgr).getReportLogs(searchCriteria);
         Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
     }
@@ -528,7 +528,7 @@ public class TestAssetREST {
         Assert.assertEquals(vXTrxLogV2List, expectedVXTrxLogV2List);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
-        Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil, Mockito.times(4)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(assetMgr).getReportLogsV2(searchCriteria);
         Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
     }
@@ -753,7 +753,7 @@ public class TestAssetREST {
         Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
-        Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil, Mockito.times(4)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(assetMgr).getReportLogs(searchCriteria);
         Mockito.verify(searchUtil).extractCommonCriterias(request, xTrxLogService.getSortFields());
     }
@@ -773,7 +773,7 @@ public class TestAssetREST {
         Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
-        Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(searchUtil, Mockito.times(4)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(assetMgr).getReportLogs(searchCriteria);
         Mockito.verify(searchUtil).extractCommonCriterias(request, xTrxLogService.getSortFields());
     }

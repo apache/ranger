@@ -664,6 +664,10 @@ public class AssetMgr extends AssetMgrBase {
                     temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
 
                     searchCriteria.getParamList().put("startDate", temp);
+                } else if (searchCriteria.getParamList().containsKey("startDateTime")) {
+                    Date temp = (Date) searchCriteria.getParamList().get("startDateTime");
+                    temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+                    searchCriteria.getParamList().put("startDateTime", temp);
                 }
 
                 if (searchCriteria.getParamList().containsKey("endDate")) {
@@ -673,6 +677,10 @@ public class AssetMgr extends AssetMgrBase {
                     temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
 
                     searchCriteria.getParamList().put("endDate", temp);
+                } else if (searchCriteria.getParamList().containsKey("endDateTime")) {
+                    Date temp = (Date) searchCriteria.getParamList().get("endDateTime");
+                    temp = dateUtil.addTimeOffset(temp, clientTimeOffsetInMinute);
+                    searchCriteria.getParamList().put("endDateTime", temp);
                 }
 
                 if (searchCriteria.getParamList().containsKey("owner")) {

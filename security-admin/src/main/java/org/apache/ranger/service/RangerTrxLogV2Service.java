@@ -79,6 +79,8 @@ public class RangerTrxLogV2Service {
         searchFields.add(new SearchField("sessionId", "obj.sessionId", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("startDate", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
         searchFields.add(new SearchField("endDate", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
+        searchFields.add(new SearchField("startDateTime", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        searchFields.add(new SearchField("endDateTime", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
         searchFields.add(new SearchField("owner", "obj.addedByUserId", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("objectClassType", "obj.objectClassType", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("objectId", "obj.objectId", SearchField.DATA_TYPE.INT_LIST, SearchField.SEARCH_TYPE.FULL));

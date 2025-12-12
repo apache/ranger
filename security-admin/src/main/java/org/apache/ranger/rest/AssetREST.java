@@ -707,6 +707,8 @@ public class AssetREST {
         searchUtil.extractString(request, searchCriteria, "owner", "Owner", StringUtil.VALIDATION_TEXT);
         searchUtil.extractDate(request, searchCriteria, "startDate", "Trasaction date since", "MM/dd/yyyy");
         searchUtil.extractDate(request, searchCriteria, "endDate", "Trasaction date till", "MM/dd/yyyy");
+        searchUtil.extractDate(request, searchCriteria, "startDateTime", "Start Date Time", "yyyy-MM-dd'T'HH:mm:ss'Z'");
+        searchUtil.extractDate(request, searchCriteria, "endDateTime", "End Date Time", "yyyy-MM-dd'T'HH:mm:ss'Z'");
 
         return searchCriteria;
     }
