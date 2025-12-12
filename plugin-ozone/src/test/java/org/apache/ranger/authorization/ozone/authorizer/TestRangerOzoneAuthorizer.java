@@ -49,7 +49,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestRangerOzoneAuthorizer {
-    static RangerOzoneAuthorizer ozoneAuthorizer;
+    private static final String RANGER_SERVICE_TYPE = "ozone";
+    private static final String RANGER_APP_ID       = "om";
+    private static final String OZONE_SERVICE_ID    = "om";
+    private static final String OWNER_NAME          = "ozone";
+
+    private static RangerOzoneAuthorizer ozoneAuthorizer;
 
     private final String               hostname  = "localhost";
     private final InetAddress          ipAddress = InetAddress.getLoopbackAddress();
@@ -66,7 +71,7 @@ public class TestRangerOzoneAuthorizer {
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
-        RangerPluginConfig pluginConfig = new RangerPluginConfig("ozone", null, "om", null, null, null); // loads ranger-ozone-security.xml
+        RangerPluginConfig pluginConfig = new RangerPluginConfig(RANGER_SERVICE_TYPE, null, RANGER_APP_ID, null, null, null); // loads ranger-ozone-security.xml
         RangerBasePlugin   plugin       = new RangerBasePlugin(pluginConfig);
 
         // loads policies from om_dev_ozone.json, by EmbeddedResourcePolicySource configured in ranger-ozone-security.xml
@@ -103,10 +108,10 @@ public class TestRangerOzoneAuthorizer {
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNotNull(inlinePolicy.getGrants());
 
-        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone");
-        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone");
-        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME);
+        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME);
+        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME, false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
 
         // user1 doesn't have access without session-policy
         assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
@@ -139,10 +144,10 @@ public class TestRangerOzoneAuthorizer {
         assertEquals(RangerInlinePolicy.Mode.INLINE, inlinePolicy.getMode());
         assertNull(inlinePolicy.getGrants());
 
-        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone");
-        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone");
-        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+        RequestContext ctxListWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME);
+        RequestContext ctxReadWithoutSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME);
+        RequestContext ctxListWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME, false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy    = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
 
         // user1 doesn't have access without session-policy
         assertFalse("session-policy should not allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithoutSessionPolicy));
@@ -179,8 +184,8 @@ public class TestRangerOzoneAuthorizer {
         assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, new HashSet<>(Arrays.asList("volume:vol1", "bucket:vol1/buck1")), Collections.singleton("list"))));
         assertTrue(inlinePolicy.getGrants().contains(new RangerInlinePolicy.Grant(null, Collections.singleton("key:vol1/buck1/key1"), Collections.singleton("read"))));
 
-        RequestContext ctxListWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, "ozone", false, sessionPolicy);
-        RequestContext ctxReadWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, "om", IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, "ozone", false, sessionPolicy);
+        RequestContext ctxListWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.LIST, OWNER_NAME, false, sessionPolicy);
+        RequestContext ctxReadWithSessionPolicy = new RequestContext(hostname, ipAddress, user1, OZONE_SERVICE_ID, IAccessAuthorizer.ACLIdentityType.ANONYMOUS, IAccessAuthorizer.ACLType.READ, OWNER_NAME, false, sessionPolicy);
 
         // user1 should have access with sessionPolicy
         assertTrue("session-policy should allow list on volume vol1", ozoneAuthorizer.checkAccess(vol1, ctxListWithSessionPolicy));

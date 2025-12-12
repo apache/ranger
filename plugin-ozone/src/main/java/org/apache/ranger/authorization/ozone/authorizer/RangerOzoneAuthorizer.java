@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RangerOzoneAuthorizer implements IAccessAuthorizer {
@@ -241,14 +242,15 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             RangerAccessResult result = plugin.isAccessAllowed(request);
 
             if (result != null && result.getIsAccessDetermined() && result.getIsAllowed()) {
+                final Set<OzoneGrant>                ozoneGrants = assumeRoleRequest.getGrants();
                 final List<RangerInlinePolicy.Grant> inlineGrants;
 
-                if (assumeRoleRequest.getGrants() == null) { // inlinePolicy allows all permissions
+                if (ozoneGrants == null) { // allow all permissions
                     inlineGrants = null;
-                } else if (assumeRoleRequest.getGrants().isEmpty()) { // inlinePolicy doesn't allow any permission
+                } else if (ozoneGrants.isEmpty()) { // don't allow any permission
                     inlineGrants = Collections.singletonList(new RangerInlinePolicy.Grant());
-                } else { // inlinePolicy allows explicitly specified permissions
-                    inlineGrants = assumeRoleRequest.getGrants().stream().map(g -> toRangerGrant(g, plugin)).collect(Collectors.toList());
+                } else { // allow explicitly specified permissions
+                    inlineGrants = ozoneGrants.stream().map(g -> toRangerGrant(g, plugin)).collect(Collectors.toList());
                 }
 
                 RangerInlinePolicy inlinePolicy = new RangerInlinePolicy(RangerPrincipal.PREFIX_ROLE + assumeRoleRequest.getTargetRoleName(), RangerInlinePolicy.Mode.INLINE, inlineGrants, ugi.getShortUserName());
