@@ -68,7 +68,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
     private static final String CREDENTIAL_PATH              = "ranger.ks.jpa.jdbc.credential.provider.path";
     private static final String MK_CREDENTIAL_ALIAS          = "ranger.ks.masterkey.credential.alias";
     private static final String DB_CREDENTIAL_ALIAS          = "ranger.ks.jpa.jdbc.credential.alias";
-    private static final String DB_PASSWORD                  = "ranger.ks.jpa.jdbc.password";
+    public static final String DB_PASSWORD                  = "ranger.ks.jpa.jdbc.password";
     private static final String HSM_ENABLED                  = "ranger.ks.hsm.enabled";
     private static final String HSM_PARTITION_PASSWORD_ALIAS = "ranger.ks.hsm.partition.password.alias";
     private static final String HSM_PARTITION_PASSWORD       = "ranger.ks.hsm.partition.password";
@@ -81,6 +81,9 @@ public class RangerKeyStoreProvider extends KeyProvider {
     private static final String AZURE_CLIENT_SECRET_ALIAS    = "ranger.kms.azure.client.secret.alias";
     private static final String AZURE_CLIENT_SECRET          = "ranger.kms.azure.client.secret";
     private static final String AWS_KMS_ENABLED              = "ranger.kms.awskms.enabled";
+    public static final String DB_URL                        = "ranger.ks.jpa.jdbc.url";
+    public static final String DB_USER                       = "ranger.ks.jpa.jdbc.user";
+    public static final String DB_DRIVER                     = "ranger.ks.jpa.jdbc.driver";
     private static final String AWS_CLIENT_SECRETKEY_ALIAS   = RangerAWSKMSProvider.AWS_CLIENT_SECRETKEY + ".alias";
     private static final String AWS_CLIENT_SECRETKEY         = RangerAWSKMSProvider.AWS_CLIENT_SECRETKEY;
     private static final String TENCENT_KMS_ENABLED          = "ranger.kms.tencentkms.enabled";
