@@ -25,7 +25,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ import java.util.Map;
 import static org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType.NONE;
 import static org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType.PREFIX;
 import static org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType.SELF;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RangerDefaultResourceMatcherTest {
     Object[][] data = {
@@ -128,8 +128,8 @@ public class RangerDefaultResourceMatcherTest {
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, excludes);
 
-            assertEquals(getMessage(row), matchType, matcher.getMatchType(resource, matchScope, evalContext));
-            assertEquals(getMessage(row), result, matcher.isMatch(resource, matchScope, evalContext));
+            assertEquals(matchType, matcher.getMatchType(resource, matchScope, evalContext), getMessage(row));
+            assertEquals(result, matcher.isMatch(resource, matchScope, evalContext), getMessage(row));
         }
     }
 
@@ -150,8 +150,8 @@ public class RangerDefaultResourceMatcherTest {
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, excludes);
 
-            assertEquals(getMessage(row), matchType, matcher.getMatchType(resource, matchScope, evalContext));
-            assertEquals(getMessage(row), result, matcher.isMatch(resource, matchScope, evalContext));
+            assertEquals(matchType, matcher.getMatchType(resource, matchScope, evalContext), getMessage(row));
+            assertEquals(result, matcher.isMatch(resource, matchScope, evalContext), getMessage(row));
         }
     }
 

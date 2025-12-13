@@ -26,39 +26,39 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase;
 import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase.OneTest;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestResourceMatcher {
     static Gson gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
                 .setPrettyPrinting()
                 .create();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
     }
 
@@ -102,7 +102,7 @@ public class TestResourceMatcher {
     private void runTests(InputStreamReader reader, String testName) throws Exception {
         ResourceMatcherTestCases testCases = gsonBuilder.fromJson(reader, ResourceMatcherTestCases.class);
 
-        assertTrue("invalid input: " + testName, testCases != null && testCases.testCases != null);
+        assertTrue(testCases != null && testCases.testCases != null, "invalid input: " + testName);
 
         for (TestCase testCase : testCases.testCases) {
             RangerResourceMatcher matcher = createResourceMatcher(testCase.resourceDef, testCase.policyResource);
@@ -115,7 +115,7 @@ public class TestResourceMatcher {
                 boolean expected = oneTest.result;
                 boolean result   = matcher.isMatch(oneTest.input, ResourceElementMatchingScope.SELF, oneTest.evalContext);
 
-                assertEquals("isMatch() failed! " + testCase.name + ":" + oneTest.name + ": input=" + oneTest.input, expected, result);
+                assertEquals(expected, result, "isMatch() failed! " + testCase.name + ":" + oneTest.name + ": input=" + oneTest.input);
             }
         }
     }

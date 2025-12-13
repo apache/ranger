@@ -34,9 +34,9 @@ import javax.security.auth.login.LoginException;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -93,7 +93,7 @@ public class SolrMgrTest {
 
         // Assert: client is assigned and initDone may be true
         assertNotNull(client);
-        assertInstanceOf(HttpSolrClient.class, client);
+        assertTrue(client instanceof HttpSolrClient);
         // Ensure same instance returned on subsequent calls
         assertSame(client, mgr.getSolrClient());
 

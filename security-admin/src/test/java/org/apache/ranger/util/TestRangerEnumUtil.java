@@ -18,18 +18,14 @@ package org.apache.ranger.util;
 
 import org.apache.ranger.common.view.VEnum;
 import org.apache.ranger.common.view.VEnumElement;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TestRangerEnumUtil {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     @Autowired
     RangerEnumUtil xaEnumUtil = new RangerEnumUtil();
 
@@ -48,14 +44,14 @@ public class TestRangerEnumUtil {
         vEnum.setElementList(listVEnumElement);
         xaEnumUtil.enumList.add(vEnum);
         List<VEnum> dbvEnum = xaEnumUtil.getEnums();
-        Assert.assertNotNull(dbvEnum);
+        Assertions.assertNotNull(dbvEnum);
     }
 
     @Test
     public void testGetEnumEmpty() {
         String enumName = "";
         xaEnumUtil.getEnum(enumName);
-        Assert.assertNotNull(xaEnumUtil.enumList.size() > 0);
+        Assertions.assertNotNull(xaEnumUtil.enumList.size() > 0);
     }
 
     @Test
@@ -79,8 +75,8 @@ public class TestRangerEnumUtil {
 
         VEnum dbvEnum = xaEnumUtil.getEnum(enumName);
 
-        Assert.assertNotNull(dbvEnum);
-        Assert.assertEquals(enumName, dbvEnum.getEnumName());
+        Assertions.assertNotNull(dbvEnum);
+        Assertions.assertEquals(enumName, dbvEnum.getEnumName());
     }
 
     @Test
@@ -89,7 +85,7 @@ public class TestRangerEnumUtil {
         int     enumValue  = 1;
         String  value      = xaEnumUtil.getLabel(enumName, enumValue);
         boolean checkValue = value.isEmpty();
-        Assert.assertFalse(checkValue);
+        Assertions.assertFalse(checkValue);
     }
 
     @Test
@@ -98,7 +94,7 @@ public class TestRangerEnumUtil {
         String enumName  = "CommonEnums.ActiveStatus";
         int    enumValue = 1;
         String value     = xaEnumUtil.getLabel(enumName, enumValue);
-        Assert.assertNotNull(value);
+        Assertions.assertNotNull(value);
     }
 
     @Test
@@ -106,7 +102,7 @@ public class TestRangerEnumUtil {
         String enumName    = "CommonEnums.BooleanValue";
         String elementName = "BOOL_NONE";
         int    value       = xaEnumUtil.getValue(enumName, elementName);
-        Assert.assertEquals(0, value);
+        Assertions.assertEquals(0, value);
     }
 
     @Test
@@ -115,6 +111,6 @@ public class TestRangerEnumUtil {
         String enumName    = "CommonEnums.ActivationStatus";
         String elementName = "ACT_STATUS_DISABLED";
         int    value       = xaEnumUtil.getValue(enumName, elementName);
-        Assert.assertEquals(0, value);
+        Assertions.assertEquals(0, value);
     }
 }

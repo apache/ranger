@@ -20,7 +20,7 @@ package org.apache.ranger.plugin.util;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,9 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestServiceTags {
     private static final RangerServiceResource[] RESOURCES = {
@@ -248,12 +248,12 @@ public class TestServiceTags {
         // Verify resource1 has no duplicate tag IDs
         List<Long> resource1Tags = svcTags1.getResourceToTagIds().get(0L);
         Set<Long> uniqueTags = new HashSet<>(resource1Tags);
-        assertEquals("Duplicate tag IDs should be removed from resource1", uniqueTags.size(), resource1Tags.size());
+        assertEquals(uniqueTags.size(), resource1Tags.size(), "Duplicate tag IDs should be removed from resource1");
 
         // Verify resource2 has no duplicate tag IDs
         List<Long> resource2Tags = svcTags1.getResourceToTagIds().get(1L);
         uniqueTags = new HashSet<>(resource2Tags);
-        assertEquals("Duplicate tag IDs should be removed from resource2", uniqueTags.size(), resource2Tags.size());
+        assertEquals(uniqueTags.size(), resource2Tags.size(), "Duplicate tag IDs should be removed from resource2");
     }
 
     private ServiceTags createServiceTags(RangerTag[] tags, RangerServiceResource[] resources) {

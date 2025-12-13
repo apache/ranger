@@ -30,11 +30,11 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceMatchin
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,13 +43,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPolicyACLs {
     private static Gson gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
                 .setPrettyPrinting()
@@ -57,15 +57,15 @@ public class TestPolicyACLs {
                 .create();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
     }
 
@@ -109,7 +109,7 @@ public class TestPolicyACLs {
     private void runTests(InputStreamReader reader, String testName) {
         PolicyACLsTests testCases = gsonBuilder.fromJson(reader, PolicyACLsTests.class);
 
-        assertTrue("invalid input: " + testName, testCases != null && testCases.testCases != null);
+        assertTrue(testCases != null && testCases.testCases != null, "invalid input: " + testName);
 
         for (PolicyACLsTests.TestCase testCase : testCases.testCases) {
             String                    serviceType         = testCase.servicePolicies.getServiceDef().getName();
@@ -124,11 +124,11 @@ public class TestPolicyACLs {
 
                 RangerResourceACLs acls = policyEngine.getResourceACLs(request);
 
-                assertEquals(oneTest.name + ": userACLs mismatch", oneTest.userPermissions, acls.getUserACLs());
-                assertEquals(oneTest.name + ": groupACLs mismatch", oneTest.groupPermissions, acls.getGroupACLs());
-                assertEquals(oneTest.name + ": roleACLs mismatch", oneTest.rolePermissions, acls.getRoleACLs());
-                assertEquals(oneTest.name + ": rowFilters mismatch", oneTest.rowFilters, acls.getRowFilters());
-                assertEquals(oneTest.name + ": dataMasks mismatch", oneTest.dataMasks, acls.getDataMasks());
+                assertEquals(oneTest.userPermissions, acls.getUserACLs(), oneTest.name + ": userACLs mismatch");
+                assertEquals(oneTest.groupPermissions, acls.getGroupACLs(), oneTest.name + ": groupACLs mismatch");
+                assertEquals(oneTest.rolePermissions, acls.getRoleACLs(), oneTest.name + ": roleACLs mismatch");
+                assertEquals(oneTest.rowFilters, acls.getRowFilters(), oneTest.name + ": rowFilters mismatch");
+                assertEquals(oneTest.dataMasks, acls.getDataMasks(), oneTest.name + ": dataMasks mismatch");
             });
         }
     }

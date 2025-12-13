@@ -53,7 +53,6 @@ import java.util.Collections;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -98,7 +97,7 @@ public class TestUnixAuthenticationService {
                         .thenAnswer(inv -> null);
 
                 InvocationTargetException ex = assertThrows(InvocationTargetException.class, () -> invokeInit(svc));
-                assertInstanceOf(RuntimeException.class, ex.getCause());
+                assertTrue(ex.getCause() instanceof RuntimeException);
             }
         }
     }

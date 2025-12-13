@@ -19,8 +19,7 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,14 +32,14 @@ import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTyp
 import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_NULL;
 import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_SHOW_FIRST_4;
 import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_SHOW_LAST_4;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestDataMasker {
     private static final Pattern HEXADECIMAL_PATTERN = Pattern.compile("\\p{XDigit}+");
 
-    @DataProvider(name = "testMaskProvider")
-    public Object[][] dpMethod() {
+    public Object[][] testMaskProvider() {
         return new Object[][] {
                 {"1234567890", MASK, null, "**********"},
                 {"1", MASK, null, "*****"},
@@ -89,7 +88,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "shaProvider")
     public Object[][] shaProvider() {
         return new Object[][] {
                 {"1234567890"},
@@ -107,7 +105,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "badMasks")
     public Object[][] badMasks() {
         return new Object[][] {
                 {"1234567890", null, null, "**********"},
@@ -123,7 +120,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "dateformats")
     public Object[][] dateformats() {
         return new Object[][] {
                 {"", MASK_DATE_SHOW_YEAR, null, ""},
@@ -143,7 +139,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "dateformatsBad")
     public Object[][] dateformatsBad() {
         return new Object[][] {
                 {" ", MASK_DATE_SHOW_YEAR, null, ""},
@@ -156,7 +151,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "booleans2")
     public Object[][] booleans() {
         return new Object[][] {
                 {true, MASK, null, false},
@@ -175,7 +169,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "booleansBad")
     public Object[][] booleansBad() {
         return new Object[][] {
                 {false, MASK_DATE_SHOW_YEAR, null, null},
@@ -185,7 +178,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "numbers")
     public Object[][] numbers() {
         return new Object[][] {
                 {0, MASK, null, DataMasker.DEFAULT_NUMBER_MASK},
@@ -210,7 +202,6 @@ public class TestDataMasker {
         };
     }
 
-    @DataProvider(name = "numbersBad")
     public Object[][] numbersBad() {
         return new Object[][] {
                 {1, MASK_DATE_SHOW_YEAR, null, null},
@@ -225,51 +216,99 @@ public class TestDataMasker {
         };
     }
 
-    @Test(dataProvider = "testMaskProvider")
-    void testMask(String value, String maskType, String customValue, String result) {
-        assertEquals(DataMasker.maskString(value, maskType, customValue), result);
+    @Test
+    void testMask() {
+        for (Object[] row : testMaskProvider()) {
+            String value = (String) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            String result = (String) row[3];
+            assertEquals(result, DataMasker.maskString(value, maskType, customValue));
+        }
     }
 
-    @Test(dataProvider = "shaProvider")
-    void testShaMask(String value) {
-        String masked = DataMasker.maskString(value, MASK_HASH, null);
-        assertEquals(masked.length(), 64);
-        assertTrue(isHexadecimal(masked));
+    @Test
+    void testShaMask() {
+        for (Object[] row : shaProvider()) {
+            String value = (String) row[0];
+            String masked = DataMasker.maskString(value, MASK_HASH, null);
+            assertEquals(64, masked.length());
+            assertTrue(isHexadecimal(masked));
+        }
     }
 
-    @Test(expectedExceptions = MaskingException.class, dataProvider = "badMasks")
-    void testInvalidMask(String value, String maskType, String customValue, String result) {
-        DataMasker.maskString(value, maskType, customValue);
+    @Test
+    void testInvalidMask() {
+        for (Object[] row : badMasks()) {
+            String value = (String) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            assertThrows(MaskingException.class, () -> DataMasker.maskString(value, maskType, customValue));
+        }
     }
 
-    @Test(dataProvider = "dateformats")
-    void testMaskYear(String value, String maskType, String customValue, String result) {
-        assertEquals(DataMasker.maskString(value, maskType, customValue), result);
+    @Test
+    void testMaskYear() {
+        for (Object[] row : dateformats()) {
+            String value = (String) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            String result = (String) row[3];
+            assertEquals(result, DataMasker.maskString(value, maskType, customValue));
+        }
     }
 
-    @Test(expectedExceptions = MaskingException.class, dataProvider = "dateformatsBad")
-    void testMaskYearBad(String value, String maskType, String customValue, String result) {
-        DataMasker.maskString(value, maskType, customValue);
+    @Test
+    void testMaskYearBad() {
+        for (Object[] row : dateformatsBad()) {
+            String value = (String) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            assertThrows(MaskingException.class, () -> DataMasker.maskString(value, maskType, customValue));
+        }
     }
 
-    @Test(dataProvider = "booleans2")
-    void testMaskBooleans(Boolean value, String maskType, String customValue, Boolean result) {
-        assertEquals(DataMasker.maskBoolean(value, maskType, customValue), result);
+    @Test
+    void testMaskBooleans() {
+        for (Object[] row : booleans()) {
+            Boolean value = (Boolean) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            Boolean result = (Boolean) row[3];
+            assertEquals(result, DataMasker.maskBoolean(value, maskType, customValue));
+        }
     }
 
-    @Test(expectedExceptions = MaskingException.class, dataProvider = "booleansBad")
-    void testMaskBooleansBad(Boolean value, String maskType, String customValue, Boolean result) {
-        DataMasker.maskBoolean(value, maskType, customValue);
+    @Test
+    void testMaskBooleansBad() {
+        for (Object[] row : booleansBad()) {
+            Boolean value = (Boolean) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            assertThrows(MaskingException.class, () -> DataMasker.maskBoolean(value, maskType, customValue));
+        }
     }
 
-    @Test(dataProvider = "numbers")
-    void testNumbers(Number value, String maskType, String customValue, Number result) {
-        DataMasker.maskNumber(value, maskType, customValue);
+    @Test
+    void testNumbers() {
+        for (Object[] row : numbers()) {
+            Number value = (Number) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            Number result = (Number) row[3];
+            Number masked = DataMasker.maskNumber(value, maskType, customValue);
+            assertEquals(String.valueOf(result), String.valueOf(masked));
+        }
     }
 
-    @Test(expectedExceptions = MaskingException.class, dataProvider = "numbersBad")
-    void testNumbersBad(Number value, String maskType, String customValue, Boolean result) {
-        DataMasker.maskNumber(value, maskType, customValue);
+    @Test
+    void testNumbersBad() {
+        for (Object[] row : numbersBad()) {
+            Number value = (Number) row[0];
+            String maskType = (String) row[1];
+            String customValue = (String) row[2];
+            assertThrows(MaskingException.class, () -> DataMasker.maskNumber(value, maskType, customValue));
+        }
     }
 
     private boolean isHexadecimal(String input) {

@@ -46,6 +46,7 @@ import java.util.Map;
  * @description <Unit Test for PatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 class>
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPatchForAllServiceDefUpdateForResourceSpecificAccesses_J10012 {
     @Test

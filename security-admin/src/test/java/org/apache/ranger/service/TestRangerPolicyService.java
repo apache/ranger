@@ -30,7 +30,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -83,7 +83,7 @@ public class TestRangerPolicyService {
     public void test1ValidateForCreate() {
         RangerPolicy rangerPolicy = rangerPolicy();
         policyService.validateForCreate(rangerPolicy);
-        Assert.assertNotNull(rangerPolicy);
+        Assertions.assertNotNull(rangerPolicy);
     }
 
     @Test
@@ -92,7 +92,7 @@ public class TestRangerPolicyService {
         XXPolicy     policy       = policy();
         policyService.validateForUpdate(rangerPolicy, policy);
 
-        Assert.assertNotNull(rangerPolicy);
+        Assertions.assertNotNull(rangerPolicy);
     }
 
     @Test

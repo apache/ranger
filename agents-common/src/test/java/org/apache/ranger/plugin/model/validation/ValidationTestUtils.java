@@ -30,7 +30,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumElementDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -106,7 +106,7 @@ public class ValidationTestUtils {
     // check if any one of the sub-fields is present
     void checkFailureForMissingValue(List<ValidationFailureDetails> failures, String field, String[] subFields) {
         if (CollectionUtils.isEmpty(failures)) {
-            Assert.fail("List of failures is null/empty!");
+            Assertions.fail("List of failures is null/empty!");
         } else {
             boolean found = false;
             int     i     = 0;
@@ -117,7 +117,7 @@ public class ValidationTestUtils {
                 }
                 i++;
             }
-            Assert.assertTrue(failures.toString(), found);
+            Assertions.assertTrue(found, failures.toString());
         }
     }
 
@@ -131,10 +131,10 @@ public class ValidationTestUtils {
 
     void checkFailure(List<ValidationFailureDetails> failures, Boolean internalError, Boolean missing, Boolean semanticError, String field, String subField) {
         if (CollectionUtils.isEmpty(failures)) {
-            Assert.fail("List of failures is null/empty!");
+            Assertions.fail("List of failures is null/empty!");
         } else {
             boolean found = hasFailure(failures, internalError, missing, semanticError, field, subField);
-            Assert.assertTrue(failures.toString(), found);
+            Assertions.assertTrue(found, failures.toString());
         }
     }
 
@@ -156,7 +156,7 @@ public class ValidationTestUtils {
     }
 
     List<RangerAccessTypeDef> createAccessTypeDefs(String[] names) {
-        Assert.assertNotNull(names); // fail if null is passed in!
+        Assertions.assertNotNull(names); // fail if null is passed in!
         List<RangerAccessTypeDef> defs = new ArrayList<>();
         for (String name : names) {
             RangerAccessTypeDef def = mock(RangerAccessTypeDef.class);

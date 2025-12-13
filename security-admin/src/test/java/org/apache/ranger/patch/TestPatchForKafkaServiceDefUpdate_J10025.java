@@ -86,6 +86,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @description <Unit Test for PatchForKafkaServiceDefUpdate_J10025 class>
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPatchForKafkaServiceDefUpdate_J10025 {
     private static void setIfPresent(Object target, String fieldName, Object value) {

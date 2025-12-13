@@ -19,7 +19,7 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.ranger.plugin.util.RangerCache.RefreshMode;
 import org.apache.ranger.plugin.util.RangerCache.RefreshableValue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,9 +34,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RangerCacheTest {
     private static final int CACHE_THREAD_COUNT               = 25;
@@ -119,7 +119,7 @@ public class RangerCacheTest {
             cache.remove(user);
         }
 
-        assertEquals("cache should have no users", 0, cache.getKeys().size());
+        assertEquals(0, cache.getKeys().size(), "cache should have no users");
 
         log(String.format("all entries in the cache are now removed: timeTaken=%sms", (System.currentTimeMillis() - startTimeMs)));
     }
@@ -414,15 +414,15 @@ public class RangerCacheTest {
             userStats.get.record(timeTaken);
 
             if (userName.startsWith(USERNAME_PREFIX_FAILED_INIT)) {
-                assertNull("userGroups should be null for user=" + userName + ", lookupCount=" + lookupCount, userGroups);
+                assertNull(userGroups, "userGroups should be null for user=" + userName + ", lookupCount=" + lookupCount);
             } else if (userName.startsWith(USERNAME_PREFIX_FAILED_FIRST_INIT)) {
                 if (lookupCount == 0) {
-                    assertNull("userGroups should be null after first lookup for user=" + userName + ", lookupCount=" + lookupCount, userGroups);
+                    assertNull(userGroups, "userGroups should be null after first lookup for user=" + userName + ", lookupCount=" + lookupCount);
                 } else {
-                    assertNotNull("userGroups should be null only after first lookup for user=" + userName + ", lookupCount=" + lookupCount, userGroups);
+                    assertNotNull(userGroups, "userGroups should be null only after first lookup for user=" + userName + ", lookupCount=" + lookupCount);
                 }
             } else {
-                assertNotNull("userGroups should not be null for user=" + userName + ", lookupCount=" + lookupCount, userGroups);
+                assertNotNull(userGroups, "userGroups should not be null for user=" + userName + ", lookupCount=" + lookupCount);
             }
 
             userStats.lastValue = userGroups;

@@ -37,8 +37,8 @@ import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.InputStream;
@@ -54,9 +54,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class RangerBasePluginTest {
     private static final String RANGER_SERVICE_TYPE                = "hbase";
@@ -73,7 +73,7 @@ public class RangerBasePluginTest {
     private static Gson             gsonBuilder;
     private static RangerBasePlugin rangerBasePlugin;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
                 .setPrettyPrinting()
@@ -112,13 +112,13 @@ public class RangerBasePluginTest {
     private void runTests(Reader reader) throws Exception {
         RangerBasePluginTestCase testCase = readTestCase(reader);
 
-        assertNotNull("testCase was null",  testCase);
-        assertNotNull("testCase.policies was null",  testCase.policies);
-        assertNotNull("testCase.tags was null", testCase.tags);
-        assertNotNull("testCase.roles was null", testCase.roles);
-        assertNotNull("testCase.userStore was null", testCase.userStore);
-        assertNotNull("testCase.gdsInfo was null", testCase.gdsInfo);
-        assertNotNull("testCase.tests was null", testCase.tests);
+        assertNotNull(testCase, "testCase was null");
+        assertNotNull(testCase.policies, "testCase.policies was null");
+        assertNotNull(testCase.tags, "testCase.tags was null");
+        assertNotNull(testCase.roles, "testCase.roles was null");
+        assertNotNull(testCase.userStore, "testCase.userStore was null");
+        assertNotNull(testCase.gdsInfo, "testCase.gdsInfo was null");
+        assertNotNull(testCase.tests, "testCase.tests was null");
 
         int failedCount = 0;
 
@@ -130,10 +130,10 @@ public class RangerBasePluginTest {
                     if (test.result != null) {
                         RangerAccessResult result = rangerBasePlugin.isAccessAllowed(request);
 
-                        assertNotNull("result was null! - " + test.name, result);
-                        assertEquals("isAllowed mismatched! - " + test.name, test.result.getIsAllowed(), result.getIsAllowed());
-                        assertEquals("isAccessDetermined mismatched! - " + test.name, test.result.getIsAccessDetermined(), result.getIsAccessDetermined());
-                        assertEquals("isAllowed mismatched! - " + test.name, test.result.getPolicyId(), result.getPolicyId());
+                        assertNotNull(result, "result was null! - " + test.name);
+                        assertEquals(test.result.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
+                        assertEquals(test.result.getIsAccessDetermined(), result.getIsAccessDetermined(), "isAccessDetermined mismatched! - " + test.name);
+                        assertEquals(test.result.getPolicyId(), result.getPolicyId(), "isAllowed mismatched! - " + test.name);
                     }
                 } catch (Error e) {
                     // The PolicyRefresher modifies the policy, so it's expected that tests for the modified policy would fail.

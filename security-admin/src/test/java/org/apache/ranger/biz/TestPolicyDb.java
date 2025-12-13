@@ -30,9 +30,9 @@ import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,8 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPolicyDb {
     static Gson             gsonBuilder;
@@ -51,13 +51,13 @@ public class TestPolicyDb {
     static RangerServiceDef hbaseServiceDef;
     static RangerServiceDef tagServiceDef;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
         initializeServiceDefs();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() {
     }
 
@@ -104,7 +104,7 @@ public class TestPolicyDb {
             testCase.servicePolicies.setServiceDef(serviceDef);
         }
 
-        assertTrue("invalid input: " + testName, testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null);
+        assertTrue(testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null, "invalid input: " + testName);
 
         RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 
@@ -122,17 +122,17 @@ public class TestPolicyDb {
             if (test.allowedPolicies != null) {
                 List<RangerPolicy> allowedPolicies = policyAdmin.getAllowedUnzonedPolicies(test.user, test.userGroups, test.accessType);
 
-                assertEquals("allowed-policy count mismatch!", test.allowedPolicies.size(), allowedPolicies.size());
+                assertEquals(test.allowedPolicies.size(), allowedPolicies.size(), "allowed-policy count mismatch!");
 
                 Set<Long> allowedPolicyIds = new HashSet<>();
                 for (RangerPolicy allowedPolicy : allowedPolicies) {
                     allowedPolicyIds.add(allowedPolicy.getId());
                 }
-                assertEquals("allowed-policy list mismatch!", test.allowedPolicies, allowedPolicyIds);
+                assertEquals(test.allowedPolicies, allowedPolicyIds, "allowed-policy list mismatch!");
             } else {
                 boolean result = policyAdmin.isAccessAllowedByUnzonedPolicies(test.resources, null, test.user, test.userGroups, test.accessType);
 
-                assertEquals("isAccessAllowed mismatched! - " + test.name, expected, result);
+                assertEquals(expected, result, "isAccessAllowed mismatched! - " + test.name);
             }
         }
     }

@@ -46,18 +46,16 @@ import org.apache.ranger.view.VXPolicy;
 import org.apache.ranger.view.VXPolicyList;
 import org.apache.ranger.view.VXRepository;
 import org.apache.ranger.view.VXRepositoryList;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -67,12 +65,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(MockitoJUnitRunner.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPublicAPIs {
-    private static final Long              Id     = 8L;
-    @Rule
-    public               ExpectedException thrown = ExpectedException.none();
+    private static final Long Id = 8L;
     @InjectMocks
     PublicAPIs publicAPIs = new PublicAPIs();
     @Mock
@@ -94,7 +90,7 @@ public class TestPublicAPIs {
     @Mock
     AssetREST assetREST;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         RangerSecurityContext context = new RangerSecurityContext();
         context.setUserSession(new UserSessionBase());
@@ -111,10 +107,10 @@ public class TestPublicAPIs {
         Mockito.when(serviceUtil.toVXRepository(rangerService)).thenReturn(vXRepository);
         VXRepository dbVXRepository = publicAPIs.getRepository(Id);
 
-        Assert.assertNotNull(dbVXRepository);
-        Assert.assertEquals(dbVXRepository, vXRepository);
-        Assert.assertEquals(dbVXRepository.getId(), vXRepository.getId());
-        Assert.assertEquals(dbVXRepository.getName(), vXRepository.getName());
+        Assertions.assertNotNull(dbVXRepository);
+        Assertions.assertEquals(dbVXRepository, vXRepository);
+        Assertions.assertEquals(dbVXRepository.getId(), vXRepository.getId());
+        Assertions.assertEquals(dbVXRepository.getName(), vXRepository.getName());
         Mockito.verify(serviceREST).getService(Id);
         Mockito.verify(serviceUtil).toVXRepository(rangerService);
     }
@@ -131,11 +127,11 @@ public class TestPublicAPIs {
         Mockito.when(serviceUtil.vXAssetToPublicObject(vXAsset)).thenReturn(vXRepository);
         VXRepository dbVXRepository = publicAPIs.createRepository(vXRepository);
 
-        Assert.assertNotNull(dbVXRepository);
-        Assert.assertEquals(dbVXRepository, vXRepository);
-        Assert.assertEquals(dbVXRepository.getId(),
+        Assertions.assertNotNull(dbVXRepository);
+        Assertions.assertEquals(dbVXRepository, vXRepository);
+        Assertions.assertEquals(dbVXRepository.getId(),
                 vXRepository.getId());
-        Assert.assertEquals(dbVXRepository.getName(),
+        Assertions.assertEquals(dbVXRepository.getName(),
                 vXRepository.getName());
         Mockito.verify(serviceREST).createService(rangerService);
         Mockito.verify(serviceUtil).publicObjecttoVXAsset(vXRepository);
@@ -161,10 +157,10 @@ public class TestPublicAPIs {
         Mockito.when(serviceUtil.vXAssetToPublicObject(vXAsset)).thenReturn(vXRepository);
         VXRepository dbVXRepository = publicAPIs.updateRepository(vXRepository, Id);
 
-        Assert.assertNotNull(dbVXRepository);
-        Assert.assertEquals(dbVXRepository, vXRepository);
-        Assert.assertEquals(dbVXRepository.getId(), vXRepository.getId());
-        Assert.assertEquals(dbVXRepository.getName(), vXRepository.getName());
+        Assertions.assertNotNull(dbVXRepository);
+        Assertions.assertEquals(dbVXRepository, vXRepository);
+        Assertions.assertEquals(dbVXRepository.getId(), vXRepository.getId());
+        Assertions.assertEquals(dbVXRepository.getName(), vXRepository.getName());
         Mockito.verify(serviceREST).updateService(rangerService, request);
         Mockito.verify(serviceUtil).publicObjecttoVXAsset(vXRepository);
         Mockito.verify(serviceUtil).toRangerService(vXAsset);
@@ -197,8 +193,8 @@ public class TestPublicAPIs {
         Mockito.when(serviceREST.getServices(filter)).thenReturn(ret);
         Mockito.when(serviceUtil.rangerServiceListToPublicObjectList(ret)).thenReturn(vXRepositoryList);
         VXRepositoryList dbVXRepositoryList = publicAPIs.searchRepositories(request);
-        Assert.assertNotNull(dbVXRepositoryList);
-        Assert.assertEquals(dbVXRepositoryList.getResultSize(), vXRepositoryList.getResultSize());
+        Assertions.assertNotNull(dbVXRepositoryList);
+        Assertions.assertEquals(dbVXRepositoryList.getResultSize(), vXRepositoryList.getResultSize());
     }
 
     @Test
@@ -212,7 +208,7 @@ public class TestPublicAPIs {
 
         VXLong resultActual = publicAPIs.countRepositories(request);
 
-        Assert.assertEquals(resultExpected.getValue(), resultActual.getValue());
+        Assertions.assertEquals(resultExpected.getValue(), resultActual.getValue());
         Mockito.verify(assetREST).countXAssets(request);
     }
 
@@ -225,10 +221,10 @@ public class TestPublicAPIs {
         Mockito.when(serviceREST.getServiceByName(policy.getService())).thenReturn(service);
         Mockito.when(serviceUtil.toVXPolicy(policy, service)).thenReturn(vXPolicy);
         VXPolicy dbVXPolicy = publicAPIs.getPolicy(Id);
-        Assert.assertNotNull(dbVXPolicy);
-        Assert.assertEquals(dbVXPolicy, vXPolicy);
-        Assert.assertEquals(dbVXPolicy.getPolicyName(), vXPolicy.getPolicyName());
-        Assert.assertEquals(dbVXPolicy.getRepositoryType(), vXPolicy.getRepositoryType());
+        Assertions.assertNotNull(dbVXPolicy);
+        Assertions.assertEquals(dbVXPolicy, vXPolicy);
+        Assertions.assertEquals(dbVXPolicy.getPolicyName(), vXPolicy.getPolicyName());
+        Assertions.assertEquals(dbVXPolicy.getRepositoryType(), vXPolicy.getRepositoryType());
         Mockito.verify(serviceREST).getPolicy(Id);
         Mockito.verify(serviceREST).getServiceByName(policy.getService());
         Mockito.verify(serviceUtil).toVXPolicy(policy, service);
@@ -244,10 +240,10 @@ public class TestPublicAPIs {
         Mockito.when(serviceREST.createPolicy(policy, null)).thenReturn(policy);
         Mockito.when(serviceUtil.toVXPolicy(policy, service)).thenReturn(vXPolicy);
         VXPolicy dbVXPolicy = publicAPIs.createPolicy(vXPolicy);
-        Assert.assertNotNull(dbVXPolicy);
-        Assert.assertEquals(dbVXPolicy, vXPolicy);
-        Assert.assertEquals(dbVXPolicy.getId(), vXPolicy.getId());
-        Assert.assertEquals(dbVXPolicy.getRepositoryName(), vXPolicy.getRepositoryName());
+        Assertions.assertNotNull(dbVXPolicy);
+        Assertions.assertEquals(dbVXPolicy, vXPolicy);
+        Assertions.assertEquals(dbVXPolicy.getId(), vXPolicy.getId());
+        Assertions.assertEquals(dbVXPolicy.getRepositoryName(), vXPolicy.getRepositoryName());
         Mockito.verify(serviceREST).createPolicy(policy, null);
         Mockito.verify(serviceREST).getServiceByName(vXPolicy.getRepositoryName());
         Mockito.verify(serviceUtil).toVXPolicy(policy, service);
@@ -269,10 +265,10 @@ public class TestPublicAPIs {
         Mockito.when(serviceUtil.toVXPolicy(policy, service)).thenReturn(vXPolicy);
         VXPolicy dbVXPolicy = publicAPIs.updatePolicy(vXPolicy, Id);
 
-        Assert.assertNotNull(dbVXPolicy);
-        Assert.assertEquals(dbVXPolicy, vXPolicy);
-        Assert.assertEquals(dbVXPolicy.getId(), vXPolicy.getId());
-        Assert.assertEquals(dbVXPolicy.getRepositoryName(), vXPolicy.getRepositoryName());
+        Assertions.assertNotNull(dbVXPolicy);
+        Assertions.assertEquals(dbVXPolicy, vXPolicy);
+        Assertions.assertEquals(dbVXPolicy.getId(), vXPolicy.getId());
+        Assertions.assertEquals(dbVXPolicy.getRepositoryName(), vXPolicy.getRepositoryName());
         Mockito.verify(serviceREST).updatePolicy(policy, Id);
         Mockito.verify(serviceREST).getServiceByName(vXPolicy.getRepositoryName());
         Mockito.verify(serviceUtil).toVXPolicy(policy, service);
@@ -309,8 +305,8 @@ public class TestPublicAPIs {
         Mockito.when(serviceREST.getPolicies(filter)).thenReturn(policyList);
         Mockito.when(serviceUtil.rangerPolicyListToPublic(policyList, filter)).thenReturn(vXPolicyList);
         VXPolicyList dbVXPolicyList = publicAPIs.searchPolicies(request);
-        Assert.assertNotNull(dbVXPolicyList);
-        Assert.assertEquals(dbVXPolicyList.getResultSize(), vXPolicyList.getResultSize());
+        Assertions.assertNotNull(dbVXPolicyList);
+        Assertions.assertEquals(dbVXPolicyList.getResultSize(), vXPolicyList.getResultSize());
         Mockito.verify(searchUtil).getSearchFilterFromLegacyRequest(request, policyService.sortFields);
         Mockito.verify(serviceREST).getPolicies(filter);
         Mockito.verify(serviceUtil).rangerPolicyListToPublic(policyList, filter);
@@ -327,7 +323,7 @@ public class TestPublicAPIs {
 
         VXLong resultActual = publicAPIs.countPolicies(request);
 
-        Assert.assertEquals(resultExpected.getValue(), resultActual.getValue());
+        Assertions.assertEquals(resultExpected.getValue(), resultActual.getValue());
         Mockito.verify(assetREST).countXResources(request);
     }
 

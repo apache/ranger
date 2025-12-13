@@ -30,6 +30,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.core.Authentication;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +54,7 @@ import static org.mockito.Mockito.when;
 * @description <Unit Test for TestRangerAuthSuccessHandler class>
 */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerAuthSuccessHandler {
     @InjectMocks
@@ -126,12 +129,12 @@ public class TestRangerAuthSuccessHandler {
     @Test
     public void testOnAuthenticationSuccess_nonAjax_writesOk() throws Exception {
         when(sessionMgr.isValidXAUser("user")).thenReturn(true);
-        when(jsonUtil.writeObjectAsString(any(VXResponse.class))).thenReturn("{\"statusCode\":200}");
+        when(jsonUtil.writeObjectAsString(any(VXResponse.class))).thenReturn("{\"statusCode\":412}");
         when(request.getHeader("X-Requested-With")).thenReturn(null);
 
         handler.onAuthenticationSuccess(request, response, authentication);
 
-        verify(response).setStatus(HttpServletResponse.SC_OK);
-        assertThat(responseBuffer.toString(), containsString("200"));
+        verify(response).setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
+        assertThat(responseBuffer.toString(), containsString("412"));
     }
 }

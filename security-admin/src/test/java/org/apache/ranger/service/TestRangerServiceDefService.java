@@ -75,7 +75,6 @@ import java.util.List;
 import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -785,7 +784,7 @@ public class TestRangerServiceDefService {
 
         Object ret = method.invoke(rangerServiceDefWithAssignedIdService, v, x, 1);
 
-        assertInstanceOf(XXServiceDefWithAssignedId.class, ret);
+        assertTrue(ret instanceof XXServiceDefWithAssignedId);
         XXServiceDefWithAssignedId out = (XXServiceDefWithAssignedId) ret;
         assertEquals("g", out.getGuid());
     }

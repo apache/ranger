@@ -60,17 +60,15 @@ import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
 import org.apache.ranger.view.VXTrxLogV2List;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
@@ -83,13 +81,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@RunWith(MockitoJUnitRunner.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestAssetREST {
-    private static final Long              Id     = 8L;
-    @Rule public         ExpectedException thrown = ExpectedException.none();
+    private static final Long Id = 8L;
     @Mock
     ServiceREST serviceREST;
     @Mock
@@ -136,8 +134,8 @@ public class TestAssetREST {
         Mockito.when(serviceREST.getService(rangerService.getId())).thenReturn(rangerService);
         Mockito.when(serviceUtil.toVXAsset(rangerService)).thenReturn(vXAsset);
         VXAsset asset = assetREST.getXAsset(Id);
-        Assert.assertNotNull(asset);
-        Assert.assertEquals(vXAsset, asset);
+        Assertions.assertNotNull(asset);
+        Assertions.assertEquals(vXAsset, asset);
         Mockito.verify(serviceREST).getService(rangerService.getId());
         Mockito.verify(serviceUtil).toVXAsset(rangerService);
     }
@@ -150,8 +148,8 @@ public class TestAssetREST {
         Mockito.when(serviceUtil.toRangerService(vXAsset)).thenReturn(rangerService);
         Mockito.when(serviceUtil.toVXAsset(rangerService)).thenReturn(vXAsset);
         VXAsset asset = assetREST.createXAsset(vXAsset);
-        Assert.assertNotNull(asset);
-        Assert.assertEquals(vXAsset, asset);
+        Assertions.assertNotNull(asset);
+        Assertions.assertEquals(vXAsset, asset);
         Mockito.verify(serviceREST).createService(rangerService);
         Mockito.verify(serviceUtil).toRangerService(vXAsset);
         Mockito.verify(serviceUtil).toVXAsset(rangerService);
@@ -166,8 +164,8 @@ public class TestAssetREST {
         Mockito.when(serviceREST.updateService(rangerService, request)).thenReturn(rangerService);
         Mockito.when(serviceUtil.toVXAsset(rangerService)).thenReturn(vXAsset);
         VXAsset asset = assetREST.updateXAsset(vXAsset);
-        Assert.assertNotNull(asset);
-        Assert.assertEquals(vXAsset, asset);
+        Assertions.assertNotNull(asset);
+        Assertions.assertEquals(vXAsset, asset);
         Mockito.verify(serviceREST).updateService(rangerService, request);
         Mockito.verify(serviceUtil).toRangerService(vXAsset);
         Mockito.verify(serviceUtil).toVXAsset(rangerService);
@@ -192,8 +190,8 @@ public class TestAssetREST {
         Mockito.when(serviceUtil.toRangerService(vXAsset)).thenReturn(rangerService);
         Mockito.when(serviceREST.validateConfig(rangerService)).thenReturn(expectedVxResponse);
         VXResponse actualVxResponse = assetREST.configTest(vXAsset);
-        Assert.assertNotNull(actualVxResponse);
-        Assert.assertEquals(expectedVxResponse, actualVxResponse);
+        Assertions.assertNotNull(actualVxResponse);
+        Assertions.assertEquals(expectedVxResponse, actualVxResponse);
         Mockito.verify(serviceUtil).toRangerService(vXAsset);
         Mockito.verify(serviceREST).validateConfig(rangerService);
     }
@@ -215,8 +213,8 @@ public class TestAssetREST {
         Mockito.when(serviceUtil.toVXAsset(rangerService1)).thenReturn(vXAsset1);
         Mockito.when(serviceUtil.toVXAsset(rangerService2)).thenReturn(vXAsset2);
         VXAssetList vXAssetList = assetREST.searchXAssets(request);
-        Assert.assertNotNull(vXAssetList);
-        Assert.assertEquals(expectedVXAsset.getVXAssets(), vXAssetList.getVXAssets());
+        Assertions.assertNotNull(vXAssetList);
+        Assertions.assertEquals(expectedVXAsset.getVXAssets(), vXAssetList.getVXAssets());
         Mockito.verify(searchUtil).getSearchFilterFromLegacyRequestForRepositorySearch(request, null);
         Mockito.verify(serviceREST).getServices(searchFilter);
         Mockito.verify(serviceUtil, Mockito.times(1)).toVXAsset(rangerService1);
@@ -242,7 +240,7 @@ public class TestAssetREST {
         Mockito.when(serviceUtil.toVXAsset(rangerService1)).thenReturn(vXAsset1);
         Mockito.when(serviceUtil.toVXAsset(rangerService2)).thenReturn(vXAsset2);
         VXLong actualAsset = assetREST.countXAssets(request);
-        Assert.assertEquals(expectedAsset.getValue(), actualAsset.getValue());
+        Assertions.assertEquals(expectedAsset.getValue(), actualAsset.getValue());
     }
 
     @Test
@@ -254,8 +252,8 @@ public class TestAssetREST {
         Mockito.when(serviceREST.getServiceByName(rangerPolicy.getService())).thenReturn(rangerService);
         Mockito.when(serviceUtil.toVXResource(rangerPolicy, rangerService)).thenReturn(expectedvxResource);
         VXResource actualvxResource = assetREST.getXResource(Id);
-        Assert.assertNotNull(actualvxResource);
-        Assert.assertEquals(expectedvxResource, actualvxResource);
+        Assertions.assertNotNull(actualvxResource);
+        Assertions.assertEquals(expectedvxResource, actualvxResource);
     }
 
     @Test
@@ -268,8 +266,8 @@ public class TestAssetREST {
         Mockito.when(serviceUtil.toRangerPolicy(vxResource, rangerService)).thenReturn(rangerPolicy);
         Mockito.when(serviceUtil.toVXResource(rangerPolicy, rangerService)).thenReturn(vxResource);
         VXResource actualvxResource = assetREST.createXResource(vxResource);
-        Assert.assertNotNull(actualvxResource);
-        Assert.assertEquals(vxResource, actualvxResource);
+        Assertions.assertNotNull(actualvxResource);
+        Assertions.assertEquals(vxResource, actualvxResource);
         Mockito.verify(serviceREST).getService(vxResource.getAssetId());
         Mockito.verify(serviceREST).createPolicy(rangerPolicy, null);
         Mockito.verify(serviceUtil).toRangerPolicy(vxResource, rangerService);
@@ -286,8 +284,8 @@ public class TestAssetREST {
         Mockito.when(serviceUtil.toRangerPolicy(vxResource, rangerService)).thenReturn(rangerPolicy);
         Mockito.when(serviceUtil.toVXResource(rangerPolicy, rangerService)).thenReturn(vxResource);
         VXResource actualvxResource = assetREST.updateXResource(vxResource, Id);
-        Assert.assertNotNull(actualvxResource);
-        Assert.assertEquals(vxResource, actualvxResource);
+        Assertions.assertNotNull(actualvxResource);
+        Assertions.assertEquals(vxResource, actualvxResource);
         Mockito.verify(serviceREST).getService(vxResource.getAssetId());
         Mockito.verify(serviceREST).updatePolicy(rangerPolicy, Id);
         Mockito.verify(serviceUtil).toRangerPolicy(vxResource, rangerService);
@@ -297,17 +295,11 @@ public class TestAssetREST {
     @Test
     public void testUpdateXResourceForInvalidResourceId() {
         VXResource    vxResource    = vxResource(Id);
-        RangerPolicy  rangerPolicy  = rangerPolicy(Id);
-        RangerService rangerService = rangerService(Id);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
-        VXResource actualvxResource = assetREST.updateXResource(vxResource, -11L);
-        Assert.assertNotNull(actualvxResource);
-        Assert.assertEquals(vxResource, actualvxResource);
-        Mockito.verify(serviceREST).getService(vxResource.getAssetId());
-        Mockito.verify(serviceREST).updatePolicy(rangerPolicy, Id);
-        Mockito.verify(serviceUtil).toRangerPolicy(vxResource, rangerService);
-        Mockito.verify(serviceUtil).toVXResource(rangerPolicy, rangerService);
+
+        assertThrows(WebApplicationException.class, () -> {
+            assetREST.updateXResource(vxResource, -11L);
+        });
     }
 
     @Test
@@ -321,8 +313,8 @@ public class TestAssetREST {
         Mockito.when(serviceUtil.toRangerPolicy(vxResource, rangerService)).thenReturn(rangerPolicy);
         Mockito.when(serviceUtil.toVXResource(rangerPolicy, rangerService)).thenReturn(vxResource);
         VXResource actualvxResource = assetREST.updateXResource(vxResource, Id);
-        Assert.assertNotNull(actualvxResource);
-        Assert.assertEquals(vxResource, actualvxResource);
+        Assertions.assertNotNull(actualvxResource);
+        Assertions.assertEquals(vxResource, actualvxResource);
         Mockito.verify(serviceREST).getService(vxResource.getAssetId());
         Mockito.verify(serviceREST).updatePolicy(rangerPolicy, Id);
         Mockito.verify(serviceUtil).toRangerPolicy(vxResource, rangerService);
@@ -357,8 +349,8 @@ public class TestAssetREST {
         Mockito.when(searchUtil.getSearchFilterFromLegacyRequest(request, null)).thenReturn(searchFilter);
         Mockito.when(serviceREST.getPolicies(searchFilter)).thenReturn(rangerPolicyList);
         VXResourceList actualVXResourceList = assetREST.searchXResources(request);
-        Assert.assertNotNull(actualVXResourceList);
-        Assert.assertEquals(expectedVXResourceList.getVXResources(), actualVXResourceList.getVXResources());
+        Assertions.assertNotNull(actualVXResourceList);
+        Assertions.assertEquals(expectedVXResourceList.getVXResources(), actualVXResourceList.getVXResources());
         Mockito.verify(searchUtil).getSearchFilterFromLegacyRequest(request, null);
         Mockito.verify(serviceREST).getPolicies(searchFilter);
         for (i = 0; i < 2; i++) {
@@ -390,7 +382,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.getSearchFilterFromLegacyRequest(request, null)).thenReturn(searchFilter);
         Mockito.when(serviceREST.getPolicies(searchFilter)).thenReturn(rangerPolicyList);
         VXLong actualXResource = assetREST.countXResources(request);
-        Assert.assertEquals(expectedXResouce.getValue(), actualXResource.getValue());
+        Assertions.assertEquals(expectedXResouce.getValue(), actualXResource.getValue());
     }
 
     @Test
@@ -398,8 +390,8 @@ public class TestAssetREST {
         VXCredentialStore vXCredentialStore = vXCredentialStore();
         Mockito.when(assetMgr.getXCredentialStore(Id)).thenReturn(vXCredentialStore);
         VXCredentialStore actualvXCredentialStore = assetREST.getXCredentialStore(Id);
-        Assert.assertNotNull(actualvXCredentialStore);
-        Assert.assertEquals(vXCredentialStore, actualvXCredentialStore);
+        Assertions.assertNotNull(actualvXCredentialStore);
+        Assertions.assertEquals(vXCredentialStore, actualvXCredentialStore);
         Mockito.verify(assetMgr).getXCredentialStore(Id);
     }
 
@@ -408,8 +400,8 @@ public class TestAssetREST {
         VXCredentialStore vXCredentialStore = vXCredentialStore();
         Mockito.when(assetMgr.createXCredentialStore(vXCredentialStore)).thenReturn(vXCredentialStore);
         VXCredentialStore actualvXCredentialStore = assetREST.createXCredentialStore(vXCredentialStore);
-        Assert.assertNotNull(actualvXCredentialStore);
-        Assert.assertEquals(vXCredentialStore, actualvXCredentialStore);
+        Assertions.assertNotNull(actualvXCredentialStore);
+        Assertions.assertEquals(vXCredentialStore, actualvXCredentialStore);
         Mockito.verify(assetMgr).createXCredentialStore(vXCredentialStore);
     }
 
@@ -418,8 +410,8 @@ public class TestAssetREST {
         VXCredentialStore vXCredentialStore = vXCredentialStore();
         Mockito.when(assetMgr.updateXCredentialStore(vXCredentialStore)).thenReturn(vXCredentialStore);
         VXCredentialStore actualvXCredentialStore = assetREST.updateXCredentialStore(vXCredentialStore);
-        Assert.assertNotNull(actualvXCredentialStore);
-        Assert.assertEquals(vXCredentialStore, actualvXCredentialStore);
+        Assertions.assertNotNull(actualvXCredentialStore);
+        Assertions.assertEquals(vXCredentialStore, actualvXCredentialStore);
         Mockito.verify(assetMgr).updateXCredentialStore(vXCredentialStore);
     }
 
@@ -441,7 +433,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
         Mockito.when(assetMgr.searchXCredentialStores(searchCriteria)).thenReturn(vXCredentialStoreList);
         VXCredentialStoreList actualvxCredentialStoreList = assetREST.searchXCredentialStores(request);
-        Assert.assertEquals(vXCredentialStoreList.getVXCredentialStores(), actualvxCredentialStoreList.getVXCredentialStores());
+        Assertions.assertEquals(vXCredentialStoreList.getVXCredentialStores(), actualvxCredentialStoreList.getVXCredentialStores());
         Mockito.verify(assetMgr).searchXCredentialStores(searchCriteria);
     }
 
@@ -453,7 +445,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractCommonCriterias(request, sortFields)).thenReturn(searchCriteria);
         Mockito.when(assetMgr.getXCredentialStoreSearchCount(searchCriteria)).thenReturn(expectedvXLong);
         VXLong actualvXLong = assetREST.countXCredentialStores(request);
-        Assert.assertEquals(expectedvXLong, actualvXLong);
+        Assertions.assertEquals(expectedvXLong, actualvXLong);
         Mockito.verify(assetMgr).getXCredentialStoreSearchCount(searchCriteria);
     }
 
@@ -469,7 +461,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(8);
         Mockito.when(assetMgr.searchXPolicyExportAudits(searchCriteria)).thenReturn(vXPolicyExportAuditList);
         VXPolicyExportAuditList expectedVXPolicyExportAuditList = assetREST.searchXPolicyExportAudits(request);
-        Assert.assertEquals(vXPolicyExportAuditList, expectedVXPolicyExportAuditList);
+        Assertions.assertEquals(vXPolicyExportAuditList, expectedVXPolicyExportAuditList);
         Mockito.verify(searchUtil).extractCommonCriterias(request, sortFields);
         Mockito.verify(searchUtil, Mockito.times(5)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
@@ -491,7 +483,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(new Date());
         Mockito.when(assetMgr.getReportLogs(searchCriteria)).thenReturn(vXTrxLogList);
         VXTrxLogList expectedVXTrxLogListt = assetREST.getReportLogs(request);
-        Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
+        Assertions.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
@@ -507,7 +499,7 @@ public class TestAssetREST {
         String transactionId = "123456";
         Mockito.when(assetMgr.getTransactionReport(transactionId)).thenReturn(vXTrxLogList);
         VXTrxLogList expectedVXTrxLogListt = assetREST.getTransactionReport(request, transactionId);
-        Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
+        Assertions.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(assetMgr).getTransactionReport(transactionId);
     }
 
@@ -525,7 +517,7 @@ public class TestAssetREST {
 
         VXTrxLogV2List expectedVXTrxLogV2List = assetREST.getReportLogsV2(request);
 
-        Assert.assertEquals(vXTrxLogV2List, expectedVXTrxLogV2List);
+        Assertions.assertEquals(vXTrxLogV2List, expectedVXTrxLogV2List);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
@@ -542,7 +534,7 @@ public class TestAssetREST {
 
         VXTrxLogV2List expectedVXTrxLogList = assetREST.getTransactionReportV2(request, transactionId);
 
-        Assert.assertEquals(vXTrxLogV2List, expectedVXTrxLogList);
+        Assertions.assertEquals(vXTrxLogV2List, expectedVXTrxLogList);
         Mockito.verify(assetMgr).getTransactionReportV2(transactionId);
     }
 
@@ -565,7 +557,7 @@ public class TestAssetREST {
         Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME)).thenReturn(xServiceDef);
         Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
         VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
-        Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
+        Assertions.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
         Mockito.verify(msBizUtil).isKeyAdmin();
         Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
         Mockito.verify(daoManager).getXXServiceDef();
@@ -600,7 +592,7 @@ public class TestAssetREST {
         Mockito.when(xxServiceDefDao.findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME)).thenReturn(xServiceDef);
         Mockito.when(assetMgr.getAccessLogs(searchCriteria)).thenReturn(vXAccessAuditList);
         VXAccessAuditList expectedVXAccessAuditList = assetREST.getAccessLogs(request, null);
-        Assert.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
+        Assertions.assertEquals(vXAccessAuditList, expectedVXAccessAuditList);
         Mockito.verify(msBizUtil).isKeyAdmin();
         Mockito.verify(assetMgr).getAccessLogs(searchCriteria);
         Mockito.verify(daoManager).getXXServiceDef();
@@ -634,7 +626,7 @@ public class TestAssetREST {
             fail("test failed due to: " + e.getMessage());
         }
         VXPolicy expectedVXPolicy = assetREST.grantPermission(request, vXPolicy);
-        Assert.assertEquals(vXPolicy, expectedVXPolicy);
+        Assertions.assertEquals(vXPolicy, expectedVXPolicy);
         Mockito.verify(serviceUtil).toGrantRevokeRequest(vXPolicy);
         try {
             Mockito.verify(serviceREST).grantAccess(vXPolicy.getRepositoryName(), grantRequestObj, request);
@@ -666,7 +658,7 @@ public class TestAssetREST {
             assetREST.grantPermission(request, vXPolicy);
             fail("Exception not thrown");
         } catch (WebApplicationException e) {
-            Assert.assertTrue(true);
+            Assertions.assertTrue(true);
         }
         Mockito.verify(serviceUtil).toGrantRevokeRequest(vXPolicy);
         try {
@@ -696,7 +688,7 @@ public class TestAssetREST {
             fail("test failed due to: " + e.getMessage());
         }
         VXPolicy expectedVXPolicy = assetREST.revokePermission(request, vXPolicy);
-        Assert.assertEquals(vXPolicy, expectedVXPolicy);
+        Assertions.assertEquals(vXPolicy, expectedVXPolicy);
         Mockito.verify(serviceUtil).toGrantRevokeRequest(vXPolicy);
         try {
             Mockito.verify(serviceREST).revokeAccess(vXPolicy.getRepositoryName(), grantRequestObj, request);
@@ -728,7 +720,7 @@ public class TestAssetREST {
             assetREST.revokePermission(request, vXPolicy);
             fail("Exception not thrown");
         } catch (WebApplicationException e) {
-            Assert.assertTrue(true);
+            Assertions.assertTrue(true);
         }
         Mockito.verify(serviceUtil).toGrantRevokeRequest(vXPolicy);
         try {
@@ -750,7 +742,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(new Date());
         Mockito.when(assetMgr.getReportLogs(searchCriteria)).thenReturn(vXTrxLogList);
         VXTrxLogList expectedVXTrxLogListt = assetREST.getReportLogs(request);
-        Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
+        Assertions.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
@@ -770,7 +762,7 @@ public class TestAssetREST {
         Mockito.when(searchUtil.extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString())).thenReturn(new Date());
         Mockito.when(assetMgr.getReportLogs(searchCriteria)).thenReturn(vXTrxLogList);
         VXTrxLogList expectedVXTrxLogListt = assetREST.getReportLogs(request);
-        Assert.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
+        Assertions.assertEquals(vXTrxLogList, expectedVXTrxLogListt);
         Mockito.verify(searchUtil, Mockito.times(4)).extractString(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractInt(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString());
         Mockito.verify(searchUtil, Mockito.times(2)).extractDate(Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());

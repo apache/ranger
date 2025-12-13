@@ -19,8 +19,8 @@
 
 package org.apache.ranger.policyengine;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -51,7 +51,7 @@ public class PerfTesterTest {
         if (args != null) {
             CommandLineParser commandLineParser = new CommandLineParser();
             PerfTestOptions   parseResult       = commandLineParser.parse(args);
-            Assert.assertNotNull(parseResult);
+            Assertions.assertNotNull(parseResult);
         }
     }
 

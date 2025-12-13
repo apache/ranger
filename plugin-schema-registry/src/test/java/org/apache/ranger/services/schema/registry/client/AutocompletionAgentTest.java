@@ -19,16 +19,16 @@ package org.apache.ranger.services.schema.registry.client;
 
 import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
 import org.apache.ranger.services.schema.registry.client.util.DefaultSchemaRegistryClientForTesting;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class AutocompletionAgentTest {
     @Test

@@ -36,18 +36,16 @@ import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXStringList;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -56,11 +54,11 @@ import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+@ExtendWith(MockitoExtension.class)
+@TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestUserREST {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     @InjectMocks
     UserREST userREST = new UserREST();
     @Mock
@@ -121,9 +119,9 @@ public class TestUserREST {
 
         VXPortalUserList vXPUserListAct = userREST.searchUsers(request);
 
-        Assert.assertNotNull(vXPUserListAct);
-        Assert.assertEquals(vXPUserExpList, vXPUserListAct);
-        Assert.assertEquals(vXPUserExpList.getPageSize(), vXPUserListAct.getPageSize());
+        Assertions.assertNotNull(vXPUserListAct);
+        Assertions.assertEquals(vXPUserExpList, vXPUserListAct);
+        Assertions.assertEquals(vXPUserExpList.getPageSize(), vXPUserListAct.getPageSize());
 
         Mockito.verify(searchUtil).extractCommonCriterias(Matchers.eq(request), Matchers.anyListOf(SortField.class));
         Mockito.verify(searchUtil).extractLong(request, searchCriteria, "userId", "User Id");
@@ -145,12 +143,12 @@ public class TestUserREST {
 
         VXPortalUser vxPUserAct = userREST.getUserProfileForUser(userId);
 
-        Assert.assertNotNull(vxPUserAct);
-        Assert.assertEquals(vxPUserExp, vxPUserAct);
-        Assert.assertEquals(vxPUserExp.getLoginId(), vxPUserAct.getLoginId());
-        Assert.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
-        Assert.assertEquals(vxPUserExp.getEmailAddress(), vxPUserAct.getEmailAddress());
-        Assert.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
+        Assertions.assertNotNull(vxPUserAct);
+        Assertions.assertEquals(vxPUserExp, vxPUserAct);
+        Assertions.assertEquals(vxPUserExp.getLoginId(), vxPUserAct.getLoginId());
+        Assertions.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
+        Assertions.assertEquals(vxPUserExp.getEmailAddress(), vxPUserAct.getEmailAddress());
+        Assertions.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
 
         Mockito.verify(userManager).getUserProfile(userId);
     }
@@ -164,7 +162,7 @@ public class TestUserREST {
 
         VXPortalUser vxPUserAct = userREST.getUserProfileForUser(userId);
 
-        Assert.assertEquals(vxPUserExp, vxPUserAct);
+        Assertions.assertEquals(vxPUserExp, vxPUserAct);
 
         Mockito.verify(userManager).getUserProfile(userId);
     }
@@ -177,11 +175,11 @@ public class TestUserREST {
 
         VXPortalUser vxPUserAct = userREST.create(vxPUserExp, request);
 
-        Assert.assertNotNull(vxPUserAct);
-        Assert.assertEquals(vxPUserExp.getLoginId(), vxPUserAct.getLoginId());
-        Assert.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
-        Assert.assertEquals(vxPUserExp.getLastName(), vxPUserAct.getLastName());
-        Assert.assertEquals(vxPUserExp.getEmailAddress(), vxPUserAct.getEmailAddress());
+        Assertions.assertNotNull(vxPUserAct);
+        Assertions.assertEquals(vxPUserExp.getLoginId(), vxPUserAct.getLoginId());
+        Assertions.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
+        Assertions.assertEquals(vxPUserExp.getLastName(), vxPUserAct.getLastName());
+        Assertions.assertEquals(vxPUserExp.getEmailAddress(), vxPUserAct.getEmailAddress());
 
         Mockito.verify(userManager).createUser(vxPUserExp);
     }
@@ -194,7 +192,7 @@ public class TestUserREST {
 
         VXPortalUser vxPUserAct = userREST.createDefaultAccountUser(vxPUserExp, request);
 
-        Assert.assertNull(vxPUserAct);
+        Assertions.assertNull(vxPUserAct);
 
         Mockito.verify(userManager).createDefaultAccountUser(vxPUserExp);
     }
@@ -208,12 +206,12 @@ public class TestUserREST {
 
         VXPortalUser vxPUserAct = userREST.createDefaultAccountUser(vxPUserExp, request);
 
-        Assert.assertNotNull(vxPUserAct);
-        Assert.assertEquals(vxPUserExp, vxPUserAct);
-        Assert.assertEquals(vxPUserExp.getLoginId(), vxPUserAct.getLoginId());
-        Assert.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
-        Assert.assertEquals(vxPUserExp.getLastName(), vxPUserAct.getLastName());
-        Assert.assertEquals(vxPUserExp.getEmailAddress(), vxPUserAct.getEmailAddress());
+        Assertions.assertNotNull(vxPUserAct);
+        Assertions.assertEquals(vxPUserExp, vxPUserAct);
+        Assertions.assertEquals(vxPUserExp.getLoginId(), vxPUserAct.getLoginId());
+        Assertions.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
+        Assertions.assertEquals(vxPUserExp.getLastName(), vxPUserAct.getLastName());
+        Assertions.assertEquals(vxPUserExp.getEmailAddress(), vxPUserAct.getEmailAddress());
 
         Mockito.verify(userManager).createDefaultAccountUser(vxPUserExp);
         Mockito.verify(xUserMgr).assignPermissionToUser(vxPUserExp, true);
@@ -236,10 +234,10 @@ public class TestUserREST {
 
         VXPortalUser vxPUserAct = userREST.update(vxPUserExp, request);
 
-        Assert.assertNotNull(vxPUserAct);
-        Assert.assertEquals(xxPUserExp.getLoginId(), vxPUserAct.getLoginId());
-        Assert.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
-        Assert.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
+        Assertions.assertNotNull(vxPUserAct);
+        Assertions.assertEquals(xxPUserExp.getLoginId(), vxPUserAct.getLoginId());
+        Assertions.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
+        Assertions.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
 
         Mockito.verify(daoManager).getXXPortalUser();
         Mockito.verify(xxPortalUserDao).getById(Mockito.anyLong());
@@ -260,14 +258,9 @@ public class TestUserREST {
         Mockito.doNothing().when(userManager).checkAccess(xxPUserExp);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any(), Mockito.nullable(Long.class), Mockito.nullable(String.class), Mockito.anyString())).thenReturn(new WebApplicationException());
 
-        thrown.expect(WebApplicationException.class);
-
-        userREST.update(vxPUserExp, request);
-
-        Mockito.verify(daoManager).getXXPortalUser();
-        Mockito.verify(xxPortalUserDao).getById(Mockito.anyLong());
-        Mockito.verify(userManager).checkAccess(xxPUserExp);
-        Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), Mockito.any(), Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+        assertThrows(WebApplicationException.class, () -> {
+            userREST.update(vxPUserExp, request);
+        });
     }
 
     @Test
@@ -280,8 +273,8 @@ public class TestUserREST {
 
         VXResponse responseAct = userREST.setUserRoles(userId, roleList);
 
-        Assert.assertNotNull(responseAct);
-        Assert.assertEquals(responseExp.getStatusCode(), responseAct.getStatusCode());
+        Assertions.assertNotNull(responseAct);
+        Assertions.assertEquals(responseExp.getStatusCode(), responseAct.getStatusCode());
 
         Mockito.verify(userManager).checkAccess(userId);
         Mockito.verify(userManager).setUserRoles(userId, roleList.getVXStrings());
@@ -302,11 +295,11 @@ public class TestUserREST {
         Mockito.when(userManager.deactivateUser(xxPUserExp)).thenReturn(vxPUserExp);
 
         VXPortalUser vxPUserAct = userREST.deactivateUser(userId);
-        Assert.assertNotNull(vxPUserAct);
-        Assert.assertEquals(xxPUserExp.getLoginId(), vxPUserAct.getLoginId());
-        Assert.assertEquals(vxPUserExp.getStatus(), vxPUserAct.getStatus());
-        Assert.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
-        Assert.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
+        Assertions.assertNotNull(vxPUserAct);
+        Assertions.assertEquals(xxPUserExp.getLoginId(), vxPUserAct.getLoginId());
+        Assertions.assertEquals(vxPUserExp.getStatus(), vxPUserAct.getStatus());
+        Assertions.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
+        Assertions.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
 
         Mockito.verify(daoManager).getXXPortalUser();
         Mockito.verify(xxPortalUserDao).getById(userId);
@@ -322,13 +315,10 @@ public class TestUserREST {
         Mockito.when(daoManager.getXXPortalUser()).thenReturn(xxPortalUserDao);
         Mockito.when(xxPortalUserDao.getById(userId)).thenReturn(xxPUserExp);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any(), Mockito.nullable(Long.class), Mockito.nullable(String.class), Mockito.anyString())).thenReturn(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
 
-        userREST.deactivateUser(userId);
-
-        Mockito.verify(daoManager).getXXPortalUser();
-        Mockito.verify(xxPortalUserDao).getById(userId);
-        Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), Mockito.any(), Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+        assertThrows(WebApplicationException.class, () -> {
+            userREST.deactivateUser(userId);
+        });
     }
 
     @Test
@@ -341,85 +331,56 @@ public class TestUserREST {
 
         VXPortalUser vxPUserAct = userREST.getUserProfile(request);
 
-        Assert.assertNotNull(vxPUserAct);
-        Assert.assertEquals(vxPUserExp, vxPUserAct);
-        Assert.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
-        Assert.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
+        Assertions.assertNotNull(vxPUserAct);
+        Assertions.assertEquals(vxPUserExp, vxPUserAct);
+        Assertions.assertEquals(vxPUserExp.getId(), vxPUserAct.getId());
+        Assertions.assertEquals(vxPUserExp.getFirstName(), vxPUserAct.getFirstName());
 
         Mockito.verify(userManager).getUserProfileByLoginId();
     }
 
     @Test
     public void test16ChangePassword() {
-        XXPortalUser     xxPUser          = new XXPortalUser();
-        VXResponse       vxResponseExp    = new VXResponse();
         VXPasswordChange vxPasswordChange = createPasswordChange();
-        vxResponseExp.setStatusCode(10);
         XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 
         Mockito.when(daoManager.getXXPortalUser()).thenReturn(xxPortalUserDao);
         Mockito.when(restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, vxPasswordChange.getLoginId())).thenThrow(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
-        VXResponse vxResponseAct = userREST.changePassword(userId, vxPasswordChange);
 
-        Assert.assertNotNull(vxResponseAct);
-        Assert.assertEquals(vxResponseExp, vxResponseAct);
-        Assert.assertEquals(vxResponseExp.getStatusCode(), vxResponseAct.getStatusCode());
-
-        Mockito.verify(daoManager).getXXPortalUser();
-        Mockito.verify(xxPortalUserDao).getById(userId);
-        Mockito.verify(userManager).checkAccess(xxPUser);
-        Mockito.verify(userManager).changePassword(vxPasswordChange);
+        assertThrows(WebApplicationException.class, () -> {
+            userREST.changePassword(userId, vxPasswordChange);
+        });
     }
 
     @Test
     public void test17ChangePassword() {
-        XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any(), Mockito.nullable(Long.class), Mockito.nullable(String.class), Mockito.nullable(String.class))).thenReturn(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
 
-        userREST.changePassword(userId, changePassword);
-
-        Mockito.verify(daoManager).getXXPortalUser();
-        Mockito.verify(xxPortalUserDao).getById(userId);
-        Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), Mockito.any(), Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+        assertThrows(WebApplicationException.class, () -> {
+            userREST.changePassword(userId, changePassword);
+        });
     }
 
     @Test
     public void test18ChangeEmailAddress() {
-        XXPortalUser     xxPUser     = new XXPortalUser();
-        VXPortalUser     vxPUserExp  = createVXPortalUser();
         VXPasswordChange changeEmail = createPasswordChange();
-
         XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
 
         Mockito.when(daoManager.getXXPortalUser()).thenReturn(xxPortalUserDao);
         Mockito.when(restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, changeEmail.getLoginId())).thenThrow(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
-        VXPortalUser vxPortalUserAct = userREST.changeEmailAddress(userId, changeEmail);
 
-        Assert.assertNotNull(vxPortalUserAct);
-        Assert.assertEquals(vxPUserExp, vxPortalUserAct);
-        Assert.assertEquals(vxPUserExp.getId(), vxPortalUserAct.getId());
-        Assert.assertEquals(vxPUserExp.getFirstName(), vxPortalUserAct.getFirstName());
-
-        Mockito.verify(daoManager).getXXPortalUser();
-        Mockito.verify(xxPortalUserDao).getById(userId);
-        Mockito.verify(userManager).checkAccess(xxPUser);
-        Mockito.verify(userManager).changeEmailAddress(xxPUser, changeEmail);
+        assertThrows(WebApplicationException.class, () -> {
+            userREST.changeEmailAddress(userId, changeEmail);
+        });
     }
 
     @Test
     public void test19ChangeEmailAddress() {
-        XXPortalUserDao xxPortalUserDao = Mockito.mock(XXPortalUserDao.class);
         Mockito.when(restErrorUtil.createRESTException(Mockito.anyString(), Mockito.any(), Mockito.nullable(Long.class), Mockito.nullable(String.class), Mockito.nullable(String.class))).thenReturn(new WebApplicationException());
-        thrown.expect(WebApplicationException.class);
 
-        userREST.changeEmailAddress(userId, changePassword);
-
-        Mockito.verify(daoManager).getXXPortalUser();
-        Mockito.verify(xxPortalUserDao).getById(userId);
-        Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString(), Mockito.any(), Mockito.anyLong(), Mockito.anyString(), Mockito.anyString());
+        assertThrows(WebApplicationException.class, () -> {
+            userREST.changeEmailAddress(userId, changePassword);
+        });
     }
 
     private VXPortalUser createVXPortalUser() {

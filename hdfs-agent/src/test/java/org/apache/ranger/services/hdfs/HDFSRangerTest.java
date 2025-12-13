@@ -33,7 +33,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +67,7 @@ public class HDFSRangerTest {
     private static MiniDFSCluster hdfsCluster;
     private static String         defaultFs;
 
-    @org.junit.BeforeClass
+    @org.junit.jupiter.api.BeforeAll
     public static void setup() throws Exception {
         Configuration conf = new Configuration();
 
@@ -80,18 +80,18 @@ public class HDFSRangerTest {
         defaultFs   = conf.get("fs.defaultFS");
     }
 
-    @org.junit.AfterClass
+    @org.junit.jupiter.api.AfterAll
     public static void cleanup() {
         FileUtil.fullyDelete(baseDir);
         hdfsCluster.shutdown();
     }
 
-    @org.junit.Test
+    @org.junit.jupiter.api.Test
     public void readTest() throws Exception {
         hdfsReadTest("/tmp/tmpdir/data-file2");
     }
 
-    @org.junit.Test
+    @org.junit.jupiter.api.Test
     public void writeTest() throws Exception {
         FileSystem fileSystem = hdfsCluster.getFileSystem();
 
@@ -159,7 +159,7 @@ public class HDFSRangerTest {
         });
     }
 
-    @org.junit.Test
+    @org.junit.jupiter.api.Test
     public void executeTest() throws Exception {
         FileSystem fileSystem = hdfsCluster.getFileSystem();
 
@@ -237,7 +237,7 @@ public class HDFSRangerTest {
         });
     }
 
-    @org.junit.Test
+    @org.junit.jupiter.api.Test
     public void readTestUsingTagPolicy() throws Exception {
         FileSystem fileSystem = hdfsCluster.getFileSystem();
 
@@ -346,13 +346,13 @@ public class HDFSRangerTest {
         });
     }
 
-    @org.junit.Test
+    @org.junit.jupiter.api.Test
     public void hdfsFileNameTokenReadTest() throws Exception {
         hdfsReadTest("/tmp/tmpdir4/data-file");
         hdfsReadFailTest("/tmp/tmpdir4/t/abc");
     }
 
-    @org.junit.Test
+    @org.junit.jupiter.api.Test
     public void hdfsBaseFileNameTokenReadTest() throws Exception {
         hdfsReadTest("/tmp/tmpdir5/data-file.txt");
         hdfsReadFailTest("/tmp/tmpdir5/data-file.csv");
@@ -360,8 +360,8 @@ public class HDFSRangerTest {
     }
 
     // TODO
-    @org.junit.Test
-    @org.junit.Ignore
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.Disabled
     public void hdfsContentSummaryTest() throws Exception {
         hdfsGetContentSummary("/tmp/get-content-summary");
     }
@@ -555,7 +555,7 @@ public class HDFSRangerTest {
 
                     long directoryCount = contentSummary.getDirectoryCount();
 
-                    Assert.assertEquals("Found unexpected number of directories; expected-count=3, actual-count=" + directoryCount, 3, directoryCount);
+                    Assertions.assertEquals(3, directoryCount, "Found unexpected number of directories; expected-count=3, actual-count=" + directoryCount);
                 } catch (Exception e) {
                     fail("Failed to getContentSummary, exception=" + e);
                 }

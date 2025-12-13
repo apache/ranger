@@ -94,12 +94,19 @@ public class TestUserSyncMetricsProducer {
         t.start();
 
         long start = System.currentTimeMillis();
-        while ((!Files.exists(metrics) || Files.size(metrics) == 0) && System.currentTimeMillis() - start < 1000) {
+        String content = "";
+        while (System.currentTimeMillis() - start < 2000) {
+            if (Files.exists(metrics) && Files.size(metrics) > 0) {
+                content = new String(Files.readAllBytes(metrics), StandardCharsets.UTF_8);
+                if (content.contains("\"jvm\"")) {
+                    break;
+                }
+            }
             TimeUnit.MILLISECONDS.sleep(10);
         }
         assertTrue(Files.exists(metrics));
-        String content = new String(Files.readAllBytes(metrics), StandardCharsets.UTF_8);
-        assertTrue(content.contains("\"jvm\""));
+        assertTrue(content.contains("\"jvm\""), "Expected metrics to contain JVM data, but got: " + content);
+        // When HA is enabled but not activated, role remains inactive (0)
         assertEquals(0, RangerMetricsUtil.getIsRoleActive());
 
         Field shutdownField = UserSyncMetricsProducer.class.getDeclaredField("shutdownFlag");

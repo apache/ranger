@@ -29,6 +29,7 @@ import org.apache.ranger.ugsyncutil.model.XGroupInfo;
 import org.apache.ranger.ugsyncutil.model.XUserInfo;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -64,6 +65,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPolicyMgrUserGroupBuilder {
+    @BeforeAll
+    public static void setupHA() {
+        // Disable HA for unit tests to avoid "server not in active state" errors
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty("ranger-ugsync.server.ha.enabled", "false");
+    }
+
     @Test
     public void testA_userNameTransform_appliesLowerCaseAndRegex() throws Exception {
         UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();

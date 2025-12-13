@@ -20,10 +20,10 @@ package org.apache.ranger.authorization.hadoop.utils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialShell;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -63,7 +63,7 @@ public class RangerCredentialProviderTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         // adding a delete before creating a keystore
         try {
@@ -96,13 +96,6 @@ public class RangerCredentialProviderTest {
         System.out.println("(1) Number of active Threads : " + Thread.activeCount());
 
         listThreads();
-    }
-
-    @After
-    public void cleanup() throws Exception {
-        if (ksFile != null && ksFile.exists()) {
-            ksFile.delete();
-        }
     }
 
     @Test
@@ -142,7 +135,7 @@ public class RangerCredentialProviderTest {
         assertSame(first, second);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         System.out.println("In teardown : Number of active Threads : " + Thread.activeCount());
 
@@ -154,6 +147,10 @@ public class RangerCredentialProviderTest {
         int ret = cs.run(argsDelete);
 
         assertEquals(0, ret);
+
+        if (ksFile != null && ksFile.exists()) {
+            ksFile.delete();
+        }
 
         listThreads();
     }

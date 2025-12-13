@@ -21,9 +21,9 @@ package org.apache.ranger.services.nifi.client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import javax.net.ssl.HostnameVerifier;
@@ -93,7 +93,7 @@ public class TestNiFiClient {
     private static final String HTTP_RESOURCES = "http://localhost:8080/nifi-api/resources";
     private static final String RESPONSE_ENTITY = "{\"status\": \"success\"}";
 
-    @Before
+    @BeforeEach
     public void setup() throws NoSuchAlgorithmException, KeyManagementException {
         niFiClient = new MockNiFiClient(RESOURCES_RESPONSE, 200, false, HOSTNAME);
     }
@@ -112,11 +112,11 @@ public class TestNiFiClient {
         expectedResources.add("/resources");
 
         List<String> resources = niFiClient.getResources(resourceLookupContext);
-        Assert.assertNotNull(resources);
-        Assert.assertEquals(expectedResources.size(), resources.size());
+        Assertions.assertNotNull(resources);
+        Assertions.assertEquals(expectedResources.size(), resources.size());
 
         resources.removeAll(expectedResources);
-        Assert.assertEquals(0, resources.size());
+        Assertions.assertEquals(0, resources.size());
     }
 
     @Test
@@ -129,11 +129,11 @@ public class TestNiFiClient {
         expectedResources.add("/proxy");
 
         List<String> resources = niFiClient.getResources(resourceLookupContext);
-        Assert.assertNotNull(resources);
-        Assert.assertEquals(expectedResources.size(), resources.size());
+        Assertions.assertNotNull(resources);
+        Assertions.assertEquals(expectedResources.size(), resources.size());
 
         resources.removeAll(expectedResources);
-        Assert.assertEquals(0, resources.size());
+        Assertions.assertEquals(0, resources.size());
     }
 
     @Test
@@ -145,11 +145,11 @@ public class TestNiFiClient {
         expectedResources.add("/controller");
 
         List<String> resources = niFiClient.getResources(resourceLookupContext);
-        Assert.assertNotNull(resources);
-        Assert.assertEquals(expectedResources.size(), resources.size());
+        Assertions.assertNotNull(resources);
+        Assertions.assertEquals(expectedResources.size(), resources.size());
 
         resources.removeAll(expectedResources);
-        Assert.assertEquals(0, resources.size());
+        Assertions.assertEquals(0, resources.size());
     }
 
     @Test
@@ -162,17 +162,17 @@ public class TestNiFiClient {
 
         try {
             niFiClient.getResources(resourceLookupContext);
-            Assert.fail("should have thrown exception");
+            Assertions.fail("should have thrown exception");
         } catch (Exception e) {
-            Assert.assertTrue(e.getMessage().contains(errorMsg));
+            Assertions.assertTrue(e.getMessage().contains(errorMsg));
         }
     }
 
     @Test
     public void testConnectionTestSuccess() {
         HashMap<String, Object> ret = niFiClient.connectionTest();
-        Assert.assertNotNull(ret);
-        Assert.assertEquals(NiFiClient.SUCCESS_MSG, ret.get("message"));
+        Assertions.assertNotNull(ret);
+        Assertions.assertEquals(NiFiClient.SUCCESS_MSG, ret.get("message"));
     }
 
     @Test
@@ -181,8 +181,8 @@ public class TestNiFiClient {
         niFiClient = new MockNiFiClient(errorMsg, Response.Status.BAD_REQUEST.getStatusCode(), false, HOSTNAME);
 
         HashMap<String, Object> ret = niFiClient.connectionTest();
-        Assert.assertNotNull(ret);
-        Assert.assertEquals(NiFiClient.FAILURE_MSG, ret.get("message"));
+        Assertions.assertNotNull(ret);
+        Assertions.assertEquals(NiFiClient.FAILURE_MSG, ret.get("message"));
     }
 
     @Test
@@ -191,7 +191,7 @@ public class TestNiFiClient {
         sslClient.setupSSLMock(HOSTNAME);
         sslClient.getResponse(sslClient.getWebResource(), "application/json");
         verify(sslClient.hostnameVerifierSpy).verify(eq(HOSTNAME), any(SSLSession.class));
-        Assert.assertTrue(sslClient.lastVerifyResult);
+        Assertions.assertTrue(sslClient.lastVerifyResult);
     }
 
     @Test
@@ -200,7 +200,7 @@ public class TestNiFiClient {
         sslClient.setupSSLMock("other.com");
         sslClient.getResponse(sslClient.getWebResource(), "application/json");
         verify(sslClient.hostnameVerifierSpy).verify(eq(HOSTNAME), any(SSLSession.class));
-        Assert.assertFalse(sslClient.lastVerifyResult);
+        Assertions.assertFalse(sslClient.lastVerifyResult);
     }
 
     @Test
@@ -208,7 +208,7 @@ public class TestNiFiClient {
         MockNiFiClient sslClient = new MockNiFiClient(RESPONSE_ENTITY, 200, true, HOSTNAME);
         sslClient.setupSSLMockWithNoCerts();
         sslClient.getResponse(sslClient.getWebResource(), "application/json");
-        Assert.assertFalse(sslClient.lastVerifyResult);
+        Assertions.assertFalse(sslClient.lastVerifyResult);
     }
 
     @Test
@@ -216,7 +216,7 @@ public class TestNiFiClient {
         MockNiFiClient sslClient = new MockNiFiClient(RESPONSE_ENTITY, 200, true, HOSTNAME);
         sslClient.setupSSLMockWithEmptyCerts();
         sslClient.getResponse(sslClient.getWebResource(), "application/json");
-        Assert.assertFalse(sslClient.lastVerifyResult);
+        Assertions.assertFalse(sslClient.lastVerifyResult);
     }
 
     @Test
@@ -225,7 +225,7 @@ public class TestNiFiClient {
         sslClient.setupSSLMockWithSanInIntermediate();
         sslClient.getResponse(sslClient.getWebResource(), "application/json");
         verify(sslClient.hostnameVerifierSpy).verify(eq(HOSTNAME), any(SSLSession.class));
-        Assert.assertFalse(sslClient.lastVerifyResult);
+        Assertions.assertFalse(sslClient.lastVerifyResult);
     }
 
     /**

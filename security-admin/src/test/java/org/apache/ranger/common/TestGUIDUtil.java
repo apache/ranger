@@ -27,7 +27,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -129,7 +128,7 @@ public class TestGUIDUtil {
 
     @Test
     public void testSerializableImplementation() {
-        assertInstanceOf(Serializable.class, guidUtil);
+        assertTrue(guidUtil instanceof Serializable);
     }
 
     @Test

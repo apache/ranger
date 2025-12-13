@@ -35,7 +35,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -101,14 +101,14 @@ public class TestRangerPolicyServiceBase {
         Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
 
         XXPolicy dbPolicy = policyService.mapViewToEntityBean(rangerPolicy, policy, operationContext);
-        Assert.assertNotNull(dbPolicy);
-        Assert.assertEquals(dbPolicy.getId(), policy.getId());
-        Assert.assertEquals(dbPolicy.getGuid(), policy.getGuid());
-        Assert.assertEquals(dbPolicy.getName(), policy.getName());
-        Assert.assertEquals(dbPolicy.getAddedByUserId(), policy.getAddedByUserId());
-        Assert.assertEquals(dbPolicy.getIsEnabled(), policy.getIsEnabled());
-        Assert.assertEquals(dbPolicy.getVersion(), policy.getVersion());
-        Assert.assertEquals(dbPolicy.getDescription(), policy.getDescription());
+        Assertions.assertNotNull(dbPolicy);
+        Assertions.assertEquals(dbPolicy.getId(), policy.getId());
+        Assertions.assertEquals(dbPolicy.getGuid(), policy.getGuid());
+        Assertions.assertEquals(dbPolicy.getName(), policy.getName());
+        Assertions.assertEquals(dbPolicy.getAddedByUserId(), policy.getAddedByUserId());
+        Assertions.assertEquals(dbPolicy.getIsEnabled(), policy.getIsEnabled());
+        Assertions.assertEquals(dbPolicy.getVersion(), policy.getVersion());
+        Assertions.assertEquals(dbPolicy.getDescription(), policy.getDescription());
 
         Mockito.verify(daoManager).getXXService();
     }
@@ -147,13 +147,13 @@ public class TestRangerPolicyServiceBase {
         Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
         RangerPolicy dbRangerPolicy = policyService.mapEntityToViewBean(rangerPolicy, policy);
 
-        Assert.assertNotNull(dbRangerPolicy);
-        Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
-        Assert.assertEquals(dbRangerPolicy.getGuid(), rangerPolicy.getGuid());
-        Assert.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
-        Assert.assertEquals(dbRangerPolicy.getIsEnabled(), rangerPolicy.getIsEnabled());
-        Assert.assertEquals(dbRangerPolicy.getVersion(), rangerPolicy.getVersion());
-        Assert.assertEquals(dbRangerPolicy.getDescription(), rangerPolicy.getDescription());
+        Assertions.assertNotNull(dbRangerPolicy);
+        Assertions.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
+        Assertions.assertEquals(dbRangerPolicy.getGuid(), rangerPolicy.getGuid());
+        Assertions.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
+        Assertions.assertEquals(dbRangerPolicy.getIsEnabled(), rangerPolicy.getIsEnabled());
+        Assertions.assertEquals(dbRangerPolicy.getVersion(), rangerPolicy.getVersion());
+        Assertions.assertEquals(dbRangerPolicy.getDescription(), rangerPolicy.getDescription());
 
         Mockito.verify(daoManager).getXXService();
     }

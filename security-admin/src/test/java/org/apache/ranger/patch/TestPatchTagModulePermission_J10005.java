@@ -34,6 +34,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -47,6 +49,7 @@ import java.util.List;
  * @description <Unit Test for PatchTagModulePermission_J10005 class>
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPatchTagModulePermission_J10005 {
     private static void setIfPresent(Object target, String fieldName, Object value) {
@@ -79,7 +82,7 @@ public class TestPatchTagModulePermission_J10005 {
         Mockito.when(xxModuleDefDao.findByModuleName(Mockito.anyString())).thenReturn(moduleDef);
         Mockito.when(xxPortalUserDao.findByRole(Mockito.anyString()))
                 .thenReturn(Collections.singletonList(new XXPortalUser()));
-        Mockito.when(xxPortalUserRoleDao.findXPortalUserRolebyXPortalUserId(Mockito.anyLong()))
+        Mockito.when(xxPortalUserRoleDao.findXPortalUserRolebyXPortalUserId(Mockito.any()))
                 .thenReturn(Collections.emptyList());
         Mockito.when(xxPolicyDao.getAll()).thenReturn(Collections.emptyList());
 

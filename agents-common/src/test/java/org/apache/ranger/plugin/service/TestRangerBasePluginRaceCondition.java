@@ -28,8 +28,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestRangerBasePluginRaceCondition {
     private static final Logger LOG = LoggerFactory.getLogger(TestRangerBasePluginRaceCondition.class);
@@ -55,7 +55,7 @@ public class TestRangerBasePluginRaceCondition {
     private RangerBasePlugin plugin;
     private RangerAccessRequest request;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         System.setProperty("ranger.plugin.trino.policy.pollIntervalMs", "-1");
         System.setProperty("ranger.plugin.trino.policy.source.impl",

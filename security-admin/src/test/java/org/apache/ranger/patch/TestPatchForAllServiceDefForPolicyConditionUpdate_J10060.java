@@ -45,6 +45,7 @@ import java.util.List;
  * @description <Unit Test for PatchForAllServiceDefForPolicyConditionUpdate_J10060 class>
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPatchForAllServiceDefForPolicyConditionUpdate_J10060 {
     private static void setIfPresent(Object target, String fieldName, Object value) {

@@ -22,6 +22,7 @@ package org.apache.ranger.usergroupsync;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -46,6 +47,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestUserGroupSync {
+    @BeforeAll
+    public static void setupHA() {
+        // Disable HA for unit tests
+        UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
+        cfg.setProperty("ranger-ugsync.server.ha.enabled", "false");
+    }
+
     @Test
     public void testA_syncUserGroup_enabled_invokesUpdateSink() throws Exception {
         UserGroupSyncConfig.getInstance().setProperty("ranger.usersync.enabled", "true");
