@@ -25,6 +25,7 @@
 			"uiHint":"",
 			"label": "Ozone Volume",
 			"description": "Ozone Volume",
+			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
 			"isValidLeaf": true
 		},
 		{
@@ -44,9 +45,9 @@
 			"uiHint":"",
 			"label": "Ozone Bucket",
 			"description": "Ozone Bucket",
+			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
 			"isValidLeaf": true
 		},
-
 		{
 			"itemId": 3,
 			"name": "key",
@@ -64,7 +65,25 @@
 			"uiHint":"",
 			"label": "Ozone Key",
 			"description": "Ozone Key",
+			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
 			"isValidLeaf": true
+		},
+		{
+			"itemId":                 4,
+			"name":                   "role",
+			"type":                   "string",
+			"level":                  10,
+			"parent":                 "",
+			"mandatory":              true,
+			"lookupSupported":        true,
+			"recursiveSupported":     false,
+			"excludesSupported":      false,
+			"matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":         { "wildCard":true, "ignoreCase":false },
+			"label":                  "Role",
+			"description":            "Role",
+			"accessTypeRestrictions": [ "assume_role" ],
+			"isValidLeaf":            true
 		}
 	],
 
@@ -130,6 +149,12 @@
 			"name": "write_acl",
 			"label": "Write_ACL",
 			"category": "UPDATE"
+		},
+		{
+			"itemId":   8,
+			"name":     "assume_role",
+			"label":    "Assume_Role",
+			"category": "MANAGE"
 		}
 	],
 

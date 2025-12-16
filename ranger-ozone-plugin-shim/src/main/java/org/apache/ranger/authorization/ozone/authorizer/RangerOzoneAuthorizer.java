@@ -20,6 +20,7 @@
 package org.apache.ranger.authorization.ozone.authorizer;
 
 import org.apache.hadoop.ozone.om.exceptions.OMException;
+import org.apache.hadoop.ozone.security.acl.AssumeRoleRequest;
 import org.apache.hadoop.ozone.security.acl.IAccessAuthorizer;
 import org.apache.hadoop.ozone.security.acl.IOzoneObj;
 import org.apache.hadoop.ozone.security.acl.RequestContext;
@@ -98,6 +99,21 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
         }
 
         return ret;
+    }
+
+    @Override
+    public String generateAssumeRoleSessionPolicy(AssumeRoleRequest assumeRoleRequest) throws OMException {
+        LOG.debug("==> RangerOzoneAuthorizer.generateAssumeRoleSessionPolicy()");
+
+        try {
+            activatePluginClassLoader();
+
+            return ozoneAuthorizationProviderImpl.generateAssumeRoleSessionPolicy(assumeRoleRequest);
+        } finally {
+            deactivatePluginClassLoader();
+
+            LOG.debug("<== RangerOzoneAuthorizer.generateAssumeRoleSessionPolicy()");
+        }
     }
 
     private void activatePluginClassLoader() {
