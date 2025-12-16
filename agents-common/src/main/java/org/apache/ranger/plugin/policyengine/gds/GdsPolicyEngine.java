@@ -95,7 +95,7 @@ public class GdsPolicyEngine {
 
             evaluate(request, RangerPolicy.POLICY_TYPE_ACCESS, ret);
 
-            if (ret.getIsAllowed()) {
+            if (serviceDefHelper.isDataMaskSupported() && ret.getIsAllowed()) {
                 evaluate(request, RangerPolicy.POLICY_TYPE_DATAMASK, ret);
             }
 
@@ -127,6 +127,14 @@ public class GdsPolicyEngine {
         RangerResourceACLs ret = new RangerResourceACLs();
 
         getDataShareResources(request, RangerPolicy.POLICY_TYPE_ACCESS).keySet().forEach(e -> e.getResourceACLs(request, ret));
+
+        if (serviceDefHelper.isDataMaskSupported()) {
+            getDataShareResources(request, RangerPolicy.POLICY_TYPE_DATAMASK).keySet().forEach(e -> e.getResourceACLs(request, ret));
+        }
+
+        if (serviceDefHelper.isRowFilterSupported()) {
+            getDataShareResources(request, RangerPolicy.POLICY_TYPE_ROWFILTER).keySet().forEach(e -> e.getResourceACLs(request, ret));
+        }
 
         ret.finalizeAcls();
 

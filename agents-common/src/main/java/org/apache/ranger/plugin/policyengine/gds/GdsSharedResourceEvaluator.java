@@ -205,7 +205,7 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
         return ret;
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, List<GdsDshidEvaluator> dshidEvaluators) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsDataShareEvaluator dshEvaluator, List<GdsDshidEvaluator> dshidEvaluators) {
         LOG.debug("==> GdsSharedResourceEvaluator.getResourceACLs({}, {})", request, acls);
 
         boolean isResourceMatch = policyResourceMatcher.isMatch(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
@@ -214,11 +214,29 @@ public class GdsSharedResourceEvaluator implements RangerResourceEvaluator {
             isConditional = isConditional || conditionEvaluator != null;
 
             for (GdsDshidEvaluator dshidEvaluator : dshidEvaluators) {
-                dshidEvaluator.getResourceACLs(request, acls, isConditional, getAllowedAccessTypes());
+                dshidEvaluator.getResourceACLs(request, acls, isConditional, dshEvaluator, this);
             }
+
+            // TODO: get mask and row-filter
         }
 
         LOG.debug("<== GdsSharedResourceEvaluator.getResourceACLs({}, {})", request, acls);
+    }
+
+    public void getResourceMasks(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsDataShareEvaluator dshEvaluator, List<GdsDshidEvaluator> dshidEvaluators) {
+        LOG.debug("==> GdsSharedResourceEvaluator.getResourceMasks({}, {})", request, acls);
+
+        boolean isResourceMatch = policyResourceMatcher.isMatch(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
+
+        if (isResourceMatch) {
+            isConditional = isConditional || conditionEvaluator != null;
+
+            for (GdsDshidEvaluator dshidEvaluator : dshidEvaluators) {
+                dshidEvaluator.getResourceMasks(request, acls, isConditional, this, dshEvaluator);
+            }
+        }
+
+        LOG.debug("<== GdsSharedResourceEvaluator.getResourceMasks({}, {})", request, acls);
     }
 
     public RangerPolicyItemRowFilterInfo getRowFilter() {

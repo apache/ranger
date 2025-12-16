@@ -1,0 +1,114 @@
+[
+  {
+    "resource": { "name": "path:mybucket/data/path1/file.orc" },
+    "context": { "serviceName": "dev_s3" },
+    "permissions": {
+      "resource": { "name": "path:mybucket/data/path1/file.orc" },
+      "users": {
+        "all-path-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version":  2 } } }
+        },
+        "path1-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 1, "version":  1 } } }
+        },
+        "path1-rw-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 1, "version":  1 } } },
+          "write": { "permission": "write", "access":  { "decision": "ALLOW", "policy": { "id": 1, "version":  1 } } }
+        }
+      }
+    }
+  },
+  {
+    "resource": { "name": "path:mybucket/data/path2/file.orc" },
+    "context": { "serviceName": "dev_s3" },
+    "permissions": {
+      "resource": { "name": "path:mybucket/data/path2/file.orc" },
+      "users": {
+        "all-path-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version":  2 } } }
+        },
+        "path2-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 2, "version":  1 } } }
+        },
+        "path2-rw-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 2, "version": 1 } } },
+          "write": { "permission": "write", "access":  { "decision": "ALLOW", "policy": { "id": 2, "version": 1 } } }
+        }
+      }
+    }
+  },
+  {
+    "resource": { "name": "path:mybucket/data/tag1/file.orc" },
+    "context": { "serviceName": "dev_s3" },
+    "permissions": {
+      "resource": { "name": "path:mybucket/data/tag1/file.orc" },
+      "users": {
+        "all-path-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
+        },
+        "all-tag-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 11, "version": 1 } } }
+        },
+        "tag1-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 11, "version": 1 } } }
+        },
+        "tag1-rw-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 11, "version": 1 } } },
+          "write": { "permission": "write", "access":  { "decision": "ALLOW", "policy": { "id": 11, "version": 1 } } }
+        }
+      }
+    }
+  },
+  {
+    "resource": { "name": "path:mybucket/data/tag2/file.orc" },
+    "context": { "serviceName": "dev_s3" },
+    "permissions": {
+      "resource": { "name": "path:mybucket/data/tag2/file.orc" },
+      "users": {
+        "all-path-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
+        },
+        "all-tag-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 12, "version": 1 } } }
+        },
+        "tag2-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 12, "version": 1 } } }
+        },
+        "tag2-rw-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 12, "version": 1 } } },
+          "write": { "permission": "write", "access":  { "decision": "ALLOW", "policy": { "id": 12, "version": 1 } } }
+        }
+      }
+    }
+  },
+  {
+    "resource": { "name": "path:mybucket/data/ds1/file.orc" },
+    "context": { "serviceName": "dev_s3" },
+    "permissions": {
+      "resource": { "name": "path:mybucket/data/ds1/file.orc" },
+      "users": {
+        "all-path-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
+        },
+        "ds1-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 41, "version": 1 } } }
+        }
+      }
+    }
+  },
+  {
+    "resource": { "name": "path:mybucket/data/ds2/file.orc" },
+    "context": { "serviceName": "dev_s3" },
+    "permissions": {
+      "resource": { "name": "path:mybucket/data/ds2/file.orc" },
+      "users": {
+        "all-path-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 3, "version": 2 } } }
+        },
+        "ds2-r-user": {
+          "read": { "permission": "read", "access":  { "decision": "ALLOW", "policy": { "id": 42, "version": 1 } } }
+        }
+      }
+    }
+  }
+]

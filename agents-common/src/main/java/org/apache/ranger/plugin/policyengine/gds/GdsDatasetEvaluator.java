@@ -150,7 +150,7 @@ public class GdsDatasetEvaluator {
         LOG.debug("<== GdsDatasetEvaluator.evaluate({}, {}, {})", request, result, projectsToEval);
     }
 
-    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
+    public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsDataShareEvaluator dshEvaluator, GdsSharedResourceEvaluator sharedResourceEvaluator, GdsDshidEvaluator dshidEvaluator) {
         if (isActive()) {
             acls.getDatasets().add(getName());
 
@@ -158,13 +158,37 @@ public class GdsDatasetEvaluator {
                 GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
 
                 for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                    policyEvaluator.getResourceACLs(datasetRequest, acls, isConditional, allowedAccessTypes, RangerPolicyResourceMatcher.MatchType.SELF, null);
+                    policyEvaluator.getResourceACLs(datasetRequest, acls, isConditional, sharedResourceEvaluator.getAllowedAccessTypes(), RangerPolicyResourceMatcher.MatchType.SELF, null);
                 }
             }
 
             for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
-                dipEvaluator.getResourceACLs(request, acls, isConditional, allowedAccessTypes);
+                dipEvaluator.getResourceACLs(request, acls, isConditional, sharedResourceEvaluator, dshEvaluator, dshidEvaluator.getDatasetEvaluator());
             }
+        }
+    }
+
+    public void getResourceMasks(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, GdsSharedResourceEvaluator sharedResourceEvaluator, GdsDataShareEvaluator dshEvaluator) {
+        if (isActive()) {
+            acls.getDatasets().add(getName());
+
+            if (!policyEvaluators.isEmpty()) {
+                isConditional = isConditional || scheduleEvaluator != null;
+
+                GdsDatasetAccessRequest datasetRequest = new GdsDatasetAccessRequest(getId(), gdsServiceDef, request);
+
+                for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                    boolean isPolicyConditional = isConditional || policyEvaluator.getPolicyConditionsCount() != 0 || policyEvaluator.getValidityScheduleEvaluatorsCount() != 0;
+
+                    // TODO: updated acls with masks from sharedResourceEvaluator and dshEvaluator
+                }
+            }
+
+            /* TODO:
+            for (GdsDipEvaluator dipEvaluator : dipEvaluators) {
+                dipEvaluator.getResourceMasks(request, acls, isConditional, sharedResourceEvaluator, dshEvaluator, this);
+            }
+             */
         }
     }
 
