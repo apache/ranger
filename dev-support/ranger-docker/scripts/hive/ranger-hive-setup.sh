@@ -128,6 +128,36 @@ cat <<EOF > ${TEZ_HOME}/conf/tez-site.xml
 </configuration>
 EOF
 
+rebuild_tez_tarball() {
+  if [ ! -f "/opt/apache-tez-${TEZ_VERSION}-bin.tar.gz" ]; then
+    echo "Recreating Tez tarball for HDFS upload..."
+    cd /opt
+    tar czf apache-tez-${TEZ_VERSION}-bin.tar.gz apache-tez-${TEZ_VERSION}-bin/
+  fi
+}
+
+create_hdfs_directories_and_files() {
+  exec_user=$1;
+
+  # prepare tez directories and files in hdfs folders
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -put -f /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz /apps/tez/" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 755 /apps/tez" $exec_user
+
+  # Create HDFS user directory for hive
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" $exec_user
+
+  # Create HDFS /tmp/hive directory for Tez staging
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /tmp/hive" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" $exec_user
+
+  # Create /user/root directory for YARN job execution
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" $exec_user
+}
+
 # Copy Tez JARs to Hive lib directory
 cp ${TEZ_HOME}/lib/tez-*.jar ${HIVE_HOME}/lib/
 cp ${TEZ_HOME}/tez-*.jar ${HIVE_HOME}/lib/
@@ -142,62 +172,30 @@ cp ${TEZ_HOME}/conf/tez-site.xml ${HIVE_HOME}/conf/
 if [ "${KERBEROS_ENABLED}" == "true" ]; then
     echo "Kerberos enabled - authenticating as hive user..."
     su -c "kinit -kt /etc/keytabs/hive.keytab hive/\`hostname -f\`@EXAMPLE.COM" hive
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" hive
-
-    # Recreate Tez tarball if it doesn't exist
-    if [ ! -f "/opt/apache-tez-${TEZ_VERSION}-bin.tar.gz" ]; then
-        echo "Recreating Tez tarball for HDFS upload..."
-        cd /opt
-        tar czf apache-tez-${TEZ_VERSION}-bin.tar.gz apache-tez-${TEZ_VERSION}-bin/
+    rc=$?
+    if [ $rc -ne 0 ]; then
+      echo "ERROR: kinit failed for hive principal (exit code=$rc)" >&2
+      exit $rc
     fi
 
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -put -f /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz /apps/tez/" hive
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 755 /apps/tez" hive
+    echo "kinit successful, proceeding operations as hive user"
+
+    # Recreate Tez tarball if it doesn't exist
+    rebuild_tez_tarball
+
+    #create hdfs directories and files for hive and tez
+    create_hdfs_directories_and_files 'hive'
+
     su -c "kdestroy" hive
 else
     # Non-Kerberos mode - use hdfs user
     su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" hdfs
 
     # Recreate Tez tarball if it doesn't exist (it gets removed during Docker build)
-    if [ ! -f "/opt/apache-tez-${TEZ_VERSION}-bin.tar.gz" ]; then
-        echo "Recreating Tez tarball for HDFS upload..."
-        cd /opt
-        tar czf apache-tez-${TEZ_VERSION}-bin.tar.gz apache-tez-${TEZ_VERSION}-bin/
-    fi
+    rebuild_tez_tarball
 
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -put -f /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz /apps/tez/" hdfs
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 755 /apps/tez" hdfs
-fi
-
-# Create HDFS user directory for hive
-if [ "${KERBEROS_ENABLED}" == "true" ]; then
-    su -c "kinit -kt /etc/keytabs/hive.keytab hive/\`hostname -f\`@EXAMPLE.COM" hive
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" hive
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" hive
-
-    # Create HDFS /tmp/hive directory for Tez staging
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" hive
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /tmp/hive" hive
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" hive
-
-    # Create /user/root directory for YARN job execution
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" hive
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" hive
-    su -c "kdestroy" hive
-else
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" hdfs
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" hdfs
-
-    # Create HDFS /tmp/hive directory for Tez staging
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" hdfs
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /tmp/hive" hdfs
-
-    # Fix /tmp directory permissions for Ranger (critical for INSERT operations)
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" hdfs
-
-    # Create /user/root directory for YARN job execution
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" hdfs
-    su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" hdfs
+    #create hdfs directories and files for hive and tez
+    create_hdfs_directories_and_files 'hdfs'
 fi
 
 # Initialize Hive schema
