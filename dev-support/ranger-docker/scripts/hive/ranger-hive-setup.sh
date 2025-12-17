@@ -131,31 +131,30 @@ EOF
 rebuild_tez_tarball() {
   if [ ! -f "/opt/apache-tez-${TEZ_VERSION}-bin.tar.gz" ]; then
     echo "Recreating Tez tarball for HDFS upload..."
-    cd /opt
-    tar czf apache-tez-${TEZ_VERSION}-bin.tar.gz apache-tez-${TEZ_VERSION}-bin/
+    tar -C /opt -czf /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz apache-tez-${TEZ_VERSION}-bin/
   fi
 }
 
 create_hdfs_directories_and_files() {
-  exec_user=$1;
+  exec_user=$1
 
   # prepare tez directories and files in hdfs folders
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" $exec_user
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -put -f /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz /apps/tez/" $exec_user
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 755 /apps/tez" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -put -f /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz /apps/tez/" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 755 /apps/tez" "$exec_user"
 
   # Create HDFS user directory for hive
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" $exec_user
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" "$exec_user"
 
   # Create HDFS /tmp/hive directory for Tez staging
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" $exec_user
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /tmp/hive" $exec_user
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 1777 /tmp/hive" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 1777 /tmp" "$exec_user"
 
   # Create /user/root directory for YARN job execution
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" $exec_user
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" $exec_user
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" "$exec_user"
 }
 
 # Copy Tez JARs to Hive lib directory
@@ -183,7 +182,7 @@ if [ "${KERBEROS_ENABLED}" == "true" ]; then
     # Recreate Tez tarball if it doesn't exist
     rebuild_tez_tarball
 
-    #create hdfs directories and files for hive and tez
+    # Create hdfs directories and files for hive and tez
     create_hdfs_directories_and_files 'hive'
 
     su -c "kdestroy" hive
@@ -194,7 +193,7 @@ else
     # Recreate Tez tarball if it doesn't exist (it gets removed during Docker build)
     rebuild_tez_tarball
 
-    #create hdfs directories and files for hive and tez
+    # Create hdfs directories and files for hive and tez
     create_hdfs_directories_and_files 'hdfs'
 fi
 
