@@ -18,15 +18,17 @@
  */
 package org.apache.ranger.services.nifi.client;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class TestNiFiConnectionMgr {
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testValidURLWithWrongEndPoint() throws Exception {
         final String nifiUrl = "http://localhost:8080/nifi";
 
@@ -34,10 +36,10 @@ public class TestNiFiConnectionMgr {
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
-        NiFiConnectionMgr.getNiFiClient("nifi", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiConnectionMgr.getNiFiClient("nifi", configs));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInvalidURL() throws Exception {
         final String nifiUrl = "not a url";
 
@@ -45,7 +47,7 @@ public class TestNiFiConnectionMgr {
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
-        NiFiConnectionMgr.getNiFiClient("nifi", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiConnectionMgr.getNiFiClient("nifi", configs));
     }
 
     @Test
@@ -57,21 +59,21 @@ public class TestNiFiConnectionMgr {
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
         NiFiClient client = NiFiConnectionMgr.getNiFiClient("nifi", configs);
-        Assert.assertNotNull(client);
-        Assert.assertEquals(nifiUrl, client.getUrl());
-        Assert.assertNull(client.getSslContext());
+        Assertions.assertNotNull(client);
+        Assertions.assertEquals(nifiUrl, client.getUrl());
+        Assertions.assertNull(client.getSslContext());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAuthTypeNoneMissingURL() throws Exception {
         Map<String, String> configs = new HashMap<>();
         configs.put(NiFiConfigs.NIFI_URL, null);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.NONE.name());
 
-        NiFiConnectionMgr.getNiFiClient("nifi", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiConnectionMgr.getNiFiClient("nifi", configs));
     }
 
-    @Test(expected = FileNotFoundException.class)
+    @Test
     public void testAuthTypeSSL() throws Exception {
         final String nifiUrl = "https://localhost:8080/nifi-api/resources";
 
@@ -87,10 +89,10 @@ public class TestNiFiConnectionMgr {
         configs.put(NiFiConfigs.NIFI_SSL_TRUSTSTORE_PASSWORD, "password");
         configs.put(NiFiConfigs.NIFI_SSL_TRUSTSTORE_TYPE, "JKS");
 
-        NiFiConnectionMgr.getNiFiClient("nifi", configs);
+        assertThrows(FileNotFoundException.class, () -> NiFiConnectionMgr.getNiFiClient("nifi", configs));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAuthTypeSSLWithNonHttpsUrl() throws Exception {
         final String nifiUrl = "http://localhost:8080/nifi-api/resources";
 
@@ -106,10 +108,10 @@ public class TestNiFiConnectionMgr {
         configs.put(NiFiConfigs.NIFI_SSL_TRUSTSTORE_PASSWORD, "password");
         configs.put(NiFiConfigs.NIFI_SSL_TRUSTSTORE_TYPE, "JKS");
 
-        NiFiConnectionMgr.getNiFiClient("nifi", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiConnectionMgr.getNiFiClient("nifi", configs));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAuthTypeSSLMissingConfigs() throws Exception {
         final String nifiUrl = "http://localhost:8080/nifi";
 
@@ -117,6 +119,6 @@ public class TestNiFiConnectionMgr {
         configs.put(NiFiConfigs.NIFI_URL, nifiUrl);
         configs.put(NiFiConfigs.NIFI_AUTHENTICATION_TYPE, NiFiAuthType.SSL.name());
 
-        NiFiConnectionMgr.getNiFiClient("nifi", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiConnectionMgr.getNiFiClient("nifi", configs));
     }
 }

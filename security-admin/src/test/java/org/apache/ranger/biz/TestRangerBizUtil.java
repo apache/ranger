@@ -693,7 +693,7 @@ public class TestRangerBizUtil {
 
         List<XXTrxLogV2> list = new ArrayList<>();
         list.add(new XXTrxLogV2());
-        // user session already set in @Before setup()
+        // user session already set in @BeforeEach setup()
         rangerBizUtil.createTrxLog(list);
         Mockito.verify(trxDao, Mockito.atLeastOnce()).create(Mockito.any(XXTrxLogV2.class));
     }

@@ -45,9 +45,9 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -64,9 +64,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPolicyEngineForDeltas {
     private static final String AUDIT_PROPERTIES_FILE = "xasecure-audit.properties";
@@ -74,7 +74,7 @@ public class TestPolicyEngineForDeltas {
     static RangerPluginContext pluginContext;
     static Gson                gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "hive", "cl1", "on-prem", null));
 
@@ -167,7 +167,7 @@ public class TestPolicyEngineForDeltas {
         pluginContext.getConfig().addResource(new org.apache.hadoop.fs.Path(file.toURI()));
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() {
     }
 
@@ -190,7 +190,7 @@ public class TestPolicyEngineForDeltas {
     private void runTests(InputStreamReader reader, String testName) {
         PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 
-        assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.testsInfo != null && testCase.testsInfo.tests != null);
+        assertTrue(testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.testsInfo != null && testCase.testsInfo.tests != null, "invalid input: " + testName);
 
         ServicePolicies servicePolicies = new ServicePolicies();
 
@@ -396,10 +396,10 @@ public class TestPolicyEngineForDeltas {
 
                 policyEngine.evaluateAuditPolicies(result);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-                assertEquals("policy-id mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
-                assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited() && result.getIsAuditedDetermined());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
+                assertEquals(expected.getPolicyId(), result.getPolicyId(), "policy-id mismatched! - " + test.name);
+                assertEquals(expected.getIsAudited(), result.getIsAudited() && result.getIsAuditedDetermined(), "isAudited mismatched! - " + test.name);
             }
 
             if (test.dataMaskResult != null) {
@@ -408,11 +408,11 @@ public class TestPolicyEngineForDeltas {
 
                 policyEngine.evaluateAuditPolicies(result);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
-                assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
-                assertEquals("maskedValue mismatched! - " + test.name, expected.getMaskedValue(), result.getMaskedValue());
-                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getMaskType(), result.getMaskType(), "maskType mismatched! - " + test.name);
+                assertEquals(expected.getMaskCondition(), result.getMaskCondition(), "maskCondition mismatched! - " + test.name);
+                assertEquals(expected.getMaskedValue(), result.getMaskedValue(), "maskedValue mismatched! - " + test.name);
+                assertEquals(expected.getPolicyId(), result.getPolicyId(), "policyId mismatched! - " + test.name);
             }
 
             if (test.rowFilterResult != null) {
@@ -421,20 +421,20 @@ public class TestPolicyEngineForDeltas {
 
                 policyEngine.evaluateAuditPolicies(result);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
-                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getFilterExpr(), result.getFilterExpr(), "filterExpr mismatched! - " + test.name);
+                assertEquals(expected.getPolicyId(), result.getPolicyId(), "policyId mismatched! - " + test.name);
             }
 
             if (test.resourceAccessInfo != null) {
                 RangerResourceAccessInfo expected = new RangerResourceAccessInfo(test.resourceAccessInfo);
                 RangerResourceAccessInfo result   = policyEngine.getResourceAccessInfo(test.request);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("allowedUsers mismatched! - " + test.name, expected.getAllowedUsers(), result.getAllowedUsers());
-                assertEquals("allowedGroups mismatched! - " + test.name, expected.getAllowedGroups(), result.getAllowedGroups());
-                assertEquals("deniedUsers mismatched! - " + test.name, expected.getDeniedUsers(), result.getDeniedUsers());
-                assertEquals("deniedGroups mismatched! - " + test.name, expected.getDeniedGroups(), result.getDeniedGroups());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getAllowedUsers(), result.getAllowedUsers(), "allowedUsers mismatched! - " + test.name);
+                assertEquals(expected.getAllowedGroups(), result.getAllowedGroups(), "allowedGroups mismatched! - " + test.name);
+                assertEquals(expected.getDeniedUsers(), result.getDeniedUsers(), "deniedUsers mismatched! - " + test.name);
+                assertEquals(expected.getDeniedGroups(), result.getDeniedGroups(), "deniedGroups mismatched! - " + test.name);
             }
         }
     }

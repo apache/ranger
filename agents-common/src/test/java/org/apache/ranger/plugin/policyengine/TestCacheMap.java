@@ -19,9 +19,9 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class TestCacheMap {
     private static       CacheMap<String, String> testCacheMap;
     private static final int                      initialCapacity = 16;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         LOG.debug("==> TestCacheMap.setUpBeforeClass(), initialCapacity:{}", initialCapacity);
 
@@ -42,7 +42,7 @@ public class TestCacheMap {
         LOG.debug("<== TestCacheMap.setUpBeforeClass(), initialCapacity:{}", initialCapacity);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() throws Exception {
     }
 

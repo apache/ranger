@@ -22,8 +22,8 @@ package org.apache.ranger.tagsync.process;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasHiveResourceMapper;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.HashMap;
@@ -86,7 +86,7 @@ public class TestHiveResourceMapper {
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.fail("expected exception. Found " + resource);
+            Assertions.fail("expected exception. Found " + resource);
         } catch (Exception excp) {
             // ignore
         }
@@ -120,53 +120,53 @@ public class TestHiveResourceMapper {
     }
 
     private void assertServiceResource(RangerServiceResource resource) {
-        Assert.assertNotNull(resource);
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
-        Assert.assertNotNull(resource.getResourceElements());
+        Assertions.assertNotNull(resource);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertNotNull(resource.getResourceElements());
     }
 
     private void assertDbResource(RangerServiceResource resource) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(1, resource.getResourceElements().size());
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().size());
-        Assert.assertEquals(RANGER_DATABASE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().get(0));
+        Assertions.assertEquals(1, resource.getResourceElements().size());
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().size());
+        Assertions.assertEquals(RANGER_DATABASE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().get(0));
     }
 
     private void assertTableResource(RangerServiceResource resource) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(2, resource.getResourceElements().size());
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().size());
-        Assert.assertEquals(RANGER_DATABASE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().get(0));
+        Assertions.assertEquals(2, resource.getResourceElements().size());
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().size());
+        Assertions.assertEquals(RANGER_DATABASE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().get(0));
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().size());
-        Assert.assertEquals(RANGER_TABLE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().size());
+        Assertions.assertEquals(RANGER_TABLE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().get(0));
     }
 
     private void assertColumnResource(RangerServiceResource resource) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(3, resource.getResourceElements().size());
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().size());
-        Assert.assertEquals(RANGER_DATABASE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().get(0));
+        Assertions.assertEquals(3, resource.getResourceElements().size());
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().size());
+        Assertions.assertEquals(RANGER_DATABASE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_DB).getValues().get(0));
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().size());
-        Assert.assertEquals(RANGER_TABLE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().size());
+        Assertions.assertEquals(RANGER_TABLE, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_TABLE).getValues().get(0));
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN).getValues().size());
-        Assert.assertEquals(RANGER_COLUMN, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN).getValues().size());
+        Assertions.assertEquals(RANGER_COLUMN, resource.getResourceElements().get(AtlasHiveResourceMapper.RANGER_TYPE_HIVE_COLUMN).getValues().get(0));
     }
 }

@@ -42,24 +42,24 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPolicyEngine {
     static RangerBasePlugin plugin;
     static Gson             gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         plugin      = new RangerBasePlugin("hbase", "hbase");
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
@@ -69,7 +69,7 @@ public class TestPolicyEngine {
                 .create();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() throws Exception {
     }
 
@@ -100,7 +100,7 @@ public class TestPolicyEngine {
         try {
             PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 
-            assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
+            assertTrue(testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null, "invalid input: " + testName);
 
             ServicePolicies servicePolicies = new ServicePolicies();
             servicePolicies.setServiceName(testCase.serviceName);
@@ -119,10 +119,10 @@ public class TestPolicyEngine {
 
                 RangerAccessResult result = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-                assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
-                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
+                assertEquals(expected.getIsAudited(), result.getIsAudited(), "isAudited mismatched! - " + test.name);
+                assertEquals(expected.getPolicyId(), result.getPolicyId(), "policyId mismatched! - " + test.name);
             }
         } catch (Throwable excp) {
             excp.printStackTrace();

@@ -25,14 +25,14 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRangerPluginCapability {
     private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
@@ -69,7 +69,8 @@ public class TestRangerPluginCapability {
 
             List<String> difference = me.compare(other);
 
-            assertTrue(fileName + "-" + testCase.name + "-" + Arrays.toString(difference.toArray()), StringUtils.equals(JsonUtils.listToJson(difference), JsonUtils.listToJson(testCase.difference)));
+            assertTrue(StringUtils.equals(JsonUtils.listToJson(difference), JsonUtils.listToJson(testCase.difference)),
+                    fileName + "-" + testCase.name + "-" + Arrays.toString(difference.toArray()));
         }
     }
 

@@ -35,8 +35,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef.AccessTypeCategory;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -54,10 +54,10 @@ import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_DE
 import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_MANAGE;
 import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_READ;
 import static org.apache.ranger.plugin.util.ServiceDefUtil.ACCESS_TYPE_MARKER_UPDATE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ServiceDefUtilTest {
     private static final String REF_USER                    = "USER.dept";
@@ -88,7 +88,7 @@ public class ServiceDefUtilTest {
 
     static Gson gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ").setPrettyPrinting().create();
     }
@@ -99,13 +99,13 @@ public class ServiceDefUtilTest {
         RangerPolicy    policy      = getPolicy(svcPolicies);
 
         svcPolicies.getPolicies().add(policy);
-        assertFalse("policy doesn't have any reference to user/group attribute", ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+        assertFalse(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy doesn't have any reference to user/group attribute");
 
         policy.setResource("database", new RangerPolicyResource("/departments/USER.dept/")); // expressions must be within ${{}}
-        assertFalse("policy doesn't have any reference to user/group attribute", ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+        assertFalse(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy doesn't have any reference to user/group attribute");
 
         policy.getRowFilterPolicyItems().get(0).getRowFilterInfo().setFilterExpr("dept in USER.dept"); // expressions must be within ${{}}
-        assertFalse("policy doesn't have any reference to user/group attribute", ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+        assertFalse(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy doesn't have any reference to user/group attribute");
     }
 
     @Test
@@ -118,23 +118,23 @@ public class ServiceDefUtilTest {
             policy.setResource("database", new RangerPolicyResource(resource));
 
             svcPolicies.getPolicies().add(policy);
-            assertTrue("policy resource refers to user/group attribute: " + resource, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy resource refers to user/group attribute: " + resource);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicies().clear();
             svcPolicies.getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("policy-delta resource refers to user/group attribute: " + resource, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy-delta resource refers to user/group attribute: " + resource);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicyDeltas().clear();
             svcPolicies.getSecurityZones().put("zone1", getSecurityZoneInfo("zone1"));
             svcPolicies.getSecurityZones().get("zone1").getPolicies().add(policy);
-            assertTrue("zone-policy resource refers to user/group attribute: " + resource, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy resource refers to user/group attribute: " + resource);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicies().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("zone-policy-delta resource refers to user/group attribute: " + resource, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy-delta resource refers to user/group attribute: " + resource);
         }
     }
 
@@ -148,30 +148,30 @@ public class ServiceDefUtilTest {
             policy.addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
 
             svcPolicies.getPolicies().add(policy);
-            assertTrue("policy condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicies().clear();
             svcPolicies.getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("policy-delta condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy-delta condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicyDeltas().clear();
             svcPolicies.getSecurityZones().put("zone1", getSecurityZoneInfo("zone1"));
             svcPolicies.getSecurityZones().get("zone1").getPolicies().add(policy);
-            assertTrue("zone-policy condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicies().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("zone-policy-delta condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy-delta condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicies().clear();
             svcPolicies.getPolicyDeltas().clear();
             svcPolicies.getSecurityZones().clear();
             svcPolicies.getTagPolicies().getPolicies().add(policy);
-            assertTrue("tag-policy condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "tag-policy condition refers to user/group attribute: " + condExpr);
         }
     }
 
@@ -219,29 +219,29 @@ public class ServiceDefUtilTest {
             policyItems.get(0).addCondition(new RangerPolicyItemCondition("expr", Collections.singletonList(condExpr)));
 
             svcPolicies.getPolicies().add(policy);
-            assertTrue("policyItem condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policyItem condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicies().clear();
             svcPolicies.getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("policy-delta-item condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy-delta-item condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicyDeltas().clear();
             svcPolicies.getSecurityZones().put("zone1", getSecurityZoneInfo("zone1"));
             svcPolicies.getSecurityZones().get("zone1").getPolicies().add(policy);
-            assertTrue("zone-policy-item condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy-item condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicies().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("zone-policy-delta-item condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy-delta-item condition refers to user/group attribute: " + condExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicies().clear();
             svcPolicies.getTagPolicies().getPolicies().add(policy);
 
-            assertTrue("tag-policyItem condition refers to user/group attribute: " + condExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "tag-policyItem condition refers to user/group attribute: " + condExpr);
 
             i++;
         }
@@ -257,23 +257,23 @@ public class ServiceDefUtilTest {
             policy.getRowFilterPolicyItems().get(0).setRowFilterInfo(new RangerPolicyItemRowFilterInfo("dept in (" + filterExpr + ")"));
 
             svcPolicies.getPolicies().add(policy);
-            assertTrue("policy row-filter refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy row-filter refers to user/group attribute: " + filterExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicies().clear();
             svcPolicies.getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("policy-delta row-filter refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy-delta row-filter refers to user/group attribute: " + filterExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicyDeltas().clear();
             svcPolicies.getSecurityZones().put("zone1", getSecurityZoneInfo("zone1"));
             svcPolicies.getSecurityZones().get("zone1").getPolicies().add(policy);
-            assertTrue("zone-policy row-filter refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy row-filter refers to user/group attribute: " + filterExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicies().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("zone-policy-delta row-filter refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy-delta row-filter refers to user/group attribute: " + filterExpr);
         }
     }
 
@@ -286,20 +286,20 @@ public class ServiceDefUtilTest {
             RangerAccessTypeDef serviceMarkerAll = getAccessType(policies.getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
             RangerAccessTypeDef tagMarkerAll     = getAccessType(policies.getTagPolicies().getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
 
-            assertNotEquals("accessType count", policies.getServiceDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getAccessTypes().size());
-            assertNotEquals("impliedGrants: _ALL", new HashSet<>(serviceMarkerAll.getImpliedGrants()), new HashSet<>(tagMarkerAll.getImpliedGrants()));
-            assertNotEquals("dataMask.accessType count", policies.getServiceDef().getDataMaskDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getDataMaskDef().getAccessTypes().size());
-            assertNotEquals("rowFilter.accessType count", policies.getServiceDef().getRowFilterDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getRowFilterDef().getAccessTypes().size());
+            assertNotEquals(policies.getServiceDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getAccessTypes().size(), "accessType count");
+            assertNotEquals(new HashSet<>(serviceMarkerAll.getImpliedGrants()), new HashSet<>(tagMarkerAll.getImpliedGrants()), "impliedGrants: _ALL");
+            assertNotEquals(policies.getServiceDef().getDataMaskDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getDataMaskDef().getAccessTypes().size(), "dataMask.accessType count");
+            assertNotEquals(policies.getServiceDef().getRowFilterDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getRowFilterDef().getAccessTypes().size(), "rowFilter.accessType count");
 
             ServiceDefUtil.normalizeAccessTypeDefs(policies.getTagPolicies().getServiceDef(), policies.getServiceDef().getName());
 
             serviceMarkerAll = getAccessType(policies.getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
             tagMarkerAll     = getAccessType(policies.getTagPolicies().getServiceDef().getMarkerAccessTypes(), ACCESS_TYPE_MARKER_ALL);
 
-            assertEquals("accessType count", policies.getServiceDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getAccessTypes().size());
-            assertEquals("impliedGrants: _ALL", new HashSet<>(serviceMarkerAll.getImpliedGrants()), new HashSet<>(tagMarkerAll.getImpliedGrants()));
-            assertEquals("dataMask.accessType count", policies.getServiceDef().getDataMaskDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getDataMaskDef().getAccessTypes().size());
-            assertEquals("rowFilter.accessType count", 0, policies.getTagPolicies().getServiceDef().getRowFilterDef().getAccessTypes().size());
+            assertEquals(policies.getServiceDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getAccessTypes().size(), "accessType count");
+            assertEquals(new HashSet<>(serviceMarkerAll.getImpliedGrants()), new HashSet<>(tagMarkerAll.getImpliedGrants()), "impliedGrants: _ALL");
+            assertEquals(policies.getServiceDef().getDataMaskDef().getAccessTypes().size(), policies.getTagPolicies().getServiceDef().getDataMaskDef().getAccessTypes().size(), "dataMask.accessType count");
+            assertEquals(0, policies.getTagPolicies().getServiceDef().getRowFilterDef().getAccessTypes().size(), "rowFilter.accessType count");
         }
     }
 
@@ -318,46 +318,46 @@ public class ServiceDefUtilTest {
         // 6 marker access-types should be populated with impliedGrants
         List<RangerAccessTypeDef> accessTypeDefs = Arrays.asList(create, select, update, delete, manage, read, write, execute);
         List<RangerAccessTypeDef> markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
-        assertEquals("markerTypeDefs count", 6, markerTypeDefs.size());
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ, toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, toSet(update.getName(), write.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, toSet(delete.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, toSet(manage.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL, allNames, getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+        assertEquals(6, markerTypeDefs.size(), "markerTypeDefs count");
+        assertEquals(toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE), "impliedGrants in " + ACCESS_TYPE_MARKER_CREATE);
+        assertEquals(toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ), "impliedGrants in " + ACCESS_TYPE_MARKER_READ);
+        assertEquals(toSet(update.getName(), write.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE), "impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE);
+        assertEquals(toSet(delete.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE), "impliedGrants in " + ACCESS_TYPE_MARKER_DELETE);
+        assertEquals(toSet(manage.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE), "impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE);
+        assertEquals(allNames, getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL), "impliedGrants in " + ACCESS_TYPE_MARKER_ALL);
 
         // 2 marker access-types should be populated with impliedGrants: _CREATE, _ALL
         accessTypeDefs = new ArrayList<>(Collections.singleton(create));
         markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
-        assertEquals("markerTypeDefs count", 6, markerTypeDefs.size());
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL, toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+        assertEquals(6, markerTypeDefs.size(), "markerTypeDefs count");
+        assertEquals(toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE), "impliedGrants in " + ACCESS_TYPE_MARKER_CREATE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ), "impliedGrants in " + ACCESS_TYPE_MARKER_READ);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE), "impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE), "impliedGrants in " + ACCESS_TYPE_MARKER_DELETE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE), "impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE);
+        assertEquals(toSet(create.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL), "impliedGrants in " + ACCESS_TYPE_MARKER_ALL);
 
         // 2 marker access-types should be populated with impliedGrants: _READ, _ALL
         accessTypeDefs = new ArrayList<>(Arrays.asList(select, read));
         markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
-        assertEquals("markerTypeDefs count", 6, markerTypeDefs.size());
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ, toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL, toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+        assertEquals(6, markerTypeDefs.size(), "markerTypeDefs count");
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE), "impliedGrants in " + ACCESS_TYPE_MARKER_CREATE);
+        assertEquals(toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ), "impliedGrants in " + ACCESS_TYPE_MARKER_READ);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE), "impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE), "impliedGrants in " + ACCESS_TYPE_MARKER_DELETE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE), "impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE);
+        assertEquals(toSet(select.getName(), read.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL), "impliedGrants in " + ACCESS_TYPE_MARKER_ALL);
 
         // accessTypes with no category should be added to _ALL
         accessTypeDefs = new ArrayList<>(Collections.singleton(execute));
         markerTypeDefs = ServiceDefUtil.getMarkerAccessTypes(accessTypeDefs);
-        assertEquals("markerTypeDefs count", 6, markerTypeDefs.size()); // 1 marker access-types should be added: _ALL
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_CREATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_READ, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_DELETE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE, Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE));
-        assertEquals("impliedGrants in " + ACCESS_TYPE_MARKER_ALL, toSet(execute.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL));
+        assertEquals(6, markerTypeDefs.size(), "markerTypeDefs count"); // 1 marker access-types should be added: _ALL
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_CREATE), "impliedGrants in " + ACCESS_TYPE_MARKER_CREATE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_READ), "impliedGrants in " + ACCESS_TYPE_MARKER_READ);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_UPDATE), "impliedGrants in " + ACCESS_TYPE_MARKER_UPDATE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_DELETE), "impliedGrants in " + ACCESS_TYPE_MARKER_DELETE);
+        assertEquals(Collections.emptySet(), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_MANAGE), "impliedGrants in " + ACCESS_TYPE_MARKER_MANAGE);
+        assertEquals(toSet(execute.getName()), getImpliedGrants(markerTypeDefs, ACCESS_TYPE_MARKER_ALL), "impliedGrants in " + ACCESS_TYPE_MARKER_ALL);
     }
 
     public void testPolicyItemDataMaskExprUserGroupRef() {
@@ -369,23 +369,23 @@ public class ServiceDefUtilTest {
             policy.getDataMaskPolicyItems().get(0).setDataMaskInfo(new RangerPolicyItemDataMaskInfo("CUSTOM", "", "CASE WHEN dept in (" + filterExpr + ")THEN {col} ELSE '0' END"));
 
             svcPolicies.getPolicies().add(policy);
-            assertTrue("policy data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy data-mask refers to user/group attribute: " + filterExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicies().clear();
             svcPolicies.getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("policy-delta data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "policy-delta data-mask refers to user/group attribute: " + filterExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getPolicyDeltas().clear();
             svcPolicies.getSecurityZones().put("zone1", getSecurityZoneInfo("zone1"));
             svcPolicies.getSecurityZones().get("zone1").getPolicies().add(policy);
-            assertTrue("zone-policy data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy data-mask refers to user/group attribute: " + filterExpr);
 
             svcPolicies.getServiceDef().getContextEnrichers().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicies().clear();
             svcPolicies.getSecurityZones().get("zone1").getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, 1L, policy));
-            assertTrue("zone-policy-delta data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+            assertTrue(ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"), "zone-policy-delta data-mask refers to user/group attribute: " + filterExpr);
         }
     }
 

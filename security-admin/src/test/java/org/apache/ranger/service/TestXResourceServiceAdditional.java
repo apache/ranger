@@ -46,6 +46,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -65,6 +67,7 @@ import static org.mockito.Mockito.when;
  */
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestXResourceServiceAdditional {
     @Mock private RangerDaoManager                  daoManager;
@@ -97,8 +100,8 @@ public class TestXResourceServiceAdditional {
         asset.setName("repo");
         asset.setAssetType(7);
         when(xxAssetDao.getById(5L)).thenReturn(asset);
-        when(xxPermMapDao.findByResourceId(anyLong())).thenReturn(Collections.emptyList());
-        when(xxAuditMapDao.findByResourceId(anyLong())).thenReturn(Collections.emptyList());
+        when(xxPermMapDao.findByResourceId(any())).thenReturn(Collections.emptyList());
+        when(xxAuditMapDao.findByResourceId(any())).thenReturn(Collections.emptyList());
         VXResource v = svc.populateViewBean(x);
         assertNotNull(v);
         assertEquals("repo", v.getAssetName());
@@ -169,7 +172,7 @@ public class TestXResourceServiceAdditional {
         when(daoManager.getXXAsset()).thenReturn(xxAssetDao);
         when(daoManager.getXXPortalUser()).thenReturn(xxPortalUserDao);
         when(daoManager.getXXPermMap()).thenReturn(xxPermMapDao);
-        when(xxPermMapDao.findByResourceId(anyLong())).thenReturn(Collections.emptyList());
+        when(xxPermMapDao.findByResourceId(any())).thenReturn(Collections.emptyList());
         XXPortalUser u = new XXPortalUser();
         u.setLoginId("u");
         when(xxPortalUserDao.getById(anyLong())).thenReturn(u);

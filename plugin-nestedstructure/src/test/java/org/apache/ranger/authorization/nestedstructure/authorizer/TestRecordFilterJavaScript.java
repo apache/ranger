@@ -19,20 +19,22 @@
 
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRecordFilterJavaScript {
-    @Test(expectedExceptions = MaskingException.class)
+    @Test
     public void testArbitraryCommand() {
-        RecordFilterJavaScript.filterRow("user", "this.engine.factory.scriptEngine.eval('java.lang.Runtime.getRuntime().exec(\"/Applications/Spotify.app/Contents/MacOS/Spotify\")')", TestJsonManipulator.bigTester);
+        assertThrows(MaskingException.class, () ->
+                RecordFilterJavaScript.filterRow("user", "this.engine.factory.scriptEngine.eval('java.lang.Runtime.getRuntime().exec(\"/Applications/Spotify.app/Contents/MacOS/Spotify\")')", TestJsonManipulator.bigTester));
     }
 
     @Test
@@ -47,7 +49,7 @@ public class TestRecordFilterJavaScript {
         assertFalse(Files.exists(Paths.get("omg.txt")));
     }
 
-    @AfterTest
+    @AfterEach
     public void deleteTestFile() throws IOException {
         Files.deleteIfExists(Paths.get("omg.txt"));
     }

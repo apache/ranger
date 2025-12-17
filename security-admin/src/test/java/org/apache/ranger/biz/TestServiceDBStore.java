@@ -189,6 +189,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 * @description <Unit Test for TestServiceDBStore class>
 */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestServiceDBStore {
     private static final String CFG_SERVICE_ADMIN_USERS  = "service.admin.users";

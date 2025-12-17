@@ -55,9 +55,9 @@ import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -79,10 +79,10 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestPolicyEngine {
     private static final String AUDIT_PROPERTIES_FILE = "xasecure-audit.properties";
@@ -90,7 +90,7 @@ public class TestPolicyEngine {
     static RangerPluginContext pluginContext;
     static Gson                gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "hive", "cl1", "on-prem", null));
 
@@ -182,7 +182,7 @@ public class TestPolicyEngine {
         pluginContext.getConfig().addResource(new org.apache.hadoop.fs.Path(file.toURI()));
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() throws Exception {
     }
 
@@ -704,7 +704,7 @@ public class TestPolicyEngine {
     private void runTests(InputStreamReader reader, String testName) {
         PolicyEngineTestCase testCase = gsonBuilder.fromJson(reader, PolicyEngineTestCase.class);
 
-        assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
+        assertTrue(testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null, "invalid input: " + testName);
 
         ServicePolicies servicePolicies = new ServicePolicies();
         servicePolicies.setPolicyVersion(100L);
@@ -904,9 +904,9 @@ public class TestPolicyEngine {
 
                 policyEngine.evaluateAuditPolicies(result);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-                assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
+                assertEquals(expected.getIsAudited(), result.getIsAudited(), "isAudited mismatched! - " + test.name);
             }
 
             if (test.dataMaskResult != null) {
@@ -917,11 +917,11 @@ public class TestPolicyEngine {
 
                 policyEngine.evaluateAuditPolicies(result);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
-                assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
-                assertEquals("maskedValue mismatched! - " + test.name, expected.getMaskedValue(), result.getMaskedValue());
-                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getMaskType(), result.getMaskType(), "maskType mismatched! - " + test.name);
+                assertEquals(expected.getMaskCondition(), result.getMaskCondition(), "maskCondition mismatched! - " + test.name);
+                assertEquals(expected.getMaskedValue(), result.getMaskedValue(), "maskedValue mismatched! - " + test.name);
+                assertEquals(expected.getPolicyId(), result.getPolicyId(), "policyId mismatched! - " + test.name);
             }
 
             if (test.rowFilterResult != null) {
@@ -932,20 +932,20 @@ public class TestPolicyEngine {
 
                 policyEngine.evaluateAuditPolicies(result);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
-                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getFilterExpr(), result.getFilterExpr(), "filterExpr mismatched! - " + test.name);
+                assertEquals(expected.getPolicyId(), result.getPolicyId(), "policyId mismatched! - " + test.name);
             }
 
             if (test.resourceAccessInfo != null) {
                 RangerResourceAccessInfo expected = new RangerResourceAccessInfo(test.resourceAccessInfo);
                 RangerResourceAccessInfo result   = policyEngine.getResourceAccessInfo(test.request);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("allowedUsers mismatched! - " + test.name, expected.getAllowedUsers(), result.getAllowedUsers());
-                assertEquals("allowedGroups mismatched! - " + test.name, expected.getAllowedGroups(), result.getAllowedGroups());
-                assertEquals("deniedUsers mismatched! - " + test.name, expected.getDeniedUsers(), result.getDeniedUsers());
-                assertEquals("deniedGroups mismatched! - " + test.name, expected.getDeniedGroups(), result.getDeniedGroups());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(expected.getAllowedUsers(), result.getAllowedUsers(), "allowedUsers mismatched! - " + test.name);
+                assertEquals(expected.getAllowedGroups(), result.getAllowedGroups(), "allowedGroups mismatched! - " + test.name);
+                assertEquals(expected.getDeniedUsers(), result.getDeniedUsers(), "deniedUsers mismatched! - " + test.name);
+                assertEquals(expected.getDeniedGroups(), result.getDeniedGroups(), "deniedGroups mismatched! - " + test.name);
             }
         });
     }
@@ -969,7 +969,7 @@ public class TestPolicyEngine {
             fail("Exception in reading validity-scheduler test cases.");
         }
 
-        assertNotNull("TestCases are null!", testCases);
+        assertNotNull(testCases, "TestCases are null!");
 
         if (CollectionUtils.isNotEmpty(testCases)) {
             for (ValiditySchedulerTestCase testCase : testCases) {
@@ -996,9 +996,9 @@ public class TestPolicyEngine {
                     }
                 }
 
-                assertEquals(testCase.name + " - isValid (validationFailures: " + validationFailures + ")", testCase.result.isValid, isValid);
-                assertEquals(testCase.name + " - isApplicable (validationFailures: " + validationFailures + ")", testCase.result.isApplicable, isApplicable);
-                assertEquals(testCase.name + " - validationFailureCount (validationFailures: " + validationFailures + ")", testCase.result.validationFailureCount, validationFailures.size());
+                assertEquals(testCase.result.isValid, isValid, testCase.name + " - isValid (validationFailures: " + validationFailures + ")");
+                assertEquals(testCase.result.isApplicable, isApplicable, testCase.name + " - isApplicable (validationFailures: " + validationFailures + ")");
+                assertEquals(testCase.result.validationFailureCount, validationFailures.size(), testCase.name + " - validationFailureCount (validationFailures: " + validationFailures + ")");
             }
         }
         TimeZone.setDefault(defaultTZ);

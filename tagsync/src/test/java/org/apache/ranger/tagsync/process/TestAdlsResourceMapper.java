@@ -22,8 +22,8 @@ package org.apache.ranger.tagsync.process;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasAdlsResourceMapper;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
@@ -55,7 +55,7 @@ public class TestAdlsResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 1);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT_NAME);
     }
@@ -65,7 +65,7 @@ public class TestAdlsResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_ADLS_GEN2_CONTAINER, CONTAINER_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 2);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_CONTAINER, CONTAINER_NAME);
@@ -76,7 +76,7 @@ public class TestAdlsResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, RELATIVE_PATH_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 3);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_CONTAINER, CONTAINER_NAME);
@@ -88,7 +88,7 @@ public class TestAdlsResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_ADLS_GEN2_CONTAINER, CONTAINER2_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 2);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT2_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_CONTAINER, CONTAINER_NAME);
@@ -99,7 +99,7 @@ public class TestAdlsResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, RELATIVE_PATH2_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 3);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT2_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_CONTAINER, CONTAINER_NAME);
@@ -143,26 +143,25 @@ public class TestAdlsResourceMapper {
     }
 
     private void assertResourceElementCount(RangerServiceResource resource, int count) {
-        Assert.assertNotNull(resource);
-        Assert.assertNotNull(resource.getResourceElements());
-        Assert.assertEquals(count, resource.getResourceElements().size());
+        Assertions.assertNotNull(resource);
+        Assertions.assertNotNull(resource.getResourceElements());
+        Assertions.assertEquals(count, resource.getResourceElements().size());
     }
 
     private void assertResourceElementValue(RangerServiceResource resource, String resourceName, String value) {
-        Assert.assertTrue(resource.getResourceElements().containsKey(resourceName));
-        Assert.assertNotNull(resource.getResourceElements().get(resourceName).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(resourceName).getValues().size());
-        Assert.assertEquals(value, resource.getResourceElements().get(resourceName).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(resourceName));
+        Assertions.assertNotNull(resource.getResourceElements().get(resourceName).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(resourceName).getValues().size());
+        Assertions.assertEquals(value, resource.getResourceElements().get(resourceName).getValues().get(0));
     }
 
     private void assertException(RangerAtlasEntity entity, String exceptionMessage) {
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.assertFalse("Expected buildResource() to fail. But it returned " + resource, true);
+            Assertions.assertFalse(true, "Expected buildResource() to fail. But it returned " + resource);
         } catch (Exception excp) {
-            Assert.assertTrue("Unexpected exception message: expected=" + exceptionMessage + "; found " + excp.getMessage(),
-                    excp.getMessage().startsWith(exceptionMessage));
+            Assertions.assertTrue(excp.getMessage().startsWith(exceptionMessage), "Unexpected exception message: expected=" + exceptionMessage + "; found " + excp.getMessage());
         }
     }
 }

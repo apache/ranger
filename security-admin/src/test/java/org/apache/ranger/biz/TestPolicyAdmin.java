@@ -30,9 +30,9 @@ import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,18 +42,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPolicyAdmin {
     static Gson gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() {
     }
 
@@ -76,7 +76,7 @@ public class TestPolicyAdmin {
     private void runTests(InputStreamReader reader, String testName) {
         PolicyAdminTestCase testCase = gsonBuilder.fromJson(reader, PolicyAdminTestCase.class);
 
-        assertTrue("invalid input: " + testName, testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null);
+        assertTrue(testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null, "invalid input: " + testName);
 
         RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 
@@ -106,8 +106,8 @@ public class TestPolicyAdmin {
                     }
                 }
 
-                assertEquals("allowed-policy count mismatch! - " + test.name, test.allowedPolicies.size(), allowedPolicies.size());
-                assertEquals("allowed-policy list mismatch! - " + test.name, test.allowedPolicies, allowedPolicies);
+                assertEquals(test.allowedPolicies.size(), allowedPolicies.size(), "allowed-policy count mismatch! - " + test.name);
+                assertEquals(test.allowedPolicies, allowedPolicies, "allowed-policy list mismatch! - " + test.name);
             } else {
                 RangerPolicy     policy     = new RangerPolicy();
                 RangerPolicyItem policyItem = new RangerPolicyItem();
@@ -132,7 +132,7 @@ public class TestPolicyAdmin {
                     result = policyAdmin.isDelegatedAdminAccessAllowedForRead(policy, test.user, test.userGroups, null, null);
                 }
 
-                assertEquals("isAccessAllowed mismatched! - " + test.name, expected, result);
+                assertEquals(expected, result, "isAccessAllowed mismatched! - " + test.name);
             }
         }
     }

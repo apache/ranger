@@ -25,9 +25,9 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,7 +45,7 @@ public class TestRangerServiceValidator {
     private final ValidationTestUtils            utils    = new ValidationTestUtils();
     private final List<ValidationFailureDetails> failures = new ArrayList<>();
 
-    @Before
+    @BeforeEach
     public void before() {
         store     = mock(ServiceStore.class);
         action    = Action.CREATE; // by default we set action to create
@@ -80,8 +80,8 @@ public class TestRangerServiceValidator {
 
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean valid = validator.isValid(rangerService, Action.CREATE, failures);
-        Assert.assertEquals(0, failures.size());
-        Assert.assertTrue(valid);
+        Assertions.assertEquals(0, failures.size());
+        Assertions.assertTrue(valid);
     }
 
     @Test
@@ -114,8 +114,8 @@ public class TestRangerServiceValidator {
         when(store.getService(1L)).thenReturn(rangerService);
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean valid = validator.isValid(rangerService, Action.UPDATE, failures);
-        Assert.assertEquals(0, failures.size());
-        Assert.assertTrue(valid);
+        Assertions.assertEquals(0, failures.size());
+        Assertions.assertTrue(valid);
     }
 
     @Test
@@ -152,10 +152,10 @@ public class TestRangerServiceValidator {
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean                  valid          = validator.isValid(rangerService, Action.UPDATE, failures);
         ValidationFailureDetails failureMessage = failures.get(0);
-        Assert.assertFalse(valid);
-        Assert.assertEquals("name", failureMessage.getFieldName());
-        Assert.assertEquals(errorMessage, failureMessage.reason);
-        Assert.assertEquals(errorCode, failureMessage.errorCode);
+        Assertions.assertFalse(valid);
+        Assertions.assertEquals("name", failureMessage.getFieldName());
+        Assertions.assertEquals(errorMessage, failureMessage.reason);
+        Assertions.assertEquals(errorCode, failureMessage.errorCode);
     }
 
     @Test
@@ -190,10 +190,10 @@ public class TestRangerServiceValidator {
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean                  valid          = validator.isValid(rangerService, action, failures);
         ValidationFailureDetails failureMessage = failures.get(0);
-        Assert.assertFalse(valid);
-        Assert.assertEquals("name", failureMessage.getFieldName());
-        Assert.assertEquals(errorMessage, failureMessage.reason);
-        Assert.assertEquals(errorCode, failureMessage.errorCode);
+        Assertions.assertFalse(valid);
+        Assertions.assertEquals("name", failureMessage.getFieldName());
+        Assertions.assertEquals(errorMessage, failureMessage.reason);
+        Assertions.assertEquals(errorCode, failureMessage.errorCode);
     }
 
     @Test
@@ -229,10 +229,10 @@ public class TestRangerServiceValidator {
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean                  valid          = validator.isValid(rangerService, action, failures);
         ValidationFailureDetails failureMessage = failures.get(0);
-        Assert.assertFalse(valid);
-        Assert.assertEquals("name", failureMessage.getFieldName());
-        Assert.assertEquals(errorMessage, failureMessage.reason);
-        Assert.assertEquals(errorCode, failureMessage.errorCode);
+        Assertions.assertFalse(valid);
+        Assertions.assertEquals("name", failureMessage.getFieldName());
+        Assertions.assertEquals(errorMessage, failureMessage.reason);
+        Assertions.assertEquals(errorCode, failureMessage.errorCode);
     }
 
     @Test
@@ -280,16 +280,16 @@ public class TestRangerServiceValidator {
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean                  valid          = validator.isValid(rangerService, Action.UPDATE, failures);
         ValidationFailureDetails failureMessage = failures.get(0);
-        Assert.assertFalse(valid);
-        Assert.assertEquals("name", failureMessage.getFieldName());
-        Assert.assertEquals(errorMessage, failureMessage.reason);
-        Assert.assertEquals(errorCode, failureMessage.errorCode);
+        Assertions.assertFalse(valid);
+        Assertions.assertEquals("name", failureMessage.getFieldName());
+        Assertions.assertEquals(errorMessage, failureMessage.reason);
+        Assertions.assertEquals(errorCode, failureMessage.errorCode);
 
         //Case: previous service name does have space, updating with name containing space
         when(store.getService(1L)).thenReturn(rangerService);
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean validWithSpace = validator.isValid(rangerService, Action.UPDATE, failures);
-        Assert.assertTrue(validWithSpace);
+        Assertions.assertTrue(validWithSpace);
     }
 
     @Test
@@ -324,10 +324,10 @@ public class TestRangerServiceValidator {
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean                  valid          = validator.isValid(rangerService, action, failures);
         ValidationFailureDetails failureMessage = failures.get(0);
-        Assert.assertFalse(valid);
-        Assert.assertEquals("name", failureMessage.getFieldName());
-        Assert.assertEquals(errorMessage, failureMessage.reason);
-        Assert.assertEquals(errorCode, failureMessage.errorCode);
+        Assertions.assertFalse(valid);
+        Assertions.assertEquals("name", failureMessage.getFieldName());
+        Assertions.assertEquals(errorMessage, failureMessage.reason);
+        Assertions.assertEquals(errorCode, failureMessage.errorCode);
     }
 
     @Test
@@ -364,23 +364,23 @@ public class TestRangerServiceValidator {
         when(store.getServiceDefByName("yarn")).thenReturn(rangerServiceDef);
         boolean                  valid          = validator.isValid(rangerService, Action.UPDATE, failures);
         ValidationFailureDetails failureMessage = failures.get(0);
-        Assert.assertFalse(valid);
-        Assert.assertEquals("name", failureMessage.getFieldName());
-        Assert.assertEquals(errorMessage, failureMessage.reason);
-        Assert.assertEquals(errorCode, failureMessage.errorCode);
+        Assertions.assertFalse(valid);
+        Assertions.assertEquals("name", failureMessage.getFieldName());
+        Assertions.assertEquals(errorMessage, failureMessage.reason);
+        Assertions.assertEquals(errorCode, failureMessage.errorCode);
     }
 
     @Test
     public void testIsValid_failures() throws Exception {
         RangerService service = mock(RangerService.class);
         // passing in a null service to the check itself is an error
-        Assert.assertFalse(validator.isValid((RangerService) null, action, failures));
+        Assertions.assertFalse(validator.isValid((RangerService) null, action, failures));
         utils.checkFailureForMissingValue(failures, "service");
 
         // id is required for update
         when(service.getId()).thenReturn(null);
         // let's verify the failure and the sort of error information that is returned (for one of these)
-        // Assert.assert that among the failure reason is one about id being missing.
+        // Assertions.assert that among the failure reason is one about id being missing.
         checkFailure_isValid(validator, service, Action.UPDATE, failures, "missing", "id");
         when(service.getId()).thenReturn(7L);
 
@@ -486,7 +486,7 @@ public class TestRangerServiceValidator {
         // service def exists
         when(store.getServiceDefByName("aType")).thenReturn(serviceDef);
 
-        Assert.assertTrue(validator.isValid(service, Action.CREATE, failures));
+        Assertions.assertTrue(validator.isValid(service, Action.CREATE, failures));
 
         // for update to work the only additional requirement is that id is required and service should exist
         // if name is not null and it points to a service then it should match the id
@@ -495,32 +495,32 @@ public class TestRangerServiceValidator {
         when(existingService.getId()).thenReturn(7L);
         when(store.getService(7L)).thenReturn(existingService);
         when(store.getServiceByName("aName")).thenReturn(existingService);
-        Assert.assertTrue(validator.isValid(service, Action.UPDATE, failures));
+        Assertions.assertTrue(validator.isValid(service, Action.UPDATE, failures));
         // name need not point to a service for update to work, of course.
         when(store.getServiceByName("aName")).thenReturn(null);
-        Assert.assertTrue(validator.isValid(service, Action.UPDATE, failures));
+        Assertions.assertTrue(validator.isValid(service, Action.UPDATE, failures));
     }
 
     @Test
     public void test_isValid_withId_errorConditions() throws Exception {
         // api that takes in long is only supported for delete currently
-        Assert.assertFalse(validator.isValid(1L, Action.CREATE, failures));
+        Assertions.assertFalse(validator.isValid(1L, Action.CREATE, failures));
         utils.checkFailureForInternalError(failures);
         // passing in a null id is a failure!
         validator = new RangerServiceValidator(store);
         failures.clear();
-        Assert.assertFalse(validator.isValid((Long) null, Action.DELETE, failures));
+        Assertions.assertFalse(validator.isValid((Long) null, Action.DELETE, failures));
         utils.checkFailureForMissingValue(failures, "id");
         // if service with that id does not exist then that, is ok because delete is idempotent
         when(store.getService(1L)).thenReturn(null);
         when(store.getService(2L)).thenThrow(new Exception());
         failures.clear();
-        Assert.assertTrue(validator.isValid(1L, Action.DELETE, failures));
-        Assert.assertTrue(failures.isEmpty());
+        Assertions.assertTrue(validator.isValid(1L, Action.DELETE, failures));
+        Assertions.assertTrue(failures.isEmpty());
 
         failures.clear();
-        Assert.assertTrue(validator.isValid(2L, Action.DELETE, failures));
-        Assert.assertTrue(failures.isEmpty());
+        Assertions.assertTrue(validator.isValid(2L, Action.DELETE, failures));
+        Assertions.assertTrue(failures.isEmpty());
     }
 
     @Test
@@ -528,7 +528,7 @@ public class TestRangerServiceValidator {
         validator = new RangerServiceValidator(store);
         RangerService service = mock(RangerService.class);
         when(store.getService(1L)).thenReturn(service);
-        Assert.assertTrue(validator.isValid(1L, Action.DELETE, failures));
+        Assertions.assertTrue(validator.isValid(1L, Action.DELETE, failures));
     }
 
     void checkFailure_isValid(RangerServiceValidator validator, RangerService service, Action action, List<ValidationFailureDetails> failures, String errorType, String field) {
@@ -537,7 +537,7 @@ public class TestRangerServiceValidator {
 
     void checkFailure_isValid(RangerServiceValidator validator, RangerService service, Action action, List<ValidationFailureDetails> failures, String errorType, String field, String subField) {
         failures.clear();
-        Assert.assertFalse(validator.isValid(service, action, failures));
+        Assertions.assertFalse(validator.isValid(service, action, failures));
         switch (errorType) {
             case "missing":
                 utils.checkFailureForMissingValue(failures, field, subField);
@@ -549,7 +549,7 @@ public class TestRangerServiceValidator {
                 utils.checkFailureForInternalError(failures);
                 break;
             default:
-                Assert.fail("Unsupported errorType[" + errorType + "]");
+                Assertions.fail("Unsupported errorType[" + errorType + "]");
                 break;
         }
     }

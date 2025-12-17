@@ -24,6 +24,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -49,6 +51,7 @@ import static org.mockito.Mockito.when;
 * @description <Unit Test for TestRangerCSRFPreventionFilter class>
 */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerCSRFPreventionFilter {
     private static final String EXPECTED_MESSAGE = "Missing header or invalid Header value for CSRF Vulnerability Protection";

@@ -50,6 +50,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -79,7 +81,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -89,6 +90,7 @@ import static org.mockito.Mockito.when;
 * @description <Unit Test for TestGdsREST class>
 */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestGdsREST {
     private final HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
@@ -1560,6 +1562,7 @@ public class TestGdsREST {
 
         String[] requestedAccessTypes = {"_MANAGE"};
         when(searchUtil.getParamMultiValues(request, "accessType")).thenReturn(requestedAccessTypes);
+        when(searchUtil.getParamMultiValues(request, "principal")).thenReturn(new String[0]);
 
         List<RangerPolicy.RangerPolicyItem> policyItemsByAccessType = new ArrayList<>(gdsREST.filterPolicyItemsByRequest(policy, request));
 

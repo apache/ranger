@@ -20,8 +20,7 @@
 package org.apache.ranger.authorization.nestedstructure.authorizer;
 
 import com.google.gson.JsonParser;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,8 +35,9 @@ import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTyp
 import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_NULL;
 import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_SHOW_FIRST_4;
 import static org.apache.ranger.authorization.nestedstructure.authorizer.MaskTypes.MASK_SHOW_LAST_4;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestJsonManipulator {
     static final String testString1 = "{\n" +
@@ -113,11 +113,12 @@ public class TestJsonManipulator {
         assertEquals(js.getFields().size(), 12);
     }
 
-    @Test(expectedExceptions = MaskingException.class)
+    @Test
     public void invalidJson() {
-        JsonManipulator js = new JsonManipulator("{foo:\"bar\"");
-
-        assertEquals(js.getFields().size(), 1);
+        assertThrows(MaskingException.class, () -> {
+            JsonManipulator js = new JsonManipulator("{foo:\"bar\"");
+            js.getFields().size();
+        });
     }
 
     @Test
@@ -135,8 +136,7 @@ public class TestJsonManipulator {
         assertEquals(man.getFields().size(), 11);
     }
 
-    @DataProvider(name = "simpleMasks")
-    public Object[][] simpleMasks() {
+    public static Object[][] simpleMasks() {
         return new Object[][] {
                 //basic string masking
                 {"{\"string1\":\"value1\"}",
@@ -224,8 +224,7 @@ public class TestJsonManipulator {
         };
     }
 
-    @DataProvider(name = "complexMasks")
-    public Object[][] complexMasks() {
+    public static Object[][] complexMasks() {
         return new Object[][] {
                 //test masking two fields
                 {bigTester,
@@ -288,20 +287,33 @@ public class TestJsonManipulator {
         };
     }
 
-    @Test(dataProvider = "simpleMasks")
-    void testSimpleMasks(String json, List<FieldLevelAccess> fieldAccess, String outputJson) {
-        JsonManipulator man = new JsonManipulator(json);
+    @Test
+    void testSimpleMasks() {
+        for (Object[] row : simpleMasks()) {
+            String json = (String) row[0];
+            @SuppressWarnings("unchecked")
+            List<FieldLevelAccess> fieldAccess = (List<FieldLevelAccess>) row[1];
+            String outputJson = (String) row[2];
 
-        man.maskFields(fieldAccess);
-
-        assertEquals(man.getJsonString(), outputJson);
+            JsonManipulator man = new JsonManipulator(json);
+            man.maskFields(fieldAccess);
+            assertEquals(outputJson, man.getJsonString());
+        }
     }
 
-    @Test(dataProvider = "complexMasks")
-    void testComplexMasks(String json, List<FieldLevelAccess> fieldAccess, String fieldName, String value) {
-        JsonManipulator man = new JsonManipulator(json);
-        man.maskFields(fieldAccess);
-        assertEquals(man.readString(fieldName), value);
+    @Test
+    void testComplexMasks() {
+        for (Object[] row : complexMasks()) {
+            String json = (String) row[0];
+            @SuppressWarnings("unchecked")
+            List<FieldLevelAccess> fieldAccess = (List<FieldLevelAccess>) row[1];
+            String fieldName = (String) row[2];
+            String value = (String) row[3];
+
+            JsonManipulator man = new JsonManipulator(json);
+            man.maskFields(fieldAccess);
+            assertEquals(value, man.readString(fieldName));
+        }
     }
 
     @Test

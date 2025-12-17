@@ -56,6 +56,7 @@ import java.util.Map;
  * @description <Unit Test for PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 class>
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 {
     private static void setIfPresent(Object target, String fieldName, Object value) {

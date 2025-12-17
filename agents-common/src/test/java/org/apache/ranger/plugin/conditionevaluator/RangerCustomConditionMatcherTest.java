@@ -30,10 +30,10 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerUserStore;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,11 +49,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class RangerCustomConditionMatcherTest {
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
     }
 
@@ -87,31 +87,31 @@ public class RangerCustomConditionMatcherTest {
         RangerScriptConditionEvaluator tagsTypeCondition        = createScriptConditionEvaluator("_ctx.tags['PII']._type == 'PII' && _ctx.tags['PCI']._type == 'PCI'");
         RangerScriptConditionEvaluator tagsAttributesCondition  = createScriptConditionEvaluator("_ctx.tags['PII'].attr1 == 'PII_value' && _ctx.tags['PCI'].attr1 == 'PCI_value'");
 
-        Assert.assertTrue("request.resource.database should be db1", resourceDbCondition.isMatched(request));
-        Assert.assertTrue("request.resource.database should not be db2", resourceDbCondition2.isMatched(request));
-        Assert.assertTrue("request.resource.table should be tbl1", resourceTblCondition.isMatched(request));
-        Assert.assertTrue("request.resource.column should be col1", resourceColCondition.isMatched(request));
-        Assert.assertTrue("request.accessType should be select", accessTypeCondition.isMatched(request));
-        Assert.assertTrue("request.action should be query", actionCondition.isMatched(request));
-        Assert.assertTrue("request.user should be testUser", userCondition.isMatched(request));
-        Assert.assertTrue("request.userGroups should have 2 entries", userGroupsLenCondition.isMatched(request));
-        Assert.assertTrue("request.userGroups should have test-group1", userGroupsHas1Condition.isMatched(request));
-        Assert.assertTrue("request.userGroups should have test-group2", userGroupsHas2Condition.isMatched(request));
-        Assert.assertTrue("request.userRoles should have 2 entries", userRolesLenCondition.isMatched(request));
-        Assert.assertTrue("request.userRoles should have test-role1", userRolesHas1Condition.isMatched(request));
-        Assert.assertTrue("request.userRoles should have test-role2", userRolesHas2Condition.isMatched(request));
-        Assert.assertTrue("request.userAttributes should have 3 entries", userAttrLenCondition.isMatched(request));
-        Assert.assertTrue("request.userAttributes[attr1] should be test-user-value1", userAttr1Condition.isMatched(request));
-        Assert.assertTrue("request.userAttributes[attr2] should be test-user-value2", userAttr2Condition.isMatched(request));
-        Assert.assertTrue("request.userGroup1Attributes[attr1] should be test-group1-value1", userGroup1Attr1Condition.isMatched(request));
-        Assert.assertTrue("request.userGroup1Attributes[attr2] should be test-group1-value2", userGroup1Attr2Condition.isMatched(request));
-        Assert.assertTrue("request.userGroup2Attributes[attr1] should be test-group2-value1", userGroup2Attr1Condition.isMatched(request));
-        Assert.assertTrue("request.userGroup2Attributes[attr2] should be test-group2-value2", userGroup2Attr2Condition.isMatched(request));
-        Assert.assertTrue("tag._type should be PCI", tagTypeCondition.isMatched(request));
-        Assert.assertTrue("tag.attr1 should be PCI_value", tagAttributesCondition.isMatched(request));
-        Assert.assertTrue("should have 2 tags", tagsLengthCondition.isMatched(request));
-        Assert.assertTrue("tags PCI and PII should be found", tagsTypeCondition.isMatched(request));
-        Assert.assertTrue("tag attributes for PCI and PII should be found", tagsAttributesCondition.isMatched(request));
+        Assertions.assertTrue(resourceDbCondition.isMatched(request), "request.resource.database should be db1");
+        Assertions.assertTrue(resourceDbCondition2.isMatched(request), "request.resource.database should not be db2");
+        Assertions.assertTrue(resourceTblCondition.isMatched(request), "request.resource.table should be tbl1");
+        Assertions.assertTrue(resourceColCondition.isMatched(request), "request.resource.column should be col1");
+        Assertions.assertTrue(accessTypeCondition.isMatched(request), "request.accessType should be select");
+        Assertions.assertTrue(actionCondition.isMatched(request), "request.action should be query");
+        Assertions.assertTrue(userCondition.isMatched(request), "request.user should be testUser");
+        Assertions.assertTrue(userGroupsLenCondition.isMatched(request), "request.userGroups should have 2 entries");
+        Assertions.assertTrue(userGroupsHas1Condition.isMatched(request), "request.userGroups should have test-group1");
+        Assertions.assertTrue(userGroupsHas2Condition.isMatched(request), "request.userGroups should have test-group2");
+        Assertions.assertTrue(userRolesLenCondition.isMatched(request), "request.userRoles should have 2 entries");
+        Assertions.assertTrue(userRolesHas1Condition.isMatched(request), "request.userRoles should have test-role1");
+        Assertions.assertTrue(userRolesHas2Condition.isMatched(request), "request.userRoles should have test-role2");
+        Assertions.assertTrue(userAttrLenCondition.isMatched(request), "request.userAttributes should have 3 entries");
+        Assertions.assertTrue(userAttr1Condition.isMatched(request), "request.userAttributes[attr1] should be test-user-value1");
+        Assertions.assertTrue(userAttr2Condition.isMatched(request), "request.userAttributes[attr2] should be test-user-value2");
+        Assertions.assertTrue(userGroup1Attr1Condition.isMatched(request), "request.userGroup1Attributes[attr1] should be test-group1-value1");
+        Assertions.assertTrue(userGroup1Attr2Condition.isMatched(request), "request.userGroup1Attributes[attr2] should be test-group1-value2");
+        Assertions.assertTrue(userGroup2Attr1Condition.isMatched(request), "request.userGroup2Attributes[attr1] should be test-group2-value1");
+        Assertions.assertTrue(userGroup2Attr2Condition.isMatched(request), "request.userGroup2Attributes[attr2] should be test-group2-value2");
+        Assertions.assertTrue(tagTypeCondition.isMatched(request), "tag._type should be PCI");
+        Assertions.assertTrue(tagAttributesCondition.isMatched(request), "tag.attr1 should be PCI_value");
+        Assertions.assertTrue(tagsLengthCondition.isMatched(request), "should have 2 tags");
+        Assertions.assertTrue(tagsTypeCondition.isMatched(request), "tags PCI and PII should be found");
+        Assertions.assertTrue(tagsAttributesCondition.isMatched(request), "tag attributes for PCI and PII should be found");
     }
 
     @Test
@@ -121,37 +121,37 @@ public class RangerCustomConditionMatcherTest {
 
         // When any tag in the resourceTags matches policyConditionTags it should return TRUE
         List<String> resourceTags = Arrays.asList("PCI", "PHI");
-        Assert.assertTrue(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertTrue(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
         resourceTags = Arrays.asList("PHI", "PII", "HIPPA");
-        Assert.assertTrue(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertTrue(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When no Tag Matches between resourceTags and PolicyConditionTags it should return FALSE
         resourceTags = Arrays.asList("HIPPA", "PHI");
-        Assert.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags and resourceTags contains empty set it should return TRUE as empty set matches.
         policyConditionTags              = Arrays.asList("");
         resourceTags                     = Arrays.asList("");
         tagsAnyPresentConditionEvaluator = createRangerAnyOfExpectedTagsPresentConditionEvaluator(policyConditionTags);
-        Assert.assertTrue(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertTrue(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags is not empty and resourceTags empty it should return FALSE as there is no any match.
         policyConditionTags              = Arrays.asList("PCI", "PII");
         resourceTags                     = Arrays.asList("");
         tagsAnyPresentConditionEvaluator = createRangerAnyOfExpectedTagsPresentConditionEvaluator(policyConditionTags);
-        Assert.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags is empty and resourceTags in not empty it should return FALSE as there is no any match.
         policyConditionTags              = Arrays.asList("");
         resourceTags                     = Arrays.asList("PCI", "PII");
         tagsAnyPresentConditionEvaluator = createRangerAnyOfExpectedTagsPresentConditionEvaluator(policyConditionTags);
-        Assert.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags is not empty and resourceTags is NULL it should return FALSE as there is no any match.
         policyConditionTags              = Arrays.asList("PCI", "PII");
         resourceTags                     = null;
         tagsAnyPresentConditionEvaluator = createRangerAnyOfExpectedTagsPresentConditionEvaluator(policyConditionTags);
-        Assert.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertFalse(tagsAnyPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
     }
 
     @Test
@@ -161,35 +161,35 @@ public class RangerCustomConditionMatcherTest {
 
         // When no Tag Matches between resourceTags and PolicyConditionTags it should return TRUE
         List<String> resourceTags = Arrays.asList("HIPPA", "PHI");
-        Assert.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When any Tag Matches between resourceTags and PolicyConditionTags it should return FALSE
         resourceTags = Arrays.asList("HIPPA", "PII", "");
-        Assert.assertFalse(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertFalse(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags and resourceTags both are empty is should return FALSE as both matches.
         policyConditionTags              = Arrays.asList("");
         resourceTags                     = Arrays.asList("");
         tagsNotPresentConditionEvaluator = createRangerTagsNotPresentConditionEvaluator(policyConditionTags);
-        Assert.assertFalse(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertFalse(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags is not empty and resourceTags empty it should return TRUE as there is no tag match between these two sets.
         policyConditionTags              = Arrays.asList("PCI", "PII");
         resourceTags                     = Arrays.asList("");
         tagsNotPresentConditionEvaluator = createRangerTagsNotPresentConditionEvaluator(policyConditionTags);
-        Assert.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags is  empty and resourceTags in not empty it should return TRUE as there is no tag match between these two sets.
         policyConditionTags              = Arrays.asList("");
         resourceTags                     = Arrays.asList("PCI", "PII");
         tagsNotPresentConditionEvaluator = createRangerTagsNotPresentConditionEvaluator(policyConditionTags);
-        Assert.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
 
         // When policyConditionTags is not empty and resourceTags is NULL it should return TRUE as there is no tag match between these two sets.
         policyConditionTags              = Arrays.asList("PCI", "PII");
         resourceTags                     = Arrays.asList("");
         tagsNotPresentConditionEvaluator = createRangerTagsNotPresentConditionEvaluator(policyConditionTags);
-        Assert.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
+        Assertions.assertTrue(tagsNotPresentConditionEvaluator.isMatched(createRequest(resourceTags)));
     }
 
     RangerAnyOfExpectedTagsPresentConditionEvaluator createRangerAnyOfExpectedTagsPresentConditionEvaluator(List<String> policyConditionTags) {

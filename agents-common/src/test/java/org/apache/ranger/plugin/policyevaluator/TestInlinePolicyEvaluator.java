@@ -41,9 +41,9 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,13 +52,13 @@ import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestInlinePolicyEvaluator {
     Gson gsonBuilder;
 
-    @Before
+    @BeforeEach
     public void init() {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
                 .setPrettyPrinting()
@@ -67,7 +67,7 @@ public class TestInlinePolicyEvaluator {
                 .create();
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
     }
 
@@ -78,7 +78,7 @@ public class TestInlinePolicyEvaluator {
 
     private void runTests(String resourceName) throws IOException {
         try (InputStream inStream = this.getClass().getResourceAsStream(resourceName)) {
-            assertNotNull("failed to find resource '" + resourceName + "'", inStream);
+            assertNotNull(inStream, "failed to find resource '" + resourceName + "'");
 
             InputStreamReader reader = new InputStreamReader(inStream);
 
@@ -103,10 +103,10 @@ public class TestInlinePolicyEvaluator {
 
             RangerAccessResult result = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
-            assertNotNull("result was null! - " + test.name, result);
-            assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-            assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
-            assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+            assertNotNull(result, "result was null! - " + test.name);
+            assertEquals(expected.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
+            assertEquals(expected.getIsAudited(), result.getIsAudited(), "isAudited mismatched! - " + test.name);
+            assertEquals(expected.getPolicyId(), result.getPolicyId(), "policyId mismatched! - " + test.name);
         }
     }
 

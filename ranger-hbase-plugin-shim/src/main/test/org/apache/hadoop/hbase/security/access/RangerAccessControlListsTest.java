@@ -55,6 +55,6 @@ public class RangerAccessControlListsTest {
         } catch (IOException e) {
             exceptionFound = e;
         }
-        Assert.assertFalse("Expected to get a NullPointerExecution after init method Execution - Found [" + exceptionFound + "]", (!(exceptionFound != null && exceptionFound.getCause() instanceof NullPointerException)));
+        Assert.assertFalse((!(exceptionFound != null && exceptionFound.getCause() instanceof NullPointerException)), "Expected to get a NullPointerExecution after init method Execution - Found [" + exceptionFound + "]");
     }
 }

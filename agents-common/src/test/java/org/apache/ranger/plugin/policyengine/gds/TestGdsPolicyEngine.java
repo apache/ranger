@@ -40,8 +40,8 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,13 +58,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestGdsPolicyEngine {
     static Gson gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
                 .setPrettyPrinting()
@@ -124,7 +124,7 @@ public class TestGdsPolicyEngine {
             }
         }
 
-        assertTrue("invalid input: " + testName, testCase.gdsInfo != null && testCase.tests != null);
+        assertTrue(testCase.gdsInfo != null && testCase.tests != null, "invalid input: " + testName);
 
         ServiceDefUtil.normalize(testCase.serviceDef);
         testCase.serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(testCase.serviceDef.getAccessTypes()));
@@ -145,11 +145,11 @@ public class TestGdsPolicyEngine {
                 if (test.acls != null) {
                     RangerResourceACLs acls = policyEngine.getResourceACLs(test.request);
 
-                    assertEquals(test.name, test.acls, acls);
+                    assertEquals(test.acls, acls, test.name);
                 } else {
                     GdsAccessResult result = policyEngine.evaluate(test.request);
 
-                    assertEquals(test.name, test.result, result);
+                    assertEquals(test.result, result, test.name);
                 }
             } else if (test.sharedWith != null) {
                 Set<String> users  = test.sharedWith.get("users");
@@ -159,13 +159,13 @@ public class TestGdsPolicyEngine {
                 if (test.datasets != null) {
                     Set<Long> datasets = policyEngine.getDatasetsSharedWith(users, groups, roles);
 
-                    assertEquals(test.name, test.datasets, datasets);
+                    assertEquals(test.datasets, datasets, test.name);
                 }
 
                 if (test.projects != null) {
                     Set<Long> projects = policyEngine.getProjectsSharedWith(users, groups, roles);
 
-                    assertEquals(test.name, test.projects, projects);
+                    assertEquals(test.projects, projects, test.name);
                 }
             } else if (test.resourceIds != null) {
                 Iterator<GdsSharedResourceEvaluator> iter;
@@ -186,7 +186,7 @@ public class TestGdsPolicyEngine {
 
                 iter.forEachRemaining(e -> resourceIds.add(e.getId()));
 
-                assertEquals(test.name, test.resourceIds, resourceIds);
+                assertEquals(test.resourceIds, resourceIds, test.name);
             }
         }
     }

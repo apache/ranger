@@ -43,7 +43,6 @@ import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -140,7 +139,7 @@ public class TestRangerAuthenticationProvider {
                         Collections.singletonList(new SimpleGrantedAuthority("ROLE_PRE")));
 
         Authentication out = provider.getAuthenticationWithGrantedAuthority(input);
-        assertInstanceOf(UsernamePasswordAuthenticationToken.class, out);
+        assertTrue(out instanceof UsernamePasswordAuthenticationToken);
         Collection<? extends GrantedAuthority> auths = out.getAuthorities();
         assertEquals(2, auths.size());
         assertTrue(auths.stream().anyMatch(a -> a.getAuthority().equals("ROLE_A")));

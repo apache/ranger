@@ -52,6 +52,7 @@ import java.util.List;
  * @description <Unit Test for PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 class>
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestPatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 {
     private static void setIfPresent(Object target, String fieldName, Object value) {

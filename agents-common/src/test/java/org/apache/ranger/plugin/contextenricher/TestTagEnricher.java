@@ -38,9 +38,9 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -51,14 +51,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestTagEnricher {
     static Gson gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
                 .setPrettyPrinting()
@@ -66,7 +66,7 @@ public class TestTagEnricher {
                 .create();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() throws Exception {
     }
 
@@ -110,7 +110,7 @@ public class TestTagEnricher {
     private void runTests(InputStreamReader reader, String testName) {
         TagEnricherTestCase testCase = gsonBuilder.fromJson(reader, TagEnricherTestCase.class);
 
-        assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.serviceResources != null && testCase.tests != null);
+        assertTrue(testCase != null && testCase.serviceDef != null && testCase.serviceResources != null && testCase.tests != null, "invalid input: " + testName);
 
         ServiceTags serviceTags = new ServiceTags();
         serviceTags.setServiceName(testCase.serviceName);
@@ -155,7 +155,7 @@ public class TestTagEnricher {
                 Collections.sort(resultTags);
             }
 
-            assertEquals(test.name, expectedTags, resultTags);
+            assertEquals(expectedTags, resultTags, test.name);
         }
     }
 

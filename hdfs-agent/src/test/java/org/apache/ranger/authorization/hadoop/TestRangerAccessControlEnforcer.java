@@ -76,13 +76,13 @@ public class TestRangerAccessControlEnforcer {
         // Build inode hierarchy: root directory with two child directories "a" and "b"
         INodeDirectory rootDir  = Mockito.mock(INodeDirectory.class);
         INode          rootNode = Mockito.mock(INode.class);
-        Mockito.when(rootNode.isDirectory()).thenReturn(true);
-        Mockito.when(rootNode.asDirectory()).thenReturn(rootDir);
-        Mockito.when(rootDir.getFullPathName()).thenReturn("/root");
+        Mockito.lenient().when(rootNode.isDirectory()).thenReturn(true);
+        Mockito.lenient().when(rootNode.asDirectory()).thenReturn(rootDir);
+        Mockito.lenient().when(rootDir.getFullPathName()).thenReturn("/root");
         Mockito.when(rootDir.getPathComponents()).thenReturn(new byte[][] {"".getBytes()});
         INodeDirectoryAttributes rootAttrs = Mockito.mock(INodeDirectoryAttributes.class);
-        Mockito.when(rootAttrs.getLocalNameBytes()).thenReturn("root".getBytes());
-        Mockito.when(rootDir.getSnapshotINode(Mockito.anyInt())).thenReturn(rootAttrs);
+        Mockito.lenient().when(rootAttrs.getLocalNameBytes()).thenReturn("root".getBytes());
+        Mockito.lenient().when(rootDir.getSnapshotINode(Mockito.anyInt())).thenReturn(rootAttrs);
 
         INode          childA = Mockito.mock(INode.class);
         INode          childB = Mockito.mock(INode.class);
@@ -96,27 +96,27 @@ public class TestRangerAccessControlEnforcer {
         Mockito.when(childB.getLocalName()).thenReturn("b");
         INodeDirectoryAttributes attrA = Mockito.mock(INodeDirectoryAttributes.class);
         INodeDirectoryAttributes attrB = Mockito.mock(INodeDirectoryAttributes.class);
-        Mockito.when(attrA.getLocalNameBytes()).thenReturn("a".getBytes());
-        Mockito.when(attrB.getLocalNameBytes()).thenReturn("b".getBytes());
-        Mockito.when(dirA.getSnapshotINode(Mockito.anyInt())).thenReturn(attrA);
-        Mockito.when(dirB.getSnapshotINode(Mockito.anyInt())).thenReturn(attrB);
-        Mockito.when(dirA.getPathComponents()).thenReturn(new byte[][] {"".getBytes(), "root".getBytes(), "a".getBytes()});
-        Mockito.when(dirB.getPathComponents()).thenReturn(new byte[][] {"".getBytes(), "root".getBytes(), "b".getBytes()});
+        Mockito.lenient().when(attrA.getLocalNameBytes()).thenReturn("a".getBytes());
+        Mockito.lenient().when(attrB.getLocalNameBytes()).thenReturn("b".getBytes());
+        Mockito.lenient().when(dirA.getSnapshotINode(Mockito.anyInt())).thenReturn(attrA);
+        Mockito.lenient().when(dirB.getSnapshotINode(Mockito.anyInt())).thenReturn(attrB);
+        Mockito.lenient().when(dirA.getPathComponents()).thenReturn(new byte[][] {"".getBytes(), "root".getBytes(), "a".getBytes()});
+        Mockito.lenient().when(dirB.getPathComponents()).thenReturn(new byte[][] {"".getBytes(), "root".getBytes(), "b".getBytes()});
         ReadOnlyList<INode> emptyChildren = Mockito.mock(ReadOnlyList.class);
-        Mockito.when(emptyChildren.isEmpty()).thenReturn(true);
-        Mockito.when(emptyChildren.size()).thenReturn(0);
-        Mockito.when(emptyChildren.iterator()).thenReturn(Collections.emptyIterator());
-        Mockito.when(dirA.getChildrenList(Mockito.anyInt())).thenReturn(emptyChildren);
-        Mockito.when(dirB.getChildrenList(Mockito.anyInt())).thenReturn(emptyChildren);
+        Mockito.lenient().when(emptyChildren.isEmpty()).thenReturn(true);
+        Mockito.lenient().when(emptyChildren.size()).thenReturn(0);
+        Mockito.lenient().when(emptyChildren.iterator()).thenReturn(Collections.emptyIterator());
+        Mockito.lenient().when(dirA.getChildrenList(Mockito.anyInt())).thenReturn(emptyChildren);
+        Mockito.lenient().when(dirB.getChildrenList(Mockito.anyInt())).thenReturn(emptyChildren);
 
         List<INode>         list     = Arrays.asList(childA, childB);
         ReadOnlyList<INode> children = Mockito.mock(ReadOnlyList.class);
-        Mockito.when(children.isEmpty()).thenReturn(list.isEmpty());
-        Mockito.when(children.size()).thenReturn(list.size());
-        Mockito.when(children.get(Mockito.eq(0))).thenReturn(list.get(0));
-        Mockito.when(children.get(Mockito.eq(1))).thenReturn(list.get(1));
-        Mockito.when(children.iterator()).thenReturn(list.iterator());
-        Mockito.when(rootDir.getChildrenList(Mockito.anyInt())).thenReturn(children);
+        Mockito.lenient().when(children.isEmpty()).thenReturn(list.isEmpty());
+        Mockito.lenient().when(children.size()).thenReturn(list.size());
+        Mockito.lenient().when(children.get(Mockito.eq(0))).thenReturn(list.get(0));
+        Mockito.lenient().when(children.get(Mockito.eq(1))).thenReturn(list.get(1));
+        Mockito.lenient().when(children.iterator()).thenReturn(list.iterator());
+        Mockito.lenient().when(rootDir.getChildrenList(Mockito.anyInt())).thenReturn(children);
 
         // prepare arrays
         INodeAttributes[] inodeAttrs    = new INodeAttributes[] {rootAttrs};
@@ -150,12 +150,12 @@ public class TestRangerAccessControlEnforcer {
         RangerHdfsPlugin      plugin          = Mockito.mock(RangerHdfsPlugin.class);
         AccessControlEnforcer defaultEnforcer = Mockito.mock(AccessControlEnforcer.class);
 
-        Mockito.when(plugin.isHadoopAuthEnabled()).thenReturn(true);
-        Mockito.when(plugin.isUseLegacySubAccessAuthorization()).thenReturn(false);
-        Mockito.when(plugin.isOptimizeSubAccessAuthEnabled()).thenReturn(false);
-        Mockito.when(plugin.getHadoopModuleName()).thenReturn("hdfs");
-        Mockito.when(plugin.getExcludedUsers()).thenReturn(Collections.emptySet());
-        Mockito.when(plugin.isAccessAllowed(Mockito.any(RangerAccessRequest.class), Mockito.any())).thenAnswer(inv -> {
+        Mockito.lenient().when(plugin.isHadoopAuthEnabled()).thenReturn(true);
+        Mockito.lenient().when(plugin.isUseLegacySubAccessAuthorization()).thenReturn(false);
+        Mockito.lenient().when(plugin.isOptimizeSubAccessAuthEnabled()).thenReturn(false);
+        Mockito.lenient().when(plugin.getHadoopModuleName()).thenReturn("hdfs");
+        Mockito.lenient().when(plugin.getExcludedUsers()).thenReturn(Collections.emptySet());
+        Mockito.lenient().when(plugin.isAccessAllowed(Mockito.any(RangerAccessRequest.class), Mockito.any())).thenAnswer(inv -> {
             RangerAccessRequest req = inv.getArgument(0);
             return new RangerAccessResult(0, "hdfs", null, req);
         });
@@ -164,13 +164,13 @@ public class TestRangerAccessControlEnforcer {
 
         INodeDirectory rootDir  = Mockito.mock(INodeDirectory.class);
         INode          rootNode = Mockito.mock(INode.class);
-        Mockito.when(rootNode.isDirectory()).thenReturn(true);
-        Mockito.when(rootNode.asDirectory()).thenReturn(rootDir);
-        Mockito.when(rootDir.getFullPathName()).thenReturn("/root");
-        Mockito.when(rootDir.getPathComponents()).thenReturn(new byte[][] {"".getBytes()});
+        Mockito.lenient().when(rootNode.isDirectory()).thenReturn(true);
+        Mockito.lenient().when(rootNode.asDirectory()).thenReturn(rootDir);
+        Mockito.lenient().when(rootDir.getFullPathName()).thenReturn("/root");
+        Mockito.lenient().when(rootDir.getPathComponents()).thenReturn(new byte[][] {"".getBytes()});
         INodeDirectoryAttributes rootAttrs = Mockito.mock(INodeDirectoryAttributes.class);
-        Mockito.when(rootAttrs.getLocalNameBytes()).thenReturn("root".getBytes());
-        Mockito.when(rootDir.getSnapshotINode(Mockito.anyInt())).thenReturn(rootAttrs);
+        Mockito.lenient().when(rootAttrs.getLocalNameBytes()).thenReturn("root".getBytes());
+        Mockito.lenient().when(rootDir.getSnapshotINode(Mockito.anyInt())).thenReturn(rootAttrs);
 
         INode          childC = Mockito.mock(INode.class);
         INodeDirectory dirC   = Mockito.mock(INodeDirectory.class);
@@ -178,30 +178,30 @@ public class TestRangerAccessControlEnforcer {
         Mockito.when(childC.asDirectory()).thenReturn(dirC);
         Mockito.when(childC.getLocalName()).thenReturn("c");
         INodeDirectoryAttributes attrC = Mockito.mock(INodeDirectoryAttributes.class);
-        Mockito.when(attrC.getLocalNameBytes()).thenReturn("c".getBytes());
-        Mockito.when(dirC.getSnapshotINode(Mockito.anyInt())).thenReturn(attrC);
-        Mockito.when(dirC.getPathComponents()).thenReturn(new byte[][] {"".getBytes(), "root".getBytes(), "c".getBytes()});
+        Mockito.lenient().when(attrC.getLocalNameBytes()).thenReturn("c".getBytes());
+        Mockito.lenient().when(dirC.getSnapshotINode(Mockito.anyInt())).thenReturn(attrC);
+        Mockito.lenient().when(dirC.getPathComponents()).thenReturn(new byte[][] {"".getBytes(), "root".getBytes(), "c".getBytes()});
 
         List<INode>         list     = Collections.singletonList(childC);
         ReadOnlyList<INode> children = Mockito.mock(ReadOnlyList.class);
-        Mockito.when(children.isEmpty()).thenReturn(list.isEmpty());
-        Mockito.when(children.size()).thenReturn(list.size());
-        Mockito.when(children.get(Mockito.eq(0))).thenReturn(list.get(0));
-        Mockito.when(children.iterator()).thenReturn(list.iterator());
-        Mockito.when(rootDir.getChildrenList(Mockito.anyInt())).thenReturn(children);
+        Mockito.lenient().when(children.isEmpty()).thenReturn(list.isEmpty());
+        Mockito.lenient().when(children.size()).thenReturn(list.size());
+        Mockito.lenient().when(children.get(Mockito.eq(0))).thenReturn(list.get(0));
+        Mockito.lenient().when(children.iterator()).thenReturn(list.iterator());
+        Mockito.lenient().when(rootDir.getChildrenList(Mockito.anyInt())).thenReturn(children);
         ReadOnlyList<INode> emptyChildren2 = Mockito.mock(ReadOnlyList.class);
-        Mockito.when(emptyChildren2.isEmpty()).thenReturn(true);
-        Mockito.when(emptyChildren2.size()).thenReturn(0);
-        Mockito.when(emptyChildren2.iterator()).thenReturn(Collections.emptyIterator());
-        Mockito.when(dirC.getChildrenList(Mockito.anyInt())).thenReturn(emptyChildren2);
+        Mockito.lenient().when(emptyChildren2.isEmpty()).thenReturn(true);
+        Mockito.lenient().when(emptyChildren2.size()).thenReturn(0);
+        Mockito.lenient().when(emptyChildren2.iterator()).thenReturn(Collections.emptyIterator());
+        Mockito.lenient().when(dirC.getChildrenList(Mockito.anyInt())).thenReturn(emptyChildren2);
 
         INodeAttributes[] inodeAttrs    = new INodeAttributes[] {rootAttrs};
         INode[]           inodes        = new INode[] {rootNode};
         byte[][]          pathByNameArr = new byte[][] {"root".getBytes()};
 
         UserGroupInformation ugi = Mockito.mock(UserGroupInformation.class);
-        Mockito.when(ugi.getShortUserName()).thenReturn("user");
-        Mockito.when(ugi.getGroupNames()).thenReturn(new String[] {"grp"});
+        Mockito.lenient().when(ugi.getShortUserName()).thenReturn("user");
+        Mockito.lenient().when(ugi.getGroupNames()).thenReturn(new String[] {"grp"});
 
         // resourcePath without trailing separator forces adding Path.SEPARATOR_CHAR when pushing children
         enforcer.checkPermission("owner", "super", ugi, inodeAttrs, inodes, pathByNameArr, 0, "/root", 0, false,
@@ -215,30 +215,30 @@ public class TestRangerAccessControlEnforcer {
         RangerHdfsPlugin      plugin          = Mockito.mock(RangerHdfsPlugin.class);
         AccessControlEnforcer defaultEnforcer = Mockito.mock(AccessControlEnforcer.class);
 
-        Mockito.when(plugin.isHadoopAuthEnabled()).thenReturn(true);
-        Mockito.when(plugin.getHadoopModuleName()).thenReturn("hdfs");
-        Mockito.when(plugin.getExcludedUsers()).thenReturn(new HashSet<String>());
+        Mockito.lenient().when(plugin.isHadoopAuthEnabled()).thenReturn(true);
+        Mockito.lenient().when(plugin.getHadoopModuleName()).thenReturn("hdfs");
+        Mockito.lenient().when(plugin.getExcludedUsers()).thenReturn(new HashSet<String>());
         // No policy evaluation in this path
 
         RangerAccessControlEnforcer enforcer = new RangerAccessControlEnforcer(plugin, defaultEnforcer);
 
         INodeDirectory rootDir  = Mockito.mock(INodeDirectory.class);
         INode          rootNode = Mockito.mock(INode.class);
-        Mockito.when(rootNode.isDirectory()).thenReturn(true);
-        Mockito.when(rootNode.asDirectory()).thenReturn(rootDir);
-        Mockito.when(rootDir.getFullPathName()).thenReturn("/root");
-        Mockito.when(rootDir.getPathComponents()).thenReturn(new byte[][] {"".getBytes()});
+        Mockito.lenient().when(rootNode.isDirectory()).thenReturn(true);
+        Mockito.lenient().when(rootNode.asDirectory()).thenReturn(rootDir);
+        Mockito.lenient().when(rootDir.getFullPathName()).thenReturn("/root");
+        Mockito.lenient().when(rootDir.getPathComponents()).thenReturn(new byte[][] {"".getBytes()});
         INodeDirectoryAttributes rootAttrs = Mockito.mock(INodeDirectoryAttributes.class);
-        Mockito.when(rootAttrs.getLocalNameBytes()).thenReturn("root".getBytes());
-        Mockito.when(rootDir.getSnapshotINode(Mockito.anyInt())).thenReturn(rootAttrs);
+        Mockito.lenient().when(rootAttrs.getLocalNameBytes()).thenReturn("root".getBytes());
+        Mockito.lenient().when(rootDir.getSnapshotINode(Mockito.anyInt())).thenReturn(rootAttrs);
 
         INodeAttributes[] inodeAttrs    = new INodeAttributes[] {rootAttrs};
         INode[]           inodes        = new INode[] {rootNode};
         byte[][]          pathByNameArr = new byte[][] {"root".getBytes()};
 
         UserGroupInformation ugi = Mockito.mock(UserGroupInformation.class);
-        Mockito.when(ugi.getShortUserName()).thenReturn("user");
-        Mockito.when(ugi.getGroupNames()).thenReturn(new String[] {"grp"});
+        Mockito.lenient().when(ugi.getShortUserName()).thenReturn("user");
+        Mockito.lenient().when(ugi.getGroupNames()).thenReturn(new String[] {"grp"});
 
         // All access parameters null -> traverseOnlyCheck true
         enforcer.checkPermission("owner", "super", ugi, inodeAttrs, inodes, pathByNameArr, 0, Path.SEPARATOR, 0, false,

@@ -20,9 +20,9 @@
 package org.apache.ranger.audit.destination;
 
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Date;
@@ -33,7 +33,7 @@ import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestinati
 
 public class AmazonCloudWatchAuditDestinationTest {
     @Test
-    @Ignore // For manual execution only
+    @Disabled // For manual execution only
     public void testWrite() {
         AmazonCloudWatchAuditDestination amazonCloudWatchAuditDestination = new AmazonCloudWatchAuditDestination();
         Properties                       properties                       = new Properties();
@@ -42,7 +42,7 @@ public class AmazonCloudWatchAuditDestinationTest {
 
         amazonCloudWatchAuditDestination.init(properties, CONFIG_PREFIX);
 
-        Assert.assertTrue(amazonCloudWatchAuditDestination.log(Collections.singletonList(getAuthzAuditEvent())));
+        Assertions.assertTrue(amazonCloudWatchAuditDestination.log(Collections.singletonList(getAuthzAuditEvent())));
     }
 
     private AuthzAuditEvent getAuthzAuditEvent() {

@@ -19,8 +19,8 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -59,9 +59,9 @@ public class TestRangerHealth {
 
         RangerServerHealth rangerHealth = RangerServerHealth.up().withDetail("components", componentsMap).build();
 
-        Assert.assertEquals("RangerHealth.up()", UP, rangerHealth.getStatus());
-        Assert.assertEquals("RangerHealth.getDetails()", 1, rangerHealth.getDetails().size());
-        Assert.assertEquals("RangerHealth.getDetails('component')", 2, ((Map<?, ?>) rangerHealth.getDetails().get("components")).size());
+        Assertions.assertEquals(UP, rangerHealth.getStatus(), "RangerHealth.up()");
+        Assertions.assertEquals(1, rangerHealth.getDetails().size(), "RangerHealth.getDetails()");
+        Assertions.assertEquals(2, ((Map<?, ?>) rangerHealth.getDetails().get("components")).size(), "RangerHealth.getDetails('component')");
     }
 
     @Test
@@ -92,8 +92,8 @@ public class TestRangerHealth {
 
         RangerServerHealth rangerHealth = RangerServerHealth.down().withDetail("components", componentsMap).build();
 
-        Assert.assertEquals("RangerHealth.down()", DOWN, rangerHealth.getStatus());
-        Assert.assertEquals("RangerHealth.getDetails()", 1, rangerHealth.getDetails().size());
-        Assert.assertEquals("RangerHealth.getDetails('component')", 2, ((Map<?, ?>) rangerHealth.getDetails().get("components")).size());
+        Assertions.assertEquals(DOWN, rangerHealth.getStatus(), "RangerHealth.down()");
+        Assertions.assertEquals(1, rangerHealth.getDetails().size(), "RangerHealth.getDetails()");
+        Assertions.assertEquals(2, ((Map<?, ?>) rangerHealth.getDetails().get("components")).size(), "RangerHealth.getDetails('component')");
     }
 }

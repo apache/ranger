@@ -26,13 +26,14 @@ import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerPurgeResult;
 import org.apache.ranger.plugin.util.RangerRESTClient;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.testng.annotations.BeforeMethod;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.Response;
@@ -52,10 +53,18 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class TestRangerClient {
     private static final RangerClient.API GET_TEST_API = new RangerClient.API("/relative/path/test", HttpMethod.GET, Response.Status.OK);
+    private AutoCloseable               mocks;
 
-    @BeforeMethod
+    @BeforeEach
     public void setup() {
-        MockitoAnnotations.initMocks(this);
+        mocks = MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        if (mocks != null) {
+            mocks.close();
+        }
     }
 
     @Test
@@ -89,7 +98,7 @@ public class TestRangerClient {
             when(restClient.get(anyString(), any())).thenReturn(response);
             when(response.getStatus()).thenReturn(ClientResponse.Status.SERVICE_UNAVAILABLE.getStatusCode());
 
-            RangerService ret = client.getService(1L);
+            client.getService(1L);
 
             Assertions.fail("Expected to fail with SERVICE_UNAVAILABLE");
         } catch (RangerServiceException excp) {

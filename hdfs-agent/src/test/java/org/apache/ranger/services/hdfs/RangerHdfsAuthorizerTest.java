@@ -28,10 +28,10 @@ import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -55,7 +55,7 @@ public class RangerHdfsAuthorizerTest {
     private static RangerHdfsAuthorizer  authorizer;
     private static AccessControlEnforcer rangerControlEnforcer;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         try {
             File file = File.createTempFile("hdfs-version-site", ".xml");
@@ -94,24 +94,24 @@ public class RangerHdfsAuthorizerTest {
 
             authorizer.start();
         } catch (Exception exception) {
-            Assert.fail("Cannot create hdfs-version-site file:[" + exception.getMessage() + "]");
+            Assertions.fail("Cannot create hdfs-version-site file:[" + exception.getMessage() + "]");
         }
 
         AccessControlEnforcer accessControlEnforcer = null;
 
         rangerControlEnforcer = authorizer.getExternalAccessControlEnforcer(accessControlEnforcer);
 
-        Assert.assertNotNull("rangerControlEnforcer should not be null", rangerControlEnforcer);
+        Assertions.assertNotNull(rangerControlEnforcer, "rangerControlEnforcer should not be null");
     }
 
-    @AfterClass
+    @AfterAll
     public static void teardown() {
         authorizer.stop();
     }
 
     @Test
     public void testAccessControlEnforcer() {
-        Assert.assertNotNull("rangerControlEnforcer", rangerControlEnforcer);
+        Assertions.assertNotNull(rangerControlEnforcer, "rangerControlEnforcer");
     }
 
     @Test
@@ -342,9 +342,9 @@ public class RangerHdfsAuthorizerTest {
             try {
                 checkAccess(access, userName, groups);
 
-                Assert.fail("Access should be blocked for " + path + " access=" + access + " for user=" + userName + " groups=" + Arrays.asList(groups));
+                Assertions.fail("Access should be blocked for " + path + " access=" + access + " for user=" + userName + " groups=" + Arrays.asList(groups));
             } catch (AccessControlException ace) {
-                Assert.assertNotNull(ace);
+                Assertions.assertNotNull(ace);
             }
         }
 
@@ -356,9 +356,9 @@ public class RangerHdfsAuthorizerTest {
             try {
                 checkDirAccess(access, userName, groups);
 
-                Assert.fail("Access should be blocked for parent directory of " + path + " access=" + access + " for user=" + userName + " groups=" + Arrays.asList(groups));
+                Assertions.fail("Access should be blocked for parent directory of " + path + " access=" + access + " for user=" + userName + " groups=" + Arrays.asList(groups));
             } catch (AccessControlException ace) {
-                Assert.assertNotNull(ace);
+                Assertions.assertNotNull(ace);
             }
         }
     }

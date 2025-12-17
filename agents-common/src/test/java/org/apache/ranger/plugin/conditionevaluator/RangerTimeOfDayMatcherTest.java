@@ -22,8 +22,8 @@ package org.apache.ranger.plugin.conditionevaluator;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -120,9 +120,9 @@ public class RangerTimeOfDayMatcherTest {
                 int start = (Integer) data[2];
                 int end   = (Integer) data[3];
 
-                Assert.assertArrayEquals(new int[] {start, end}, duration);
+                Assertions.assertArrayEquals(new int[] {start, end}, duration);
             } else {
-                Assert.assertNull(duration);
+                Assertions.assertNull(duration);
             }
         }
     }
@@ -155,9 +155,9 @@ public class RangerTimeOfDayMatcherTest {
             boolean result        = matcher.durationMatched(durations, hour, 0);
 
             if (matchExpected) {
-                Assert.assertTrue("" + hour, result);
+                Assertions.assertTrue(result, "" + hour);
             } else {
-                Assert.assertFalse("" + hour, result);
+                Assertions.assertFalse(result, "" + hour);
             }
         }
     }
@@ -207,9 +207,9 @@ public class RangerTimeOfDayMatcherTest {
             boolean matchExpected = (boolean) data[2];
 
             if (matchExpected) {
-                Assert.assertTrue("" + hour, matcher.isMatched(request));
+                Assertions.assertTrue(matcher.isMatched(request), "" + hour);
             } else {
-                Assert.assertFalse("" + hour, matcher.isMatched(request));
+                Assertions.assertFalse(matcher.isMatched(request), "" + hour);
             }
         }
     }
@@ -257,9 +257,9 @@ public class RangerTimeOfDayMatcherTest {
             boolean matchExpected = (boolean) data[2];
 
             if (matchExpected) {
-                Assert.assertTrue("" + hour, matcher.isMatched(request));
+                Assertions.assertTrue(matcher.isMatched(request), "" + hour);
             } else {
-                Assert.assertFalse("" + hour, matcher.isMatched(request));
+                Assertions.assertFalse(matcher.isMatched(request), "" + hour);
             }
         }
     }
@@ -269,9 +269,9 @@ public class RangerTimeOfDayMatcherTest {
             Matcher matcher = p.matcher(aDuration);
 
             if (match) {
-                Assert.assertTrue(aDuration, matcher.matches());
+                Assertions.assertTrue(matcher.matches(), aDuration);
             } else {
-                Assert.assertFalse(aDuration, matcher.matches());
+                Assertions.assertFalse(matcher.matches(), aDuration);
             }
         }
     }
@@ -280,14 +280,14 @@ public class RangerTimeOfDayMatcherTest {
         for (String[] data : input) {
             Matcher m = p.matcher(data[0]);
 
-            Assert.assertTrue(data[0], m.matches());
-            Assert.assertEquals(8, m.groupCount());
-            Assert.assertEquals(data[1], m.group(1));
-            Assert.assertEquals(data[2], m.group(3));
-            Assert.assertEquals(data[3], m.group(4));
-            Assert.assertEquals(data[4], m.group(5));
-            Assert.assertEquals(data[5], m.group(7));
-            Assert.assertEquals(data[6], m.group(8));
+            Assertions.assertTrue(m.matches(), data[0]);
+            Assertions.assertEquals(8, m.groupCount());
+            Assertions.assertEquals(data[1], m.group(1));
+            Assertions.assertEquals(data[2], m.group(3));
+            Assertions.assertEquals(data[3], m.group(4));
+            Assertions.assertEquals(data[4], m.group(5));
+            Assertions.assertEquals(data[5], m.group(7));
+            Assertions.assertEquals(data[6], m.group(8));
         }
     }
 }

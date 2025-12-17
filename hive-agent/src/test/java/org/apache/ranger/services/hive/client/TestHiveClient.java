@@ -462,11 +462,11 @@ public class TestHiveClient {
         Field          fCfg   = Class.forName("org.apache.ranger.plugin.client.BaseClient").getDeclaredField("configHolder");
         fCfg.setAccessible(true);
         HadoopConfigHolder cfg = Mockito.mock(HadoopConfigHolder.class);
-        Mockito.when(cfg.isEnableHiveMetastoreLookup()).thenReturn(false);
-        Mockito.when(cfg.getHiveSiteFilePath()).thenReturn("");
-        Mockito.when(cfg.isKerberosAuthentication()).thenReturn(false);
-        Mockito.when(cfg.getUserName()).thenReturn("u");
-        Mockito.when(cfg.getPassword()).thenReturn("p");
+        Mockito.lenient().when(cfg.isEnableHiveMetastoreLookup()).thenReturn(false);
+        Mockito.lenient().when(cfg.getHiveSiteFilePath()).thenReturn("");
+        Mockito.lenient().when(cfg.isKerberosAuthentication()).thenReturn(false);
+        Mockito.lenient().when(cfg.getUserName()).thenReturn("u");
+        Mockito.lenient().when(cfg.getPassword()).thenReturn("p");
         fCfg.set(client, cfg);
         try (MockedStatic<Subject> subj = Mockito.mockStatic(Subject.class)) {
             subj.when(() -> Subject.doAs(Mockito.any(Subject.class), Mockito.any(PrivilegedExceptionAction.class))).thenReturn(null);

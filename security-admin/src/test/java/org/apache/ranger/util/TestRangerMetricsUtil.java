@@ -19,8 +19,8 @@
 
 package org.apache.ranger.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 
 import java.util.Map;
@@ -33,20 +33,20 @@ public class TestRangerMetricsUtil {
     public void testGetRangerMetricsValues() {
         Map<String, Object> rangerMetricsMap = rangerMetricsUtil.getValues();
 
-        Assert.assertNotNull(rangerMetricsMap);
-        Assert.assertNotNull(rangerMetricsMap.get("os.spec"));
-        Assert.assertNotNull(rangerMetricsMap.get("os.vcpus"));
-        Assert.assertNotNull(rangerMetricsMap.get("memory"));
+        Assertions.assertNotNull(rangerMetricsMap);
+        Assertions.assertNotNull(rangerMetricsMap.get("os.spec"));
+        Assertions.assertNotNull(rangerMetricsMap.get("os.vcpus"));
+        Assertions.assertNotNull(rangerMetricsMap.get("memory"));
 
         Map<String, Object> memoryDetailsMap = (Map<String, Object>) rangerMetricsMap.get("memory");
 
-        Assert.assertNotNull(memoryDetailsMap.get("heapMax"));
-        Assert.assertNotNull(memoryDetailsMap.get("heapCommitted"));
-        Assert.assertNotNull(memoryDetailsMap.get("heapUsed"));
-        Assert.assertNotNull(memoryDetailsMap.get("memory_pool_usages"));
+        Assertions.assertNotNull(memoryDetailsMap.get("heapMax"));
+        Assertions.assertNotNull(memoryDetailsMap.get("heapCommitted"));
+        Assertions.assertNotNull(memoryDetailsMap.get("heapUsed"));
+        Assertions.assertNotNull(memoryDetailsMap.get("memory_pool_usages"));
 
         Map<String, Object> poolDivisionDetailsMap = (Map<String, Object>) memoryDetailsMap.get("memory_pool_usages");
 
-        Assert.assertTrue(poolDivisionDetailsMap.size() > 0);
+        Assertions.assertTrue(poolDivisionDetailsMap.size() > 0);
     }
 }
