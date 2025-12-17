@@ -1899,6 +1899,8 @@ CREATE NONCLUSTERED INDEX x_resource_up_time ON dbo.x_resource(update_time ASC)
 GO
 CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_cr_time ON dbo.x_trx_log_v2(create_time ASC)
 GO
+CREATE NONCLUSTERED INDEX x_trx_log_v2_action ON dbo.x_trx_log_v2(action ASC)
+GO
 CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_added_by_id ON dbo.x_trx_log_v2(added_by_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_trx_log_v2_FK_trx_id ON dbo.x_trx_log_v2(trx_id ASC)
