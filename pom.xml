@@ -838,6 +838,7 @@
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
                 <module>plugin-schema-registry</module>
+                <module>plugin-seatunnel</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>
                 <module>plugin-trino</module>
@@ -1127,6 +1128,18 @@
             </modules>
         </profile>
         <profile>
+            <id>ranger-seatunnel-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>plugin-seatunnel</module>
+                <module>ranger-util</module>
+            </modules>
+        </profile>
+        <profile>
             <id>linux</id>
             <activation>
                 <os>
@@ -1165,6 +1178,7 @@
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
                 <module>plugin-schema-registry</module>
+                <module>plugin-seatunnel</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>
                 <module>plugin-trino</module>
@@ -1248,6 +1262,7 @@
                 <module>plugin-ozone</module>
                 <module>plugin-presto</module>
                 <module>plugin-schema-registry</module>
+                <module>plugin-seatunnel</module>
                 <module>plugin-solr</module>
                 <module>plugin-sqoop</module>
                 <module>plugin-trino</module>
