@@ -86,7 +86,7 @@ public class TestRangerSafenetKeySecure {
         storeField.setAccessible(true);
         storeField.set(secure, null);
 
-        boolean result = secure.setMasterKey("pass", "mockKey".getBytes(), new Configuration());
+        boolean result = secure.setExternalKeyAsMK("pass", "mockKey".getBytes());
         assertFalse(result);
     }
 
