@@ -313,15 +313,6 @@ public class RangerPolicyRepository {
         return sb.toString();
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            cleanup();
-        } finally {
-            super.finalize();
-        }
-    }
-
     public StringBuilder toString(StringBuilder sb) {
         if (sb == null) {
             sb = new StringBuilder();
@@ -480,20 +471,6 @@ public class RangerPolicyRepository {
         }
 
         LOG.debug("<== preCleanup(isForced={})", isForced);
-    }
-
-    void cleanup() {
-        LOG.debug("==> cleanup()");
-
-        preCleanup(false);
-
-        if (CollectionUtils.isNotEmpty(this.contextEnrichers) && !isContextEnrichersShared) {
-            for (RangerContextEnricher enricher : this.contextEnrichers) {
-                enricher.cleanup();
-            }
-        }
-
-        LOG.debug("<== cleanup()");
     }
 
     void reorderPolicyEvaluators() {
