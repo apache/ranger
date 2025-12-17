@@ -18,7 +18,6 @@ package org.apache.hadoop.crypto.key.kms;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeySecureToRangerDBMKUtil;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -39,24 +38,19 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestKeySecureToRangerDBMKUtil {
     private final ByteArrayOutputStream errContent = new ByteArrayOutputStream();
 
     @Test
     public void testShowUsage() {
-        // Backup original System.err
         PrintStream originalErr = System.err;
 
-        // Prepare to capture System.err
         ByteArrayOutputStream errContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(errContent));
 
         try {
-            // Call method
             KeySecureToRangerDBMKUtil.showUsage();
 
-            // Flush and verify output
             System.err.flush();
             String output = errContent.toString();
             assertTrue(output.contains("USAGE: java "), "Expected usage message in System.err");
@@ -98,12 +92,10 @@ public class TestKeySecureToRangerDBMKUtil {
 
     @Test
     void testMain_invalidArgs_showsUsage_and_exit1() throws Exception {
-        // Capture System.err
         PrintStream           originalErr = System.err;
         ByteArrayOutputStream errBuf      = new ByteArrayOutputStream();
         System.setErr(new PrintStream(errBuf));
 
-        // Intercept System.exit
         SecurityManager originalSM = System.getSecurityManager();
         System.setSecurityManager(new SecurityManager() {
             @Override

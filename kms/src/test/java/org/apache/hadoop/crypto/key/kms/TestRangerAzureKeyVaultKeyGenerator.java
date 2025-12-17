@@ -21,7 +21,6 @@ import com.microsoft.azure.keyvault.webkey.JsonWebKeyEncryptionAlgorithm;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.RangerAzureKeyVaultKeyGenerator;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -44,7 +43,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-@Disabled
 public class TestRangerAzureKeyVaultKeyGenerator {
     private static final String        VALID_VAULT_URL     = "https://test-keyvault.vault.azure.net/";
     private static final String        VALID_MASTER_KEY    = "test-master-key";
@@ -72,8 +70,6 @@ public class TestRangerAzureKeyVaultKeyGenerator {
     @Test
     public void testConstructorWithConfiguration() throws Exception {
         setValidConfiguration();
-
-        // This will fail because we don't have actual Azure credentials, but should not throw during construction
         Exception exception = assertThrows(Exception.class, () -> {
             RangerAzureKeyVaultKeyGenerator generator = new RangerAzureKeyVaultKeyGenerator(configuration);
         });
@@ -169,7 +165,6 @@ public class TestRangerAzureKeyVaultKeyGenerator {
     @Test
     public void testCreateKeyVaultClientSSLDefaultEnabledWithoutCertPath() {
         setValidConfiguration();
-        // Don't set SSL enabled, should default to true
         configuration.unset("ranger.kms.azure.keyvault.certificate.path");
 
         Exception exception = assertThrows(Exception.class, () -> {
@@ -323,7 +318,6 @@ public class TestRangerAzureKeyVaultKeyGenerator {
 
             RangerAzureKeyVaultKeyGenerator generator = new RangerAzureKeyVaultKeyGenerator(configuration, null);
 
-            // Use reflection to test the private method
             Method getZoneKeyEncryptionAlgoMethod = RangerAzureKeyVaultKeyGenerator.class.getDeclaredMethod("getZoneKeyEncryptionAlgo");
             getZoneKeyEncryptionAlgoMethod.setAccessible(true);
 
@@ -339,12 +333,10 @@ public class TestRangerAzureKeyVaultKeyGenerator {
         configuration.set("ranger.kms.azure.keyvault.ssl.enabled", "true");
         configuration.set("ranger.kms.azure.keyvault.certificate.path", VALID_CERT_PATH);
 
-        // This will fail because we don't have actual Azure credentials, but should not fail on validation
         Exception exception = assertThrows(Exception.class, () -> {
             RangerAzureKeyVaultKeyGenerator.createKeyVaultClient(configuration);
         });
 
-        // Should not be a configuration validation error but rather an authentication error
         assertFalse(exception.getMessage().contains("client id is not configured"));
         assertFalse(exception.getMessage().contains("Please provide certificate path for authentication"));
     }
@@ -356,12 +348,10 @@ public class TestRangerAzureKeyVaultKeyGenerator {
         configuration.set("ranger.kms.azure.keyvault.certificate.path", VALID_CERT_PATH);
         configuration.set("ranger.kms.azure.keyvault.certificate.password", VALID_CERT_PASSWORD);
 
-        // This will fail because we don't have actual Azure credentials, but should not fail on validation
         Exception exception = assertThrows(Exception.class, () -> {
             RangerAzureKeyVaultKeyGenerator.createKeyVaultClient(configuration);
         });
 
-        // Should not be a configuration validation error
         assertFalse(exception.getMessage().contains("client id is not configured"));
         assertFalse(exception.getMessage().contains("Please provide certificate path for authentication"));
     }
@@ -370,7 +360,6 @@ public class TestRangerAzureKeyVaultKeyGenerator {
     public void testConfigurationValuesAreSetCorrectly() {
         setValidConfiguration();
 
-        // Test that constructor accepts and uses the configuration values
         assertDoesNotThrow(() -> {
             RangerAzureKeyVaultKeyGenerator generator = new RangerAzureKeyVaultKeyGenerator(configuration, null);
             assertNotNull(generator);

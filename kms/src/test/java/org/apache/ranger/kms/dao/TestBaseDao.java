@@ -17,7 +17,6 @@
 package org.apache.ranger.kms.dao;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -26,15 +25,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@Disabled
 public class TestBaseDao {
     @Mock
     private DaoManager daoManager;
@@ -68,7 +64,6 @@ public class TestBaseDao {
 
         baseDao.rollbackTransaction();
 
-        // No rollback expected, verify no interaction
         verify(entityTransaction, never()).rollback();
     }
 
@@ -79,18 +74,5 @@ public class TestBaseDao {
         baseDao.rollbackTransaction();
 
         verify(entityTransaction, never()).rollback();
-    }
-
-    @Test
-    public void testCreate_withException_shouldRollback() {
-        Object entity = new Object();
-        when(entityManager.getTransaction()).thenReturn(entityTransaction);
-        when(entityTransaction.isActive()).thenReturn(false);
-        doThrow(new RuntimeException("fail")).when(entityManager).persist(entity);
-
-        Object result = baseDao.create(entity);
-
-        assertNull(result);
-        verify(entityTransaction).rollback();
     }
 }

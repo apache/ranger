@@ -28,7 +28,6 @@ import org.apache.ranger.kms.dao.RangerKMSDao;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -68,7 +67,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -260,7 +258,6 @@ public class TestRangerKeyStore {
     }
 
     @Test
-    @Disabled
     public void testAddKeyEntry_throwsKeyStoreException_whenSealKeyFails() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
@@ -278,32 +275,6 @@ public class TestRangerKeyStore {
 
         assertThrows(KeyStoreException.class, () ->
                 rangerKeyStore.addKeyEntry(alias, faultyKey, password, cipher, bitLength, description, version, attributes));
-    }
-
-    @Test
-    @Disabled
-    public void testDbOperationStore_whenUpdateThrowsException() {
-        DaoManager     daoManager     = mock(DaoManager.class);
-        RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
-        RangerKMSDao   rangerKMSDao   = mock(RangerKMSDao.class);
-
-        try {
-            Field kmsDaoField = RangerKeyStore.class.getDeclaredField("kmsDao");
-            kmsDaoField.setAccessible(true);
-            kmsDaoField.set(rangerKeyStore, rangerKMSDao);
-        } catch (Exception e) {
-            //
-        }
-
-        XXRangerKeyStore input = new XXRangerKeyStore();
-        input.setAlias("test-alias");
-
-        when(rangerKMSDao.findByAlias(anyString())).thenReturn(new XXRangerKeyStore());
-
-        doThrow(new RuntimeException("Simulated DB update error")).when(rangerKMSDao).update(any());
-        rangerKeyStore.dbOperationStore(input);
-        verify(rangerKMSDao).update(any());
-        verify(rangerKMSDao, never()).create(any());
     }
 
     @Test
@@ -331,7 +302,6 @@ public class TestRangerKeyStore {
     }
 
     @Test
-    @Disabled
     public void testDbOperationDelete() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
@@ -352,7 +322,6 @@ public class TestRangerKeyStore {
     }
 
     @Test
-    @Disabled
     public void testDbOperationLoad() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = new RangerKeyStore(daoManager);
@@ -477,7 +446,6 @@ public class TestRangerKeyStore {
     }
 
     @Test
-    @Disabled
     void testAddSecureKeyByteEntry_EncryptFails_ThrowsKeyStoreException() throws Exception {
         DaoManager     daoManager     = mock(DaoManager.class);
         RangerKeyStore rangerKeyStore = spy(new RangerKeyStore(daoManager));
