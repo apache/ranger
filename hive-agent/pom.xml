@@ -345,6 +345,11 @@
             <version>${hadoop.version}</version>
             <scope>test</scope>
             <exclusions>
+                <!-- Exclude Jersey 1.x - project uses Jersey 2.x -->
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>jersey-guice</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty</artifactId>
