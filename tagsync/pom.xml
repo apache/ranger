@@ -513,4 +513,19 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>ban-legacy-dependencies</id>
+                        <phase>none</phase>
+                        <!-- Skip ban-legacy-dependencies check - this module requires Apache Atlas which uses Jersey 1.x -->
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

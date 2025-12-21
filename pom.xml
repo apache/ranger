@@ -614,6 +614,46 @@
                             </rules>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>ban-legacy-dependencies</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <!-- Ban JUnit 4 - project has migrated to JUnit 5 -->
+                                        <exclude>junit:junit:*:*:compile</exclude>
+                                        <exclude>junit:junit:*:*:runtime</exclude>
+                                        <exclude>junit:junit:*:*:provided</exclude>
+                                        <exclude>junit:junit-dep:*:*:compile</exclude>
+                                        <exclude>junit:junit-dep:*:*:runtime</exclude>
+                                        <exclude>junit:junit-dep:*:*:provided</exclude>
+
+                                        <!-- Ban Jersey 1.x - project has migrated to Jersey 2.x (Glassfish) -->
+                                        <exclude>com.sun.jersey:*:*:*:compile</exclude>
+                                        <exclude>com.sun.jersey:*:*:*:runtime</exclude>
+                                        <exclude>com.sun.jersey:*:*:*:provided</exclude>
+                                        <exclude>com.sun.jersey.contribs:*:*:*:compile</exclude>
+                                        <exclude>com.sun.jersey.contribs:*:*:*:runtime</exclude>
+                                        <exclude>com.sun.jersey.contribs:*:*:*:provided</exclude>
+                                    </excludes>
+                                    <searchTransitive>true</searchTransitive>
+                                    <message>❌ Banned dependencies detected!
+                                        
+                                        This project has migrated to:
+                                        - JUnit 5 (org.junit.jupiter:junit-jupiter) - NOT JUnit 4 (junit:junit)
+                                        - Jersey 2.x (org.glassfish.jersey.*) - NOT Jersey 1.x (com.sun.jersey:*)
+                                        
+                                        Test-scoped dependencies are allowed for compatibility with test infrastructure.
+                                        
+                                        Please update your dependencies accordingly.</message>
+                                </bannedDependencies>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
