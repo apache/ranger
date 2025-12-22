@@ -54,7 +54,7 @@ Ranger is built using [Apache Maven](https://maven.apache.org/). To run Ranger:
 
 ## Regular Build Process
 
-1. Check out the code from GIT repository
+1. Check out the code from GIT repository and make sure JAVA_HOME & PATH environment variables are properly set (JDK17).
 
 2. On the root folder, please execute the following Maven command:
 
@@ -120,6 +120,10 @@ Ranger is built using [Apache Maven](https://maven.apache.org/). To run Ranger:
 
 4. Modify the install.properties file with appropriate variables 
 
-5. - If the module has setup.sh, execute ./setup.sh
+5. - export/ set JAVA_OPTS environment variable.
+   ```
+   JAVA_OPTS="--add-opens=java.base/java.nio=ALL-UNNAMED --add-exports=java.base/sun.net.dns=ALL-UNNAMED --add-exports=java.base/sun.net.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-exports=java.xml.crypto/com.sun.org.apache.xml.internal.security.utils=ALL-UNNAMED"
+   ```
+   - If the module has setup.sh, execute ./setup.sh
    - If the install.sh file does not exists, execute ./enable-<component>-plugin.sh
 
