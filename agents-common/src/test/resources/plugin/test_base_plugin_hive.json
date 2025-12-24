@@ -406,9 +406,9 @@
       },
       "acls": {
         "userACLs": {
-          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
-          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
-          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id": 2001 } } },
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 110 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 201 } } },
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
           "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2001 } } },
           "ds2-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
           "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } },
@@ -425,8 +425,8 @@
       },
       "acls": {
         "userACLs": {
-          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
-          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 121 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 202 } } },
           "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
           "ds2-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
           "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } },

@@ -353,33 +353,34 @@ public class RangerResourceACLs {
         }
 
         @Override
-        public boolean equals(Object other) {
-            if (other == null) {
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            } else if (obj == null || getClass() != obj.getClass()) {
                 return false;
-            }
-
-            if (other instanceof AccessResult) {
-                AccessResult otherObject = (AccessResult) other;
-                return result == otherObject.result && isFinal == otherObject.isFinal;
             } else {
-                return false;
+                AccessResult other = (AccessResult) obj;
+
+                return result == other.result &&
+                        isFinal == other.isFinal &&
+                        policy == null ? other.policy == null : (other.policy != null && Objects.equals(policy.getId(), other.policy.getId()));
             }
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(result, isFinal); // policy is not relevant for equals() and hashCode()
+            return Objects.hash(result, isFinal, policy == null ? null : policy.getId());
         }
 
         @Override
         public String toString() {
             if (result == ACCESS_ALLOWED) {
-                return "ALLOWED, final=" + isFinal;
+                return "ALLOWED, final=" + isFinal + ", policyId=" + (policy != null ? policy.getId() : null);
             }
             if (result == ACCESS_DENIED) {
-                return "NOT_ALLOWED, final=" + isFinal;
+                return "NOT_ALLOWED, final=" + isFinal + ", policyId=" + (policy != null ? policy.getId() : null);
             }
-            return "CONDITIONAL_ALLOWED, final=" + isFinal;
+            return "CONDITIONAL_ALLOWED, final=" + isFinal + ", policyId=" + (policy != null ? policy.getId() : null);
         }
     }
 
@@ -395,6 +396,15 @@ public class RangerResourceACLs {
         private final Set<String>                  accessTypes;
         private final RangerPolicyItemDataMaskInfo maskInfo;
         private       boolean                      isConditional;
+
+        public DataMaskResult() {
+            this.users         = new HashSet<>();
+            this.groups        = new HashSet<>();
+            this.roles         = new HashSet<>();
+            this.accessTypes   = new HashSet<>();
+            this.maskInfo      = new RangerPolicyItemDataMaskInfo();
+            this.isConditional = false;
+        }
 
         public DataMaskResult(Set<String> users, Set<String> groups, Set<String> roles, Set<String> accessTypes, RangerPolicyItemDataMaskInfo maskInfo) {
             this.users       = users;
@@ -526,6 +536,15 @@ public class RangerResourceACLs {
         private final Set<String>                   accessTypes;
         private final RangerPolicyItemRowFilterInfo filterInfo;
         private       boolean                       isConditional;
+
+        public RowFilterResult() {
+            this.users         = new HashSet<>();
+            this.groups        = new HashSet<>();
+            this.roles         = new HashSet<>();
+            this.accessTypes   = new HashSet<>();
+            this.filterInfo    = new RangerPolicyItemRowFilterInfo();
+            this.isConditional = false;
+        }
 
         public RowFilterResult(Set<String> users, Set<String> groups, Set<String> roles, Set<String> accessTypes, RangerPolicyItemRowFilterInfo filterInfo) {
             this.users       = users;
