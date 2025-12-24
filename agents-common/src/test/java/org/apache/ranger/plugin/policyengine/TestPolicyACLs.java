@@ -39,6 +39,8 @@ import org.junit.jupiter.api.Test;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -145,11 +147,11 @@ public class TestPolicyACLs {
                 String                                                    name;
                 RangerAccessResource                                      resource;
                 ResourceMatchingScope                                     resourceMatchingScope;
-                Map<String, Map<String, RangerResourceACLs.AccessResult>> userPermissions;
-                Map<String, Map<String, RangerResourceACLs.AccessResult>> groupPermissions;
-                Map<String, Map<String, RangerResourceACLs.AccessResult>> rolePermissions;
-                List<RowFilterResult>                                     rowFilters;
-                List<DataMaskResult>                                      dataMasks;
+                Map<String, Map<String, RangerResourceACLs.AccessResult>> userPermissions  = new HashMap<>();
+                Map<String, Map<String, RangerResourceACLs.AccessResult>> groupPermissions = new HashMap<>();
+                Map<String, Map<String, RangerResourceACLs.AccessResult>> rolePermissions  = new HashMap<>();
+                List<RowFilterResult>                                     rowFilters       = new ArrayList<>();
+                List<DataMaskResult>                                      dataMasks        = new ArrayList<>();
             }
         }
     }

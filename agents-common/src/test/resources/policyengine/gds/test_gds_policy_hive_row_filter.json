@@ -332,10 +332,10 @@
       "request": { "resource": { "elements": { "database": "sales", "table": "prospects" } } },
       "acls": {
         "userACLs": {
-          "ds-user":    { "select": { "result": 1, "isFinal": true } },
-          "ds1-user":   { "select": { "result": 1, "isFinal": true } },
-          "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj1-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } }
         },
         "datasets": [ "dataset-1" ],
         "projects": [ "project-1" ]
@@ -346,10 +346,10 @@
       "request": { "resource": { "elements": { "database": "sales", "table": "orders" } } },
       "acls": {
         "userACLs": {
-          "ds-user":    { "select": { "result": 1, "isFinal": true } },
-          "ds1-user":   { "select": { "result": 1, "isFinal": true } },
-          "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj1-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } }
         },
         "datasets": [ "dataset-1" ],
         "projects": [ "project-1" ]
@@ -365,10 +365,10 @@
       "request": { "resource": { "elements": { "database": "sales", "table": "orders", "column": "created_time" } } },
       "acls": {
         "userACLs": {
-          "ds-user":    { "select": { "result": 1, "isFinal": true } },
-          "ds1-user":   { "select": { "result": 1, "isFinal": true } },
-          "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj1-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } }
         },
         "datasets": [ "dataset-1" ],
         "projects": [ "project-1" ]
@@ -384,11 +384,11 @@
       "request": { "resource": { "elements": { "database": "finance", "table": "invoices" } } },
       "acls": {
         "userACLs": {
-          "ds-user":    { "select": { "result": 1, "isFinal": true } },
-          "ds1-user":   { "select": { "result": 1, "isFinal": true } },
-          "ds2-user":   { "select": { "result": 1, "isFinal": true } },
-          "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj1-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id":  2002 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "ds2-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2002 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } }
         },
         "datasets": [ "dataset-1", "dataset-2" ],
         "projects": [ "project-1" ]
@@ -399,11 +399,11 @@
       "request": { "resource": { "elements": { "database": "finance", "table": "payments" } } },
       "acls": {
         "userACLs": {
-          "ds-user":    { "select": { "result": 1, "isFinal": true } },
-          "ds1-user":   { "select": { "result": 1, "isFinal": true } },
-          "ds2-user":   { "select": { "result": 1, "isFinal": true } },
-          "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj1-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id":  2002 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2001 } } },
+          "ds2-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2002 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } }
         },
         "datasets": [ "dataset-1", "dataset-2" ],
         "projects": [ "project-1" ]
@@ -419,10 +419,10 @@
       "request": { "resource": { "elements": { "database": "shipping", "table": "shipments" } } },
       "acls": {
         "userACLs": {
-          "ds-user":    { "select": { "result": 1, "isFinal": true } },
-          "ds2-user":   { "select": { "result": 1, "isFinal": true } },
-          "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj1-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id":  2002 } } },
+          "ds2-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2002 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3001 } } }
         },
         "datasets": [ "dataset-2" ],
         "projects": [ "project-1" ]
@@ -438,12 +438,12 @@
       "request": { "resource": { "elements": { "database": "customers", "table": "contact_info" } } },
       "acls": {
         "userACLs": {
-          "ds-user":    { "select": { "result": 1, "isFinal": true } },
-          "ds3-user":   { "select": { "result": 1, "isFinal": true } },
-          "ds6-user":   { "select": { "result": 1, "isFinal": true } },
-          "proj-user":  { "select": { "result": 1, "isFinal": true } },
-          "proj2-user": { "select": { "result": 1, "isFinal": true } },
-          "proj4-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id":  2003 } } },
+          "ds3-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2003 } } },
+          "ds6-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id":  2006 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  3002 } } },
+          "proj2-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3002 } } },
+          "proj4-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  3004 } } }
         },
         "datasets": [ "dataset-3", "dataset-6" ],
         "projects": [ "project-2", "project-4" ]
@@ -459,8 +459,8 @@
       "request": { "resource": { "elements": { "database": "operations", "table": "facilities" } } },
       "acls": {
         "userACLs": {
-          "ds-user":  { "select": { "result": 1, "isFinal": true } },
-          "ds4-user": { "select": { "result": 1, "isFinal": true } }
+          "ds-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id":  2004 } } },
+          "ds4-user": { "select": { "result": 1, "isFinal": true, "policy": { "id":  2004 } } }
         },
         "datasets": [ "dataset-4" ]
       }
