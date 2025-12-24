@@ -8,7 +8,7 @@
         "serviceDef": {
           "name": "hive", "id": 3,
           "resources": [
-            { "name": "database", "level": 1, "parewnt": "",        "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Hive Database", "description": "Hive Database" },
+            { "name": "database", "level": 1, "parent": "",         "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Hive Database", "description": "Hive Database" },
             { "name": "table",    "level": 2, "parent": "database", "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Hive Table",    "description": "Hive Table" },
             { "name": "udf",      "level": 2, "parent": "database", "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Hive UDF",      "description": "Hive UDF" },
             { "name": "column",   "level": 3, "parent": "table",    "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Hive Column",   "description": "Hive Column" }
