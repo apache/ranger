@@ -27,6 +27,8 @@ EOF
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh hive.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh hdfs.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
 fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
@@ -169,11 +171,11 @@ cp ${TEZ_HOME}/conf/tez-site.xml ${HIVE_HOME}/conf/
 
 # Upload Tez libraries to HDFS
 if [ "${KERBEROS_ENABLED}" == "true" ]; then
-    echo "Kerberos enabled - authenticating as hive user..."
-    su -c "kinit -kt /etc/keytabs/hive.keytab hive/\`hostname -f\`@EXAMPLE.COM" hive
+    echo "Kerberos enabled - authenticating as hdfs user..."
+    su -c "kinit -kt /etc/keytabs/hdfs.keytab hdfs/\`hostname -f\`@EXAMPLE.COM" hdfs
     rc=$?
     if [ $rc -ne 0 ]; then
-      echo "ERROR: kinit failed for hive principal (exit code=$rc)" >&2
+      echo "ERROR: kinit failed for hdfs principal (exit code=$rc)" >&2
       exit $rc
     fi
 
@@ -183,7 +185,7 @@ if [ "${KERBEROS_ENABLED}" == "true" ]; then
     rebuild_tez_tarball
 
     # Create hdfs directories and files for hive and tez
-    create_hdfs_directories_and_files 'hive'
+    create_hdfs_directories_and_files 'hdfs'
 
     su -c "kdestroy" hive
 else
