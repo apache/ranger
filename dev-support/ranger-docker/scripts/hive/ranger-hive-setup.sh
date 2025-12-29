@@ -187,7 +187,7 @@ if [ "${KERBEROS_ENABLED}" == "true" ]; then
     # Create hdfs directories and files for hive and tez
     create_hdfs_directories_and_files 'hdfs'
 
-    su -c "kdestroy" hive
+    su -c "kdestroy" hdfs
 else
     # Non-Kerberos mode - use hdfs user
     su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" hdfs
