@@ -241,6 +241,8 @@ function UserForm(props) {
           isEditView && userInfo && isExternalOrFederatedUser ? true : false
         }
         styles={selectInputCustomStyles}
+        tabSelectsValue={false}
+        placeholder="Select Groups"
       />
     );
   };
@@ -710,6 +712,7 @@ function UserForm(props) {
                         options={userRoleListData()}
                         onChange={(e) => getUserRole(e, input)}
                         isDisabled={disabledUserRoleField()}
+                        tabSelectsValue={false}
                       ></Select>
                     )}
                   ></Field>

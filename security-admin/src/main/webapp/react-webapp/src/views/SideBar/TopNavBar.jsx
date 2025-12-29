@@ -204,6 +204,7 @@ export const TopNavBar = (props) => {
           menuPlacement="auto"
           placeholder="Select Service Name"
           hideSelectedOptions
+          tabSelectsValue={false}
         />
         {!isKMSRole && (
           <React.Fragment>
@@ -221,6 +222,7 @@ export const TopNavBar = (props) => {
               placeholder="Select Zone Name"
               isClearable
               hideSelectedOptions
+              tabSelectsValue={false}
             />
           </React.Fragment>
         )}

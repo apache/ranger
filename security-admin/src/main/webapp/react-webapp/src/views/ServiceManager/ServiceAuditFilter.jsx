@@ -429,6 +429,7 @@ export default function ServiceAuditFilter(props) {
                                   isMulti
                                   styles={selectInputCustomStyles}
                                   placeholder="Select Roles"
+                                  tabSelectsValue={false}
                                 />
                               </div>
                             )}
@@ -469,6 +470,7 @@ export default function ServiceAuditFilter(props) {
                                   isMulti
                                   styles={selectInputCustomStyles}
                                   placeholder="Select Groups"
+                                  tabSelectsValue={false}
                                 />
                               </div>
                             )}
@@ -509,6 +511,7 @@ export default function ServiceAuditFilter(props) {
                                   isMulti
                                   styles={selectInputCustomStyles}
                                   placeholder="Select Users"
+                                  tabSelectsValue={false}
                                 />
                               </div>
                             )}

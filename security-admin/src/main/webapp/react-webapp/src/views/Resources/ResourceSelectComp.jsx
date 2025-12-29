@@ -216,6 +216,20 @@ export default function ResourceSelectComp(props) {
             filterOption={customFilterOptions}
             isLoading={isLoading}
             styles={selectInputCustomStyles}
+            formatCreateLabel={(inputValue) => `Create "${inputValue.trim()}"`}
+            onCreateOption={(inputValue) => {
+              const trimmedValue = inputValue.trim();
+              if (trimmedValue) {
+                const newOption = { label: trimmedValue, value: trimmedValue };
+                const currentValue = input.value || [];
+                const newValue = isArray(currentValue)
+                  ? [...currentValue, newOption]
+                  : [newOption];
+                input.onChange(newValue);
+              }
+            }}
+            tabSelectsValue={false}
+            placeholder="Add policy Resources"
           />
           {formValues &&
             formValues[`resourceName-${levelKey}`]?.mandatory &&
