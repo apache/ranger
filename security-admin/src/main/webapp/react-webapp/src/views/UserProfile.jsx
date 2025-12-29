@@ -23,7 +23,11 @@ import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
 import { getUserProfile, setUserProfile } from "Utils/appState";
 import { isSystemAdmin, isKeyAdmin, InfoIcon } from "Utils/XAUtils";
-import { BlockUi, scrollToError } from "../components/CommonComponents";
+import {
+  BlockUi,
+  scrollToError,
+  trimInputValue
+} from "Components/CommonComponents";
 import withRouter from "Hooks/withRouter";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
 import { cloneDeep, has, isEmpty } from "lodash";
@@ -102,7 +106,7 @@ class UserProfile extends Component {
         (error?.response?.data?.msgDesc == "serverMsg.userMgrOldPassword" ||
           error?.response?.data?.msgDesc == "serverMsg.userMgrNewPassword")
       ) {
-        toast.error("Error occured while updating user password!");
+        toast.error("Error occurred while updating user password!");
       }
       console.error(`Error occurred while updating user password! ${error}`);
     }
@@ -218,8 +222,8 @@ class UserProfile extends Component {
                     onSubmit={this.updateUserInfo}
                     validate={this.validateUserForm}
                     initialValues={{
-                      firstName: userProps.firstName,
-                      lastName: userProps.lastName,
+                      firstName: userProps?.firstName?.trim(),
+                      lastName: userProps?.lastName?.trim(),
                       emailAddress: userProps.emailAddress,
                       userRoleList: userProps.userRoleList[0]
                     }}
@@ -263,6 +267,7 @@ class UserProfile extends Component {
                                   }
                                   disabled={isUserAllowed}
                                   data-cy="firstName"
+                                  onBlur={(e) => trimInputValue(e, input)}
                                 />
                                 <InfoIcon
                                   css="input-box-info-icon"
@@ -306,6 +311,7 @@ class UserProfile extends Component {
                                   }
                                   disabled={isUserAllowed}
                                   data-cy="lastName"
+                                  onBlur={(e) => trimInputValue(e, input)}
                                 />
                                 <InfoIcon
                                   css="input-box-info-icon"
@@ -355,7 +361,7 @@ class UserProfile extends Component {
                                   position="right"
                                   message={
                                     RegexMessage.MESSAGE
-                                      .emailvalidationinfomessage
+                                      .emailValidationInfoMessage
                                   }
                                 />
                                 {meta.error && meta.touched && (

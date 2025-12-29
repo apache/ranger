@@ -93,7 +93,7 @@ export default function ResourceSelectComp(props) {
         toastId.current = toast.error(error.response.data.msgDesc);
       } else {
         toastId.current = toast.error(
-          "Resouce lookup failed for current resource"
+          "Resource lookup failed for current resource"
         );
       }
     }
