@@ -126,6 +126,9 @@
                     <include>org.apache.orc:orc-core:jar:${orc.version}</include>
                     <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
                     <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+                    <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+                    <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
+                    <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
                 </includes>
             </binaries>
         </moduleSet>

@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -322,21 +323,33 @@ public class TagAdminRESTSink implements TagSink, Runnable {
                     sessionId = null; // Clear session on unauthorized
                     isValidRangerCookie = false;
                 } else if (response.getStatus() == HttpServletResponse.SC_OK || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
-                    List<NewCookie> respCookieList = new ArrayList<>();
-                    response.getHeaders().get("Set-Cookie").forEach(headerValue -> {
-                        if (headerValue.toString().contains(rangerAdminCookieName)) {
-                            respCookieList.add(NewCookie.valueOf(headerValue.toString()));
-                        }
-                    });
+                    Cookie                 newCookie = null;
+                    Map<String, NewCookie> cookieMap = response.getCookies();
+                    if (cookieMap != null && cookieMap.containsKey(rangerAdminCookieName)) {
+                        newCookie = cookieMap.get(rangerAdminCookieName);
+                    }
 
-                    // save cookie received from credentials session login
-                    for (NewCookie cookie : respCookieList) {
-                        if (cookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
-                            sessionId           = cookie.toCookie();
-                            isValidRangerCookie = true;
-                            break;
-                        } else {
-                            isValidRangerCookie = false;
+                    if (sessionId == null || newCookie != null) {
+                        sessionId = newCookie;
+                        isValidRangerCookie = true;
+                    } else {
+                        if (response.getHeaders().get("Set-Cookie") != null) {
+                            List<NewCookie> respCookieList = new ArrayList<>();
+                            response.getHeaders().get("Set-Cookie").forEach(headerValue -> {
+                                if (headerValue.toString().contains(rangerAdminCookieName)) {
+                                    respCookieList.add(NewCookie.valueOf(headerValue.toString()));
+                                }
+                            });
+                            // save cookie received from credentials session login
+                            for (NewCookie cookie : respCookieList) {
+                                if (cookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
+                                    sessionId           = cookie.toCookie();
+                                    isValidRangerCookie = true;
+                                    break;
+                                } else {
+                                    isValidRangerCookie = false;
+                                }
+                            }
                         }
                     }
                 }
@@ -365,21 +378,34 @@ public class TagAdminRESTSink implements TagSink, Runnable {
                 sessionId = null;
                 isValidRangerCookie = false;
             } else if (response.getStatus() == HttpServletResponse.SC_NO_CONTENT || response.getStatus() == HttpServletResponse.SC_OK) {
-                List<NewCookie> respCookieList = new ArrayList<>();
-                response.getHeaders().get("Set-Cookie").forEach(headerValue -> {
-                    if (headerValue.toString().contains(rangerAdminCookieName)) {
-                        respCookieList.add(NewCookie.valueOf(headerValue.toString()));
-                    }
-                });
+                Cookie                 newCookie = null;
+                Map<String, NewCookie> cookieMap = response.getCookies();
+                if (cookieMap != null && cookieMap.containsKey(rangerAdminCookieName)) {
+                    newCookie = cookieMap.get(rangerAdminCookieName);
+                }
 
-                for (NewCookie respCookie : respCookieList) {
-                    if (respCookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
-                        if (!(sessionId.getValue().equalsIgnoreCase(respCookie.toCookie().getValue()))) {
-                            sessionId = respCookie.toCookie();
+                if (sessionId == null || newCookie != null) {
+                    sessionId = newCookie;
+                    isValidRangerCookie = true;
+                } else {
+                    if (response.getHeaders().get("Set-Cookie") != null) {
+                        List<NewCookie> respCookieList = new ArrayList<>();
+                        response.getHeaders().get("Set-Cookie").forEach(headerValue -> {
+                            if (headerValue.toString().contains(rangerAdminCookieName)) {
+                                respCookieList.add(NewCookie.valueOf(headerValue.toString()));
+                            }
+                        });
+                        // save cookie received from credentials session login
+                        for (NewCookie respCookie : respCookieList) {
+                            if (respCookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
+                                if (!(sessionId.getValue().equalsIgnoreCase(respCookie.toCookie().getValue()))) {
+                                    sessionId = respCookie.toCookie();
+                                }
+
+                                isValidRangerCookie = true;
+                                break;
+                            }
                         }
-
-                        isValidRangerCookie = true;
-                        break;
                     }
                 }
             } else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
