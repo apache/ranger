@@ -27,7 +27,7 @@ define(function(require){
         var SessionMgr  = require('mgrs/SessionMgr');
         var XAUtil = require('utils/XAUtils');
         var App    =require('App');
-	require('jquery.cookie');
+
 	var TopNav = Backbone.Marionette.ItemView.extend(
 	/** @lends TopNav */
 	{
@@ -80,8 +80,7 @@ define(function(require){
 				that.$('ul li').removeClass('active');
 				that.$('ul li:first').addClass('active');
 			});
-			$.cookie('clientTimeOffset', new Date().getTimezoneOffset());
-			
+			document.cookie = "clientTimeOffset=" + new Date().getTimezoneOffset();
 			//To hide top menu when user don't have access to all it's sub menu's
 			_.each($(this.$el.find('.page-nav ul')), function(ul) {
 				if($(ul).find('li').length <= 0){
