@@ -92,6 +92,8 @@ function create_keytabs() {
   create_principal_and_keytab hbase ranger-hbase
 
   create_principal_and_keytab hive ranger-hive
+  create_principal_and_keytab hdfs ranger-hive
+  create_principal_and_keytab HTTP ranger-hive
 
   create_principal_and_keytab kafka ranger-kafka
 

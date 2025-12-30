@@ -21,6 +21,12 @@ hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
                                   'policy.download.auth.users': 'hdfs',
                                   'tag.download.auth.users': 'hdfs',
                                   'userstore.download.auth.users': 'hdfs',
+                                  'setup.additional.default.policies': 'true',
+                                  'default-policy.1.name': 'hive-tez-path',
+                                  'default-policy.1.resource.path': '/apps/tez,/tmp/hive',
+                                  'default-policy.1.resource.path.is-recursive': 'true',
+                                  'default-policy.1.policyItem.1.users': 'hive',
+                                  'default-policy.1.policyItem.1.accessTypes': 'read,write,execute',
                                   'ranger.plugin.hdfs.policy.refresh.synchronous':'true'}})
 
 hive = RangerService({'name': 'dev_hive', 'type': 'hive',

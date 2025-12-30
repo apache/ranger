@@ -27,6 +27,8 @@ EOF
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh hive.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh hdfs.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
 fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
@@ -128,6 +130,34 @@ cat <<EOF > ${TEZ_HOME}/conf/tez-site.xml
 </configuration>
 EOF
 
+rebuild_tez_tarball() {
+  if [ ! -f "/opt/apache-tez-${TEZ_VERSION}-bin.tar.gz" ]; then
+    echo "Recreating Tez tarball for HDFS upload..."
+    tar -C /opt -czf /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz apache-tez-${TEZ_VERSION}-bin/
+  fi
+}
+
+create_hdfs_directories_and_files() {
+  exec_user=$1
+
+  # prepare tez directories and files in hdfs folders
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -put -f /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz /apps/tez/" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 755 /apps/tez" "$exec_user"
+
+  # Create HDFS user directory for hive
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 770 /user/hive" "$exec_user"
+
+  # Create HDFS /tmp/hive directory for Tez staging
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 770 /tmp/hive" "$exec_user"
+
+  # Create /user/root directory for YARN job execution
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 770 /user/root" "$exec_user"
+}
+
 # Copy Tez JARs to Hive lib directory
 cp ${TEZ_HOME}/lib/tez-*.jar ${HIVE_HOME}/lib/
 cp ${TEZ_HOME}/tez-*.jar ${HIVE_HOME}/lib/
@@ -139,32 +169,34 @@ cp ${HADOOP_HOME}/etc/hadoop/yarn-site.xml ${HIVE_HOME}/conf/
 cp ${TEZ_HOME}/conf/tez-site.xml ${HIVE_HOME}/conf/
 
 # Upload Tez libraries to HDFS
-su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" hdfs
+if [ "${KERBEROS_ENABLED}" == "true" ]; then
+    echo "Kerberos enabled - authenticating as hdfs user..."
+    su -c "kinit -kt /etc/keytabs/hdfs.keytab hdfs/\`hostname -f\`@EXAMPLE.COM" hdfs
+    rc=$?
+    if [ $rc -ne 0 ]; then
+      echo "ERROR: kinit failed for hdfs principal (exit code=$rc)" >&2
+      exit $rc
+    fi
 
-# Recreate Tez tarball if it doesn't exist (it gets removed during Docker build)
-if [ ! -f "/opt/apache-tez-${TEZ_VERSION}-bin.tar.gz" ]; then
-    echo "Recreating Tez tarball for HDFS upload..."
-    cd /opt
-    tar czf apache-tez-${TEZ_VERSION}-bin.tar.gz apache-tez-${TEZ_VERSION}-bin/
+    echo "kinit successful, proceeding operations as hive user"
+
+    # Recreate Tez tarball if it doesn't exist
+    rebuild_tez_tarball
+
+    # Create hdfs directories and files for hive and tez
+    create_hdfs_directories_and_files 'hdfs'
+
+    su -c "kdestroy" hdfs
+else
+    # Non-Kerberos mode - use hdfs user
+    su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /apps/tez" hdfs
+
+    # Recreate Tez tarball if it doesn't exist (it gets removed during Docker build)
+    rebuild_tez_tarball
+
+    # Create hdfs directories and files for hive and tez
+    create_hdfs_directories_and_files 'hdfs'
 fi
-
-su -c "${HADOOP_HOME}/bin/hdfs dfs -put /opt/apache-tez-${TEZ_VERSION}-bin.tar.gz /apps/tez/" hdfs
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 755 /apps/tez" hdfs
-
-# Create HDFS user directory for hive
-su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" hdfs
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" hdfs
-
-# Create HDFS /tmp/hive directory for Tez staging
-su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" hdfs
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /tmp/hive" hdfs
-
-# Fix /tmp directory permissions for Ranger (critical for INSERT operations)
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp" hdfs
-
-# Create /user/root directory for YARN job execution
-su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" hdfs
-su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" hdfs
 
 # Initialize Hive schema
 su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema" hive
