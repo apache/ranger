@@ -300,64 +300,46 @@ public class RoleDBStore implements RoleStore {
     }
 
     public RangerRoleList getRoles(SearchFilter filter, RangerRoleList rangerRoleList) throws Exception {
-    	List<RangerRole> roles = new ArrayList<RangerRole>();
-    	List<XXRole> xxRoles = (List<XXRole>)roleService.searchResources(filter, roleService.searchFields, roleService.sortFields, rangerRoleList);
+        List<RangerRole> roles = getRoles(filter);
 
-    	if (CollectionUtils.isNotEmpty(xxRoles)) {
-    		for (XXRole xxRole : xxRoles) {
-    			roles.add(roleService.read(xxRole.getId()));
-    		}
-    	}
+        setPaginatedResult(roles, filter, rangerRoleList);
 
-    	rangerRoleList.setRoleList(roles);
-    	return rangerRoleList;
+        return rangerRoleList;
     }
 
     public RangerRoleList getRolesForUser(SearchFilter filter, RangerRoleList rangerRoleList) throws Exception {
-		List<RangerRole> roles = new ArrayList<RangerRole>();
-		List<XXRole> xxRoles = null;
-		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (filter == null) {
+			filter = new SearchFilter();
+		}
+
+		List<RangerRole> roles;
+		UserSessionBase  userSession = ContextUtil.getCurrentUserSession();
+
 		if (userSession != null && userSession.getUserRoleList().size() == 1
 				&& userSession.getUserRoleList().contains(RangerConstants.ROLE_USER)
 				&& userSession.getLoginId() != null) {
-			VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
-			xxRoles = daoMgr.getXXRole().findByUserId(loggedInVXUser.getId());
+			VXUser       loggedInVXUser = xUserService.getXUserByUserName(userSession.getLoginId());
+			List<XXRole> xxRoles        = daoMgr.getXXRole().findByUserId(loggedInVXUser.getId());
+
+			roles = new ArrayList<>();
 
 			if (CollectionUtils.isNotEmpty(xxRoles)) {
 				for (XXRole xxRole : xxRoles) {
 					roles.add(roleService.read(xxRole.getId()));
 				}
 			}
-			if (predicateUtil != null && filter != null && !filter.isEmpty()) {
-                List<RangerRole> copy = new ArrayList<>(roles);
 
-                predicateUtil.applyFilter(copy, filter);
-                roles = copy;
-            }
-			int totalCount = roles.size();
-			int startIndex = filter.getStartIndex();
-			int pageSize = filter.getMaxRows();
-			int toIndex = Math.min(startIndex + pageSize, totalCount);
-			if (CollectionUtils.isNotEmpty(roles)) {
-				roles = roles.subList(startIndex, toIndex);
-				rangerRoleList.setResultSize(roles.size());
-				rangerRoleList.setPageSize(filter.getMaxRows());
-				rangerRoleList.setSortBy(filter.getSortBy());
-				rangerRoleList.setSortType(filter.getSortType());
-				rangerRoleList.setStartIndex(filter.getStartIndex());
-				rangerRoleList.setTotalCount(totalCount);
+			if (predicateUtil != null && !filter.isEmpty()) {
+				List<RangerRole> copy = new ArrayList<>(roles);
+
+				predicateUtil.applyFilter(copy, filter);
+				roles = copy;
 			}
 		} else {
-			xxRoles = (List<XXRole>) roleService.searchResources(filter, roleService.searchFields,
-					roleService.sortFields, rangerRoleList);
-
-			if (CollectionUtils.isNotEmpty(xxRoles)) {
-				for (XXRole xxRole : xxRoles) {
-					roles.add(roleService.read(xxRole.getId()));
-				}
-			}
+			roles = getRoles(filter);
 		}
-		rangerRoleList.setRoleList(roles);
+
+		setPaginatedResult(roles, filter, rangerRoleList);
 
 		return rangerRoleList;
 	}
@@ -476,6 +458,27 @@ public class RoleDBStore implements RoleStore {
         XXRole role = daoMgr.getXXRole().findByRoleName(name);
         return role != null;
     }
+
+    private void setPaginatedResult(List<RangerRole> roles, SearchFilter filter, RangerRoleList result) {
+        int totalCount = roles.size();
+        int startIndex = filter.getStartIndex();
+        int pageSize   = filter.getMaxRows();
+        int toIndex    = Math.min(startIndex + pageSize, totalCount);
+
+        if (CollectionUtils.isNotEmpty(roles)) {
+            roles = roles.subList(startIndex, toIndex);
+
+            result.setResultSize(roles.size());
+            result.setPageSize(filter.getMaxRows());
+            result.setSortBy(filter.getSortBy());
+            result.setSortType(filter.getSortType());
+            result.setStartIndex(filter.getStartIndex());
+            result.setTotalCount(totalCount);
+        }
+
+        result.setRoleList(roles);
+    }
+
     
     public static class RoleVersionUpdater implements Runnable {
 

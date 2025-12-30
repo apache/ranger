@@ -145,16 +145,18 @@ public class TestRoleDBStore {
 
     @Test
     public void testGetRolesBySearchFilter() throws Exception {
-        RangerRole     rangerRole     = getRangerRole();
-        RangerRoleList rangerRoleList = new RangerRoleList(Collections.singletonList(rangerRole));
-        XXRole         xxRole         = getTestRole();
-        List<XXRole>   xxRoles        = Collections.singletonList(xxRole);
-        SearchFilter   searchFilter   = new SearchFilter();
+	XXRoleDao    xxRoleDao    = Mockito.mock(XXRoleDao.class);
+        XXRole       xxRole       = getTestRole();
+        List<XXRole> xxRoles      = Collections.singletonList(xxRole);
+        SearchFilter searchFilter = new SearchFilter();
+        RangerRole   rangerRole   = getRangerRole();
 
-        Mockito.when(roleService.searchResources(searchFilter, roleService.searchFields, roleService.sortFields , rangerRoleList)).thenReturn(xxRoles);
+
+	Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.getAll()).thenReturn(xxRoles);
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
 
-        RangerRoleList rangerRoleListInDB = roleDBStore.getRoles(searchFilter, rangerRoleList);
+        RangerRoleList rangerRoleListInDB = roleDBStore.getRoles(searchFilter, new RangerRoleList());
 
         Assert.assertNotNull(rangerRoleListInDB);
         Assert.assertEquals(1, rangerRoleListInDB.getList().size());
@@ -162,13 +164,15 @@ public class TestRoleDBStore {
 
     @Test
     public void testGetRolesForUser_WithoutUserSession() throws Exception {
-        RangerRole     rangerRole     = getRangerRole();
-        RangerRoleList rangerRoleList = new RangerRoleList(Collections.singletonList(rangerRole));
+	RangerRole     rangerRole     = getRangerRole();
+        RangerRoleList rangerRoleList = new RangerRoleList();
         XXRole         xxRole         = getTestRole();
         List<XXRole>   xxRoles        = Collections.singletonList(xxRole);
         SearchFilter   searchFilter   = new SearchFilter();
+        XXRoleDao      xxRoleDao      = Mockito.mock(XXRoleDao.class);
 
-        Mockito.when(roleService.searchResources(searchFilter, roleService.searchFields, roleService.sortFields , rangerRoleList)).thenReturn(xxRoles);
+        Mockito.when(daoMgr.getXXRole()).thenReturn(xxRoleDao);
+        Mockito.when(xxRoleDao.getAll()).thenReturn(xxRoles);
         Mockito.when(roleService.read(xxRole.getId())).thenReturn(rangerRole);
 
         RangerContextHolder.setSecurityContext(null);
