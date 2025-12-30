@@ -147,16 +147,15 @@ create_hdfs_directories_and_files() {
 
   # Create HDFS user directory for hive
   su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive" "$exec_user"
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 777 /user/hive" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 770 /user/hive" "$exec_user"
 
   # Create HDFS /tmp/hive directory for Tez staging
   su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive" "$exec_user"
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 1777 /tmp/hive" "$exec_user"
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 1777 /tmp" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod -R 770 /tmp/hive" "$exec_user"
 
   # Create /user/root directory for YARN job execution
   su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/root" "$exec_user"
-  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /user/root" "$exec_user"
+  su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod 770 /user/root" "$exec_user"
 }
 
 # Copy Tez JARs to Hive lib directory
