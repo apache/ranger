@@ -149,8 +149,8 @@
       },
       "acls": {
         "userACLs": {
-          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
-          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } }
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 110 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 201 } } }
         }
       }
     },
@@ -161,8 +161,8 @@
       },
       "acls": {
         "userACLs": {
-          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
-          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } }
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 121 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 202 } } }
         }
       }
     },

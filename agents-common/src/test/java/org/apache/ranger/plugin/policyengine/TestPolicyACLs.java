@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -43,8 +45,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class TestPolicyACLs {
@@ -142,18 +144,18 @@ public class TestPolicyACLs {
 			String               name;
 			ServicePolicies      servicePolicies;
 			List<OneTest>        tests;
+        }
 
-			class OneTest {
-				String               name;
-				RangerAccessResource resource;
-				ResourceMatchingScope resourceMatchingScope;
-				Map<String, Map<String, RangerResourceACLs.AccessResult>> userPermissions;
-				Map<String, Map<String, RangerResourceACLs.AccessResult>> groupPermissions;
-				Map<String, Map<String, RangerResourceACLs.AccessResult>> rolePermissions;
-				List<RowFilterResult>                                     rowFilters;
-				List<DataMaskResult>                                      dataMasks;
-			}
-		}
+        static class OneTest {
+            String                                                    name;
+            RangerAccessResource                                      resource;
+            ResourceMatchingScope                                     resourceMatchingScope;
+            Map<String, Map<String, RangerResourceACLs.AccessResult>> userPermissions  = new HashMap<>();
+            Map<String, Map<String, RangerResourceACLs.AccessResult>> groupPermissions = new HashMap<>();
+            Map<String, Map<String, RangerResourceACLs.AccessResult>> rolePermissions  = new HashMap<>();
+            List<RowFilterResult>                                     rowFilters       = new ArrayList<>();
+            List<DataMaskResult>                                      dataMasks        = new ArrayList<>();
+        }
 	}
 
 	static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
