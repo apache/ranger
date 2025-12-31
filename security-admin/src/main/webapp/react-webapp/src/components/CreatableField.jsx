@@ -52,8 +52,8 @@ const CreatableField = (props) => {
   };
 
   const createOption = (label) => ({
-    value: label,
-    label: label
+    value: label.trim(),
+    label: label.trim()
   });
 
   const handleInputChange = (value) => {

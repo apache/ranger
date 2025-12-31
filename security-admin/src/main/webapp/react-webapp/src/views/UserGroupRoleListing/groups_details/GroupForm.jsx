@@ -27,6 +27,7 @@ import {
   Loader,
   scrollToError,
   CustomTooltip,
+  trimInputValue,
   BlockUi
 } from "Components/CommonComponents";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
@@ -42,7 +43,7 @@ const INITIAL_STATE = {
   blockUI: false
 };
 
-const PromtDialog = (props) => {
+const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
   return null;
@@ -210,7 +211,7 @@ function GroupForm() {
     if (params?.groupID) {
       if (Object.keys(groupInfo).length > 0) {
         formValueObj.name = groupInfo.name;
-        formValueObj.description = groupInfo.description;
+        formValueObj.description = groupInfo?.description?.trim();
       }
     }
     return formValueObj;
@@ -263,7 +264,7 @@ function GroupForm() {
             dirty
           }) => (
             <div className="wrap user-role-grp-form">
-              <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
+              <PromptDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
               <form
                 onSubmit={(event) => {
                   handleSubmit(event);
@@ -300,6 +301,7 @@ function GroupForm() {
                               : false
                           }
                           data-cy="name"
+                          onBlur={(e) => trimInputValue(e, input)}
                         />
                         <span className="input-box-info-icon">
                           <CustomTooltip
@@ -349,6 +351,7 @@ function GroupForm() {
                           }
                           id="description"
                           data-cy="description"
+                          onBlur={(e) => trimInputValue(e, input)}
                         />
                       </Col>
                     </Row>
