@@ -110,11 +110,9 @@ public class RangerRESTClient {
         mUrl               = url;
         mSslConfigFileName = sslConfigFileName;
         configuredURLs     = StringUtil.getURLs(mUrl);
-        if (StringUtil.isEmpty(url)) {
-            throw new IllegalArgumentException("Ranger URL is null or empty. Likely caused by incorrect configuration");
-        } else {
-            setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
-        }
+
+        setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
+
         init(config);
     }
 
