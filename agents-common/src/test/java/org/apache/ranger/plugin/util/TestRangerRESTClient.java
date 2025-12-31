@@ -22,8 +22,11 @@ package org.apache.ranger.plugin.util;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRangerRESTClient {
     private static final String SERVICE_TYPE = "hive";
@@ -34,8 +37,8 @@ public class TestRangerRESTClient {
     @Test
     public void testPluginInit_WithNoUrl_ThrowsException() {
         RangerBasePlugin plugin = new RangerBasePlugin(SERVICE_TYPE, SERVICE_NAME, APP_ID);
-        IllegalArgumentException exception = Assert.assertThrows(IllegalArgumentException.class, plugin::init);
-        Assert.assertTrue(exception.getMessage().contains(ERR_MESSAGE));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, plugin::init);
+        assertTrue(exception.getMessage().contains(ERR_MESSAGE));
     }
 
     @Test
@@ -45,6 +48,6 @@ public class TestRangerRESTClient {
         pluginConfig.set("ranger.plugin.hive.policy.rest.url", "http://dummy:1234");
         RangerBasePlugin plugin = new RangerBasePlugin(pluginConfig);
         plugin.init();
-        Assert.assertNotNull("RangerBasePlugin should be initialized successfully", plugin);
+        assertNotNull(plugin, "RangerBasePlugin should be initialized successfully");
     }
 }
