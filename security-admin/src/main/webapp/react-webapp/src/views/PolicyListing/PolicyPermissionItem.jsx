@@ -371,6 +371,8 @@ export default function PolicyPermissionItem(props) {
                                       styles={customStyles}
                                       cacheOptions
                                       isMulti
+                                      tabSelectsValue={false}
+                                      placeholder="Select Roles"
                                     />
                                   </div>
                                 )}
@@ -402,6 +404,8 @@ export default function PolicyPermissionItem(props) {
                                       styles={customStyles}
                                       cacheOptions
                                       isMulti
+                                      tabSelectsValue={false}
+                                      placeholder="Select Groups"
                                     />
                                   </div>
                                 )}
@@ -433,6 +437,8 @@ export default function PolicyPermissionItem(props) {
                                       styles={customStyles}
                                       cacheOptions
                                       isMulti
+                                      tabSelectsValue={false}
+                                      placeholder="Select Users"
                                     />
                                   </div>
                                 )}

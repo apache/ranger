@@ -1393,6 +1393,25 @@ export default function AddUpdatePolicyForm() {
                                   }}
                                   defaultOptions={defaultPolicyLabelOptions}
                                   styles={selectInputCustomStyles}
+                                  // Add this prop to trim the visual "Create" label
+                                  formatCreateLabel={(inputValue) =>
+                                    `Create "${inputValue.trim()}"`
+                                  }
+                                  // Add this prop to trim the value when a tag is created
+                                  onCreateOption={(inputValue) => {
+                                    const policyLabelVal = inputValue.trim();
+                                    if (policyLabelVal) {
+                                      input.onChange([
+                                        ...input.value,
+                                        {
+                                          label: policyLabelVal,
+                                          value: policyLabelVal
+                                        }
+                                      ]);
+                                    }
+                                  }}
+                                  tabSelectsValue={false}
+                                  placeholder="Add Policy Labels"
                                 />
                               </Col>
                             </FormB.Group>

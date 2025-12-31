@@ -984,16 +984,12 @@ class ServiceForm extends Component {
         undefined
       );
 
-  SelectField = ({ input, ...rest }) => (
-    <Select {...input} {...rest} searchable />
-  );
-
   AsyncSelectField = ({ input, ...rest }) => (
-    <AsyncSelect {...input} {...rest} cacheOptions />
+    <AsyncSelect {...input} {...rest} cacheOptions tabSelectsValue={false} />
   );
 
   AsyncCreatableSelectField = ({ input, ...rest }) => (
-    <AsyncCreatableSelect {...input} {...rest} />
+    <AsyncCreatableSelect {...input} {...rest} tabSelectsValue={false} />
   );
 
   fetchUsers = async (inputValue) => {

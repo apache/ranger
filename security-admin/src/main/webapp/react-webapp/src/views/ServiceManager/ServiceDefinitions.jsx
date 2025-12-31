@@ -412,6 +412,7 @@ class ServiceDefinitions extends Component {
                   })}
                   menuPlacement="auto"
                   placeholder="Select Zone Name"
+                  tabSelectsValue={false}
                 />
               </div>
             )}
