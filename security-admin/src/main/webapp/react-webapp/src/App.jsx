@@ -21,7 +21,12 @@ import React, { Suspense, lazy, Component } from "react";
 import { Route, Routes, HashRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import axios from "axios";
-import { hasAccessToTab, isUser } from "Utils/XAUtils";
+import {
+  hasAccessToTab,
+  isUser,
+  isSystemAdmin,
+  isAuditor
+} from "Utils/XAUtils";
 import ErrorBoundary from "Views/ErrorBoundary";
 import ErrorPage from "Views/ErrorPage";
 import { CommonScrollButton, Loader } from "Components/CommonComponents";
@@ -214,15 +219,17 @@ export default class App extends Component {
       );
     }
 
-    try {
-      let resp = await fetchApi({
-        url: `plugins/definitions/name/gds`
-      });
-      gdsServiceDef = resp.data;
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching GDS Service Definition or CSRF headers! ${error}`
-      );
+    if (isUser() || isSystemAdmin() || isAuditor()) {
+      try {
+        let resp = await fetchApi({
+          url: `plugins/definitions/name/gds`
+        });
+        gdsServiceDef = resp.data;
+      } catch (error) {
+        console.error(
+          `Error occurred while fetching GDS Service Definition or CSRF headers! ${error}`
+        );
+      }
     }
 
     setServiceDef(
