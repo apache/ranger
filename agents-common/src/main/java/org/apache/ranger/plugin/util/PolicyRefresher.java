@@ -137,24 +137,7 @@ public class PolicyRefresher extends Thread {
 	public void startRefresher() {
 		loadRoles();
 		loadPolicy();
-
-		super.start();
-
-		policyDownloadTimer = new Timer("policyDownloadTimer", true);
-
-		try {
-			policyDownloadTimer.schedule(new DownloaderTask(policyDownloadQueue), pollingIntervalMs, pollingIntervalMs);
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Scheduled policyDownloadRefresher to download policies every " + pollingIntervalMs + " milliseconds");
-			}
-		} catch (IllegalStateException exception) {
-			LOG.error("Error scheduling policyDownloadTimer:", exception);
-			LOG.error("*** Policies will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
-
-			policyDownloadTimer = null;
-		}
-
+		initRefresher();
 	}
 
 	public void stopRefresher() {
@@ -414,7 +397,10 @@ public class PolicyRefresher extends Thread {
 					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 				} else {
 					try {
-						cacheDirTmp.mkdirs();
+						if (!cacheDirTmp.mkdirs() && !cacheDirTmp.exists()) {
+							LOG.error("Cannot create cache directory: {}", realCacheDirName);
+						}
+
 						cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 					} catch (SecurityException ex) {
 						LOG.error("Cannot create cache directory", ex);
@@ -425,7 +411,7 @@ public class PolicyRefresher extends Thread {
 				}
 			}
 			
-	    	if(cacheFile != null) {
+			if(cacheFile != null) {
 
 				RangerPerfTracer perf = null;
 
@@ -433,27 +419,16 @@ public class PolicyRefresher extends Thread {
 					perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
 				}
 
-				Writer writer = null;
-	
-				try {
-					writer = new FileWriter(cacheFile);
+				try (Writer writer = new FileWriter(cacheFile)) {
 					JsonUtils.objectToWriter(writer, policies);
-		        } catch (Exception excp) {
-		        	LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-		        } finally {
-					if (writer != null) {
-						try {
-							writer.close();
-							deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
-						} catch (Exception excp) {
-							LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-						}
-					}
+
+					deleteOldestVersionCacheFileInCacheDirectory(cacheFile.getParentFile());
+				} catch (Exception excp) {
+					LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 				}
 
 				RangerPerfTracer.log(perf);
-
-	    	}
+			}
 
 			if (doPreserveDeltas) {
 				if (backupCacheFile != null) {
@@ -495,7 +470,23 @@ public class PolicyRefresher extends Thread {
 				String fileName = f.getName();
 				// Extract the part after json_
 				int policyVersionIdx = fileName.lastIndexOf("json_");
+
+				if (policyVersionIdx == -1 || policyVersionIdx + 5 >= fileName.length()) {
+					LOG.warn("Invalid cache file name format: {}", fileName);
+
+					continue;
+				}
+
 				String policyVersionStr = fileName.substring(policyVersionIdx + 5);
+
+				try {
+					Long policyVersion = Long.valueOf(policyVersionStr);
+
+					policyVersions.add(policyVersion);
+				} catch (NumberFormatException e) {
+					LOG.warn("Cannot parse version from file: {}", fileName, e);
+				}
+
 				Long policyVersion = Long.valueOf(policyVersionStr);
 				policyVersions.add(policyVersion);
 			}
@@ -565,5 +556,36 @@ public class PolicyRefresher extends Thread {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadRoles()");
 		}
+	}
+
+	private void initRefresher() {
+		LOG.debug("==> PolicyRefresher(serviceName={}).initRefresher()", serviceName);
+
+		try {
+			super.start();
+		} catch (IllegalStateException e) {
+			LOG.error("Failed to start PolicyRefresher thread for serviceName={}", serviceName, e);
+
+			throw e;
+		}
+
+		policyDownloadTimer = new Timer("policyDownloadTimer", true);
+
+		try {
+			policyDownloadTimer.schedule(new DownloaderTask(policyDownloadQueue), pollingIntervalMs, pollingIntervalMs);
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Scheduled policyDownloadRefresher to download policies every " + pollingIntervalMs + " milliseconds");
+			}
+		} catch (IllegalArgumentException | IllegalStateException | NullPointerException e) {
+			LOG.error("Error scheduling policyDownloadTimer:", e);
+			LOG.error("*** Policies will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
+
+			policyDownloadTimer.cancel();
+
+			policyDownloadTimer = null;
+		}
+
+		LOG.debug("<== PolicyRefresher(serviceName={}).initRefresher()", serviceName);
 	}
 }
