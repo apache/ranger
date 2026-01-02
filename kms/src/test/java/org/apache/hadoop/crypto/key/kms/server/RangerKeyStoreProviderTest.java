@@ -126,7 +126,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key
         Options options = new Options(conf);
         options.setBitLength(128);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
         Assertions.assertEquals("newkey1", keyVersion.getName());
         Assertions.assertEquals(128 / 8, keyVersion.getMaterial().length);
@@ -190,7 +189,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key
         Options options = new Options(conf);
         options.setBitLength(256);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
         Assertions.assertEquals("newkey1", keyVersion.getName());
         Assertions.assertEquals(256 / 8, keyVersion.getMaterial().length);
@@ -220,7 +218,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key
         Options options = new Options(conf);
         options.setBitLength(192);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
         Assertions.assertEquals("newkey1", keyVersion.getName());
         Assertions.assertEquals(192 / 8, keyVersion.getMaterial().length);
@@ -264,7 +261,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key version
         Options options = new Options(conf);
         options.setBitLength(192);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
 
         Assertions.assertEquals("newkey1", keyVersion.getName());
@@ -315,7 +311,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key version
         Options options = new Options(conf);
         options.setBitLength(192);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
 
         Assertions.assertEquals("newkey1", keyVersion.getName());
@@ -370,7 +365,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key version
         Options options = new Options(conf);
         options.setBitLength(192);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
 
         Assertions.assertEquals("newkey1", keyVersion.getName());
@@ -404,7 +398,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key version
         Options options = new Options(conf);
         options.setBitLength(192);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
 
         Assertions.assertEquals("newkey1", keyVersion.getName());
@@ -439,7 +432,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key version
         Options options = new Options(conf);
         options.setBitLength(192);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
         Assertions.assertEquals("newkey1", keyVersion.getName());
         Assertions.assertEquals(192 / 8, keyVersion.getMaterial().length);
@@ -492,7 +484,6 @@ public class RangerKeyStoreProviderTest {
         // Create a key version
         Options options = new Options(conf);
         options.setBitLength(192);
-        options.setCipher("AES");
         KeyVersion keyVersion = keyProvider.createKey("newkey1", options);
 
         Assertions.assertEquals("newkey1", keyVersion.getName());
@@ -602,7 +593,6 @@ public class RangerKeyStoreProviderTest {
 
         Options options = new Options(conf);
         options.setBitLength(128);
-        options.setCipher("AES");
         provider.createKey("testKeyMismatch", options);
         provider.flush();
 
@@ -964,7 +954,6 @@ public class RangerKeyStoreProviderTest {
         String keyName  = "existingKey";
         byte[] material = new byte[16]; // 128 bits
         KeyProvider.Options options = new KeyProvider.Options(conf)
-                .setCipher("AES")
                 .setBitLength(128);
 
         // Simulate that key already exists
@@ -989,7 +978,6 @@ public class RangerKeyStoreProviderTest {
         String keyName  = "newKey";
         byte[] material = new byte[10]; // 80 bits
         KeyProvider.Options options = new KeyProvider.Options(conf)
-                .setCipher("AES")
                 .setBitLength(128); // But expects 128 bits
 
         // Simulate key does not exist
