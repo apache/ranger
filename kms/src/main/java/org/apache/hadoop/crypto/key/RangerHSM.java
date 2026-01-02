@@ -150,7 +150,8 @@ public class RangerHSM implements RangerKMSMKI {
         return null;
     }
 
-    public boolean setMasterKey(String password, byte[] key) {
+    @Override
+    public boolean setExternalKeyAsMK(String password, byte[] key) {
         if (myStore != null) {
             try {
                 Key aesKey = new SecretKeySpec(key, MK_CIPHER);

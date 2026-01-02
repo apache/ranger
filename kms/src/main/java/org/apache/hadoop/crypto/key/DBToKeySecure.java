@@ -102,14 +102,14 @@ public class DBToKeySecure {
             String      mkPassword  = conf.get(ENCRYPTION_KEY);
 
             // Get Master Key from Ranger DB
-            RangerMasterKey rangerMasterKey = new RangerMasterKey(daoManager);
+            RangerKMSMKI rangerMasterKey    = new RangerMasterKey(daoManager);
             String          mkey            = rangerMasterKey.getMasterKey(mkPassword);
             byte[]          key             = Base64.decode(mkey);
 
             if (conf != null) {
-                RangerSafenetKeySecure rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
+                RangerKMSMKI rangerSafenetKeySecure = new RangerSafenetKeySecure(conf);
 
-                return rangerSafenetKeySecure.setMasterKey(password, key, conf);
+                return rangerSafenetKeySecure.setExternalKeyAsMK(password, key);
             }
 
             return false;

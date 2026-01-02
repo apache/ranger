@@ -37,4 +37,8 @@ public interface RangerKMSMKI {
     default boolean reencryptMKWithFipsAlgo(String mkPassword) throws Exception {
         return  false;
     }
+
+    default boolean setExternalKeyAsMK(String password, byte[] key) throws Throwable {
+        throw new UnsupportedOperationException("This method is not supported for current MK provider");
+    }
 }
