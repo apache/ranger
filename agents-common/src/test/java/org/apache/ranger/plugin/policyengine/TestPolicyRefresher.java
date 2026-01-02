@@ -26,26 +26,30 @@ import org.apache.ranger.plugin.util.DownloadTrigger;
 import org.apache.ranger.plugin.util.PolicyRefresher;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.rules.Timeout;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -60,11 +64,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+@Timeout(value = 15, unit = TimeUnit.SECONDS)
 public class TestPolicyRefresher {
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
-    @Rule
-    public Timeout globalTimeout = new Timeout(15000, TimeUnit.MILLISECONDS);
+    @TempDir
+    Path tempFolder;
+
     @Mock
     private RangerBasePlugin mockPlugin;
     @Mock
@@ -81,15 +87,16 @@ public class TestPolicyRefresher {
     private static final long POLL_INTERVAL = 30000L;
     private static final long TEST_TIMEOUT_SECONDS = 5;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        tempCacheDir = tempFolder.newFolder("cache");
+        MockitoAnnotations.openMocks(this);
+        tempCacheDir = tempFolder.resolve("cache").toFile();
+        tempCacheDir.mkdirs();
         setupBasicMocks();
         policyRefresher = new PolicyRefresher(mockPlugin);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (policyRefresher != null && policyRefresher.isAlive()) {
             policyRefresher.stopRefresher();
@@ -108,7 +115,7 @@ public class TestPolicyRefresher {
     public void testLastActivationTimeInMillis() {
         long testTime = System.currentTimeMillis();
         policyRefresher.setLastActivationTimeInMillis(testTime);
-        assertEquals("Last activation time should be set and retrieved correctly", testTime, policyRefresher.getLastActivationTimeInMillis());
+        assertEquals(testTime, policyRefresher.getLastActivationTimeInMillis(), "Last activation time should be set and retrieved correctly");
     }
 
     @Test
@@ -124,10 +131,10 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Policies should be loaded on start", policiesSetLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(policiesSetLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Policies should be loaded on start");
         verify(mockPlugin, atLeastOnce()).setPolicies(argThat(policies ->
                 policies != null && SERVICE_NAME.equals(policies.getServiceName()) && policies.getPolicyVersion() == 1L));
-        assertTrue("PolicyRefresher thread should be alive after start", policyRefresher.isAlive());
+        assertTrue(policyRefresher.isAlive(), "PolicyRefresher thread should be alive after start");
     }
 
     @Test
@@ -142,10 +149,10 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Refresher should start successfully", startLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(startLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Refresher should start successfully");
         policyRefresher.stopRefresher();
         policyRefresher.join(2000);
-        assertFalse("PolicyRefresher thread should stop after stopRefresher call", policyRefresher.isAlive());
+        assertFalse(policyRefresher.isAlive(), "PolicyRefresher thread should stop after stopRefresher call");
     }
 
     @Test
@@ -169,10 +176,10 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Initial policies should load", initialLoadLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(initialLoadLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Initial policies should load");
         DownloadTrigger trigger = new DownloadTrigger();
         policyRefresher.syncPoliciesWithAdmin(trigger);
-        assertTrue("Sync should trigger policy update within timeout", syncUpdateLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(syncUpdateLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Sync should trigger policy update within timeout");
         verify(mockPlugin, atLeast(2)).setPolicies(argThat(policies -> policies != null
                 && policies.getPolicyVersion() == 2L));
     }
@@ -199,17 +206,17 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Initial load should complete", initialLoadLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(initialLoadLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Initial load should complete");
         verify(mockPlugin, atLeastOnce()).setPolicies(policiesCaptor.capture());
-        assertEquals("First update should have version 1", Long.valueOf(1), policiesCaptor.getValue().getPolicyVersion());
+        assertEquals(Long.valueOf(1), policiesCaptor.getValue().getPolicyVersion(), "First update should have version 1");
 
         DownloadTrigger trigger = new DownloadTrigger();
         policyRefresher.syncPoliciesWithAdmin(trigger);
 
-        assertTrue("Update should complete", updateLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(updateLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Update should complete");
         verify(mockPlugin, atLeast(2)).setPolicies(policiesCaptor.capture());
         boolean version3Found = policiesCaptor.getAllValues().stream().anyMatch(p -> p.getPolicyVersion() == 3L);
-        assertTrue("Should update to version 3", version3Found);
+        assertTrue(version3Found, "Should update to version 3");
     }
 
     @Test
@@ -227,7 +234,7 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Should set null policies when service not found", nullPoliciesLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(nullPoliciesLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Should set null policies when service not found");
         verify(mockPlugin, atLeastOnce()).setPolicies(null);
     }
 
@@ -244,9 +251,9 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Refresher should start and attempt to fetch policies", startLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
-        assertTrue("Refresher should handle IO exceptions gracefully and stay alive", policyRefresher.isAlive());
-        assertTrue("Refresher should retry after IO exception", attemptCount.get() >= 1);
+        assertTrue(startLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Refresher should start and attempt to fetch policies");
+        assertTrue(policyRefresher.isAlive(), "Refresher should handle IO exceptions gracefully and stay alive");
+        assertTrue(attemptCount.get() >= 1, "Refresher should retry after IO exception");
     }
 
     @Test
@@ -262,7 +269,7 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Policies should be set in plugin", policiesSetLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(policiesSetLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Policies should be set in plugin");
         verify(mockPlugin, atLeastOnce()).setPolicies(argThat(policies -> policies != null && policies.getPolicyVersion() == 5L));
 
         String expectedCacheFileName = (APP_ID + "_" + SERVICE_NAME + ".json")
@@ -273,7 +280,7 @@ public class TestPolicyRefresher {
         boolean fileExists = waitForFile(cacheFile);
 
         if (fileExists) {
-            assertTrue("Cache file should be created: " + cacheFile.getAbsolutePath(), cacheFile.exists());
+            assertTrue(cacheFile.exists(), "Cache file should be created: " + cacheFile.getAbsolutePath());
         }
         policyRefresher.stopRefresher();
         policyRefresher.join(2000);
@@ -289,7 +296,7 @@ public class TestPolicyRefresher {
         try (FileWriter writer = new FileWriter(cacheFile)) {
             writer.write(json);
         }
-        assertTrue("Cache file should be created for test setup", cacheFile.exists());
+        assertTrue(cacheFile.exists(), "Cache file should be created for test setup");
         reset(mockPlugin, mockRangerAdminClient);
         setupBasicMocks();
         when(mockRangerAdminClient.getServicePoliciesIfUpdated(anyLong(), anyLong())).thenReturn(null);
@@ -305,7 +312,7 @@ public class TestPolicyRefresher {
         PolicyRefresher newRefresher = new PolicyRefresher(mockPlugin);
         newRefresher.startRefresher();
 
-        assertTrue("Policies should be loaded from cache within timeout", policiesLoadedLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(policiesLoadedLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Policies should be loaded from cache within timeout");
         verify(mockPlugin, atLeastOnce()).setPolicies(argThat(policies -> policies != null && policies.getPolicyVersion() == 10L));
         newRefresher.stopRefresher();
         newRefresher.join(2000);
@@ -331,13 +338,13 @@ public class TestPolicyRefresher {
         PolicyRefresher newRefresher = new PolicyRefresher(mockPlugin);
         newRefresher.startRefresher();
 
-        assertTrue("Initial load should complete", initLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(initLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Initial load should complete");
 
         newRefresher.syncPoliciesWithAdmin(new DownloadTrigger());
         newRefresher.syncPoliciesWithAdmin(new DownloadTrigger());
         newRefresher.syncPoliciesWithAdmin(new DownloadTrigger());
 
-        assertTrue("All sync requests should be processed", allSyncsLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(allSyncsLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "All sync requests should be processed");
         verify(mockPlugin, atLeast(4)).setPolicies(argThat(policies ->
                 policies != null && policies.getPolicyVersion() == 1L));
         newRefresher.stopRefresher();
@@ -358,7 +365,7 @@ public class TestPolicyRefresher {
 
         boolean wasCalledInTime = waitLatch.await(2, TimeUnit.SECONDS);
 
-        assertTrue("Refresher should be running", newRefresher.isAlive());
+        assertTrue(newRefresher.isAlive(), "Refresher should be running");
         if (wasCalledInTime) {
             verify(mockPlugin, atLeastOnce()).setPolicies(null);
         }
@@ -381,11 +388,11 @@ public class TestPolicyRefresher {
 
         policyRefresher.startRefresher();
 
-        assertTrue("Policies should be applied", policiesAppliedLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(policiesAppliedLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Policies should be applied");
         long afterActivation = System.currentTimeMillis();
         long activationTime = policyRefresher.getLastActivationTimeInMillis();
-        assertTrue("Activation time should be after test start", activationTime >= beforeActivation);
-        assertTrue("Activation time should be before verification", activationTime <= afterActivation);
+        assertTrue(activationTime >= beforeActivation, "Activation time should be after test start");
+        assertTrue(activationTime <= afterActivation, "Activation time should be before verification");
         verify(mockPlugin, times(1)).setPolicies(argThat(policies ->
                 policies != null && policies.getPolicyVersion() == 1L));
     }
@@ -400,7 +407,7 @@ public class TestPolicyRefresher {
         try (FileWriter writer = new FileWriter(cacheFile)) {
             writer.write("{ corrupted json data without closing brace");
         }
-        assertTrue("Corrupted cache file should exist", cacheFile.exists());
+        assertTrue(cacheFile.exists(), "Corrupted cache file should exist");
 
         reset(mockPlugin, mockRangerAdminClient);
         setupBasicMocks();
@@ -418,7 +425,7 @@ public class TestPolicyRefresher {
         PolicyRefresher newRefresher = new PolicyRefresher(mockPlugin);
         newRefresher.startRefresher();
 
-        assertTrue("Should load fresh policies when cache is corrupted", policiesLoadedLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertTrue(policiesLoadedLatch.await(TEST_TIMEOUT_SECONDS, TimeUnit.SECONDS), "Should load fresh policies when cache is corrupted");
         verify(mockPlugin, atLeastOnce()).setPolicies(argThat(policies ->
                 policies != null && policies.getPolicyVersion() == 1L));
         newRefresher.stopRefresher();
