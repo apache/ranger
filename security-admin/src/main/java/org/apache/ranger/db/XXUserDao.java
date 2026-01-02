@@ -68,6 +68,18 @@ public class XXUserDao extends BaseDao<XXUser> {
         return null;
     }
 
+    public Long findIdByUserName(String userName) {
+        if (daoManager.getStringUtil().isEmpty(userName)) {
+            return null;
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXUser.findIdByUserName", Long.class).setParameter("name", userName).getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
     public XXUser findByPortalUserId(Long portalUserId) {
         if (portalUserId == null) {
             return null;
