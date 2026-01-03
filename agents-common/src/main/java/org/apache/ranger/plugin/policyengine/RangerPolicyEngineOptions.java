@@ -51,6 +51,10 @@ public class RangerPolicyEngineOptions {
 	public RangerPolicyEngineOptions() {}
 
 	public RangerPolicyEngineOptions(final RangerPolicyEngineOptions other) {
+		this(other, null);
+	}
+
+	public RangerPolicyEngineOptions(final RangerPolicyEngineOptions other, RangerServiceDefHelper serviceDefHelper) {
 		this.disableContextEnrichers = other.disableContextEnrichers;
 		this.disableCustomConditions = other.disableCustomConditions;
 		this.disableTagPolicyEvaluation = other.disableTagPolicyEvaluation;
@@ -65,7 +69,7 @@ public class RangerPolicyEngineOptions {
 		this.enableResourceMatcherReuse = other.enableResourceMatcherReuse;
 		this.optimizeTrieForRetrieval = other.optimizeTrieForRetrieval;
 		this.disableRoleResolution = other.disableRoleResolution;
-		this.serviceDefHelper = null;
+		this.serviceDefHelper = serviceDefHelper;
 		this.optimizeTrieForSpace = other.optimizeTrieForSpace;
 		this.optimizeTagTrieForRetrieval = other.optimizeTagTrieForRetrieval;
 		this.optimizeTagTrieForSpace = other.optimizeTagTrieForSpace;
