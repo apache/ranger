@@ -19,8 +19,8 @@
 
 package org.apache.ranger.biz;
 
-import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RangerPolicyAdminCacheForEngineOptions {
-    private static volatile RangerPolicyAdminCacheForEngineOptions sInstance = null;
+    private static volatile RangerPolicyAdminCacheForEngineOptions sInstance;
 
     private final Map<RangerPolicyEngineOptions, RangerPolicyAdminCache> policyAdminCacheForEngineOptions = Collections.synchronizedMap(new HashMap<>());
 
@@ -55,19 +55,20 @@ public class RangerPolicyAdminCacheForEngineOptions {
     }
 
     private RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
-        RangerPolicyAdminCache policyAdminCache;
+        RangerPolicyAdminCache policyAdminCache = policyAdminCacheForEngineOptions.get(options);
 
-        synchronized (this) {
-            policyAdminCache = policyAdminCacheForEngineOptions.get(options);
+        if (policyAdminCache == null) {
+            synchronized (this) {
+                policyAdminCache = policyAdminCacheForEngineOptions.get(options);
 
-            if (policyAdminCache == null) {
-                policyAdminCache = new RangerPolicyAdminCache();
+                if (policyAdminCache == null) {
+                    policyAdminCache = new RangerPolicyAdminCache();
 
-                policyAdminCacheForEngineOptions.put(options, policyAdminCache);
+                    policyAdminCacheForEngineOptions.put(options, policyAdminCache);
+                }
             }
         }
 
         return policyAdminCache.getServicePoliciesAdmin(serviceName, svcStore, roleStore, zoneStore, options);
     }
 }
-

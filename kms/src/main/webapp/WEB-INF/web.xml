@@ -18,56 +18,66 @@
 
 <web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee">
 
-  <display-name>ranger-kms</display-name>
-  <absolute-ordering />
+    <display-name>ranger-kms</display-name>
+    <absolute-ordering />
 
-  <listener>
-    <listener-class>org.apache.hadoop.crypto.key.kms.server.KMSWebApp</listener-class>
-  </listener>
+    <listener>
+        <listener-class>org.apache.hadoop.crypto.key.kms.server.KMSWebApp</listener-class>
+    </listener>
 
-  <servlet>
-    <servlet-name>webservices-driver</servlet-name>
-    <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-    <init-param>
-      <param-name>com.sun.jersey.config.property.packages</param-name>
-      <param-value>org.apache.hadoop.crypto.key.kms.server</param-value>
-    </init-param>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
+    <servlet>
+        <servlet-name>webservices-driver</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>org.apache.hadoop.crypto.key.kms.server</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
 
-  <servlet>
-    <servlet-name>jmx-servlet</servlet-name>
-    <servlet-class>org.apache.hadoop.crypto.key.kms.server.KMSJMXServlet</servlet-class>
-  </servlet>
+    <servlet>
+        <servlet-name>jmx-servlet</servlet-name>
+        <servlet-class>org.apache.hadoop.crypto.key.kms.server.KMSJMXServlet</servlet-class>
+    </servlet>
 
-  <servlet-mapping>
-    <servlet-name>webservices-driver</servlet-name>
-    <url-pattern>/*</url-pattern>
-  </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>webservices-driver</servlet-name>
+        <url-pattern>/kms/*</url-pattern>
+    </servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>jmx-servlet</servlet-name>
-    <url-pattern>/jmx</url-pattern>
-  </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>jmx-servlet</servlet-name>
+        <url-pattern>/jmx</url-pattern>
+    </servlet-mapping>
 
-  <filter>
-    <filter-name>authFilter</filter-name>
-    <filter-class>org.apache.hadoop.crypto.key.kms.server.KMSAuthenticationFilter</filter-class>
-  </filter>
+    <filter>
+        <filter-name>HSTSFilter</filter-name>
+        <filter-class>org.apache.hadoop.crypto.key.kms.server.HSTSFilter</filter-class>
+    </filter>
 
-  <filter>
-    <filter-name>MDCFilter</filter-name>
-    <filter-class>org.apache.hadoop.crypto.key.kms.server.KMSMDCFilter</filter-class>
-  </filter>
+    <filter>
+        <filter-name>authFilter</filter-name>
+        <filter-class>org.apache.hadoop.crypto.key.kms.server.KMSAuthenticationFilter</filter-class>
+    </filter>
 
-  <filter-mapping>
-    <filter-name>authFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
+    <filter>
+        <filter-name>MDCFilter</filter-name>
+        <filter-class>org.apache.hadoop.crypto.key.kms.server.KMSMDCFilter</filter-class>
+    </filter>
 
-  <filter-mapping>
-    <filter-name>MDCFilter</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
+    <filter-mapping>
+        <filter-name>HSTSFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>authFilter</filter-name>
+        <url-pattern>/kms/*</url-pattern>
+    </filter-mapping>
+
+    <filter-mapping>
+        <filter-name>MDCFilter</filter-name>
+        <url-pattern>/kms/*</url-pattern>
+    </filter-mapping>
 
 </web-app>

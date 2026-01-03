@@ -14,14 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import print_function
-try:
-	from StringIO import StringIO
-except ImportError:
-	from io import StringIO
-try:
-	from ConfigParser import ConfigParser
-except ImportError:
-	from configparser import ConfigParser
+from io import StringIO
+from configparser import ConfigParser
 import xml.etree.ElementTree as ET
 import os,sys,getopt
 from os import listdir
@@ -102,20 +96,23 @@ config2xmlMAP = {
 	'jdbc.password':'ranger.jpa.jdbc.password',
 	'jdbc.maxPoolSize':'ranger.jpa.jdbc.maxpoolsize',
 	'jdbc.minPoolSize':'ranger.jpa.jdbc.minpoolsize',
-	'jdbc.initialPoolSize':'ranger.jpa.jdbc.initialpoolsize',
-	'jdbc.maxIdleTime':'ranger.jpa.jdbc.maxidletime',
-	'jdbc.maxStatements':'ranger.jpa.jdbc.maxstatements',
-	'jdbc.preferredTestQuery':'ranger.jpa.jdbc.preferredtestquery',
-	'jdbc.idleConnectionTestPeriod':'ranger.jpa.jdbc.idleconnectiontestperiod',
+	'jdbc.idleTimeout':'ranger.jpa.jdbc.idletimeout',
+	'jdbc.maxLifetime':'ranger.jpa.jdbc.maxlifetime',
+	'jdbc.connectionTimeout':'ranger.jpa.jdbc.connectiontimeout',
+    'jdbc.preferredTestQuery':'ranger.jpa.jdbc.preferredTestQuery',
 	'xaDB.jdbc.credential.alias':'ranger.jpa.jdbc.credential.alias',
 	'xaDB.jdbc.credential.provider.path':'ranger.jpa.jdbc.credential.provider.path',
 	'xa.logs.base.dir':'ranger.logs.base.dir',
 	'xa.scheduler.enabled':'ranger.scheduler.enabled',
 	'xa.audit.store':'ranger.audit.source.type',
 	'audit_elasticsearch_urls':'ranger.audit.elasticsearch.urls',
+	'audit_elasticsearch_protocol':'ranger.audit.elasticsearch.protocol',
 	'audit_elasticsearch_port':'ranger.audit.elasticsearch.port',
 	'audit_elasticsearch_user':'ranger.audit.elasticsearch.user',
 	'audit_elasticsearch_password':'ranger.audit.elasticsearch.password',
+	'audit_cloudwatch_region':'ranger.audit.amazon_cloudwatch.region',
+	'audit_cloudwatch_log_group':'ranger.audit.amazon_cloudwatch.log_group',
+	'audit_cloudwatch_log_stream_prefix':'ranger.audit.amazon_cloudwatch.log_stream_prefix',
 	'audit_solr_urls':'ranger.audit.solr.urls',
 	'auditDB.jdbc.dialect':'ranger.jpa.audit.jdbc.dialect',
 	'auditDB.jdbc.driver':'ranger.jpa.audit.jdbc.driver',
@@ -148,7 +145,7 @@ def getPropertiesConfigMap(configFileName):
 	config.seek(0,os.SEEK_SET)
 	fcp = ConfigParser()
 	fcp.optionxform = str
-	fcp.readfp(config)
+	fcp.read_file(config)
 	for k,v in fcp.items('dummysection'):
 		ret[k] = v
 	return ret
@@ -161,7 +158,7 @@ def getPropertiesKeyList(configFileName):
 	config.seek(0,os.SEEK_SET)
 	fcp = ConfigParser()
 	fcp.optionxform = str
-	fcp.readfp(config)
+	fcp.read_file(config)
 	for k,v in fcp.items('dummysection'):
 		ret.append(k)
 	return ret

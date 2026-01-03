@@ -40,6 +40,7 @@ class RangerPolicy(RangerBaseModelObject):
         self.resourceSignature    = attrs.get('resourceSignature')
         self.isAuditEnabled       = attrs.get('isAuditEnabled')
         self.resources            = attrs.get('resources')
+        self.additionalResources  = attrs.get('additionalResources')
         self.policyItems          = attrs.get('policyItems')
         self.denyPolicyItems      = attrs.get('denyPolicyItems')
         self.allowExceptions      = attrs.get('allowExceptions')
@@ -58,6 +59,7 @@ class RangerPolicy(RangerBaseModelObject):
         super(RangerPolicy, self).type_coerce_attrs()
 
         self.resources            = type_coerce_dict(self.resources, RangerPolicyResource)
+        self.additionalResources  = type_coerce_list_dict(self.additionalResources, RangerPolicyResource)
         self.policyItems          = type_coerce_list(self.policyItems, RangerPolicyItem)
         self.denyPolicyItems      = type_coerce_list(self.denyPolicyItems, RangerPolicyItem)
         self.allowExceptions      = type_coerce_list(self.allowExceptions, RangerPolicyItem)
@@ -65,7 +67,17 @@ class RangerPolicy(RangerBaseModelObject):
         self.dataMaskPolicyItems  = type_coerce_list(self.dataMaskPolicyItems, RangerDataMaskPolicyItem)
         self.rowFilterPolicyItems = type_coerce_list(self.rowFilterPolicyItems, RangerRowFilterPolicyItem)
         self.validitySchedules    = type_coerce_list(self.validitySchedules, RangerValiditySchedule)
+        self.conditions           = type_coerce_list(self.conditions, RangerPolicyItemCondition)
 
+    def add_resource(self, resource):
+        if resource is not None:
+            if self.resources is None:
+                self.resources = resource
+            else:
+                if self.additionalResources is None:
+                    self.additionalResources = []
+
+                self.additionalResources.append(resource)
 
 class RangerPolicyResource(RangerBase):
     def __init__(self, attrs=None):
@@ -107,7 +119,8 @@ class RangerPolicyItem(RangerBase):
     def type_coerce_attrs(self):
         super(RangerPolicyItem, self).type_coerce_attrs()
 
-        self.accesses = type_coerce_list(self.accesses, RangerPolicyItemAccess)
+        self.accesses   = type_coerce_list(self.accesses, RangerPolicyItemAccess)
+        self.conditions = type_coerce_list(self.conditions, RangerPolicyItemCondition)
 
 
 class RangerDataMaskPolicyItem(RangerPolicyItem):

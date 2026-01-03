@@ -1,0 +1,11 @@
+{
+  "authentication": {
+    "class":                  "solr.KerberosPlugin",
+    "kerberos.principal":     "HTTP/ranger-solr.rangernw@EXAMPLE.COM",
+    "kerberos.keytab":        "/etc/keytabs/HTTP.keytab",
+    "kerberos.name.rules":    "RULE:[2:$1@$0](.*@EXAMPLE.COM)s/@.*//\nRULE:[1:$1@$0](.*@EXAMPLE.COM)s/@.*//\nDEFAULT",
+    "kerberos.cookie.domain": "ranger-solr",
+    "cookie.domain":          "ranger-solr",
+    "token.valid":            3600
+  }
+}

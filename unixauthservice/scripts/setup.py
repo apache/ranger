@@ -15,18 +15,9 @@
 # limitations under the License.
 
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
-try:
-    import commands as commands
-except ImportError:
-    import subprocess as commands
+from io import StringIO
+from configparser import ConfigParser
+import subprocess
 
 import re
 import xml.etree.ElementTree as ET
@@ -57,7 +48,7 @@ defaultCertFileName = 'unixauthservice.jks'
 outputFileName = 'ranger-ugsync-site.xml'
 installPropFileName = 'install.properties'
 defaultSiteXMLFileName = 'ranger-ugsync-default.xml'
-log4jFileName = 'log4j.properties'
+logbackFileName = 'logback.xml'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-ugsync-template.xml'
 initdProgramName = 'ranger-usersync'
@@ -178,7 +169,7 @@ def getPropertiesConfigMap(configFileName):
     config.seek(0, os.SEEK_SET)
     fcp = ConfigParser()
     fcp.optionxform = str
-    fcp.readfp(config)
+    fcp.read_file(config)
     for k, v in fcp.items('dummysection'):
         ret[k] = v
     return ret
@@ -192,7 +183,7 @@ def getPropertiesKeyList(configFileName):
     config.seek(0, os.SEEK_SET)
     fcp = ConfigParser()
     fcp.optionxform = str
-    fcp.readfp(config)
+    fcp.read_file(config)
     for k, v in fcp.items('dummysection'):
         ret.append(k)
     return ret
@@ -232,8 +223,8 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
 
 def password_validation(password, userType):
     if password:
-        if re.search("[\\\`'\"]", password):
-            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \ `")
+        if re.search("[\\`'\"]", password):
+            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \\ `")
             sys.exit(1)
         else:
             print("[I] " + userType + " property is verified.")
@@ -289,7 +280,7 @@ def convertInstallPropsToXML(props):
 
 def createUser(username, groupname):
     checkuser = "grep ^" + username + ": /etc/passwd | awk -F: '{print $1}'|head -1 "
-    (status, output) = commands.getstatusoutput(checkuser)
+    (status, output) = subprocess.getstatusoutput(checkuser)
     if len(output) < 1:
         cmd = "useradd -g %s %s -m" % (groupname, username)
         ret = os.system(cmd)
@@ -306,7 +297,7 @@ def createUser(username, groupname):
 
 def createGroup(groupname):
     checkgroup = "egrep ^" + groupname + ": /etc/group | awk -F: '{print $1}'|head -1 "
-    (status, output) = commands.getstatusoutput(checkgroup)
+    (status, output) = subprocess.getstatusoutput(checkgroup)
     if len(output) < 1:
         cmd = "groupadd %s" % (groupname)
         ret = os.system(cmd)
@@ -343,15 +334,13 @@ def initializeInitD(ownerName):
                 for prefix in initPrefixList:
                     scriptFn = prefix + initdProgramName
                     scriptName = join(rcDir, scriptFn)
-                    if isfile(scriptName) or os.path.islink(scriptName):
-                        os.remove(scriptName)
-                    os.symlink(initdFn, scriptName)
+                    if not (isfile(scriptName) or os.path.islink(scriptName)):
+                        os.symlink(initdFn, scriptName)
         userSyncScriptName = "ranger-usersync-services.sh"
         localScriptName = os.path.abspath(join(RANGER_USERSYNC_HOME, userSyncScriptName))
         ubinScriptName = join("/usr/bin", initdProgramName)
-        if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
-            os.remove(ubinScriptName)
-        os.symlink(localScriptName, ubinScriptName)
+        if not (isfile(ubinScriptName) or os.path.islink(ubinScriptName)):
+            os.symlink(localScriptName, ubinScriptName)
 
 
 def createJavaKeystoreForSSL(fn, passwd):
@@ -412,7 +401,7 @@ def main():
         if (not os.path.isdir(dir)):
             os.makedirs(dir, 0o750)
 
-    defFileList = [defaultSiteXMLFileName, log4jFileName]
+    defFileList = [defaultSiteXMLFileName, logbackFileName]
     for defFile in defFileList:
         fn = join(confDistDirName, defFile)
         if (isfile(fn)):
@@ -504,7 +493,8 @@ def main():
     os.chown(ugsyncLogFolderName, ownerId, groupId)
     os.chown(rangerBaseDirName, ownerId, groupId)
     os.chown(usersyncBaseDirFullName, ownerId, groupId)
-
+    os.chown(pid_dir_path, ownerId, groupId)
+    os.chmod(pid_dir_path, 0o755)
     initializeInitD(ownerName)
 
     #
@@ -560,29 +550,39 @@ def main():
 
     fixPermList = [".", usersyncBaseDirFullName, confFolderName, certFolderName]
 
+    def _safe_chown_chmod(path, uid, gid, mode):
+        try:
+            os.chown(path, uid, gid)
+            os.chmod(path, mode)
+        except PermissionError as e:
+            print(f"Skipping {path}: Permission denied ({e})")
+        except OSError as e:
+            print(f"Skipping {path}: OS error ({e})")
+
     for dir in fixPermList:
         for root, dirs, files in os.walk(dir):
-            os.chown(root, ownerId, groupId)
-            os.chmod(root, 0o755)
+            _safe_chown_chmod(root, ownerId, groupId, 0o755)
             for obj in dirs:
-                dn = join(root, obj)
-                os.chown(dn, ownerId, groupId)
-                os.chmod(dn, 0o755)
+                _safe_chown_chmod(join(root, obj), ownerId, groupId, 0o755)
             for obj in files:
-                fn = join(root, obj)
-                os.chown(fn, ownerId, groupId)
-                os.chmod(fn, 0o750)
+                _safe_chown_chmod(join(root, obj), ownerId, groupId, 0o750)
 
     if isfile(nativeAuthProgramName):
-        os.chown(nativeAuthProgramName, rootOwnerId, groupId)
-        os.chmod(nativeAuthProgramName, 0o750)
+        try:
+                os.chown(nativeAuthProgramName, rootOwnerId, groupId)
+                os.chmod(nativeAuthProgramName, 0o750)
+        except PermissionError:
+                print("WARNING: chmod(4550), chown(%s:%s) failed for Unix Authentication Program (%s) " % ("root", groupName, nativeAuthProgramName))
     else:
         print("WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
         nativeAuthProgramName, "root", groupName))
 
     if isfile(pamAuthProgramName):
-        os.chown(pamAuthProgramName, rootOwnerId, groupId)
-        os.chmod(pamAuthProgramName, 0o750)
+        try:
+                os.chown(pamAuthProgramName, rootOwnerId, groupId)
+                os.chmod(pamAuthProgramName, 0o750)
+        except PermissionError:
+                print("WARNING: chmod(0o750), chown(%s:%s) failed for Unix Authentication Program (%s) " % ("root", groupName, pamAuthProgramName))
     else:
         print("WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
         pamAuthProgramName, "root", groupName))

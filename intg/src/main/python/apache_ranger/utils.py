@@ -18,7 +18,8 @@
 
 import enum
 
-APPLICATION_JSON         = 'application/json'
+APPLICATION_JSON            = 'application/json'
+QUERY_PARAM_PREFIX_RESOURCE = 'resource:'
 
 
 def non_null(obj, defValue):
@@ -30,7 +31,13 @@ def type_coerce(obj, objType):
     elif isinstance(obj, dict):
         ret = objType(obj)
 
-        ret.type_coerce_attrs()
+        if callable(getattr(ret, 'type_coerce_attrs', None)):
+            ret.type_coerce_attrs()
+    elif issubclass(objType, enum.Enum):
+        try:
+            ret = objType.value_of(obj)
+        except AttributeError: # value_of() method not defined in Enum class
+            ret = None
     else:
         ret = None
 
@@ -38,13 +45,8 @@ def type_coerce(obj, objType):
 
 def type_coerce_list(obj, objType):
     if isinstance(obj, list):
-        ret = []
-        for entry in obj:
-            ret.append(type_coerce(entry, objType))
-    else:
-        ret = None
-
-    return ret
+        return [ type_coerce(entry, objType) for entry in obj ]
+    return None
 
 def type_coerce_dict(obj, objType):
     if isinstance(obj, dict):
@@ -66,6 +68,30 @@ def type_coerce_dict_list(obj, objType):
 
     return ret
 
+def resource_to_query_params(resource, query_params=None):
+    if isinstance(resource, dict):
+      if query_params is None:
+        query_params = {}
+
+      for key, value in resource.items():
+        query_params[QUERY_PARAM_PREFIX_RESOURCE + key] = value
+
+    return query_params
+
+def type_coerce_list_dict(obj, objType):
+    if isinstance(obj, list):
+        return [ type_coerce_dict(entry, objType) for entry in obj ]
+    return None
+
+def type_coerce_kv(obj, keyType, valType):
+    if isinstance(obj, dict):
+        ret = {}
+        for k, v in obj.items():
+            ret[type_coerce(k, keyType)] = type_coerce(v, valType)
+    else:
+        ret = None
+
+    return ret
 
 class API:
     def __init__(self, path, method, expected_status, consumes=APPLICATION_JSON, produces=APPLICATION_JSON):
@@ -85,9 +111,38 @@ class HttpMethod(enum.Enum):
     POST   = "POST"
     DELETE = "DELETE"
 
+    @classmethod
+    def value_of(cls, val):
+        if isinstance(val, HttpMethod):
+            return val
+        else:
+            for key, member in cls.__members__.items():
+                if val == member.name or val == member.value:
+                    return member
+            else:
+                raise ValueError(f"'{cls.__name__}' enum not found for '{val}'")
+
 
 class HTTPStatus:
-    OK                    = 200
-    NO_CONTENT            = 204
-    INTERNAL_SERVER_ERROR = 500
-    SERVICE_UNAVAILABLE   = 503
+    OK                     = 200
+    CREATED                = 201
+    ACCEPTED               = 202
+    NO_CONTENT             = 204
+    MOVED_PERMANENTLY      = 301
+    SEE_OTHER              = 303
+    NOT_MODIFIED           = 304
+    TEMPORARY_REDIRECT     = 307
+    BAD_REQUEST            = 400
+    UNAUTHORIZED           = 401
+    FORBIDDEN              = 403
+    NOT_FOUND              = 404
+    NOT_ACCEPTABLE         = 406
+    CONFLICT               = 409
+    GONE                   = 410
+    PRECONDITION_FAILED    = 412
+    UNSUPPORTED_MEDIA_TYPE = 415
+    INTERNAL_SERVER_ERROR  = 500
+    SERVICE_UNAVAILABLE    = 503
+
+class StrEnum(str, enum.Enum):
+  """Enum where members are also (and must be) strings"""

@@ -21,56 +21,48 @@ package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class RangerContextAttributeValueNotInCondition extends RangerAbstractConditionEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerContextAttributeValueNotInCondition.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerContextAttributeValueNotInCondition.class);
 
-	protected String attributeName;
+    protected String attributeName;
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerContextAttributeValueNotInCondition.init(" + condition + ")");
-		}
+    @Override
+    public void init() {
+        LOG.debug("==> RangerContextAttributeValueNotInCondition.init({})", condition);
 
-		super.init();
+        super.init();
 
-		Map<String, String> evalOptions = conditionDef. getEvaluatorOptions();
+        Map<String, String> evalOptions = conditionDef.getEvaluatorOptions();
 
-		if (MapUtils.isNotEmpty(evalOptions)) {
-			attributeName = evalOptions.get("attributeName");
-		}
+        if (MapUtils.isNotEmpty(evalOptions)) {
+            attributeName = evalOptions.get("attributeName");
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerContextAttributeValueNotInCondition.init(" + condition + ")");
-		}
-	}
+        LOG.debug("<== RangerContextAttributeValueNotInCondition.init({})", condition);
+    }
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerContextAttributeValueNotInCondition.isMatched(" + condition + ")");
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerContextAttributeValueNotInCondition.isMatched({})", condition);
 
-		boolean ret = true;
+        boolean ret = true;
 
-		if(attributeName != null && condition != null && CollectionUtils.isNotEmpty(condition.getValues())) {
-			Object val = request.getContext().get(attributeName);
+        if (attributeName != null && condition != null && CollectionUtils.isNotEmpty(condition.getValues())) {
+            Object val = request.getContext().get(attributeName);
 
-			if(val != null) {
-				ret = !condition.getValues().contains(val);
-			}
-		}
+            if (val != null) {
+                ret = !condition.getValues().contains(val);
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerContextAttributeValueNotInCondition.isMatched(" + condition + "): " + ret);
-		}
+        LOG.debug("<== RangerContextAttributeValueNotInCondition.isMatched({}): {}", condition, ret);
 
-		return ret;
-	}
+        return ret;
+    }
 }

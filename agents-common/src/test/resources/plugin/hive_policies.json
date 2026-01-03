@@ -1,0 +1,188 @@
+{
+  "serviceDef":{
+    "name": "hive",
+    "id":   3,
+    "resources": [
+      { "name": "database",    "level":1, "parent": "",         "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive Database", "description": "Hive Database" },
+      { "name": "url",         "level":1, "parent": "",         "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerURLResourceMatcher",     "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "URL",           "description": "URL", "recursiveSupported": true },
+      { "name": "hiveservice", "level":1, "parent": "",         "mandatory": true, "lookupSupported": false, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "HiveService",   "description": "HiveService" },
+      { "name": "table",       "level":2, "parent": "database", "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive Table",    "description": "Hive Table" },
+      { "name": "udf",         "level":2, "parent": "database", "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive UDF",      "description": "Hive UDF" },
+      { "name": "column",      "level":3, "parent": "table",    "mandatory": true, "lookupSupported": true,  "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "Hive Column",   "description": "Hive Column" }
+    ],
+    "accessTypes":[
+      { "name": "select",       "label": "Select",       "category": "READ"   },
+      { "name": "update",       "label": "Update",       "category": "UPDATE" },
+      { "name": "create",       "label": "Create",       "category": "CREATE" },
+      { "name": "drop",         "label": "Drop",         "category": "DELETE" },
+      { "name": "alter",        "label": "Alter",        "category": "CREATE" },
+      { "name": "index",        "label": "Index",        "category": "MANAGE" },
+      { "name": "lock",         "label": "Lock",         "category": "MANAGE" },
+      { "name": "read",         "label": "Read",         "category": "READ"   },
+      { "name": "write",        "label": "Write",        "category": "UPDATE" },
+      { "name": "repladmin",    "label": "ReplAdmin",    "category": "MANAGE" },
+      { "name": "serviceadmin", "label": "ServiceAdmin", "category": "MANAGE" },
+      { "name": "all",          "label": "All",
+        "impliedGrants": [ "select", "update", "create", "drop", "alter", "index", "lock", "read", "write", "repladmin", "serviceadmin" ]
+      }
+    ],
+    "dataMaskDef": {
+      "accessTypes": [ { "name": "select" }],
+      "resources": [
+        { "name": "database", "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "uiHint":"{ \"singleValue\":true }" },
+        { "name": "table",    "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "uiHint":"{ \"singleValue\":true }" },
+        { "name": "column",   "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "uiHint":"{ \"singleValue\":true }" }
+      ],
+      "maskTypes": [
+        { "itemId": 1,  "name": "MASK",                "label":  "Redact",                          "description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'", "transformer": "mask({col})", "dataMaskOptions": { } },
+        { "itemId": 2,  "name": "MASK_SHOW_LAST_4",    "label": "Partial mask: show last 4",        "description": "Show last 4 characters; replace rest with 'x'",                   "transformer": "mask_show_last_n({col}, 4, 'x', 'x', 'x', -1, '1')" },
+        { "itemId": 3,  "name": "MASK_SHOW_FIRST_4",   "label": "Partial mask: show first 4",       "description": "Show first 4 characters; replace rest with 'x'",                  "transformer": "mask_show_first_n({col}, 4, 'x', 'x', 'x', -1, '1')" },
+        { "itemId": 4,  "name": "MASK_HASH",           "label": "Hash",                             "description": "Hash the value",                                                  "transformer": "mask_hash({col})" },
+        { "itemId": 5,  "name": "MASK_NULL",           "label": "Nullify",                          "description": "Replace with NULL" },
+        { "itemId": 6,  "name": "MASK_NONE",           "label": "Unmasked (retain original value)", "description": "No masking" },
+        { "itemId": 12, "name": "MASK_DATE_SHOW_YEAR", "label": "Date: show only year",             "description": "Date: show only year",                                            "transformer": "mask({col}, 'x', 'x', 'x', -1, '1', 1, 0, -1)" },
+        { "itemId": 13, "name": "CUSTOM",              "label": "Custom",                           "description": "Custom" }
+      ]
+    },
+    "rowFilterDef": {
+      "accessTypes": [
+        { "name": "select" }
+      ],
+      "resources": [
+        { "name": "database", "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "mandatory": true, "uiHint": "{ \"singleValue\":true }" },
+        { "name": "table",    "matcherOptions": { "wildCard": "false" }, "lookupSupported": true, "mandatory": true, "uiHint": "{ \"singleValue\":true }" }
+      ]
+    }
+  },
+  "securityZones": {
+    "sales": {
+      "zoneName": "sales",
+      "resources": [
+        { "database": [ "sales" ]    }
+      ],
+      "policies": [
+        { "id": 100, "name": "table: sales.prospects", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "database": { "values": [ "sales" ] }, "table":  { "values": [ "prospects" ] } },
+          "policyItems":[
+            { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "res-user" ], "delegateAdmin": false }
+          ]
+        },
+        { "id": 101, "name": "table: sales.orders", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "database": { "values": [ "sales" ] }, "table":  { "values": [ "orders" ] } },
+          "policyItems":[
+            { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "res-user" ], "delegateAdmin": false }
+          ]
+        }
+      ]
+    },
+    "finance": {
+      "zoneName": "finance",
+      "resources": [
+        { "database": [ "finance" ]  }
+      ],
+      "policies": [
+        { "id": 110, "name": "table: finance.invoices", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "database": { "values": [ "finance" ] }, "table":  { "values": [ "invoices" ] } },
+          "policyItems":[
+            { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "res-user" ], "delegateAdmin": false }
+          ]
+        },
+        { "id": 111, "name": "table: finance.payments", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "database": { "values": [ "finance" ] }, "table":  { "values": [ "payments" ] } },
+          "policyItems":[
+            { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "res-user" ], "delegateAdmin": false }
+          ]
+        }
+      ]
+    },
+    "shipping": {
+      "zoneName": "shipping",
+      "resources": [
+        { "database": [ "shipping" ] }
+      ],
+      "policies": [
+        { "id": 121, "name": "table: shipping.shipments", "isEnabled": true, "isAuditEnabled": true,
+          "resources": { "database": { "values": [ "shipping" ] }, "table":  { "values": [ "shipments" ] } },
+          "policyItems":[
+            { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "res-user" ], "delegateAdmin": false }
+          ]
+        }
+      ]
+    }
+  },
+  "policies":[
+    { "id": 131, "name": "table: customers.contact_info", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "database": { "values": [ "customers" ] }, "table":  { "values": [ "contact_info" ] } },
+      "policyItems":[
+        { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "res-user" ], "delegateAdmin": false }
+      ]
+    },
+    { "id": 141, "name": "table: operations.facilities", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "database": { "values": [ "operations" ] }, "table":  { "values": [ "facilities" ] } },
+      "policyItems":[
+        { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "res-user" ], "delegateAdmin": false }
+      ]
+    }
+  ],
+  "tagPolicies": {
+    "serviceName": "dev_tag",
+    "serviceDef": {
+      "name": "tag",
+      "id":   1,
+      "resources": [
+        { "name": "tag", "level":1, "parent": "", "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions":{ "wildCard": true, "ignoreCase": true }, "label": "TAGe", "description": "TAG" }
+      ],
+      "accessTypes":[
+        { "name": "hive:select",       "label": "Select",       "category": "READ"   },
+        { "name": "hive:update",       "label": "Update",       "category": "UPDATE" },
+        { "name": "hive:create",       "label": "Create",       "category": "CREATE" },
+        { "name": "hive:drop",         "label": "Drop",         "category": "DELETE" },
+        { "name": "hive:alter",        "label": "Alter",        "category": "CREATE" },
+        { "name": "hive:index",        "label": "Index",        "category": "MANAGE" },
+        { "name": "hive:lock",         "label": "Lock",         "category": "MANAGE" },
+        { "name": "hive:read",         "label": "Read",         "category": "READ"   },
+        { "name": "hive:write",        "label": "Write",        "category": "UPDATE" },
+        { "name": "hive:repladmin",    "label": "ReplAdmin",    "category": "MANAGE" },
+        { "name": "hive:serviceadmin", "label": "ServiceAdmin", "category": "MANAGE" },
+        { "name": "hive:all",          "label": "All",
+          "impliedGrants": [ "hive:select", "hive:update", "hive:create", "hive:drop", "hive:alter", "hive:index", "hive:lock", "hive:read", "hive:write", "hive:repladmin", "hive:serviceadmin" ]
+        }
+      ],
+      "contextEnrichers": [
+        { "itemId": 1, "name": "TagEnricher", "enricher": "org.apache.ranger.plugin.contextenricher.RangerTagEnricher", "enricherOptions" : { "tagRetrieverClassName": "org.apache.ranger.plugin.contextenricher.RangerAdminTagRetriever", "tagRefresherPollingInterval": 60000 }}
+      ]
+    },
+    "policies": [
+      { "id": 200, "name": "tag: SALES", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "tag": { "values": [ "SALES" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "tag-user" ], "delegateAdmin": false }
+        ]
+      },
+      { "id": 201, "name": "tag: FINANCE", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "tag": { "values": [ "FINANCE" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "tag-user" ], "delegateAdmin": false }
+        ]
+      },
+      { "id": 202, "name": "tag: SHIPPING", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "tag": { "values": [ "SHIPPING" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "tag-user" ], "delegateAdmin": false }
+        ]
+      },
+      { "id": 203, "name": "tag: CUSTOMER", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "tag": { "values": [ "CUSTOMER" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "tag-user" ], "delegateAdmin": false }
+        ]
+      },
+      { "id": 204, "name": "tag: OPERATIONS", "isEnabled": true, "isAuditEnabled": true,
+        "resources": { "tag": { "values": [ "OPERATIONS" ] } },
+        "policyItems":[
+          { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "tag-user" ], "delegateAdmin": false }
+        ]
+      }
+    ]
+  }
+}

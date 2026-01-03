@@ -26,7 +26,7 @@ JARS=
 do
     JARS="${JARS}:$i"
 done
-JAVA_CMD="java -Dlog4j.configuration=file:lib/log4j.properties -cp ${JARS} org.apache.ranger.examples.sampleclient.SampleClient"
+JAVA_CMD="java -Dlogback.configurationFile=file:lib/logback.xml -cp ${JARS} org.apache.ranger.examples.sampleclient.SampleClient"
 while getopts "n:h" opt; do
   case $opt in
     n) HOST=$OPTARG

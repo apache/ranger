@@ -15,4 +15,17 @@
         <name>ranger.policyengine.trie.builder.thread.count</name>
         <value>1</value>
     </property>
+    <property>
+        <name>ranger.policyengine.option.optimize.tag.trie.for.retrieval</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>ranger.policyengine.option.optimize.policy.trie.for.space</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>ranger.policyengine.option.optimize.tag.trie.for.space</name>
+        <value>true</value>
+    </property>
+
 </configuration>

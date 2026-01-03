@@ -18,44 +18,67 @@
  */
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.List;
+import org.apache.ranger.common.db.BaseDao;
+import org.apache.ranger.entity.XXSecurityZoneRefTagService;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 
 import javax.persistence.NoResultException;
 
-import org.apache.ranger.common.db.BaseDao;
-import org.apache.ranger.entity.XXSecurityZoneRefTagService;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class XXSecurityZoneRefTagServiceDao extends BaseDao<XXSecurityZoneRefTagService>{
+public class XXSecurityZoneRefTagServiceDao extends BaseDao<XXSecurityZoneRefTagService> {
+    public XXSecurityZoneRefTagServiceDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-        public XXSecurityZoneRefTagServiceDao(RangerDaoManagerBase daoManager) {
-                super(daoManager);
-        }
-
-        public List<XXSecurityZoneRefTagService> findByZoneId(Long zoneId) {
+    public List<XXSecurityZoneRefTagService> findByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-		List<XXSecurityZoneRefTagService> xxZoneRefTagService = getEntityManager()
+            return getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefTagService.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .getResultList();
-            return xxZoneRefTagService;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefTagService> findByTagServiceNameAndZoneId(String tagServiceName, Long zoneId) {
-		if (tagServiceName == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXSecurityZoneRefTagService.findByTagServiceNameAndZoneId", tClass)
-					.setParameter("tagServiceName", tagServiceName).setParameter("zoneId", zoneId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.emptyList();
-		}
-	}
+    public List<XXSecurityZoneRefTagService> findByTagServiceNameAndZoneId(String tagServiceName, Long zoneId) {
+        if (tagServiceName == null) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZoneRefTagService.findByTagServiceNameAndZoneId", tClass)
+                    .setParameter("tagServiceName", tagServiceName)
+                    .setParameter("zoneId", zoneId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<RangerServiceHeaderInfo> findServiceHeaderInfosByZoneId(Long zoneId) {
+        List<RangerServiceHeaderInfo> ret;
+
+        if (zoneId != null && zoneId > RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID) {
+            List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZoneRefTagService.findServiceHeaderInfosByZoneId", Object[].class)
+                    .setParameter("zoneId", zoneId).getResultList();
+
+            ret = new ArrayList<>(results.size());
+
+            for (Object[] result : results) {
+                ret.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], (String) result[2], (String) result[3], (Boolean) result[4]));
+            }
+        } else {
+            ret = Collections.emptyList();
+        }
+
+        return ret;
+    }
 }

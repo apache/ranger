@@ -20,10 +20,7 @@
 package org.apache.ranger.plugin.classloader.test;
 
 public class TestPrintParent {
-
-	public String getString(){
-		String ret =  "Loaded by Component ClassLoader";
-		return ret;
-	}
-
+    public String getString() {
+        return "Loaded by Component ClassLoader";
+    }
 }

@@ -19,16 +19,16 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 
-public final class  DownloaderTask extends TimerTask {
-    private static final Log LOG = LogFactory.getLog(DownloaderTask.class);
+public final class DownloaderTask extends TimerTask {
+    private static final Logger LOG = LoggerFactory.getLogger(DownloaderTask.class);
 
-    private final DownloadTrigger timerTrigger = new DownloadTrigger();
+    private final DownloadTrigger                timerTrigger = new DownloadTrigger();
     private final BlockingQueue<DownloadTrigger> queue;
 
     public DownloaderTask(BlockingQueue<DownloadTrigger> queue) {

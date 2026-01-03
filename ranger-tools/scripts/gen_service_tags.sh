@@ -19,28 +19,17 @@ echo_stderr ()
     echo "$@" >&2
 }
 
-if [ $# -ne 2 ]
+if [ $# -ne 3 ]
 then
-	echo_stderr "usage: $0 <service_name> <num_of_service_resources>"
+	echo_stderr "usage: $0 <service_name> <num_of_service_resources> <initial_id>"
+	exit 1
 fi
 
-service_name=cm_hive
-num_of_service_resources=1
+service_name=$1
+num_of_service_resources=$2
+initial_id=$3
 
-if [ $# -ge 1 ]
-then
-	service_name=$1
-		echo_stderr "service_name=${service_name}, num_of_service_resources=${num_of_service_resources}"
-	if [ $# -ge 2 ]
-	then
-		num_of_service_resources=$2
-	else
-		echo_stderr "service_name=${service_name}, Assuming num_of_service_resources=${num_of_service_resources}"
-	fi
-else
-	echo_stderr "Assuming service_name=${service_name}, num_of_service_resources=${num_of_service_resources}"
-
-fi
+echo_stderr "Assuming service_name=${service_name}, num_of_service_resources=${num_of_service_resources} initial_id=${initial_id}"
 
 echo "{
   \"op\": \"add_or_update\",
@@ -64,20 +53,26 @@ echo "{
       \"isEnabled\": true
     }
   },
-  \"tags\": {
-    \"1\": {
-      \"type\": \"EXPIRES_ON\",
-      \"attributes\": {
-        \"expiry_date\": \"2027/12/31\",
-        \"activates_on\": \"2020/01/01\"
-      },
-      \"id\": 1,
-      \"isEnabled\": true
-    }
-  },"
+  \"tags\": {"
+for ((i = ${initial_id}; i < ${initial_id} + $num_of_service_resources; i++)); do
+    if [ $i -ne ${initial_id} ]
+    then
+         echo "  ,"
+    fi
+    echo "  \"${i}\": {
+       \"type\": \"EXPIRES_ON\",
+        \"attributes\": {
+          \"expiry_date\": \"2027/12/31\",
+          \"activates_on\": \"2020/01/01\"
+        },
+        \"id\": ${i},
+        \"isEnabled\": true
+      }"
+done
+  echo "  },"
 echo "  \"serviceResources\": ["
-for ((i = 1; i <= $num_of_service_resources; i++)); do
-    if [ $i -ne 1 ]
+for ((i = ${initial_id}; i < ${initial_id} + $num_of_service_resources; i++)); do
+    if [ $i -ne ${initial_id} ]
     then
        echo "  ,"
     fi
@@ -85,18 +80,19 @@ for ((i = 1; i <= $num_of_service_resources; i++)); do
         \"database\": { \"values\": [ \"finance_${i}\" ], \"isExcludes\": false, \"isRecursive\": false },
         \"table\": { \"values\": [ \"tax_2020_${i}\" ], \"isExcludes\": false, \"isRecursive\": false }
       },
+      \"serviceName\": \"${service_name}\",
       \"id\": ${i},
       \"isEnabled\": true
    }"
 done
 echo "  ],"
 echo "  \"resourceToTagIds\": {"
-for ((i = 1; i <= $num_of_service_resources; i++)); do
-    if [ $i -ne 1 ]
+for ((i = ${initial_id}; i < ${initial_id} + $num_of_service_resources; i++)); do
+    if [ $i -ne ${initial_id} ]
     then
        echo "  ,"
     fi
-    echo "    \"${i}\": [ 1 ]"
+    echo "    \"${i}\": [ ${i} ]"
 done
 echo "  }
 }"

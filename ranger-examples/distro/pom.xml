@@ -17,16 +17,40 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <artifactId>ranger-examples-distro</artifactId>
-    <name>Apache Ranger Examples Distribution</name>
-    <description>Apache Ranger Examples Distribution</description>
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger-examples</artifactId>
         <version>3.0.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
+
+    <artifactId>ranger-examples-distro</artifactId>
+    <name>Apache Ranger Examples Distribution</name>
+    <description>Apache Ranger Examples Distribution</description>
+
+    <!--Add a dependency here to ensure this module is the final one built-->
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>conditions-enrichers</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-sampleapp-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>sample-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>sampleapp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 
     <profiles>
         <profile>
@@ -40,8 +64,8 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>${assembly.plugin.version}</version>
                         <configuration>
-                          <finalName>ranger-examples-${project.version}</finalName>
-                          <outputDirectory>../target</outputDirectory>
+                            <finalName>ranger-examples-${project.version}</finalName>
+                            <outputDirectory>../target</outputDirectory>
                         </configuration>
                         <executions>
                             <execution>
@@ -64,13 +88,4 @@
             </build>
         </profile>
     </profiles>
-
-    <!--Add a dependency here to ensure this module is the final one built-->
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>sample-client</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
 </project>

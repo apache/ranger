@@ -25,6 +25,7 @@ $ export DOC_SRC_DIR=ranger/docs
 $ cd ${DOC_SRC_DIR}
 
 $ mvn site
+$ sh fix-external-site-reference.sh
 
 
 # ---------------------------------------------------------------------

@@ -1,22 +1,29 @@
-version: '3'
 services:
   ranger-hive:
     build:
       context: .
       dockerfile: Dockerfile.ranger-hive
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - HIVE_HADOOP_VERSION=${HIVE_HADOOP_VERSION}
         - HIVE_VERSION=${HIVE_VERSION}
-        - RANGER_VERSION=${RANGER_VERSION}
+        - HIVE_PLUGIN_VERSION=${HIVE_PLUGIN_VERSION}
+        - TEZ_VERSION=${TEZ_VERSION}
+        - RANGER_DB_TYPE=${RANGER_DB_TYPE}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-hive
     container_name: ranger-hive
-    hostname: ranger-hive.example.com
+    hostname: ranger-hive.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-hive:/etc/keytabs
     stdin_open: true
     tty: true
     networks:
       - ranger
     ports:
       - "10000:10000"
+      - "9083:9083"
     depends_on:
       ranger:
         condition: service_started
@@ -27,7 +34,11 @@ services:
     environment:
       - HIVE_HADOOP_VERSION
       - HIVE_VERSION
-      - RANGER_VERSION
+      - HIVE_PLUGIN_VERSION
+      - TEZ_VERSION
+      - RANGER_DB_TYPE
+      - KERBEROS_ENABLED
 
 networks:
   ranger:
+    name: rangernw

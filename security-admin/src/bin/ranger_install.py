@@ -16,14 +16,8 @@ import sys
 import errno
 import logging
 import zipfile
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-try:
-    from ConfigParser import ConfigParser
-except ImportError:
-    from configparser import ConfigParser
+from io import StringIO
+from configparser import ConfigParser
 import subprocess
 import fileinput
 import zipfile
@@ -58,8 +52,8 @@ def log(msg,type):
 
 def password_validation(password, userType):
 	if password:
-		if re.search("[\\\`'\"]",password):
-			log("[E] "+userType+" user password contains one of the unsupported special characters like \" ' \ `","error")
+		if re.search("[\\`'\"]",password):
+			log("[E] "+userType+" user password contains one of the unsupported special characters like \" ' \\ `","error")
 			sys.exit(1)
 		else:
 			log("[I] "+userType+" user password validated","info")
@@ -667,8 +661,8 @@ def import_db ():
 #        with zipfile.ZipFile(war_file, "r") as z:
 #            z.extractall(WEBAPP_ROOT)
 #        log("Extract War file " + war_file + " to " + WEBAPP_ROOT + " DONE! ","info")
-#        if os.path.isfile ( os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml.prod")) :
-#            shutil.copyfile(os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml.prod"), os.path.join(WEBAPP_ROOT, "WEB-INF", "log4j.xml"))
+#        if os.path.isfile ( os.path.join(WEBAPP_ROOT, "WEB-INF", "logback.xml.prod")) :
+#            shutil.copyfile(os.path.join(WEBAPP_ROOT, "WEB-INF", "logback.xml.prod"), os.path.join(WEBAPP_ROOT, "WEB-INF", "logback.xml"))
 
 # def copy_mysql_connector():
 #     log("Copying MYSQL Connector to "+app_home+"/WEB-INF/lib ","info")

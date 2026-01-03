@@ -36,8 +36,8 @@ usage() {
 
 log() {
    local prefix="$(date +%Y-%m-%d\ %H:%M:%S,%3N) "
-   echo "${prefix} $@" >> $LOGFILE
-   echo "${prefix} $@"
+   echo "${prefix} $*" >> $LOGFILE
+   echo "${prefix} $*"
 }
 #eval `grep -v '^XAAUDIT.' ${PROPFILE} | grep -v '^$' | grep -v '^#'`
 get_prop(){
@@ -47,9 +47,29 @@ get_prop(){
 	echo $value
 }
 
+get_prop_or_default() {
+  validateProperty=$(sed '/^\#/d' $2 | grep "^$1\s*="  | tail -n 1) # for validation
+
+  if test -z "$validateProperty" ;
+  then
+    value=$3 # default value
+  else
+    value=$(echo $validateProperty | cut -d "=" -f2-)
+  fi
+
+  if [[ $1 == *password* ]]
+  then
+    echo $value
+  else
+   echo $value | tr -d \'\"
+ fi
+}
+
 PYTHON_COMMAND_INVOKER=$(get_prop 'PYTHON_COMMAND_INVOKER' $PROPFILE)
+
 DB_FLAVOR=$(get_prop 'DB_FLAVOR' $PROPFILE)
 SQL_CONNECTOR_JAR=$(get_prop 'SQL_CONNECTOR_JAR' $PROPFILE)
+CONNECTION_STRING_ADDITIONAL_PARAMS=$(get_prop 'CONNECTION_STRING_ADDITIONAL_PARAMS' $PROPFILE)
 db_root_user=$(get_prop 'db_root_user' $PROPFILE)
 db_root_password=$(get_prop 'db_root_password' $PROPFILE)
 db_host=$(get_prop 'db_host' $PROPFILE)
@@ -80,6 +100,7 @@ LOGFILE=$(eval echo "$(get_prop 'LOGFILE' $PROPFILE)")
 JAVA_BIN=$(get_prop 'JAVA_BIN' $PROPFILE)
 JAVA_VERSION_REQUIRED=$(get_prop 'JAVA_VERSION_REQUIRED' $PROPFILE)
 JAVA_ORACLE=$(get_prop 'JAVA_ORACLE' $PROPFILE)
+java_opts=$(get_prop_or_default 'java_opts' $PROPFILE '')
 mysql_core_file=$(get_prop 'mysql_core_file' $PROPFILE)
 oracle_core_file=$(get_prop 'oracle_core_file' $PROPFILE)
 postgres_core_file=$(get_prop 'postgres_core_file' $PROPFILE)
@@ -113,6 +134,25 @@ AZURE_MASTERKEY_NAME=$(get_prop 'AZURE_MASTERKEY_NAME' $PROPFILE)
 AZURE_MASTER_KEY_TYPE=$(get_prop 'AZURE_MASTER_KEY_TYPE' $PROPFILE)
 ZONE_KEY_ENCRYPTION_ALGO=$(get_prop 'ZONE_KEY_ENCRYPTION_ALGO' $PROPFILE)
 AZURE_KEYVAULT_URL=$(get_prop 'AZURE_KEYVAULT_URL' $PROPFILE)
+
+AWS_KMS_ENABLED=$(get_prop 'AWS_KMS_ENABLED' $PROPFILE)
+AWS_KMS_MASTERKEY_ID=$(get_prop 'AWS_KMS_MASTERKEY_ID' $PROPFILE)
+AWS_CLIENT_ACCESSKEY=$(get_prop 'AWS_CLIENT_ACCESSKEY' $PROPFILE)
+AWS_CLIENT_SECRETKEY=$(get_prop 'AWS_CLIENT_SECRETKEY' $PROPFILE)
+AWS_CLIENT_REGION=$(get_prop 'AWS_CLIENT_REGION' $PROPFILE)
+
+IS_GCP_ENABLED=$(get_prop 'IS_GCP_ENABLED' $PROPFILE)
+GCP_KEYRING_ID=$(get_prop 'GCP_KEYRING_ID' $PROPFILE)
+GCP_CRED_JSON_FILE=$(get_prop 'GCP_CRED_JSON_FILE' $PROPFILE)
+GCP_PROJECT_ID=$(get_prop 'GCP_PROJECT_ID' $PROPFILE)
+GCP_LOCATION_ID=$(get_prop 'GCP_LOCATION_ID' $PROPFILE)
+GCP_MASTER_KEY_NAME=$(get_prop 'GCP_MASTER_KEY_NAME' $PROPFILE)
+
+TENCENT_KMS_ENABLED=$(get_prop 'TENCENT_KMS_ENABLED' $PROPFILE)
+TENCENT_MASTERKEY_ID=$(get_prop 'TENCENT_MASTERKEY_ID' $PROPFILE)
+TENCENT_CLIENT_ID=$(get_prop 'TENCENT_CLIENT_ID' $PROPFILE)
+TENCENT_CLIENT_SECRET=$(get_prop 'TENCENT_CLIENT_SECRET' $PROPFILE)
+TENCENT_CLIENT_REGION=$(get_prop 'TENCENT_CLIENT_REGION' $PROPFILE)
 
 kms_principal=$(get_prop 'kms_principal' $PROPFILE)
 kms_keytab=$(get_prop 'kms_keytab' $PROPFILE)
@@ -154,9 +194,11 @@ get_distro(){
 	log "[I] Checking distribution name.."
 	ver=$(cat /etc/*{issues,release,version} 2> /dev/null)
 	if [[ $(echo $ver | grep DISTRIB_ID) ]]; then
-	    DIST_NAME=$(lsb_release -si)
+	  DIST_NAME=$(lsb_release -si)
+	elif [[ $(echo $ver | grep -E '^NAME=' | cut -d'"' -f2) ]]; then
+	  DIST_NAME=$(echo $ver | grep -E '^NAME=' | cut -d'"' -f2)
 	else
-	    DIST_NAME=$(echo $ver | cut -d ' ' -f 1 | sort -u | head -1)
+	  DIST_NAME=$(echo $ver | cut -d ' ' -f 1 | sort -u | head -1)
 	fi
 	export $DIST_NAME
 	log "[I] Found distribution : $DIST_NAME"
@@ -225,26 +267,6 @@ password_validation(){
                 else
                         log "[I]" $2 "password validated."
                 fi
-        fi
-}
-
-password_validation_safenet_keysecure(){
-        if [ -z "$1" ]
-        then
-                log "[I] Blank password is not allowed for" $2". Please enter valid password."
-                exit 1
-        else
-                log "[I]" $2 "password validated."
-        fi
-}
-
-azure_client_secret_validation(){
-        if [ -z "$1" ]
-        then
-                log "[I] Blank password is not allowed for" $2". Please enter valid password."
-                exit 1
-        else
-                log "[I]" $2 "password validated."
         fi
 }
 
@@ -375,6 +397,7 @@ check_java_version() {
 		log "[E] The java version must be greater than or equal to $JAVA_VERSION_REQUIRED, the current java version is $version"
 		exit 1;
 	fi
+	if [[ ${JAVA_OPTS} == "" ]] ;then  export JAVA_OPTS="${java_opts}" ;fi
 }
 
 sanity_check_files() {
@@ -458,17 +481,14 @@ copy_db_connector(){
 	fi
 }
 
-setup_kms(){
-        #copying ranger kms provider 
-	oldP=${PWD}
-        cd $PWD/ews/webapp
-        log "[I] Adding ranger kms provider as services in hadoop-common jar"
-	for f in lib/hadoop-common*.jar
-	do
-        	 ${JAVA_HOME}/bin/jar -uf ${f}  META-INF/services/org.apache.hadoop.crypto.key.KeyProviderFactory
-		chown ${unix_user}:${unix_group} ${f}
-	done
-        cd ${oldP}
+checkIfEmpty() {
+	if [ -z "$1" ]
+	then
+		log "[I] - Please provide valid value for '$2', Found : '$1'";
+		exit 1
+	else
+		log "[I] - '$2' validated";
+	fi
 }
 
 update_properties() {
@@ -558,9 +578,6 @@ update_properties() {
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
-		db_name=`echo ${db_name} | tr '[:upper:]' '[:lower:]'`
-		db_user=`echo ${db_user} | tr '[:upper:]' '[:lower:]'`
-
 		if [ "${db_ssl_enabled}" == "true" ]
 		then
 			if test -f $db_ssl_certificate_file; then
@@ -590,7 +607,12 @@ update_properties() {
 	if [ "${DB_FLAVOR}" == "MSSQL" ]
 	then
 		propertyName=ranger.ks.jpa.jdbc.url
-		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+    		if [ "${CONNECTION_STRING_ADDITIONAL_PARAMS}" != "" ]
+      		then
+			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name};${CONNECTION_STRING_ADDITIONAL_PARAMS}"
+   		else
+     			newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
+		fi
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 		propertyName=ranger.ks.jpa.jdbc.dialect
@@ -639,10 +661,19 @@ update_properties() {
 	AZURE_CLIENT_SEC="ranger.kms.azure.client.secret"
 	AZURE_CLIENT_SECRET_ALIAS="ranger.ks.azure.client.secret"
 
+	AWS_CLIENT_SEC="ranger.kms.aws.client.secretkey"
+	AWS_CLIENT_SECRET_ALIAS="ranger.ks.aws.client.secretkey"
+
+	TENCENT_CLIENT_SEC="ranger.kms.tencent.client.secret"
+	TENCENT_CLIENT_SECRET_ALIAS="ranger.ks.tencent.client.secret"
+
 
         HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
         KEYSECURE_ENABLED=`echo $KEYSECURE_ENABLED | tr '[:lower:]' '[:upper:]'`
 	AZURE_KEYVAULT_ENABLED=`echo $AZURE_KEYVAULT_ENABLED | tr '[:lower:]' '[:upper:]'`
+	AWS_KMS_ENABLED=`echo $AWS_KMS_ENABLED | tr '[:lower:]' '[:upper:]'`
+	IS_GCP_ENABLED=`echo $IS_GCP_ENABLED | tr '[:lower:]' '[:upper:]'`
+	TENCENT_KMS_ENABLED=`echo $TENCENT_KMS_ENABLED | tr '[:lower:]' '[:upper:]'`
 
 	if [ "${keystore}" != "" ]
 	then
@@ -670,7 +701,7 @@ update_properties() {
 
                 if [ "${KEYSECURE_ENABLED}" == "TRUE" ]
                 then
-                        password_validation_safenet_keysecure "$KEYSECURE_PASSWORD" "KEYSECURE User Password"
+                        checkIfEmpty "$KEYSECURE_PASSWORD" "KEYSECURE User Password"
                         $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${KEYSECURE_PASSWORD_ALIAS}" -v "${KEYSECURE_PASSWORD}" -c 1
 
                         propertyName=ranger.kms.keysecure.login.password.alias
@@ -684,7 +715,7 @@ update_properties() {
 
 		if [ "${AZURE_KEYVAULT_ENABLED}" == "TRUE" ]
                 then
-                        azure_client_secret_validation "$AZURE_CLIENT_SECRET" "Azure Client Secret"
+                        checkIfEmpty "$AZURE_CLIENT_SECRET" "Azure Client Secret"
                         $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${AZURE_CLIENT_SECRET_ALIAS}" -v "${AZURE_CLIENT_SECRET}" -c 1
 
                         propertyName=ranger.kms.azure.client.secret.alias
@@ -696,6 +727,34 @@ update_properties() {
                         updatePropertyToFilePy $propertyName $newPropertyValue $to_file
                 fi
 
+    # if $AWS_CLIENT_ACCESSKEY is set, then $AWS_CLIENT_SECRETKEY must be set
+		if [ "$AWS_KMS_ENABLED" == "TRUE" -a -n "$AWS_CLIENT_ACCESSKEY" ]
+		then
+                        checkIfEmpty "$AWS_CLIENT_SECRETKEY" "AWS Client SecretKey"
+                        $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${AWS_CLIENT_SECRET_ALIAS}" -v "${AWS_CLIENT_SECRETKEY}" -c 1
+
+                        propertyName=ranger.kms.aws.client.secretkey.alias
+                        newPropertyValue="${AWS_CLIENT_SECRET_ALIAS}"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                        propertyName=ranger.kms.aws.client.secretkey
+                        newPropertyValue="_"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		fi
+
+		if [ "$TENCENT_KMS_ENABLED" == "TRUE" ]
+		then
+                        checkIfEmpty "$TENCENT_CLIENT_SECRET" "Tencent Client Secret"
+                        $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${TENCENT_CLIENT_SECRET_ALIAS}" -v "${TENCENT_CLIENT_SECRET}" -c 1
+
+                        propertyName=ranger.kms.tencent.client.secret.alias
+                        newPropertyValue="${TENCENT_CLIENT_SECRET_ALIAS}"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                        propertyName=ranger.kms.tencent.client.secret
+                        newPropertyValue="_"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		fi
 
 		propertyName=ranger.ks.jpa.jdbc.credential.alias
 		newPropertyValue="${DB_CREDENTIAL_ALIAS}"
@@ -735,6 +794,14 @@ update_properties() {
 
 		propertyName="${AZURE_CLIENT_SEC}"
                 newPropertyValue="${AZURE_CLIENT_SECRET}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${AWS_CLIENT_SEC}"
+                newPropertyValue="${AWS_CLIENT_SECRETKEY}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${TENCENT_CLIENT_SEC}"
+                newPropertyValue="${TENCENT_CLIENT_SECRET}"
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	fi
@@ -888,6 +955,99 @@ update_properties() {
 
         fi
 
+	########### AWS KEY VAULT #################
+
+
+        if [ "${AWS_KMS_ENABLED}" != "TRUE" ]
+        then
+                propertyName=ranger.kms.awskms.enabled
+                newPropertyValue="false"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+        else
+                propertyName=ranger.kms.awskms.enabled
+                newPropertyValue="true"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.awskms.masterkey.id
+                newPropertyValue="${AWS_KMS_MASTERKEY_ID}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.aws.client.accesskey
+                newPropertyValue="${AWS_CLIENT_ACCESSKEY}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.aws.client.region
+                newPropertyValue="${AWS_CLIENT_REGION}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+        fi
+
+	########### RANGER GCP #################
+		if [ "${IS_GCP_ENABLED}" != "TRUE" ]
+		then
+			propertyName=ranger.kms.gcp.enabled
+			newPropertyValue="false"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		else
+			propertyName=ranger.kms.gcp.enabled
+			newPropertyValue="true"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.keyring.id
+			newPropertyValue="${GCP_KEYRING_ID}"
+			checkIfEmpty "$newPropertyValue" "GCP_KEYRING_ID"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.cred.file
+			newPropertyValue="${GCP_CRED_JSON_FILE}"
+			if [ "${newPropertyValue: -5}" != ".json" ]
+			then
+				echo "Error - GCP Credential file must be in a json format, Provided file : ${newPropertyValue}";
+				exit 1
+			fi
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.project.id
+			newPropertyValue="${GCP_PROJECT_ID}"
+			checkIfEmpty "$newPropertyValue" "GCP_PROJECT_ID"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.location.id
+			newPropertyValue="${GCP_LOCATION_ID}"
+			checkIfEmpty "$newPropertyValue" "GCP_LOCATION_ID"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.masterkey.name
+			newPropertyValue="${GCP_MASTER_KEY_NAME}"
+			checkIfEmpty "$newPropertyValue" "GCP_MASTER_KEY_NAME"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		fi
+
+	########### TENCENT KEY VAULT #################
+
+
+        if [ "${TENCENT_KMS_ENABLED}" != "TRUE" ]
+        then
+                propertyName=ranger.kms.tencentkms.enabled
+                newPropertyValue="false"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+        else
+                propertyName=ranger.kms.tencentkms.enabled
+                newPropertyValue="true"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.tencent.client.id
+                newPropertyValue="${TENCENT_CLIENT_ID}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.tencent.client.region
+                newPropertyValue="${TENCENT_CLIENT_REGION}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.tencent.masterkey.id
+                newPropertyValue="${TENCENT_MASTERKEY_ID}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+        fi
 
 	to_file_kms_site=$PWD/ews/webapp/WEB-INF/classes/conf/ranger-kms-site.xml
     if test -f $to_file_kms_site; then
@@ -988,7 +1148,7 @@ EOF
 	else
 	    useringroup=`id ${unix_user}`
         useringrouparr=(${useringroup// / })
-	    if [[  ${useringrouparr[1]} =~ "(${unix_group})" ]]
+	    if [[  ${useringrouparr[1]} =~ \(${unix_group}\) ]]
 		then
 			log "[I] the ${unix_user} user already exists and belongs to group ${unix_group}"
 		else
@@ -1129,7 +1289,7 @@ setup_install_files(){
 		then
 			DB_SSL_PARAM="' -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		else
-			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.keyStoreType={javax_net_ssl_keyStore_type} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
+			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.keyStoreType=${javax_net_ssl_keyStore_type} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		fi
 		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
@@ -1203,7 +1363,6 @@ if [ "$?" == "0" ]
 then
 	update_properties
 	$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
-    setup_kms
 else
 	log "[E] DB schema setup failed! Please contact Administrator."
 	exit 1

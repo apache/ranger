@@ -19,11 +19,10 @@
 
 package org.apache.ranger.plugin.errors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 
 public enum ValidationErrorCode {
     // SERVICE VALIDATION
@@ -34,7 +33,7 @@ public enum ValidationErrorCode {
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_ID(1005, "No service found for id [{0}]"),
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_NAME(1006, "Missing service name"),
     SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT(1007, "Duplicate service name: name=[{0}]"),
-    SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT(3051,"Display name [{0}] is already used by service [{1}]"),
+    SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT(3051, "Display name [{0}] is already used by service [{1}]"),
     SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_NAME(3031, "Invalid service name=[{0}]. It should not be longer than 256 characters and special characters are not allowed (except underscore and hyphen)"),
     SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_DISPLAY_NAME(3050, "Invalid service display name [{0}]. It should not be longer than 256 characters, should not start with space, and should not include special characters (except underscore, hyphen and space)"),
     SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT(1008, "Duplicate service name: name=[{0}], id=[{1}]"),
@@ -66,7 +65,7 @@ public enum ValidationErrorCode {
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_INVALID_DEFAULT_INDEX(2019, "default index[{0}] for enum [{1}] is invalid"),
     SERVICE_DEF_VALIDATION_ERR_ENUM_DEF_NULL_ENUM_ELEMENT(2020, "An enum element in enum element collection of enum [{0}] is null"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_RESOURCE_LEVELS(2021, "Resource-def levels are not in increasing order in an hierarchy"),
-	SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
+    SERVICE_DEF_VALIDATION_ERR_NOT_LOWERCASE_NAME(2022, "{0}:[{1}] Invalid resource name. Resource name should consist of only lowercase, hyphen or underscore characters"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_MANADORY_VALUE_FOR_SERVICE_RESOURCE(2023, "{0} cannot be mandatory because {1}(parent) is not mandatory"),
 
     // POLICY VALIDATION
@@ -104,14 +103,19 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME(3033, "Non-existent Zone name={0} in policy create"),
     POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE(3048, "Service name = {0} is not associated to Zone name = {1}"),
     POLICY_VALIDATION_ERR_UNSUPPORTED_POLICY_ITEM_TYPE(3049, "Deny or deny-exceptions are not supported if policy has isDenyAllElse flag set to true"),
-    POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_USER(3053, "policy items user was null"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_GROUP(3054, "policy items group was null"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE(3055, "policy items role was null"),
+    POLICY_VALIDATION_ERR_DUPLICATE_VALUES_FOR_RESOURCE(3056, "Values for the resource={0} contained a duplicate value={1}. Ensure all values for a resource are unique"),
+    POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009, " Invalid service type [{0}] provided for service [{1}]"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS_TYPE(4010, "policy items access object has empty or null values for type"),
 
     // SECURITY_ZONE Validations
     SECURITY_ZONE_VALIDATION_ERR_UNSUPPORTED_ACTION(3034, "Internal error: unsupported action[{0}]; isValid() is only supported for DELETE"),
     SECURITY_ZONE_VALIDATION_ERR_MISSING_FIELD(3035, "Internal error: missing field[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_NAME_CONFLICT(3036, "Another security zone already exists for this name: zone-id=[{0}]]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_ZONE_ID(3037, "No security zone found for [{0}]"),
-    SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS(3038, "both users and user-groups collections for the security zone were null/empty"),
+    SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS_AND_ROLES(3038, "users, user-groups and roles collections for the security zone were null/empty"),
     SECURITY_ZONE_VALIDATION_ERR_MISSING_RESOURCES(3039, "No resources specified for service [{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_NAME(3040, "Invalid service [{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_TYPE(3041, "Invalid service-type [{0}]"),
@@ -121,6 +125,7 @@ public enum ValidationErrorCode {
     SECURITY_ZONE_VALIDATION_ERR_INTERNAL_ERROR(3045, "Internal Error:[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT(3046, "Multiple zones:[{0}] match resource:[{1}]"),
     SECURITY_ZONE_VALIDATION_ERR_UNEXPECTED_RESOURCES(3047, "Tag service [{0}], with non-empty resources, is associated with security zone"),
+    SECURITY_ZONE_VALIDATION_ERR_DUPLICATE_RESOURCE_ENTRY(3052, "Resource [{0}] specified more than once in service [{1}]"),
 
     //RANGER ROLE Validations
     ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_OBJECT(4001, "Internal error: RangerRole object passed in was null"),
@@ -132,40 +137,67 @@ public enum ValidationErrorCode {
     ROLE_VALIDATION_ERR_INVALID_ROLE_NAME(4007, "No RangerRole found for name[{0}]"),
     ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION(4008, "Internal error: method signature isValid(Long) is only supported for DELETE"),
 
+    GDS_VALIDATION_ERR_NON_EXISTING_USER(4101, "User [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_GROUP(4102, "Group [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_ROLE(4103, "Role [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_SERVICE(4104, "Service [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NON_EXISTING_ZONE(4105, "Zone [{0}] does not exist"),
+    GDS_VALIDATION_ERR_NOT_ADMIN(4106, "User [{0}] is not an admin for {1} [{2}]"),
+    GDS_VALIDATION_ERR_SERVICE_NAME_MISSING(4107, "Service name not provided"),
+    GDS_VALIDATION_ERR_DATASET_NAME_CONFLICT(4108, "Dataset with name [{0}] already exists. ID=[{1}]"),
+    GDS_VALIDATION_ERR_DATASET_NAME_NOT_FOUND(4109, "Dataset with name [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATASET_ID_NOT_FOUND(4110, "Dataset with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_PROJECT_NAME_CONFLICT(4111, "Project with name [{0}] already exists. ID=[{1}]"),
+    GDS_VALIDATION_ERR_PROJECT_NAME_NOT_FOUND(4112, "Project with name [{0}] does not exist"),
+    GDS_VALIDATION_ERR_PROJECT_ID_NOT_FOUND(4113, "Project with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NAME_CONFLICT(4114, "Data share with name [{0}] already exists. ID=[{1}]"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NAME_NOT_FOUND(4115, "Data share with name [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATA_SHARE_ID_NOT_FOUND(4116, "Data share with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NOT_SERVICE_ADMIN(4117, "Not a admin for service [{0}]"),
+    GDS_VALIDATION_ERR_DATA_SHARE_NOT_SERVICE_OR_ZONE_ADMIN(4118, "Not a admin for service [{0}] or zone [{1}]"),
+    GDS_VALIDATION_ERR_INVALID_ACCESS_TYPE(4119, "Not a valid access-type [{0}]"),
+    GDS_VALIDATION_ERR_INVALID_MASK_TYPE(4120, "Not a valid mask-type [{0}]"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_NAME_CONFLICT(4121, "Shared resource with name [{0}] already exists in data share [{1}]. ID=[{2}]"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_ID_NOT_FOUND(4122, "Shared resource with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_ADD_DATA_SHARE_IN_DATASET_INVALID_STATUS(4123, "[{0}]: invalid status while adding data share into a dataset"),
+    GDS_VALIDATION_ERR_DATA_SHARE_IN_DATASET_ID_NOT_FOUND(4124, "Data share-in-dataset with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE(4125, "invalid status change from [{0}] to [{1}]"),
+    GDS_VALIDATION_ERR_UPDATE_IMMUTABLE_FIELD(4126, "[{0}] can't be updated"),
+    GDS_VALIDATION_ERR_DATASET_IN_PROJECT_ID_NOT_FOUND(4127, "Dataset-in-project with ID [{0}] does not exist"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_CONFLICT(4128, "Shared resource with resources [{0}] already exists for data share [{1}]"),
+    GDS_DATASET_NAME_TOO_LONG(4129, "Invalid dataset name=[{0}]. Dataset name should not be longer than 512 characters"),
+    GDS_DATASHARE_NAME_TOO_LONG(4130, "Invalid datashare name=[{0}]. Datashare name should not be longer than 512 characters"),
+    GDS_PROJECT_NAME_TOO_LONG(4131, "Invalid project name=[{0}]. Project name should not be longer than 512 characters"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_RESOURCE_NULL(4132, "Resource value in SharedResource [{0}] is null"),
+    GDS_VALIDATION_ERR_SHARED_RESOURCE_MISSING_VALUE(4133, "Invalid resource: empty or no value provided for {0}");
 
-    ;
+    private static final Logger LOG = LoggerFactory.getLogger(ValidationErrorCode.class);
 
-
-    private static final Log LOG = LogFactory.getLog(ValidationErrorCode.class);
-
-    final int _errorCode;
-    final String _template;
+    final int    errorCode;
+    final String template;
 
     ValidationErrorCode(int errorCode, String template) {
-        _errorCode = errorCode;
-        _template = template;
+        this.errorCode = errorCode;
+        this.template  = template;
     }
 
     public String getMessage(Object... items) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("<== ValidationErrorCode.getMessage(%s)", Arrays.toString(items)));
-        }
+        LOG.debug("<== ValidationErrorCode.getMessage({})", items);
 
-        MessageFormat mf = new MessageFormat(_template);
-        String result = mf.format(items);
+        MessageFormat mf     = new MessageFormat(template);
+        String        result = mf.format(items);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format("<== ValidationErrorCode.getMessage(%s): %s", Arrays.toString(items), result));
-        }
+        LOG.debug("<== ValidationErrorCode.getMessage({}): {}", items, result);
+
         return result;
     }
 
     public int getErrorCode() {
-        return _errorCode;
+        return errorCode;
     }
 
     @Override
     public String toString() {
-        return String.format("Code: %d, template: %s", _errorCode, _template);
+        return String.format("Code: %d, template: %s", errorCode, template);
     }
 }

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,19 +17,19 @@
  */
 package org.apache.ranger.credentialapi;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestCredentialReader {
     private String keystoreFile;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
@@ -37,13 +37,13 @@ public class TestCredentialReader {
         }
         keystoreFile = basedir + File.separator + "target" + File.separator + "testkeystore.jceks";
 
-        buildks buildksOBJ = new buildks();
+        buildks  buildksOBJ        = new buildks();
         String[] argsCreateCommand = {"create", "TestCredential2", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
-        int rc2 = buildksOBJ.createCredential(argsCreateCommand);
+        int      rc2               = buildksOBJ.createCredential(argsCreateCommand);
         assertEquals(0, rc2);
     }
 
-    @After
+    @AfterEach
     public void cleanup() throws Exception {
         FileUtils.deleteQuietly(new File(keystoreFile));
     }
@@ -57,7 +57,5 @@ public class TestCredentialReader {
 
         buildks buildksOBJ = new buildks();
         buildksOBJ.deleteCredential(argsdeleteCommand, true);
-
     }
-
 }

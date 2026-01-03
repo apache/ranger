@@ -1,0 +1,37 @@
+{
+  "op":          "add_or_update",
+  "tagModel":    "resource_private",
+  "serviceName": "dev_hive",
+  "tagDefinitions": {
+    "1": { "name": "SALES"     },
+    "2": { "name": "FINANCE"   },
+    "3": { "name": "SHIPPING"  },
+    "4": { "name": "CUSTOMER"  },
+    "5": { "name": "OPERATIONS"}
+  },
+  "tags": {
+    "1": { "id": 1, "type": "SALES"      },
+    "2": { "id": 2, "type": "FINANCE"    },
+    "3": { "id": 3, "type": "SHIPPING"   },
+    "4": { "id": 4, "type": "CUSTOMER"   },
+    "5": { "id": 5, "type": "OPERATIONS" }
+  },
+  "serviceResources": [
+    { "id": 1, "serviceName": "dev_hive", "resourceElements": {  "database": { "values": [ "sales" ] },      "table": { "values": [ "prospects"    ] } } },
+    { "id": 2, "serviceName": "dev_hive", "resourceElements": {  "database": { "values": [ "sales" ] },      "table": { "values": [ "orders"       ] } } },
+    { "id": 3, "serviceName": "dev_hive", "resourceElements": {  "database": { "values": [ "finance" ] },    "table": { "values": [ "invoices"     ] } } },
+    { "id": 4, "serviceName": "dev_hive", "resourceElements": {  "database": { "values": [ "finance" ] },    "table": { "values": [ "payments"     ] } } },
+    { "id": 5, "serviceName": "dev_hive", "resourceElements": {  "database": { "values": [ "shipping" ] },   "table": { "values": [ "shipments"    ] } } },
+    { "id": 6, "serviceName": "dev_hive", "resourceElements": {  "database": { "values": [ "customers" ] },  "table": { "values": [ "contact_info" ] } } },
+    { "id": 7, "serviceName": "dev_hive", "resourceElements": {  "database": { "values": [ "operations" ] }, "table": { "values": [ "facilities"   ] } } }
+  ],
+  "resourceToTagIds": {
+    "1": [ 1 ],
+    "2": [ 1 ],
+    "3": [ 2 ],
+    "4": [ 2 ],
+    "5": [ 3 ],
+    "6": [ 4 ],
+    "7": [ 5 ]
+  }
+}

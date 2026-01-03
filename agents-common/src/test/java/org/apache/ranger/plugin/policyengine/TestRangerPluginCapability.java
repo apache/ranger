@@ -22,23 +22,20 @@ package org.apache.ranger.plugin.policyengine;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRangerPluginCapability {
-
-    private static Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-				.setPrettyPrinting()
-				.create();
+    private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
 
     @Test
     public void testRangerPluginCapabilities() {
@@ -48,8 +45,8 @@ public class TestRangerPluginCapability {
     }
 
     private void runTestsFromResourceFiles(String[] resourceNames) {
-        for(String resourceName : resourceNames) {
-            InputStream inStream = this.getClass().getResourceAsStream(resourceName);
+        for (String resourceName : resourceNames) {
+            InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
             InputStreamReader reader   = new InputStreamReader(inStream);
 
             runTests(reader, resourceName);
@@ -60,28 +57,28 @@ public class TestRangerPluginCapability {
         RangerPluginCapabilityTest testCases = gsonBuilder.fromJson(reader, RangerPluginCapabilityTest.class);
 
         for (RangerPluginCapabilityTest.TestCase testCase : testCases.testCases) {
-            String testName = testCase.name;
-
             RangerPluginCapability me;
+
             if (CollectionUtils.isEmpty(testCase.myCapabilities)) {
                 me = new RangerPluginCapability();
             } else {
                 me = new RangerPluginCapability(testCase.myCapabilities);
             }
+
             RangerPluginCapability other = new RangerPluginCapability(testCase.otherCapabilities);
 
             List<String> difference = me.compare(other);
 
-            assertTrue(fileName + "-" + testName + "-" + Arrays.toString(difference.toArray()), StringUtils.equals(JsonUtils.listToJson(difference), JsonUtils.listToJson(testCase.difference)));
-
+            assertTrue(StringUtils.equals(JsonUtils.listToJson(difference), JsonUtils.listToJson(testCase.difference)),
+                    fileName + "-" + testCase.name + "-" + Arrays.toString(difference.toArray()));
         }
     }
 
     static class RangerPluginCapabilityTest {
         List<TestCase> testCases;
 
-        class TestCase {
-            String  name;
+        static class TestCase {
+            String       name;
             List<String> myCapabilities;
             List<String> otherCapabilities;
 

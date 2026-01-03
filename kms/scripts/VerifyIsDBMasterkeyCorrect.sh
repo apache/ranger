@@ -20,7 +20,7 @@ else
     exit ;
 fi
 RANGER_KMS_HOME=`dirname $0`
-cp="${RANGER_KMS_HOME}/cred/lib/*:${RANGER_KMS_HOME}/./ews/webapp/WEB-INF/classes/conf/:${RANGER_KMS_HOME}/ews/webapp/WEB-INF/classes/lib/*:${RANGER_KMS_HOME}/ews/webapp/config:${RANGER_KMS_HOME}/ews/lib/*:${RANGER_KMS_HOME}/ews/webapp/lib/*:${RANGER_KMS_HOME}/ews/webapp/META-INF"
+cp="${RANGER_KMS_HOME}/cred/lib/*:${RANGER_KMS_HOME}/ews/webapp/WEB-INF/classes/conf/:${RANGER_KMS_HOME}/ews/webapp/WEB-INF/classes:${RANGER_KMS_HOME}/ews/webapp/WEB-INF/lib/*:${RANGER_KMS_HOME}/ews/lib/*:${RANGER_KMS_HOME}/ews/webapp/META-INF"
 
 #echo "${cp}"
 java -cp "${cp}" org.apache.hadoop.crypto.key.VerifyIsDBMasterkeyCorrect ${1}

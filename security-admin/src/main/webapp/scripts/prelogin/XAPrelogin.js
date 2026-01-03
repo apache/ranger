@@ -69,6 +69,9 @@ function doLogin() {
 			"cache-control" : "no-cache"
 		},
 		success : function() {
+			if (localStorage && localStorage['backgrid-colmgr']) {
+				delete localStorage['backgrid-colmgr'];
+			}
 			if(location.hash.length > 2)
 				window.location.replace('index.html'+location.hash);
 			else
@@ -121,5 +124,15 @@ $(function() {
 		}else{
 			$(e.target).parent().removeClass('error');
 		}
+	});
+
+	$("#password").on("input", function() {
+		$("#show-password").toggle(this.value.trim() !== "");
+	});
+
+	$("#show-password").on("click", function() {
+		var showPassword = $("#password").is(":password");
+		$("#password").attr("type", showPassword ? "text" : "password");
+		$("#show-password").toggleClass("fa-eye-slash fa-eye");
 	});
 });

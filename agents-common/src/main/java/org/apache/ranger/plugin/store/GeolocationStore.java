@@ -25,8 +25,9 @@ import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;
 import java.util.Map;
 
 public interface GeolocationStore {
-	void init(Map<String, String> context);
+    void init(Map<String, String> context);
 
-	RangerGeolocationData getGeoLocation(String ipAddress);
-	RangerGeolocationDatabase getGeoDatabase();
+    RangerGeolocationData getGeoLocation(String ipAddress);
+
+    RangerGeolocationDatabase getGeoDatabase();
 }

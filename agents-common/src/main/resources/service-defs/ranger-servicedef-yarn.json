@@ -31,13 +31,15 @@
 		{
 			"itemId": 1,
 			"name": "submit-app",
-			"label": "submit-app"
+			"label": "submit-app",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 2,
 			"name": "admin-queue",
 			"label": "admin-queue",
+			"category": "MANAGE",
 			"impliedGrants":
 			[
 				"submit-app"
@@ -93,7 +95,7 @@
 			"label": "Authentication Type",
 			"defaultValue": "simple"
 		},
-		
+
 		{
 			"itemId": 5,
 			"name": "commonNameForCertificate",
@@ -103,8 +105,21 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Common Name for Certificate"
+		},
+
+		{
+			"itemId": 6,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[]"
 		}
-	
+
 	],
 
 	"enums": 

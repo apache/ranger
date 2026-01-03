@@ -20,18 +20,18 @@ package org.apache.ranger.services.sqoop.client.json.model;
 import java.util.List;
 
 public class SqoopConnectorsResponse {
-	private List<SqoopConnectorResponse> connectors;
+    private List<SqoopConnectorResponse> connectors;
 
-	public List<SqoopConnectorResponse> getConnectors() {
-		return connectors;
-	}
+    public List<SqoopConnectorResponse> getConnectors() {
+        return connectors;
+    }
 
-	public void setConnectors(List<SqoopConnectorResponse> connectors) {
-		this.connectors = connectors;
-	}
+    public void setConnectors(List<SqoopConnectorResponse> connectors) {
+        this.connectors = connectors;
+    }
 
-	@Override
-	public String toString() {
-		return "SqoopConnectorsResponse [connectors=" + connectors + "]";
-	}
+    @Override
+    public String toString() {
+        return "SqoopConnectorsResponse [connectors=" + connectors + "]";
+    }
 }

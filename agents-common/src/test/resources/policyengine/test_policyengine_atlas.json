@@ -7,7 +7,7 @@
     "resources":[
       {"name":"entity-type","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Entity Type","description":"Entity Type"},
       {"name":"entity-classification","level":2,"parent":"entity-type","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Entity Classification","description":"Entity Classification"},
-      {"name":"entity","level":2,"parent":"entity-classification","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Entity ID","description":"Entity ID"}
+      {"name":"entity","level":3,"parent":"entity-classification","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Entity ID","description":"Entity ID"}
     ],
     "accessTypes":[
       {"name":"entity-read","label":"Read Entity"},
@@ -48,12 +48,19 @@
         {"accesses":[{"type":"entity-read", "isAllowed":true}],"users":[],"groups":["email-admins"],"delegateAdmin":false}
       ]
     }
+    ,
+    {"id":3,"name":"policy for atlas resource matching","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"entity-type":{"values":["table1"]},"entity-classification":{"values":["classification1"]},"entity":{"values":["entity1"]}},
+      "policyItems":[
+        {"accesses":[{"type":"entity-read", "isAllowed":true}],"users":[],"groups":["group1"],"delegateAdmin":false}
+      ]
+    }
   ],
 
   "tests":[
     {"name":"DataSet read by a data-steward",
       "request":{
-        "resource":{"elements":{"entity-type":"DataSet", "entity-classification":[]}, "entity":"default@cl1"},
+        "resource":{"elements":{"entity-type":"DataSet", "entity-classification":[], "entity":"default@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["data-stewards"]
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":1}
@@ -61,7 +68,7 @@
     ,
     {"name":"DataSet read by a hive-admin",
       "request":{
-        "resource":{"elements":{"entity-type":"DataSet", "entity-classification":""}, "entity":"default@cl1"},
+        "resource":{"elements":{"entity-type":"DataSet", "entity-classification":"", "entity":"default@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["hive-admins"]
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
@@ -69,7 +76,7 @@
     ,
     {"name":"hive_table read by a data-steward",
       "request":{
-        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":""}, "entity":"default.testtable@cl1"},
+        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":"", "entity":"default.testtable@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["data-stewards"]
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":1}
@@ -77,7 +84,7 @@
     ,
     {"name":"hive_table read by a hive-admin",
       "request":{
-        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":""}, "entity":"default.testtable@cl1"},
+        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":"", "entity":"default.testtable@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["hive-admins"]
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
@@ -85,7 +92,7 @@
     ,
     {"name":"PII hive_table read by a privacy-officer",
       "request":{
-        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII"]}, "entity":"default.testtable@cl1"},
+        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII"], "entity":"default.testtable@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["privacy-officers"]
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":10}
@@ -93,7 +100,7 @@
     ,
     {"name":"PII hive_table read by a email-admin",
       "request":{
-        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII"]}, "entity":"default.testtable@cl1"},
+        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII"], "entity":"default.testtable@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["email-admins"]
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
@@ -101,7 +108,7 @@
     ,
     {"name":"EMAIL_PII hive_table read by a privacy-officer",
       "request":{
-        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII", "EMAIL_PII"]}, "entity":"default.testtable@cl1"},
+        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII", "EMAIL_PII"], "entity":"default.testtable@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["privacy-officers"]
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":10}
@@ -109,10 +116,18 @@
     ,
     {"name":"EMAIL_PII hive_table read by a email-admin",
       "request":{
-        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII", "EMAIL_PII"]}, "entity":"default.testtable@cl1"},
+        "resource":{"elements":{"entity-type":["hive_table", "DataSet"], "entity-classification":["PII", "EMAIL_PII"], "entity":"default.testtable@cl1"}},
         "accessType":"entity-read","user":"user1","userGroups":["email-admins"]
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":20}
+    }
+  ,
+    {"name":"Resource matching for atlas",
+      "request":{
+        "resource":{"elements":{"entity-type":["table1"], "entity-classification":["classification1"], "entity":"entity1"}},
+        "accessType":"entity-read","user":"user1","userGroups":["group1"]
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
   ]
 }

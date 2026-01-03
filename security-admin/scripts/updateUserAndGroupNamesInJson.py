@@ -52,8 +52,8 @@ def log(msg,type):
 
 def username_validation(username):
 	if username:
-		if re.search("[\\\`'\"]",username):
-			log("[E] username contains one of the unsupported special characters like \" ' \ `","error")
+		if re.search("[\\`'\"]",username):
+			log("[E] username contains one of the unsupported special characters like \" ' \\ `","error")
 			sys.exit(1)
 
 def main(argv):
@@ -81,7 +81,7 @@ def main(argv):
 		path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s/*")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home,ews_lib)
 	elif os_name == "WINDOWS":
 		path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home)
-	get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s"%(JAVA_BIN,ranger_log,path,'UpdateUserAndGroupNamesInJson')
+	get_java_cmd = "%s -Dlogdir=%s -Dlogback.configurationFile=db_patch.logback.xml -cp %s org.apache.ranger.patch.cliutil.%s"%(JAVA_BIN,ranger_log,path,'UpdateUserAndGroupNamesInJson')
 	if os_name == "LINUX":
 		ret = subprocess.call(shlex.split(get_java_cmd))
 	elif os_name == "WINDOWS":

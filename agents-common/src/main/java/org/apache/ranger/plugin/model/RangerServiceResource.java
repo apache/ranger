@@ -19,137 +19,147 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashMap;
 import java.util.Map;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerServiceResource extends RangerBaseModelObject {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private String                                         serviceName;
-	private Map<String, RangerPolicy.RangerPolicyResource> resourceElements;
-	private String                                         ownerUser;
-	private String                                         resourceSignature;
-	private Map<String, String>							   additionalInfo;
+    private String                            serviceName;
+    private Map<String, RangerPolicyResource> resourceElements;
+    private String                            ownerUser;
+    private String                            resourceSignature;
+    private Map<String, String>               additionalInfo;
 
-	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature, String ownerUser, Map<String, String> additionalInfo) {
-		super();
-		setGuid(guid);
-		setServiceName(serviceName);
-		setResourceElements(resourceElements);
-		setResourceSignature(resourceSignature);
-		setOwnerUser(ownerUser);
-		setAdditionalInfo(additionalInfo);
-	}
-	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature, String ownerUser) {
-		this(guid, serviceName, resourceElements, resourceSignature,ownerUser, null);
-	}
-	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature) {
-		this(guid, serviceName, resourceElements, resourceSignature, null);
+    public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicyResource> resourceElements, String resourceSignature, String ownerUser, Map<String, String> additionalInfo) {
+        super();
 
-	}
+        setGuid(guid);
+        setServiceName(serviceName);
+        setResourceElements(resourceElements);
+        setResourceSignature(resourceSignature);
+        setOwnerUser(ownerUser);
+        setAdditionalInfo(additionalInfo);
+    }
 
-	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements) {
-		this(guid, serviceName, resourceElements, null, null);
-	}
-	public RangerServiceResource(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements) {
-		this(null, serviceName, resourceElements, null, null);
-	}
+    public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicyResource> resourceElements, String resourceSignature, String ownerUser) {
+        this(guid, serviceName, resourceElements, resourceSignature, ownerUser, null);
+    }
 
-	public RangerServiceResource() {
-		this(null, null, null, null, null);
-	}
+    public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicyResource> resourceElements, String resourceSignature) {
+        this(guid, serviceName, resourceElements, resourceSignature, null);
+    }
 
-	public String getServiceName() { return serviceName; }
+    public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicyResource> resourceElements) {
+        this(guid, serviceName, resourceElements, null, null);
+    }
 
-	public Map<String, RangerPolicy.RangerPolicyResource> getResourceElements() { return resourceElements; }
+    public RangerServiceResource(String serviceName, Map<String, RangerPolicyResource> resourceElements) {
+        this(null, serviceName, resourceElements, null, null);
+    }
 
-	public String getResourceSignature() {
-		return resourceSignature;
-	}
+    public RangerServiceResource() {
+        this(null, null, null, null, null);
+    }
 
-	public String getOwnerUser() {
-		return ownerUser;
-	}
+    public String getServiceName() {
+        return serviceName;
+    }
 
-	public Map<String, String> getAdditionalInfo() {
-		return additionalInfo;
-	}
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
 
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
+    public Map<String, RangerPolicyResource> getResourceElements() {
+        return resourceElements;
+    }
 
-	public void setResourceElements(Map<String, RangerPolicy.RangerPolicyResource> resource) {
-		this.resourceElements = resource == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resource;
-	}
+    public void setResourceElements(Map<String, RangerPolicyResource> resource) {
+        this.resourceElements = resource;
+    }
 
-	public void setResourceSignature(String resourceSignature) {
-		this.resourceSignature = resourceSignature;
-	}
+    public String getResourceSignature() {
+        return resourceSignature;
+    }
 
-	public void setOwnerUser(String ownerUser) {
-		this.ownerUser = ownerUser;
-	}
+    public void setResourceSignature(String resourceSignature) {
+        this.resourceSignature = resourceSignature;
+    }
 
-	public void setAdditionalInfo(Map<String, String> additionalInfo) {
-		this.additionalInfo = additionalInfo;
-	}
+    public String getOwnerUser() {
+        return ownerUser;
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
+    public void setOwnerUser(String ownerUser) {
+        this.ownerUser = ownerUser;
+    }
 
-		toString(sb);
+    public Map<String, String> getAdditionalInfo() {
+        return additionalInfo;
+    }
 
-		return sb.toString();
-	}
+    public void setAdditionalInfo(Map<String, String> additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
 
-	public StringBuilder toString(StringBuilder sb) {
+    public void dedupStrings(Map<String, String> strTbl) {
+        super.dedupStrings(strTbl);
 
-		sb.append("RangerServiceResource={ ");
+        serviceName      = StringUtil.dedupString(serviceName, strTbl);
+        resourceElements = StringUtil.dedupStringsMapOfPolicyResource(resourceElements, strTbl);
+        ownerUser        = StringUtil.dedupString(ownerUser, strTbl);
+        additionalInfo   = StringUtil.dedupStringsMap(additionalInfo, strTbl);
+    }
 
-		super.toString(sb);
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-		sb.append("guid={").append(getGuid()).append("} ");
-		sb.append("serviceName={").append(serviceName).append("} ");
+        toString(sb);
 
-		sb.append("resourceElements={");
-		if(resourceElements != null) {
-			for(Map.Entry<String, RangerPolicy.RangerPolicyResource> e : resourceElements.entrySet()) {
-				sb.append(e.getKey()).append("={");
-				e.getValue().toString(sb);
-				sb.append("} ");
-			}
-		}
-		sb.append("} ");
+        return sb.toString();
+    }
 
-		sb.append("ownerUser={").append(ownerUser).append("} ");
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerServiceResource={ ");
 
-		sb.append("additionalInfo={");
-		if(additionalInfo != null) {
-			for(Map.Entry<String, String> e : additionalInfo.entrySet()) {
-				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
-			}
-		}
-		sb.append("} ");
+        super.toString(sb);
 
-		sb.append("resourceSignature={").append(resourceSignature).append("} ");
+        sb.append("guid={").append(getGuid()).append("} ");
+        sb.append("serviceName={").append(serviceName).append("} ");
 
-		sb.append(" }");
+        sb.append("resourceElements={");
+        if (resourceElements != null) {
+            for (Map.Entry<String, RangerPolicyResource> e : resourceElements.entrySet()) {
+                sb.append(e.getKey()).append("={");
+                e.getValue().toString(sb);
+                sb.append("} ");
+            }
+        }
+        sb.append("} ");
 
-		return sb;
-	}
+        sb.append("ownerUser={").append(ownerUser).append("} ");
+
+        sb.append("additionalInfo={");
+        if (additionalInfo != null) {
+            for (Map.Entry<String, String> e : additionalInfo.entrySet()) {
+                sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
+            }
+        }
+        sb.append("} ");
+
+        sb.append("resourceSignature={").append(resourceSignature).append("} ");
+
+        sb.append(" }");
+
+        return sb;
+    }
 }
-

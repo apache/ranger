@@ -46,6 +46,4 @@ CREATE INDEX xa_access_audit_upd_by_id ON  xa_access_audit(upd_by_id);
 CREATE INDEX xa_access_audit_cr_time ON  xa_access_audit(create_time);
 CREATE INDEX xa_access_audit_up_time ON  xa_access_audit(update_time);
 CREATE INDEX xa_access_audit_event_time ON  xa_access_audit(event_time);
-CREATE OR REPLACE PUBLIC SYNONYM xa_access_audit FOR xa_access_audit;
-CREATE OR REPLACE PUBLIC SYNONYM XA_ACCESS_AUDIT_SEQ FOR XA_ACCESS_AUDIT_SEQ;
 commit;

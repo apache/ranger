@@ -17,9 +17,28 @@
 
 package org.apache.hadoop.crypto.key;
 
-public interface RangerKMSMKI {
+import java.security.Key;
 
-	boolean generateMasterKey(String password) throws Throwable;
-	
-	String getMasterKey(String password) throws Throwable;
+public interface RangerKMSMKI {
+    boolean generateMasterKey(String password) throws Throwable;
+
+    String getMasterKey(String password) throws Throwable;
+
+    default byte[] decryptZoneKey(byte[] encryptedByte) throws Exception {
+        return null;
+    }
+
+    default byte[] encryptZoneKey(Key zoneKey) throws Exception {
+        return null;
+    }
+
+    default void onInitialization() throws Exception {}
+
+    default boolean reencryptMKWithFipsAlgo(String mkPassword) throws Exception {
+        return  false;
+    }
+
+    default boolean setExternalKeyAsMK(String password, byte[] key) throws Throwable {
+        throw new UnsupportedOperationException("This method is not supported for current MK provider");
+    }
 }

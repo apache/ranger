@@ -19,14 +19,8 @@
 
 package org.apache.ranger.biz;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -40,36 +34,38 @@ import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXRoleRefGroup;
 import org.apache.ranger.entity.XXRoleRefRole;
 import org.apache.ranger.entity.XXRoleRefUser;
-import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.service.RangerAuditFields;
-import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XGroupService;
-import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.apache.ranger.service.RangerBaseModelService.OPERATION_CREATE_CONTEXT;
 
 @Component
 public class RoleRefUpdater {
-	private static final Log LOG = LogFactory.getLog(RoleRefUpdater.class);
-
-	@Autowired
-	RangerDaoManager daoMgr;
-
-	@Autowired
-	RangerAuditFields<?> rangerAuditFields;
-
-	@Autowired
-	RESTErrorUtil restErrorUtil;
-
-	@Autowired
-    XUserMgr xUserMgr;
+    private static final Logger LOG = LoggerFactory.getLogger(RoleRefUpdater.class);
 
     @Autowired
-    XUserService xUserService;
+    RangerDaoManager daoMgr;
+
+    @Autowired
+    RangerAuditFields<?> rangerAuditFields;
+
+    @Autowired
+    RESTErrorUtil restErrorUtil;
+
+    @Autowired
+    XUserMgr xUserMgr;
 
     @Autowired
     XGroupService xGroupService;
@@ -77,343 +73,320 @@ public class RoleRefUpdater {
     @Autowired
     RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
 
-	@Autowired
-	RangerTransactionService transactionService;
+    @Autowired
+    RoleDBStore roleStore;
 
-	@Autowired
-	RangerBizUtil xaBizUtil;
+    @Autowired
+    RangerBizUtil xaBizUtil;
 
-	public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroup) throws Exception {
-		if (rangerRole == null) {
-			return;
-		}
+    public RangerDaoManager getRangerDaoManager() {
+        return daoMgr;
+    }
 
-		cleanupRefTables(rangerRole);
-		final Long roleId = rangerRole.getId();
+    public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroupRole) {
+        if (rangerRole == null) {
+            return;
+        }
 
-		final Set<String> roleUsers = new HashSet<>();
-		final Set<String> roleGroups = new HashSet<>();
-		final Set<String> roleRoles = new HashSet<>();
+        cleanupRefTables(rangerRole);
 
-		for (RangerRole.RoleMember user : rangerRole.getUsers()) {
-			roleUsers.add(user.getName());
-		}
-		for (RangerRole.RoleMember group : rangerRole.getGroups()) {
-			roleGroups.add(group.getName());
-		}
-		for (RangerRole.RoleMember role : rangerRole.getRoles()) {
-			roleRoles.add(role.getName());
-		}
+        final Long        roleId     = rangerRole.getId();
+        final Set<String> roleUsers  = new HashSet<>();
+        final Set<String> roleGroups = new HashSet<>();
+        final Set<String> roleRoles  = new HashSet<>();
 
-		if (CollectionUtils.isNotEmpty(roleUsers)) {
-			for (String roleUser : roleUsers) {
+        for (RangerRole.RoleMember user : rangerRole.getUsers()) {
+            roleUsers.add(user.getName());
+        }
 
-				if (StringUtils.isBlank(roleUser)) {
-					continue;
-				}
-				Long userId = null;
-				XXUser xUser = daoMgr.getXXUser().findByUserName(roleUser);
+        for (RangerRole.RoleMember group : rangerRole.getGroups()) {
+            roleGroups.add(group.getName());
+        }
 
-				if (xUser == null) {
-					if (createNonExistUserGroup && xaBizUtil.checkAdminAccess()) {
-						LOG.warn("User specified in role does not exist in ranger admin, creating new user, User = "
-								+ roleUser);
-						// Schedule another transaction and let this transaction complete (and commit) successfully!
-						final RoleUserCreateContext roleUserCreateContext = new RoleUserCreateContext(roleUser, roleId);
-						Runnable CreateAndAssociateUser = new Runnable () {
-							@Override
-							public void run() {
-								Runnable realTask = new Runnable () {
-									@Override
-									public void run() {
-										doCreateAndAssociateRoleUser(roleUserCreateContext);
-									}
-								};
-								transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-							}
-                        };
-						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(CreateAndAssociateUser);
+        for (RangerRole.RoleMember role : rangerRole.getRoles()) {
+            roleRoles.add(role.getName());
+        }
 
-					} else {
-						throw restErrorUtil.createRESTException("user with name: " + roleUser + " does not exist ",
-								MessageEnums.INVALID_INPUT_DATA);
-					}
-				}else {
-					userId = xUser.getId();
-				}
+        final boolean isCreateNonExistentUGRs = createNonExistUserGroupRole && xaBizUtil.checkAdminAccess();
 
-				if(null != userId) {
-					userRoleAssociation(roleId,userId,roleUser);
-				}
-			}
-		}
+        if (CollectionUtils.isNotEmpty(roleUsers)) {
+            for (String roleUser : roleUsers) {
+                if (StringUtils.isBlank(roleUser)) {
+                    continue;
+                }
 
-		if (CollectionUtils.isNotEmpty(roleGroups)) {
-			for (String roleGroup : roleGroups) {
+                RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.USER, roleUser, roleId);
 
-				if (StringUtils.isBlank(roleGroup)) {
-					continue;
-				}
-				Long groupId = null;
-				XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(roleGroup);
+                if (!associator.doAssociate(false)) {
+                    if (isCreateNonExistentUGRs) {
+                        rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
+                    } else {
+                        throw restErrorUtil.createRESTException("user with name: " + roleUser + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+                    }
+                }
+            }
+        }
 
-				if (xGroup == null) {
-					if (createNonExistUserGroup && xaBizUtil.checkAdminAccess()) {
-						LOG.warn("Group specified in role does not exist in ranger admin, creating new group, Group = "
-								+ roleGroup);
-						VXGroup vxGroupNew = new VXGroup();
-						vxGroupNew.setName(roleGroup);
-						vxGroupNew.setDescription(roleGroup);
-						vxGroupNew.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
-						// Schedule another transaction and let this transaction complete (and commit) successfully!
-						final RoleGroupCreateContext roleGroupCreateContext = new RoleGroupCreateContext(vxGroupNew, roleId);
+        if (CollectionUtils.isNotEmpty(roleGroups)) {
+            for (String roleGroup : roleGroups) {
+                if (StringUtils.isBlank(roleGroup)) {
+                    continue;
+                }
 
-						Runnable createAndAssociateRoleGroup = new Runnable() {
-                            @Override
-                            public void run() {
-                                Runnable realTask = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        doCreateAndAssociateRoleGroup(roleGroupCreateContext);
-                                    }
-                                };
-                                transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-                            }
-                        };
-						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndAssociateRoleGroup);
+                RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.GROUP, roleGroup, roleId);
 
-					} else {
-						throw restErrorUtil.createRESTException("group with name: " + roleGroup + " does not exist ",
-								MessageEnums.INVALID_INPUT_DATA);
-					}
-				}else {
-					groupId = xGroup.getId();
-				}
+                if (!associator.doAssociate(false)) {
+                    if (isCreateNonExistentUGRs) {
+                        rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
+                    } else {
+                        throw restErrorUtil.createRESTException("Group with name: " + roleGroup + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+                    }
+                }
+            }
+        }
 
-				if(null != groupId) {
-					groupRoleAssociation(roleId, groupId, roleGroup);
-				}
-			}
-		}
+        if (CollectionUtils.isNotEmpty(roleRoles)) {
+            for (String roleRole : roleRoles) {
+                if (StringUtils.isBlank(roleRole)) {
+                    continue;
+                }
 
-		if (CollectionUtils.isNotEmpty(roleRoles)) {
-			for (String roleRole : roleRoles) {
+                RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.ROLE, roleRole, roleId);
 
-				if (StringUtils.isBlank(roleRole)) {
-					continue;
-				}
+                if (!associator.doAssociate(false)) {
+                    if (isCreateNonExistentUGRs) {
+                        rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
+                    } else {
+                        throw restErrorUtil.createRESTException("Role with name: " + roleRole + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+                    }
+                }
+            }
+        }
+    }
 
-				XXRole xRole = daoMgr.getXXRole().findByRoleName(roleRole);
+    public Boolean cleanupRefTables(RangerRole rangerRole) {
+        final Long roleId = rangerRole.getId();
 
-				if (xRole == null) {
-					throw restErrorUtil.createRESTException("Role with name: " + roleRole + " does not exist ",
-							MessageEnums.INVALID_INPUT_DATA);
-				}
+        if (roleId == null) {
+            return false;
+        }
 
-				XXRoleRefRole xRoleRefRole = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefRole());
+        XXRoleRefUserDao  xRoleUserDao  = daoMgr.getXXRoleRefUser();
+        XXRoleRefGroupDao xRoleGroupDao = daoMgr.getXXRoleRefGroup();
+        XXRoleRefRoleDao  xRoleRoleDao  = daoMgr.getXXRoleRefRole();
 
-				xRoleRefRole.setRoleId(roleId);
-				xRoleRefRole.setSubRoleId(xRole.getId());
-				xRoleRefRole.setSubRoleName(roleRole);
-				xRoleRefRole.setSubRoleType(0);
-				daoMgr.getXXRoleRefRole().create(xRoleRefRole);
-			}
-		}
+        List<Long> xxRoleRefUserIds = xRoleUserDao.findIdsByRoleId(roleId);
 
-	}
+        xRoleUserDao.deleteRoleRefUserByIds(xxRoleRefUserIds);
 
-	public Boolean cleanupRefTables(RangerRole rangerRole) {
-		final Long roleId = rangerRole.getId();
+        List<Long> xxRoleRefGroupByIds = xRoleGroupDao.findIdsByRoleId(roleId);
 
-		if (roleId == null) {
-			return false;
-		}
+        xRoleGroupDao.deleteRoleRefGroupByIds(xxRoleRefGroupByIds);
 
-		XXRoleRefUserDao xRoleUserDao = daoMgr.getXXRoleRefUser();
-		XXRoleRefGroupDao xRoleGroupDao = daoMgr.getXXRoleRefGroup();
-		XXRoleRefRoleDao xRoleRoleDao = daoMgr.getXXRoleRefRole();
+        List<Long> xxRoleRefRoleIds = xRoleRoleDao.findIdsByRoleId(roleId);
 
-		for (XXRoleRefUser xxRoleRefUser : xRoleUserDao.findByRoleId(roleId)) {
-			xRoleUserDao.remove(xxRoleRefUser);
-		}
+        xRoleRoleDao.deleteRoleRefRoleByIds(xxRoleRefRoleIds);
 
-		for (XXRoleRefGroup xxRoleRefGroup : xRoleGroupDao.findByRoleId(roleId)) {
-			xRoleGroupDao.remove(xxRoleRefGroup);
-		}
+        return true;
+    }
 
-		for (XXRoleRefRole xxRoleRefRole : xRoleRoleDao.findByRoleId(roleId)) {
-			xRoleRoleDao.remove(xxRoleRefRole);
-		}
-		return true;
-	}
+    private class RolePrincipalAssociator implements Runnable {
+        final PolicyRefUpdater.PRINCIPAL_TYPE type;
+        final String                          name;
+        final Long                            roleId;
 
-	public void groupRoleAssociation(Long roleId, Long groupId, String groupName) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("===> groupRoleAssociation()");
-		}
+        public RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE type, String name, Long roleId) {
+            this.type   = type;
+            this.name   = name;
+            this.roleId = roleId;
+        }
 
-		XXRoleRefGroup xRoleRefGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefGroup());
-		xRoleRefGroup.setRoleId(roleId);
-		xRoleRefGroup.setGroupId(groupId);
-		xRoleRefGroup.setGroupName(groupName);
-		xRoleRefGroup.setGroupType(0);
-		daoMgr.getXXRoleRefGroup().create(xRoleRefGroup);
-	}
+        @Override
+        public void run() {
+            if (doAssociate(true)) {
+                LOG.debug("Associated {}:{} with role id:[{}]", type.name(), name, roleId);
+            } else {
+                throw new RuntimeException("Failed to associate " + type.name() + ":" + name + " with role id:[" + roleId + "]");
+            }
+        }
 
-	private static final class RoleGroupCreateContext {
-		final VXGroup group;
-		final Long roleId;
+        boolean doAssociate(boolean isAdmin) {
+            LOG.debug("===> RolePrincipalAssociator.doAssociate({})", isAdmin);
 
-		RoleGroupCreateContext(VXGroup group, Long roleId) {
-			this.group = group;
-			this.roleId = roleId;
-		}
+            final boolean ret;
 
-		@Override
-		public String toString() {
-			return "{group=" + group + ", roleId=" + roleId + "}";
-		}
-	}
+            Long id = createOrGetPrincipal(isAdmin);
 
-	void doCreateAndAssociateRoleGroup(final RoleGroupCreateContext context) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("===> doCreateAndAssociateRoleGroup()");
-		}
-		XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(context.group.getName());
+            if (id != null) {
+                // associate with role
+                createRoleAssociation(id, name);
 
-		if (xGroup != null) {
-			groupRoleAssociation(context.roleId, xGroup.getId(), context.group.getName());
-		} else {
-			try {
-				// Create group
-				VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(context.group);
-				if (null != vXGroup) {
-					List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup, "create");
-					xaBizUtil.createTrxLog(trxLogList);
-				}
-			} catch (Exception exception) {
-				LOG.error("Failed to create Group or to associate group and role, RoleGroupContext:[" + context + "]",
-						exception);
-			} finally {
-				// This transaction may still fail at commit time because another transaction
-				// has already created the group
-				// So, associate the group to role in a different transaction
-				Runnable associateRoleGroup = new Runnable() {
-                    @Override
-					public void run() {
-						Runnable realTask = new Runnable() {
-							@Override
-							public void run() {
-								doAssociateRoleGroup(context);
-							}
-						};
-						transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-					}
-                };
-				rangerTransactionSynchronizationAdapter.executeOnTransactionCompletion(associateRoleGroup);
-			}
-		}
-	}
+                ret = true;
+            } else {
+                ret = false;
+            }
 
-	void doAssociateRoleGroup(final RoleGroupCreateContext context) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("===> doAssociateRoleGroup()");
-		}
-		XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(context.group.getName());
+            LOG.debug("<=== RolePrincipalAssociator.doAssociate({}) : {}", isAdmin, ret);
 
-		if (xGroup == null) {
-			LOG.error("No Group created!! Irrecoverable error! RoleGroupContext:[" + context + "]");
-		} else {
-			try {
-				groupRoleAssociation(context.roleId, xGroup.getId(), context.group.getName());
-			} catch (Exception exception) {
-				LOG.error("Failed to associate group and role, RoleGroupContext:[" + context + "]", exception);
-			}
-		}
-	}
+            return ret;
+        }
 
-	private static final class RoleUserCreateContext {
-		final String userName;
-		final Long roleId;
+        private Long createOrGetPrincipal(final boolean createIfAbsent) {
+            LOG.debug("===> RolePrincipalAssociator.createOrGetPrincipal({})", createIfAbsent);
 
-		RoleUserCreateContext(String userName, Long roleId) {
-			this.userName = userName;
-			this.roleId = roleId;
-		}
+            Long ret = null;
 
-		@Override
-		public String toString() {
-			return "{userName=" + userName + ", roleId=" + roleId + "}";
-		}
-	}
+            switch (type) {
+                case USER: {
+                    XXUser xUser = daoMgr.getXXUser().findByUserName(name);
 
-	public void userRoleAssociation(Long roleId, Long userId, String userName) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("===> userRoleAssociation()");
-		}
-		XXRoleRefUser xRoleRefUser = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefUser());
-		xRoleRefUser.setRoleId(roleId);
-		xRoleRefUser.setUserId(userId);
-		xRoleRefUser.setUserName(userName);
-		xRoleRefUser.setUserType(0);
-		daoMgr.getXXRoleRefUser().create(xRoleRefUser);
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<=== userRoleAssociation()");
-		}
-	}
+                    if (xUser != null) {
+                        ret = xUser.getId();
+                    } else {
+                        if (createIfAbsent) {
+                            ret = createPrincipal(name);
+                        }
+                    }
+                }
+                break;
+                case GROUP: {
+                    XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(name);
 
-	void doCreateAndAssociateRoleUser(final RoleUserCreateContext context) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("===> doCreateAndAssociateRoleUser()");
-		}
-		XXUser xUser = daoMgr.getXXUser().findByUserName(context.userName);
+                    if (xGroup != null) {
+                        ret = xGroup.getId();
+                    } else {
+                        if (createIfAbsent) {
+                            ret = createPrincipal(name);
+                        }
+                    }
+                }
+                break;
+                case ROLE: {
+                    XXRole xRole = daoMgr.getXXRole().findByRoleName(name);
 
-		if (xUser != null) {
-			userRoleAssociation(context.roleId, xUser.getId(), context.userName);
-		} else {
-			try {
-				// Create External user
-				xUserMgr.createServiceConfigUser(context.userName);
-			} catch (Exception exception) {
-				LOG.error("Failed to create User or to associate user and role, RoleUserContext:[" + context + "]",
-						exception);
-			} finally {
-				// This transaction may still fail at commit time because another transaction
-				// has already created the user
-				// So, associate the user to role in a different transaction
-				Runnable associateRoleUser = new Runnable() {
-					@Override
-					public void run() {
-						Runnable realTask = new Runnable() {
-							@Override
-							public void run() {
-								doAssociateRoleUser(context);
-							}
-						};
-						transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-					}
-                };
-				rangerTransactionSynchronizationAdapter.executeOnTransactionCompletion(associateRoleUser);
-			}
-		}
+                    if (xRole != null) {
+                        ret = xRole.getId();
+                    } else {
+                        if (createIfAbsent) {
+                            RangerBizUtil.setBulkMode(false);
+                            ret = createPrincipal(name);
+                        }
+                    }
+                }
+                break;
+                default:
+                    break;
+            }
 
-	}
+            LOG.debug("<=== RolePrincipalAssociator.createOrGetPrincipal({}) : {}", createIfAbsent, ret);
 
-	void doAssociateRoleUser(final RoleUserCreateContext context) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("===> doAssociateRoleUser()");
-		}
-		XXUser xUser = daoMgr.getXXUser().findByUserName(context.userName);
+            return ret;
+        }
 
-		if (xUser == null) {
-			LOG.error("No User created!! Irrecoverable error! RoleUserContext:[" + context + "]");
-		} else {
-			try {
-				userRoleAssociation(context.roleId, xUser.getId(), context.userName);
-			} catch (Exception exception) {
-				LOG.error("Failed to associate user and role, RoleUserContext:[" + context + "]", exception);
-			}
-		}
-	}
+        private Long createPrincipal(String user) {
+            LOG.warn("{} specified in role does not exist in ranger admin, creating new {}, Type: {}, name = {}", type.name(), type.name(), type.name(), user);
 
+            LOG.debug("===> RolePrincipalAssociator.createPrincipal(type={}, name={})", type.name(), name);
+
+            Long ret = null;
+
+            switch (type) {
+                case USER: {
+                    // Create External user
+                    VXUser vXUser = xUserMgr.createServiceConfigUser(name);
+                    if (vXUser != null) {
+                        XXUser xUser = daoMgr.getXXUser().findByUserName(name);
+
+                        if (xUser == null) {
+                            LOG.error("No User created!! Irrecoverable error! [{}]", name);
+                        } else {
+                            ret = xUser.getId();
+                        }
+                    } else {
+                        LOG.warn("serviceConfigUser:[{}] creation failed. This may be a transient/spurious condition that may correct itself when transaction is committed", name);
+                    }
+                }
+                break;
+                case GROUP: {
+                    // Create group
+                    VXGroup vxGroup = new VXGroup();
+
+                    vxGroup.setName(name);
+                    vxGroup.setDescription(name);
+                    vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
+
+                    VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(vxGroup);
+
+                    if (vXGroup != null) {
+                        xGroupService.createTransactionLog(vXGroup, null, OPERATION_CREATE_CONTEXT);
+
+                        ret = vXGroup.getId();
+                    }
+                }
+                break;
+                case ROLE: {
+                    // Create role
+                    try {
+                        RangerRole rRole       = new RangerRole(name, null, null, null, null);
+                        RangerRole createdRole = roleStore.createRole(rRole, false);
+
+                        ret = createdRole.getId();
+                    } catch (Exception e) {
+                        LOG.error("Failed to create Role {}", type.name());
+                    }
+                }
+                break;
+                default:
+                    break;
+            }
+
+            LOG.debug("<=== RolePrincipalAssociator.createPrincipal(type={}, name={}) : {}", type.name(), name, ret);
+
+            return ret;
+        }
+
+        private void createRoleAssociation(Long id, String name) {
+            LOG.debug("===> RolePrincipalAssociator.createRoleAssociation(roleId={}, type={}, name={}, id={})", roleId, type.name(), name, id);
+
+            switch (type) {
+                case USER: {
+                    XXRoleRefUser xRoleRefUser = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefUser());
+
+                    xRoleRefUser.setRoleId(roleId);
+                    xRoleRefUser.setUserId(id);
+                    xRoleRefUser.setUserName(name);
+                    xRoleRefUser.setUserType(0);
+
+                    daoMgr.getXXRoleRefUser().create(xRoleRefUser);
+                }
+                break;
+                case GROUP: {
+                    XXRoleRefGroup xRoleRefGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefGroup());
+
+                    xRoleRefGroup.setRoleId(roleId);
+                    xRoleRefGroup.setGroupId(id);
+                    xRoleRefGroup.setGroupName(name);
+                    xRoleRefGroup.setGroupType(0);
+
+                    daoMgr.getXXRoleRefGroup().create(xRoleRefGroup);
+                }
+                break;
+                case ROLE: {
+                    XXRoleRefRole xRoleRefRole = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefRole());
+
+                    xRoleRefRole.setRoleId(roleId);
+                    xRoleRefRole.setSubRoleId(id);
+                    xRoleRefRole.setSubRoleName(name);
+                    xRoleRefRole.setSubRoleType(0);
+
+                    daoMgr.getXXRoleRefRole().create(xRoleRefRole);
+                }
+                break;
+                default:
+                    break;
+            }
+
+            LOG.debug("<=== RolePrincipalAssociator.createRoleAssociation(roleId={}, type={}, name={}, id={})", roleId, type.name(), name, id);
+        }
+    }
 }

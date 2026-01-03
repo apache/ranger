@@ -33,19 +33,22 @@
 		{
 			"itemId": 1,
 			"name": "read",
-			"label": "Read"
+			"label": "Read",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 2,
 			"name": "write",
-			"label": "Write"
+			"label": "Write",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 3,
 			"name": "execute",
-			"label": "Execute"
+			"label": "Execute",
+			"category": "READ"
 		}
 	],
 
@@ -83,7 +86,7 @@
 			"mandatory": true,
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"1.For one Namenode Url, eg.<br>hdfs://&lt;host&gt;:&lt;port&gt;<br>2.For HA Namenode Urls(use , delimiter), eg.<br>hdfs://&lt;host&gt;:&lt;port&gt;,hdfs://&lt;host2&gt;:&lt;port2&gt;<br>\"}",
+			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"1. For a single NameNode URL, use:<br>hdfs://&lt;host&gt;:&lt;port&gt;<br><br>2. For HDFS High Availability (HA) setup, use the nameservice-based URL:<br>hdfs://&lt;nameservice&gt;<br><br>Note: Do not provide multiple NameNode URLs separated by commas. Instead, use the nameservice configured for your HDFS cluster.<br><br>You can confirm the correct value from the Hadoop configuration property <strong>fs.defaultFS</strong> in <em>core-site.xml</em>.\"}",
 			"label": "Namenode URL"
 		},
 
@@ -180,6 +183,19 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Common Name for Certificate"
+		},
+
+		{
+			"itemId": 12,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true}, {'actions':['delete','rename'],'isAudited':true}, {'users':['hdfs'], 'actions': ['listStatus', 'getfileinfo', 'listCachePools', 'listCacheDirectives', 'listCorruptFileBlocks', 'monitorHealth', 'rollEditLog', 'open'], 'isAudited': false}, {'users': ['oozie'],'resources': {'path': {'values': ['/user/oozie/share/lib'],'isRecursive': true}},'isAudited': false},{'users': ['spark'],'resources': {'path': {'values': ['/user/spark/applicationHistory'],'isRecursive': true}},'isAudited': false},{'users': ['hue'],'resources': {'path': {'values': ['/user/hue'],'isRecursive': true}},'isAudited': false},{'users': ['hbase'],'resources': {'path': {'values': ['/hbase'],'isRecursive': true}},'isAudited': false},{'users': ['mapred'],'resources': {'path': {'values': ['/user/history'],'isRecursive': true}},'isAudited': false}, {'actions': ['getfileinfo'], 'isAudited':false} ]"
 		}
 	],
 

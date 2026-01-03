@@ -19,166 +19,180 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.ranger.authorization.utils.TestStringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestPathResourceTrie {
-	private static final RangerResourceDef   PATH_RESOURCE_DEF      = getPathResourceDef();
+    private static final RangerResourceDef       PATH_RESOURCE_DEF = getPathResourceDef();
+    private static final RangerResourceEvaluator EVAL_             = getEvaluator("/");
+    private static final RangerResourceEvaluator EVAL_nr           = getEvaluator("/", false, false);
+    private static final RangerResourceEvaluator EVAL_HOME         = getEvaluator("/home");
+    private static final RangerResourceEvaluator EVAL_HOME_        = getEvaluator("/home/");
+    private static final RangerResourceEvaluator EVAL_TMPnr        = getEvaluator("/tmp", false, false);
+    private static final RangerResourceEvaluator EVAL_TMP_nr       = getEvaluator("/tmp/", false, false);
+    private static final RangerResourceEvaluator EVAL_TMP_AB       = getEvaluator("/tmp/ab");
+    private static final RangerResourceEvaluator EVAL_TMP_A_B      = getEvaluator("/tmp/a/b");
+    private static final RangerResourceEvaluator EVAL_TMP_AC_D_E_F = getEvaluator("/tmp/ac/d/e/f");
+    private static final RangerResourceEvaluator EVAL_TMPFILE      = getEvaluator("/tmpfile");
+    private static final RangerResourceEvaluator EVAL_TMPdTXT      = getEvaluator("/tmp.txt");
+    private static final RangerResourceEvaluator EVAL_TMPA_B       = getEvaluator("/tmpa/b");
 
-	private static final RangerPolicyResourceEvaluator EVAL_             = getEvaluator("/");
-	private static final RangerPolicyResourceEvaluator EVAL_nr           = getEvaluator("/", false, false);
-	private static final RangerPolicyResourceEvaluator EVAL_HOME         = getEvaluator("/home");
-	private static final RangerPolicyResourceEvaluator EVAL_HOME_        = getEvaluator("/home/");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPnr        = getEvaluator("/tmp", false, false);
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_nr       = getEvaluator("/tmp/", false, false);
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_AB       = getEvaluator("/tmp/ab");
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_A_B      = getEvaluator("/tmp/a/b");
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_AC_D_E_F = getEvaluator("/tmp/ac/d/e/f");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPFILE      = getEvaluator("/tmpfile");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPdTXT      = getEvaluator("/tmp.txt");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPA_B       = getEvaluator("/tmpa/b");
+    private static final List<RangerResourceEvaluator> EVALUATORS = Arrays.asList(EVAL_,
+            EVAL_nr,
+            EVAL_HOME,
+            EVAL_HOME_,
+            EVAL_TMPnr,
+            EVAL_TMP_nr,
+            EVAL_TMP_AB,
+            EVAL_TMP_A_B,
+            EVAL_TMP_AC_D_E_F,
+            EVAL_TMPFILE,
+            EVAL_TMPdTXT,
+            EVAL_TMPA_B);
 
-	private static final List<RangerPolicyResourceEvaluator> EVALUATORS = Arrays.asList(EVAL_,
-																						EVAL_nr,
-																						EVAL_HOME,
-																						EVAL_HOME_,
-																						EVAL_TMPnr,
-																						EVAL_TMP_nr,
-																						EVAL_TMP_AB,
-																						EVAL_TMP_A_B,
-																						EVAL_TMP_AC_D_E_F,
-																						EVAL_TMPFILE,
-																						EVAL_TMPdTXT,
-																						EVAL_TMPA_B
-																						);
+    private final RangerResourceTrie<RangerResourceEvaluator> trie = new RangerResourceTrie<>(PATH_RESOURCE_DEF, EVALUATORS);
 
-	private final RangerResourceTrie<RangerPolicyResourceEvaluator> trie = new RangerResourceTrie<>(PATH_RESOURCE_DEF, EVALUATORS);
+    @Test
+    public void testChildrenScope() {
+        final ResourceElementMatchingScope scope = ResourceElementMatchingScope.SELF_OR_CHILD;
 
-	@Test
-	public void testChildrenScope() {
-		final RangerAccessRequest.ResourceMatchingScope scope = RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD;
+        verifyEvaluators("/", scope, EVAL_, EVAL_nr, EVAL_HOME, EVAL_HOME_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMPFILE, EVAL_TMPdTXT);
+        verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMP_AB);
+        verifyEvaluators("/tmp/", scope, EVAL_, EVAL_TMP_nr, EVAL_TMP_AB);
+        verifyEvaluators("/tmp/a", scope, EVAL_, EVAL_TMP_A_B);
+        verifyEvaluators("/tmp/ac", scope, EVAL_);
+        verifyEvaluators("/tmp/ac/d", scope, EVAL_);
+        verifyEvaluators("/tmp/ac/d/e", scope, EVAL_, EVAL_TMP_AC_D_E_F);
+        verifyEvaluators("/unmatched", scope, EVAL_);
+        verifyEvaluators("invalid: does-not-begin-with-sep", scope);
+    }
 
-		verifyEvaluators("/", scope, EVAL_, EVAL_nr, EVAL_HOME, EVAL_HOME_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMPFILE, EVAL_TMPdTXT);
-		verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMP_AB);
-		verifyEvaluators("/tmp/", scope, EVAL_, EVAL_TMP_nr, EVAL_TMP_AB);
-		verifyEvaluators("/tmp/a", scope, EVAL_, EVAL_TMP_A_B);
-		verifyEvaluators("/tmp/ac", scope, EVAL_);
-		verifyEvaluators("/tmp/ac/d", scope, EVAL_);
-		verifyEvaluators("/tmp/ac/d/e", scope, EVAL_, EVAL_TMP_AC_D_E_F);
-		verifyEvaluators("/unmatched", scope, EVAL_);
-		verifyEvaluators("invalid: does-not-begin-with-sep", scope);
-	}
+    @Test
+    public void testPrefixScope() {
+        final ResourceElementMatchingScope scope = ResourceElementMatchingScope.SELF_OR_PREFIX;
 
-	@Test
-	public void testSelfScope() {
-		final RangerAccessRequest.ResourceMatchingScope scope = RangerAccessRequest.ResourceMatchingScope.SELF;
+        verifyEvaluators("/", scope, EVAL_, EVAL_nr, EVAL_HOME, EVAL_HOME_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F, EVAL_TMPFILE, EVAL_TMPdTXT, EVAL_TMPA_B);
+        verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F, EVAL_TMPFILE, EVAL_TMPdTXT, EVAL_TMPA_B);
+        verifyEvaluators("/tmp/", scope, EVAL_, EVAL_TMP_nr, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F);
+        verifyEvaluators("/tmp/a", scope, EVAL_, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F);
+        verifyEvaluators("/tmp/ac", scope, EVAL_, EVAL_TMP_AC_D_E_F);
+        verifyEvaluators("/tmp/ac/d", scope, EVAL_, EVAL_TMP_AC_D_E_F);
+        verifyEvaluators("/tmp/ac/d/e", scope, EVAL_, EVAL_TMP_AC_D_E_F);
+        verifyEvaluators("/unmatched", scope, EVAL_);
+        verifyEvaluators("invalid: does-not-begin-with-sep", scope);
+    }
 
-		verifyEvaluators("/", scope, EVAL_, EVAL_nr);
-		verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr);
-		verifyEvaluators("/tmp/", scope, EVAL_, EVAL_TMP_nr);
-		verifyEvaluators("/tmp/a", scope, EVAL_);
-		verifyEvaluators("/tmp/ac", scope, EVAL_);
-		verifyEvaluators("/tmp/ac/d", scope, EVAL_);
-		verifyEvaluators("/tmp/ac/d/e", scope, EVAL_);
-		verifyEvaluators("/unmatched", scope, EVAL_);
-		verifyEvaluators("invalid: does-not-begin-with-sep", scope);
-	}
+    @Test
+    public void testSelfScope() {
+        final ResourceElementMatchingScope scope = ResourceElementMatchingScope.SELF;
 
-	private void verifyEvaluators(String resource, RangerAccessRequest.ResourceMatchingScope scope, RangerPolicyResourceEvaluator... evaluators) {
-		Set<RangerPolicyResourceEvaluator> expected = evaluators.length == 0 ? null : new HashSet<>(Arrays.asList(evaluators));
-		Set<RangerPolicyResourceEvaluator> result   = trie.getEvaluatorsForResource(resource, scope);
+        verifyEvaluators("/", scope, EVAL_, EVAL_nr);
+        verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr);
+        verifyEvaluators("/tmp/", scope, EVAL_, EVAL_TMP_nr);
+        verifyEvaluators("/tmp/a", scope, EVAL_);
+        verifyEvaluators("/tmp/ac", scope, EVAL_);
+        verifyEvaluators("/tmp/ac/d", scope, EVAL_);
+        verifyEvaluators("/tmp/ac/d/e", scope, EVAL_);
+        verifyEvaluators("/unmatched", scope, EVAL_);
+        verifyEvaluators("invalid: does-not-begin-with-sep", scope);
+    }
 
-		assertEquals("incorrect evaluators for resource "  + resource, expected, result);
-	}
+    private void verifyEvaluators(String resource, ResourceElementMatchingScope scope, RangerResourceEvaluator... evaluators) {
+        Set<RangerResourceEvaluator> expected = evaluators.length == 0 ? null : new HashSet<>(Arrays.asList(evaluators));
+        Set<RangerResourceEvaluator> result   = trie.getEvaluatorsForResource(resource, scope);
 
-	private static RangerResourceDef getPathResourceDef() {
-		RangerResourceDef ret = new RangerResourceDef();
+        assertEquals(expected, result, "incorrect evaluators for resource " + resource);
+    }
 
-		ret.setItemId(1L);
-		ret.setName("path");
-		ret.setType("path");
-		ret.setLevel(10);
-		ret.setParent("");
-		ret.setMatcher("org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher");
-		ret.setMatcherOptions(new HashMap<String, String>() {{
-			put("wildCard", "true");
-			put("ignoreCase", "true");
-			put("pathSeparatorChar", "/");
-		}});
+    private static RangerResourceDef getPathResourceDef() {
+        RangerResourceDef ret = new RangerResourceDef();
 
-		return ret;
-	}
+        ret.setItemId(1L);
+        ret.setName("path");
+        ret.setType("path");
+        ret.setLevel(10);
+        ret.setParent("");
+        ret.setMatcher("org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher");
+        ret.setMatcherOptions(TestStringUtil.mapFromStrings("wildCard", "true", "ignoreCase", "true", "pathSeparatorChar", "/"));
 
-	private static RangerPolicyResourceEvaluator getEvaluator(String resource) {
-		return  new TestPolicyResourceEvaluator(new RangerPolicyResource(resource, false, true));
-	}
+        return ret;
+    }
 
-	private static RangerPolicyResourceEvaluator getEvaluator(String resource, boolean  isExcludes, boolean isRecursive) {
-		return  new TestPolicyResourceEvaluator(new RangerPolicyResource(resource, isExcludes, isRecursive));
-	}
+    private static RangerResourceEvaluator getEvaluator(String resource) {
+        return new TestPolicyResourceEvaluator(new RangerPolicyResource(resource, false, true));
+    }
 
-	private static class TestPolicyResourceEvaluator implements RangerPolicyResourceEvaluator {
-		private static long nextId = 1;
+    private static RangerResourceEvaluator getEvaluator(String resource, boolean isExcludes, boolean isRecursive) {
+        return new TestPolicyResourceEvaluator(new RangerPolicyResource(resource, isExcludes, isRecursive));
+    }
 
-		private final long                  id;
-		private final RangerPolicyResource  policyResource;
-		private final RangerResourceMatcher resourceMatcher;
+    private static class TestPolicyResourceEvaluator implements RangerResourceEvaluator {
+        private static long nextId = 1;
 
-		TestPolicyResourceEvaluator(RangerPolicyResource policyResource) {
-			this.id = nextId++;
-			this.policyResource = policyResource;
-			this.resourceMatcher = new RangerPathResourceMatcher();
+        private final long                  id;
+        private final RangerPolicyResource  policyResource;
+        private final RangerResourceMatcher resourceMatcher;
 
-			resourceMatcher.setResourceDef(PATH_RESOURCE_DEF);
-			resourceMatcher.setPolicyResource(policyResource);
+        TestPolicyResourceEvaluator(RangerPolicyResource policyResource) {
+            this.id              = nextId++;
+            this.policyResource  = policyResource;
+            this.resourceMatcher = new RangerPathResourceMatcher();
 
-			resourceMatcher.init();
-		}
+            resourceMatcher.setResourceDef(PATH_RESOURCE_DEF);
+            resourceMatcher.setPolicyResource(policyResource);
 
-		@Override
-		public long getId() {
-			return id;
-		}
+            resourceMatcher.init();
+        }
 
-		@Override
-		public RangerPolicyResourceMatcher getPolicyResourceMatcher() {
-			return null;
-		}
+        @Override
+        public long getId() {
+            return id;
+        }
 
-		@Override
-		public Map<String, RangerPolicyResource> getPolicyResource() {
-			return Collections.singletonMap(PATH_RESOURCE_DEF.getName(), policyResource);
-		}
+        @Override
+        public RangerPolicyResourceMatcher getPolicyResourceMatcher() {
+            return null;
+        }
 
-		@Override
-		public RangerResourceMatcher getResourceMatcher(String resourceName) {
-			return resourceMatcher;
-		}
+        @Override
+        public Map<String, RangerPolicyResource> getPolicyResource() {
+            return Collections.singletonMap(PATH_RESOURCE_DEF.getName(), policyResource);
+        }
 
-		@Override
-		public boolean isAncestorOf(RangerResourceDef resourceDef) {
-			return false;
-		}
+        @Override
+        public RangerResourceMatcher getResourceMatcher(String resourceName) {
+            return resourceMatcher;
+        }
 
-		@Override
-		public String toString() {
-			return "id=" + id + ", resource=" + policyResource;
-		}
-	}
+        @Override
+        public boolean isAncestorOf(RangerResourceDef resourceDef) {
+            return false;
+        }
+
+        @Override
+        public boolean isLeaf(String resourceName) {
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "id=" + id + ", resource=" + policyResource;
+        }
+    }
 }

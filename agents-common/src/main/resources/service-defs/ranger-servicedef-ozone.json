@@ -25,6 +25,7 @@
 			"uiHint":"",
 			"label": "Ozone Volume",
 			"description": "Ozone Volume",
+			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
 			"isValidLeaf": true
 		},
 		{
@@ -44,9 +45,9 @@
 			"uiHint":"",
 			"label": "Ozone Bucket",
 			"description": "Ozone Bucket",
+			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
 			"isValidLeaf": true
 		},
-
 		{
 			"itemId": 3,
 			"name": "key",
@@ -64,7 +65,25 @@
 			"uiHint":"",
 			"label": "Ozone Key",
 			"description": "Ozone Key",
+			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
 			"isValidLeaf": true
+		},
+		{
+			"itemId":                 4,
+			"name":                   "role",
+			"type":                   "string",
+			"level":                  10,
+			"parent":                 "",
+			"mandatory":              true,
+			"lookupSupported":        true,
+			"recursiveSupported":     false,
+			"excludesSupported":      false,
+			"matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":         { "wildCard":true, "ignoreCase":false },
+			"label":                  "Role",
+			"description":            "Role",
+			"accessTypeRestrictions": [ "assume_role" ],
+			"isValidLeaf":            true
 		}
 	],
 
@@ -88,41 +107,54 @@
 		{
 			"itemId": 1,
 			"name": "read",
-			"label": "Read"
+			"label": "Read",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 2,
 			"name": "write",
-			"label": "Write"
+			"label": "Write",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 3,
 			"name": "create",
-			"label": "Create"
+			"label": "Create",
+			"category": "CREATE"
 		},
 
 		{
 			"itemId": 4,
 			"name": "list",
-			"label": "List"
+			"label": "List",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 5,
 			"name": "delete",
-			"label": "Delete"
+			"label": "Delete",
+			"category": "DELETE"
 		},
 		{
 			"itemId": 6,
 			"name": "read_acl",
-			"label": "Read_ACL"
+			"label": "Read_ACL",
+			"category": "READ"
 		},
 		{
 			"itemId": 7,
 			"name": "write_acl",
-			"label": "Write_ACL"
+			"label": "Write_ACL",
+			"category": "UPDATE"
+		},
+		{
+			"itemId":   8,
+			"name":     "assume_role",
+			"label":    "Assume_Role",
+			"category": "MANAGE"
 		}
 	],
 
@@ -169,7 +201,7 @@
 			"name": "hadoop.security.authorization",
 			"type": "bool",
 			"subType": "YesTrue:NoFalse",
-			"mandatory": true,
+			"mandatory": false,
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
@@ -199,6 +231,19 @@
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":""
+		},
+
+		{
+			"itemId": 7,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
 		}
 	],
 
@@ -241,9 +286,9 @@
 			"evaluatorOptions": { },
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"",
 			"label": "IP Address Range",
-			"description": "IP Address Range"
+			"description": "IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 
 	]

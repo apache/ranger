@@ -1,0 +1,35 @@
+services:
+  ranger-knox:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-knox
+      args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
+        - KNOX_VERSION=${KNOX_VERSION}
+        - KNOX_PLUGIN_VERSION=${KNOX_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
+    image: ranger-knox
+    container_name: ranger-knox
+    hostname: ranger-knox.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-knox:/etc/keytabs
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    ports:
+      - "8443:8443"
+    depends_on:
+      ranger:
+        condition: service_started
+      ranger-zk:
+        condition: service_started
+    environment:
+      - KNOX_VERSION
+      - KNOX_PLUGIN_VERSION
+      - KERBEROS_ENABLED
+
+networks:
+  ranger:
+    name: rangernw

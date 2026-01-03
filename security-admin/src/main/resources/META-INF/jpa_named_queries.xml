@@ -24,6 +24,35 @@
 			   WHERE obj.extSessionId = :sessionId
 		</query>
 	</named-query>
+	<named-query name="XXAuthSession.deleteOlderThan">
+		<query>delete from XXAuthSession obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
+
+	<named-query name="XXAuthSession.getRecentAuthFailureCountByLoginId">
+		<query>SELECT COUNT(1) FROM XXAuthSession obj
+			WHERE obj.loginId = :loginId
+			  AND obj.authStatus != 1
+			  AND obj.createTime &gt; COALESCE(
+			    (SELECT MAX(obj2.createTime) FROM XXAuthSession obj2
+			      WHERE obj2.loginId = :loginId
+			        AND obj2.authStatus = 1
+			        AND obj2.createTime &gt; :authWindowStartTime),
+			    :authWindowStartTime)
+		</query>
+	</named-query>
+	<named-query name="XXAuthSession.findIdsByUserId">
+		<query>SELECT obj.id FROM XXAuthSession obj WHERE obj.userId = :userId
+		</query>
+	</named-query>
+	<named-query name="XXAuthSession.deleteByIds">
+		<query>DELETE FROM XXAuthSession obj WHERE obj.id in :ids
+		</query>
+	</named-query>
+	<named-query name="XXAuthSession.getSuccessAuthSessionsByUserId">
+		<query>SELECT obj FROM XXAuthSession obj WHERE obj.loginId = :loginId and obj.authStatus = :authStatus order by obj.id DESC
+		</query>
+	</named-query>
+
 
 	<!-- XXPortalUser -->
 	<named-query name="XXPortalUser.findByEmailAddress">
@@ -41,6 +70,11 @@
 	<named-query name="XXPortalUser.findByRole">
 		<query>SELECT obj FROM XXPortalUser obj, XXPortalUserRole role WHERE obj.id = role.userId
 			and role.userRole = :userRole</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.getNonUserRoleExternalUsers">
+		<query>SELECT obj.loginId FROM XXPortalUser obj, XXPortalUserRole role WHERE obj.id = role.userId
+			and role.userRole != :userRole and obj.userSource = :userSource </query>
 	</named-query>
 
 	<named-query name="XXPortalUser.getUserAddedReport">
@@ -82,7 +116,7 @@
         </named-query>
 
         <named-query name="XXPolicyLabelMap.findByPolicyLabelId">
-                <query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.id = :policyLabelId
+                <query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.policyLabelId = :policyLabelId
                         </query>
         </named-query>
 
@@ -91,7 +125,10 @@
                 order by obj.policyId, obj.id
                         </query>
         </named-query>
-
+		<named-query name="XXPolicyLabelMap.findByPolicyIdAndLabelId">
+			<query>SELECT obj FROM XXPolicyLabelMap obj WHERE obj.policyLabelId = :policyLabelId AND obj.policyId = :policyId
+			</query>
+		</named-query>
 
 	<!-- XXPortalUserRole -->
 	<named-query name="XXPortalUserRole.findByRoleUserId">
@@ -127,6 +164,18 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroup.getAllGroupIdNames">
+		<query>SELECT obj.id, obj.name FROM XXGroup obj
+		</query>
+	</named-query>
+
+	<named-query name="XXGroup.getAllGroupsInfo">
+		<query>SELECT group.name, group.description, group.otherAttributes, group.syncSource, group.groupSource
+		         FROM XXGroup group
+		        WHERE group.isVisible = 1
+		</query>
+	</named-query>
+
 	<!-- XXGroup -->
 	<named-query name="XXUser.findGroupsByUserIds">
 		<query>SELECT user.name, group.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
@@ -136,6 +185,25 @@
 
 	<named-query name="XXUser.getAllUserIds">
 		<query>SELECT user.name, user.id FROM XXUser user
+		</query>
+	</named-query>
+
+	<named-query name="XXUser.getAllUserIdNames">
+		<query>SELECT portalUser.id, user.id, user.name FROM XXUser user, XXPortalUser portalUser WHERE user.name=portalUser.loginId
+		</query>
+	</named-query>
+
+	<named-query name="VXXPrincipal.lookupByName">
+		<query>SELECT p.principalName, p.principalType FROM VXXPrincipal p
+			    WHERE p.principalName LIKE :principalName
+			      AND p.isVisible = 1
+			    ORDER BY p.principalName</query>
+	</named-query>
+
+	<named-query name="XXUser.getAllUsersInfo">
+		<query>SELECT user.name, user.description, user.otherAttributes, user.syncSource, pUser.userSource, pUser.emailAddress
+		         FROM XXUser user LEFT OUTER JOIN XXPortalUser pUser ON pUser.loginId = user.name
+		        WHERE user.isVisible = 1
 		</query>
 	</named-query>
 
@@ -263,9 +331,50 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXTrxLog.findByTrxId">
-		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
+	<named-query name="XXGroupGroup.findGroupNamesByGroupName">
+		<query>SELECT obj.name FROM XXGroup obj
+			WHERE obj.id IN (SELECT gg.parentGroupId FROM XXGroupGroup gg, XXGroup g
+			WHERE gg.groupId = g.id AND g.name=:groupName)
 		</query>
+	</named-query>
+
+	<named-query name="XXTrxLog.findByTrxId">
+		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId order by obj.id
+		</query>
+	</named-query>
+
+     <named-query name="XXTrxLog.findByTrxIdForMigration">
+          <query>SELECT obj.id, obj.createTime, obj.addedByUserId,
+                        obj.objectClassType, obj.objectId, obj.objectName,
+                        obj.parentObjectId, obj.parentObjectClassType, obj.parentObjectName,
+                        obj.attributeName, obj.previousValue, obj.newValue,
+                        obj.transactionId, obj.action, obj.requestId, obj.sessionId, obj.sessionType
+                   FROM XXTrxLog obj
+                  WHERE obj.transactionId = :transactionId
+               ORDER BY obj.id
+          </query>
+     </named-query>
+
+	<named-query name="XXTrxLog.findDistinctTrxIds">
+		<query>SELECT obj.transactionId FROM XXTrxLog obj GROUP BY obj.transactionId ORDER BY MIN(obj.id)
+		</query>
+	</named-query>
+
+	<named-query name="XXTrxLog.findDistinctTrxIdsByTimeInterval">
+		<query>
+			SELECT obj.transactionId FROM XXTrxLog obj
+			WHERE obj.createTime BETWEEN :startDate AND :endDate
+			GROUP BY obj.transactionId
+			ORDER BY MIN(obj.id)
+		</query>
+	</named-query>
+
+	<named-query name="XXTrxLogV2.findByTrxId">
+		<query>SELECT obj FROM XXTrxLogV2 obj WHERE obj.transactionId = :transactionId order by obj.id</query>
+	</named-query>
+
+	<named-query name="XXTrxLogV2.deleteOlderThan">
+		<query>delete from XXTrxLogV2 obj where obj.createTime &lt; :olderThan</query>
 	</named-query>
 
 	<named-query name="XXUser.findByPortalUserId">
@@ -305,12 +414,24 @@
 		<query>select obj from XXPolicy obj where obj.name = :polName and obj.service = :serviceId and obj.zoneId = :zoneId order by obj.id</query>
 	</named-query>
 
+	<named-query name="XXPolicy.getMetaAttributesForPolicies">
+		<query>SELECT obj.id, obj.createTime, obj.updateTime FROM XXPolicy obj WHERE obj.id IN :policyIds</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findByServiceId">
 		<query>select obj from XXPolicy obj where obj.service = :serviceId order by obj.id</query>
 	</named-query>
 
 	<named-query name="XXPolicy.findPolicyIdsByServiceId">
 		<query>select obj.id from XXPolicy obj where obj.service = :serviceId</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findDuplicateGUIDByServiceIdAndZoneId">
+		<query>select obj.guid from XXPolicy obj where obj.service = :serviceId and obj.zoneId = :zoneId GROUP BY obj.guid HAVING COUNT(obj.guid)>1</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findPolicyByGUIDAndServiceIdAndZoneId">
+		<query>select obj from XXPolicy obj where obj.guid = :guid and obj.service =:serviceId and obj.zoneId = :zoneId order by obj.id </query>
 	</named-query>
 
 	<named-query name="XXPolicy.getMaxIdOfXXPolicy">
@@ -320,6 +441,10 @@
 	<named-query name="XXPolicy.findByResourceSignatureByPolicyStatus">
 		<query>select obj from XXPolicy obj, XXService xSvc where obj.service = xSvc.id 
 				and obj.resourceSignature = :resSignature and xSvc.name = :serviceName and obj.isEnabled = :isPolicyEnabled</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findByPolicyStatus">
+		<query>select obj from XXPolicy obj where obj.isEnabled = :isPolicyEnabled</query>
 	</named-query>
 	
 	<!--  currently not exposed but should be when we have a use case for it -->
@@ -371,6 +496,35 @@
 		<query>select obj from XXPolicy obj where obj.id in (select item.policyId from XXPolicyItem item) </query>
 	</named-query>
 
+	<named-query name="XXPolicy.findPolicyByPolicyGUID">
+		<query>select obj from XXPolicy obj where obj.guid = :guid and obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findPolicyByPolicyGUIDAndZoneName">
+		<query>select obj from XXPolicy obj, XXSecurityZone zone where obj.guid = :guid and obj.zoneId = zone.id and zone.name = :zoneName</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findPolicyByPolicyGUIDAndServiceName">
+		<query>select obj from XXPolicy obj, XXService svc where obj.guid = :guid and obj.service = svc.id and svc.name = :serviceName and obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findPolicyByPolicyGUIDAndServiceNameAndZoneName">
+		<query>select obj from XXPolicy obj, XXService svc, XXSecurityZone zone where obj.guid = :guid and obj.service = svc.id and svc.name = :serviceName and obj.zoneId = zone.id and zone.name = :zoneName</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findDuplicatePoliciesByServiceAndResourceSignature">
+		<query>select obj.resourceSignature, obj.service from XXPolicy obj GROUP BY obj.resourceSignature, obj.service HAVING COUNT(obj.resourceSignature) > 1</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findByServiceIdAndResourceSignature">
+		<query>select obj from XXPolicy obj where obj.service = :serviceId and obj.resourceSignature = :resSignature</query>
+	</named-query>
+
+	<!-- XXPolicyExportAudit -->
+	<named-query name="XXPolicyExportAudit.deleteOlderThan">
+		<query>DELETE FROM XXPolicyExportAudit obj WHERE obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
@@ -385,11 +539,27 @@
 	</named-query>
 
     <named-query name="XXServiceDef.findServiceDefNameByServiceName">
-                <query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.name = :name</query>
-        </named-query>
+        <query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.name = :name</query>
+	</named-query>
 
 	<named-query name="XXServiceDef.findServiceDefNameByServiceId">
 		<query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.id = :id</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getNameByHasEnricher">
+		<query>SELECT DISTINCT(xsd.name) FROM XXServiceDef xsd, XXContextEnricherDef xced WHERE xsd.id = xced.defId</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getServiceCount">
+		<query>SELECT xsd.name, COUNT(xs.id) FROM XXService xs, XXServiceDef xsd WHERE xs.type = xsd.id GROUP BY xsd.name</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getPolicyCountByType">
+		<query>SELECT xsd.name, COUNT(xp.id) FROM XXPolicy xp, XXService xs, XXServiceDef xsd WHERE xs.id = xp.service AND xs.type = xsd.id AND xp.policyType = :policyType GROUP BY xsd.name</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getPolicyCountByDenyItems">
+	    <query>SELECT xsd.name, COUNT(xp.id) FROM XXPolicy xp, XXService xs, XXServiceDef xsd WHERE xp.policyText LIKE '%denyPolicyItems":[{%' AND xp.service = xs.id AND xsd.id = xs.type GROUP by xsd.name</query>
 	</named-query>
 
 	<!-- XXResourceDef -->
@@ -432,6 +602,14 @@
 		<query>select obj from XXAccessTypeDefGrants obj where obj.atdId = :atdId</query>
 	</named-query>
 
+	<named-query name="XXAccessTypeDefGrants.findByServiceDefId">
+		<query>select atd.name, obj.impliedGrant from XXAccessTypeDef atd, XXAccessTypeDefGrants obj
+			    where atd.defId = :serviceDefId
+			      and obj.atdId = atd.id
+			    order by atd.name
+		</query>
+	</named-query>
+
 	<!-- XXEnumElementDef -->
 	<named-query name="XXEnumElementDef.findByEnumDefId">
 		<query>select obj from XXEnumElementDef obj where obj.enumDefId = :enumDefId order by obj.order</query>
@@ -456,6 +634,13 @@
 	<named-query name="XXAccessTypeDef.findByNameAndServiceId">
 		<query>select obj from XXAccessTypeDef obj, XXService xSvc where 
 				obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+	</named-query>
+
+	<named-query name="XXAccessTypeDef.getNamesByServiceName">
+		<query>SELECT obj.name FROM XXAccessTypeDef obj, XXService svc
+		        WHERE svc.name = :serviceName
+		          AND svc.type = obj.defId
+		</query>
 	</named-query>
 
 	<!-- XXPolicyConditionDef -->
@@ -492,9 +677,20 @@
 			obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
+	<named-query name="XXDataMaskTypeDef.getNamesByServiceName">
+		<query>SELECT obj.name FROM XXDataMaskTypeDef obj, XXService svc
+		        WHERE svc.name = :serviceName
+		          AND svc.type = obj.defId
+		</query>
+	</named-query>
+
 	<!-- XXServiceConfigMap -->
 	<named-query name="XXServiceConfigMap.findByServiceId">
 		<query>select obj from XXServiceConfigMap obj where obj.serviceId = :serviceId</query>
+	</named-query>
+
+	<named-query name="XXServiceConfigMap.findByConfigKey">
+		<query>select obj from XXServiceConfigMap obj where obj.configKey = :configKey</query>
 	</named-query>
 
 	<named-query name="XXServiceConfigMap.findByServiceAndConfigKey">
@@ -516,6 +712,10 @@
 	</named-query>
 
 	<!-- XXService -->
+	<named-query name="XXService.findIdByName">
+		<query>select obj.id from XXService obj where obj.name = :name</query>
+	</named-query>
+
 	<named-query name="XXService.findByName">
 		<query>select obj from XXService obj where obj.name = :name</query>
 	</named-query>
@@ -536,6 +736,10 @@
 		<query>select obj from XXService obj where obj.tagService = :tagServiceId</query>
 	</named-query>
 
+	<named-query name="XXService.findIdsByTagServiceId">
+		<query>select obj.id from XXService obj where obj.tagService = :tagServiceId</query>
+	</named-query>
+
 	<named-query name="XXService.findAssociatedTagService">
 		<query>select obj from XXService obj
 			where obj.name = :serviceName
@@ -552,6 +756,13 @@
 	</named-query>
 	<named-query name="XXService.getAllServiceIds">
 		<query>select obj.id from XXService obj</query>
+	</named-query>
+
+	<named-query name="XXService.getAllServiceHeaders">
+		<query>
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled FROM XXService obj
+			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
+		</query>
 	</named-query>
 
 	<!-- XXServiceVersionInfo -->
@@ -663,12 +874,16 @@
 		<query>select obj from XXPolicyRefAccessType obj where obj.policyId = :policyId </query>
 	</named-query>
 
+	<named-query name="XXPolicyRefAccessType.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefAccessType obj where obj.policyId = :policyId </query>
+	</named-query>
+
 	<named-query name="XXPolicyRefAccessType.findByAccessTypeDefId">
 		<query>select obj from XXPolicyRefAccessType obj where obj.accessDefId = :accessDefId</query>
 	</named-query>
 
-	<named-query name="XXPolicyRefAccessType.deleteByPolicyId">
-		<query>DELETE FROM XXPolicyRefAccessType obj WHERE obj.policyId = :policyId</query>
+	<named-query name="XXPolicyRefAccessType.deleteByIds">
+		<query>DELETE FROM XXPolicyRefAccessType obj WHERE obj.id IN :ids</query>
 	</named-query>
 
 	<!-- XXPolicyRefCondition -->
@@ -676,17 +891,25 @@
 		<query>select obj from XXPolicyRefCondition obj where obj.policyId = :policyId </query>
 	</named-query>
 
+	<named-query name="XXPolicyRefCondition.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefCondition obj where obj.policyId = :policyId </query>
+	</named-query>
+
 	<named-query name="XXPolicyRefCondition.findByConditionName">
 		<query>select obj from XXPolicyRefCondition obj where obj.conditionName = :conditionName</query>
 	</named-query>
 
-	<named-query name="XXPolicyRefCondition.deleteByPolicyId">
-		<query>DELETE FROM XXPolicyRefCondition obj WHERE obj.policyId = :policyId </query>
+	<named-query name="XXPolicyRefCondition.deleteByIds">
+		<query>DELETE FROM XXPolicyRefCondition obj WHERE obj.id IN :ids </query>
 	</named-query>
 
 	<!-- XXPolicyRefGroup -->
 	<named-query name="XXPolicyRefGroup.findByPolicyId">
 		<query>select obj from XXPolicyRefGroup obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefGroup.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefGroup obj where obj.policyId = :policyId </query>
 	</named-query>
 
 	<named-query name="XXPolicyRefGroup.findByGroupName">
@@ -698,8 +921,8 @@
 		<query>select obj from XXPolicyRefGroup obj where obj.groupId = :groupId and obj.policyId = :policyId </query>
 	</named-query>
 
-	<named-query name="XXPolicyRefGroup.deleteByPolicyId">
-		<query>DELETE FROM XXPolicyRefGroup obj WHERE obj.policyId = :policyId</query>
+	<named-query name="XXPolicyRefGroup.deleteByIds">
+		<query>DELETE FROM XXPolicyRefGroup obj WHERE obj.id IN :ids</query>
 	</named-query>
 
 	<named-query name="XXPolicyRefCondition.findByConditionDefIdAndPolicyId">
@@ -849,12 +1072,16 @@
 		<query>select obj from XXPolicyRefDataMaskType obj where obj.policyId = :policyId </query>
 	</named-query>
 
+	<named-query name="XXPolicyRefDataMaskType.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefDataMaskType obj where obj.policyId = :policyId </query>
+	</named-query>
+
 	<named-query name="XXPolicyRefDataMaskType.findByDataMaskTypeName">
 		<query>select obj from XXPolicyRefDataMaskType obj where obj.dataMaskTypeName = :dataMaskTypeName</query>
 	</named-query>
 
-	<named-query name="XXPolicyRefDataMaskType.deleteByPolicyId">
-		<query>DELETE FROM XXPolicyRefDataMaskType obj WHERE obj.policyId = :policyId </query>
+	<named-query name="XXPolicyRefDataMaskType.deleteByIds">
+		<query>DELETE FROM XXPolicyRefDataMaskType obj WHERE obj.id IN :ids </query>
 	</named-query>
 
 	<!-- XXPolicyRefResource -->
@@ -862,17 +1089,25 @@
 		<query>select obj from XXPolicyRefResource obj where obj.policyId = :policyId </query>
 	</named-query>
 
+	<named-query name="XXPolicyRefResource.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefResource obj where obj.policyId = :policyId </query>
+	</named-query>
+
 	<named-query name="XXPolicyRefResource.findByResourceDefId">
 		<query>select obj from XXPolicyRefResource obj where obj.resourceDefId = :resourceDefId</query>
 	</named-query>
 
-	<named-query name="XXPolicyRefResource.deleteByPolicyId">
-		<query>DELETE FROM XXPolicyRefResource obj WHERE obj.policyId = :policyId </query>
+	<named-query name="XXPolicyRefResource.deleteByIds">
+		<query>DELETE FROM XXPolicyRefResource obj WHERE obj.id IN :ids </query>
 	</named-query>
 
 	<!-- XXPolicyRefUser -->
 	<named-query name="XXPolicyRefUser.findByPolicyId">
 		<query>select obj from XXPolicyRefUser obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefUser.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefUser obj where obj.policyId = :policyId </query>
 	</named-query>
 
 	<named-query name="XXPolicyRefUser.findByUserName">
@@ -883,8 +1118,8 @@
 		<query>select obj from XXPolicyRefUser obj where obj.userId = :userId</query>
 	</named-query>
 
-	<named-query name="XXPolicyRefUser.deleteByPolicyId">
-		<query>DELETE FROM XXPolicyRefUser obj WHERE obj.policyId = :policyId</query>
+	<named-query name="XXPolicyRefUser.deleteByIds">
+		<query>DELETE FROM XXPolicyRefUser obj WHERE obj.id IN :ids</query>
 	</named-query>
 
 	<!-- XXPolicyItemCondition -->
@@ -1044,6 +1279,10 @@
 		<query>DELETE FROM XXUserPermission obj WHERE obj.moduleId=:moduleId</query>
 	</named-query>
 
+	<named-query name="XXUserPermission.findModuleUsersByModuleId">
+	<query>select xpu.loginId from XXUserPermission xump, XXPortalUser xpu where xump.moduleId=:moduleId and xump.isAllowed=:isAllowed and xump.userId = xpu.id </query>
+	</named-query>
+
 	<!-- XXGroupPermission -->
 	<named-query name="XXGroupPermission.findByGroupId">
 		<query>SELECT obj FROM XXGroupPermission obj
@@ -1053,17 +1292,11 @@
 
 	<named-query name="XXGroupPermission.findByModuleId">
 		<query>SELECT obj FROM XXGroupPermission obj
-			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
+			   WHERE obj.moduleId=:moduleId	AND obj.isAllowed=:isAllowed
 		 </query>
 	</named-query>
-	
+
 	<named-query name="XXGroupPermissionUpdates.findByModuleId">
-		<query>SELECT obj FROM XXGroupPermission obj
-			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
-		 </query>
-	</named-query>
-	
-	<named-query name="XXGroupPermissionUpdate.findByModuleId">
 		<query>SELECT obj FROM XXGroupPermission obj
 			   WHERE obj.moduleId=:moduleId
 		 </query>
@@ -1084,7 +1317,12 @@
 	<named-query name="XXGroupPermission.deleteByModuleId">
 		<query>DELETE FROM XXGroupPermission obj WHERE obj.moduleId=:moduleId</query>
 	</named-query>
-	
+
+	<named-query name="XXGroupPermission.findModuleGroupsByModuleId">
+	<query>select xg.name from XXGroupPermission xgmp, XXGroup xg where xgmp.moduleId=:moduleId and xgmp.isAllowed=:isAllowed and xgmp.groupId =xg.id </query>
+	</named-query>
+
+
 	<named-query name="XXPortalUser.findByUserName">
 		<query>SELECT Obj FROM XXPortalUser obj
 			   WHERE obj.loginId=:loginId
@@ -1097,11 +1335,23 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXPortalUser.getCountByUserRole">
+		<query>SELECT xpur.userRole, COUNT(xpu.id) FROM XXPortalUser xpu, XXPortalUserRole xpur WHERE xpur.userId = xpu.id GROUP BY xpur.userRole</query>
+	</named-query>
+
 	<named-query name="XXPortalUser.findAllXPortalUser">
 		<query>SELECT xxPortalUser FROM XXPortalUser xxPortalUser
 		</query>
 	</named-query>
-	
+
+	<named-query name="XXPortalUser.findByUserSourceAndStatus">
+		<query>SELECT obj FROM XXPortalUser obj WHERE obj.userSource=:userSource and obj.status=:status</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.findById">
+		<query>SELECT obj.firstName, obj.lastName, obj.publicScreenName, obj.loginId FROM XXPortalUser obj WHERE obj.id=:id</query>
+	</named-query>
+
 	<!-- VXModuleDef -->
 	<named-query name="XXModuleDef.findByModuleId">
 		<query>SELECT obj FROM XXModuleDef obj
@@ -1193,15 +1443,15 @@
 	</named-query>
 
 	<named-query name="XXTagResourceMap.findByResourceId">
-		<query>select obj from XXTagResourceMap obj where obj.resourceId = :resourceId</query>
+		<query>select obj.id, obj.guid, obj.tagId, obj.resourceId from XXTagResourceMap obj where obj.resourceId = :resourceId</query>
 	</named-query>
 
 	<named-query name="XXTagResourceMap.findByResourceGuid">
-		<query>select obj from XXTagResourceMap obj, XXServiceResource res where res.guid = :resourceGuid and obj.resourceId = res.id</query>
+		<query>select obj.id, obj.guid, obj.tagId, obj.resourceId from XXTagResourceMap obj, XXServiceResource res where res.guid = :resourceGuid and obj.resourceId = res.id</query>
 	</named-query>
 	
 	<named-query name="XXTagResourceMap.findByTagId">
-		<query>select obj from XXTagResourceMap obj where obj.tagId = :tagId</query>
+		<query>select obj.id, obj.guid, obj.tagId, obj.resourceId from XXTagResourceMap obj where obj.tagId = :tagId</query>
 	</named-query>
 
 	<named-query name="XXTagResourceMap.findByTagGuid">
@@ -1376,6 +1626,13 @@
 		          AND obj.attributeName = :attrName
 		</query>
     </named-query>
+	<named-query name="XXTrxLog.deleteOlderThan">
+		<query>delete from XXTrxLog obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
+	<named-query name="XXTrxLogV2.updateSessIdWithNull">
+		<query>UPDATE XXTrxLogV2 obj SET obj.sessionId = null WHERE obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 	<named-query name="XXAuthSession.getAuthSessionByUserId">
 		<query>SELECT obj FROM XXAuthSession obj WHERE obj.userId = :userId
 		</query>
@@ -1475,6 +1732,12 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXSecurityZone.getAllZoneIdNames">
+		<query>
+			select obj.id, obj.name from XXSecurityZone obj
+		</query>
+	</named-query>
+
 	<named-query name="XXSecurityZoneRefGroup.findByZoneId">
         <query>
             select obj from XXSecurityZoneRefGroup obj where obj.zoneId = :zoneId
@@ -1492,6 +1755,24 @@
             select obj from XXSecurityZoneRefGroup obj where obj.zoneId = :zoneId and obj.groupType = :groupType
         </query>
     </named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findByZoneId">
+		<query>
+			select obj from XXSecurityZoneRefRole obj where obj.zoneId = :zoneId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findByRoleId">
+		<query>
+			select obj from XXSecurityZoneRefRole obj where obj.roleId = :roleId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findRoleRefZoneCount">
+		<query>
+			select count(obj.zoneId) from XXSecurityZoneRefRole obj where obj.roleName = :roleName
+		</query>
+	</named-query>
 
 	<named-query name="XXSecurityZoneRefResource.findByZoneId">
         <query>
@@ -1529,6 +1810,14 @@
 	     </query>
 	 </named-query>
 
+    <named-query name="XXSecurityZoneRefService.findServiceHeaderInfosByZoneId">
+        <query>
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled FROM XXService obj
+			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
+			 WHERE obj.id IN (SELECT ref.serviceId FROM XXSecurityZoneRefService ref WHERE ref.zoneId = :zoneId)
+        </query>
+    </named-query>
+
     <named-query name="XXSecurityZoneRefTagService.findByZoneId">
         <query>
             select obj from XXSecurityZoneRefTagService obj where obj.zoneId = :zoneId
@@ -1540,6 +1829,14 @@
 	         select obj from XXSecurityZoneRefTagService obj where obj.tagServiceName = :tagServiceName and obj.zoneId = :zoneId
 	     </query>
 	 </named-query>
+
+    <named-query name="XXSecurityZoneRefTagService.findServiceHeaderInfosByZoneId">
+        <query>
+			SELECT obj.id, obj.name, obj.displayName, svcDef.name, obj.isEnabled FROM XXService obj
+			  LEFT OUTER JOIN XXServiceDef svcDef ON obj.type = svcDef.id
+			 WHERE obj.id IN (SELECT ref.tagServiceId FROM XXSecurityZoneRefTagService ref WHERE ref.zoneId = :zoneId)
+        </query>
+    </named-query>
 
 	<named-query name="XXSecurityZoneRefUser.findByZoneId">
         <query>
@@ -1565,11 +1862,29 @@
         </query>
     </named-query>
 
-	<named-query name="XXSecurityZone.findZoneNamesByGroupId">
+    <named-query name="XXSecurityZone.findZoneNamesByGroupId">
         <query>
             select distinct obj.name from XXSecurityZone obj, XXSecurityZoneRefGroup refObj where obj.id = refObj.zoneId and refObj.groupId = :groupId
         </query>
     </named-query>
+
+    <named-query name="XXSecurityZone.findAllZoneHeaderInfos">
+        <query>
+            SELECT obj.id, obj.name FROM XXSecurityZone obj WHERE obj.id != :unzoneId
+        </query>
+    </named-query>
+
+	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByServiceId">
+		<query>
+			select obj.id, obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefService ref where ref.serviceId = :serviceId)
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByTagServiceId">
+		<query>
+			select obj.id, obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefTagService ref where ref.tagServiceId = :tagServiceId)
+		</query>
+	</named-query>
 
     <named-query name="XXGlobalState.findByStateId">
         <query>
@@ -1592,16 +1907,17 @@
     </named-query>
     <named-query name="XXPolicyChangeLog.findSinceVersion">
         <query>
-            select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
-            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.policyVersion >= :version order by
-            obj.policyVersion
+			<![CDATA[select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
+            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.policyVersion >= :version and obj.policyVersion <= :maxVersion order by
+            obj.policyVersion]]>
         </query>
     </named-query>
 
     <named-query name="XXPolicyChangeLog.findGreaterThan">
         <query>
-            select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
-            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.serviceType = 'tag' and obj.id > :id order by obj.id
+            <![CDATA[select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
+            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.serviceType = 'tag' and obj.id > :id and obj.policyVersion <= :maxVersion
+            order by obj.id]]>
         </query>
     </named-query>
 
@@ -1636,6 +1952,10 @@
         <query>select obj from XXRoleRefUser obj  where obj.roleId = :roleId</query>
     </named-query>
 
+		<named-query name="XXRoleRefUser.findIdsByRoleId">
+				<query>select obj.id from XXRoleRefUser obj  where obj.roleId = :roleId</query>
+		</named-query>
+
     <named-query name="XXRoleRefUser.findByUserId">
         <query>select obj from XXRoleRefUser obj where obj.userId = :userId</query>
     </named-query>
@@ -1647,6 +1967,10 @@
     <named-query name="XXRoleRefGroup.findByRoleId">
         <query>select obj from XXRoleRefGroup obj  where obj.roleId = :roleId</query>
     </named-query>
+
+		<named-query name="XXRoleRefGroup.findIdsByRoleId">
+			<query>select obj.id from XXRoleRefGroup obj  where obj.roleId = :roleId</query>
+		</named-query>
 
     <named-query name="XXRoleRefGroup.findByGroupId">
         <query>select obj from XXRoleRefGroup obj  where obj.groupId = :groupId</query>
@@ -1660,6 +1984,10 @@
         <query>select obj from XXRoleRefRole obj  where obj.roleId = :roleId</query>
     </named-query>
 
+		<named-query name="XXRoleRefRole.findIdsByRoleId">
+				<query>select obj.id from XXRoleRefRole obj  where obj.roleId = :roleId</query>
+		</named-query>
+
     <named-query name="XXRoleRefRole.findBySubRoleId">
         <query>select obj from XXRoleRefRole obj  where obj.subRoleId = :subRoleId</query>
     </named-query>
@@ -1672,10 +2000,24 @@
         <query>select count(obj.roleId) from XXRoleRefRole obj where obj.subRoleName = :subRoleName </query>
     </named-query>
 
+	<named-query name="XXRoleRefGroup.deleteRoleRefGroupByIds">
+				<query>DELETE FROM XXRoleRefGroup obj WHERE obj.id IN :ids </query>
+	</named-query>
+	<named-query name="XXRoleRefRole.deleteRoleRefRoleByIds">
+				<query>DELETE FROM XXRoleRefRole obj WHERE obj.id IN :ids </query>
+	</named-query>
+	<named-query name="XXRoleRefUser.deleteRoleRefUserByIds">
+				<query>DELETE FROM XXRoleRefUser obj WHERE obj.id IN :ids </query>
+	</named-query>
+
 
 	<!-- XXPolicyRefRole -->
 	<named-query name="XXPolicyRefRole.findByPolicyId">
 		<query>select obj from XXPolicyRefRole obj where obj.policyId = :policyId </query>
+	</named-query>
+
+	<named-query name="XXPolicyRefRole.findIdsByPolicyId">
+		<query>select obj.id from XXPolicyRefRole obj where obj.policyId = :policyId </query>
 	</named-query>
 
 	<named-query name="XXPolicyRefRole.findByRoleName">
@@ -1705,8 +2047,8 @@
         <query>select count(obj.policyId) from XXPolicyRefRole obj where obj.roleName = :roleName </query>
     </named-query>
 
-	<named-query name="XXPolicyRefRole.deleteByPolicyId">
-		<query>DELETE FROM XXPolicyRefRole obj WHERE obj.policyId = :policyId </query>
+	<named-query name="XXPolicyRefRole.deleteByIds">
+		<query>DELETE FROM XXPolicyRefRole obj WHERE obj.id IN :ids </query>
 	</named-query>
 
 	<!-- XXTagChangeLog -->
@@ -1764,10 +2106,8 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXRMSResourceMapping.deleteByServiceId">
-		<query>
-			DELETE FROM XXRMSResourceMapping mapping WHERE mapping.hlResourceId in (select obj.id from XXRMSServiceResource obj where obj.serviceId = :serviceId) OR
-			mapping.llResourceId in (select obj.id from XXRMSServiceResource obj where obj.serviceId = :serviceId)
+	<named-query name="XXRMSResourceMapping.deleteByServiceIds">
+		<query>DELETE FROM XXRMSResourceMapping mapping WHERE mapping.hlResourceId IN :ids OR mapping.llResourceId IN :ids
 		</query>
 	</named-query>
 
@@ -1838,4 +2178,261 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXRole.findByGroupId">
+		<query>SELECT obj FROM XXRole obj
+			WHERE obj.id IN (SELECT roleRefGroup.roleId FROM  XXRoleRefGroup roleRefGroup WHERE roleRefGroup.groupId = :groupId)
+			OR obj.id IN (SELECT roleRefGroup.roleId FROM XXRoleRefGroup roleRefGroup WHERE roleRefGroup.groupId IN
+			(SELECT groupGroup.parentGroupId FROM XXGroupGroup groupGroup WHERE groupGroup.groupId = :groupId))
+			order by obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findByZoneId">
+		<query>select obj from XXPolicy obj where obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findByServiceType">
+		<query>SELECT obj FROM XXPolicy obj
+		         JOIN XXService xs ON obj.service = xs.id
+		         JOIN XXServiceDef xsd ON xsd.id = xs.type
+		        WHERE xsd.name = :serviceType</query>
+	</named-query>
+
+	<named-query name="XXGdsDataset.findByGuid">
+		<query>select obj from XXGdsDataset obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDataset.findByName">
+		<query>select obj from XXGdsDataset obj where obj.name = :name</query>
+	</named-query>
+
+	<!-- GDS -->
+	<named-query name="XXGdsDataset.findByDataShareId">
+		<query>select obj from XXGdsDataset obj, XXGdsDataShareInDataset dsid
+		        where dsid.dataShareId = :dataShareId
+		          and dsid.datasetId   = obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsDataset.findDatasetsWithDataShareInStatus">
+		<query>select obj from XXGdsDataset obj, XXGdsDataShareInDataset dsid
+			where dsid.dataShareId = :dataShareId
+			  and dsid.datasetId   = obj.id
+			  and dsid.status      = :status
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsDataset.findByProjectId">
+		<query>select obj from XXGdsDataset obj, XXGdsDatasetInProject dip
+		        where dip.projectId = :projectId
+		          and dip.datasetId = obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsDataset.findServiceIds">
+		<query>SELECT DISTINCT(dsh.serviceId) FROM XXGdsDataShare dsh, XXGdsDataShareInDataset dshid
+		        WHERE dshid.datasetId   = :datasetId
+		          AND dshid.dataShareId = dsh.id
+		</query>
+	</named-query>
+
+   <named-query name="XXGdsDataset.getDatasetIdsAndACLs">
+		<query>select obj.id, obj.acl from XXGdsDataset obj where obj.id is NOT null
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findByGuid">
+		<query>select obj from XXGdsProject obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findByName">
+		<query>select obj from XXGdsProject obj where obj.name = :name</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findByDatasetId">
+		<query>select obj from XXGdsProject obj, XXGdsDatasetInProject dip
+		        where dip.datasetId = :datasetId
+		          and dip.projectId = obj.id</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findProjectsWithDatasetInStatus">
+		<query>SELECT obj FROM XXGdsProject obj, XXGdsDatasetInProject dip
+			WHERE dip.datasetId = :datasetId
+			  AND dip.projectId = obj.id
+			  AND dip.status    = :status</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findProjectsWithDataShareInStatus">
+		<query>SELECT obj FROM XXGdsProject obj
+			WHERE EXISTS (
+				SELECT 1 FROM XXGdsDatasetInProject dip, XXGdsDataShareInDataset dshid
+				  WHERE dshid.dataShareId = :dataShareId
+				    AND dshid.status      = :status
+				    AND dip.datasetId     = dshid.datasetId
+				    AND dip.projectId     = obj.id
+				    AND dip.status        = :status)</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findServiceIds">
+		<query>SELECT DISTINCT(dsh.serviceId) FROM XXGdsDataShare dsh, XXGdsDataShareInDataset dshid, XXGdsDatasetInProject dip
+		        WHERE dip.projectId     = :projectId
+		          AND dip.datasetId     = dshid.datasetId
+		          AND dshid.dataShareId = dsh.id
+		</query>
+	</named-query>
+
+   <named-query name="XXGdsProject.getProjectIdsAndACLs">
+		<query>select obj.id, obj.acl from XXGdsProject obj where obj.id  is NOT null
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByGuid">
+		<query>select obj from XXGdsDataShare obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByName">
+		<query>select obj from XXGdsDataShare obj where obj.name = :name</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByServiceId">
+		<query>select obj from XXGdsDataShare obj where obj.serviceId = :serviceId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByZoneId">
+		<query>select obj from XXGdsDataShare obj where obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByServiceIdAndZoneId">
+		<query>select obj from XXGdsDataShare obj where obj.serviceId = :serviceId and obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByDatasetId">
+		<query>select obj from XXGdsDataShare obj, XXGdsDataShareInDataset dsd
+		        where dsd.datasetId   = :datasetId
+		          and dsd.dataShareId = obj.id
+		</query>
+	</named-query>
+
+<named-query name="XXGdsDataShare.getDataShareIdsAndACLs">
+		<query>select obj.id, obj.acl from XXGdsDataShare obj where obj.id is NOT null
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByGuid">
+		<query>select obj from XXGdsSharedResource obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByName">
+		<query>select obj from XXGdsSharedResource obj where obj.name = :name</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByServiceId">
+		<query>select obj from XXGdsSharedResource obj, XXGdsDataShare ds
+		            where ds.serviceId = :serviceId
+		              and ds.id        = obj.dataShareId
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByServiceIdAndZoneId">
+		<query>select obj from XXGdsSharedResource obj, XXGdsDataShare ds
+		            where ds.serviceId = :serviceId
+		              and ds.zoneId    = :zoneId
+		              and ds.id        = obj.dataShareId
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByDatasetId">
+		<query>select obj from XXGdsSharedResource obj, XXGdsDataShareInDataset dsd
+		        where dsd.datasetId   = :datasetId
+		          and dsd.dataShareId = obj.dataShareId
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.getIdByDataShareIdAndName">
+		<query>select obj.id from XXGdsSharedResource obj
+		        where obj.dataShareId = :dataShareId
+		          and obj.name = :name
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.getIdByDataShareIdAndResourceSignature">
+			<query>select obj.id from XXGdsSharedResource obj
+			        where obj.dataShareId = :dataShareId
+			          and obj.resourceSignature = :resourceSignature
+			</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByGuid">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByDataShareIdAndDatasetId">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.dataShareId = :dataShareId and obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByDataShareId">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.dataShareId = :dataShareId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByDatasetId">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findDataShareIdsInStatuses">
+		<query>SELECT obj.dataShareId FROM XXGdsDataShareInDataset obj WHERE obj.datasetId = :datasetId AND obj.status IN :statuses</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByGuid">
+		<query>select obj from XXGdsDatasetInProject obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByDatasetIdAndProjectId">
+		<query>select obj from XXGdsDatasetInProject obj where obj.datasetId = :datasetId and obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByDatasetId">
+		<query>select obj from XXGdsDatasetInProject obj where obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByProjectId">
+		<query>select obj from XXGdsDatasetInProject obj where obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.getDataSharesInDatasetCountByStatus">
+		<query>SELECT obj.status, COUNT(obj) FROM XXGdsDataShareInDataset obj
+		        WHERE obj.datasetId = :datasetId
+		        GROUP BY obj.status</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetPolicyMap">
+		<query>SELECT obj FROM XXGdsDatasetPolicyMap obj WHERE obj.datasetId = :datasetId AND obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetPolicyMaps">
+		<query>SELECT obj FROM XXGdsDatasetPolicyMap obj WHERE obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetPolicyIds">
+		<query>SELECT obj.policyId FROM XXGdsDatasetPolicyMap obj WHERE obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetPolicyMap.getDatasetIdForPolicy">
+		<query>SELECT obj.datasetId FROM XXGdsDatasetPolicyMap obj WHERE obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyMap">
+		<query>SELECT obj FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId AND obj.policyId = :policyId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyMaps">
+		<query>SELECT obj FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectPolicyIds">
+		<query>SELECT obj.policyId FROM XXGdsProjectPolicyMap obj WHERE obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsProjectPolicyMap.getProjectIdForPolicy">
+		<query>SELECT obj.projectId FROM XXGdsProjectPolicyMap obj WHERE obj.policyId = :policyId</query>
+	</named-query>
 </entity-mappings>

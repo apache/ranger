@@ -44,9 +44,6 @@ for custom_env_script in `find ${XAPOLICYMGR_DIR}/ews/webapp/WEB-INF/classes/con
         fi
 done
 
-JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_admin_max_heap_size} -Xms1g -Xloggc:${XAPOLICYMGR_EWS_DIR}/logs/gc-worker.log -verbose:gc -XX:+PrintGCDetails"
-if [[ ${JAVA_OPTS} != *"-Duser.timezone"* ]] ;then  export JAVA_OPTS=" ${JAVA_OPTS} -Duser.timezone=UTC" ;fi
-
 if [ "$JAVA_HOME" != "" ]; then
         export PATH=$JAVA_HOME/bin:$PATH
 fi
@@ -57,10 +54,19 @@ then
 	RANGER_ADMIN_LOG_DIR=${XAPOLICYMGR_EWS_DIR}/logs
 fi
 
+JAVA_OPTS=" ${JAVA_OPTS} -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx${ranger_admin_max_heap_size} -Xms1g -Xloggc:${RANGER_ADMIN_LOG_DIR}/gc-worker.log -verbose:gc -XX:+PrintGCDetails"
+if [[ ${JAVA_OPTS} != *"-Duser.timezone"* ]] ;then  export JAVA_OPTS=" ${JAVA_OPTS} -Duser.timezone=UTC" ;fi
+
+if [ -z "${RANGER_ADMIN_LOGBACK_CONF_FILE}" ]
+then
+	RANGER_ADMIN_LOGBACK_CONF_FILE=${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf/logback.xml
+fi
+
 if [ -z "${RANGER_PID_DIR_PATH}" ]
 then
         RANGER_PID_DIR_PATH=/var/run/ranger
 fi
+
 if [ -z "${RANGER_ADMIN_PID_NAME}" ]
 then
         RANGER_ADMIN_PID_NAME=rangeradmin.pid
@@ -85,7 +91,7 @@ fi
 SERVER_NAME=rangeradmin
 start() {
 	SLEEP_TIME_AFTER_START=5
-	nohup  java -Dproc_rangeradmin ${JAVA_OPTS} -Dlog4j.configuration=file:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/log4j.properties  -Duser=${USER} -Dhostname=${HOSTNAME} ${DB_SSL_PARAM} -Dservername=${SERVER_NAME} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.EmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1 &
+	nohup  java -Dproc_rangeradmin ${JAVA_OPTS} -Dlogback.configurationFile=file:${RANGER_ADMIN_LOGBACK_CONF_FILE}  -Duser=${USER} -Dhostname=${HOSTNAME} ${DB_SSL_PARAM} -Dservername=${SERVER_NAME} -Dlogdir=${RANGER_ADMIN_LOG_DIR} -Dcatalina.base=${XAPOLICYMGR_EWS_DIR} -cp "${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/classes/conf:${XAPOLICYMGR_EWS_DIR}/lib/*:${XAPOLICYMGR_EWS_DIR}/webapp/WEB-INF/lib/*:${RANGER_JAAS_LIB_DIR}/*:${RANGER_JAAS_CONF_DIR}:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH" org.apache.ranger.server.tomcat.EmbeddedServer > ${RANGER_ADMIN_LOG_DIR}/catalina.out 2>&1 &
 	VALUE_OF_PID=$!
 	echo "Starting Apache Ranger Admin Service"
 	sleep $SLEEP_TIME_AFTER_START

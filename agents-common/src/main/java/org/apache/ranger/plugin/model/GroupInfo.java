@@ -19,28 +19,23 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.plugin.util.RangerUserStoreUtil;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.HashMap;
 import java.util.Map;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class GroupInfo extends RangerBaseModelObject implements java.io.Serializable {
-
     private static final long serialVersionUID = 1L;
-    private String                  name;
-    private String                  description;
-    private Map<String, String>     otherAttributes;
+
+    private String              name;
+    private String              description;
+    private Map<String, String> otherAttributes;
 
     public GroupInfo() {
         this(null, null, null);
@@ -83,5 +78,4 @@ public class GroupInfo extends RangerBaseModelObject implements java.io.Serializ
                 + ", otherAttributes=" + RangerUserStoreUtil.getPrintableOptions(otherAttributes)
                 + "}";
     }
-
 }

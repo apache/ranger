@@ -18,12 +18,13 @@
  */
 package org.apache.ranger.services.nifi;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.nifi.client.NiFiClient;
 import org.apache.ranger.services.nifi.client.NiFiConnectionMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,32 +32,27 @@ import java.util.List;
  * RangerService for Apache NiFi.
  */
 public class RangerServiceNiFi extends RangerBaseService {
-
-    private static final Log LOG = LogFactory.getLog(RangerServiceNiFi.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceNiFi.class);
 
     @Override
-    public HashMap<String, Object> validateConfig() throws Exception {
-        HashMap<String, Object> ret = new HashMap<>();
-        String serviceName = getServiceName();
+    public HashMap<String, Object> validateConfig() {
+        HashMap<String, Object> ret         = new HashMap<>();
+        String                  serviceName = getServiceName();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceNiFi.validateConfig Service: (" + serviceName + " )");
-        }
+        LOG.debug("==> RangerServiceNiFi.validateConfig Service: ({})", serviceName);
 
         if (configs != null) {
             try {
                 ret = NiFiConnectionMgr.connectionTest(serviceName, configs);
             } catch (Exception e) {
-                LOG.error("<== RangerServiceNiFi.validateConfig Error:", e);
+                LOG.error("<== RangerServiceNiFi.validateConfig Error: ", e);
                 throw e;
             }
         } else {
             throw new IllegalStateException("No Configuration found");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceNiFi.validateConfig Response : (" + ret + " )");
-        }
+        LOG.debug("<== RangerServiceNiFi.validateConfig Response : ({})", ret);
 
         return ret;
     }
@@ -66,5 +62,4 @@ public class RangerServiceNiFi extends RangerBaseService {
         final NiFiClient client = NiFiConnectionMgr.getNiFiClient(serviceName, configs);
         return client.getResources(context);
     }
-
 }

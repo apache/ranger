@@ -29,41 +29,45 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RangerElasticsearchAuditHandler extends RangerMultiResourceAuditHandler {
-	private static final String PROP_ES_PLUGIN_AUDIT_EXCLUDED_USERS = "ranger.elasticsearch.plugin.audit.excluded.users";
-	private static final String PROP_ES_PLUGIN_AUDIT_INDEX = "xasecure.audit.destination.elasticsearch.index";
+    private static final String PROP_ES_PLUGIN_AUDIT_EXCLUDED_USERS = "ranger.elasticsearch.plugin.audit.excluded.users";
+    private static final String PROP_ES_PLUGIN_AUDIT_INDEX          = "xasecure.audit.destination.elasticsearch.index";
 
-	private String indexName = "ranger_audits";
-	private String esUser = "elasticsearch";
-	private List<String> excludeUsers = null;
-	private AuthzAuditEvent auditEvent = null;
+    private final String       indexName;
+    private final List<String> excludeUsers;
 
-	public RangerElasticsearchAuditHandler(Configuration config) {
-		String excludeUserList = config.get(PROP_ES_PLUGIN_AUDIT_EXCLUDED_USERS, esUser);
-		excludeUsers = Arrays.asList(excludeUserList.split(","));
-		indexName = config.get(PROP_ES_PLUGIN_AUDIT_INDEX, indexName);
-	}
+    public RangerElasticsearchAuditHandler(Configuration config) {
+        String esUser          = "elasticsearch";
+        String excludeUserList = config.get(PROP_ES_PLUGIN_AUDIT_EXCLUDED_USERS, esUser);
 
-	@Override
-	public void processResult(RangerAccessResult result) {
-		// We don't audit "allowed" operation for user "elasticsearch" on index "ranger_audits" to avoid recursive
-		// logging due to updated of ranger_audits index by elasticsearch plugin's audit creation.
-		if (!isAuditingNeeded(result)) {
-			return;
-		}
-		auditEvent = super.getAuthzEvents(result);
-		super.logAuthzAudit(auditEvent);
-	}
+        excludeUsers = Arrays.asList(excludeUserList.split(","));
+        indexName    = config.get(PROP_ES_PLUGIN_AUDIT_INDEX, "ranger_audits");
+    }
 
-	private boolean isAuditingNeeded(final RangerAccessResult result) {
-		boolean ret = true;
-		boolean isAllowed = result.getIsAllowed();
-		RangerAccessRequest request = result.getAccessRequest();
-		RangerAccessResourceImpl resource = (RangerAccessResourceImpl) request.getResource();
-		String resourceName = (String) resource.getValue("index");
-		String requestUser = request.getUser();
-		if (resourceName != null && resourceName.equals(indexName) && excludeUsers.contains(requestUser) && isAllowed) {
-			ret = false;
-		}
-		return ret;
-	}
+    @Override
+    public void processResult(RangerAccessResult result) {
+        // We don't audit "allowed" operation for user "elasticsearch" on index "ranger_audits" to avoid recursive
+        // logging due to updated of ranger_audits index by elasticsearch plugin's audit creation.
+        if (!isAuditingNeeded(result)) {
+            return;
+        }
+
+        AuthzAuditEvent auditEvent = super.getAuthzEvents(result);
+
+        super.logAuthzAudit(auditEvent);
+    }
+
+    private boolean isAuditingNeeded(final RangerAccessResult result) {
+        boolean                  ret          = true;
+        boolean                  isAllowed    = result.getIsAllowed();
+        RangerAccessRequest      request      = result.getAccessRequest();
+        RangerAccessResourceImpl resource     = (RangerAccessResourceImpl) request.getResource();
+        String                   resourceName = (String) resource.getValue("index");
+        String                   requestUser  = request.getUser();
+
+        if (resourceName != null && resourceName.equals(indexName) && excludeUsers.contains(requestUser) && isAllowed) {
+            ret = false;
+        }
+
+        return ret;
+    }
 }

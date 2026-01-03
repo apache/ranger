@@ -52,7 +52,8 @@
 		{
 			"itemId": 1,
 			"name": "allow",
-			"label": "Allow"
+			"label": "Allow",
+			"category": "READ"
 		}
 	],
 
@@ -100,6 +101,19 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Common Name for Certificate"
+		},
+
+		{
+			"itemId":5,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['knox'] ,'isAudited':false} ]"
 		}
 	],
 
@@ -122,9 +136,9 @@
 			"evaluatorOptions": { },
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"",
 			"label": "IP Address Range",
-			"description": "IP Address Range"
+			"description": "IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 	]
 }

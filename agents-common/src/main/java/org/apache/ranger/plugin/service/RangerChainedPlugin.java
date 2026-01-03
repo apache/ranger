@@ -19,44 +19,66 @@
 
 package org.apache.ranger.plugin.service;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
 public abstract class RangerChainedPlugin {
-    private static final Log LOG = LogFactory.getLog(RangerChainedPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerChainedPlugin.class);
 
     protected final RangerBasePlugin rootPlugin;
     protected final String           serviceType;
     protected final String           serviceName;
     protected final RangerBasePlugin plugin;
+    protected final boolean          skipAccessCheckIfAlreadyDetermined;
 
     protected RangerChainedPlugin(RangerBasePlugin rootPlugin, String serviceType, String serviceName) {
-        LOG.info("RangerChainedPlugin(" + serviceType + ", " + serviceName + ")");
+        LOG.info("RangerChainedPlugin({}, {})", serviceType, serviceName);
 
         this.rootPlugin  = rootPlugin;
         this.serviceType = serviceType;
         this.serviceName = serviceName;
         this.plugin      = buildChainedPlugin(serviceType, serviceName, rootPlugin.getAppId());
+
+        RangerPluginConfig rootPluginConfig = rootPlugin.getPluginContext().getConfig();
+
+        skipAccessCheckIfAlreadyDetermined = rootPluginConfig.getBoolean(rootPluginConfig.getPropertyPrefix() + ".bypass.chained.plugin.evaluation.if.access.is.determined", false);
     }
 
     public void init() {
-        LOG.info("==> RangerChainedPlugin.init(" + serviceType + ", " + serviceName + ")");
+        LOG.info("==> RangerChainedPlugin.init({}, {})", serviceType, serviceName);
 
         this.plugin.init();
 
-        LOG.info("<== RangerChainedPlugin.init(" + serviceType + ", " + serviceName + ")");
-    }
-
-    protected RangerBasePlugin buildChainedPlugin(String serviceType, String serviceName, String appId) {
-        return new RangerBasePlugin(serviceType, serviceName, appId);
+        LOG.info("<== RangerChainedPlugin.init({}, {})", serviceType, serviceName);
     }
 
     public abstract RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
     public abstract Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests);
 
+    public abstract RangerResourceACLs getResourceACLs(RangerAccessRequest request);
+
+    public abstract RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer policyType);
+
+    public boolean isAuthorizeOnlyWithChainedPlugin() {
+        return false;
+    }
+
+    public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request) {
+        return null; // no-op
+    }
+
+    public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request) {
+        return null; // no-op
+    }
+
+    protected RangerBasePlugin buildChainedPlugin(String serviceType, String serviceName, String appId) {
+        return new RangerBasePlugin(serviceType, serviceName, appId);
+    }
 }

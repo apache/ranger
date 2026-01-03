@@ -31,7 +31,7 @@
         <link href="styles/bootstrap.min.css" media="all" rel="stylesheet" type="text/css" id="bootstrap-css">
         <link rel="stylesheet" href="styles/font-awesome.min.css">
         <link href="styles/xa.css" media="all" rel="stylesheet" type="text/css" >
-        <script src="libs/bower/jquery/js/jquery-3.5.1.js" ></script>
+        <script src="libs/bower/jquery/js/core-lib.js" ></script>
         <script src="scripts/prelogin/XAPrelogin.js" ></script>
         <script type="text/javascript">
             $(document).ready(function() {
@@ -55,8 +55,8 @@
             response.setHeader("X-Frame-Options", "DENY");
             response.setHeader("X-Content-Type-Options", "nosniff");
             response.setHeader("X-XSS-Protection", "1; mode=block");
-            response.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline';font-src 'self'");
-            response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+            response.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'");
+            response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
             // Delete browser cache in firefox environment
             response.setHeader("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"); // HTTP 1.1.
             response.setHeader("Pragma", "no-cache");
@@ -74,12 +74,15 @@
                         <label><i class="fa fa-user"></i> Username:</label>
                         <input type="text" name="username" id="username" tabindex="1" autofocus>
                         <label><i class="fa fa-lock"></i> Password:</label>
-                        <input type="password" name="password" id="password" tabindex="2" autocomplete="off">
+                        <div class="position-relative">
+                            <input type="password" name="password" id="password" tabindex="2" autocomplete="off">
+                            <i class="fa fa-eye-slash password-icon" id="show-password"></i>
+                        </div>
                     </div>
                     <span id="errorBox" class="help-inline" style="color:white;display:none;"><span class="errorMsg"></span>
                         <i class="fa fa-exclamation-triangle" style="color:#ae2817;"></i>
                     </span>
-                    <span id="errorBoxUnsynced" class="help-inline" style="color:white;display:none;">User is not available in HDP Admin Tool. Please contact your Administrator.
+                    <span id="errorBoxUnsynced" class="help-inline" style="color:white;display:none;">User is not available in Ranger Admin Tool. Please contact your Administrator.
                         <i class="fa fa-exclamation-triangle" style="color:#ae2817;"></i>
                     </span>
                     <button type="submit" class="btn btn-primary btn-block" id="signIn" tabindex="4" >

@@ -22,8 +22,8 @@ package org.apache.ranger.tagsync.process;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.HashMap;
@@ -32,10 +32,10 @@ import java.util.Map;
 import static org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 
 public class TestHbaseResourceMapper {
-    private static final String NAMESPACE_QUALIFIED_NAME            = "namespace@cl1";
-    private static final String TABLE_QUALIFIED_NAME                = "table@cl1";
-    private static final String COLUMN_FAMILY_QUALIFIED_NAME        = "table.family@cl1";
-    private static final String COLUMN_QUALIFIED_NAME               = "table.family.column@cl1";
+    private static final String NAMESPACE_QUALIFIED_NAME     = "namespace@cl1";
+    private static final String TABLE_QUALIFIED_NAME         = "table@cl1";
+    private static final String COLUMN_FAMILY_QUALIFIED_NAME = "table.family@cl1";
+    private static final String COLUMN_QUALIFIED_NAME        = "table.family.column@cl1";
 
     private static final String DOTTED_TABLE_QUALIFIED_NAME         = "table.prefix.1@cl1";
     private static final String DOTTED_COLUMN_FAMILY_QUALIFIED_NAME = "table.prefix.1.family@cl1";
@@ -43,14 +43,14 @@ public class TestHbaseResourceMapper {
 
     private static final String TABLE_WITH_NAMESPACE_QUALIFIED_NAME = "namespace:table@cl1";
 
-    private static final String SERVICE_NAME                        = "cl1_hbase";
-    private static final String RANGER_NAMESPACE                    = "namespace:*";
-    private static final String RANGER_TABLE                        = "table";
-    private static final String RANGER_COLUMN_FAMILY                = "family";
-    private static final String RANGER_COLUMN                       = "column";
+    private static final String SERVICE_NAME         = "cl1_hbase";
+    private static final String RANGER_NAMESPACE     = "namespace:*";
+    private static final String RANGER_TABLE         = "table";
+    private static final String RANGER_COLUMN_FAMILY = "family";
+    private static final String RANGER_COLUMN        = "column";
 
-    private static final String DOTTED_RANGER_TABLE                 = "table.prefix.1";
-    private static final String RANGER_TABLE_WITH_NAMESPACE         = "namespace:table";
+    private static final String DOTTED_RANGER_TABLE         = "table.prefix.1";
+    private static final String RANGER_TABLE_WITH_NAMESPACE = "namespace:table";
 
     AtlasHbaseResourceMapper resourceMapper = new AtlasHbaseResourceMapper();
 
@@ -60,8 +60,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, NAMESPACE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseNamespaceEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseNamespaceEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertNamespaceResource(resource);
     }
@@ -72,8 +72,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_WITH_NAMESPACE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseTableEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertTableWithNamespaceResource(resource);
     }
@@ -84,8 +84,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, TABLE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseTableEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertTableResource(resource, false);
     }
@@ -96,8 +96,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_FAMILY_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnFamilyEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnFamilyEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnFamilyResource(resource, false);
     }
@@ -108,8 +108,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, COLUMN_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnResource(resource, false);
     }
@@ -123,8 +123,8 @@ public class TestHbaseResourceMapper {
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+            Assertions.fail("expected exception. Found " + resource);
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -140,8 +140,8 @@ public class TestHbaseResourceMapper {
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+            Assertions.fail("expected exception. Found " + resource);
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -157,8 +157,8 @@ public class TestHbaseResourceMapper {
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+            Assertions.fail("expected exception. Found " + resource);
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -169,8 +169,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_TABLE_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseTableEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseTableEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertTableResource(resource, true);
     }
@@ -181,8 +181,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_FAMILY_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnFamilyEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnFamilyEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnFamilyResource(resource, true);
     }
@@ -193,8 +193,8 @@ public class TestHbaseResourceMapper {
 
         entAttribs.put(ENTITY_ATTRIBUTE_QUALIFIED_NAME, DOTTED_COLUMN_QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getHbaseColumnEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getHbaseColumnEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertColumnResource(resource, true);
     }
@@ -236,78 +236,78 @@ public class TestHbaseResourceMapper {
     }
 
     private void assertServiceResource(RangerServiceResource resource) {
-        Assert.assertNotNull(resource);
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
-        Assert.assertNotNull(resource.getResourceElements());
+        Assertions.assertNotNull(resource);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertNotNull(resource.getResourceElements());
     }
 
     private void assertNamespaceResource(RangerServiceResource resource) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(1, resource.getResourceElements().size());
+        Assertions.assertEquals(1, resource.getResourceElements().size());
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
-        Assert.assertEquals(RANGER_NAMESPACE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
+        Assertions.assertEquals(RANGER_NAMESPACE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
     }
 
     private void assertTableWithNamespaceResource(RangerServiceResource resource) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(1, resource.getResourceElements().size());
+        Assertions.assertEquals(1, resource.getResourceElements().size());
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
-        Assert.assertEquals(RANGER_TABLE_WITH_NAMESPACE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
+        Assertions.assertEquals(RANGER_TABLE_WITH_NAMESPACE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
     }
 
     private void assertTableResource(RangerServiceResource resource, boolean isDottedTable) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(1, resource.getResourceElements().size());
+        Assertions.assertEquals(1, resource.getResourceElements().size());
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
-        Assert.assertEquals(isDottedTable ? DOTTED_RANGER_TABLE : RANGER_TABLE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
+        Assertions.assertEquals(isDottedTable ? DOTTED_RANGER_TABLE : RANGER_TABLE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
     }
 
     private void assertColumnFamilyResource(RangerServiceResource resource, boolean isDottedTable) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(2, resource.getResourceElements().size());
+        Assertions.assertEquals(2, resource.getResourceElements().size());
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
-        Assert.assertEquals(isDottedTable ? DOTTED_RANGER_TABLE : RANGER_TABLE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
+        Assertions.assertEquals(isDottedTable ? DOTTED_RANGER_TABLE : RANGER_TABLE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().size());
-        Assert.assertEquals(RANGER_COLUMN_FAMILY, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().size());
+        Assertions.assertEquals(RANGER_COLUMN_FAMILY, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().get(0));
     }
 
     private void assertColumnResource(RangerServiceResource resource, boolean isDottedTable) {
         assertServiceResource(resource);
 
-        Assert.assertEquals(3, resource.getResourceElements().size());
+        Assertions.assertEquals(3, resource.getResourceElements().size());
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
-        Assert.assertEquals(isDottedTable ? DOTTED_RANGER_TABLE : RANGER_TABLE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().size());
+        Assertions.assertEquals(isDottedTable ? DOTTED_RANGER_TABLE : RANGER_TABLE, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_TABLE).getValues().get(0));
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().size());
-        Assert.assertEquals(RANGER_COLUMN_FAMILY, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().size());
+        Assertions.assertEquals(RANGER_COLUMN_FAMILY, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN_FAMILY).getValues().get(0));
 
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN).getValues().size());
-        Assert.assertEquals(RANGER_COLUMN, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN).getValues().size());
+        Assertions.assertEquals(RANGER_COLUMN, resource.getResourceElements().get(AtlasHbaseResourceMapper.RANGER_TYPE_HBASE_COLUMN).getValues().get(0));
     }
 }

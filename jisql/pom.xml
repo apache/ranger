@@ -17,16 +17,19 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>jisql</artifactId>
-    <name>Jdbc SQL Connector</name>
-    <description>Jdbc SQL Connector to execute sql statement in any db</description>
-    <packaging>jar</packaging>
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
         <version>3.0.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
+    <artifactId>jisql</artifactId>
+    <packaging>jar</packaging>
+    <name>Jdbc SQL Connector</name>
+    <description>Jdbc SQL Connector to execute sql statement in any db</description>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>net.sf.jopt-simple</groupId>

@@ -17,36 +17,49 @@
 
 package org.apache.ranger.biz;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerPrincipal.PrincipalType;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
+import org.apache.ranger.plugin.model.RangerSecurityZone.SecurityZoneSummary;
+import org.apache.ranger.plugin.model.RangerSecurityZone.ZoneServiceSummary;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.store.AbstractPredicateUtil;
+import org.apache.ranger.plugin.store.PList;
+import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
+import org.apache.ranger.plugin.store.SecurityZoneStore;
+import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.rest.SecurityZoneREST;
+import org.apache.ranger.service.RangerBaseModelService;
+import org.apache.ranger.service.RangerSecurityZoneServiceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXSecurityZone;
-import org.apache.ranger.entity.XXTrxLog;
-import org.apache.ranger.plugin.model.RangerSecurityZone;
-import org.apache.ranger.plugin.store.AbstractPredicateUtil;
-import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
-import org.apache.ranger.plugin.store.SecurityZoneStore;
-import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.service.RangerSecurityZoneServiceService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 @Component
 public class SecurityZoneDBStore implements SecurityZoneStore {
-    private static final Log LOG = LogFactory.getLog(SecurityZoneDBStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityZoneDBStore.class);
+
     private static final String RANGER_GLOBAL_STATE_NAME = "RangerSecurityZone";
 
     @Autowired
@@ -59,33 +72,21 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     RESTErrorUtil restErrorUtil;
 
     @Autowired
-	SecurityZoneRefUpdater securityZoneRefUpdater;
+    SecurityZoneRefUpdater securityZoneRefUpdater;
 
     @Autowired
     RangerBizUtil bizUtil;
 
-    AbstractPredicateUtil predicateUtil = null;
+    AbstractPredicateUtil predicateUtil;
+
+    @Autowired
+    ServiceMgr serviceMgr;
 
     public void init() throws Exception {}
 
-    @PostConstruct
-    public void initStore() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> SecurityZoneDBStore.initStore()");
-        }
-
-        predicateUtil = new SecurityZonePredicateUtil();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== SecurityZoneDBStore.initStore()");
-        }
-    }
-
     @Override
     public RangerSecurityZone createSecurityZone(RangerSecurityZone securityZone) throws Exception {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> SecurityZoneDBStore.createSecurityZone()");
-        }
+        LOG.debug("==> SecurityZoneDBStore.createSecurityZone()");
 
         XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(securityZone.getName());
 
@@ -96,43 +97,50 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
         RangerSecurityZone createdSecurityZone = securityZoneService.create(securityZone);
+
         if (createdSecurityZone == null) {
-            throw new Exception("Cannot create security zone:[" + securityZone + "]");
+            throw restErrorUtil.createRESTException("Cannot create security zone:[" + securityZone + "]");
         }
+
         securityZoneRefUpdater.createNewZoneMappingForRefTable(createdSecurityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(createdSecurityZone, null, "create");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(createdSecurityZone, null, RangerBaseModelService.OPERATION_CREATE_CONTEXT);
+
         return createdSecurityZone;
     }
 
     @Override
     public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
-        XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(securityZone.getId());
-        if (xxSecurityZone == null) {
-            throw restErrorUtil.createRESTException("security-zone with id: " + securityZone.getId() + " does not exist");
-        }
-
-        Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-        RangerSecurityZone oldSecurityZone = gsonBuilder.fromJson(xxSecurityZone.getJsonData(), RangerSecurityZone.class);
+        RangerSecurityZone oldSecurityZone = securityZoneService.read(securityZone.getId());
 
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
 
         RangerSecurityZone updatedSecurityZone = securityZoneService.update(securityZone);
+
         if (updatedSecurityZone == null) {
-            throw new Exception("Cannot update security zone:[" + securityZone + "]");
+            throw restErrorUtil.createRESTException("Cannot update security zone:[" + securityZone + "]");
         }
+
         securityZoneRefUpdater.createNewZoneMappingForRefTable(updatedSecurityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(updatedSecurityZone, oldSecurityZone, "update");
-        bizUtil.createTrxLog(trxLogList);
+
+        boolean isRenamed = !StringUtils.equals(securityZone.getName(), (null == oldSecurityZone) ? null : oldSecurityZone.getName());
+
+        if (isRenamed) {
+            securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
+        }
+
+        securityZoneService.createTransactionLog(updatedSecurityZone, oldSecurityZone, RangerBaseModelService.OPERATION_UPDATE_CONTEXT);
+
         return securityZone;
     }
 
     @Override
     public void deleteSecurityZoneByName(String zoneName) throws Exception {
         XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(zoneName);
+
         if (xxSecurityZone == null) {
             throw restErrorUtil.createRESTException("security-zone with name: " + zoneName + " does not exist");
         }
+
         RangerSecurityZone securityZone = securityZoneService.read(xxSecurityZone.getId());
 
         daoMgr.getXXGlobalState().onGlobalStateChange(RANGER_GLOBAL_STATE_NAME);
@@ -140,9 +148,8 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         securityZoneRefUpdater.cleanupRefTables(securityZone);
 
         securityZoneService.delete(securityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(securityZone, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
-        }
+        securityZoneService.createTransactionLog(securityZone, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
+    }
 
     @Override
     public void deleteSecurityZoneById(Long zoneId) throws Exception {
@@ -153,29 +160,29 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         securityZoneRefUpdater.cleanupRefTables(securityZone);
 
         securityZoneService.delete(securityZone);
-        List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(securityZone, null, "delete");
-        bizUtil.createTrxLog(trxLogList);
+        securityZoneService.createTransactionLog(securityZone, null, RangerBaseModelService.OPERATION_DELETE_CONTEXT);
     }
 
     @Override
-    public RangerSecurityZone getSecurityZone(Long id) throws Exception {
+    public RangerSecurityZone getSecurityZone(Long id) {
         return securityZoneService.read(id);
     }
 
     @Override
-    public RangerSecurityZone getSecurityZoneByName(String name) throws Exception {
+    public RangerSecurityZone getSecurityZoneByName(String name) {
         XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneName(name);
+
         if (xxSecurityZone == null) {
             throw restErrorUtil.createRESTException("security-zone with name: " + name + " does not exist");
         }
+
         return securityZoneService.read(xxSecurityZone.getId());
     }
 
     @Override
-    public List<RangerSecurityZone> getSecurityZones(SearchFilter filter) throws Exception {
-        List<RangerSecurityZone> ret = new ArrayList<>();
-
-        List<XXSecurityZone> xxSecurityZones = daoMgr.getXXSecurityZoneDao().getAll();
+    public List<RangerSecurityZone> getSecurityZones(SearchFilter filter) {
+        List<RangerSecurityZone> ret             = new ArrayList<>();
+        List<XXSecurityZone>     xxSecurityZones = daoMgr.getXXSecurityZoneDao().getAll();
 
         for (XXSecurityZone xxSecurityZone : xxSecurityZones) {
             if (!xxSecurityZone.getId().equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
@@ -183,10 +190,11 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             }
         }
 
-        if (CollectionUtils.isNotEmpty(ret) && filter != null && !filter.isEmpty()) {
+        if (CollectionUtils.isNotEmpty(ret) && filter != null) {
             List<RangerSecurityZone> copy = new ArrayList<>(ret);
 
             predicateUtil.applyFilter(copy, filter);
+
             ret = copy;
         }
 
@@ -198,6 +206,7 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         Map<String, RangerSecurityZone.RangerSecurityZoneService> ret = null;
 
         SearchFilter filter = new SearchFilter();
+
         filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
 
         try {
@@ -211,7 +220,158 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
                 }
             }
         } catch (Exception excp) {
-            LOG.error("Failed to get security zones for service:[" + serviceName + "]", excp);
+            LOG.error("Failed to get security zones for service:[{}]", serviceName, excp);
+        }
+
+        return ret;
+    }
+
+    @PostConstruct
+    public void initStore() {
+        LOG.debug("==> SecurityZoneDBStore.initStore()");
+
+        predicateUtil = new SecurityZonePredicateUtil();
+
+        LOG.debug("<== SecurityZoneDBStore.initStore()");
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList(HttpServletRequest request) {
+        String  namePrefix         = request.getParameter(SearchFilter.ZONE_NAME_PREFIX);
+        boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+
+        List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
+
+        if (!ret.isEmpty() && filterByNamePrefix) {
+            ret.removeIf(zoneHeader -> !StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix));
+        }
+
+        return ret;
+    }
+
+    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(Long zoneId, HttpServletRequest request) {
+        if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_SECURITY_ZONE)) {
+            throw restErrorUtil.createRESTException(SecurityZoneREST.STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE, MessageEnums.OPER_NO_PERMISSION);
+        }
+
+        String  namePrefix         = request.getParameter(SearchFilter.SERVICE_NAME_PREFIX);
+        boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+
+        List<RangerServiceHeaderInfo> services    = daoMgr.getXXSecurityZoneRefService().findServiceHeaderInfosByZoneId(zoneId);
+        List<RangerServiceHeaderInfo> tagServices = daoMgr.getXXSecurityZoneRefTagService().findServiceHeaderInfosByZoneId(zoneId);
+        List<RangerServiceHeaderInfo> ret         = new ArrayList<>(services.size() + tagServices.size());
+
+        ret.addAll(services);
+        ret.addAll(tagServices);
+
+        if (!ret.isEmpty() && filterByNamePrefix) {
+            ret.removeIf(serviceHeader -> !StringUtils.startsWithIgnoreCase(serviceHeader.getName(), namePrefix));
+        }
+
+        return ret;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoListByServiceId(Long serviceId, Boolean isTagService, HttpServletRequest request) {
+        if (serviceId == null) {
+            throw restErrorUtil.createRESTException("Invalid value for serviceId", MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        String  namePrefix         = request.getParameter(SearchFilter.ZONE_NAME_PREFIX);
+        boolean filterByNamePrefix = StringUtils.isNotBlank(namePrefix);
+
+        List<RangerSecurityZoneHeaderInfo> ret = daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfosByServiceId(serviceId, isTagService);
+
+        if (!ret.isEmpty() && filterByNamePrefix) {
+            ret.removeIf(zoneHeader -> !StringUtils.startsWithIgnoreCase(zoneHeader.getName(), namePrefix));
+        }
+
+        return ret;
+    }
+
+    public PList<SecurityZoneSummary> getZonesSummary(SearchFilter filter) {
+        int maxRows    = filter.getMaxRows();
+        int startIndex = filter.getStartIndex();
+
+        filter.setStartIndex(0);
+        filter.setMaxRows(0);
+
+        List<RangerSecurityZone>  securityZones = getSecurityZones(filter);
+        List<SecurityZoneSummary> summaryList   = new ArrayList<>();
+
+        for (RangerSecurityZone securityZone : securityZones) {
+            if (bizUtil.isAdmin() || serviceMgr.isZoneAdmin(securityZone.getName()) || serviceMgr.isZoneAuditor(securityZone.getName())) {
+                summaryList.add(toSecurityZoneSummary(securityZone));
+            }
+        }
+
+        List<SecurityZoneSummary> paginatedList;
+
+        if (summaryList.size() > startIndex) {
+            int endIndex = Math.min((startIndex + maxRows), summaryList.size());
+
+            paginatedList = summaryList.subList(startIndex, endIndex);
+        } else {
+            paginatedList = Collections.emptyList();
+        }
+
+        return new PList<>(paginatedList, startIndex, maxRows, summaryList.size(), paginatedList.size(), filter.getSortType(), filter.getSortBy());
+    }
+
+    private SecurityZoneSummary toSecurityZoneSummary(RangerSecurityZone securityZone) {
+        SecurityZoneSummary ret = new SecurityZoneSummary();
+
+        ret.setId(securityZone.getId());
+        ret.setName(securityZone.getName());
+        ret.setDescription(securityZone.getDescription());
+        ret.setGuid(securityZone.getGuid());
+        ret.setCreateTime(securityZone.getCreateTime());
+        ret.setUpdateTime(securityZone.getUpdateTime());
+        ret.setCreatedBy(securityZone.getCreatedBy());
+        ret.setUpdatedBy(securityZone.getUpdatedBy());
+        ret.setVersion(ret.getVersion());
+        ret.setIsEnabled(securityZone.getIsEnabled());
+        ret.setTagServices(securityZone.getTagServices());
+
+        Map<PrincipalType, Integer> adminCount   = new HashMap<>();
+        Map<PrincipalType, Integer> auditorCount = new HashMap<>();
+
+        adminCount.put(PrincipalType.USER, securityZone.getAdminUsers().size());
+        adminCount.put(PrincipalType.GROUP, securityZone.getAdminUserGroups().size());
+        adminCount.put(PrincipalType.ROLE, securityZone.getAdminRoles().size());
+
+        auditorCount.put(PrincipalType.USER, securityZone.getAuditUsers().size());
+        auditorCount.put(PrincipalType.GROUP, securityZone.getAuditUserGroups().size());
+        auditorCount.put(PrincipalType.ROLE, securityZone.getAuditRoles().size());
+
+        ret.setAdminCount(adminCount);
+        ret.setAuditorCount(auditorCount);
+
+        List<ZoneServiceSummary> services = getSecurityZoneServiceSummary(securityZone);
+
+        ret.setServices(services);
+        ret.setTotalResourceCount(services.stream().mapToLong(ZoneServiceSummary::getResourceCount).sum());
+
+        return ret;
+    }
+
+    private List<ZoneServiceSummary> getSecurityZoneServiceSummary(RangerSecurityZone securityZone) {
+        List<ZoneServiceSummary> ret = new ArrayList<>();
+
+        if (MapUtils.isNotEmpty(securityZone.getServices())) {
+            for (Map.Entry<String, RangerSecurityZoneService> entry : securityZone.getServices().entrySet()) {
+                String                    serviceName = entry.getKey();
+                RangerSecurityZoneService zoneService = entry.getValue();
+                XXService                 xService    = daoMgr.getXXService().findByName(serviceName);
+                XXServiceDef              serviceDef  = daoMgr.getXXServiceDef().getById(xService.getType());
+                ZoneServiceSummary        summary     = new ZoneServiceSummary();
+
+                summary.setId(xService.getId());
+                summary.setName(serviceName);
+                summary.setType(serviceDef.getName());
+                summary.setDisplayName(xService.getDisplayName());
+                summary.setResourceCount((long) zoneService.getResources().size());
+
+                ret.add(summary);
+            }
         }
 
         return ret;

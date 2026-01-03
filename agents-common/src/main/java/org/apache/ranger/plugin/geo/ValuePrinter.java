@@ -19,70 +19,73 @@
 
 package org.apache.ranger.plugin.geo;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
 class ValuePrinter<T> implements ValueProcessor<T> {
-	private static final Log LOG = LogFactory.getLog(ValuePrinter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ValuePrinter.class);
 
-	private Writer writer;
-	private String fileName;
+    private       Writer writer;
+    private final String fileName;
 
-	ValuePrinter(String fileName) {
-		this.fileName = fileName;
-	}
+    ValuePrinter(String fileName) {
+        this.fileName = fileName;
+    }
 
-	public T process(T value) {
+    public T process(T value) {
+        if (value != null) {
+            if (writer == null) {
+                LOG.error("ValuePrinter.process() -{}", value);
+            } else {
+                try {
+                    writer.write(value.toString());
+                    writer.write('\n');
+                } catch (IOException exception) {
+                    LOG.error("ValuePrinter.process() - Cannot write '{}' to {}", value, fileName);
+                }
+            }
+        }
 
-		if (value != null) {
-			if (writer == null) {
-				LOG.error("ValuePrinter.process() -" + value);
-			} else {
-				try {
-					writer.write(value.toString());
-					writer.write('\n');
-				} catch (IOException exception) {
-					LOG.error("ValuePrinter.process() - Cannot write '" + value + "' to " + fileName);
-				}
-			}
-		}
-		return value;
-	}
+        return value;
+    }
 
-	public void print(String str) {
-		if (writer == null) {
-			LOG.error("ValuePrinter.print() -" + str);
-		} else {
-			try {
-				writer.write(str);
-				writer.write('\n');
-			} catch (IOException exception) {
-				LOG.error("ValuePrinter.print() - Cannot write '" + str + "' to " + fileName );
-			}
-		}
-	}
+    public void print(String str) {
+        if (writer == null) {
+            LOG.error("ValuePrinter.print() -{}", str);
+        } else {
+            try {
+                writer.write(str);
+                writer.write('\n');
+            } catch (IOException exception) {
+                LOG.error("ValuePrinter.print() - Cannot write '{}' to {}", str, fileName);
+            }
+        }
+    }
 
-	void build() {
-		try {
-			if (StringUtils.isNotBlank(fileName)) {
-				writer = new BufferedWriter(new OutputStreamWriter(
-						new FileOutputStream(fileName)));
-			}
-		} catch(IOException exception) {
-			LOG.error("ValuePrinter.build() - Cannot open " + fileName + " for writing");
-		}
-	}
+    void build() {
+        try {
+            if (StringUtils.isNotBlank(fileName)) {
+                writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileName)));
+            }
+        } catch (IOException exception) {
+            LOG.error("ValuePrinter.build() - Cannot open {} for writing", fileName);
+        }
+    }
 
-	void close() {
-		try {
-			if (writer != null) {
-				writer.close();
-			}
-		} catch (IOException exception) {
-			LOG.error("ValuePrinter.close() - Cannot close " + fileName);
-		}
-	}
+    void close() {
+        try {
+            if (writer != null) {
+                writer.close();
+            }
+        } catch (IOException exception) {
+            LOG.error("ValuePrinter.close() - Cannot close {}", fileName);
+        }
+    }
 }

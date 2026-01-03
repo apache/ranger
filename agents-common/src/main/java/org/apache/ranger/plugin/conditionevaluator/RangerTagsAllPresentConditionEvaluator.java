@@ -20,61 +20,60 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
 
-
 public class RangerTagsAllPresentConditionEvaluator extends RangerAbstractConditionEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerTagsAllPresentConditionEvaluator.class);
 
-	private static final Log LOG = LogFactory.getLog(RangerTagsAllPresentConditionEvaluator.class);
+    private final Set<String> policyConditionTags = new HashSet<>();
 
-	private final Set<String> policyConditionTags = new HashSet<>();
+    @Override
+    public void init() {
+        LOG.debug("==> RangerTagsAllPresentConditionEvaluator.init({})", condition);
 
-	@Override
-	public void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerTagsAllPresentConditionEvaluator.init(" + condition + ")");
-		}
+        super.init();
 
-		super.init();
+        if (condition != null) {
+            for (String value : condition.getValues()) {
+                policyConditionTags.add(value.trim());
+            }
+        }
 
-		if (condition != null ) {
-			for (String value : condition.getValues()) {
-				policyConditionTags.add(value.trim());
-			}
-		}
+        LOG.debug("<== RangerTagsAllPresentConditionEvaluator.init({}): Tags[{}]", condition, policyConditionTags);
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagsAllPresentConditionEvaluator.init(" + condition + "): Tags[" + policyConditionTags + "]");
-		}
-	}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerTagsAllPresentConditionEvaluator.isMatched({})", request);
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
+        boolean matched = true;
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerTagsAllPresentConditionEvaluator.isMatched(" + request + ")");
-		}
+        if (CollectionUtils.isNotEmpty(policyConditionTags)) {
+            Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
-		boolean matched = true;
+            // check if resource Tags  atleast have to have all the tags in policy Condition
+            if (CollectionUtils.isNotEmpty(resourceTags)) {
+                Set<String> tags = new HashSet<>(resourceTags.size());
 
-		if (CollectionUtils.isNotEmpty(policyConditionTags))  {
-			RangerAccessRequest			 readOnlyRequest = request.getReadOnlyCopy();
-			RangerScriptExecutionContext context         = new RangerScriptExecutionContext(readOnlyRequest);
-			Set<String>                  resourceTags    = context.getAllTagTypes();
+                for (RangerTagForEval tag : resourceTags) {
+                    tags.add(tag.getType());
+                }
 
-			// check if resource Tags  atleast have to have all the tags in policy Condition
-			matched = resourceTags != null && resourceTags.containsAll(policyConditionTags);
-		}
+                matched = tags.containsAll(policyConditionTags);
+            } else {
+                matched = false;
+            }
+        }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagsAllPresentConditionEvaluator.isMatched(" + request+ "): " + matched);
-		}
+        LOG.debug("<== RangerTagsAllPresentConditionEvaluator.isMatched({}): {}", request, matched);
 
-		return matched;
-	}
+        return matched;
+    }
 }

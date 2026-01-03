@@ -1,15 +1,21 @@
-version: '3'
 services:
   ranger-hadoop:
     build:
       context: .
       dockerfile: Dockerfile.ranger-hadoop
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - HADOOP_VERSION=${HADOOP_VERSION}
-        - RANGER_VERSION=${RANGER_VERSION}
+        - HDFS_PLUGIN_VERSION=${HDFS_PLUGIN_VERSION}
+        - YARN_PLUGIN_VERSION=${YARN_PLUGIN_VERSION}
+        - TEZ_VERSION=${TEZ_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-hadoop
     container_name: ranger-hadoop
-    hostname: ranger-hadoop.example.com
+    hostname: ranger-hadoop.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-hadoop:/etc/keytabs
     stdin_open: true
     tty: true
     networks:
@@ -21,14 +27,18 @@ services:
       ranger:
         condition: service_started
     healthcheck:
-      test: "hdfs dfs -ls /hbase"
-      interval: 1m30s
+      test: ["CMD-SHELL", "/home/ranger/scripts/ranger-hadoop-healthcheck.sh"]
+      interval: 20s
       timeout: 10s
-      retries: 30
+      retries: 40
       start_period: 40s
     environment:
       - HADOOP_VERSION
-      - RANGER_VERSION
+      - HDFS_PLUGIN_VERSION
+      - YARN_PLUGIN_VERSION
+      - TEZ_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:
+    name: rangernw

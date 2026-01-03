@@ -17,29 +17,30 @@
 
 package org.apache.ranger.service;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.entity.*;
+import org.apache.ranger.common.SortField;
+import org.apache.ranger.entity.XXAccessTypeDef;
+import org.apache.ranger.entity.XXContextEnricherDef;
+import org.apache.ranger.entity.XXDataMaskTypeDef;
+import org.apache.ranger.entity.XXEnumDef;
+import org.apache.ranger.entity.XXEnumElementDef;
+import org.apache.ranger.entity.XXPolicyConditionDef;
+import org.apache.ranger.entity.XXResourceDef;
+import org.apache.ranger.entity.XXServiceConfigDef;
+import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXServiceDefBase;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef.AccessTypeCategory;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
@@ -52,647 +53,783 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.view.RangerServiceDefList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef>
-		extends RangerBaseModelService<T, V> {
-	private static final Log LOG = LogFactory.getLog(RangerServiceDefServiceBase.class);
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-	private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS = "__accessTypeRestrictions";
-	private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";
+import static org.apache.ranger.plugin.util.ServiceDefUtil.IMPLICIT_CONDITION_EXPRESSION_EVALUATOR;
 
-	@Autowired
-	RangerAuditFields<?> rangerAuditFields;
+public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef> extends RangerBaseModelService<T, V> {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
 
-	@Autowired
-	JSONUtil jsonUtil;
-	
-	@Autowired
-	GUIDUtil guidUtil;
+    public static final String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
 
-	public RangerServiceDefServiceBase() {
-		super();
+    private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS  = "__accessTypeRestrictions";
+    private static final String OPTION_RESOURCE_IS_VALID_LEAF             = "__isValidLeaf";
 
-		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_DISPLAY_NAME, "obj.displayName", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
+    @Autowired
+    RangerAuditFields<?> rangerAuditFields;
 
-		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
-		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_ID, "obj.id"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE, "obj.name"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_DISPLAY_NAME, "obj.displayName"));
-	}
+    @Autowired
+    JSONUtil jsonUtil;
 
-	@Override
-	protected V populateViewBean(T xServiceDef) {
-		V serviceDef = super.populateViewBean((T) xServiceDef);
-		Long serviceDefId = xServiceDef.getId();
+    @Autowired
+    GUIDUtil guidUtil;
 
-		List<XXServiceConfigDef> xConfigs = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
-		if (!stringUtil.isEmpty(xConfigs)) {
-			List<RangerServiceConfigDef> configs = new ArrayList<RangerServiceConfigDef>();
-			for (XXServiceConfigDef xConfig : xConfigs) {
-				RangerServiceConfigDef config = populateXXToRangerServiceConfigDef(xConfig);
-				configs.add(config);
-			}
-			serviceDef.setConfigs(configs);
-		}
+    public RangerServiceDefServiceBase() {
+        super();
 
-		List<XXResourceDef> xResources = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
-		if (!stringUtil.isEmpty(xResources)) {
-			List<RangerResourceDef> resources = new ArrayList<RangerResourceDef>();
-			for (XXResourceDef xResource : xResources) {
-				RangerResourceDef resource = populateXXToRangerResourceDef(xResource);
-				resources.add(resource);
-			}
-			serviceDef.setResources(resources);
-		}
+        searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_DISPLAY_NAME, "obj.displayName", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
 
-		List<XXAccessTypeDef> xAccessTypes = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
-		if (!stringUtil.isEmpty(xAccessTypes)) {
-			List<RangerAccessTypeDef> accessTypes = new ArrayList<RangerAccessTypeDef>();
-			for (XXAccessTypeDef xAtd : xAccessTypes) {
-				RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd);
-				accessTypes.add(accessType);
-			}
-			serviceDef.setAccessTypes(accessTypes);
-		}
+        sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+        sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
+        sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_ID, "obj.id"));
+        sortFields.add(new SortField(SearchFilter.SERVICE_TYPE, "obj.name"));
+        sortFields.add(new SortField(SearchFilter.SERVICE_TYPE_DISPLAY_NAME, "obj.displayName"));
+    }
 
-		List<XXPolicyConditionDef> xPolicyConditions = daoMgr.getXXPolicyConditionDef()
-				.findByServiceDefId(serviceDefId);
-		if (!stringUtil.isEmpty(xPolicyConditions)) {
-			List<RangerPolicyConditionDef> policyConditions = new ArrayList<RangerPolicyConditionDef>();
-			for (XXPolicyConditionDef xPolicyCondDef : xPolicyConditions) {
-				RangerPolicyConditionDef policyCondition = populateXXToRangerPolicyConditionDef(xPolicyCondDef);
-				policyConditions.add(policyCondition);
-			}
-			serviceDef.setPolicyConditions(policyConditions);
-		}
+    public XXServiceConfigDef populateRangerServiceConfigDefToXX(RangerServiceConfigDef vObj, XXServiceConfigDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerServiceConfigDefToXX, serviceDef can not be null");
 
-		List<XXContextEnricherDef> xContextEnrichers = daoMgr.getXXContextEnricherDef()
-				.findByServiceDefId(serviceDefId);
-		if (!stringUtil.isEmpty(xContextEnrichers)) {
-			List<RangerContextEnricherDef> contextEnrichers = new ArrayList<RangerContextEnricherDef>();
-			for (XXContextEnricherDef xContextEnricherDef : xContextEnrichers) {
-				RangerContextEnricherDef contextEnricher = populateXXToRangerContextEnricherDef(xContextEnricherDef);
-				contextEnrichers.add(contextEnricher);
-			}
-			serviceDef.setContextEnrichers(contextEnrichers);
-		}
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
 
-		List<XXEnumDef> xEnumList = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
-		if (!stringUtil.isEmpty(xEnumList)) {
-			List<RangerEnumDef> enums = new ArrayList<RangerEnumDef>();
-			for (XXEnumDef xEnum : xEnumList) {
-				RangerEnumDef vEnum = populateXXToRangerEnumDef(xEnum);
-				enums.add(vEnum);
-			}
-			serviceDef.setEnums(enums);
-		}
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 
-		RangerDataMaskDef  dataMaskDef  = new RangerDataMaskDef();
-		RangerRowFilterDef rowFilterDef = new RangerRowFilterDef();
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setType(vObj.getType());
+        xObj.setSubtype(vObj.getSubType());
+        xObj.setIsMandatory(vObj.getMandatory());
+        xObj.setDefaultvalue(vObj.getDefaultValue());
+        xObj.setValidationRegEx(vObj.getValidationRegEx());
+        xObj.setValidationMessage(vObj.getValidationMessage());
+        xObj.setUiHint(vObj.getUiHint());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setDescription(vObj.getDescription());
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setRbkeydescription(vObj.getRbKeyDescription());
+        xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 
-		List<XXDataMaskTypeDef> xDataMaskTypes = daoMgr.getXXDataMaskTypeDef().findByServiceDefId(serviceDefId);
-		if (!stringUtil.isEmpty(xDataMaskTypes)) {
-			List<RangerDataMaskTypeDef> dataMaskTypes = new ArrayList<RangerDataMaskTypeDef>();
-			for (XXDataMaskTypeDef xDataMaskType : xDataMaskTypes) {
-				RangerDataMaskTypeDef dataMaskType = populateXXToRangerDataMaskTypeDef(xDataMaskType);
-				dataMaskTypes.add(dataMaskType);
-			}
+        return xObj;
+    }
 
-			dataMaskDef.setMaskTypes(dataMaskTypes);
-		}
+    public RangerServiceConfigDef populateXXToRangerServiceConfigDef(XXServiceConfigDef xObj) {
+        RangerServiceConfigDef vObj = new RangerServiceConfigDef();
 
-		if (!stringUtil.isEmpty(xResources)) {
-			for (XXResourceDef xResource : xResources) {
-				if (StringUtils.isNotEmpty(xResource.getDataMaskOptions())) {
-					RangerResourceDef dataMaskResource = jsonToObject(xResource.getDataMaskOptions(), RangerResourceDef.class);
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setType(xObj.getType());
+        vObj.setSubType(xObj.getSubtype());
+        vObj.setMandatory(xObj.getIsMandatory());
+        vObj.setDefaultValue(xObj.getDefaultvalue());
+        vObj.setValidationRegEx(xObj.getValidationRegEx());
+        vObj.setValidationMessage(xObj.getValidationMessage());
+        vObj.setUiHint(xObj.getUiHint());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+        vObj.setRbKeyDescription(xObj.getRbkeydescription());
+        vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
 
-					dataMaskDef.getResources().add(dataMaskResource);
-				}
+        return vObj;
+    }
 
-				if (StringUtils.isNotEmpty(xResource.getRowFilterOptions())) {
-					RangerResourceDef resource = jsonToObject(xResource.getRowFilterOptions(), RangerResourceDef.class);
+    public XXResourceDef populateRangerResourceDefToXX(RangerResourceDef vObj, XXResourceDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerResourceDefToXX, serviceDef can not be null");
 
-					rowFilterDef.getResources().add(resource);
-				}
-			}
-		}
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
 
-		if (!stringUtil.isEmpty(xAccessTypes)) {
-			for (XXAccessTypeDef xAtd : xAccessTypes) {
-				if(StringUtils.isNotEmpty(xAtd.getDataMaskOptions())) {
-					RangerAccessTypeDef dataMaskAccessType = jsonToObject(xAtd.getDataMaskOptions(), RangerAccessTypeDef.class);
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 
-					dataMaskDef.getAccessTypes().add(dataMaskAccessType);
-				}
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setType(vObj.getType());
+        xObj.setLevel(vObj.getLevel());
+        xObj.setMandatory(vObj.getMandatory());
+        xObj.setLookupsupported(vObj.getLookupSupported());
+        xObj.setRecursivesupported(vObj.getRecursiveSupported());
+        xObj.setExcludessupported(vObj.getExcludesSupported());
+        xObj.setMatcher(vObj.getMatcher());
 
-				if(StringUtils.isNotEmpty(xAtd.getRowFilterOptions())) {
-					RangerAccessTypeDef accessType = jsonToObject(xAtd.getRowFilterOptions(), RangerAccessTypeDef.class);
+        String              accessTypeRestrictions = objectToJson((HashSet<String>) vObj.getAccessTypeRestrictions());
+        String              isValidLeaf            = objectToJson(vObj.getIsValidLeaf());
+        Map<String, String> matcherOptions         = vObj.getMatcherOptions();
 
-					rowFilterDef.getAccessTypes().add(accessType);
-				}
-			}
-		}
-		serviceDef.setDataMaskDef(dataMaskDef);
-		serviceDef.setRowFilterDef(rowFilterDef);
+        if (StringUtils.isNotBlank(accessTypeRestrictions)) {
+            matcherOptions.put(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS, accessTypeRestrictions);
+        } else {
+            matcherOptions.remove(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS);
+        }
 
-		ServiceDefUtil.normalize(serviceDef);
-
-		return serviceDef;
-	}
-
-	@Override
-	protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
-
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
-
-		xObj.setGuid(guid);
-		xObj.setName(vObj.getName());
-		xObj.setDisplayName(vObj.getDisplayName());
-		xObj.setImplclassname(vObj.getImplClass());
-		xObj.setLabel(vObj.getLabel());
-		xObj.setDescription(vObj.getDescription());
-		xObj.setRbkeylabel(vObj.getRbKeyLabel());
-		xObj.setRbkeydescription(vObj.getRbKeyDescription());
-		xObj.setIsEnabled(vObj.getIsEnabled());
-
-		xObj.setDefOptions(mapToJsonString(vObj.getOptions()));
-
-		return xObj;
-	}
-
-	@Override
-	protected V mapEntityToViewBean(V vObj, T xObj) {
-		vObj.setGuid(xObj.getGuid());
-		vObj.setVersion(xObj.getVersion());
-		vObj.setName(xObj.getName());
-		vObj.setImplClass(xObj.getImplclassname());
-		vObj.setLabel(xObj.getLabel());
-		vObj.setDescription(xObj.getDescription());
-		vObj.setOptions(jsonStringToMap(xObj.getDefOptions()));
-		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		vObj.setRbKeyDescription(xObj.getRbkeydescription());
-		vObj.setIsEnabled(xObj.getIsEnabled());
-		vObj.setDisplayName(xObj.getDisplayName());
-		return vObj;
-	}
-
-	public XXServiceConfigDef populateRangerServiceConfigDefToXX(RangerServiceConfigDef vObj, XXServiceConfigDef xObj,
-			XXServiceDef serviceDef, int operationContext) {
-		if(serviceDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerServiceConfigDefToXX, serviceDef can not be null");
-			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
-		
-		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
-		xObj.setDefid(serviceDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setType(vObj.getType());
-		xObj.setSubtype(vObj.getSubType());
-		xObj.setIsMandatory(vObj.getMandatory());
-		xObj.setDefaultvalue(vObj.getDefaultValue());
-		xObj.setValidationRegEx(vObj.getValidationRegEx());
-		xObj.setValidationMessage(vObj.getValidationMessage());
-		xObj.setUiHint(vObj.getUiHint());
-		xObj.setLabel(vObj.getLabel());
-		xObj.setDescription(vObj.getDescription());
-		xObj.setRbkeylabel(vObj.getRbKeyLabel());
-		xObj.setRbkeydescription(vObj.getRbKeyDescription());
-		xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
-		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
-		return xObj;
-	}
-
-	public RangerServiceConfigDef populateXXToRangerServiceConfigDef(XXServiceConfigDef xObj) {
-		RangerServiceConfigDef vObj = new RangerServiceConfigDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setType(xObj.getType());
-		vObj.setSubType(xObj.getSubtype());
-		vObj.setMandatory(xObj.getIsMandatory());
-		vObj.setDefaultValue(xObj.getDefaultvalue());
-		vObj.setValidationRegEx(xObj.getValidationRegEx());
-		vObj.setValidationMessage(xObj.getValidationMessage());
-		vObj.setUiHint(xObj.getUiHint());
-		vObj.setLabel(xObj.getLabel());
-		vObj.setDescription(xObj.getDescription());
-		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		vObj.setRbKeyDescription(xObj.getRbkeydescription());
-		vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
-		return vObj;
-	}
-	
-	public XXResourceDef populateRangerResourceDefToXX(RangerResourceDef vObj, XXResourceDef xObj,
-			XXServiceDef serviceDef, int operationContext) {
-		if(serviceDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerResourceDefToXX, serviceDef can not be null");
-			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
-		
-		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
-		xObj.setDefid(serviceDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setType(vObj.getType());
-		xObj.setLevel(vObj.getLevel());
-		xObj.setMandatory(vObj.getMandatory());
-		xObj.setLookupsupported(vObj.getLookupSupported());
-		xObj.setRecursivesupported(vObj.getRecursiveSupported());
-		xObj.setExcludessupported(vObj.getExcludesSupported());
-		xObj.setMatcher(vObj.getMatcher());
-
-		String              accessTypeRestrictions = objectToJson((HashSet<String>)vObj.getAccessTypeRestrictions());
-		String              isValidLeaf            = objectToJson(vObj.getIsValidLeaf());
-		Map<String, String> matcherOptions         = vObj.getMatcherOptions();
-
-		if (StringUtils.isNotBlank(accessTypeRestrictions)) {
-			matcherOptions.put(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS, accessTypeRestrictions);
-		} else {
-			matcherOptions.remove(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS);
-		}
-
-		if (StringUtils.isNotBlank(isValidLeaf)) {
-			matcherOptions.put(OPTION_RESOURCE_IS_VALID_LEAF, isValidLeaf);
-		} else {
-			matcherOptions.remove(OPTION_RESOURCE_IS_VALID_LEAF);
-		}
+        if (StringUtils.isNotBlank(isValidLeaf)) {
+            matcherOptions.put(OPTION_RESOURCE_IS_VALID_LEAF, isValidLeaf);
+        } else {
+            matcherOptions.remove(OPTION_RESOURCE_IS_VALID_LEAF);
+        }
 
         xObj.setMatcheroptions(mapToJsonString(matcherOptions));
+        xObj.setValidationRegEx(vObj.getValidationRegEx());
+        xObj.setValidationMessage(vObj.getValidationMessage());
+        xObj.setUiHint(vObj.getUiHint());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setDescription(vObj.getDescription());
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setRbkeydescription(vObj.getRbKeyDescription());
+        xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 
-		xObj.setValidationRegEx(vObj.getValidationRegEx());
-		xObj.setValidationMessage(vObj.getValidationMessage());
-		xObj.setUiHint(vObj.getUiHint());
-		xObj.setLabel(vObj.getLabel());
-		xObj.setDescription(vObj.getDescription());
-		xObj.setRbkeylabel(vObj.getRbKeyLabel());
-		xObj.setRbkeydescription(vObj.getRbKeyDescription());
-		xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
-		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
-		return xObj;
-	}
-	
-	public RangerResourceDef populateXXToRangerResourceDef(XXResourceDef xObj) {
-		RangerResourceDef vObj = new RangerResourceDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setType(xObj.getType());
-		vObj.setLevel(xObj.getLevel());		
-		vObj.setMandatory(xObj.getMandatory());
-		vObj.setLookupSupported(xObj.getLookupsupported());
-		vObj.setRecursiveSupported(xObj.getRecursivesupported());
-		vObj.setExcludesSupported(xObj.getExcludessupported());
-		vObj.setMatcher(xObj.getMatcher());
+        return xObj;
+    }
 
-		Map<String, String> matcherOptions = jsonStringToMap(xObj.getMatcheroptions());
+    public RangerResourceDef populateXXToRangerResourceDef(XXResourceDef xObj) {
+        RangerResourceDef vObj = new RangerResourceDef();
 
-		if (MapUtils.isNotEmpty(matcherOptions)) {
-			String optionAccessTypeRestrictions = matcherOptions.remove(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS);
-			String optionIsValidLeaf            = matcherOptions.remove(OPTION_RESOURCE_IS_VALID_LEAF);
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setType(xObj.getType());
+        vObj.setLevel(xObj.getLevel());
+        vObj.setMandatory(xObj.getMandatory());
+        vObj.setLookupSupported(xObj.getLookupsupported());
+        vObj.setRecursiveSupported(xObj.getRecursivesupported());
+        vObj.setExcludesSupported(xObj.getExcludessupported());
+        vObj.setMatcher(xObj.getMatcher());
 
-			if (StringUtils.isNotBlank(optionAccessTypeRestrictions)) {
-				Set<String> accessTypeRestrictions = new HashSet<>();
+        Map<String, String> matcherOptions = jsonStringToMap(xObj.getMatcheroptions());
 
-				accessTypeRestrictions = jsonToObject(optionAccessTypeRestrictions, accessTypeRestrictions.getClass());
+        if (MapUtils.isNotEmpty(matcherOptions)) {
+            String optionAccessTypeRestrictions = matcherOptions.remove(OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS);
+            String optionIsValidLeaf            = matcherOptions.remove(OPTION_RESOURCE_IS_VALID_LEAF);
 
-				vObj.setAccessTypeRestrictions(accessTypeRestrictions);
-			}
+            if (StringUtils.isNotBlank(optionAccessTypeRestrictions)) {
+                Set<String> accessTypeRestrictions = new HashSet<>();
 
-			if (StringUtils.isNotBlank(optionIsValidLeaf)) {
-				Boolean isValidLeaf = jsonToObject(optionIsValidLeaf, Boolean.class);
+                accessTypeRestrictions = jsonToObject(optionAccessTypeRestrictions, accessTypeRestrictions.getClass());
 
-				vObj.setIsValidLeaf(isValidLeaf);
-			}
-		}
+                vObj.setAccessTypeRestrictions(accessTypeRestrictions);
+            }
 
-		vObj.setMatcherOptions(matcherOptions);
+            if (StringUtils.isNotBlank(optionIsValidLeaf)) {
+                Boolean isValidLeaf = jsonToObject(optionIsValidLeaf, Boolean.class);
 
-		vObj.setValidationRegEx(xObj.getValidationRegEx());
-		vObj.setValidationMessage(xObj.getValidationMessage());
-		vObj.setUiHint(xObj.getUiHint());
-		vObj.setLabel(xObj.getLabel());
-		vObj.setDescription(xObj.getDescription());
-		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		vObj.setRbKeyDescription(xObj.getRbkeydescription());
-		vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
+                vObj.setIsValidLeaf(isValidLeaf);
+            }
+        }
 
-		XXResourceDef parent = daoMgr.getXXResourceDef().getById(xObj.getParent());
-		String parentName = (parent != null) ? parent.getName() : null;
-		vObj.setParent(parentName);
-		
-		return vObj;
-	}
-	
-	public XXAccessTypeDef populateRangerAccessTypeDefToXX(RangerAccessTypeDef vObj, XXAccessTypeDef xObj,
-			XXServiceDef serviceDef, int operationContext) {
-		if(serviceDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerAccessTypeDefToXX, serviceDef can not be null");
-			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
-		
-		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
-		xObj.setDefid(serviceDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setLabel(vObj.getLabel());
-		xObj.setRbkeylabel(vObj.getRbKeyLabel());
-		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
-		return xObj;
-	}
-	
-	public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj) {
-		RangerAccessTypeDef vObj = new RangerAccessTypeDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setLabel(xObj.getLabel());
-		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		
-		List<String> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByATDId(xObj.getId());
-		vObj.setImpliedGrants(impliedGrants);
-		return vObj;
-	}
-	
-	public XXPolicyConditionDef populateRangerPolicyConditionDefToXX(RangerPolicyConditionDef vObj,
-			XXPolicyConditionDef xObj, XXServiceDef serviceDef, int operationContext) {
-		if(serviceDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerPolicyConditionDefToXX, serviceDef can not be null");
-			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
-		
-		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
-		xObj.setDefid(serviceDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setEvaluator(vObj.getEvaluator());
-		xObj.setEvaluatoroptions(mapToJsonString(vObj.getEvaluatorOptions()));
-		xObj.setValidationRegEx(vObj.getValidationRegEx());
-		xObj.setValidationMessage(vObj.getValidationMessage());
-		xObj.setUiHint(vObj.getUiHint());
-		xObj.setLabel(vObj.getLabel());
-		xObj.setDescription(vObj.getDescription());
-		xObj.setRbkeylabel(vObj.getRbKeyLabel());
-		xObj.setRbkeydescription(vObj.getRbKeyDescription());
-		xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
-		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
-		return xObj;
-	}
-	
-	public RangerPolicyConditionDef populateXXToRangerPolicyConditionDef(XXPolicyConditionDef xObj) {
-		RangerPolicyConditionDef vObj = new RangerPolicyConditionDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setEvaluator(xObj.getEvaluator());
-		vObj.setEvaluatorOptions(jsonStringToMap(xObj.getEvaluatoroptions()));
-		vObj.setValidationRegEx(xObj.getValidationRegEx());
-		vObj.setValidationMessage(xObj.getValidationMessage());
-		vObj.setUiHint(xObj.getUiHint());
-		vObj.setLabel(xObj.getLabel());
-		vObj.setDescription(xObj.getDescription());
-		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		vObj.setRbKeyDescription(xObj.getRbkeydescription());
-		vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
-		return vObj;
-	}
-	
-	public XXContextEnricherDef populateRangerContextEnricherDefToXX(RangerContextEnricherDef vObj,
-			XXContextEnricherDef xObj, XXServiceDef serviceDef, int operationContext) {
-		if(serviceDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerContextEnricherDefToXX, serviceDef can not be null");
-			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
+        vObj.setMatcherOptions(matcherOptions);
+        vObj.setValidationRegEx(xObj.getValidationRegEx());
+        vObj.setValidationMessage(xObj.getValidationMessage());
+        vObj.setUiHint(xObj.getUiHint());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+        vObj.setRbKeyDescription(xObj.getRbkeydescription());
+        vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
 
-		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
-		xObj.setDefid(serviceDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setEnricher(vObj.getEnricher());
-		xObj.setEnricherOptions(mapToJsonString(vObj.getEnricherOptions()));
-		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
-		return xObj;
-	}
-	
-	public RangerContextEnricherDef populateXXToRangerContextEnricherDef(XXContextEnricherDef xObj) {
-		RangerContextEnricherDef vObj = new RangerContextEnricherDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setEnricher(xObj.getEnricher());
-		vObj.setEnricherOptions(jsonStringToMap(xObj.getEnricherOptions()));
-		return vObj;
-	}
-	
-	public XXEnumDef populateRangerEnumDefToXX(RangerEnumDef vObj, XXEnumDef xObj, XXServiceDef serviceDef,
-			int operationContext) {
-		if(serviceDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerEnumDefToXX, serviceDef can not be null");
-			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
+        XXResourceDef parent     = daoMgr.getXXResourceDef().getById(xObj.getParent());
+        String        parentName = (parent != null) ? parent.getName() : null;
 
-		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
-		xObj.setDefid(serviceDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setDefaultindex(vObj.getDefaultIndex());
-		return xObj;
-	}
-	
-	public RangerEnumDef populateXXToRangerEnumDef(XXEnumDef xObj) {
-		RangerEnumDef vObj = new RangerEnumDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setDefaultIndex(xObj.getDefaultindex());
-		
-		List<XXEnumElementDef> xElements = daoMgr.getXXEnumElementDef().findByEnumDefId(xObj.getId());
-		List<RangerEnumElementDef> elements = new ArrayList<RangerEnumElementDef>();
-		
-		for(XXEnumElementDef xEle : xElements) {
-			RangerEnumElementDef element = populateXXToRangerEnumElementDef(xEle);
-			elements.add(element);
-		}
-		vObj.setElements(elements);
-		
-		return vObj;
-	}
-	
-	public XXEnumElementDef populateRangerEnumElementDefToXX(RangerEnumElementDef vObj, XXEnumElementDef xObj,
-			XXEnumDef enumDef, int operationContext) {
-		if(enumDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerEnumElementDefToXX, enumDef can not be null");
-			throw restErrorUtil.createRESTException("enumDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
+        vObj.setParent(parentName);
 
-		xObj = rangerAuditFields.populateAuditFields(xObj, enumDef);
-		xObj.setEnumdefid(enumDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setLabel(vObj.getLabel());
-		xObj.setRbkeylabel(vObj.getRbKeyLabel());
-		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
-		return xObj;
-	}
-	
-	public RangerEnumElementDef populateXXToRangerEnumElementDef(XXEnumElementDef xObj) {
-		RangerEnumElementDef vObj = new RangerEnumElementDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setLabel(xObj.getLabel());
-		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		return vObj;
-	}
+        return vObj;
+    }
 
-	public XXDataMaskTypeDef populateRangerDataMaskDefToXX(RangerDataMaskTypeDef vObj, XXDataMaskTypeDef xObj,
-														   XXServiceDef serviceDef, int operationContext) {
-		if(serviceDef == null) {
-			LOG.error("RangerServiceDefServiceBase.populateRangerDataMaskDefToXX, serviceDef can not be null");
-			throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
-		}
+    public XXAccessTypeDef populateRangerAccessTypeDefToXX(RangerAccessTypeDef vObj, XXAccessTypeDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerAccessTypeDefToXX, serviceDef can not be null");
 
-		xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
-		xObj.setDefid(serviceDef.getId());
-		xObj.setItemId(vObj.getItemId());
-		xObj.setName(vObj.getName());
-		xObj.setLabel(vObj.getLabel());
-		xObj.setDescription(vObj.getDescription());
-		xObj.setTransformer(vObj.getTransformer());
-		xObj.setDataMaskOptions(mapToJsonString(vObj.getDataMaskOptions()));
-		xObj.setRbkeylabel(vObj.getRbKeyLabel());
-		xObj.setRbKeyDescription(vObj.getRbKeyDescription());
-		xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
-		return xObj;
-	}
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
 
-	public RangerDataMaskTypeDef populateXXToRangerDataMaskTypeDef(XXDataMaskTypeDef xObj) {
-		RangerDataMaskTypeDef vObj = new RangerDataMaskTypeDef();
-		vObj.setItemId(xObj.getItemId());
-		vObj.setName(xObj.getName());
-		vObj.setLabel(xObj.getLabel());
-		vObj.setDescription(xObj.getDescription());
-		vObj.setTransformer(xObj.getTransformer());
-		vObj.setDataMaskOptions(jsonStringToMap(xObj.getDataMaskOptions()));
-		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		vObj.setRbKeyDescription(xObj.getRbKeyDescription());
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 
-		return vObj;
-	}
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 
-	public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
-		RangerServiceDefList retList = new RangerServiceDefList();
-		int startIndex = searchFilter.getStartIndex();
-		int pageSize = searchFilter.getMaxRows();
-		searchFilter.setStartIndex(0);
-		searchFilter.setMaxRows(Integer.MAX_VALUE);
-	
-		boolean isAuditPage=false;
-		if(searchFilter.getParam("pageSource")!=null){
-			isAuditPage=true;
-		}
-		List<T> xSvcDefList = searchResources(searchFilter, searchFields, sortFields,
-				retList);
-		List<T> permittedServiceDefs = new ArrayList<T>();
-		for (T xSvcDef : xSvcDefList) {
-			if (bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage) ) {
-				permittedServiceDefs.add(xSvcDef);
-			}
-		}
-		if (!permittedServiceDefs.isEmpty()) {
-			populatePageList(permittedServiceDefs, startIndex, pageSize, retList);
-		}
-		return retList;
+        if (vObj.getCategory() != null) {
+            xObj.setCategory((short) vObj.getCategory().ordinal());
+        }
 
-	}
-	
+        return xObj;
+    }
 
-	private void populatePageList(List<T> xxObjList, int startIndex, int pageSize,
-			RangerServiceDefList retList) {
-		List<RangerServiceDef> onePageList = new ArrayList<RangerServiceDef>();
+    public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj) {
+        List<String> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByATDId(xObj.getId());
 
-		for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
-			onePageList.add(populateViewBean(xxObjList.get(i)));
-		}
-		retList.setServiceDefs(onePageList);
-		retList.setStartIndex(startIndex);
-		retList.setPageSize(pageSize);
-		retList.setResultSize(onePageList.size());
-		retList.setTotalCount(xxObjList.size());
-	}
+        return populateXXToRangerAccessTypeDef(xObj, impliedGrants);
+    }
 
-	private String mapToJsonString(Map<String, String> map) {
-		String ret = null;
+    public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj, List<String> impliedGrants) {
+        RangerAccessTypeDef vObj = new RangerAccessTypeDef();
 
-		if(map != null) {
-			try {
-				ret = jsonUtil.readMapToString(map);
-			} catch(Exception excp) {
-				LOG.warn("mapToJsonString() failed to convert map: " + map, excp);
-			}
-		}
+        if (impliedGrants == null) {
+            impliedGrants = new ArrayList<>();
+        }
 
-		return ret;
-	}
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+        vObj.setImpliedGrants(impliedGrants);
 
-	protected Map<String, String> jsonStringToMap(String jsonStr) {
-		Map<String, String> ret = null;
+        if (xObj.getCategory() != null) {
+            vObj.setCategory(toAccessTypeCategory(xObj.getCategory()));
+        }
 
-		if(!StringUtils.isEmpty(jsonStr)) {
-			try {
-				ret = jsonUtil.jsonToMap(jsonStr);
-			} catch(Exception excp) {
-				// fallback to earlier format: "name1=value1;name2=value2"
-				for(String optionString : jsonStr.split(";")) {
-					if(StringUtils.isEmpty(optionString)) {
-						continue;
-					}
+        return vObj;
+    }
 
-					String[] nvArr = optionString.split("=");
+    public XXPolicyConditionDef populateRangerPolicyConditionDefToXX(RangerPolicyConditionDef vObj, XXPolicyConditionDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerPolicyConditionDefToXX, serviceDef can not be null");
 
-					String name  = (nvArr != null && nvArr.length > 0) ? nvArr[0].trim() : null;
-					String value = (nvArr != null && nvArr.length > 1) ? nvArr[1].trim() : null;
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
 
-					if(StringUtils.isEmpty(name)) {
-						continue;
-					}
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 
-					if(ret == null) {
-						ret = new HashMap<String, String>();
-					}
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setEvaluator(vObj.getEvaluator());
+        xObj.setEvaluatoroptions(mapToJsonString(vObj.getEvaluatorOptions()));
+        xObj.setValidationRegEx(vObj.getValidationRegEx());
+        xObj.setValidationMessage(vObj.getValidationMessage());
+        xObj.setUiHint(vObj.getUiHint());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setDescription(vObj.getDescription());
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setRbkeydescription(vObj.getRbKeyDescription());
+        xObj.setRbKeyValidationMessage(vObj.getRbKeyValidationMessage());
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 
-					ret.put(name, value);
-				}
-			}
-		}
+        return xObj;
+    }
 
-		return ret;
-	}
+    public RangerPolicyConditionDef populateXXToRangerPolicyConditionDef(XXPolicyConditionDef xObj) {
+        RangerPolicyConditionDef vObj = new RangerPolicyConditionDef();
 
-	public String objectToJson(Serializable obj) {
-		String ret = null;
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setEvaluator(xObj.getEvaluator());
+        vObj.setEvaluatorOptions(jsonStringToMap(xObj.getEvaluatoroptions()));
+        vObj.setValidationRegEx(xObj.getValidationRegEx());
+        vObj.setValidationMessage(xObj.getValidationMessage());
+        vObj.setUiHint(xObj.getUiHint());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+        vObj.setRbKeyDescription(xObj.getRbkeydescription());
+        vObj.setRbKeyValidationMessage(xObj.getRbKeyValidationMessage());
 
-		if(obj != null) {
-			try {
-				ret = jsonUtil.writeObjectAsString(obj);
-			} catch(Exception excp) {
-				LOG.warn("objectToJson() failed to convert object to json: " + obj, excp);
-			}
-		}
+        return vObj;
+    }
 
-		return ret;
-	}
+    public XXContextEnricherDef populateRangerContextEnricherDefToXX(RangerContextEnricherDef vObj, XXContextEnricherDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerContextEnricherDefToXX, serviceDef can not be null");
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
 
-	public <DST> DST jsonToObject(String jsonStr, Class<DST> clz) {
-		DST ret = null;
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
 
-		if(StringUtils.isNotEmpty(jsonStr)) {
-			try {
-				ret = jsonUtil.writeJsonToJavaObject(jsonStr, clz);
-			} catch(Exception excp) {
-				LOG.warn("jsonToObject() failed to convert json to object: " + jsonStr, excp);
-			}
-		}
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setEnricher(vObj.getEnricher());
+        xObj.setEnricherOptions(mapToJsonString(vObj.getEnricherOptions()));
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
 
-		return ret;
-	}
+        return xObj;
+    }
 
+    public RangerContextEnricherDef populateXXToRangerContextEnricherDef(XXContextEnricherDef xObj) {
+        RangerContextEnricherDef vObj = new RangerContextEnricherDef();
+
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setEnricher(xObj.getEnricher());
+        vObj.setEnricherOptions(jsonStringToMap(xObj.getEnricherOptions()));
+
+        return vObj;
+    }
+
+    public XXEnumDef populateRangerEnumDefToXX(RangerEnumDef vObj, XXEnumDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerEnumDefToXX, serviceDef can not be null");
+
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
+
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setDefaultindex(vObj.getDefaultIndex());
+
+        return xObj;
+    }
+
+    public RangerEnumDef populateXXToRangerEnumDef(XXEnumDef xObj) {
+        RangerEnumDef vObj = new RangerEnumDef();
+
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setDefaultIndex(xObj.getDefaultindex());
+
+        List<XXEnumElementDef>     xElements = daoMgr.getXXEnumElementDef().findByEnumDefId(xObj.getId());
+        List<RangerEnumElementDef> elements  = new ArrayList<>();
+
+        for (XXEnumElementDef xEle : xElements) {
+            RangerEnumElementDef element = populateXXToRangerEnumElementDef(xEle);
+
+            elements.add(element);
+        }
+
+        vObj.setElements(elements);
+
+        return vObj;
+    }
+
+    public XXEnumElementDef populateRangerEnumElementDefToXX(RangerEnumElementDef vObj, XXEnumElementDef xObj, XXEnumDef enumDef, int operationContext) {
+        if (enumDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerEnumElementDefToXX, enumDef can not be null");
+
+            throw restErrorUtil.createRESTException("enumDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
+
+        xObj = rangerAuditFields.populateAuditFields(xObj, enumDef);
+
+        xObj.setEnumdefid(enumDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
+        return xObj;
+    }
+
+    public RangerEnumElementDef populateXXToRangerEnumElementDef(XXEnumElementDef xObj) {
+        RangerEnumElementDef vObj = new RangerEnumElementDef();
+
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+
+        return vObj;
+    }
+
+    public XXDataMaskTypeDef populateRangerDataMaskDefToXX(RangerDataMaskTypeDef vObj, XXDataMaskTypeDef xObj, XXServiceDef serviceDef, int operationContext) {
+        if (serviceDef == null) {
+            LOG.error("RangerServiceDefServiceBase.populateRangerDataMaskDefToXX, serviceDef can not be null");
+
+            throw restErrorUtil.createRESTException("RangerServiceDef cannot be null.", MessageEnums.DATA_NOT_FOUND);
+        }
+
+        xObj = rangerAuditFields.populateAuditFields(xObj, serviceDef);
+
+        xObj.setDefid(serviceDef.getId());
+        xObj.setItemId(vObj.getItemId());
+        xObj.setName(vObj.getName());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setDescription(vObj.getDescription());
+        xObj.setTransformer(vObj.getTransformer());
+        xObj.setDataMaskOptions(mapToJsonString(vObj.getDataMaskOptions()));
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setRbKeyDescription(vObj.getRbKeyDescription());
+        xObj.setOrder(AppConstants.DEFAULT_SORT_ORDER);
+
+        return xObj;
+    }
+
+    public RangerDataMaskTypeDef populateXXToRangerDataMaskTypeDef(XXDataMaskTypeDef xObj) {
+        RangerDataMaskTypeDef vObj = new RangerDataMaskTypeDef();
+
+        vObj.setItemId(xObj.getItemId());
+        vObj.setName(xObj.getName());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setTransformer(xObj.getTransformer());
+        vObj.setDataMaskOptions(jsonStringToMap(xObj.getDataMaskOptions()));
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+        vObj.setRbKeyDescription(xObj.getRbKeyDescription());
+
+        return vObj;
+    }
+
+    public RangerServiceDefList searchRangerServiceDefs(SearchFilter searchFilter) {
+        RangerServiceDefList retList       = new RangerServiceDefList();
+        int                  startIndex    = searchFilter.getStartIndex();
+        int                  pageSize      = searchFilter.getMaxRows();
+        String               denyCondition = searchFilter.getParam(SearchFilter.FETCH_DENY_CONDITION);
+
+        searchFilter.setStartIndex(0);
+        searchFilter.setMaxRows(Integer.MAX_VALUE);
+
+        boolean isAuditPage          = searchFilter.getParam("pageSource") != null;
+        List<T> xSvcDefList          = searchResources(searchFilter, searchFields, sortFields, retList);
+        List<T> permittedServiceDefs = new ArrayList<>();
+
+        for (T xSvcDef : xSvcDefList) {
+            if ((bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage)) || ("true".equals(denyCondition))) {
+                if (!bizUtil.isGdsServiceDef(xSvcDef)) {
+                    permittedServiceDefs.add(xSvcDef);
+                }
+            }
+        }
+
+        if (!permittedServiceDefs.isEmpty()) {
+            populatePageList(permittedServiceDefs, startIndex, pageSize, retList);
+        }
+
+        return retList;
+    }
+
+    public String objectToJson(Serializable obj) {
+        String ret = null;
+
+        if (obj != null) {
+            try {
+                ret = jsonUtil.writeObjectAsString(obj);
+            } catch (Exception excp) {
+                LOG.warn("objectToJson() failed to convert object to json: {}", obj, excp);
+            }
+        }
+
+        return ret;
+    }
+
+    public <DST> DST jsonToObject(String jsonStr, Class<DST> clz) {
+        DST ret = null;
+
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            try {
+                ret = jsonUtil.writeJsonToJavaObject(jsonStr, clz);
+            } catch (Exception excp) {
+                LOG.warn("jsonToObject() failed to convert json to object: {}", jsonStr, excp);
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
+        String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
+
+        xObj.setGuid(guid);
+        xObj.setName(vObj.getName());
+        xObj.setDisplayName(vObj.getDisplayName());
+        xObj.setImplclassname(vObj.getImplClass());
+        xObj.setLabel(vObj.getLabel());
+        xObj.setDescription(vObj.getDescription());
+        xObj.setRbkeylabel(vObj.getRbKeyLabel());
+        xObj.setRbkeydescription(vObj.getRbKeyDescription());
+        xObj.setIsEnabled(vObj.getIsEnabled());
+        xObj.setDefOptions(mapToJsonString(vObj.getOptions()));
+
+        return xObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T xObj) {
+        vObj.setGuid(xObj.getGuid());
+        vObj.setVersion(xObj.getVersion());
+        vObj.setName(xObj.getName());
+        vObj.setImplClass(xObj.getImplclassname());
+        vObj.setLabel(xObj.getLabel());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setOptions(jsonStringToMap(xObj.getDefOptions()));
+        vObj.setRbKeyLabel(xObj.getRbkeylabel());
+        vObj.setRbKeyDescription(xObj.getRbkeydescription());
+        vObj.setIsEnabled(xObj.getIsEnabled());
+        vObj.setDisplayName(xObj.getDisplayName());
+
+        return vObj;
+    }
+
+    @Override
+    protected V populateViewBean(T xServiceDef) {
+        V                        serviceDef   = super.populateViewBean(xServiceDef);
+        Long                     serviceDefId = xServiceDef.getId();
+        List<XXServiceConfigDef> xConfigs     = daoMgr.getXXServiceConfigDef().findByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xConfigs)) {
+            List<RangerServiceConfigDef> configs = new ArrayList<>();
+
+            for (XXServiceConfigDef xConfig : xConfigs) {
+                RangerServiceConfigDef config = populateXXToRangerServiceConfigDef(xConfig);
+
+                configs.add(config);
+            }
+
+            serviceDef.setConfigs(configs);
+        }
+
+        List<XXResourceDef> xResources = daoMgr.getXXResourceDef().findByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xResources)) {
+            List<RangerResourceDef> resources = new ArrayList<>();
+
+            for (XXResourceDef xResource : xResources) {
+                RangerResourceDef resource = populateXXToRangerResourceDef(xResource);
+
+                resources.add(resource);
+            }
+
+            serviceDef.setResources(resources);
+        }
+
+        List<XXAccessTypeDef>     xAccessTypes  = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
+        Map<String, List<String>> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xAccessTypes)) {
+            List<RangerAccessTypeDef> accessTypes = new ArrayList<>();
+
+            for (XXAccessTypeDef xAtd : xAccessTypes) {
+                RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd, impliedGrants.get(xAtd.getName()));
+
+                accessTypes.add(accessType);
+            }
+
+            serviceDef.setAccessTypes(accessTypes);
+        }
+
+        serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(serviceDef.getAccessTypes()));
+
+        List<XXPolicyConditionDef> xPolicyConditions = daoMgr.getXXPolicyConditionDef().findByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xPolicyConditions)) {
+            List<RangerPolicyConditionDef> policyConditions = new ArrayList<>();
+
+            for (XXPolicyConditionDef xPolicyCondDef : xPolicyConditions) {
+                RangerPolicyConditionDef policyCondition = populateXXToRangerPolicyConditionDef(xPolicyCondDef);
+
+                policyConditions.add(policyCondition);
+            }
+
+            serviceDef.setPolicyConditions(policyConditions);
+        }
+
+        List<XXContextEnricherDef> xContextEnrichers = daoMgr.getXXContextEnricherDef().findByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xContextEnrichers)) {
+            List<RangerContextEnricherDef> contextEnrichers = new ArrayList<>();
+
+            for (XXContextEnricherDef xContextEnricherDef : xContextEnrichers) {
+                RangerContextEnricherDef contextEnricher = populateXXToRangerContextEnricherDef(xContextEnricherDef);
+
+                contextEnrichers.add(contextEnricher);
+            }
+
+            serviceDef.setContextEnrichers(contextEnrichers);
+        }
+
+        List<XXEnumDef> xEnumList = daoMgr.getXXEnumDef().findByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xEnumList)) {
+            List<RangerEnumDef> enums = new ArrayList<>();
+
+            for (XXEnumDef xEnum : xEnumList) {
+                RangerEnumDef vEnum = populateXXToRangerEnumDef(xEnum);
+
+                enums.add(vEnum);
+            }
+
+            serviceDef.setEnums(enums);
+        }
+
+        RangerDataMaskDef       dataMaskDef    = new RangerDataMaskDef();
+        RangerRowFilterDef      rowFilterDef   = new RangerRowFilterDef();
+        List<XXDataMaskTypeDef> xDataMaskTypes = daoMgr.getXXDataMaskTypeDef().findByServiceDefId(serviceDefId);
+
+        if (!stringUtil.isEmpty(xDataMaskTypes)) {
+            List<RangerDataMaskTypeDef> dataMaskTypes = new ArrayList<>();
+
+            for (XXDataMaskTypeDef xDataMaskType : xDataMaskTypes) {
+                RangerDataMaskTypeDef dataMaskType = populateXXToRangerDataMaskTypeDef(xDataMaskType);
+
+                dataMaskTypes.add(dataMaskType);
+            }
+
+            dataMaskDef.setMaskTypes(dataMaskTypes);
+        }
+
+        if (!stringUtil.isEmpty(xResources)) {
+            for (XXResourceDef xResource : xResources) {
+                if (StringUtils.isNotEmpty(xResource.getDataMaskOptions())) {
+                    RangerResourceDef dataMaskResource = jsonToObject(xResource.getDataMaskOptions(), RangerResourceDef.class);
+
+                    dataMaskDef.getResources().add(dataMaskResource);
+                }
+
+                if (StringUtils.isNotEmpty(xResource.getRowFilterOptions())) {
+                    RangerResourceDef resource = jsonToObject(xResource.getRowFilterOptions(), RangerResourceDef.class);
+
+                    rowFilterDef.getResources().add(resource);
+                }
+            }
+        }
+
+        if (!stringUtil.isEmpty(xAccessTypes)) {
+            for (XXAccessTypeDef xAtd : xAccessTypes) {
+                if (StringUtils.isNotEmpty(xAtd.getDataMaskOptions())) {
+                    RangerAccessTypeDef dataMaskAccessType = jsonToObject(xAtd.getDataMaskOptions(), RangerAccessTypeDef.class);
+
+                    dataMaskDef.getAccessTypes().add(dataMaskAccessType);
+                }
+
+                if (StringUtils.isNotEmpty(xAtd.getRowFilterOptions())) {
+                    RangerAccessTypeDef accessType = jsonToObject(xAtd.getRowFilterOptions(), RangerAccessTypeDef.class);
+
+                    rowFilterDef.getAccessTypes().add(accessType);
+                }
+            }
+        }
+
+        serviceDef.setDataMaskDef(dataMaskDef);
+        serviceDef.setRowFilterDef(rowFilterDef);
+
+        addImplicitConditionExpressionIfNeeded(serviceDef);
+
+        ServiceDefUtil.normalize(serviceDef);
+
+        return serviceDef;
+    }
+
+    protected Map<String, String> jsonStringToMap(String jsonStr) {
+        Map<String, String> ret = null;
+
+        if (!StringUtils.isEmpty(jsonStr)) {
+            try {
+                ret = jsonUtil.jsonToMap(jsonStr);
+            } catch (Exception excp) {
+                // fallback to earlier format: "name1=value1;name2=value2"
+                for (String optionString : jsonStr.split(";")) {
+                    if (StringUtils.isEmpty(optionString)) {
+                        continue;
+                    }
+
+                    String[] nvArr = optionString.split("=");
+                    String   name  = nvArr.length > 0 ? nvArr[0].trim() : null;
+                    String   value = nvArr.length > 1 ? nvArr[1].trim() : null;
+
+                    if (StringUtils.isEmpty(name)) {
+                        continue;
+                    }
+
+                    if (ret == null) {
+                        ret = new HashMap<>();
+                    }
+
+                    ret.put(name, value);
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    boolean addImplicitConditionExpressionIfNeeded(RangerServiceDef serviceDef) {
+        boolean ret                      = false;
+        boolean implicitConditionDefault = PropertiesUtil.getBooleanProperty(PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION, true);
+        boolean implicitConditionEnabled = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_IMPLICIT_CONDITION_EXPRESSION, implicitConditionDefault);
+
+        if (implicitConditionEnabled) {
+            boolean                        exists        = false;
+            List<RangerPolicyConditionDef> conditionDefs = serviceDef.getPolicyConditions();
+
+            if (conditionDefs == null) {
+                conditionDefs = new ArrayList<>();
+            }
+
+            for (RangerPolicyConditionDef conditionDef : conditionDefs) {
+                if (StringUtils.equalsIgnoreCase(conditionDef.getEvaluator(), IMPLICIT_CONDITION_EXPRESSION_EVALUATOR)) {
+                    exists = true;
+
+                    break;
+                }
+            }
+
+            if (!exists) {
+                long maxItemId = ServiceDefUtil.getConditionsMaxItemId(conditionDefs);
+
+                conditionDefs.add(ServiceDefUtil.createImplicitExpressionConditionDef(maxItemId + 1));
+
+                serviceDef.setPolicyConditions(conditionDefs);
+
+                ret = true;
+            }
+        }
+
+        LOG.debug("addImplicitConditionExpressionIfNeeded(serviceType={}): implicitConditionDefault={}, implicitConditionEnabled={}, conditionDefs={}, ret={}", serviceDef.getName(), implicitConditionDefault, implicitConditionEnabled, serviceDef.getPolicyConditions(), ret);
+
+        return ret;
+    }
+
+    private void populatePageList(List<T> xxObjList, int startIndex, int pageSize, RangerServiceDefList retList) {
+        List<RangerServiceDef> onePageList = new ArrayList<>();
+
+        for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
+            onePageList.add(populateViewBean(xxObjList.get(i)));
+        }
+
+        retList.setServiceDefs(onePageList);
+        retList.setStartIndex(startIndex);
+        retList.setPageSize(pageSize);
+        retList.setResultSize(onePageList.size());
+        retList.setTotalCount(xxObjList.size());
+    }
+
+    private String mapToJsonString(Map<String, String> map) {
+        String ret = null;
+
+        if (map != null) {
+            try {
+                ret = jsonUtil.readMapToString(map);
+            } catch (Exception excp) {
+                LOG.warn("mapToJsonString() failed to convert map: {}", map, excp);
+            }
+        }
+
+        return ret;
+    }
+
+    private AccessTypeCategory toAccessTypeCategory(short val) {
+        AccessTypeCategory ret = null;
+
+        for (AccessTypeCategory category : AccessTypeCategory.values()) {
+            if (category.ordinal() == val) {
+                ret = category;
+
+                break;
+            }
+        }
+
+        return ret;
+    }
 }

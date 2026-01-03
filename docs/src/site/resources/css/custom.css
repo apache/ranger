@@ -1,0 +1,286 @@
+/* You can override this file with your own styles */
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;1,300;1,400&display=swap');
+
+.project-ranger{
+    overflow-x: hidden;
+}
+
+.nav {
+    margin-top: 20px !important;
+}
+
+.navbar .nav.pull-right {
+    margin-top: 18px !important;
+}
+
+/* Css for Navbar */
+.navbar .nav>li>a {
+    color: #17425a;
+}
+
+.navbar-inner {
+    background-image: none;
+    background-color: #67BE9C;
+    border-bottom: none;
+}
+
+.navbar .nav li.dropdown.open>.dropdown-toggle, .navbar .nav li.dropdown.active>.dropdown-toggle, .navbar .nav li.dropdown.open.active>.dropdown-toggle {
+    background-color: #17425a26;
+    color: #17425a;
+    border: 1px solid transparent;
+}
+.navbar .nav>li>a:hover {
+    color: #ffffff;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+.dropdown-menu{
+    background-color: #ffffff;
+}
+
+.dropdown-menu>li>a{
+    color: #17425a;
+}
+
+.dropdown-menu>li>a:hover, .dropdown-menu>li>a:focus, .dropdown-submenu:hover>a, .dropdown-submenu:focus>a,
+.dropdown-menu>.active>a, .dropdown-menu>.active>a:hover, .dropdown-menu>.active>a:focus{
+    background-image: none;
+    background-color: #e9ecef;
+    color: #17425a;
+}
+
+.navbar .nav li.dropdown.open>.dropdown-toggle .caret, .navbar .nav li.dropdown.active>.dropdown-toggle .caret, .navbar .nav li.dropdown.open.active>.dropdown-toggle .caret {
+    border-top-color: #17425a;
+    border-bottom-color: #17425a;
+}
+.navbar .nav li.dropdown>.dropdown-toggle .caret {
+    border-top-color: #17425a;
+    border-bottom-color: #17425a;
+}
+
+.navbar .pull-right>li>.dropdown-menu:after, .navbar .nav>li>.dropdown-menu.pull-right:after {
+    right: 13px;
+    left: auto;
+}
+.navbar .nav>li>.dropdown-menu:after {
+    border-bottom: 6px solid #67BE9C;
+}
+
+.navbar .nav li.dropdown>a:hover .caret, .navbar .nav li.dropdown>a:focus .caret {
+    border-top-color: #ffffff;
+    border-bottom-color: #ffffff;
+}
+
+.navbar .nav>li>a:focus, .navbar .nav>li>a:hover {
+    color: #ffffff;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+
+/* Css for custom header */
+#banner .pull-left{
+    float: none;
+}
+
+body
+{
+    margin: 0;
+    padding: 0;
+}
+
+.header-section
+{
+    position: relative;
+    width: 100%;
+    top: 70px;
+    display: flex;
+    height: 350px;
+    padding-top: 3%;
+    padding-bottom: 3%;
+}
+
+.header-section:after {
+    content: ' ';
+    z-index: -1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #67BE9C;
+    border-radius: 0 0 50% 75%/0 0 100% 100%;
+    transform: scaleX(1.5);
+    background-image: url(./../background_design.png);
+    background-repeat: no-repeat;
+    background-position: 300px -94px;
+    background-size: 80%;
+}
+
+.header-section .content
+{
+    position: relative;
+    z-index: 1;
+    margin: 0 auto;
+    max-width: 900px;
+    text-align: center;
+}
+
+.header-section .content p
+{
+    color: #fff;
+    font-size: 35px;
+}
+
+.header-section .left-side-text {
+    font-size: 34px;
+    color: #17425a;
+    font-weight:400;
+    margin-bottom: 10px;
+}
+
+.button-container a {
+    font-size: 16px;
+    color: #ffffff !important;
+    margin: 4px 2px;
+    padding: 15px 45px;
+    background-color: #17425a;
+    border-radius: 4px;
+}
+.button-container a:hover {
+    background-color: #406377; /* Darker green background color */
+}
+
+/* link highlights */
+a {
+    color: #0B9ACE;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    color: #157ab5;
+    text-decoration: underline;
+}
+
+footer.well {
+    color: #4b565a;
+}
+
+.hide {
+    display: none;
+}
+
+.main-body {
+    padding-top: 100px;
+}
+
+/* Css for tablet and mobile phone view */
+#banner  > .span12 {
+    width:100%;
+}
+
+@media (min-width: 768px) and (max-width: 979px) {
+    .container{
+        width: 100%;
+    }
+    .main-body {
+        padding-top: 0px !important; 
+    }
+}
+
+@media (max-width: 979px){
+    .navbar-fixed-top {
+        position: relative;
+    }
+    .header-section {
+        top: 0;
+        padding: 10px 20px;
+        overflow: hidden;
+    }
+    .body-content{
+        padding: 10px 20px;
+    }
+    .subfooter,
+    footer.well {
+        padding: 10px 20px;
+    }
+
+    #bannerLeft > h1 {
+        margin:0
+    }
+    .header-section:after{
+        overflow: hidden;
+    }
+    .row {
+        overflow: hidden;
+    }
+    .navbar-fixed-top {
+        margin-bottom: 0 !important;
+    }
+    .navbar-fixed-top ~ .container {
+        width:auto;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .row-fluid .span6 {
+        width: 70%;
+    }
+    .navbar .nav-collapse .nav>li>a {
+        color: #17425a;
+    }
+    .navbar .nav li.dropdown.active>.dropdown-toggle{
+        color: #ffffff;
+    }
+    .dropdown.open .dropdown-menu{
+        background-color: #ffffff;
+    }
+}
+
+@media (max-width: 767px){
+    .row-fluid .span6 {
+        width: 90%;
+    }
+    .navbar-fixed-top{
+        position: fixed;
+    }
+    .navbar-fixed-top .brand {
+        margin-left: 30px;
+    }
+    .btn.btn-navbar {
+        position: relative;
+        top: 15px;
+        right: 15px;
+    }
+    .header-section{
+        top: 90px;
+    }
+    .header-section:after {
+        background-image: none;
+    }
+    .nav-collapse, .nav-collapse.collapse{
+        padding: 0 15px;
+    }
+    .header-section,
+    .subfooter,
+    footer.well,
+    .body-content {
+        padding: 10px 30px;
+    }
+}
+
+table.bodyTable.table.table-striped.table-hover {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+}
+
+#Contributors ~ table.bodyTable.table.table-striped.table-hover {
+    display:table;
+}
+
+.dropdown-backdrop{
+    display: none;
+}

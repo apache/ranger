@@ -117,23 +117,19 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.jpa.jdbc.initialpoolsize</name>
+		<name>ranger.jpa.jdbc.idletimeout</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.jpa.jdbc.maxidletime</name>
+		<name>ranger.jpa.jdbc.maxlifetime</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.jpa.jdbc.maxstatements</name>
+		<name>ranger.jpa.jdbc.connectiontimeout</name>
 		<value></value>
 	</property>
 	<property>
 		<name>ranger.jpa.jdbc.preferredtestquery</name>
-		<value></value>
-	</property>
-	<property>
-		<name>ranger.jpa.jdbc.idleconnectiontestperiod</name>
 		<value></value>
 	</property>
 	<property>
@@ -165,6 +161,10 @@
 		<value></value>
 	</property>
 	<property>
+		<name>ranger.audit.elasticsearch.protocol</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.audit.elasticsearch.port</name>
 		<value></value>
 	</property>
@@ -174,6 +174,18 @@
 	</property>
 	<property>
 		<name>ranger.audit.elasticsearch.password</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.region</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_group</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_stream_prefix</name>
 		<value></value>
 	</property>
 	<property>

@@ -51,6 +51,11 @@
 		<description></description>
 	</property>
 	<property>
+		<name>ranger.audit.elasticsearch.protocol</name>
+		<value>http</value>
+		<description></description>
+	</property>
+	<property>
 		<name>ranger.audit.elasticsearch.port</name>
 		<value>9200</value>
 		<description></description>
@@ -73,6 +78,18 @@
 	<property>
 		<name>ranger.audit.elasticsearch.bootstrap.enabled</name>
 		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.region</name>
+		<value>us-east-2</value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_group</name>
+		<value>ranger_audits</value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_stream_prefix</name>
+		<value></value>
 	</property>
 	<property>
 		<name>ranger.audit.solr.urls</name>
@@ -313,6 +330,10 @@
         <name>ranger.kms.service.user.hbase</name>
         <value>hbase</value>
     </property>
+    <property>
+        <name>ranger.kms.service.user.om</name>
+        <value>om</value>
+    </property>
 
     <property>
         <name>ranger.audit.hive.query.visibility</name>
@@ -334,6 +355,10 @@
         </property>
         <property>
                 <name>ranger.audit.solr.config.name</name>
+                <value></value>
+        </property>
+        <property>
+                <name>ranger.audit.solr.configset.location</name>
                 <value></value>
         </property>
         <property>
@@ -365,4 +390,53 @@
 			<name>ranger.admin.cookie.name</name>
 			<value>RANGERADMINSESSIONID</value>
 		</property>
+		<property>
+			<name>ranger.admin.init.purge.login_records</name>
+			<value>false</value>
+		</property>
+		<property>
+			<name>ranger.admin.init.purge.login_records.retention.days</name>
+			<value>0</value>
+		</property>
+		<property>
+			<name>ranger.admin.init.purge.transaction_records</name>
+			<value>false</value>
+		</property>
+		<property>
+			<name>ranger.admin.init.purge.transaction_records.retention.days
+			</name>
+			<value>0</value>
+		</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.loginModuleName</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.loginModuleControlFlag</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.useKeyTab</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.storeKey</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.useTicketCache</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.serviceName</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.keyTab</name>
+		<value></value>
+	</property>
+	<property>
+		<name>xasecure.audit.jaas.Client.option.principal</name>
+		<value></value>
+	</property>
 </configuration>

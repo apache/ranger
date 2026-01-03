@@ -19,14 +19,13 @@
 
 package org.apache.ranger.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.plugin.model.RangerRole;
-
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -35,115 +34,115 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerRoleCache {
-	private static final Log LOG = LogFactory.getLog(RangerRoleCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerRoleCache.class);
 
-	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
+    private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
-	private static volatile RangerRoleCache sInstance = null;
+    private static volatile RangerRoleCache sInstance;
 
-	private final int           waitTimeInSeconds;
-	private final ReentrantLock lock = new ReentrantLock();
+    private final int           waitTimeInSeconds;
+    private final ReentrantLock lock = new ReentrantLock();
 
-	RangerRoleCacheWrapper roleCacheWrapper = null;
+    RangerRoleCacheWrapper roleCacheWrapper;
 
-	public static RangerRoleCache getInstance() {
-		if (sInstance == null) {
-			synchronized (RangerRoleCache.class) {
-				if (sInstance == null) {
-					sInstance = new RangerRoleCache();
-				}
-			}
-		}
-		return sInstance;
-	}
+    private RangerRoleCache() {
+        RangerAdminConfig config = RangerAdminConfig.getInstance();
 
-	private RangerRoleCache() {
-		RangerAdminConfig config = RangerAdminConfig.getInstance();
+        waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+    }
 
-		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
-	}
+    public static RangerRoleCache getInstance() {
+        RangerRoleCache me = sInstance;
 
-	public RangerRoles getLatestRangerRoleOrCached(String serviceName, RoleDBStore roleDBStore, Long lastKnownRoleVersion, Long rangerRoleVersionInDB) throws Exception {
-		final RangerRoles ret;
+        if (me == null) {
+            synchronized (RangerRoleCache.class) {
+                me = sInstance;
 
-		if (lastKnownRoleVersion == null || !lastKnownRoleVersion.equals(rangerRoleVersionInDB)) {
-			roleCacheWrapper = new RangerRoleCacheWrapper();
-			ret              = roleCacheWrapper.getLatestRangerRoles(serviceName, roleDBStore, lastKnownRoleVersion, rangerRoleVersionInDB);
-		} else if (lastKnownRoleVersion.equals(rangerRoleVersionInDB)) {
-			ret = null;
-		} else {
-			ret = roleCacheWrapper.getRoles();
-		}
+                if (me == null) {
+                    me        = new RangerRoleCache();
+                    sInstance = me;
+                }
+            }
+        }
 
-		return ret;
-	}
+        return me;
+    }
 
-	private class RangerRoleCacheWrapper {
-		RangerRoles roles;
-		Long        rolesVersion;
+    public RangerRoles getLatestRangerRoleOrCached(String serviceName, RoleDBStore roleDBStore, Long lastKnownRoleVersion, Long rangerRoleVersionInDB) throws Exception {
+        final RangerRoles ret;
 
-		RangerRoleCacheWrapper() {
-			this.roles        = null;
-			this.rolesVersion = -1L;
-		}
+        if (lastKnownRoleVersion == null || !lastKnownRoleVersion.equals(rangerRoleVersionInDB)) {
+            roleCacheWrapper = new RangerRoleCacheWrapper();
+            ret              = roleCacheWrapper.getLatestRangerRoles(serviceName, roleDBStore, lastKnownRoleVersion, rangerRoleVersionInDB);
+        } else {
+            ret = null;
+        }
 
-		public RangerRoles getRoles() {
-			return this.roles;
-		}
+        return ret;
+    }
 
-		public Long getRolesVersion() {
-			return this.rolesVersion;
-		}
+    private class RangerRoleCacheWrapper {
+        RangerRoles roles;
+        Long        rolesVersion;
 
-		public RangerRoles getLatestRangerRoles(String serviceName, RoleDBStore roleDBStore, Long lastKnownRoleVersion, Long rolesVersionInDB) throws Exception {
-			RangerRoles ret	       = null;
-			boolean     lockResult = false;
+        RangerRoleCacheWrapper() {
+            this.roles        = null;
+            this.rolesVersion = -1L;
+        }
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> RangerRoleCache.getLatestRangerRoles(ServiceName= " + serviceName + " lastKnownRoleVersion= " + lastKnownRoleVersion + " rolesVersionInDB= " + rolesVersionInDB + ")");
-			}
+        public RangerRoles getRoles() {
+            return this.roles;
+        }
 
-			try {
-				lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
+        public Long getRolesVersion() {
+            return this.rolesVersion;
+        }
 
-				if (lockResult) {
-					// We are getting all the Roles to be downloaded for now. Should do downloades for each service based on what roles are there in the policies.
-					SearchFilter          searchFilter = null;
-					final Set<RangerRole> rolesInDB    = new HashSet<>(roleDBStore.getRoles(searchFilter));
+        public RangerRoles getLatestRangerRoles(String serviceName, RoleDBStore roleDBStore, Long lastKnownRoleVersion, Long rolesVersionInDB) throws Exception {
+            RangerRoles ret        = null;
+            boolean     lockResult = false;
 
-					Date updateTime = new Date();
+            LOG.debug("==> RangerRoleCache.getLatestRangerRoles(ServiceName= {} lastKnownRoleVersion= {} rolesVersionInDB= {})", serviceName, lastKnownRoleVersion, rolesVersionInDB);
 
-					if (rolesInDB != null) {
-						ret = new RangerRoles();
+            try {
+                lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
 
-						ret.setRangerRoles(rolesInDB);
-						ret.setRoleUpdateTime(updateTime);
-						ret.setRoleVersion(rolesVersionInDB);
+                if (lockResult) {
+                    // We are getting all the Roles to be downloaded for now. Should do downloades for each service based on what roles are there in the policies.
+                    final long            startTimeMs  = System.currentTimeMillis();
+                    SearchFilter          searchFilter = null;
+                    final Set<RangerRole> rolesInDB    = new HashSet<>(roleDBStore.getRoles(searchFilter));
+                    final long            dbLoadTimeMs = System.currentTimeMillis() - startTimeMs;
+                    Date                  updateTime   = new Date();
 
-						rolesVersion = rolesVersionInDB;
-					} else {
-						LOG.error("Could not get Ranger Roles from database ...");
-					}
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached RangerRoles");
-					}
-					ret = getRoles();
-				}
-			} catch (InterruptedException exception) {
-				LOG.error("RangerRoleCache.getLatestRangerRoles:lock got interrupted..", exception);
-			} finally {
-				if (lockResult) {
-					lock.unlock();
-				}
-			}
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("loading Roles from database and it took:{} seconds", TimeUnit.MILLISECONDS.toSeconds(dbLoadTimeMs));
+                    }
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerRoleCache.getLatestRangerRoles(ServiceName= " + serviceName + " lastKnownRoleVersion= " + lastKnownRoleVersion + " rolesVersionInDB= " + rolesVersionInDB + " RangerRoles= " + ret + ")");
-			}
+                    ret = new RangerRoles();
 
-			return ret;
-		}
-	}
+                    ret.setRangerRoles(rolesInDB);
+                    ret.setRoleUpdateTime(updateTime);
+                    ret.setRoleVersion(rolesVersionInDB);
+
+                    rolesVersion = rolesVersionInDB;
+                    roles        = ret;
+                } else {
+                    LOG.debug("Could not get lock in [{}] seconds, returning cached RangerRoles", waitTimeInSeconds);
+
+                    ret = getRoles();
+                }
+            } catch (InterruptedException exception) {
+                LOG.error("RangerRoleCache.getLatestRangerRoles:lock got interrupted..", exception);
+            } finally {
+                if (lockResult) {
+                    lock.unlock();
+                }
+            }
+
+            LOG.debug("<== RangerRoleCache.getLatestRangerRoles(ServiceName= {} lastKnownRoleVersion= {} rolesVersionInDB= {} RangerRoles= {})", serviceName, lastKnownRoleVersion, rolesVersionInDB, ret);
+
+            return ret;
+        }
+    }
 }
-

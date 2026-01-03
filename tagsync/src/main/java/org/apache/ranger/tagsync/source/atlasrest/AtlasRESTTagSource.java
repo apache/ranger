@@ -19,8 +19,6 @@
 
 package org.apache.ranger.tagsync.source.atlasrest;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.atlas.AtlasClientV2;
 import org.apache.atlas.AtlasServiceException;
 import org.apache.atlas.exception.AtlasBaseException;
@@ -40,11 +38,9 @@ import org.apache.atlas.type.AtlasType;
 import org.apache.atlas.type.AtlasTypeRegistry;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
@@ -54,6 +50,8 @@ import org.apache.ranger.tagsync.process.TagSynchronizer;
 import org.apache.ranger.tagsync.source.atlas.AtlasNotificationMapper;
 import org.apache.ranger.tagsync.source.atlas.AtlasResourceMapperUtil;
 import org.apache.ranger.tagsync.source.atlas.EntityNotificationWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -62,95 +60,87 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
 
 public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
-	private static final Log LOG = LogFactory.getLog(AtlasRESTTagSource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTTagSource.class);
 
-    	private static final int REQUESTED_ENTITIES_LIMIT_MAX = 10000;
-    	private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
-		@Override
-		protected DateFormat initialValue() {
-			SimpleDateFormat dateFormat = new SimpleDateFormat(AtlasBaseTypeDef.SERIALIZED_DATE_FORMAT_STR);
+    private static final ThreadLocal<DateFormat> DATE_FORMATTER = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(AtlasBaseTypeDef.SERIALIZED_DATE_FORMAT_STR);
 
-			dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-			return dateFormat;
-		}
-	};
+        return dateFormat;
+    });
 
-	private long sleepTimeBetweenCycleInMillis;
-	private String[] restUrls         = null;
-	private boolean  isKerberized     = false;
-	private String[] userNamePassword = null;
+    private long     sleepTimeBetweenCycleInMillis;
+    private String[] restUrls;
+    private boolean  isKerberized;
+    private String[] userNamePassword;
+    private int      entitiesBatchSize = TagSyncConfig.DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
 
-	private Thread myThread = null;
+    private Thread myThread;
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
+        AtlasRESTTagSource atlasRESTTagSource = new AtlasRESTTagSource();
 
-		AtlasRESTTagSource atlasRESTTagSource = new AtlasRESTTagSource();
+        TagSyncConfig config = TagSyncConfig.getInstance();
 
-		TagSyncConfig config = TagSyncConfig.getInstance();
+        Properties props = config.getProperties();
 
-		Properties props = config.getProperties();
+        TagSynchronizer.printConfigurationProperties(props);
 
-		TagSynchronizer.printConfigurationProperties(props);
+        boolean ret = TagSynchronizer.initializeKerberosIdentity(props);
 
-		boolean ret = TagSynchronizer.initializeKerberosIdentity(props);
+        if (ret) {
+            TagSink tagSink = TagSynchronizer.initializeTagSink(props);
 
-		if (ret) {
+            if (tagSink != null) {
+                if (atlasRESTTagSource.initialize(props)) {
+                    try {
+                        tagSink.start();
+                        atlasRESTTagSource.setTagSink(tagSink);
+                        atlasRESTTagSource.synchUp();
+                    } catch (Exception exception) {
+                        LOG.error("ServiceTags upload failed : ", exception);
+                        System.exit(1);
+                    }
+                } else {
+                    LOG.error("AtlasRESTTagSource initialization failed, exiting.");
+                    System.exit(1);
+                }
+            } else {
+                LOG.error("TagSink initialization failed, exiting.");
+                System.exit(1);
+            }
+        } else {
+            LOG.error("Error initializing kerberos identity");
+            System.exit(1);
+        }
+    }
 
-			TagSink tagSink = TagSynchronizer.initializeTagSink(props);
+    @Override
+    public boolean initialize(Properties properties) {
+        LOG.debug("==> AtlasRESTTagSource.initialize()");
 
-			if (tagSink != null) {
+        boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
 
-				if (atlasRESTTagSource.initialize(props)) {
-					try {
-						tagSink.start();
-						atlasRESTTagSource.setTagSink(tagSink);
-						atlasRESTTagSource.synchUp();
-					} catch (Exception exception) {
-						LOG.error("ServiceTags upload failed : ", exception);
-						System.exit(1);
-					}
-				} else {
-					LOG.error("AtlasRESTTagSource initialization failed, exiting.");
-					System.exit(1);
-				}
+        sleepTimeBetweenCycleInMillis = TagSyncConfig.getTagSourceAtlasDownloadIntervalInMillis(properties);
+        isKerberized                  = TagSyncConfig.getTagsyncKerberosIdentity(properties) != null;
+        entitiesBatchSize             = TagSyncConfig.getAtlasRestSourceEntitiesBatchSize(properties);
 
-			} else {
-				LOG.error("TagSink initialization failed, exiting.");
-				System.exit(1);
-			}
-		} else {
-			LOG.error("Error initializing kerberos identity");
-			System.exit(1);
-		}
+        String restEndpoint  = TagSyncConfig.getAtlasRESTEndpoint(properties);
+        String sslConfigFile = TagSyncConfig.getAtlasRESTSslConfigFile(properties);
+        this.userNamePassword = new String[] {TagSyncConfig.getAtlasRESTUserName(properties), TagSyncConfig.getAtlasRESTPassword(properties)};
 
-	}
-	@Override
-	public boolean initialize(Properties properties) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> AtlasRESTTagSource.initialize()");
-		}
+        LOG.debug("restUrl={}", restEndpoint);
+        LOG.debug("sslConfigFile={}", sslConfigFile);
+        LOG.debug("userName={}", userNamePassword[0]);
+        LOG.debug("kerberized={}", isKerberized);
 
-		boolean ret = AtlasResourceMapperUtil.initializeAtlasResourceMappers(properties);
-
-		sleepTimeBetweenCycleInMillis = TagSyncConfig.getTagSourceAtlasDownloadIntervalInMillis(properties);
-		isKerberized = TagSyncConfig.getTagsyncKerberosIdentity(properties) != null;
-
-		String restEndpoint       = TagSyncConfig.getAtlasRESTEndpoint(properties);
-		String sslConfigFile = TagSyncConfig.getAtlasRESTSslConfigFile(properties);
-        this.userNamePassword = new String[] { TagSyncConfig.getAtlasRESTUserName(properties), TagSyncConfig.getAtlasRESTPassword(properties) };
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("restUrl=" + restEndpoint);
-			LOG.debug("sslConfigFile=" + sslConfigFile);
-			LOG.debug("userName=" + userNamePassword[0]);
-			LOG.debug("kerberized=" + isKerberized);
-		}
         if (StringUtils.isNotEmpty(restEndpoint)) {
             this.restUrls = restEndpoint.split(",");
 
@@ -159,95 +149,91 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                     restUrls[i] += "/";
                 }
             }
-		} else {
-			LOG.info("AtlasEndpoint not specified, Initial download of Atlas-entities cannot be done.");
-			ret = false;
-		}
+        } else {
+            LOG.info("AtlasEndpoint not specified, Initial download of Atlas-entities cannot be done.");
+            ret = false;
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== AtlasRESTTagSource.initialize(), result=" + ret);
-		}
+        LOG.debug("<== AtlasRESTTagSource.initialize(), result={}", ret);
 
-		return ret;
-	}
+        return ret;
+    }
 
-	@Override
-	public boolean start() {
+    @Override
+    public boolean start() {
+        myThread = new Thread(this);
+        myThread.setDaemon(true);
+        myThread.start();
 
-		myThread = new Thread(this);
-		myThread.setDaemon(true);
-		myThread.start();
+        return true;
+    }
 
-		return true;
-	}
+    @Override
+    public void stop() {
+        if (myThread != null && myThread.isAlive()) {
+            myThread.interrupt();
+        }
+    }
 
-	@Override
-	public void stop() {
-		if (myThread != null && myThread.isAlive()) {
-			myThread.interrupt();
-		}
-	}
+    @Override
+    public void run() {
+        LOG.debug("==> AtlasRESTTagSource.run()");
 
-	@Override
-	public void run() {
+        while (true) {
+            try {
+                if (TagSyncConfig.isTagSyncServiceActive()) {
+                    LOG.debug("==> AtlasRESTTagSource.run() is running as server is Active");
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> AtlasRESTTagSource.run()");
-		}
+                    synchUp();
+                } else {
+                    LOG.debug("==> This server is running passive mode");
+                }
+                LOG.debug("Sleeping for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
 
-		while (true) {
+                Thread.sleep(sleepTimeBetweenCycleInMillis);
+            } catch (InterruptedException exception) {
+                LOG.error("Interrupted..: ", exception);
+                return;
+            } catch (Exception e) {
+                LOG.error("Caught exception", e);
+                return;
+            }
+        }
+    }
 
-			synchUp();
+    public void synchUp() throws Exception {
+        List<RangerAtlasEntityWithTags> rangerAtlasEntities = getAtlasActiveEntities();
 
-			LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+        if (CollectionUtils.isNotEmpty(rangerAtlasEntities)) {
+            if (LOG.isDebugEnabled()) {
+                for (RangerAtlasEntityWithTags element : rangerAtlasEntities) {
+                    LOG.debug(Objects.toString(element));
+                }
+            }
+            Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(rangerAtlasEntities);
 
-			try {
-
-				Thread.sleep(sleepTimeBetweenCycleInMillis);
-
-			} catch (InterruptedException exception) {
-				LOG.error("Interrupted..: ", exception);
-				return;
-			}
-		}
-	}
-
-	public void synchUp() {
-
-		List<RangerAtlasEntityWithTags> rangerAtlasEntities = getAtlasActiveEntities();
-
-		if (CollectionUtils.isNotEmpty(rangerAtlasEntities)) {
-			if (LOG.isDebugEnabled()) {
-				for (RangerAtlasEntityWithTags element : rangerAtlasEntities) {
-					LOG.debug(element);
-				}
-			}
-			Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(rangerAtlasEntities);
-
-			if (MapUtils.isNotEmpty(serviceTagsMap)) {
-				for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
-					if (LOG.isDebugEnabled()) {
-						Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-								.setPrettyPrinting()
-								.create();
-						String serviceTagsString = gsonBuilder.toJson(entry.getValue());
-
-						LOG.debug("serviceTags=" + serviceTagsString);
-					}
-					updateSink(entry.getValue());
-				}
-			}
-		}
-
-	}
+            if (MapUtils.isNotEmpty(serviceTagsMap)) {
+                for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
+                    if (LOG.isDebugEnabled()) {
+                        try {
+                            String serviceTagsString = JsonUtils.objectToJson(entry.getValue());
+                            LOG.debug("serviceTags={}", serviceTagsString);
+                        } catch (Exception e) {
+                            LOG.error("An error occurred while conveting serviceTags to string", e);
+                        }
+                    }
+                    updateSink(entry.getValue());
+                }
+            }
+        }
+    }
 
     private List<RangerAtlasEntityWithTags> getAtlasActiveEntities() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getAtlasActiveEntities()");
-        }
-        List<RangerAtlasEntityWithTags> ret         = new ArrayList<>();
+        LOG.debug("==> getAtlasActiveEntities()");
 
-        AtlasClientV2                   atlasClient = null;
+        List<RangerAtlasEntityWithTags> ret = new ArrayList<>();
+
+        AtlasClientV2 atlasClient = null;
         try {
             atlasClient = getAtlasClient();
         } catch (IOException exception) {
@@ -255,7 +241,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         }
 
         if (atlasClient != null) {
-
             SearchParameters searchParams = new SearchParameters();
 
             searchParams.setExcludeDeletedEntities(true);
@@ -263,7 +248,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             //searchParams.setIncludeSubClassifications(true);
             //searchParams.setIncludeSubTypes(true);
             searchParams.setIncludeClassificationAttributes(true);
-            searchParams.setLimit(REQUESTED_ENTITIES_LIMIT_MAX);
+            searchParams.setLimit(entitiesBatchSize);
 
             boolean isMoreData;
             int     nextStartIndex = 0;
@@ -296,30 +281,23 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                 }
 
                 if (commitUpdates && searchResult != null) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(AtlasType.toJson(searchResult));
-                    }
+                    LOG.debug(AtlasType.toJson(searchResult));
 
                     List<AtlasEntityHeader> entityHeaders = searchResult.getEntities();
 
                     if (CollectionUtils.isNotEmpty(entityHeaders)) {
-
                         nextStartIndex += entityHeaders.size();
                         isMoreData = true;
 
                         for (AtlasEntityHeader header : entityHeaders) {
                             if (!header.getStatus().equals(AtlasEntity.Status.ACTIVE)) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Skipping entity because it is not ACTIVE, header:[" + header + "]");
-                                }
+                                LOG.debug("Skipping entity because it is not ACTIVE, header:[{}]", header);
                                 continue;
                             }
 
                             String typeName = header.getTypeName();
                             if (!AtlasResourceMapperUtil.isEntityTypeHandled(typeName)) {
-                                if (LOG.isDebugEnabled()) {
-                                    LOG.debug("Not fetching Atlas entities of type:[" + typeName + "]");
-                                }
+                                LOG.debug("Not fetching Atlas entities of type:[{}]", typeName);
                                 continue;
                             }
 
@@ -333,7 +311,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                             }
 
                             if (CollectionUtils.isNotEmpty(allTagsForEntity)) {
-                                RangerAtlasEntity entity = new RangerAtlasEntity(typeName, header.getGuid(), header.getAttributes());
+                                RangerAtlasEntity         entity         = new RangerAtlasEntity(typeName, header.getGuid(), header.getAttributes());
                                 RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(entity, allTagsForEntity, typeRegistry);
 
                                 ret.add(entityWithTags);
@@ -341,13 +319,11 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                         }
                     }
                 }
-            } while (isMoreData);
-
+            }
+            while (isMoreData);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getAtlasActiveEntities()");
-        }
+        LOG.debug("<== getAtlasActiveEntities()");
 
         return ret;
     }
@@ -356,27 +332,24 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
      * Returns a list of <EntityNotificationWrapper.RangerAtlasClassification>
      */
     private List<EntityNotificationWrapper.RangerAtlasClassification> resolveTag(AtlasTypeRegistry typeRegistry, AtlasClassification classification) {
-        List<EntityNotificationWrapper.RangerAtlasClassification>   ret         = new ArrayList<>();
-        String                                                      typeName    = classification.getTypeName();
-        Map<String, Object>                                         attributes  = classification.getAttributes();
+        List<EntityNotificationWrapper.RangerAtlasClassification> ret        = new ArrayList<>();
+        String                                                    typeName   = classification.getTypeName();
+        Map<String, Object>                                       attributes = classification.getAttributes();
 
         try {
             AtlasClassificationType classificationType = typeRegistry.getClassificationTypeByName(typeName);
 
             if (classificationType != null) {
-
                 Map<String, String> allAttributes = new HashMap<>();
 
                 if (MapUtils.isNotEmpty(attributes) && MapUtils.isNotEmpty(classificationType.getAllAttributes())) {
                     for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
-
-                        String name     = attribute.getKey();
-                        Object value    = attribute.getValue();
+                        String name  = attribute.getKey();
+                        Object value = attribute.getValue();
 
                         if (value != null) {
-
-                            String stringValue                              = value.toString();
-                            AtlasStructType.AtlasAttribute atlasAttribute   = classificationType.getAttribute(name);
+                            String                         stringValue    = value.toString();
+                            AtlasStructType.AtlasAttribute atlasAttribute = classificationType.getAttribute(name);
 
                             if (atlasAttribute != null) {
                                 if (value instanceof Number) {
@@ -389,8 +362,8 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                         }
                     }
                 }
-                List<TimeBoundary> validityPeriods              = classification.getValidityPeriods();
-                List<RangerValiditySchedule> validitySchedules  = null;
+                List<TimeBoundary>           validityPeriods   = classification.getValidityPeriods();
+                List<RangerValiditySchedule> validitySchedules = null;
 
                 if (CollectionUtils.isNotEmpty(validityPeriods)) {
                     validitySchedules = EntityNotificationWrapper.convertTimeSpecFromAtlasToRanger(validityPeriods);
@@ -402,16 +375,13 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                 // Find base classification types
                 Set<String> superTypeNames = classificationType.getAllSuperTypes();
                 for (String superTypeName : superTypeNames) {
-
                     AtlasClassificationType superType = typeRegistry.getClassificationTypeByName(superTypeName);
 
                     if (superType != null) {
-
                         Map<String, String> attributeMap = new HashMap<>();
 
                         if (MapUtils.isNotEmpty(attributes) && MapUtils.isNotEmpty(superType.getAllAttributes())) {
                             for (String name : superType.getAllAttributes().keySet()) {
-
                                 String stringValue = allAttributes.get(name);
 
                                 if (stringValue != null) {
@@ -419,8 +389,8 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                                 }
                             }
                         }
-                        validityPeriods     = classification.getValidityPeriods();
-                        validitySchedules   = null;
+                        validityPeriods   = classification.getValidityPeriods();
+                        validitySchedules = null;
 
                         if (CollectionUtils.isNotEmpty(validityPeriods)) {
                             validitySchedules = EntityNotificationWrapper.convertTimeSpecFromAtlasToRanger(validityPeriods);
@@ -430,25 +400,24 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
                 }
             }
         } catch (Exception exception) {
-            LOG.error("Error in resolving tags for type:[" + typeName + "]", exception);
+            LOG.error("Error in resolving tags for type:[{}]", typeName, exception);
         }
         return ret;
     }
 
-	private AtlasClientV2 getAtlasClient() throws IOException {
-		final AtlasClientV2 ret;
+    private AtlasClientV2 getAtlasClient() throws IOException {
+        final AtlasClientV2 ret;
 
-		if (isKerberized) {
-			UserGroupInformation ugi = UserGroupInformation.getLoginUser();
+        if (isKerberized) {
+            UserGroupInformation ugi = UserGroupInformation.getLoginUser();
 
-			ugi.checkTGTAndReloginFromKeytab();
+            ugi.checkTGTAndReloginFromKeytab();
 
-			ret = new AtlasClientV2(ugi, ugi.getShortUserName(), restUrls);
-		} else {
-			ret = new AtlasClientV2(restUrls, userNamePassword);
-		}
+            ret = new AtlasClientV2(ugi, ugi.getShortUserName(), restUrls);
+        } else {
+            ret = new AtlasClientV2(restUrls, userNamePassword);
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 }
-

@@ -18,348 +18,303 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import java.util.Objects;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_access_type_def")
 public class XXAccessTypeDef extends XXDBBase implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_access_type_def_SEQ", sequenceName = "x_access_type_def_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_access_type_def_SEQ")
-	@Column(name = "id")
-	protected Long id;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * defId of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "def_id")
-	protected Long defId;
+    /**
+     * id of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_access_type_def_SEQ", sequenceName = "x_access_type_def_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_access_type_def_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * itemId of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "item_id")
-	protected Long itemId;
+    /**
+     * defId of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "def_id")
+    protected Long defId;
 
-	/**
-	 * name of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "name")
-	protected String name;
+    /**
+     * itemId of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "item_id")
+    protected Long itemId;
 
-	/**
-	 * label of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "label")
-	protected String label;
+    /**
+     * name of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "name")
+    protected String name;
 
-	/**
-	 * rbKeyLabel of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "rb_key_label")
-	protected String rbKeyLabel;
+    /**
+     * label of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "label")
+    protected String label;
 
-	/**
-	 * order of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "sort_order")
-	protected Integer order;
+    /**
+     * rbKeyLabel of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "rb_key_label")
+    protected String rbKeyLabel;
 
-	/**
-	 * dataMaskOptions of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "datamask_options")
-	protected String dataMaskOptions;
+    /**
+     * category of the XXAccessTypeDef
+     */
+    @Column(name = "category")
+    protected Short category;
 
-	/**
-	 * rowFilterOptions of the XXAccessTypeDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "rowfilter_options")
-	protected String rowFilterOptions;
+    /**
+     * order of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "sort_order")
+    protected Integer order;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * dataMaskOptions of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "datamask_options")
+    protected String dataMaskOptions;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * rowFilterOptions of the XXAccessTypeDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "rowfilter_options")
+    protected String rowFilterOptions;
 
-	/**
-	 * This method sets the value to the member attribute <b> defId</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param defId
-	 *            Value to set member attribute <b> defId</b>
-	 */
-	public void setDefid(Long defId) {
-		this.defId = defId;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>defId</b>
-	 *
-	 * @return Date - value of member attribute <b>defId</b> .
-	 */
-	public Long getDefid() {
-		return this.defId;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> itemId</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param itemId
-	 *            Value to set member attribute <b> itemId</b>
-	 */
-	public void setItemId(Long itemId) {
-		this.itemId = itemId;
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>itemId</b>
-	 *
-	 * @return Long - value of member attribute <b>itemId</b> .
-	 */
-	public Long getItemId() {
-		return this.itemId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * This method sets the value to the member attribute <b> name</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param name
-	 *            Value to set member attribute <b> name</b>
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+        XXAccessTypeDef other = (XXAccessTypeDef) obj;
 
-	/**
-	 * Returns the value for the member attribute <b>name</b>
-	 *
-	 * @return Date - value of member attribute <b>name</b> .
-	 */
-	public String getName() {
-		return this.name;
-	}
+        return Objects.equals(defId, other.defId) &&
+                Objects.equals(itemId, other.itemId) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(category, other.category) &&
+                Objects.equals(dataMaskOptions, other.dataMaskOptions) &&
+                Objects.equals(rowFilterOptions, other.rowFilterOptions) &&
+                Objects.equals(order, other.order);
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> label</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param label
-	 *            Value to set member attribute <b> label</b>
-	 */
-	public void setLabel(String label) {
-		this.label = label;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "XXAccessTypeDef [" + super.toString() + " id=" + id
+                + ", defId=" + defId + ", itemId=" + itemId + ", name=" + name + ", label=" + label
+                + ", rbKeyLabel=" + rbKeyLabel + ", category=" + category + ", dataMaskOptions=" + dataMaskOptions
+                + ", rowFilterOptions=" + rowFilterOptions + ", order=" + order + "]";
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>label</b>
-	 *
-	 * @return Date - value of member attribute <b>label</b> .
-	 */
-	public String getLabel() {
-		return this.label;
-	}
+    /**
+     * Returns the value for the member attribute <b>defId</b>
+     *
+     * @return Date - value of member attribute <b>defId</b> .
+     */
+    public Long getDefid() {
+        return this.defId;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> rbKeyLabel</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param rbKeyLabel
-	 *            Value to set member attribute <b> rbKeyLabel</b>
-	 */
-	public void setRbkeylabel(String rbKeyLabel) {
-		this.rbKeyLabel = rbKeyLabel;
-	}
+    /**
+     * This method sets the value to the member attribute <b> defId</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param defId Value to set member attribute <b> defId</b>
+     */
+    public void setDefid(Long defId) {
+        this.defId = defId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>rbKeyLabel</b>
-	 *
-	 * @return Date - value of member attribute <b>rbKeyLabel</b> .
-	 */
-	public String getRbkeylabel() {
-		return this.rbKeyLabel;
-	}
+    /**
+     * Returns the value for the member attribute <b>itemId</b>
+     *
+     * @return Long - value of member attribute <b>itemId</b> .
+     */
+    public Long getItemId() {
+        return this.itemId;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> order</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param order
-	 *            Value to set member attribute <b> order</b>
-	 */
-	public void setOrder(Integer order) {
-		this.order = order;
-	}
+    /**
+     * This method sets the value to the member attribute <b> itemId</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param itemId Value to set member attribute <b> itemId</b>
+     */
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>order</b>
-	 *
-	 * @return Date - value of member attribute <b>order</b> .
-	 */
-	public Integer getOrder() {
-		return this.order;
-	}
+    /**
+     * Returns the value for the member attribute <b>name</b>
+     *
+     * @return Date - value of member attribute <b>name</b> .
+     */
+    public String getName() {
+        return this.name;
+    }
 
-	public String getDataMaskOptions() {
-		return dataMaskOptions;
-	}
+    /**
+     * This method sets the value to the member attribute <b> name</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param name Value to set member attribute <b> name</b>
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setDataMaskOptions(String dataMaskOptions) {
-		this.dataMaskOptions = dataMaskOptions;
-	}
+    /**
+     * Returns the value for the member attribute <b>label</b>
+     *
+     * @return Date - value of member attribute <b>label</b> .
+     */
+    public String getLabel() {
+        return this.label;
+    }
 
-	public String getRowFilterOptions() { return rowFilterOptions; }
+    /**
+     * This method sets the value to the member attribute <b> label</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param label Value to set member attribute <b> label</b>
+     */
+    public void setLabel(String label) {
+        this.label = label;
+    }
 
-	public void setRowFilterOptions(String rowFilterOptions) { this.rowFilterOptions = rowFilterOptions; }
+    /**
+     * Returns the value for the member attribute <b>rbKeyLabel</b>
+     *
+     * @return Date - value of member attribute <b>rbKeyLabel</b> .
+     */
+    public String getRbkeylabel() {
+        return this.rbKeyLabel;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		XXAccessTypeDef other = (XXAccessTypeDef) obj;
-		if (defId == null) {
-			if (other.defId != null) {
-				return false;
-			}
-		} else if (!defId.equals(other.defId)) {
-			return false;
-		}
-		if (itemId == null) {
-			if (other.itemId != null) {
-				return false;
-			}
-		} else if (!itemId.equals(other.itemId)) {
-			return false;
-		}
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
-		if (label == null) {
-			if (other.label != null) {
-				return false;
-			}
-		} else if (!label.equals(other.label)) {
-			return false;
-		}
-		if (name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		} else if (!name.equals(other.name)) {
-			return false;
-		}
-		if (order == null) {
-			if (other.order != null) {
-				return false;
-			}
-		} else if (!order.equals(other.order)) {
-			return false;
-		}
-		if (rbKeyLabel == null) {
-			if (other.rbKeyLabel != null) {
-				return false;
-			}
-		} else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-			return false;
-		}
-		if (dataMaskOptions == null) {
-			if (other.dataMaskOptions != null) {
-				return false;
-			}
-		} else if (!dataMaskOptions.equals(other.dataMaskOptions)) {
-			return false;
-		}
-		if (rowFilterOptions == null) {
-			if (other.rowFilterOptions != null) {
-				return false;
-			}
-		} else if (!rowFilterOptions.equals(other.rowFilterOptions)) {
-			return false;
-		}
-		return true;
-	}
+    /**
+     * This method sets the value to the member attribute <b> rbKeyLabel</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param rbKeyLabel Value to set member attribute <b> rbKeyLabel</b>
+     */
+    public void setRbkeylabel(String rbKeyLabel) {
+        this.rbKeyLabel = rbKeyLabel;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "XXAccessTypeDef [" + super.toString() + " id=" + id
-				+ ", defId=" + defId + ", itemId=" + itemId + ", name=" + name + ", label=" + label
-				+ ", rbKeyLabel=" + rbKeyLabel + ", dataMaskOptions=" + dataMaskOptions
-				+ ", rowFilterOptions=" + rowFilterOptions + ", order=" + order + "]";
-	}
+    public Short getCategory() {
+        return category;
+    }
 
+    public void setCategory(Short category) {
+        this.category = category;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>order</b>
+     *
+     * @return Date - value of member attribute <b>order</b> .
+     */
+    public Integer getOrder() {
+        return this.order;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> order</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param order Value to set member attribute <b> order</b>
+     */
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
+
+    public String getDataMaskOptions() {
+        return dataMaskOptions;
+    }
+
+    public void setDataMaskOptions(String dataMaskOptions) {
+        this.dataMaskOptions = dataMaskOptions;
+    }
+
+    public String getRowFilterOptions() {
+        return rowFilterOptions;
+    }
+
+    public void setRowFilterOptions(String rowFilterOptions) {
+        this.rowFilterOptions = rowFilterOptions;
+    }
 }

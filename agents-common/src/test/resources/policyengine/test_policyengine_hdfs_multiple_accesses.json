@@ -1,0 +1,147 @@
+{
+  "serviceName":"hdfsdev",
+
+  "serviceDef":{
+    "name":"hdfs",
+    "id":1,
+    "resources":[
+      {"name":"path","type":"path","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Resource Path","description":"HDFS file or directory path"}
+    ],
+    "accessTypes":[
+      {"name":"read","label":"Read"},
+      {"name":"write","label":"Write"},
+      {"name":"execute","label":"Execute"}
+    ],
+    "contextEnrichers":
+    [
+      {
+        "itemId":1,
+        "name" : "GeolocationEnricher",
+        "enricher" : "org.apache.ranger.plugin.contextenricher.RangerFileBasedGeolocationProvider",
+        "enricherOptions" : {
+          "FilePath":"/etc/ranger/geo/geo.txt", "ForceRead":"false", "IPInDotFormat":"true"
+        ,"geolocation.meta.prefix": "TEST_"
+        }
+      }
+    ],
+    "policyConditions": [
+      {
+        "itemId":1,
+        "name":"ScriptConditionEvaluator",
+        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+        "evaluatorOptions" : {"engineName":"JavaScript"},
+        "label":"Script",
+        "description": "Script to execute"
+      }
+    ]
+  },
+
+  "policies":[
+    {"id":1,"name":"audit-all-access under /public","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/public"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    }
+  ,
+    {"id":2,"name":"allow-execute-to-all under /public/","isEnabled":true,"isAuditEnabled":false,
+      "resources":{"path":{"values":["/public/*"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"execute","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    }
+  ,
+    {"id":3,"name":"allow-read-to-finance under /public/finance","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/public/finance"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":["finance"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":4,"name":"deny-all-to-finance under /public/finance to user guest","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"path":{"values":["/public/finance"],"isRecursive":true}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}, {"type":"write","isAllowed":true}, {"type":"execute","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":5,"name":"allow-read-to-finance under /public/finance to user guest","isEnabled":true,"isAuditEnabled":true, "policyPriority": 1,
+      "resources":{"path":{"values":["/public/finance"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
+      ]
+    },
+    {"id":6,"name":"allow-execute-to-finance under /public/finance to user guest","isEnabled":true,"isAuditEnabled":true, "policyPriority": 1,
+      "resources":{"path":{"values":["/public/finance"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"execute","isAllowed":true}],"users":["guest"],"groups":[],"delegateAdmin":false}
+      ]
+    }
+  ],
+
+  "tests":[
+    {"name":"ALLOW 'read_execute /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"read","user":"guest","userGroups":[],"requestData":"read_execute /public/finance",
+        "context": {"ALLACCESSTYPEGROUPS": [ ["read"],  ["execute"] ], "ALLACCESSTYPES": [ "read", "execute"]}
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":6}
+    },
+    {"name":"ALLOW 'read /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"read","user":"guest","userGroups":[],"requestData":"read /public/finance"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":5}
+    },
+    {"name":"ALLOW 'execute /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"execute","user":"guest","userGroups":[],"requestData":"execute /public/finance"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":6}
+    },
+    {"name":"DENY 'write /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"write","user":"guest","userGroups":[],"requestData":"write /public/finance"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":4}
+    },
+    {"name":"DENY 'write_execute /public/finance' for user guest",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"write","user":"guest","userGroups":[],"requestData":"write_execute /public/finance",
+        "context": {"ALLACCESSTYPEGROUPS": [ ["write"],  ["execute"] ], "ALLACCESSTYPES": [ "write", "execute"]}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":4}
+    },
+    {"name":"ALLOW 'read_execute /public/finance' for user finance",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"read","user":"finance","userGroups":[],"requestData":"read_execute /public/finance",
+        "context": {"ALLACCESSTYPEGROUPS": [ ["read"],  ["execute"] ], "ALLACCESSTYPES": [ "read", "execute"]}
+
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
+    }
+  ,
+    {"name":"DENY 'read_execute /public/finance' for user hr",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"read","user":"hr","userGroups":[],"requestData":"read_execute /public/finance",
+        "context": {"ALLACCESSTYPEGROUPS": [ ["read"],  ["execute"] ], "ALLACCESSTYPES": [ "read", "execute"]}
+
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    }
+    ,
+    {"name":"ALLOW 'execute /public/finance' for user hr",
+      "request":{
+        "resource":{"elements":{"path":"/public/finance"}},
+        "accessType":"execute","user":"hr","userGroups":[],"requestData":"execute /public/finance"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+    }
+  ]
+}
+

@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package org.apache.ranger.ugsyncutil.model;;
+package org.apache.ranger.ugsyncutil.model;
 
 import java.util.Set;
 
 public class GroupUserInfo {
-    String groupName;
+    String      groupName;
     Set<String> addUsers;
     Set<String> delUsers;
 

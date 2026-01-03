@@ -61,26 +61,6 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		</property>
 	</bean>
 
-	<bean id="loggingEntityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
-		<property name="persistenceUnitName" value="loggingPU" />
-		<property name="dataSource" ref="loggingDataSource" />
-		<property name="jpaVendorAdapter">
-			<bean class="org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter">
-				<property name="databasePlatform" value="${ranger.jpa.jdbc.dialect}" />
-				<property name="showSql" value="${ranger.jpa.showsql}" />
-				<property name="generateDdl" value="false" />
-			</bean>
-		</property>
-		<property name="jpaPropertyMap">
-		<props>
-			<prop key="eclipselink.weaving">false</prop>
-		</props>
-		 </property>
-		<property name="loadTimeWeaver">
-		<bean class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver"/>
-		</property>
-	</bean>
-
 	<bean id="xmlPropertyConfigurer" class="org.apache.ranger.common.XMLPropertiesUtil" />
 
 	<bean id="propertyConfigurer" class="org.apache.ranger.common.PropertiesUtil">
@@ -123,99 +103,40 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		<property name="entityManagerFactory" ref="defaultEntityManagerFactory" />
 	</bean>
 
-	<bean id="transactionManager2" class="org.springframework.orm.jpa.JpaTransactionManager">
-		<property name="entityManagerFactory" ref="loggingEntityManagerFactory" />
-	</bean>
-
-	<!-- Datasource and Connection Pool Configuration http://www.mchange.com/projects/c3p0/index.jsp#configuration_properties -->
-	<bean id="defaultDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass">
+	<!-- Datasource and Connection Pool Configuration https://github.com/brettwooldridge/HikariCP -->
+	<bean id="defaultDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<property name="driverClassName">
 			<value>${ranger.jpa.jdbc.driver}</value>
 		</property>
 		<property name="jdbcUrl">
 			<value>${ranger.jpa.jdbc.url}</value>
 		</property>
-		<property name="user">
+		<property name="username">
 			<value>${ranger.jpa.jdbc.user}</value>
 		</property>
 		<property name="password">
 			<value>${ranger.jpa.jdbc.password}</value>
 		</property>
-		<property name="maxPoolSize">
-			<!-- <value>20</value> -->
+		<property name="maximumPoolSize">
 			<value>${ranger.jpa.jdbc.maxpoolsize}</value>
 		</property>
-		<property name="minPoolSize">
+		<property name="minimumIdle">
 			<value>${ranger.jpa.jdbc.minpoolsize}</value>
 		</property>
-		<property name="initialPoolSize">
-			<value>${ranger.jpa.jdbc.initialpoolsize}</value>
+		<property name="idleTimeout">
+			<value>${ranger.jpa.jdbc.idletimeout}</value>
 		</property>
-		<!-- Seconds a Connection can remain pooled but unused before being discarded.
-		Zero means idle connections never expire. -->
-		<property name="maxIdleTime">
-			<value>${ranger.jpa.jdbc.maxidletime}</value>
-		</property>
-		<property name="maxStatements">
-			<value>${ranger.jpa.jdbc.maxstatements}</value>
-		</property>
-		<property name="preferredTestQuery">
+		<property name="connectionTestQuery">
 			<value>${ranger.jpa.jdbc.preferredtestquery}</value>
 		</property>
-		<property name="idleConnectionTestPeriod">
-			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
+		<property name="maxLifetime">
+			<value>${ranger.jpa.jdbc.maxlifetime}</value>
 		</property>
-		<property name="statementCacheNumDeferredCloseThreads">
-			<value>1</value>
+		<property name="connectionTimeout">
+			<value>${ranger.jpa.jdbc.connectiontimeout}</value>
 		</property>
 	</bean>
 
-	<bean id="loggingDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass">
-			<value>${ranger.jpa.jdbc.driver}</value>
-		</property>
-		<property name="jdbcUrl">
-			<value>${ranger.jpa.audit.jdbc.url}</value>
-		</property>
-		<property name="user">
-			<value>${ranger.jpa.jdbc.user}</value>
-		</property>
-		<property name="password">
-			<value>${ranger.jpa.jdbc.password}</value>
-		</property>
-		<property name="maxPoolSize">
-			<!-- <value>20</value> -->
-			<value>${ranger.jpa.jdbc.maxpoolsize}</value>
-		</property>
-		<property name="minPoolSize">
-			<value>${ranger.jpa.jdbc.minpoolsize}</value>
-		</property>
-		<property name="initialPoolSize">
-			<value>${ranger.jpa.jdbc.initialpoolsize}</value>
-		</property>
-		<!-- Seconds a Connection can remain pooled but unused before being discarded.
-		Zero means idle connections never expire. -->
-		<property name="maxIdleTime">
-			<value>${ranger.jpa.jdbc.maxidletime}</value>
-		</property>
-		<property name="maxStatements">
-			<value>${ranger.jpa.jdbc.maxstatements}</value>
-		</property>
-		<property name="preferredTestQuery">
-			<value>${ranger.jpa.jdbc.preferredtestquery}</value>
-		</property>
-		<property name="idleConnectionTestPeriod">
-			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
-		</property>
-	</bean>
-
-	<bean id="velocityEngine"
-	class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
-		<property name="velocityProperties">
-			<value>resource.loader=class
-				class.resource.loader.class=org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</value>
-		</property>
-	</bean>
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basenames">
 			<list>

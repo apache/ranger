@@ -19,21 +19,20 @@
 
 package org.apache.util.outputformatter;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
 
 /**
  * This is the default formatter for Jisql.  It outputs data in a &quot;normal&quot;
  * format that is similar to most other database command line formatters.
- *
  */
 public class CSVFormatter implements JisqlFormatter {
-    private char delimiter = ',';
-    private boolean includeColumnNames = false;
-
+    private char    delimiter          = ',';
+    private boolean includeColumnNames;
 
     /**
      * Sets a the supported option list for this formatter.  This formatter accepts
@@ -49,27 +48,25 @@ public class CSVFormatter implements JisqlFormatter {
      * </ul>
      *
      * @param parser the OptionParser to use.
-     *
      */
-    public void setSupportedOptions( OptionParser parser ) {
-        parser.accepts( "delimiter" ).withRequiredArg().ofType( String.class );
-        parser.accepts( "colnames" );
+    public void setSupportedOptions(OptionParser parser) {
+        parser.accepts("delimiter").withRequiredArg().ofType(String.class);
+        parser.accepts("colnames");
     }
 
     /**
      * Consumes any options that were specified on the command line.
      *
      * @param options the OptionSet that the main driver is using.
-     *
-     * @throws Exception if there is a problem parsing the command line arguments.
-     *
      */
-    public void consumeOptions( OptionSet options ) throws Exception {
-        if( options.has( "delimiter" ) )
-            delimiter = ((String)(options.valueOf( "delimiter" ))).charAt( 0 );
+    public void consumeOptions(OptionSet options) {
+        if (options.has("delimiter")) {
+            delimiter = ((String) (options.valueOf("delimiter"))).charAt(0);
+        }
 
-        if( options.has( "colnames" ) )
-        	includeColumnNames = true;
+        if (options.has("colnames")) {
+            includeColumnNames = true;
+        }
     }
 
     /**
@@ -77,11 +74,10 @@ public class CSVFormatter implements JisqlFormatter {
      * message should contain information on how to call the formatter.
      *
      * @param out the PrintStream to display the usage message on.
-     *
      */
-    public void usage( PrintStream out ) {
-        out.println("\t-delimiter specifies the character to use as the delimiter.  This defaults to \"" + delimiter + "\"" );
-        out.println("\t-colnames outputs column names.  By default there are no column names." );
+    public void usage(PrintStream out) {
+        out.println("\t-delimiter specifies the character to use as the delimiter.  This defaults to \"" + delimiter + "\"");
+        out.println("\t-colnames outputs column names.  By default there are no column names.");
     }
 
     /**
@@ -90,25 +86,25 @@ public class CSVFormatter implements JisqlFormatter {
      *
      * @param out a PrintStream to send any output to.
      * @param metaData the ResultSetMetaData for the output.
-     *
      */
-    public void formatHeader( PrintStream out, ResultSetMetaData metaData ) throws Exception {
-        if( includeColumnNames ) {
+    public void formatHeader(PrintStream out, ResultSetMetaData metaData) throws Exception {
+        if (includeColumnNames) {
             int numColumns = metaData.getColumnCount();
 
             //
             // output the column names
             //
             for (int i = 1; i <= numColumns; i++) {
-                out.print( metaData.getColumnName(i).trim() );
-                if( (i + 1) <= numColumns )
-                	out.print( delimiter );
+                out.print(metaData.getColumnName(i).trim());
+
+                if ((i + 1) <= numColumns) {
+                    out.print(delimiter);
+                }
             }
 
             out.println();
         }
     }
-
 
     /**
      * Called to output the data.
@@ -116,20 +112,16 @@ public class CSVFormatter implements JisqlFormatter {
      * @param out the PrintStream to output data to.
      * @param resultSet the ResultSet for the row.
      * @param metaData the ResultSetMetaData for the row.
-     *
-     *
      */
-    public void formatData( PrintStream out, ResultSet resultSet, ResultSetMetaData metaData ) throws Exception{
+    public void formatData(PrintStream out, ResultSet resultSet, ResultSetMetaData metaData) {
     }
-
 
     /**
      * Outputs a footer for a query.  For the CSVFormatter this method does nothing.
      *
      * @param out the PrintStream to output data to.
      * @param metaData the ResultSetMetaData for the output.
-     *
      */
-    public void formatFooter( PrintStream out, ResultSetMetaData metaData ) throws Exception {
+    public void formatFooter(PrintStream out, ResultSetMetaData metaData) {
     }
 }

@@ -20,10 +20,9 @@
 package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import com.google.common.collect.ImmutableMap;
+import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,142 +32,223 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PerfDataRecorder {
-	private static final Log LOG  = LogFactory.getLog(PerfDataRecorder.class);
-	private static final Log PERF = RangerPerfTracer.getPerfLogger(PerfDataRecorder.class);
+    private static final Logger LOG  = LoggerFactory.getLogger(PerfDataRecorder.class);
+    private static final Logger PERF = RangerPerfTracer.getPerfLogger(PerfDataRecorder.class);
 
-	private static volatile PerfDataRecorder instance;
-	private Map<String, PerfStatistic> perfStatistics = new HashMap<>();
+    private static volatile PerfDataRecorder instance;
 
-	public static void initialize(List<String> names) {
-		if (instance == null) {
-			synchronized (PerfDataRecorder.class) {
-				if (instance == null) {
-					instance = new PerfDataRecorder(names);
-				}
-			}
-		}
-	}
+    private final Map<String, PerfStatistic> perfStatistics = Collections.synchronizedMap(new HashMap<>());
+    private       RangerReadWriteLock        lock;
 
-	public static boolean collectStatistics() {
-		return instance != null;
-	}
+    private PerfDataRecorder(List<String> names) {
+        if (CollectionUtils.isNotEmpty(names)) {
+            for (String name : names) {
+                // Create structure
+                perfStatistics.put(name, new PerfStatistic());
+            }
+        }
+    }
 
-	public static void printStatistics() {
-		if (instance != null) {
-			instance.dumpStatistics();
-		}
-	}
+    public static void initialize(List<String> names) {
+        initialize(true, 0, false, names);
+    }
 
-	public static void clearStatistics() {
-		if (instance != null) {
-			instance.clear();
-		}
-	}
+    public static void initialize(final boolean useRecorder, final int collectionIntervalInSeconds, final boolean usePerfDataLock, List<String> names) {
+        if (useRecorder) {
+            if (instance == null) {
+                synchronized (PerfDataRecorder.class) {
+                    if (instance == null) {
+                        instance      = new PerfDataRecorder(names);
+                        instance.lock = new RangerReadWriteLock(usePerfDataLock);
+                        if (collectionIntervalInSeconds > 0) {
+                            Thread statDumper = new StatisticsDumper(collectionIntervalInSeconds);
+                            statDumper.setName("Perf-Statistics-Dumper");
+                            statDumper.setDaemon(true);
+                            statDumper.start();
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	public static void recordStatistic(String tag, long elapsedTime) {
-		if (instance != null) {
-			instance.record(tag, elapsedTime);
-		}
-	}
+    public static boolean collectStatistics() {
+        return instance != null;
+    }
 
-	private void dumpStatistics() {
-		List<String> tags = new ArrayList<>(perfStatistics.keySet());
+    public static void printStatistics() {
+        if (instance != null) {
+            instance.dumpStatistics();
+        }
+    }
 
-		Collections.sort(tags);
+    public static void clearStatistics() {
+        if (instance != null) {
+            try (RangerReadWriteLock.RangerLock writeLock = instance.lock.getWriteLock()) {
+                instance.clear();
+            }
+        }
+    }
 
-		for (String tag : tags) {
-			PerfStatistic perfStatistic = perfStatistics.get(tag);
+    public static void recordStatistic(String tag, long cpuTime, long elapsedTime) {
+        if (instance != null) {
+            instance.record(tag, cpuTime, elapsedTime);
+        }
+    }
 
-			long averageTimeSpent = 0L;
+    public static Map<String, PerfStatistic> exposeStatistics() {
+        if (instance != null) {
+            return ImmutableMap.copyOf(instance.perfStatistics);
+        }
+        return ImmutableMap.of();
+    }
 
-			if (perfStatistic.numberOfInvocations.get() != 0L) {
-				averageTimeSpent = perfStatistic.microSecondsSpent.get()/perfStatistic.numberOfInvocations.get();
-			}
+    private void dumpStatistics() {
+        List<String> tags;
 
-			String logMsg = "[" + tag + "]" +
-                             " execCount: " + perfStatistic.numberOfInvocations.get() +
-                             ", totalTimeTaken: " + perfStatistic.microSecondsSpent.get() + " μs" +
-                             ", maxTimeTaken: " + perfStatistic.maxTimeSpent.get() + " μs" +
-                             ", minTimeTaken: " + perfStatistic.minTimeSpent.get() + " μs" +
-                             ", avgTimeTaken: " + averageTimeSpent + " μs";
+        try (RangerReadWriteLock.RangerLock readLock = lock.getReadLock()) {
+            tags = new ArrayList<>(perfStatistics.keySet());
+        }
 
-			LOG.info(logMsg);
-			PERF.debug(logMsg);
-		}
-	}
+        Collections.sort(tags);
 
-	private void clear() {
-		perfStatistics.clear();
-	}
+        for (String tag : tags) {
+            PerfStatistic perfStatistic = perfStatistics.get(tag);
 
-	private void record(String tag, long elapsedTime) {
-		PerfStatistic perfStatistic = perfStatistics.get(tag);
+            long averageTimeSpentCpu = 0L;
+            long averageTimeSpent    = 0L;
 
-		if (perfStatistic == null) {
-			synchronized (PerfDataRecorder.class) {
-				perfStatistic = perfStatistics.get(tag);
+            if (perfStatistic.numberOfInvocations.get() != 0L) {
+                averageTimeSpentCpu = perfStatistic.microSecondsSpentCpu.get() / perfStatistic.numberOfInvocations.get();
+            }
 
-				if(perfStatistic == null) {
-					perfStatistic = new PerfStatistic();
-					perfStatistics.put(tag, perfStatistic);
-				}
-			}
-		}
+            if (perfStatistic.numberOfInvocations.get() != 0L) {
+                averageTimeSpent = perfStatistic.microSecondsSpent.get() / perfStatistic.numberOfInvocations.get();
+            }
 
-		perfStatistic.addPerfDataItem(elapsedTime);
-	}
+            String logMsg = "[" + tag + "]" +
+                    " execCount: " + perfStatistic.numberOfInvocations.get() +
+                    ", totalTimeTakenCpu: " + perfStatistic.microSecondsSpentCpu.get() + " μs" +
+                    ", maxTimeTakenCpu: " + perfStatistic.maxTimeSpentCpu.get() + " μs" +
+                    ", minTimeTakenCpu: " + perfStatistic.minTimeSpentCpu.get() + " μs" +
+                    ", avgTimeTakenCpu: " + averageTimeSpentCpu + " μs" +
+                    ", totalTimeTaken: " + perfStatistic.microSecondsSpent.get() + " μs" +
+                    ", maxTimeTaken: " + perfStatistic.maxTimeSpent.get() + " μs" +
+                    ", minTimeTaken: " + perfStatistic.minTimeSpent.get() + " μs" +
+                    ", avgTimeTaken: " + averageTimeSpent + " μs";
 
-	private PerfDataRecorder(List<String> names) {
-		if (CollectionUtils.isNotEmpty(names)) {
-			for (String name : names) {
-				// Create structure
-				perfStatistics.put(name, new PerfStatistic());
-			}
-		}
-	}
+            LOG.info(logMsg);
+            PERF.debug(logMsg);
+        }
+    }
 
-	public static Map<String, PerfStatistic> exposeStatistics() {
-		if (instance != null) {
-			return ImmutableMap.copyOf(instance.perfStatistics);
-		}
-		return ImmutableMap.of();
-	}
+    private void clear() {
+        perfStatistics.clear();
+    }
 
-	public static class PerfStatistic {
-		private AtomicLong numberOfInvocations = new AtomicLong(0L);
-		private AtomicLong microSecondsSpent = new AtomicLong(0L);
-		private AtomicLong minTimeSpent = new AtomicLong(Long.MAX_VALUE);
-		private AtomicLong maxTimeSpent = new AtomicLong(Long.MIN_VALUE);
+    private void record(String tag, long cpuTime, long elapsedTime) {
+        try (RangerReadWriteLock.RangerLock writeLock = lock.getWriteLock()) {
+            PerfStatistic perfStatistic = perfStatistics.get(tag);
 
-		void addPerfDataItem(final long timeTaken) {
-			numberOfInvocations.getAndIncrement();
-			microSecondsSpent.getAndAdd(timeTaken);
+            if (perfStatistic == null) {
+                synchronized (PerfDataRecorder.class) {
+                    perfStatistic = perfStatistics.get(tag);
 
-			long min = minTimeSpent.get();
-			if(timeTaken < min) {
-				minTimeSpent.compareAndSet(min, timeTaken);
-			}
+                    if (perfStatistic == null) {
+                        perfStatistic = new PerfStatistic();
+                        perfStatistics.put(tag, perfStatistic);
+                    }
+                }
+            }
 
-			long max = maxTimeSpent.get();
-			if(timeTaken > max) {
-				maxTimeSpent.compareAndSet(max, timeTaken);
-			}
-		}
+            perfStatistic.addPerfDataItem(cpuTime, elapsedTime);
+        }
+    }
 
-		public long getNumberOfInvocations() {
-			return numberOfInvocations.get();
-		}
+    public static class PerfStatistic {
+        private final AtomicLong numberOfInvocations  = new AtomicLong(0L);
+        private final AtomicLong microSecondsSpentCpu = new AtomicLong(0L);
+        private final AtomicLong minTimeSpentCpu      = new AtomicLong(Long.MAX_VALUE);
+        private final AtomicLong maxTimeSpentCpu      = new AtomicLong(Long.MIN_VALUE);
+        private final AtomicLong microSecondsSpent    = new AtomicLong(0L);
+        private final AtomicLong minTimeSpent         = new AtomicLong(Long.MAX_VALUE);
+        private final AtomicLong maxTimeSpent         = new AtomicLong(Long.MIN_VALUE);
 
-		public long getMicroSecondsSpent() {
-			return microSecondsSpent.get();
-		}
+        public long getNumberOfInvocations() {
+            return numberOfInvocations.get();
+        }
 
-		public long getMinTimeSpent() {
-			return minTimeSpent.get();
-		}
+        public long getMicroSecondsSpentCpu() {
+            return microSecondsSpentCpu.get();
+        }
 
-		public long getMaxTimeSpent() {
-			return maxTimeSpent.get();
-		}
-	}
+        public long getMinTimeSpentCpu() {
+            return minTimeSpentCpu.get();
+        }
+
+        public long getMaxTimeSpentCpu() {
+            return maxTimeSpentCpu.get();
+        }
+
+        public long getMicroSecondsSpent() {
+            return microSecondsSpent.get();
+        }
+
+        public long getMinTimeSpent() {
+            return minTimeSpent.get();
+        }
+
+        public long getMaxTimeSpent() {
+            return maxTimeSpent.get();
+        }
+
+        void addPerfDataItem(final long cpuTime, final long timeTaken) {
+            numberOfInvocations.getAndIncrement();
+            microSecondsSpentCpu.getAndAdd(cpuTime);
+            microSecondsSpent.getAndAdd(timeTaken);
+
+            long min = minTimeSpentCpu.get();
+            if (cpuTime < min) {
+                minTimeSpentCpu.compareAndSet(min, cpuTime);
+            }
+            min = minTimeSpent.get();
+            if (timeTaken < min) {
+                minTimeSpent.compareAndSet(min, timeTaken);
+            }
+
+            long max = maxTimeSpentCpu.get();
+            if (cpuTime > max) {
+                maxTimeSpentCpu.compareAndSet(max, cpuTime);
+            }
+            max = maxTimeSpent.get();
+            if (timeTaken > max) {
+                maxTimeSpent.compareAndSet(max, timeTaken);
+            }
+        }
+    }
+
+    private static class StatisticsDumper extends Thread {
+        final int collectionIntervalInSeconds;
+
+        StatisticsDumper(final int collectionIntervalInSeconds) {
+            this.collectionIntervalInSeconds = collectionIntervalInSeconds;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    sleep(collectionIntervalInSeconds * 1000L);
+                    printStatistics();
+                    clearStatistics();
+                } catch (InterruptedException exception) {
+                    printStatistics();
+
+                    LOG.warn("Thread[{}] was interrupted. Returning from thread. Performance statistics will NOT be dumped periodically!!", this.getName());
+
+                    break;
+                }
+            }
+        }
+    }
 }

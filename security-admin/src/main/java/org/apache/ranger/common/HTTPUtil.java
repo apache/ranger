@@ -17,47 +17,42 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Component
 public class HTTPUtil {
-
     public static final String USER_AGENT = "User-Agent";
-
-    public static final String IPHONE = "iPhone";
-    public static final String IPAD = "iPad";
-    public static final String IPOD = "iPod";
-    public static final String ANDROID = "Android";
+    public static final String IPHONE     = "iPhone";
+    public static final String IPAD       = "iPad";
+    public static final String IPOD       = "iPod";
+    public static final String ANDROID    = "Android";
 
     public int getDeviceType(HttpServletRequest httpRequest) {
-	return getDeviceType(httpRequest.getHeader(USER_AGENT));
-
+        return getDeviceType(httpRequest.getHeader(USER_AGENT));
     }
 
     public int getDeviceType(String userAgent) {
-	if (userAgent == null) {
-	    return RangerCommonEnums.DEVICE_UNKNOWN;
-	}
+        if (userAgent == null) {
+            return RangerCommonEnums.DEVICE_UNKNOWN;
+        }
 
-	if (userAgent.contains(IPHONE)) {
-	    return RangerCommonEnums.DEVICE_IPHONE;
-	} else if (userAgent.contains(IPAD)) {
-	    return RangerCommonEnums.DEVICE_IPAD;
-	} else if (userAgent.contains(IPOD)) {
-	    return RangerCommonEnums.DEVICE_IPOD;
-	} else if (userAgent.contains(ANDROID)) {
-	    return RangerCommonEnums.DEVICE_ANDROID;
-	} else {
-	    return RangerCommonEnums.DEVICE_BROWSER;
-	}
+        if (userAgent.contains(IPHONE)) {
+            return RangerCommonEnums.DEVICE_IPHONE;
+        } else if (userAgent.contains(IPAD)) {
+            return RangerCommonEnums.DEVICE_IPAD;
+        } else if (userAgent.contains(IPOD)) {
+            return RangerCommonEnums.DEVICE_IPOD;
+        } else if (userAgent.contains(ANDROID)) {
+            return RangerCommonEnums.DEVICE_ANDROID;
+        } else {
+            return RangerCommonEnums.DEVICE_BROWSER;
+        }
     }
-
-
 }

@@ -17,18 +17,12 @@
  * under the License.
  */
 
- package org.apache.ranger.authorization.hive.authorizer;
+package org.apache.ranger.authorization.hive.authorizer;
 
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.AbstractHiveAuthorizer;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.DisallowTransformHook;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAccessControlException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginException;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext.CLIENT_TYPE;
@@ -37,124 +31,112 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyProvide
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrincipal;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeInfo;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.SettableConfigUpdater;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerHiveAuthorizerBase.class);
 
-	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizerBase.class);
+    private final HiveMetastoreClientFactory mMetastoreClientFactory;
+    private final HiveConf                   mHiveConf;
+    private final HiveAuthenticationProvider mHiveAuthenticator;
+    private final HiveAuthzSessionContext    mSessionContext;
+    private final UserGroupInformation       mUgi;
 
-	private HiveMetastoreClientFactory mMetastoreClientFactory;
-	private HiveConf                   mHiveConf;
-	private HiveAuthenticationProvider mHiveAuthenticator;
-	private HiveAuthzSessionContext    mSessionContext;
-	private UserGroupInformation       mUgi;
+    public RangerHiveAuthorizerBase(HiveMetastoreClientFactory metastoreClientFactory, HiveConf hiveConf, HiveAuthenticationProvider hiveAuthenticator, HiveAuthzSessionContext context) {
+        mMetastoreClientFactory = metastoreClientFactory;
+        mHiveConf               = hiveConf;
+        mHiveAuthenticator      = hiveAuthenticator;
+        mSessionContext         = context;
 
-	public RangerHiveAuthorizerBase(HiveMetastoreClientFactory metastoreClientFactory,
-									  HiveConf                   hiveConf,
-									  HiveAuthenticationProvider hiveAuthenticator,
-									  HiveAuthzSessionContext    context) {
-		mMetastoreClientFactory = metastoreClientFactory;
-		mHiveConf               = hiveConf;
-		mHiveAuthenticator      = hiveAuthenticator;
-		mSessionContext         = context;
+        String userName = mHiveAuthenticator == null ? null : mHiveAuthenticator.getUserName();
 
-		String userName = mHiveAuthenticator == null ? null : mHiveAuthenticator.getUserName();
+        mUgi = userName == null ? null : UserGroupInformation.createRemoteUser(userName);
 
-		mUgi = userName == null ? null : UserGroupInformation.createRemoteUser(userName);
+        if (mHiveAuthenticator == null) {
+            LOG.warn("RangerHiveAuthorizerBase.RangerHiveAuthorizerBase(): hiveAuthenticator is null");
+        } else if (StringUtil.isEmpty(userName)) {
+            LOG.warn("RangerHiveAuthorizerBase.RangerHiveAuthorizerBase(): hiveAuthenticator.getUserName() returned null/empty");
+        } else if (mUgi == null) {
+            LOG.warn("RangerHiveAuthorizerBase.RangerHiveAuthorizerBase(): UserGroupInformation.createRemoteUser({}) returned null", userName);
+        }
+    }
 
-		if(mHiveAuthenticator == null) {
-			LOG.warn("RangerHiveAuthorizerBase.RangerHiveAuthorizerBase(): hiveAuthenticator is null");
-		} else if(StringUtil.isEmpty(userName)) {
-			LOG.warn("RangerHiveAuthorizerBase.RangerHiveAuthorizerBase(): hiveAuthenticator.getUserName() returned null/empty");
-		} else if(mUgi == null) {
-			LOG.warn(String.format("RangerHiveAuthorizerBase.RangerHiveAuthorizerBase(): UserGroupInformation.createRemoteUser(%s) returned null", userName));
-		}
-	}
+    public HiveMetastoreClientFactory getMetastoreClientFactory() {
+        return mMetastoreClientFactory;
+    }
 
-	public HiveMetastoreClientFactory getMetastoreClientFactory() {
-		return mMetastoreClientFactory;
-	}
+    public HiveConf getHiveConf() {
+        return mHiveConf;
+    }
 
-	public HiveConf getHiveConf() {
-		return mHiveConf;
-	}
+    public HiveAuthenticationProvider getHiveAuthenticator() {
+        return mHiveAuthenticator;
+    }
 
-	public HiveAuthenticationProvider getHiveAuthenticator() {
-		return mHiveAuthenticator;
-	}
+    public HiveAuthzSessionContext getHiveAuthzSessionContext() {
+        return mSessionContext;
+    }
 
-	public HiveAuthzSessionContext getHiveAuthzSessionContext() {
-		return mSessionContext;
-	}
+    public UserGroupInformation getCurrentUserGroupInfo() {
+        return mUgi;
+    }
 
-	public UserGroupInformation getCurrentUserGroupInfo() {
-		return mUgi;
-	}
+    @Override
+    public VERSION getVersion() {
+        return VERSION.V1;
+    }
 
-	@Override
-	public void applyAuthorizationConfigPolicy(HiveConf hiveConf) throws HiveAuthzPluginException {
-		LOG.debug("RangerHiveAuthorizerBase.applyAuthorizationConfigPolicy()");
+    /**
+     * Show privileges for given principal on given object
+     *
+     * @param principal
+     * @param privObj
+     * @return
+     * @throws HiveAuthzPluginException
+     */
+    @Override
+    public List<HivePrivilegeInfo> showPrivileges(HivePrincipal principal, HivePrivilegeObject privObj) throws HiveAuthzPluginException {
+        LOG.debug("RangerHiveAuthorizerBase.showPrivileges()");
 
-		// from SQLStdHiveAccessController.applyAuthorizationConfigPolicy()
-		if (mSessionContext != null && mSessionContext.getClientType() == CLIENT_TYPE.HIVESERVER2) {
-			// Configure PREEXECHOOKS with DisallowTransformHook to disallow transform queries
-			String hooks = hiveConf.getVar(ConfVars.PREEXECHOOKS).trim();
-			if (hooks.isEmpty()) {
-				hooks = DisallowTransformHook.class.getName();
-			} else {
-				hooks = hooks + "," + DisallowTransformHook.class.getName();
-			}
+        throwNotImplementedException("showPrivileges");
 
-			hiveConf.setVar(ConfVars.PREEXECHOOKS, hooks);
+        return null;
+    }
 
-			SettableConfigUpdater.setHiveConfWhiteList(hiveConf);
-		}
-	}
+    @Override
+    public void applyAuthorizationConfigPolicy(HiveConf hiveConf) throws HiveAuthzPluginException {
+        LOG.debug("RangerHiveAuthorizerBase.applyAuthorizationConfigPolicy()");
 
-	/**
-	 * Show privileges for given principal on given object
-	 * @param principal
-	 * @param privObj
-	 * @return
-	 * @throws HiveAuthzPluginException
-	 * @throws HiveAccessControlException
-	 */
-	@Override
-	public List<HivePrivilegeInfo> showPrivileges(HivePrincipal principal, HivePrivilegeObject privObj)
-			throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.showPrivileges()");
+        // from SQLStdHiveAccessController.applyAuthorizationConfigPolicy()
+        if (mSessionContext != null && mSessionContext.getClientType() == CLIENT_TYPE.HIVESERVER2) {
+            // Configure PREEXECHOOKS with DisallowTransformHook to disallow transform queries
+            String hooks = hiveConf.getVar(HiveConf.getConfVars("hive.exec.pre.hooks")).trim();
 
-		throwNotImplementedException("showPrivileges");
+            if (hooks.isEmpty()) {
+                hooks = DisallowTransformHook.class.getName();
+            } else {
+                hooks = hooks + "," + DisallowTransformHook.class.getName();
+            }
 
-		return null;
-	}
+            hiveConf.setVar(HiveConf.getConfVars("hive.exec.pre.hooks"), hooks);
 
-	@Override
-	public List<HiveRoleGrant> getRoleGrantInfoForPrincipal(HivePrincipal principal)
-			throws HiveAuthzPluginException, HiveAccessControlException {
-		LOG.debug("RangerHiveAuthorizerBase.getRoleGrantInfoForPrincipal()");
+            SettableConfigUpdater.setHiveConfWhiteList(hiveConf);
+        }
+    }
 
-		throwNotImplementedException("getRoleGrantInfoForPrincipal");
+    @Override
+    public HivePolicyProvider getHivePolicyProvider() throws HiveAuthzPluginException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-		return null;
-	}
-
-	@Override
-	public VERSION getVersion() {
-		return VERSION.V1;
-	}
-
-	private void throwNotImplementedException(String method) throws HiveAuthzPluginException {
-		throw new HiveAuthzPluginException(method + "() not implemented in Ranger AbstractHiveAuthorizer");
-	}
-
-	@Override
-	public HivePolicyProvider getHivePolicyProvider() throws HiveAuthzPluginException {
-	    // TODO Auto-generated method stub
-	    return null;
-	}
-
+    private void throwNotImplementedException(String method) throws HiveAuthzPluginException {
+        throw new HiveAuthzPluginException(method + "() not implemented in Ranger AbstractHiveAuthorizer");
+    }
 }

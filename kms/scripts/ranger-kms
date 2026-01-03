@@ -25,13 +25,18 @@ fi
 action=$1
 arg2=$2
 arg3=$3
+
+if [ -z "${arg3}" ]
+then
+	arg3="hsmenabled"
+fi
+
 action=`echo $action | tr '[:lower:]' '[:upper:]'`
 realScriptPath=`readlink -f $0`
 realScriptDir=`dirname $realScriptPath`
 RANGER_KMS_DIR=`(cd $realScriptDir; pwd)`
 RANGER_KMS_EWS_DIR=${RANGER_KMS_DIR}/ews
 RANGER_KMS_EWS_CONF_DIR="${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf"
-RANGER_KMS_EWS_LIB_DIR="${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/lib"
 
 ranger_kms_max_heap_size=1g
 
@@ -98,7 +103,7 @@ TOMCAT_LOG_DIR=${RANGER_KMS_LOG_DIR}
 
 TOMCAT_LOG_FILE=${TOMCAT_LOG_DIR}/catalina.out
 TOMCAT_STOP_LOG_FILE=${TOMCAT_LOG_DIR}/stop_catalina.out
-KMS_LOG_PROPERTIES_FILE=${RANGER_KMS_EWS_CONF_DIR}/kms-log4j.properties
+KMS_LOG_PROPERTIES_FILE=${RANGER_KMS_EWS_CONF_DIR}/kms-logback.xml
 
 if [ ! -d ${TOMCAT_LOG_DIR} ]
 then
@@ -107,7 +112,8 @@ fi
 
 KMS_CONF_DIR=${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/classes/conf
 SERVER_NAME=rangerkms
-JAVA_OPTS="${JAVA_OPTS} ${DB_SSL_PARAM} -Duser=${USER} -Dhostname=${HOSTNAME} -Dservername=${SERVER_NAME} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dlog4j.configuration=file:${KMS_LOG_PROPERTIES_FILE} -Dkms.log.dir=${TOMCAT_LOG_DIR} -cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_LIB_DIR}/*:${RANGER_KMS_EWS_DIR}/webapp/lib/*:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH "
+cp="-cp ${RANGER_KMS_EWS_CONF_DIR}:${RANGER_KMS_EWS_DIR}/lib/*:${JAVA_HOME}/lib/*:${RANGER_HADOOP_CONF_DIR}/*:$CLASSPATH"
+JAVA_OPTS="${JAVA_OPTS} ${DB_SSL_PARAM} -Dmetric.type=${arg3} -Duser=${USER} -Dhostname=${HOSTNAME} -Dservername=${SERVER_NAME} -Dcatalina.base=${RANGER_KMS_EWS_DIR} -Dkms.config.dir=${KMS_CONF_DIR} -Dlogback.configurationFile=file:${KMS_LOG_PROPERTIES_FILE} -Dkms.log.dir=${TOMCAT_LOG_DIR} $cp"
 createRangerKMSPid () {
 	SLEEP_TIME_AFTER_START=5
 	nohup java -D${PROC_NAME} ${JAVA_OPTS} ${START_CLASS_NAME} ${KMS_CONFIG_FILENAME} > ${TOMCAT_LOG_FILE} 2>&1 &
@@ -192,7 +198,7 @@ elif [ "${action}" == "METRIC" ]; then
 	metric;
 	exit
 elif [ "${action}" == "VERSION" ]; then
-	( cd ${RANGER_KMS_LIB_DIR} ; java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo )
+	( cd ${RANGER_KMS_EWS_DIR}/webapp/WEB-INF/lib ; java -cp ranger-util-*.jar org.apache.ranger.common.RangerVersionInfo )
 	exit
 else
         echo "Invalid argument [$1];"

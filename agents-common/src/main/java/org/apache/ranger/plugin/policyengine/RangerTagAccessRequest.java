@@ -19,8 +19,7 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -29,39 +28,43 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import java.util.Map;
 
 public class RangerTagAccessRequest extends RangerAccessRequestImpl {
-	private final RangerPolicyResourceMatcher.MatchType matchType;
-	public RangerTagAccessRequest(RangerTagForEval resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
-		matchType = resourceTag.getMatchType();
-		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef));
-		super.setUser(request.getUser());
-		super.setUserGroups(request.getUserGroups());
-		super.setUserRoles(request.getUserRoles());
-		super.setAction(request.getAction());
-		super.setAccessType(request.getAccessType());
-		super.setAccessTime(request.getAccessTime());
-		super.setRequestData(request.getRequestData());
+    private final RangerPolicyResourceMatcher.MatchType matchType;
 
-		Map<String, Object> requestContext = request.getContext();
+    public RangerTagAccessRequest(RangerTagForEval resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
+        String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
 
-		RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), resourceTag);
-		RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
-		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
+        matchType = resourceTag.getMatchType();
 
-		String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
+        super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef, owner));
+        super.setUser(request.getUser());
+        super.setUserGroups(request.getUserGroups());
+        super.setUserRoles(request.getUserRoles());
+        super.setAction(request.getAction());
+        super.setAccessType(request.getAccessType());
+        super.setAccessTime(request.getAccessTime());
+        super.setRequestData(request.getRequestData());
 
-		if (StringUtils.isNotEmpty(owner)) {
-			RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
-		}
-		super.setContext(requestContext);
+        Map<String, Object> requestContext = request.getContext();
 
-		super.setClientType(request.getClientType());
-		super.setClientIPAddress(request.getClientIPAddress());
-		super.setRemoteIPAddress(request.getRemoteIPAddress());
-		super.setForwardedAddresses(request.getForwardedAddresses());
-		super.setSessionId(request.getSessionId());
-		super.setResourceMatchingScope(request.getResourceMatchingScope());
-	}
-	public RangerPolicyResourceMatcher.MatchType getMatchType() {
-		return matchType;
-	}
+        RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), resourceTag);
+        RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
+        RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
+
+        if (StringUtils.isNotEmpty(owner)) {
+            RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
+        }
+        super.setContext(requestContext);
+
+        super.setClientType(request.getClientType());
+        super.setClientIPAddress(request.getClientIPAddress());
+        super.setRemoteIPAddress(request.getRemoteIPAddress());
+        super.setForwardedAddresses(request.getForwardedAddresses());
+        super.setSessionId(request.getSessionId());
+        super.setResourceMatchingScope(request.getResourceMatchingScope());
+        super.setIgnoreDescendantDeny(request.ignoreDescendantDeny());
+    }
+
+    public RangerPolicyResourceMatcher.MatchType getMatchType() {
+        return matchType;
+    }
 }

@@ -19,47 +19,40 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-public class RangerAccessedFromClusterTypeCondition extends RangerAbstractConditionEvaluator{
-	private static final Log LOG = LogFactory.getLog(RangerAccessedFromClusterTypeCondition.class);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	private boolean isAlwaysTrue = false;
+public class RangerAccessedFromClusterTypeCondition extends RangerAbstractConditionEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedFromClusterTypeCondition.class);
 
-	@Override
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedFromClusterTypeCondition.init(" + condition + ")");
-		}
+    private boolean isAlwaysTrue;
 
-		super.init();
+    @Override
+    public void init() {
+        LOG.debug("==> RangerAccessedFromClusterTypeCondition.init({})", condition);
 
-		isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
+        super.init();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedFromClusterTypeCondition.init(" + condition + ")");
-		}
-	}
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerAccessedFromClusterTypeCondition.isMatched(" + condition + ")");
-		}
+        isAlwaysTrue = CollectionUtils.isEmpty(condition.getValues());
 
-		final boolean ret;
+        LOG.debug("<== RangerAccessedFromClusterTypeCondition.init({})", condition);
+    }
 
-		if (isAlwaysTrue || request.getClusterType() == null) {
-			ret = isAlwaysTrue;
-		} else {
-			ret = condition.getValues().contains(request.getClusterType());
-		}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerAccessedFromClusterTypeCondition.isMatched({})", condition);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAccessedFromClusterTypeCondition.isMatched(" + condition + "): " + ret);
-		}
+        final boolean ret;
 
-		return ret;
-	}
+        if (isAlwaysTrue || request.getClusterType() == null) {
+            ret = isAlwaysTrue;
+        } else {
+            ret = condition.getValues().contains(request.getClusterType());
+        }
 
+        LOG.debug("<== RangerAccessedFromClusterTypeCondition.isMatched({}): {}", condition, ret);
+
+        return ret;
+    }
 }

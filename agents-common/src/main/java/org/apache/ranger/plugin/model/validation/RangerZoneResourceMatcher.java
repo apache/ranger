@@ -19,55 +19,64 @@
 
 package org.apache.ranger.plugin.model.validation;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator {
-    private static final Log LOG = LogFactory.getLog(RangerZoneResourceMatcher.class);
+public class RangerZoneResourceMatcher implements RangerResourceEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerZoneResourceMatcher.class);
 
-    private final String                                         securityZoneName;
-    private final Map<String, RangerPolicy.RangerPolicyResource> policyResource;
-    private final RangerPolicyResourceMatcher                    policyResourceMatcher;
-    private RangerServiceDef.RangerResourceDef                   leafResourceDef;
+    private final String                             securityZoneName;
+    private final Map<String, RangerPolicyResource>  policyResource;
+    private final RangerPolicyResourceMatcher        policyResourceMatcher;
+    private final RangerServiceDef.RangerResourceDef leafResourceDef;
 
-    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDef serviceDef) {
+    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicyResource> policyResource, final RangerServiceDef serviceDef, RangerPluginContext pluginContext) {
+        this(securityZoneName, policyResource, new RangerServiceDefHelper(serviceDef), pluginContext);
+    }
 
-        RangerServiceDefHelper             serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-        final Collection<String>           resourceKeys     = policyResource.keySet();
-
-        RangerDefaultPolicyResourceMatcher matcher          = new RangerDefaultPolicyResourceMatcher();
+    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicyResource> policyResource, final RangerServiceDefHelper serviceDefHelper, RangerPluginContext pluginContext) {
+        final RangerServiceDef                   serviceDef   = serviceDefHelper.getServiceDef();
+        final Collection<String>                 resourceKeys = policyResource.keySet();
+        final RangerDefaultPolicyResourceMatcher matcher      = new RangerDefaultPolicyResourceMatcher();
 
         matcher.setServiceDef(serviceDef);
         matcher.setServiceDefHelper(serviceDefHelper);
+        matcher.setPluginContext(pluginContext);
 
         boolean found = false;
 
         for (int policyType : RangerPolicy.POLICY_TYPES) {
             for (List<RangerServiceDef.RangerResourceDef> hierarchy : serviceDefHelper.getResourceHierarchies(policyType)) {
                 if (serviceDefHelper.hierarchyHasAllResources(hierarchy, resourceKeys)) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Found hierarchy for resource-keys:[" + resourceKeys + "], policy-type:[" + policyType + "]");
-                    }
+                    LOG.debug("Found hierarchy for resource-keys:[{}], policy-type:[{}]", resourceKeys, policyType);
+
                     matcher.setPolicyResources(policyResource, policyType);
+
                     found = true;
+
                     break;
                 }
             }
+
             if (found) {
                 break;
             }
         }
+
         if (found) {
             matcher.init();
         } else {
@@ -77,10 +86,12 @@ public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator 
         this.securityZoneName      = securityZoneName;
         this.policyResourceMatcher = matcher;
         this.policyResource        = policyResource;
-        this.leafResourceDef   = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
+        this.leafResourceDef       = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
     }
 
-    public String getSecurityZoneName() { return securityZoneName; }
+    public String getSecurityZoneName() {
+        return securityZoneName;
+    }
 
     @Override
     public long getId() {
@@ -88,10 +99,12 @@ public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator 
     }
 
     @Override
-    public RangerPolicyResourceMatcher getPolicyResourceMatcher() { return policyResourceMatcher; }
+    public RangerPolicyResourceMatcher getPolicyResourceMatcher() {
+        return policyResourceMatcher;
+    }
 
     @Override
-    public Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource() {
+    public Map<String, RangerPolicyResource> getPolicyResource() {
         return policyResource;
     }
 
@@ -106,7 +119,12 @@ public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator 
     }
 
     @Override
+    public boolean isLeaf(String resourceName) {
+        return StringUtils.equals(resourceName, leafResourceDef.getName());
+    }
+
+    @Override
     public String toString() {
-        return "{security-zone-name:[" + securityZoneName + "], policyResource=[" + policyResource +"]}";
+        return "{security-zone-name:[" + securityZoneName + "], policyResource=[" + policyResource + "]}";
     }
 }

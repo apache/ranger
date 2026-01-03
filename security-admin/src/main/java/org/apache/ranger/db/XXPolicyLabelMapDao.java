@@ -17,56 +17,71 @@
 
 package org.apache.ranger.db;
 
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyLabelMap;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.List;
+
 @Service
 public class XXPolicyLabelMapDao extends BaseDao<XXPolicyLabelMap> {
+    public XXPolicyLabelMapDao(RangerDaoManagerBase daoMgr) {
+        super(daoMgr);
+    }
 
-        public XXPolicyLabelMapDao(RangerDaoManagerBase daoMgr) {
-                super(daoMgr);
+    public List<XXPolicyLabelMap> findByPolicyId(Long policyId) {
+        if (policyId == null) {
+            return null;
         }
 
-        public List<XXPolicyLabelMap> findByPolicyId(Long policyId) {
-                if(policyId == null) {
-                        return null;
-                }
-                try {
-                        return getEntityManager()
-                                        .createNamedQuery("XXPolicyLabelMap.findByPolicyId", tClass)
-                                        .setParameter("policyId", policyId).getResultList();
-                } catch (NoResultException e) {
-                        return null;
-                }
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPolicyLabelMap.findByPolicyId", tClass)
+                    .setParameter("policyId", policyId).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<XXPolicyLabelMap> findByPolicyLabelId(Long policyLabelId) {
+        if (policyLabelId == null) {
+            return null;
         }
 
-        public XXPolicyLabelMap findByPolicyLabelId(Long policyLabelId) {
-                if (policyLabelId == null) {
-                        return null;
-                }
-                try {
-                        return (XXPolicyLabelMap) getEntityManager().createNamedQuery("XXPolicyLabelMap.findByPolicyLabelId", tClass)
-                                        .setParameter("policyLabelId", policyLabelId).getResultList();
-                } catch (NoResultException e) {
-                        return null;
-                }
+        try {
+            return getEntityManager().createNamedQuery("XXPolicyLabelMap.findByPolicyLabelId", tClass)
+                    .setParameter("policyLabelId", policyLabelId).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<XXPolicyLabelMap> findByPolicyIdAndLabelId(Long policyId, Long policyLabelId) {
+        if (policyId == null || policyLabelId == null) {
+            return null;
         }
 
-        public List<XXPolicyLabelMap> findByServiceId(Long serviceId) {
-                if (serviceId == null) {
-                        return null;
-                }
-                try {
-                        return getEntityManager().createNamedQuery("XXPolicyLabelMap.findByServiceId", tClass)
-                                        .setParameter("serviceId", serviceId).getResultList();
-                } catch (NoResultException e) {
-                        return null;
-                }
+        try {
+            return getEntityManager().createNamedQuery("XXPolicyLabelMap.findByPolicyIdAndLabelId", tClass)
+                    .setParameter("policyId", policyId)
+                    .setParameter("policyLabelId", policyLabelId).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public List<XXPolicyLabelMap> findByServiceId(Long serviceId) {
+        if (serviceId == null) {
+            return null;
         }
 
+        try {
+            return getEntityManager().createNamedQuery("XXPolicyLabelMap.findByServiceId", tClass)
+                    .setParameter("serviceId", serviceId).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }

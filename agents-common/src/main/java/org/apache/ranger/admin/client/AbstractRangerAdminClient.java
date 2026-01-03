@@ -22,8 +22,15 @@ package org.apache.ranger.admin.client;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.model.RangerRole;
-import org.apache.ranger.plugin.util.*;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.ServiceGdsInfo;
+import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,17 +41,20 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
 
     protected Gson gson;
 
+    private boolean forceNonKerberos;
+
     @Override
     public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
         Gson gson = null;
 
         try {
             gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
-        } catch(Throwable excp) {
+        } catch (Throwable excp) {
             LOG.error("AbstractRangerAdminClient: failed to create GsonBuilder object", excp);
         }
 
-        this.gson = gson;
+        this.gson             = gson;
+        this.forceNonKerberos = config.getBoolean(configPropertyPrefix + ".forceNonKerberos", false);
     }
 
     @Override
@@ -64,7 +74,6 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
 
     @Override
     public void dropRole(String execUser, String roleName) throws Exception {
-
     }
 
     @Override
@@ -84,22 +93,18 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
 
     @Override
     public void grantRole(GrantRevokeRoleRequest request) throws Exception {
-
     }
 
     @Override
     public void revokeRole(GrantRevokeRoleRequest request) throws Exception {
-
     }
 
     @Override
     public void grantAccess(GrantRevokeRequest request) throws Exception {
-
     }
 
     @Override
     public void revokeAccess(GrantRevokeRequest request) throws Exception {
-
     }
 
     @Override
@@ -115,5 +120,22 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
     @Override
     public RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception {
         return null;
+    }
+
+    @Override
+    public ServiceGdsInfo getGdsInfoIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+        return null;
+    }
+
+    public boolean isKerberosEnabled(UserGroupInformation user) {
+        final boolean ret;
+
+        if (forceNonKerberos) {
+            ret = false;
+        } else {
+            ret = user != null && UserGroupInformation.isSecurityEnabled() && user.hasKerberosCredentials();
+        }
+
+        return ret;
     }
 }

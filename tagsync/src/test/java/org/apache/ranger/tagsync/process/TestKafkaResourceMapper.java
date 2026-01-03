@@ -19,24 +19,23 @@
 
 package org.apache.ranger.tagsync.process;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasKafkaResourceMapper;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.junit.Assert;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestKafkaResourceMapper {
-    private static final String CLUSTER_NAME    = "cl1";
-    private static final String TOPIC           = "kafka-topic";
-    private static final String QUALIFIED_NAME  = "kafka-topic@cl1";
+    private static final String CLUSTER_NAME   = "cl1";
+    private static final String TOPIC          = "kafka-topic";
+    private static final String QUALIFIED_NAME = "kafka-topic@cl1";
 
-    private static final String SERVICE_NAME    = "cl1_kafka";
-    private static final String RANGER_TOPIC    = "kafka-topic";
+    private static final String SERVICE_NAME = "cl1_kafka";
+    private static final String RANGER_TOPIC = "kafka-topic";
 
     AtlasKafkaResourceMapper resourceMapper = new AtlasKafkaResourceMapper();
 
@@ -46,8 +45,8 @@ public class TestKafkaResourceMapper {
 
         entAttribs.put(AtlasKafkaResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, QUALIFIED_NAME);
 
-        RangerAtlasEntity entity   = getKafkaTopicEntity(entAttribs);
-        RangerServiceResource  resource = resourceMapper.buildResource(entity);
+        RangerAtlasEntity     entity   = getKafkaTopicEntity(entAttribs);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
 
         assertServiceResource(resource);
     }
@@ -58,13 +57,13 @@ public class TestKafkaResourceMapper {
 
         entAttribs.put(AtlasKafkaResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, TOPIC);
 
-        RangerAtlasEntity entity   = getKafkaTopicEntity(entAttribs);
+        RangerAtlasEntity entity = getKafkaTopicEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+            Assertions.fail("expected exception. Found " + resource);
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -75,13 +74,13 @@ public class TestKafkaResourceMapper {
 
         entAttribs.put(AtlasKafkaResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME, CLUSTER_NAME);
 
-        RangerAtlasEntity entity   = getKafkaTopicEntity(entAttribs);
+        RangerAtlasEntity entity = getKafkaTopicEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+            Assertions.fail("expected exception. Found " + resource);
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -90,13 +89,13 @@ public class TestKafkaResourceMapper {
     public void testKafkaResourceFromMissingAttribs() throws Exception {
         Map<String, Object> entAttribs = new HashMap<String, Object>();
 
-        RangerAtlasEntity entity  = getKafkaTopicEntity(entAttribs);
+        RangerAtlasEntity entity = getKafkaTopicEntity(entAttribs);
 
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.fail("expected exception. Found " + resource);
-        } catch(Exception excp) {
+            Assertions.fail("expected exception. Found " + resource);
+        } catch (Exception excp) {
             // ignore
         }
     }
@@ -111,13 +110,13 @@ public class TestKafkaResourceMapper {
     }
 
     private void assertServiceResource(RangerServiceResource resource) {
-        Assert.assertNotNull(resource);
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
-        Assert.assertNotNull(resource.getResourceElements());
-        Assert.assertEquals(1, resource.getResourceElements().size());
-        Assert.assertTrue(resource.getResourceElements().containsKey(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC));
-        Assert.assertNotNull(resource.getResourceElements().get(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC).getValues().size());
-        Assert.assertEquals(RANGER_TOPIC, resource.getResourceElements().get(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC).getValues().get(0));
+        Assertions.assertNotNull(resource);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertNotNull(resource.getResourceElements());
+        Assertions.assertEquals(1, resource.getResourceElements().size());
+        Assertions.assertTrue(resource.getResourceElements().containsKey(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC));
+        Assertions.assertNotNull(resource.getResourceElements().get(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC).getValues().size());
+        Assertions.assertEquals(RANGER_TOPIC, resource.getResourceElements().get(AtlasKafkaResourceMapper.RANGER_TYPE_KAFKA_TOPIC).getValues().get(0));
     }
 }

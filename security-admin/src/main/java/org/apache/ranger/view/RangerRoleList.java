@@ -17,28 +17,21 @@
 
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.common.view.VList;
+import org.apache.ranger.plugin.model.RangerRole;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.ranger.common.view.VList;
-import org.apache.ranger.plugin.model.RangerRole;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class RangerRoleList extends VList{
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class RangerRoleList extends VList {
     private static final long serialVersionUID = 1L;
 
-    List<RangerRole> roles = new ArrayList<RangerRole>();
+    List<RangerRole> roles = new ArrayList<>();
 
     public RangerRoleList() {
         super();
@@ -57,6 +50,10 @@ public class RangerRoleList extends VList{
         this.roles = roles;
     }
 
+    public <T> void setGenericRoleList(List<T> roles) {
+        this.roles = (List<RangerRole>) roles;
+    }
+
     @Override
     public int getListSize() {
         if (roles != null) {
@@ -69,6 +66,4 @@ public class RangerRoleList extends VList{
     public List<?> getList() {
         return roles;
     }
-
 }
-

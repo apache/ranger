@@ -17,40 +17,42 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
+package org.apache.ranger.db;
 
-import javax.persistence.NoResultException;
-
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAsset;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import javax.persistence.NoResultException;
 
 @Service
 public class XXAssetDao extends BaseDao<XXAsset> {
-	private static final Logger logger = Logger.getLogger(XXAssetDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(XXAssetDao.class);
 
-    public XXAssetDao( RangerDaoManagerBase  daoManager ) {
-		super(daoManager);
+    public XXAssetDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
     }
 
-    public XXAsset findByAssetName(String name){
-		if (daoManager.getStringUtil().isEmpty(name)) {
-			logger.debug("name is empty");
-			return null;
-		}
-		try {
-			return getEntityManager()
-					.createNamedQuery("XXAsset.findByAssetName", XXAsset.class)
-					.setParameter("name", name.trim())
-					.setParameter("status",RangerCommonEnums.STATUS_DELETED)
-					.getSingleResult();
-		} catch (NoResultException e) {
-			// ignore
-		}
-		return null;
-    }
+    public XXAsset findByAssetName(String name) {
+        if (daoManager.getStringUtil().isEmpty(name)) {
+            logger.debug("name is empty");
 
+            return null;
+        }
+
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXAsset.findByAssetName", XXAsset.class)
+                    .setParameter("name", name.trim())
+                    .setParameter("status", RangerCommonEnums.STATUS_DELETED)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            // ignore
+        }
+
+        return null;
+    }
 }
-

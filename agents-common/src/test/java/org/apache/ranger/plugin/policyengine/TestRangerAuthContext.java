@@ -19,106 +19,110 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import static org.junit.Assert.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.collections.MapUtils;
+import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerGdsEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
+import org.apache.ranger.plugin.policyengine.gds.GdsPolicyEngine;
+import org.apache.ranger.plugin.service.RangerAuthContext;
+import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.util.ServicePolicies;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.MapUtils;
-import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
-import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
-import org.apache.ranger.plugin.service.RangerAuthContext;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import static org.apache.ranger.plugin.util.ServiceDefUtil.IMPLICIT_GDS_ENRICHER_NAME;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestRangerAuthContext {
-	private static Gson gsonBuilder;
-	private static RangerBasePlugin plugin;
+    private static Gson             gsonBuilder;
+    private static RangerBasePlugin plugin;
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-				.setPrettyPrinting()
-				.create();
+    @BeforeAll
+    public static void setUpBeforeClass() throws Exception {
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+        plugin      = new RangerBasePlugin("hive", "TestRangerAuthContext");
+    }
 
-		plugin = new RangerBasePlugin("hive", "TestRangerAuthContext");
-	}
+    @AfterAll
+    public static void tearDownAfterClass() throws Exception {
+    }
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
+    @BeforeEach
+    public void setUp() throws Exception {
+    }
 
-	@Before
-	public void setUp() throws Exception {
-	}
+    @AfterEach
+    public void tearDown() throws Exception {
+    }
 
-	@After
-	public void tearDown() throws Exception {
-	}
+    @Test
+    public void testRangerAuthContext() throws Exception {
+        String[] tests = {"/policyengine/plugin/test_auth_context.json"};
 
-	@Test
-	public void testRangerAuthContext() throws Exception {
-		String[] tests = {"/policyengine/plugin/test_auth_context.json"};
+        runTestsFromResourceFiles(tests);
+    }
 
-		runTestsFromResourceFiles(tests);
-	}
+    private void runTestsFromResourceFiles(String[] resourceNames) {
+        for (String resourceName : resourceNames) {
+            InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+            InputStreamReader reader   = new InputStreamReader(inStream);
 
-	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
-		for(String resourceName : resourceNames) {
-			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader   = new InputStreamReader(inStream);
+            runTests(reader, resourceName);
+        }
+    }
 
-			runTests(reader, resourceName);
-		}
-	}
+    private void runTests(InputStreamReader reader, String fileName) {
+        RangerAuthContextTests testCases = gsonBuilder.fromJson(reader, RangerAuthContextTests.class);
 
-	private void runTests(InputStreamReader reader, String fileName) throws Exception {
-		RangerAuthContextTests testCases = gsonBuilder.fromJson(reader, RangerAuthContextTests.class);
+        for (RangerAuthContextTests.TestCase testCase : testCases.testCases) {
+            String testName = testCase.name;
 
-		for(RangerAuthContextTests.TestCase testCase : testCases.testCases) {
-			String testName = testCase.name;
+            plugin.setPolicies(testCase.servicePolicies);
 
-			plugin.setPolicies(testCase.servicePolicies);
+            RangerAuthContext                  ctx              = plugin.getCurrentRangerAuthContext();
+            Map<RangerContextEnricher, Object> contextEnrichers = ctx.getRequestContextEnrichers();
 
-			RangerAuthContext                  ctx              = plugin.getCurrentRangerAuthContext();
-			Map<RangerContextEnricher, Object> contextEnrichers = ctx.getRequestContextEnrichers();
+            assertTrue(MapUtils.isNotEmpty(contextEnrichers) && contextEnrichers.size() == 3,
+                    fileName + "-" + testName + " - Empty contextEnrichers");
 
-			assertTrue(fileName + "-" + testName + " - Empty contextEnrichers", MapUtils.isNotEmpty(contextEnrichers) && contextEnrichers.size() == 2);
+            for (Map.Entry<RangerContextEnricher, Object> entry : contextEnrichers.entrySet()) {
+                RangerContextEnricher enricher     = entry.getKey();
+                String                enricherName = enricher.getName();
+                Object                enricherData = entry.getValue();
 
-			for (Map.Entry<RangerContextEnricher, Object> entry : contextEnrichers.entrySet()) {
-				RangerContextEnricher enricher     = entry.getKey();
-				String                enricherName = enricher.getName();
-				Object                enricherData = entry.getValue();
+                if (enricherName.equals("ProjectProvider")) {
+                    assertTrue(enricherData instanceof RangerContextEnricher,
+                            fileName + "-" + testName + " - Invalid contextEnricher");
+                } else if (enricherName.equals("TagEnricher")) {
+                    assertTrue((enricherData instanceof RangerTagEnricher || enricherData instanceof RangerTagEnricher.EnrichedServiceTags),
+                            "- Invalid contextEnricher");
+                } else if (enricherName.equals(IMPLICIT_GDS_ENRICHER_NAME) || enricher instanceof RangerGdsEnricher) {
+                    assertTrue((enricherData instanceof RangerGdsEnricher || enricherData instanceof GdsPolicyEngine),
+                            "- Invalid contextEnricher");
+                } else {
+                    fail(fileName + "-" + testName + " - Unexpected type of contextEnricher: " + enricher);
+                }
+            }
+        }
+    }
 
-				if (enricherName.equals("ProjectProvider")) {
-					assertTrue(fileName + "-" + testName + " - Invalid contextEnricher", enricherData instanceof RangerContextEnricher);
-				} else if (enricherName.equals("TagEnricher")) {
-					assertTrue("- Invalid contextEnricher", (enricherData instanceof RangerTagEnricher || enricherData instanceof RangerTagEnricher.EnrichedServiceTags));
-				} else {
-					assertTrue(fileName + "-" + testName + " - Unexpected type of contextEnricher", false);
-				}
-			}
-		}
-	}
+    static class RangerAuthContextTests {
+        List<TestCase> testCases;
 
-	static class RangerAuthContextTests {
-		List<TestCase> testCases;
-
-		class TestCase {
-			String               name;
-			ServicePolicies      servicePolicies;
-		}
-	}
-
+        static class TestCase {
+            String          name;
+            ServicePolicies servicePolicies;
+        }
+    }
 }
-

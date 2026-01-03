@@ -19,25 +19,24 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.channels.ClosedByInterruptException;
 import java.util.Map;
 
 public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
-    private static final Log LOG = LogFactory.getLog(RangerAdminUserStoreRetriever.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminUserStoreRetriever.class);
 
     private RangerAdminClient adminClient;
 
     @Override
     public void init(Map<String, String> options) {
-
         if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
             RangerPluginConfig pluginConfig = super.pluginConfig;
 
@@ -45,7 +44,9 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
                 pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
             }
 
-            adminClient = RangerBasePlugin.createAdminClient(pluginConfig);
+            RangerPluginContext pluginContext = getPluginContext();
+            RangerAdminClient   rangerAdmin   = pluginContext.getAdminClient();
+            this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
         } else {
             LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving userstore. Will NOT be able to retrieve userstore.");
         }
@@ -53,7 +54,6 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
 
     @Override
     public RangerUserStore retrieveUserStoreInfo(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-
         RangerUserStore rangerUserStore = null;
 
         if (adminClient != null) {
@@ -69,6 +69,4 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
         }
         return rangerUserStore;
     }
-
 }
-

@@ -21,16 +21,17 @@ package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerUserStore;
 
 import java.util.Map;
 
 public abstract class RangerUserStoreRetriever {
-
-    protected String             serviceName;
-    protected RangerServiceDef   serviceDef;
-    protected String             appId;
-    protected RangerPluginConfig pluginConfig;
+    protected String              serviceName;
+    protected RangerServiceDef    serviceDef;
+    protected String              appId;
+    protected RangerPluginConfig  pluginConfig;
+    protected RangerPluginContext pluginContext;
 
     public abstract void init(Map<String, String> options);
 
@@ -60,5 +61,15 @@ public abstract class RangerUserStoreRetriever {
         this.appId = appId;
     }
 
-    public void setPluginConfig(RangerPluginConfig pluginConfig) { this.pluginConfig = pluginConfig; }
+    public void setPluginConfig(RangerPluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
+    }
+
+    public RangerPluginContext getPluginContext() {
+        return pluginContext;
+    }
+
+    public void setPluginContext(RangerPluginContext pluginContext) {
+        this.pluginContext = pluginContext;
+    }
 }

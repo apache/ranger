@@ -979,6 +979,10 @@ ul.tagit li.tagit-choice .tagit-close {
   border-radius: 0 !important;
 }
 
+.ui-menu.ui-widget.ui-widget-content.ui-autocomplete.ui-front.tagit-autocomplete {
+  width: 21% !important;
+}
+
 table.backgrid tr > td > .label {
   float: left;
   margin: 0 3px 2px 0;
@@ -1477,6 +1481,7 @@ ul.tabs > li > a {
 }
 .change-row {
   background-color: #fef7cd;
+  white-space: nowrap;
 }
 .add-text {
   background-color: #e1f2d3;
@@ -1665,7 +1670,7 @@ body.login {
   border: solid #dedede;
   border-width: 0 0 1px 0;
   height: 30px;
-  padding: 0 10px;
+  padding: 0 32px 0 10px;
   width: 100%;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
@@ -1693,6 +1698,10 @@ background-color: #444444;
 	border:none;
 	word-break: break-all;
 }
+.alert-danger {
+  z-index: 1050 !important;
+}
+
 tr.disable-policy td {
 	background-color: #F0F0F0;
 }
@@ -1773,7 +1782,7 @@ margin-bottom: 5px;
 }
 .include-toggle{
 	margin-left: 360px;
-	margin-top: -29px;
+	margin-top: -35px;
 	width:80px;
   position: relative;
   top: 7px;
@@ -1920,6 +1929,16 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
 	margin-left: -5px;
     margin-top: -2px;
     font-size: 11px;
+}
+.pause-play {
+  background-color: transparent;
+  border: 0;
+  float: right;
+  font-weight: 700;
+  color: #000;
+  text-shadow: 0 1px 0 #fff;
+  opacity: 1.5;
+  padding-right: 10px;
 }
 .control-label-align {
 	width: 80px !important;
@@ -2229,7 +2248,7 @@ input.textFiledInputPadding ~ span {
 }
 .include-toggle-1{
   margin-left: 23vw;
-  margin-top: -29px;
+  margin-top: -4px;
 }
 .expanded-contant .include-toggle-1{
   margin-left: 18.4vw;
@@ -2479,6 +2498,27 @@ textarea:read-only{
 } */
 
 /* Security Zone */
+.zone-administration .form-control{
+  height: auto !important;
+}
+.role-form .form-control {
+  height: auto !important;
+}
+.permissions-table .form-control {
+  height: auto !important;
+}
+.groups-permission {
+  min-width: 480px;
+}
+.groups-permission .select2-container{
+  width: 100%;
+}
+.users-permission {
+  min-width: 480px;
+}
+.users-permission .select2-container{
+  width: 100%;
+}
 .security-panel {
   background-color: #fff;
   border-radius: 3px;
@@ -2688,6 +2728,8 @@ textarea:read-only{
   z-index: 10;
   background: #eeeeee;
   padding-top: 14px;
+  width: 70%;
+  display: inline-block;
 }
 
 #zoneServiceAccordion .accordion-inner{
@@ -2853,6 +2895,10 @@ div#zoneServiceAccordion table thead {
 
 .text-muted {
   opacity: 0.7;
+}
+
+.text-muted-select2 {
+  opacity: 0.5;
 }
 
 .center {
@@ -4068,7 +4114,7 @@ button.btn.btn-secondary.dropdown-toggle {
 */
 .ranger-policy .form-group.field-isEnabled .policy-enable-disable{
     margin-left: 38vw;
-    margin-top: -75px;
+    margin-top: -69px;
     width: 100px
 }
 
@@ -4078,7 +4124,7 @@ button.btn.btn-secondary.dropdown-toggle {
 
 .ranger-policy .form-group.field-policyPriority .policy-priority{
     margin-left: 45vw;
-    margin-top: -80px;
+    margin-top: -73px;
     width: 100px
 }
 .expanded-contant .form-group.field-policyPriority .policy-priority {
@@ -4122,8 +4168,7 @@ ul.tagit{
 }
 
 .addbtngroup .select2-container{
-  width: 300px !important;
-  display: inline-block;
+ display: inline-block;
 }
 
 .dropdown-menu a:hover{
@@ -4250,6 +4295,9 @@ ul.tagit li.tagit-new {
     border: 1px solid #ced4da;
     width: 110%;
     margin-bottom: -7px;
+}
+.ui-datepicker.ui-widget.ui-widget-content {
+  width: 20%;
 }
 /*.field-sameLevel10 .select2-container-multi .select2-choices,
 .field-sameLevel30table .select2-container-multi .select2-choices,
@@ -4398,10 +4446,6 @@ ul.tagit input[type="text"]{
 }
 .policy-form [fieldclass="resorces-css"] .control-label{
   top: -30px;
-}
-
-.form-group.field-policyLabels {
-    margin-bottom: 40px;
 }
 
 .ranger-policy .form-group.field-isEnabled > label,
@@ -4560,6 +4604,10 @@ input.textFiledInputPadding:disabled {
   background-color: white;
 }
 
+#policyDetails {
+    background-color: white;
+}
+
 .report-table .subgrid-custom-cell{
   display: table-cell!important;
 }
@@ -4663,4 +4711,58 @@ input.textFiledInputPadding:disabled {
   .zoneResources-form [fieldclass="resorces-css"] .recursive-toggle-2 {
     left:0px;
   }
+}
+
+.clearBoth {
+  clear: both;
+}
+
+
+.latestResponse {
+  width: 29%;
+  display: inline-block;
+  text-align: right;
+  top: -10px;
+  position: relative;
+}
+
+.headerBreadcrumbs {
+  position: sticky;
+  top: 42px;
+  z-index: 10;
+  background: #eeeeee;
+  width: 100%;
+  display: inline-block;
+}
+
+.js-formInput .policy-resources .select2-container {
+  width: 274px !important;
+}
+.form-resources.policy-resources .form-control.rosource-boder {
+  padding: 0px !important;
+  height: 100%;
+}
+.form-resources.policy-resources .sameLevelDropdown {
+  margin-right: 31px !important;
+  margin-left: -150px !important;
+}
+.show-all-resource {
+  margin-top: -50px;
+}
+.policy-resources .form-group[fieldclass="resorces-css"] {
+  margin-bottom: 0px !important;
+}
+.wrap.position-relative.additional-resource{
+  padding: 20px 20px 0px 20px !important;
+}
+.excludeRecursiveSupport {
+  position: absolute;
+  top: 30px;
+}
+.password-icon {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 15px;
+  cursor: pointer;
 }

@@ -19,22 +19,20 @@
 
 package org.apache.ranger.authorization.hbase;
 
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
 public class RangerHBaseResource extends RangerAccessResourceImpl {
-    public static final String KEY_TABLE              = "table";
-    public static final String KEY_COLUMN_FAMILY      = "column-family";
-    public static final String KEY_COLUMN             = "column";
-    public static final String WILDCARD               = "*";
-    public static final String NAMESPACE_SEPARATOR    = ":";
-    public static final String DEFAULT_NAMESPACE      = "default" + NAMESPACE_SEPARATOR;
+    public static final String KEY_TABLE           = "table";
+    public static final String KEY_COLUMN_FAMILY   = "column-family";
+    public static final String KEY_COLUMN          = "column";
+    public static final String WILDCARD            = "*";
+    public static final String NAMESPACE_SEPARATOR = ":";
+    public static final String DEFAULT_NAMESPACE   = "default" + NAMESPACE_SEPARATOR;
 
     public RangerHBaseResource() {
     }
@@ -57,10 +55,13 @@ public class RangerHBaseResource extends RangerAccessResourceImpl {
                 String tableName = (String) value;
 
                 if (!tableName.contains(NAMESPACE_SEPARATOR)) {
-                    List<String> tableNames = new ArrayList<>(2);
+                    List<String> tableNames = new ArrayList<>(3);
 
                     tableNames.add(tableName);
                     tableNames.add(DEFAULT_NAMESPACE + tableName);
+
+                    // special hanlding for table resource as Namespace in RANGER-3918
+                    tableNames.add(tableName + NAMESPACE_SEPARATOR);
 
                     value = tableNames;
                 } else if (StringUtils.startsWith(tableName, DEFAULT_NAMESPACE)) {

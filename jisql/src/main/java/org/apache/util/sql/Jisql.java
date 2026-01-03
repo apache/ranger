@@ -1,18 +1,26 @@
- /* Copyright (C) 2004-2011 Scott Dunbar (scott@xigole.com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.util.sql;
+
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+import org.apache.util.outputformatter.JisqlFormatter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,11 +38,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
-
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
-import org.apache.util.outputformatter.JisqlFormatter;
 
 /**
  * A simple utility to provide an interactive session with a SQL server. This
@@ -211,138 +214,130 @@ import org.apache.util.outputformatter.JisqlFormatter;
  * </p>
  */
 public class Jisql {
-	//Sybase SQL Anywhere JDBC4-Type2 (Native) Driver
-	private static final String sapJDBC4SqlAnywhereDriverName= "sap.jdbc4.sqlanywhere.IDriver";
-	private static final String sybaseJDBC4SqlAnywhereDriverName= "sybase.jdbc4.sqlanywhere.IDriver";
-    private static final String sybaseJConnect6DriverName = "com.sybase.jdbc3.jdbc.SybDriver";
-    private static final String sybaseJConnect5DriverName = "com.sybase.jdbc2.jdbc.SybDriver";
-    private static final String sybaseJConnect4DriverName = "com.sybase.jdbc.SybDriver";
-    private static final String oracleThinDriverName = "oracle.jdbc.driver.OracleDriver";
-    private static final String db2AppDriverName = "COM.ibm.db2.jdbc.app.DB2Driver";
-    private static final String db2NetDriverName = "COM.ibm.db2.jdbc.net.DB2Driver";
-    private static final String cloudscapeDriverName = "COM.cloudscape.core.JDBCDriver";
-    private static final String msqlDriverName = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-    private static final String pointbaseDriverName = "com.pointbase.jdbc.jdbcUniversalDriver";
-    private static final String postgresqlDriverName = "org.postgresql.Driver";
-    private static final String mySQLConnectJDriverName = "com.mysql.jdbc.Driver";
-    private static final String mySQLCauchoDriverName = "com.caucho.jdbc.mysql.Driver";
+    //Sybase SQL Anywhere JDBC4-Type2 (Native) Driver
+    private static final String sapJDBC4SqlAnywhereDriverName    = "sap.jdbc4.sqlanywhere.IDriver";
+    private static final String sybaseJDBC4SqlAnywhereDriverName = "sybase.jdbc4.sqlanywhere.IDriver";
+    private static final String sybaseJConnect6DriverName        = "com.sybase.jdbc3.jdbc.SybDriver";
+    private static final String sybaseJConnect5DriverName        = "com.sybase.jdbc2.jdbc.SybDriver";
+    private static final String sybaseJConnect4DriverName        = "com.sybase.jdbc.SybDriver";
+    private static final String oracleThinDriverName             = "oracle.jdbc.driver.OracleDriver";
+    private static final String db2AppDriverName                 = "COM.ibm.db2.jdbc.app.DB2Driver";
+    private static final String db2NetDriverName                 = "COM.ibm.db2.jdbc.net.DB2Driver";
+    private static final String cloudscapeDriverName             = "COM.cloudscape.core.JDBCDriver";
+    private static final String msqlDriverName                   = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+    private static final String pointbaseDriverName              = "com.pointbase.jdbc.jdbcUniversalDriver";
+    private static final String postgresqlDriverName             = "org.postgresql.Driver";
+    private static final String mySQLConnectJDriverName          = "com.mysql.jdbc.Driver";
+    private static final String mySQLCauchoDriverName            = "com.caucho.jdbc.mysql.Driver";
+    private static final String defaultFormatterClassName        = "org.apache.util.outputformatter.DefaultFormatter";
+    private static final String csvFormatterClassName            = "org.apache.util.outputformatter.CSVFormatter";
+    private static final String xmlFormatterClassName            = "org.apache.util.outputformatter.XMLFormatter";
 
-    private static final String defaultFormatterClassName = "org.apache.util.outputformatter.DefaultFormatter";
-    private static final String csvFormatterClassName = "org.apache.util.outputformatter.CSVFormatter";
-    private static final String xmlFormatterClassName = "org.apache.util.outputformatter.XMLFormatter";
-
-    private String driverName = null;
-    private String connectString = null;
-    private String userName = null;
-    private String password = null;
-    private String passwordFileName = null;
-    private String formatterClassName = defaultFormatterClassName;
-
-    private JisqlFormatter formatter = null;
-
-    private Connection connection = null;
-    private boolean printDebug = false;
-    private boolean printDriverDetails = false;
-    private Driver driver = null;
-    private Properties props = null;
-    private String inputFileName = null;
-    private String commandTerminator = "go";
-    private String inputQuery = null;
+    private String         driverName;
+    private String         connectString;
+    private String         userName;
+    private String         password;
+    private String         passwordFileName;
+    private String         inputFileName;
+    private String         inputQuery;
+    private String         commandTerminator  = "go";
+    private String         formatterClassName = defaultFormatterClassName;
+    private JisqlFormatter formatter;
+    private Connection     connection;
+    private Driver         driver;
+    private Properties     props;
+    private boolean        printDebug;
+    private boolean        printDriverDetails;
 
     /**
      * Runs Jisql with the command line arguments provided.
-     *
      */
-    public static void main(String argv[]) {
+    public static void main(String[] argv) {
         Jisql jisql = new Jisql();
 
         try {
             jisql.parseArgs(argv);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             t.printStackTrace();
+
             jisql.usage();
+
             System.exit(1);
         }
 
         try {
             jisql.run();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
+
             System.exit(1);
         }
 
         System.exit(0);
     }
 
-    public void run() throws Exception {
-    	boolean isExit=false;
+    public void run() {
+        boolean isExit = false;
+
         try {
             driver = (Driver) Class.forName(driverName).newInstance();
-            props = new Properties();
+            props  = new Properties();
 
             props.put("user", userName);
-            if (password != null)
+
+            if (password != null) {
                 props.put("password", password);
+            }
 
             connection = DriverManager.getConnection(connectString, props);
+
             if (printDriverDetails) {
                 printDriverInfo();
+            } else {
+                if (connectString.toLowerCase().startsWith("jdbc:mysql") && inputFileName != null) {
+                    MySQLPLRunner scriptRunner = new MySQLPLRunner(connection, false, true, printDebug);
+
+                    scriptRunner.setDelimiter(commandTerminator, false);
+
+                    try (FileReader reader = new FileReader(inputFileName)) {
+                        scriptRunner.runScript(reader);
+                    }
+                } else {
+                    doIsql();
+                }
             }
-            else {
-            	if(connectString.toLowerCase().startsWith("jdbc:mysql") && inputFileName!=null){
-            		MySQLPLRunner scriptRunner = new MySQLPLRunner(connection, false, true,printDebug);
-            		scriptRunner.setDelimiter(commandTerminator,false);
-            		FileReader reader = new FileReader(inputFileName);
-            		try {
-                	scriptRunner.runScript(reader);
-            		}
-            		finally {
-            			if (reader != null) {
-            				try {
-								reader.close();
-							} catch (IOException ioe) {
-								// Ignore error during closing of the reader stream
-							}
-            			}
-            		}
-            	}else{
-            		doIsql();
-            	}
-            }
-        }
-        catch (SQLException sqle) {
-        	printAllExceptions(sqle);
-        	isExit=true;
-        }
-        catch (IOException ie) {
-        	isExit=true;
-        }
-        catch (ClassNotFoundException cnfe) {
-        	isExit=true;
+        } catch (SQLException sqle) {
+            printAllExceptions(sqle);
+
+            isExit = true;
+        } catch (IOException ie) {
+            isExit = true;
+        } catch (ClassNotFoundException cnfe) {
+            isExit = true;
+
             System.err.println("Cannot find the driver class \"" + driverName + "\" in the current classpath.");
-        }
-        catch (InstantiationException ie) {
-        	isExit=true;
+        } catch (InstantiationException ie) {
+            isExit = true;
+
             System.err.println("Cannot instantiate the driver class \"" + driverName + "\"");
+
             ie.printStackTrace(System.err);
-        }
-        catch (IllegalAccessException iae) {
-        	isExit=true;
+        } catch (IllegalAccessException iae) {
+            isExit = true;
+
             System.err.println("Cannot instantiate the driver class \"" + driverName + "\" because of an IllegalAccessException");
+
             iae.printStackTrace(System.err);
-        }
-        finally {
+        } finally {
             if (connection != null) {
                 try {
                     connection.close();
-                }
-                catch (SQLException ignore) {
+                } catch (SQLException ignore) {
                     /* ignored */
                 }
-                if(isExit){
-                	System.exit(1);
+
+                if (isExit) {
+                    System.exit(1);
                 }
             }
         }
@@ -353,189 +348,212 @@ public class Jisql {
      * either a command line or from a file. Output is handled through the
      * Formatter.
      *
-     * @throws SQLException
-     *             if an exception occurs.
-     *
+     * @throws SQLException if an exception occurs.
      */
     public void doIsql() throws IOException, SQLException {
-        BufferedReader reader = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
-        ResultSetMetaData resultSetMetaData = null;
-        StringBuilder query = null;
+        BufferedReader    reader;
+        Statement         statement;
+        ResultSet         resultSet = null;
+        ResultSetMetaData resultSetMetaData;
+        StringBuilder     query;
 
         if (inputFileName != null) {
             try {
                 reader = new BufferedReader(new FileReader(inputFileName));
-            }
-            catch (FileNotFoundException fnfe) {
-            	System.err.println("Unable to open file \"" + inputFileName + "\"");
+            } catch (FileNotFoundException fnfe) {
+                System.err.println("Unable to open file \"" + inputFileName + "\"");
+
                 fnfe.printStackTrace(System.err);
+
                 throw fnfe;
             }
-        }
-        else {
+        } else {
             reader = new BufferedReader(new InputStreamReader(System.in));
         }
-        if(printDebug)
-        	printAllExceptions(connection.getWarnings());
+
+        if (printDebug) {
+            printAllExceptions(connection.getWarnings());
+        }
+
         statement = connection.createStatement();
+
         connection.clearWarnings();
-        String trimmedLine=null;
 
         try {
+            while (true) {
+                int linecount = 1;
 
-        while (true) {
-            int linecount = 1;
-            query = new StringBuilder();
+                query = new StringBuilder();
 
-            try {
-                if ((inputFileName == null) && (inputQuery == null))
-                    System.out.print("\nEnter a query:\n");
-
-                while (true) {
+                try {
                     if ((inputFileName == null) && (inputQuery == null)) {
-                        System.out.print(linecount++ + " > ");
-                        System.out.flush();
+                        System.out.print("\nEnter a query:\n");
                     }
 
-                    String line = null;
-                    if (inputQuery == null)
-                        line = reader.readLine();
-                    else
-                        line = inputQuery.toString();
+                    while (true) {
+                        if ((inputFileName == null) && (inputQuery == null)) {
+                            System.out.print(linecount++ + " > ");
+                            System.out.flush();
+                        }
 
-                    if (line == null || line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")){
-                    	if ((inputFileName != null) && (inputQuery != null)) {
-                    		break;
-                    	}else{
-                    		 return;
-                    	}
+                        String line;
+
+                        if (inputQuery == null) {
+                            line = reader.readLine();
+                        } else {
+                            line = inputQuery;
+                        }
+
+                        if (line == null || line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
+                            if ((inputFileName != null) && (inputQuery != null)) {
+                                break;
+                            } else {
+                                return;
+                            }
+                        }
+
+                        if (line.equals("reset")) {
+                            query = new StringBuilder();
+                            break;
+                        }
+
+                        String trimmedLine = line.trim();
+
+                        if (trimmedLine.startsWith("--") || trimmedLine.isEmpty()) {
+                            continue;
+                        }
+
+                        if (connectString.toLowerCase().startsWith("jdbc:oracle") && inputFileName != null) {
+                            if (trimmedLine.startsWith("/") || trimmedLine.length() < 2) {
+                                commandTerminator = ";";
+                                continue;
+                            }
+
+                            if (trimmedLine.toUpperCase().startsWith("DECLARE")) {
+                                commandTerminator = "/";
+                            }
+
+                            if ((trimmedLine.toUpperCase().startsWith("CREATE OR REPLACE PROCEDURE")) || (trimmedLine.toUpperCase().startsWith("CREATE OR REPLACE FUNCTION"))) {
+                                commandTerminator = "/";
+                            }
+                        }
+
+                        if (connectString.toLowerCase().startsWith("jdbc:postgresql") && inputFileName != null) {
+                            if (trimmedLine.toLowerCase().startsWith("select 'delimiter start';")) {
+                                commandTerminator = "select 'delimiter end';";
+                                continue;
+                            }
+                        }
+
+                        if (line.trim().equalsIgnoreCase(commandTerminator) || line.trim().endsWith(commandTerminator)) {
+                            if (line.trim().endsWith(commandTerminator)) {
+                                line = line.substring(0, line.length() - commandTerminator.length());
+
+                                query.append("\n");
+                                query.append(line);
+                            }
+                            break;
+                        }
+
+                        query.append("\n");
+                        query.append(line);
                     }
 
-                    if (line.equals("reset")) {
-                        query = new StringBuilder();
-                        break;
-                    }
-                    trimmedLine=line.trim();
-                    if (trimmedLine.startsWith("--") ||trimmedLine.length()<1) {
+                    if (query.toString().isEmpty()) {
                         continue;
                     }
-                    if(connectString.toLowerCase().startsWith("jdbc:oracle") && inputFileName!=null){
-	                    if (trimmedLine.startsWith("/") ||trimmedLine.length()<2) {
-	                        commandTerminator=";";
-	                        continue;
-	                    }
-	                    if (trimmedLine.toUpperCase().startsWith("DECLARE")) {
-	                        commandTerminator="/";
-	                    }
-	                    if ((trimmedLine.toUpperCase().startsWith("CREATE OR REPLACE PROCEDURE")) || (trimmedLine.toUpperCase().startsWith("CREATE OR REPLACE FUNCTION"))) {
-	                        commandTerminator="/";
-	                    }
-                    }
-                    if(connectString.toLowerCase().startsWith("jdbc:postgresql") && inputFileName!=null){
-	                    if (trimmedLine.toLowerCase().startsWith("select 'delimiter start';")) {
-	                        commandTerminator="select 'delimiter end';";
-	                        continue;
-	                    }
+
+                    if (printDebug) {
+                        System.out.println("executing: " + query);
                     }
 
-                    if (line.trim().equalsIgnoreCase(commandTerminator) || line.trim().endsWith(commandTerminator)) {
-                        if (line.trim().endsWith(commandTerminator)) {
-                            line = line.substring(0, line.length() - commandTerminator.length());
-                            query.append("\n");
-                            query.append(line);
+                    boolean moreResults  = statement.execute(query.toString());
+                    int     rowsAffected = 0;
+
+                    do {
+                        if (printDebug) {
+                            printAllExceptions(statement.getWarnings());
                         }
-                        break;
-                    }
 
-                    query.append("\n");
-                    query.append(line);
-                }
-
-                if (query.toString().length() == 0)
-                    continue;
-
-                if (printDebug)
-                    System.out.println("executing: " + query.toString());
-
-                boolean moreResults = statement.execute(query.toString());
-                int rowsAffected = 0;
-                do {
-                	if(printDebug)
-                		printAllExceptions(statement.getWarnings());
-                    statement.clearWarnings();
-                    if (moreResults) {
-                        resultSet = statement.getResultSet();
-                        if(printDebug)
-                        	printAllExceptions(resultSet.getWarnings());
-                        resultSet.clearWarnings();
-                        resultSetMetaData = resultSet.getMetaData();
-
-                        formatter.formatHeader(System.out, resultSetMetaData);
-                        formatter.formatData(System.out, resultSet, resultSetMetaData);
-                        formatter.formatFooter(System.out, resultSetMetaData);
-
-                        int rowsSelected = statement.getUpdateCount();
-
-                        if (rowsSelected >= 0 && printDebug) {
-                            System.out.println(rowsSelected + " rows affected.");
-                        }
-                    }
-                    else {
-                        rowsAffected = statement.getUpdateCount();
-                        if (printDebug)
-                        	printAllExceptions(statement.getWarnings());
                         statement.clearWarnings();
-                        if (rowsAffected >= 0 && printDebug) {
-                            System.out.println(rowsAffected + " rows affected.");
+
+                        if (moreResults) {
+                            resultSet = statement.getResultSet();
+
+                            if (printDebug) {
+                                printAllExceptions(resultSet.getWarnings());
+                            }
+
+                            resultSet.clearWarnings();
+
+                            resultSetMetaData = resultSet.getMetaData();
+
+                            formatter.formatHeader(System.out, resultSetMetaData);
+                            formatter.formatData(System.out, resultSet, resultSetMetaData);
+                            formatter.formatFooter(System.out, resultSetMetaData);
+
+                            int rowsSelected = statement.getUpdateCount();
+
+                            if (rowsSelected >= 0 && printDebug) {
+                                System.out.println(rowsSelected + " rows affected.");
+                            }
+                        } else {
+                            rowsAffected = statement.getUpdateCount();
+
+                            if (printDebug) {
+                                printAllExceptions(statement.getWarnings());
+                            }
+
+                            statement.clearWarnings();
+
+                            if (rowsAffected >= 0 && printDebug) {
+                                System.out.println(rowsAffected + " rows affected.");
+                            }
+                        }
+
+                        //
+                        // I was having problems with the PostgreSQL driver throwing
+                        // a NullPointerException here so I just catch it and tell
+                        // the loop that it is done if it happens.
+                        //
+                        try {
+                            moreResults = statement.getMoreResults();
+                        } catch (NullPointerException npe) {
+                            moreResults = false;
                         }
                     }
 
-                    //
-                    // I was having problems with the PostgreSQL driver throwing
-                    // a NullPointerException here so I just catch it and tell
-                    // the loop that it is done if it happens.
-                    //
-                    try {
-                        moreResults = statement.getMoreResults();
-                    }
-                    catch (NullPointerException npe) {
-                        moreResults = false;
-                    }
+                    while (moreResults || rowsAffected != -1);
+                } catch (SQLException sqle) {
+                    printAllExceptions(sqle);
+
+                    statement.cancel();
+                    statement.clearWarnings();
+
+                    throw sqle;
+                } catch (Exception e) {
+                    e.printStackTrace(System.err);
                 }
 
-                while (moreResults || rowsAffected != -1);
+                if (inputQuery != null) {
+                    return;
+                }
             }
-            catch (SQLException sqle) {
-                printAllExceptions(sqle);
-                statement.cancel();
-                statement.clearWarnings();
-                throw sqle;
-            }
-            catch (Exception e) {
-                e.printStackTrace(System.err);
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException ioe) {
+                // Ignore IOE when closing streams
             }
 
-            if (inputQuery != null)
-                return;
-        }
-        }
-        finally {
-        	if (reader != null) {
-        		try {
-        			reader.close();
-        		}
-        		catch(IOException ioe) {
-        			// Ignore IOE when closing streams
-        		}
-        	}
-		if (resultSet != null) {
-			try {
-				resultSet.close();
-			} catch (SQLException sqle) {
-			}
-		}
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException sqle) {
+                    // ignore
+                }
+            }
+
             if (statement != null) {
                 try {
                     statement.close();
@@ -549,9 +567,7 @@ public class Jisql {
     /**
      * Prints some information about the JDBC driver in use.
      *
-     * @throws SQLException
-     *             if one of the methods called does.
-     *
+     * @throws SQLException if one of the methods called does.
      */
     private void printDriverInfo() throws SQLException {
         System.out.println("driver.getMajorVersion() is " + driver.getMajorVersion());
@@ -562,11 +578,15 @@ public class Jisql {
 
         for (DriverPropertyInfo info : infos) {
             System.out.println("driver property named \"" + info.name + "\"");
+
             if (info.choices != null) {
                 System.out.println("choices:");
-                for (int j = 0; j < info.choices.length; j++)
+
+                for (int j = 0; j < info.choices.length; j++) {
                     System.out.println("\tchoice " + j + ": \"" + info.choices[j] + "\"");
+                }
             }
+
             System.out.println("description: \"" + info.description + "\"");
             System.out.println("required parameter?: \"" + info.required + "\"");
             System.out.println("current value: \"" + info.value + "\"\n");
@@ -585,28 +605,29 @@ public class Jisql {
      * Parse the command line arguments. This method parses what is needed for
      * the Jisql driver program and lets the configured formatter do the same.
      *
-     * @param argv  the command line arguments.
-     *
+     * @param argv the command line arguments.
      * @throws Exception if there are any errors parsing the command line arguments.
-     *
      */
-    public void parseArgs(String argv[]) throws Throwable {
+    public void parseArgs(String[] argv) throws Throwable {
         //
         // I'm sure that there has to be a better way but I couldn't find a
         // command lineparser that would let me ignore unknown arguments. so
         // walk through the list once to find the formatter. then, use the
         // command line parser to do it "for real"
         //
-    	String passwordValue=null;
-    	for (int argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
-    		 if ("-p".equalsIgnoreCase(argv[argumentIndex]) || "-password".equalsIgnoreCase(argv[argumentIndex]) ) {
-    			 if(argv.length>argumentIndex + 1){
-    				 passwordValue=argv[argumentIndex + 1];
-    				 argv[argumentIndex + 1]="";
-    				 break;
-    			 }
-    		 }
-    	}
+        String passwordValue = null;
+
+        for (int argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
+            if ("-p".equalsIgnoreCase(argv[argumentIndex]) || "-password".equalsIgnoreCase(argv[argumentIndex])) {
+                if (argv.length > argumentIndex + 1) {
+                    passwordValue           = argv[argumentIndex + 1];
+                    argv[argumentIndex + 1] = "";
+
+                    break;
+                }
+            }
+        }
+
         for (int argumentIndex = 0; argumentIndex < argv.length; argumentIndex++) {
             if (argv[argumentIndex].equals("-formatter")) {
                 formatterClassName = argv[argumentIndex + 1];
@@ -614,16 +635,18 @@ public class Jisql {
             }
         }
 
-        if (formatterClassName.compareToIgnoreCase("csv") == 0)
+        if (formatterClassName.compareToIgnoreCase("csv") == 0) {
             formatterClassName = csvFormatterClassName;
-        else if (formatterClassName.compareToIgnoreCase("xml") == 0)
+        } else if (formatterClassName.compareToIgnoreCase("xml") == 0) {
             formatterClassName = xmlFormatterClassName;
-        else if (formatterClassName.compareToIgnoreCase("default") == 0)
+        } else if (formatterClassName.compareToIgnoreCase("default") == 0) {
             formatterClassName = defaultFormatterClassName;
+        }
 
         formatter = (JisqlFormatter) Class.forName(formatterClassName).newInstance();
 
         OptionParser parser = new OptionParser();
+
         parser.posixlyCorrect(false);
 
         parser.accepts("c").withRequiredArg().ofType(String.class);
@@ -653,105 +676,106 @@ public class Jisql {
         if (options.has("driver")) {
             driverName = (String) options.valueOf("driver");
 
-            if (driverName.compareToIgnoreCase("jconnect4") == 0)
+            if (driverName.compareToIgnoreCase("jconnect4") == 0) {
                 driverName = sybaseJConnect4DriverName;
-            else if (driverName.compareToIgnoreCase("jconnect5") == 0)
+            } else if (driverName.compareToIgnoreCase("jconnect5") == 0) {
                 driverName = sybaseJConnect5DriverName;
-            else if (driverName.compareToIgnoreCase("jconnect6") == 0)
+            } else if (driverName.compareToIgnoreCase("jconnect6") == 0) {
                 driverName = sybaseJConnect6DriverName;
-            else if (driverName.compareToIgnoreCase("oraclethin") == 0)
+            } else if (driverName.compareToIgnoreCase("oraclethin") == 0) {
                 driverName = oracleThinDriverName;
-            else if (driverName.compareToIgnoreCase("db2app") == 0)
+            } else if (driverName.compareToIgnoreCase("db2app") == 0) {
                 driverName = db2AppDriverName;
-            else if (driverName.compareToIgnoreCase("db2net") == 0)
+            } else if (driverName.compareToIgnoreCase("db2net") == 0) {
                 driverName = db2NetDriverName;
-            else if (driverName.compareToIgnoreCase("cloudscape") == 0)
+            } else if (driverName.compareToIgnoreCase("cloudscape") == 0) {
                 driverName = cloudscapeDriverName;
-            else if (driverName.compareToIgnoreCase("mssql") == 0)
+            } else if (driverName.compareToIgnoreCase("mssql") == 0) {
                 driverName = msqlDriverName;
-            else if (driverName.compareToIgnoreCase("pointbase") == 0)
+            } else if (driverName.compareToIgnoreCase("pointbase") == 0) {
                 driverName = pointbaseDriverName;
-            else if (driverName.compareToIgnoreCase("postgresql") == 0)
+            } else if (driverName.compareToIgnoreCase("postgresql") == 0) {
                 driverName = postgresqlDriverName;
-            else if (driverName.compareToIgnoreCase("mysqlconj") == 0)
+            } else if (driverName.compareToIgnoreCase("mysqlconj") == 0) {
                 driverName = mySQLConnectJDriverName;
-            else if (driverName.compareToIgnoreCase("mysqlcaucho") == 0)
+            } else if (driverName.compareToIgnoreCase("mysqlcaucho") == 0) {
                 driverName = mySQLCauchoDriverName;
-            else if (driverName.compareToIgnoreCase("sapsajdbc4") == 0)
+            } else if (driverName.compareToIgnoreCase("sapsajdbc4") == 0) {
                 driverName = sapJDBC4SqlAnywhereDriverName;
-            else if (driverName.compareToIgnoreCase("sybasesajdbc4") == 0)
+            } else if (driverName.compareToIgnoreCase("sybasesajdbc4") == 0) {
                 driverName = sybaseJDBC4SqlAnywhereDriverName;
+            }
         }
 
         connectString = (String) options.valueOf("cstring");
 
-        if (options.has("c"))
+        if (options.has("c")) {
             commandTerminator = (String) options.valueOf("c");
+        }
 
-        if (options.has("debug"))
+        if (options.has("debug")) {
             printDebug = true;
+        }
 
-        if (options.has("user"))
+        if (options.has("user")) {
             userName = (String) options.valueOf("user");
-        else if (options.has("u"))
+        } else if (options.has("u")) {
             userName = (String) options.valueOf("u");
+        }
 
-        password=passwordValue;
+        password = passwordValue;
 
-        if (options.has("driverinfo"))
+        if (options.has("driverinfo")) {
             printDriverDetails = true;
+        }
 
-        if (options.has("input"))
+        if (options.has("input")) {
             inputFileName = (String) options.valueOf("input");
+        }
 
-        if (options.has("pf"))
+        if (options.has("pf")) {
             passwordFileName = (String) options.valueOf("pf");
+        }
 
-        if (options.has("query"))
+        if (options.has("query")) {
             inputQuery = (String) options.valueOf("query");
+        }
 
-        if (driverName == null)
+        if (driverName == null) {
             throw new Exception("driver name must exist");
+        }
 
-        if (connectString == null)
+        if (connectString == null) {
             throw new Exception("connect string must exist");
+        }
 
-        if (userName == null)
+        if (userName == null) {
             throw new Exception("user name must exist");
+        }
 
         if ((password == null) && (passwordFileName == null)) {
-            password="";
-        }
-        else if (password == null) {
-            File passwordFile = null;
-            BufferedReader reader = null;
+            password = "";
+        } else if (password == null) {
+            File passwordFile = new File(passwordFileName);
 
-            passwordFile = new File(passwordFileName);
-            if (!passwordFile.exists())
+            if (!passwordFile.exists()) {
                 throw new Exception("the password file \"" + passwordFileName + "\" does not exist");
-
-            if (!passwordFile.isFile())
-                throw new Exception("the password file \"" + passwordFileName + "\" is not a normal file");
-
-            if (!passwordFile.canRead())
-                throw new Exception("the password file \"" + passwordFileName + "\" is not readable");
-
-            try {
-                reader = new BufferedReader(new FileReader(passwordFile));
-                password = reader.readLine().trim();
             }
-            catch (Exception e) {
+
+            if (!passwordFile.isFile()) {
+                throw new Exception("the password file \"" + passwordFileName + "\" is not a normal file");
+            }
+
+            if (!passwordFile.canRead()) {
+                throw new Exception("the password file \"" + passwordFileName + "\" is not readable");
+            }
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(passwordFile))) {
+                password = reader.readLine().trim();
+            } catch (Exception e) {
                 throw new Exception("An error occured reading the password file", e);
             }
-            finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    }
-                    catch (Exception ignore) { /* ignored */
-                    }
-                }
-            }
+            /* ignored */
         }
 
         formatter.consumeOptions(options);
@@ -761,12 +785,11 @@ public class Jisql {
      * Walks through a SQLException and prints out every exception.
      *
      * @param sqle the Exception to print
-     *
      */
     private void printAllExceptions(SQLException sqle) {
         while (sqle != null) {
-            System.err.println("SQLException : " + "SQL state: " + sqle.getSQLState() + " " + sqle.toString() + " ErrorCode: "
-                    + sqle.getErrorCode());
+            System.err.println("SQLException : " + "SQL state: " + sqle.getSQLState() + " " + sqle + " ErrorCode: " + sqle.getErrorCode());
+
             sqle = sqle.getNextException();
         }
     }
@@ -774,30 +797,24 @@ public class Jisql {
     /**
      * Prints out the usage message for the Jisql driver and the configured
      * formatter.
-     *
      */
     private void usage() {
         System.err.println();
-        System.err.println("usage: java " + getClass().getName() +
-                           " -driver driver -cstring connect_string -user|-u username -password|-p password [-pf password_file] " +
-                           "[-c command_term] [-input file_name] [-debug] [-driverinfo] [-formatter formatter]");
+        System.err.println("usage: java " + getClass().getName() + " -driver driver -cstring connect_string -user|-u username -password|-p password [-pf password_file] " + "[-c command_term] [-input file_name] [-debug] [-driverinfo] [-formatter formatter]");
         System.err.println("where:");
-        System.err
-                .println("\t-driver specifies the JDBC driver to use.  There are several builtin shortcuts - see the docs for details.");
+        System.err.println("\t-driver specifies the JDBC driver to use.  There are several builtin shortcuts - see the docs for details.");
         System.err.println("\t-cstring specifies the connection string to use.  These are driver specific.");
         System.err.println("\t-user specifies a user name to log into a database server with.");
         System.err.println("\t-password specifies the user name to log into a database server with.");
         System.err.println("\t-pf specifies the name of a file that contains the password to log into a database server with.");
-        System.err.println("\t    The first line of file should contain the password and nothing else.");
+        System.err.println("\t The first line of file should contain the password and nothing else.");
         System.err.println("\t-c specifies the command terminator.  The default is \"" + commandTerminator + "\"");
         System.err.println("\t-input specifies a file name to read commands from.");
-        System.err
-                .println("\t-query specifies an optional single query to run instead of interacting with the command line or a file.");
-        System.err.println("\t       Note that the command must include a command terminator or the command will hang");
+        System.err.println("\t-query specifies an optional single query to run instead of interacting with the command line or a file.");
+        System.err.println("\t Note that the command must include a command terminator or the command will hang");
         System.err.println("\t-debug prints to stdout (System.out) debugging information");
         System.err.println("\t-driverinfo prints to stdout (System.out) detailed driver information and then exits");
-        System.err
-                .println("\t-formatter specifies either a class name or a pre-configured output formatter.  See the docs for details.");
+        System.err.println("\t-formatter specifies either a class name or a pre-configured output formatter.  See the docs for details.");
 
         if (formatter != null) {
             System.err.println("Additional command line arguments of the " + formatter.getClass().getName() + " class are");

@@ -17,10 +17,8 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.SearchField;
@@ -28,6 +26,7 @@ import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceBase;
 import org.apache.ranger.entity.XXServiceDef;
@@ -37,136 +36,164 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerServiceList;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extends RangerService> extends RangerBaseModelService<T, V> {
-	
-	@Autowired
-	GUIDUtil guidUtil;
-	
-	public RangerServiceServiceBase() {
-		super();
+import java.util.ArrayList;
+import java.util.List;
 
-		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING,
-				SEARCH_TYPE.FULL, "XXServiceDef xSvcDef", "obj.type = xSvcDef.id"));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.type", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_DISPLAY_NAME, "obj.displayName", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_NAME_PARTIAL, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_DISPLAY_NAME_PARTIAL, "obj.displayName", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_ID, "obj.tagService", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME, "xTagSvc.name", DATA_TYPE.STRING,
-				SEARCH_TYPE.FULL, "XXServiceBase xTagSvc", "obj.tagService = xTagSvc.id"));
+public abstract class RangerServiceServiceBase<T extends XXServiceBase, V extends RangerService> extends RangerAuditedModelService<T, V> {
+    @Autowired
+    GUIDUtil guidUtil;
 
-		sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
-		sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_ID, "obj.id", true, SORT_ORDER.ASC));
-		sortFields.add(new SortField(SearchFilter.SERVICE_NAME, "obj.name"));
-		sortFields.add(new SortField(SearchFilter.SERVICE_DISPLAY_NAME, "obj.displayName"));
-	}
+    public RangerServiceServiceBase() {
+        super(AppConstants.CLASS_TYPE_XA_SERVICE, AppConstants.CLASS_TYPE_XA_SERVICE_DEF);
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
-		
-		xObj.setGuid(guid);
-		
-		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(vObj.getType());
-		if(xServiceDef == null) {
-			throw restErrorUtil.createRESTException(
-					"No ServiceDefinition found with name :" + vObj.getType(),
-					MessageEnums.INVALID_INPUT_DATA);
-		}
+        trxLogAttrs.put("name", new VTrxLogAttr("name", "Service Name", false, true));
+        trxLogAttrs.put("displayName", new VTrxLogAttr("displayName", "Service Display Name"));
+        trxLogAttrs.put("description", new VTrxLogAttr("description", "Service Description"));
+        trxLogAttrs.put("isEnabled", new VTrxLogAttr("isEnabled", "Service Status"));
+        trxLogAttrs.put("configs", new VTrxLogAttr("configs", "Connection Configurations"));
+        trxLogAttrs.put("tagService", new VTrxLogAttr("tagService", "Tag Service Name"));
 
-		Long   tagServiceId   = null;
-		String tagServiceName = vObj.getTagService();
-		if(! StringUtils.isEmpty(tagServiceName)) {
-			XXService xTagService = daoMgr.getXXService().findByName(tagServiceName);
+        searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE, "xSvcDef.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXServiceDef xSvcDef", "obj.type = xSvcDef.id"));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_TYPE_ID, "obj.type", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_NAME, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_DISPLAY_NAME, "obj.displayName", DATA_TYPE.STRING, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_NAME_PARTIAL, "obj.name", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_DISPLAY_NAME_PARTIAL, "obj.displayName", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField(SearchFilter.SERVICE_ID, "obj.id", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.IS_ENABLED, "obj.isEnabled", DATA_TYPE.BOOLEAN, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_ID, "obj.tagService", DATA_TYPE.INTEGER, SEARCH_TYPE.FULL));
+        searchFields.add(new SearchField(SearchFilter.TAG_SERVICE_NAME, "xTagSvc.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL, "XXServiceBase xTagSvc", "obj.tagService = xTagSvc.id"));
 
-			if(xTagService == null) {
-				throw restErrorUtil.createRESTException(
-						"No Service found with name :" + tagServiceName,
-						MessageEnums.INVALID_INPUT_DATA);
-			}
+        sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
+        sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
+        sortFields.add(new SortField(SearchFilter.SERVICE_ID, "obj.id", true, SORT_ORDER.ASC));
+        sortFields.add(new SortField(SearchFilter.SERVICE_NAME, "obj.name"));
+        sortFields.add(new SortField(SearchFilter.SERVICE_DISPLAY_NAME, "obj.displayName"));
+    }
 
-			tagServiceId = xTagService.getId();
-		}
+    public RangerServiceList searchRangerServices(SearchFilter searchFilter) {
+        RangerServiceList retList    = new RangerServiceList();
+        int               startIndex = searchFilter.getStartIndex();
+        int               pageSize   = searchFilter.getMaxRows();
 
-		xObj.setType(xServiceDef.getId());
-		xObj.setName(vObj.getName());
-		xObj.setDisplayName(vObj.getDisplayName());
-		xObj.setTagService(tagServiceId);
-		if (OPERATION_CONTEXT == OPERATION_CREATE_CONTEXT) {
-			xObj.setTagVersion(vObj.getTagVersion());
-		}
-		xObj.setDescription(vObj.getDescription());
-		xObj.setIsEnabled(vObj.getIsEnabled());
-		return xObj;
-	}
+        searchFilter.setStartIndex(0);
+        searchFilter.setMaxRows(Integer.MAX_VALUE);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T xObj) {
-		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xObj.getType());
-		XXService    xTagService = xObj.getTagService() != null ? daoMgr.getXXService().getById(xObj.getTagService()) : null;
-		vObj.setType(xServiceDef.getName());
-		vObj.setGuid(xObj.getGuid());
-		vObj.setVersion(xObj.getVersion());
-		vObj.setName(xObj.getName());
-		vObj.setDisplayName(xObj.getDisplayName());
-		vObj.setDescription(xObj.getDescription());
-		vObj.setTagService(xTagService != null ? xTagService.getName() : null);
-		XXServiceVersionInfo versionInfoObj = daoMgr.getXXServiceVersionInfo().findByServiceId(xObj.getId());
-		if (versionInfoObj != null) {
-			vObj.setPolicyVersion(versionInfoObj.getPolicyVersion());
-			vObj.setTagVersion(versionInfoObj.getTagVersion());
-			vObj.setPolicyUpdateTime(versionInfoObj.getPolicyUpdateTime());
-			vObj.setTagUpdateTime(versionInfoObj.getTagUpdateTime());
-		} else {
-			vObj.setPolicyVersion(xObj.getPolicyVersion());
-			vObj.setTagVersion(xObj.getTagVersion());
-			vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
-			vObj.setTagUpdateTime(xObj.getTagUpdateTime());
-		}
-		vObj.setIsEnabled(xObj.getIsenabled());
-		return vObj;
-	}
+        List<T> xSvcList          = searchResources(searchFilter, searchFields, sortFields, retList);
+        List<T> permittedServices = new ArrayList<>();
 
-	public RangerServiceList searchRangerServices(SearchFilter searchFilter) {
-		RangerServiceList retList = new RangerServiceList();
+        for (T xSvc : xSvcList) {
+            if (bizUtil.hasAccess(xSvc, null)) {
+                if (!bizUtil.isGdsService(xSvc)) {
+                    permittedServices.add(xSvc);
+                }
+            }
+        }
 
-		int startIndex = searchFilter.getStartIndex();
-		int pageSize = searchFilter.getMaxRows();
-		searchFilter.setStartIndex(0);
-		searchFilter.setMaxRows(Integer.MAX_VALUE);
+        if (!permittedServices.isEmpty()) {
+            populatePageList(permittedServices, startIndex, pageSize, retList);
+        }
 
-		List<T> xSvcList = searchResources(searchFilter, searchFields, sortFields, retList);
-		List<T> permittedServices = new ArrayList<T>();
+        return retList;
+    }
 
-		for (T xSvc : xSvcList) {
-			if(bizUtil.hasAccess(xSvc, null)){
-				permittedServices.add(xSvc);
-			}
-		}
+    @Override
+    public String getParentObjectName(V vObj, V oldObj) {
+        String serviceType = vObj != null ? vObj.getType() : null;
+        XXServiceDef xServiceDef = serviceType != null ? daoMgr.getXXServiceDef().findByName(serviceType) : null;
+        return xServiceDef != null ? xServiceDef.getName() : null;
+    }
 
-		if(!permittedServices.isEmpty()) {
-			populatePageList(permittedServices, startIndex, pageSize, retList);
-		}
+    @Override
+    public Long getParentObjectId(V vObj, V oldObj) {
+        String serviceType = vObj != null ? vObj.getType() : null;
+        XXServiceDef xServiceDef = serviceType != null ? daoMgr.getXXServiceDef().findByName(serviceType) : null;
+        return xServiceDef != null ? xServiceDef.getId() : null;
+    }
 
-		return retList;
-	}
+    @Override
+    protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
+        String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
 
-	private void populatePageList(List<T> xxObjList, int startIndex, int pageSize,
-			RangerServiceList retList) {
-		List<RangerService> onePageList = new ArrayList<RangerService>();
+        xObj.setGuid(guid);
 
-		for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
-			onePageList.add(populateViewBean(xxObjList.get(i)));
-		}
-		retList.setServices(onePageList);
-		retList.setStartIndex(startIndex);
-		retList.setPageSize(pageSize);
-		retList.setResultSize(onePageList.size());
-		retList.setTotalCount(xxObjList.size());
-	}
+        XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(vObj.getType());
 
+        if (xServiceDef == null) {
+            throw restErrorUtil.createRESTException("No ServiceDefinition found with name :" + vObj.getType(), MessageEnums.INVALID_INPUT_DATA);
+        }
+
+        Long   tagServiceId   = null;
+        String tagServiceName = vObj.getTagService();
+
+        if (!StringUtils.isEmpty(tagServiceName)) {
+            XXService xTagService = daoMgr.getXXService().findByName(tagServiceName);
+
+            if (xTagService == null) {
+                throw restErrorUtil.createRESTException("No Service found with name :" + tagServiceName, MessageEnums.INVALID_INPUT_DATA);
+            }
+
+            tagServiceId = xTagService.getId();
+        }
+
+        xObj.setType(xServiceDef.getId());
+        xObj.setName(vObj.getName());
+        xObj.setDisplayName(vObj.getDisplayName());
+        xObj.setTagService(tagServiceId);
+
+        if (operationContext == OPERATION_CREATE_CONTEXT) {
+            xObj.setTagVersion(vObj.getTagVersion());
+        }
+
+        xObj.setDescription(vObj.getDescription());
+        xObj.setIsEnabled(vObj.getIsEnabled());
+
+        return xObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T xObj) {
+        XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xObj.getType());
+        XXService    xTagService = xObj.getTagService() != null ? daoMgr.getXXService().getById(xObj.getTagService()) : null;
+
+        vObj.setType(xServiceDef.getName());
+        vObj.setGuid(xObj.getGuid());
+        vObj.setVersion(xObj.getVersion());
+        vObj.setName(xObj.getName());
+        vObj.setDisplayName(xObj.getDisplayName());
+        vObj.setDescription(xObj.getDescription());
+        vObj.setTagService(xTagService != null ? xTagService.getName() : null);
+
+        XXServiceVersionInfo versionInfoObj = daoMgr.getXXServiceVersionInfo().findByServiceId(xObj.getId());
+
+        if (versionInfoObj != null) {
+            vObj.setPolicyVersion(versionInfoObj.getPolicyVersion());
+            vObj.setTagVersion(versionInfoObj.getTagVersion());
+            vObj.setPolicyUpdateTime(versionInfoObj.getPolicyUpdateTime());
+            vObj.setTagUpdateTime(versionInfoObj.getTagUpdateTime());
+        } else {
+            vObj.setPolicyVersion(xObj.getPolicyVersion());
+            vObj.setTagVersion(xObj.getTagVersion());
+            vObj.setPolicyUpdateTime(xObj.getPolicyUpdateTime());
+            vObj.setTagUpdateTime(xObj.getTagUpdateTime());
+        }
+
+        vObj.setIsEnabled(xObj.getIsenabled());
+
+        return vObj;
+    }
+
+    private void populatePageList(List<T> xxObjList, int startIndex, int pageSize, RangerServiceList retList) {
+        List<RangerService> onePageList = new ArrayList<>();
+
+        for (int i = startIndex; i < pageSize + startIndex && i < xxObjList.size(); i++) {
+            onePageList.add(populateViewBean(xxObjList.get(i)));
+        }
+
+        retList.setServices(onePageList);
+        retList.setStartIndex(startIndex);
+        retList.setPageSize(pageSize);
+        retList.setResultSize(onePageList.size());
+        retList.setTotalCount(xxObjList.size());
+    }
 }

@@ -293,8 +293,107 @@
         <description>Azure Key Vault url</description>
   </property>
    <!--Azure Key Vault END-->
-    
-  <!-- HSM Config -->
+
+    <!--AWS KMS START-->
+    <property>
+        <name>ranger.kms.awskms.enabled</name>
+        <value>false</value>
+        <description>Flag for AWS KMS</description>
+    </property>
+    <property>
+        <name>ranger.kms.awskms.masterkey.id</name>
+        <value></value>
+        <description>AWS KMS Master key id</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.accesskey</name>
+        <value></value>
+        <description>AWS Client Access Key</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.secretkey</name>
+        <value></value>
+        <description>AWS Client Secret Key</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.secretkey.alias</name>
+        <value>ranger.ks.aws.client.secretkey</value>
+        <description>AWS Client Secret Key Alias</description>
+    </property>
+    <property>
+        <name>ranger.kms.aws.client.region</name>
+        <value></value>
+        <description>AWS Region</description>
+    </property>
+    <!--AWS KMS END-->
+
+	<!-- Google Cloud KMS start -->
+	<property>
+		<name>ranger.kms.gcp.enabled</name>
+		<value>false</value>
+		<description>Flag for Google Cloud HSM e.g - true or false</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.keyring.id</name>
+		<value></value>
+		<description>Name of KeyRing.</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.cred.file</name>
+		<value></value>
+		<description>Absolute path of downloaded json credential file, e.g - /path/to/credFile.json</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.project.id</name>
+		<value></value>
+		<description>Name of project on Google Cloud HSM.</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.location.id</name>
+		<value></value>
+		<description>GCP KeyRing location id, e.g - us-east1, global etc.</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.masterkey.name</name>
+		<value></value>
+		<description>GCP Master Key Name.</description>
+	</property>
+	<!-- Google Cloud KMS end -->
+
+    <!--Tencent KMS START-->
+    <property>
+        <name>ranger.kms.tencentkms.enabled</name>
+        <value>false</value>
+        <description>Flag for Tencent KMS</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.id</name>
+        <value></value>
+        <description>Tencent Client Id</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.secret</name>
+        <value></value>
+        <description>Tencent Client Secret</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.secret.alias</name>
+        <value>ranger.ks.tencent.client.secret</value>
+        <description>Tencent Client Secret Alias</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.region</name>
+        <value>ap-beijing</value>
+        <description>Tencent Client Id</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.masterkey.id</name>
+        <value></value>
+        <description>Tencent master key name</description>
+    </property>
+    <!--Tencent KMS END-->
+
+    <!-- HSM Config -->
   <property>
   	<name>ranger.ks.hsm.type</name>
   	<value>LunaProvider</value>

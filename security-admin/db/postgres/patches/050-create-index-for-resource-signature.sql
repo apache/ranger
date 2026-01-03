@@ -17,11 +17,13 @@ select 'delimiter start';
 CREATE OR REPLACE FUNCTION create_index_for_x_rms_service_resource()
 RETURNS void AS $$
 DECLARE
-	v_index_exists integer := 0;
+	v_attnum1 integer := 0;
 BEGIN
-	select count(*) into v_index_exists from pg_class where relname = 'x_rms_service_resource_idx_resource_signature';
-	IF v_index_exists = 0 THEN
-		CREATE INDEX x_rms_service_resource_IDX_resource_signature ON x_rms_service_resource(resource_signature);
+	select attnum into v_attnum1 from pg_attribute where attrelid in(select oid from pg_class where relname='x_rms_service_resource') and attname in('resource_signature');
+	IF v_attnum1 > 0 THEN
+		IF not exists (select * from pg_index where indrelid in(select oid from pg_class where relname='x_rms_service_resource') and indkey[0]=v_attnum1) THEN
+			CREATE INDEX x_rms_service_resource_IDX_resource_signature ON x_rms_service_resource(resource_signature);
+		END IF;
 	END IF;
 END;
 $$ LANGUAGE plpgsql;

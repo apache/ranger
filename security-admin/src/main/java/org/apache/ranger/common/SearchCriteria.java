@@ -17,10 +17,13 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.common;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,172 +31,166 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-import org.apache.ranger.biz.RangerBizUtil;
-
-
 public class SearchCriteria {
-	Logger logger = Logger.getLogger(SearchCriteria.class);
+    Logger logger = LoggerFactory.getLogger(SearchCriteria.class);
 
-	int startIndex = 0;
-	int maxRows = Integer.MAX_VALUE;
-	String sortBy = null;
-	String sortType = null;
-	boolean getCount = true;
-	Number ownerId = null;
-	boolean familyOnly = false;
-	boolean getChildren = false;
-	boolean isDistinct = false;
-	HashMap<String, Object> paramList = new HashMap<String, Object>();
-	Set<String> nullParamList = new HashSet<String>();
-	Set<String> notNullParamList = new HashSet<String>();
+    int                     startIndex;
+    int                     maxRows          = Integer.MAX_VALUE;
+    String                  sortBy;
+    String                  sortType;
+    boolean                 getCount         = true;
+    Number                  ownerId;
+    boolean                 familyOnly;
+    boolean                 getChildren;
+    boolean                 isDistinct;
+    HashMap<String, Object> paramList        = new HashMap<>();
+    Set<String>             nullParamList    = new HashSet<>();
+    Set<String>             notNullParamList = new HashSet<>();
+    List<SearchGroup>       searchGroups     = new ArrayList<>();
 
-	List<SearchGroup> searchGroups = new ArrayList<SearchGroup>();
+    public SearchCriteria() {}
 
-	/**
-	 * @return the startIndex
-	 */
-	public int getStartIndex() {
-		return startIndex;
-	}
+    public SearchCriteria(String paramName, Object paramValue) {
+        addParam(paramName, paramValue);
+    }
 
-	/**
-	 * @param startIndex
-	 *            the startIndex to set
-	 */
-	public void setStartIndex(int startIndex) {
-		this.startIndex = startIndex;
-	}
+    /**
+     * @return the startIndex
+     */
+    public int getStartIndex() {
+        return startIndex;
+    }
 
-	/**
-	 * @return the maxRows
-	 */
-	public int getMaxRows() {
-		return maxRows;
-	}
+    /**
+     * @param startIndex the startIndex to set
+     */
+    public void setStartIndex(int startIndex) {
+        this.startIndex = startIndex;
+    }
 
-	/**
-	 * @param maxRows
-	 *            the maxRows to set
-	 */
-	public void setMaxRows(int maxRows) {
-		this.maxRows = maxRows;
-	}
+    /**
+     * @return the maxRows
+     */
+    public int getMaxRows() {
+        return maxRows;
+    }
 
-	/**
-	 * @return the sortBy
-	 */
-	public String getSortBy() {
-		return sortBy;
-	}
+    /**
+     * @param maxRows the maxRows to set
+     */
+    public void setMaxRows(int maxRows) {
+        this.maxRows = maxRows;
+    }
 
-	/**
-	 * @param sortBy
-	 *            the sortBy to set
-	 */
-	public void setSortBy(String sortBy) {
-		this.sortBy = sortBy;
-	}
+    /**
+     * @return the sortBy
+     */
+    public String getSortBy() {
+        return sortBy;
+    }
 
-	/**
-	 * @return the sortType
-	 */
-	public String getSortType() {
-		return sortType;
-	}
+    /**
+     * @param sortBy the sortBy to set
+     */
+    public void setSortBy(String sortBy) {
+        this.sortBy = sortBy;
+    }
 
-	/**
-	 * @param sortType
-	 *            the sortType to set
-	 */
-	public void setSortType(String sortType) {
-		this.sortType = sortType;
-	}
+    /**
+     * @return the sortType
+     */
+    public String getSortType() {
+        return sortType;
+    }
 
-	public boolean isGetCount() {
-		return getCount;
-	}
+    /**
+     * @param sortType the sortType to set
+     */
+    public void setSortType(String sortType) {
+        this.sortType = sortType;
+    }
 
-	public void setGetCount(boolean getCount) {
-		this.getCount = getCount;
-	}
+    public boolean isGetCount() {
+        return getCount;
+    }
 
-	public Number getOwnerId() {
-		return ownerId;
-	}
+    public void setGetCount(boolean getCount) {
+        this.getCount = getCount;
+    }
 
-	public void setOwnerId(Number ownerId) {
-		this.ownerId = ownerId;
-	}
+    public Number getOwnerId() {
+        return ownerId;
+    }
 
-	public boolean isGetChildren() {
-		return getChildren;
-	}
+    public void setOwnerId(Number ownerId) {
+        this.ownerId = ownerId;
+    }
 
-	public void setGetChildren(boolean getChildren) {
-		this.getChildren = getChildren;
-	}
+    public boolean isGetChildren() {
+        return getChildren;
+    }
 
-	/**
-	 * @return the paramList
-	 */
-	public HashMap<String, Object> getParamList() {
-		return paramList;
-	}
+    public void setGetChildren(boolean getChildren) {
+        this.getChildren = getChildren;
+    }
 
-	/**
-	 * @param string
-	 * @param caId
-	 */
-	public void addParam(String name, Object value) {
-		paramList.put(name, value);
-	}
+    /**
+     * @return the paramList
+     */
+    public HashMap<String, Object> getParamList() {
+        return paramList;
+    }
 
-	public Object getParamValue(String name) {
-		return paramList.get(name);
-	}
+    /**
+     * @param name
+     * @param value
+     */
+    public void addParam(String name, Object value) {
+        paramList.put(name, value);
+    }
 
-	/**
-	 * @return the nullParamList
-	 */
-	public Set<String> getNullParamList() {
-		return nullParamList;
-	}
+    public Object getParamValue(String name) {
+        return paramList.get(name);
+    }
 
-	/**
-	 * @return the notNullParamList
-	 */
-	public Set<String> getNotNullParamList() {
-		return notNullParamList;
-	}
+    /**
+     * @return the nullParamList
+     */
+    public Set<String> getNullParamList() {
+        return nullParamList;
+    }
 
-	/**
-	 * @return the searchGroups
-	 */
-	public List<SearchGroup> getSearchGroups() {
-		return searchGroups;
-	}
+    /**
+     * @return the notNullParamList
+     */
+    public Set<String> getNotNullParamList() {
+        return notNullParamList;
+    }
 
-	/**
-	 * @return the isDistinct
-	 */
-	public boolean isDistinct() {
-		return isDistinct;
-	}
+    /**
+     * @return the searchGroups
+     */
+    public List<SearchGroup> getSearchGroups() {
+        return searchGroups;
+    }
 
-	/**
-	 * @param isDistinct
-	 *            the isDistinct to set
-	 */
-	public void setDistinct(boolean isDistinct) {
+    /**
+     * @return the isDistinct
+     */
+    public boolean isDistinct() {
+        return isDistinct;
+    }
 
-		int dbFlavor = RangerBizUtil.getDBFlavor();
-		if (isDistinct && dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
-			isDistinct = false;
-			logger.debug("Database flavor is `ORACLE` so ignoring DISTINCT "
-					+ "clause from select statement.");
-		}
-		this.isDistinct = isDistinct;
-	}
+    /**
+     * @param isDistinct the isDistinct to set
+     */
+    public void setDistinct(boolean isDistinct) {
+//        int dbFlavor = RangerBizUtil.getDBFlavor();
+//        if (isDistinct && dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
+//            isDistinct = false;
+//            logger.debug("Database flavor is `ORACLE` so ignoring DISTINCT clause from select statement.");
+//        }
 
+        this.isDistinct = isDistinct;
+    }
 }

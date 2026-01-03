@@ -26,6 +26,69 @@
 			"uiHint":"",
 			"label":"Solr Collection",
 			"description":"Solr Collection"
+		},
+		{
+			"itemId":101,
+			"name":"config",
+			"type":"string",
+			"level":10,
+			"parent":"",
+			"mandatory":true,
+			"lookupSupported":true,
+			"recursiveSupported":false,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Solr Config",
+			"description":"Solr Config"
+		},
+		{
+			"itemId":102,
+			"name":"schema",
+			"type":"string",
+			"level":10,
+			"parent":"",
+			"mandatory":true,
+			"lookupSupported":true,
+			"recursiveSupported":false,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Schema of a collection",
+			"description":"The schema of a collection"
+		},
+		{
+			"itemId":103,
+			"name":"admin",
+			"type":"string",
+			"level":10,
+			"parent":"",
+			"mandatory":true,
+			"lookupSupported":true,
+			"recursiveSupported":false,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Solr Admin",
+			"description":"Solr Admin"
 		}
 		
 	],
@@ -33,25 +96,14 @@
 		{
 			"itemId":100,
 			"name":"query",
-			"label":"Query"
+			"label":"Query",
+			"category": "READ"
 		},
 		{
 			"itemId":200,
 			"name":"update",
-			"label":"Update"
-		},
-		{
-			"itemId":300,
-			"name":"others",
-			"label":"Others"
-		},
-		{
-			"itemId":900,
-			"name":"solr_admin",
-			"label":"Solr Admin",
-			"impliedGrants":[
-				"query","update","others"
-			]
+			"label":"Update",
+			"category": "UPDATE"
 		}
 	],
 	"configs":[
@@ -76,6 +128,17 @@
 			"label":"Password"
 		},
 		{
+			"itemId":300,
+			"name":"solr.zookeeper.quorum",
+			"type":"string",
+			"mandatory":false,
+			"defaultValue":"",
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label":"Solr Zookeeper Quorum"
+		},
+		{
 			"itemId":400,
 			"name":"solr.url",
 			"type":"string",
@@ -95,6 +158,19 @@
 			"validationMessage":"",
 			"uiHint":"",
 			"label":"Ranger Plugin SSL CName"
+		},
+
+		{
+			"itemId":600,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['hive','hdfs','kafka','hbase','solr','rangerraz','knox','atlas','yarn','impala'] ,'isAudited':false} ]"
 		}
 		
 	],
@@ -114,9 +190,9 @@
 			},
 			"validationRegEx":"",
 			"validationMessage":"",
-			"uiHint":"",
 			"label":"IP Address Range",
-			"description":"IP Address Range"
+			"description":"IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 		
 	]

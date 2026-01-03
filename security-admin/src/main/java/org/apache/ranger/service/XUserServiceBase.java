@@ -17,91 +17,104 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
+package org.apache.ranger.service;
 
-/**
- *
- */
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import com.google.gson.Gson;
-
-import com.google.gson.GsonBuilder;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 
-public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
-		extends AbstractBaseResourceService<T, V> {
-	public static final String NAME = "XUser";
-	private static final Gson gsonBuilder = new GsonBuilder().create();
+import javax.persistence.Query;
 
-	public XUserServiceBase() {
+import java.util.ArrayList;
+import java.util.List;
 
-	}
+public abstract class XUserServiceBase<T extends XXUser, V extends VXUser> extends AbstractAuditedResourceService<T, V> {
+    public static final String NAME = "XUser";
 
-	@SuppressWarnings("unchecked")
-	@Override
-	protected XXUser mapViewToEntityBean(VXUser vObj, XXUser mObj, int OPERATION_CONTEXT) {
-		mObj.setName( vObj.getName());
-		mObj.setIsVisible(vObj.getIsVisible());
-		mObj.setDescription( vObj.getDescription());
-		mObj.setCredStoreId( vObj.getCredStoreId());
-		mObj.setOtherAttributes(vObj.getOtherAttributes());
-		return mObj;
-	}
+    public XUserServiceBase() {
+        super(AppConstants.CLASS_TYPE_XA_USER);
 
-	@SuppressWarnings("unchecked")
-	@Override
-	protected VXUser mapEntityToViewBean(VXUser vObj, XXUser mObj) {
-		vObj.setName( mObj.getName());
-		vObj.setIsVisible(mObj.getIsVisible());
-		vObj.setDescription( mObj.getDescription());
-		vObj.setCredStoreId( mObj.getCredStoreId());
-		vObj.setOtherAttributes(mObj.getOtherAttributes());
-		return vObj;
-	}
+        trxLogAttrs.put("name", new VTrxLogAttr("name", "Login ID", false, true));
+        trxLogAttrs.put("firstName", new VTrxLogAttr("firstName", "First Name"));
+        trxLogAttrs.put("lastName", new VTrxLogAttr("lastName", "Last Name"));
+        trxLogAttrs.put("emailAddress", new VTrxLogAttr("emailAddress", "Email Address"));
+        trxLogAttrs.put("password", new VTrxLogAttr("password", "Password"));
+        trxLogAttrs.put("userRoleList", new VTrxLogAttr("userRoleList", "User Role"));
+        trxLogAttrs.put("otherAttributes", new VTrxLogAttr("otherAttributes", "Other Attributes"));
+        trxLogAttrs.put("syncSource", new VTrxLogAttr("syncSource", "Sync Source"));
+    }
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXUserList searchXUsers(SearchCriteria searchCriteria) {
-		VXUserList returnList = new VXUserList();
-		List<VXUser> xUserList = new ArrayList<VXUser>();
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXUserList searchXUsers(SearchCriteria searchCriteria) {
+        VXUserList   returnList = new VXUserList();
+        List<VXUser> xUserList  = new ArrayList<>();
 
-		@SuppressWarnings("unchecked")
-		List<XXUser> resultList = (List<XXUser>)searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+        @SuppressWarnings("unchecked")
+        List<XXUser> resultList = (List<XXUser>) searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-		// Iterate over the result list and create the return list
-		for (XXUser gjXUser : resultList) {
-			@SuppressWarnings("unchecked")
-			VXUser vXUser = populateViewBean((T)gjXUser);
-			xUserList.add(vXUser);
-		}
+        // Iterate over the result list and create the return list
+        for (XXUser gjXUser : resultList) {
+            @SuppressWarnings("unchecked")
+            VXUser vXUser = populateViewBean((T) gjXUser);
 
-		returnList.setVXUsers(xUserList);
-		return returnList;
-	}
+            xUserList.add(vXUser);
+        }
 
-	public List<UserInfo> getUsers() {
-		List<UserInfo> returnList = new ArrayList<>();
+        returnList.setVXUsers(xUserList);
 
-		@SuppressWarnings("unchecked")
-		List<XXUser> resultList = daoManager.getXXUser().getAll();
+        return returnList;
+    }
 
-		// Iterate over the result list and create the return list
-		for (XXUser gjXUser : resultList) {
-			UserInfo userInfo = new UserInfo(gjXUser.getName(), gjXUser.getDescription(), gsonBuilder.fromJson(gjXUser.getOtherAttributes(), Map.class));
-			returnList.add(userInfo);
-		}
+    /**
+     * Searches the XUser table and gets the user ids matching the search criteria.
+     */
+    public List<Long> searchXUsersForIds(SearchCriteria searchCriteria) {
+        // construct the sort clause
+        String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
 
-		return returnList;
-	}
+        // get only the column id from the table
+        String q = "SELECT obj.id FROM " + className + " obj ";
 
+        // construct the query object for retrieving the data
+        Query query = createQuery(q, sortClause, searchCriteria, searchFields, false);
+
+        return getDao().getIds(query);
+    }
+
+    public List<UserInfo> getUsers() {
+        return daoManager.getXXUser().getAllUsersInfo();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected XXUser mapViewToEntityBean(VXUser vObj, XXUser mObj, int operationContext) {
+        mObj.setName(vObj.getName());
+        mObj.setIsVisible(vObj.getIsVisible());
+        mObj.setDescription(vObj.getDescription());
+        mObj.setCredStoreId(vObj.getCredStoreId());
+        mObj.setOtherAttributes(vObj.getOtherAttributes());
+        mObj.setSyncSource(vObj.getSyncSource());
+
+        return mObj;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    protected VXUser mapEntityToViewBean(VXUser vObj, XXUser mObj) {
+        vObj.setName(mObj.getName());
+        vObj.setIsVisible(mObj.getIsVisible());
+        vObj.setDescription(mObj.getDescription());
+        vObj.setCredStoreId(mObj.getCredStoreId());
+        vObj.setOtherAttributes(mObj.getOtherAttributes());
+        vObj.setSyncSource(mObj.getSyncSource());
+
+        return vObj;
+    }
 }

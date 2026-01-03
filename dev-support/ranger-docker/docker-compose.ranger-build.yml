@@ -1,28 +1,30 @@
-version: '3'
 services:
   ranger-build:
     build:
       context: .
       dockerfile: Dockerfile.ranger-build
+      args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_BUILD_VERSION=${RANGER_BASE_BUILD_VERSION}
     image: ranger-build
     container_name: ranger-build
-    hostname: ranger-build.example.com
+    hostname: ranger-build.rangernw
     networks:
       - ranger
     volumes:
-      - ~/.m2:/home/ranger/.m2:delegated
-      - ./scripts:/home/ranger/scripts
+      - ${HOME:-~}/.m2:/home/ranger/.m2:delegated
       - ./patches:/home/ranger/patches
-      - ./dist:/home/ranger/dist
-      - ./../../:/home/ranger/src:delegated
-    depends_on:
-      - ranger-base
+      - ./dist:/home/ranger/dist:delegated
+      - ${RANGER_HOME:-./../../}:/home/ranger/src:delegated
     environment:
       - BRANCH
       - BUILD_HOST_SRC
+      - BUILD_OPTS
+      - PROFILE
       - GIT_URL
       - RANGER_VERSION
       - SKIPTESTS
 
 networks:
   ranger:
+    name: rangernw

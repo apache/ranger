@@ -17,101 +17,86 @@
 
 package org.apache.ranger.authorization.elasticsearch.authorizer;
 
-import java.util.List;
-
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 
 public class RangerElasticsearchAuthorizer {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerElasticsearchAuthorizer.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerElasticsearchAuthorizer.class);
+    private static final String RANGER_PLUGIN_TYPE                             = "elasticsearch";
+    private static final String RANGER_ELASTICSEARCH_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.elasticsearch.authorizer.RangerElasticsearchAuthorizer";
 
-	private static final String RANGER_PLUGIN_TYPE = "elasticsearch";
+    private RangerPluginClassLoader          rangerPluginClassLoader;
+    private ClassLoader                      esClassLoader;
+    private RangerElasticsearchAccessControl rangerElasticsearchAccessControl;
 
-	private static final String RANGER_ELASTICSEARCH_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.elasticsearch.authorizer.RangerElasticsearchAuthorizer";
-	private static RangerPluginClassLoader rangerPluginClassLoader = null;
+    public RangerElasticsearchAuthorizer() {
+        LOG.debug("==> RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
 
-	private static ClassLoader esClassLoader = null;
+        this.init();
 
-	private RangerElasticsearchAccessControl rangerElasticsearchAccessControl = null;
+        LOG.debug("<== RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
+    }
 
-	public RangerElasticsearchAuthorizer() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
-		}
+    public void init() {
+        LOG.debug("==> RangerElasticsearchAuthorizer.init()");
 
-		this.init();
+        try {
+            // In elasticsearch this.getClass().getClassLoader() is FactoryURLClassLoader,
+            // but Thread.currentThread().getContextClassLoader() is AppClassLoader.
+            esClassLoader = Thread.currentThread().getContextClassLoader();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerElasticsearchAuthorizer.RangerElasticsearchAuthorizer()");
-		}
-	}
+            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
 
-	public void init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerElasticsearchAuthorizer.init()");
-		}
+            rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
 
-		try {
+            Thread.currentThread().setContextClassLoader(esClassLoader);
 
-			// In elasticsearch this.getClass().getClassLoader() is FactoryURLClassLoader,
-			// but Thread.currentThread().getContextClassLoader() is AppClassLoader.
-			esClassLoader = Thread.currentThread().getContextClassLoader();
-			Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+            @SuppressWarnings("unchecked")
+            Class<RangerElasticsearchAccessControl> cls = (Class<RangerElasticsearchAccessControl>) Class.forName(RANGER_ELASTICSEARCH_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
 
-			rangerPluginClassLoader = RangerPluginClassLoader.getInstance(RANGER_PLUGIN_TYPE, this.getClass());
-			Thread.currentThread().setContextClassLoader(esClassLoader);
+            activatePluginClassLoader();
 
-			@SuppressWarnings("unchecked")
-			Class<RangerElasticsearchAccessControl> cls = (Class<RangerElasticsearchAccessControl>) Class
-					.forName(RANGER_ELASTICSEARCH_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
-			activatePluginClassLoader();
-			rangerElasticsearchAccessControl = cls.newInstance();
-		} catch (Exception e) {
-			LOG.error("Error Enabling RangerElasticsearchAuthorizer", e);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+            rangerElasticsearchAccessControl = cls.newInstance();
+        } catch (Exception e) {
+            LOG.error("Error Enabling RangerElasticsearchAuthorizer", e);
+        } finally {
+            deactivatePluginClassLoader();
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerElasticsearchAuthorizer.init()");
-		}
-	}
+        LOG.debug("<== RangerElasticsearchAuthorizer.init()");
+    }
 
-	public boolean checkPermission(String user, List<String> groups, String index, String action,
-			String clientIPAddress) {
-		boolean ret = false;
+    public boolean checkPermission(String user, List<String> groups, String index, String action, String clientIPAddress) {
+        boolean ret;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerElasticsearchAuthorizer.checkPermission()");
-		}
+        LOG.debug("==> RangerElasticsearchAuthorizer.checkPermission()");
 
-		try {
-			activatePluginClassLoader();
+        try {
+            activatePluginClassLoader();
 
-			ret = rangerElasticsearchAccessControl.checkPermission(user, groups, index, action, clientIPAddress);
-		} finally {
-			deactivatePluginClassLoader();
-		}
+            ret = rangerElasticsearchAccessControl.checkPermission(user, groups, index, action, clientIPAddress);
+        } finally {
+            deactivatePluginClassLoader();
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerElasticsearchAuthorizer.checkPermission()");
-		}
+        LOG.debug("<== RangerElasticsearchAuthorizer.checkPermission()");
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private void activatePluginClassLoader() {
-		if (rangerPluginClassLoader != null) {
-			Thread.currentThread().setContextClassLoader(rangerPluginClassLoader);
-		}
-	}
+    private void activatePluginClassLoader() {
+        if (rangerPluginClassLoader != null) {
+            Thread.currentThread().setContextClassLoader(rangerPluginClassLoader);
+        }
+    }
 
-	private void deactivatePluginClassLoader() {
-		if (esClassLoader != null) {
-			Thread.currentThread().setContextClassLoader(esClassLoader);
-		}
-	}
+    private void deactivatePluginClassLoader() {
+        if (esClassLoader != null) {
+            Thread.currentThread().setContextClassLoader(esClassLoader);
+        }
+    }
 }

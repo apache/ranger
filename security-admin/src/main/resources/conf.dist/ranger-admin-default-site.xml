@@ -157,6 +157,40 @@
 		<value>1</value>
 	</property>
 
+<!-- #auto lock when too many failed logon attempts -->
+	<property>
+		<name>ranger.admin.login.autolock.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.admin.login.autolock.window.seconds</name>
+		<value>300</value>
+	</property>
+	<property>
+		<name>ranger.admin.login.autolock.maxfailure</name>
+		<value>5</value>
+	</property>
+
+<!-- # anonymous access -->
+	<property>
+		<name>ranger.admin.allow.unauthenticated.access</name>
+		<value>false</value>
+		<description>
+			Enable unauthenticated access, it can not be used in production environment.
+			See security-applicationContext.xml for more.
+		</description>
+	</property>
+	<property>
+		<name>ranger.admin.allow.unauthenticated.download.access</name>
+		<value>false</value>
+		<description>
+			Enable unauthenticated download access. It enables /service/tags/download, /service/roles/download/ and
+			/service/plugins/policies/download only.
+			In the kerberos environment where the security requirements are not particularly high, it can be used to
+			avoid the trouble of download only ranger plugin accessing ranger via kerberos to download policies and
+			roles. In many cases, this kind of downloading behavior does not need to be protected.
+		</description>
+	</property>
 
 <!-- #hacks -->
 	<property>
@@ -298,12 +332,27 @@
 
 	<property>
 		<name>ranger.accesslog.dateformat</name>
-		<value>yyyy-MM-dd</value>
+		<value>-yyyy-MM-dd</value>
 	</property>
 
 	<property>
 		<name>ranger.accesslog.pattern</name>
-		<value>%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i"</value>
+		<value>%h %l %u %t "%r" %s %b %D "%{Referer}i" "%{User-Agent}i"</value>
+	</property>
+
+	<property>
+		<name>ranger.accesslog.rotate.enabled</name>
+		<value>true</value>
+	</property>
+
+	<property>
+		<name>ranger.accesslog.rotate.max_days</name>
+		<value>15</value>
+	</property>
+
+	<property>
+		<name>ranger.accesslog.rotate.rename_on_rotate</name>
+		<value>false</value>
 	</property>
 
 	<property>
@@ -343,32 +392,26 @@
 	</property>
 
 	<property>
-		<name>ranger.jpa.jdbc.initialpoolsize</name>
-		<value>5</value>
+		<name>ranger.jpa.jdbc.idletimeout</name>
+		<value>300000</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>ranger.jpa.jdbc.maxidletime</name>
-		<value>300</value>
-		<description></description>
-	</property>
-
-	<property>
-		<name>ranger.jpa.jdbc.maxstatements</name>
-		<value>500</value>
+		<name>ranger.jpa.jdbc.maxlifetime</name>
+		<value>1800000</value>
 		<description></description>
 	</property>
 
 	<property>
 		<name>ranger.jpa.jdbc.preferredtestquery</name>
-		<value>select 1;</value>
+		<value>select 1</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>ranger.jpa.jdbc.idleconnectiontestperiod</name>
-		<value>60</value>
+		<name>ranger.jpa.jdbc.connectiontimeout</name>
+		<value>30000</value>
 		<description></description>
 	</property>
 
@@ -483,6 +526,11 @@
 		<value>false</value>
 		<description></description>
 	</property>
+	<property>
+		<name>ranger.password.history.count</name>
+		<value>4</value>
+		<description></description>
+	</property>
 	<!-- # DB Info for audit_DB -->
 
 	<property>
@@ -529,6 +577,10 @@
 	<property>
 		<name>ranger.rest-csrf.methods-to-ignore</name>
 		<value>GET,OPTIONS,HEAD,TRACE</value>
+	</property>
+	<property>
+		<name>ranger.rest-csrf.token.length</name>
+		<value>20</value>
 	</property>
 	<property>
 		<name>ranger.rest-csrf.browser-useragents-regex</name>
@@ -615,4 +667,12 @@
 			<name>ranger.default.browser-useragents</name>
 			<value>Mozilla,Opera,Chrome</value>
 	   </property>
+          <property>
+            <name>ranger.tomcat.work.dir</name>
+            <value></value>
+          </property>
+	<property>
+		<name>ranger.allow.kerberos.auth.login.browser</name>
+		<value>false</value>
+	</property>
 </configuration>

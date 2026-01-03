@@ -19,8 +19,9 @@
 
 package org.apache.ranger.services.ozone.client;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -29,41 +30,35 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 public class OzoneConnectionMgr {
-    private static final Logger LOG = Logger.getLogger(OzoneConnectionMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OzoneConnectionMgr.class);
 
-    protected ConcurrentMap<String, OzoneClient>    ozoneConnectionCache;
-    protected ConcurrentMap<String, Boolean>        repoConnectStatusMap;
+    protected ConcurrentMap<String, OzoneClient> ozoneConnectionCache;
+    protected ConcurrentMap<String, Boolean>     repoConnectStatusMap;
 
-
-    public	OzoneConnectionMgr() {
-        ozoneConnectionCache = new ConcurrentHashMap<String, OzoneClient>();
-        repoConnectStatusMap = new ConcurrentHashMap<String, Boolean>();
+    public OzoneConnectionMgr() {
+        ozoneConnectionCache = new ConcurrentHashMap<>();
+        repoConnectStatusMap = new ConcurrentHashMap<>();
     }
 
-
-    public OzoneClient getOzoneConnection(final String serviceName, final String serviceType, final Map<String,String> configs) {
-        OzoneClient ozoneClient  = null;
+    public OzoneClient getOzoneConnection(final String serviceName, final String serviceType, final Map<String, String> configs) {
+        OzoneClient ozoneClient = null;
 
         if (serviceType != null) {
             // get it from the cache
             ozoneClient = ozoneConnectionCache.get(serviceName);
+
             if (ozoneClient == null) {
                 if (configs != null) {
+                    final Callable<OzoneClient> connectOzone = () -> new OzoneClient(serviceName, configs);
 
-                    final Callable<OzoneClient> connectHive = new Callable<OzoneClient>() {
-                        @Override
-                        public OzoneClient call() throws Exception {
-                            return new OzoneClient(serviceName, configs);
-                        }
-                    };
                     try {
-                        ozoneClient = TimedEventUtil.timedTask(connectHive, 5, TimeUnit.SECONDS);
-                    } catch(Exception e){
-                        LOG.error("Error connecting ozone repository : "+
-                                serviceName +" using config : "+ configs, e);
+                        ozoneClient = TimedEventUtil.timedTask(connectOzone, 5, TimeUnit.SECONDS);
+                    } catch (Exception e) {
+                        LOG.error("Error connecting ozone repository: {} using config: {}", serviceName, configs, e);
                     }
 
-                    OzoneClient oldClient = null;
+                    OzoneClient oldClient;
+
                     if (ozoneClient != null) {
                         oldClient = ozoneConnectionCache.putIfAbsent(serviceName, ozoneClient);
                     } else {
@@ -75,29 +70,36 @@ public class OzoneConnectionMgr {
                         if (ozoneClient != null) {
                             ozoneClient.close();
                         }
+
                         ozoneClient = oldClient;
                     }
+
                     repoConnectStatusMap.put(serviceName, true);
                 } else {
-                    LOG.error("Connection Config not defined for asset :"
-                            + serviceName, new Throwable());
+                    String message = String.format("Connection Config not defined for asset: %s", serviceName);
+
+                    LOG.error(message, new IllegalStateException(message));
                 }
             } else {
                 try {
                     ozoneClient.getVolumeList(null);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     ozoneConnectionCache.remove(serviceName);
                     /*
                      * There is a possibility that some other thread is also using this connection that we are going to close but
                      * presumably the connection is bad which is why we are closing it, so damage should not be much.
                      */
                     ozoneClient.close();
-                    ozoneClient = getOzoneConnection(serviceName,serviceType,configs);
+
+                    ozoneClient = getOzoneConnection(serviceName, serviceType, configs);
                 }
             }
         } else {
-            LOG.error("Asset not found with name "+serviceName, new Throwable());
+            String message = String.format("Asset not found with name: %s", serviceName);
+
+            LOG.error(message, new IllegalStateException(message));
         }
+
         return ozoneClient;
     }
 }

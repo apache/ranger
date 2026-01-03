@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *	 http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,24 +17,14 @@
 
 package org.apache.ranger.patch;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.PolicyRefUpdater;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXPolicyDao;
@@ -86,595 +76,605 @@ import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Consolidates Ranger policy details into a JSON string and stores it into a
  * column in x_policy table After running this patch Ranger policy can be
  * completely read/saved into x_policy table and some related Ref tables (which
  * maintain ID->String mapping for each policy).
- *
  */
 @Component
 public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchForUpdatingPolicyJson_J10019.class);
-
-	@Autowired
-	RangerDaoManager daoMgr;
+    private static final Logger logger = LoggerFactory.getLogger(PatchForUpdatingPolicyJson_J10019.class);
 
-	@Autowired
-	ServiceDBStore svcStore;
+    private final Map<String, Long>              groupIdMap         = new HashMap<>();
+    private final Map<String, Long>              userIdMap          = new HashMap<>();
+    private final Map<String, Map<String, Long>> resourceNameIdMap  = new HashMap<>();
+    private final Map<String, Map<String, Long>> accessTypeIdMap    = new HashMap<>();
+    private final Map<String, Map<String, Long>> conditionNameIdMap = new HashMap<>();
+    private final Map<String, Map<String, Long>> dataMaskTypeIdMap  = new HashMap<>();
 
-	@Autowired
-	@Qualifier(value = "transactionManager")
-	PlatformTransactionManager txManager;
-
-	@Autowired
-	PolicyRefUpdater policyRefUpdater;
-
-	private final Map<String, Long>              groupIdMap         = new HashMap<>();
-	private final Map<String, Long>              userIdMap          = new HashMap<>();
-	private final Map<String, Map<String, Long>> resourceNameIdMap  = new HashMap<>();
-	private final Map<String, Map<String, Long>> accessTypeIdMap    = new HashMap<>();
-	private final Map<String, Map<String, Long>> conditionNameIdMap = new HashMap<>();
-	private final Map<String, Map<String, Long>> dataMaskTypeIdMap  = new HashMap<>();
-
-	public static void main(String[] args) {
-		logger.info("main()");
-		try {
-			PatchForUpdatingPolicyJson_J10019 loader = (PatchForUpdatingPolicyJson_J10019) CLIUtil.getBean(PatchForUpdatingPolicyJson_J10019.class);
-
-			loader.init();
-
-			while (loader.isMoreToProcess()) {
-				loader.load();
-			}
-
-			logger.info("Load complete. Exiting!!!");
-
-			System.exit(0);
-		} catch (Exception e) {
-			logger.error("Error loading", e);
-			System.exit(1);
-		}
-	}
-
-	@Override
-	public void init() throws Exception {
-		// Do Nothing
-	}
-
-	@Override
-	public void execLoad() {
-		logger.info("==> PatchForUpdatingPolicyJson.execLoad()");
-
-		try {
-			updateRangerPolicyTableWithPolicyJson();
-		} catch (Exception e) {
-			logger.error("Error while updateRangerPolicyTableWithPolicyJson()", e);
-			System.exit(1);
-		}
-
-		logger.info("<== PatchForUpdatingPolicyJson.execLoad()");
-	}
-
-	@Override
-	public void printStats() {
-		logger.info("updateRangerPolicyTableWithPolicyJson data ");
-	}
-
-	private void updateRangerPolicyTableWithPolicyJson() throws Exception {
-		logger.info("==> updateRangerPolicyTableWithPolicyJson() ");
-
-		List<RangerService> allServices = svcStore.getServices(new SearchFilter());
-
-		if (CollectionUtils.isNotEmpty(allServices)) {
-			for (RangerService service : allServices) {
-				XXService dbService = daoMgr.getXXService().getById(service.getId());
-
-				logger.info("==> Port Policies of service(name=" + dbService.getName() + ")");
-
-				RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr, txManager);
-
-				List<RangerPolicy> policies = policyRetriever.getServicePolicies(dbService);
-
-				if (CollectionUtils.isNotEmpty(policies)) {
-					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-
-					for (RangerPolicy policy : policies) {
-						XXPolicy xPolicy = daoMgr.getXXPolicy().getById(policy.getId());
-						if (xPolicy != null && StringUtil.isEmpty(xPolicy.getPolicyText())) {
-
-							PolicyUpdaterThread updaterThread = new PolicyUpdaterThread(txTemplate, service, policy);
-							updaterThread.setDaemon(true);
-							updaterThread.start();
-							updaterThread.join();
-
-							String errorMsg = updaterThread.getErrorMsg();
-							if (StringUtils.isNotEmpty(errorMsg)) {
-								throw new Exception(errorMsg);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		logger.info("<== updateRangerPolicyTableWithPolicyJson() ");
-	}
-
-	private class PolicyUpdaterThread extends Thread {
-		final TransactionTemplate txTemplate;
-		final RangerService       service;
-		final RangerPolicy        policy;
-		String                    errorMsg;
-
-		PolicyUpdaterThread(TransactionTemplate txTemplate, final RangerService service, final RangerPolicy policy) {
-			this.txTemplate = txTemplate;
-			this.service   = service;
-			this.policy    = policy;
-			this.errorMsg  = null;
-		}
-
-		public String getErrorMsg() {
-			return errorMsg;
-		}
-
-		@Override
-		public void run() {
-			errorMsg = txTemplate.execute(new TransactionCallback<String>() {
-				@Override
-				public String doInTransaction(TransactionStatus status) {
-					String ret = null;
-					try {
-						policyRefUpdater.cleanupRefTables(policy);
-						portPolicy(service.getType(), policy);
-					} catch (Throwable e) {
-						logger.error("PortPolicy failed for policy:[" + policy + "]", e);
-						ret = e.toString();
-					}
-					return ret;
-				}
-			});
-		}
-	}
-
-	private void portPolicy(String serviceType, RangerPolicy policy) throws Exception {
-		logger.info("==> portPolicy(id=" + policy.getId() + ")");
-
-		String policyText = JsonUtils.objectToJson(policy);
-
-		if (StringUtils.isEmpty(policyText)) {
-			throw new Exception("Failed to convert policy to json string. Policy: [id=" +  policy.getId() + "; name=" + policy.getName() + "; serviceType=" + serviceType + "]");
-		}
-
-		XXPolicyDao policyDao = daoMgr.getXXPolicy();
-		XXPolicy    dbBean    = policyDao.getById(policy.getId());
-
-		dbBean.setPolicyText(policyText);
-
-		policyDao.update(dbBean);
-
-		try {
-            		Set<String> accesses = new HashSet<>();
-            		Set<String> users = new HashSet<>();
-            		Set<String> groups = new HashSet<>();
-            		Set<String> conditions = new HashSet<>();
-            		Set<String> dataMasks = new HashSet<>();
+    @Autowired
+    RangerDaoManager daoMgr;
 
-            		buildLists(policy.getPolicyItems(), accesses, conditions, users, groups);
-            		buildLists(policy.getDenyPolicyItems(), accesses, conditions, users, groups);
-            		buildLists(policy.getAllowExceptions(), accesses, conditions, users, groups);
-            		buildLists(policy.getDenyExceptions(), accesses, conditions, users, groups);
-            		buildLists(policy.getDataMaskPolicyItems(), accesses, conditions, users, groups);
-            		buildLists(policy.getRowFilterPolicyItems(), accesses, conditions, users, groups);
+    @Autowired
+    ServiceDBStore svcStore;
 
-            		buildList(policy.getDataMaskPolicyItems(), dataMasks);
-
-            		addResourceDefRef(serviceType, policy);
-            		addUserNameRef(policy.getId(), users);
-            		addGroupNameRef(policy.getId(), groups);
-            		addAccessDefRef(serviceType, policy.getId(), accesses);
-            		addPolicyConditionDefRef(serviceType, policy.getId(), conditions);
-            		addDataMaskDefRef(serviceType, policy.getId(), dataMasks);
-        	} catch (Exception e) {
-		    logger.error("portPoliry(id=" + policy.getId() +") failed!!");
-		    logger.error("Offending policy:" + policyText);
-		    throw e;
-        	}
+    @Autowired
+    @Qualifier(value = "transactionManager")
+    PlatformTransactionManager txManager;
 
-		logger.info("<== portPolicy(id=" + policy.getId() + ")");
-	}
+    @Autowired
+    PolicyRefUpdater policyRefUpdater;
 
-	private void addResourceDefRef(String serviceType, RangerPolicy policy) throws Exception {
-		logger.info("==> addResourceDefRef(id=" + policy.getId() + ")");
+    @Autowired
+    XUserMgr xUserMgr;
 
-		Map<String, Long> serviceDefResourceNameIDMap = resourceNameIdMap.get(serviceType);
+    @Autowired
+    RangerDataHistService dataHistService;
 
-		if (serviceDefResourceNameIDMap == null) {
-			serviceDefResourceNameIDMap = new HashMap<>();
+    public static void main(String[] args) {
+        logger.info("main()");
 
-			resourceNameIdMap.put(serviceType, serviceDefResourceNameIDMap);
+        try {
+            PatchForUpdatingPolicyJson_J10019 loader = (PatchForUpdatingPolicyJson_J10019) CLIUtil.getBean(PatchForUpdatingPolicyJson_J10019.class);
 
-			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+            loader.init();
 
-			for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
-			}
-		}
+            while (loader.isMoreToProcess()) {
+                loader.load();
+            }
 
-		Map<String, RangerPolicyResource> policyResources = policy.getResources();
+            logger.info("Load complete. Exiting!!!");
 
-		if (MapUtils.isNotEmpty(policyResources)) {
-			XXPolicyRefResourceDao policyRefResourceDao = daoMgr.getXXPolicyRefResource();
-			Set<String>            resourceNames        = policyResources.keySet();
+            System.exit(0);
+        } catch (Exception e) {
+            logger.error("Error loading", e);
 
-			for (String resourceName : resourceNames) {
-				Long resourceDefId = serviceDefResourceNameIDMap.get(resourceName);
+            System.exit(1);
+        }
+    }
 
-				if (resourceDefId == null) {
-					throw new Exception(resourceName + ": unknown resource in policy [id=" +  policy.getId() + "; name=" + policy.getName() + "; serviceType=" + serviceType + "]. Known resources: " + serviceDefResourceNameIDMap.keySet());
-				}
+    @Override
+    public void init() throws Exception {
+        // Do Nothing
+    }
 
-				// insert policy-id, resourceDefId, resourceName into Ref table
-				XXPolicyRefResource policyRefResource = new XXPolicyRefResource();
+    @Override
+    public void printStats() {
+        logger.info("updateRangerPolicyTableWithPolicyJson data ");
+    }
 
-				policyRefResource.setPolicyId(policy.getId());
-				policyRefResource.setResourceDefId(resourceDefId);
-				policyRefResource.setResourceName(resourceName);
+    @Override
+    public void execLoad() {
+        logger.info("==> PatchForUpdatingPolicyJson.execLoad()");
 
-				policyRefResourceDao.create(policyRefResource);
-			}
-		}
+        try {
+            updateRangerPolicyTableWithPolicyJson();
+        } catch (Exception e) {
+            logger.error("Error while updateRangerPolicyTableWithPolicyJson()", e);
 
-		logger.info("<== addResourceDefRef(id=" + policy.getId() + ")");
-	}
+            System.exit(1);
+        }
 
-	private void addUserNameRef(Long policyId, Set<String> users) throws Exception {
-		logger.info("==> addUserNameRef(id=" + policyId + ")");
+        logger.info("<== PatchForUpdatingPolicyJson.execLoad()");
+    }
 
-		XXPolicyRefUserDao policyRefUserDao = daoMgr.getXXPolicyRefUser();
-		XXUserDao          userDao          = daoMgr.getXXUser();
+    private void updateRangerPolicyTableWithPolicyJson() throws Exception {
+        logger.info("==> updateRangerPolicyTableWithPolicyJson() ");
 
-		// insert policy-id, userName into Ref table
-		for (String user : users) {
-			Long userId = userIdMap.get(user);
+        List<RangerService> allServices = svcStore.getServices(new SearchFilter());
 
-			if (userId == null) {
-				XXUser userObject = userDao.findByUserName(user);
+        if (CollectionUtils.isNotEmpty(allServices)) {
+            for (RangerService service : allServices) {
+                XXService dbService = daoMgr.getXXService().getById(service.getId());
 
-				if (userObject == null) {
-					throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
-				}
+                logger.info("==> Port Policies of service(name={})", dbService.getName());
 
-				userId = userObject.getId();
+                RangerPolicyRetriever policyRetriever = new RangerPolicyRetriever(daoMgr, txManager);
 
-				userIdMap.put(user, userId);
-			}
+                List<RangerPolicy> policies = policyRetriever.getServicePolicies(dbService);
 
-			XXPolicyRefUser policyRefUser = new XXPolicyRefUser();
+                if (CollectionUtils.isNotEmpty(policies)) {
+                    TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
-			policyRefUser.setPolicyId(policyId);
-			policyRefUser.setUserName(user);
-			policyRefUser.setUserId(userId);
+                    for (RangerPolicy policy : policies) {
+                        XXPolicy xPolicy = daoMgr.getXXPolicy().getById(policy.getId());
+                        if (xPolicy != null && StringUtil.isEmpty(xPolicy.getPolicyText())) {
+                            PolicyUpdaterThread updaterThread = new PolicyUpdaterThread(txTemplate, service, policy);
 
-			policyRefUserDao.create(policyRefUser);
-		}
+                            updaterThread.setDaemon(true);
+                            updaterThread.start();
+                            updaterThread.join();
 
-		logger.info("<== addUserNameRef(id=" + policyId + ")");
-	}
+                            String errorMsg = updaterThread.getErrorMsg();
 
-	private void addGroupNameRef(Long policyId, Set<String> groups) throws Exception {
-		logger.info("==> addGroupNameRef(id=" + policyId + ")");
+                            if (StringUtils.isNotEmpty(errorMsg)) {
+                                throw new Exception(errorMsg);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-		// insert policy-id, groupName into Ref table
-		XXPolicyRefGroupDao policyRefGroupDao = daoMgr.getXXPolicyRefGroup();
-		XXGroupDao          groupDao          = daoMgr.getXXGroup();
+        logger.info("<== updateRangerPolicyTableWithPolicyJson() ");
+    }
 
-		for (String group : groups) {
-			Long groupId = groupIdMap.get(group);
+    private void portPolicy(String serviceType, RangerPolicy policy) throws Exception {
+        logger.info("==> portPolicy(id={})", policy.getId());
 
-			if (groupId == null) {
-				XXGroup groupObject = groupDao.findByGroupName(group);
+        String policyText = JsonUtils.objectToJson(policy);
 
-				if (groupObject == null) {
-					throw new Exception(group + ": unknown group in policy [id=" + policyId + "]");
-				}
+        if (StringUtils.isEmpty(policyText)) {
+            throw new Exception("Failed to convert policy to json string. Policy: [id=" + policy.getId() + "; name=" + policy.getName() + "; serviceType=" + serviceType + "]");
+        }
 
-				groupId = groupObject.getId();
+        XXPolicyDao policyDao = daoMgr.getXXPolicy();
+        XXPolicy    dbBean    = policyDao.getById(policy.getId());
 
-				groupIdMap.put(group, groupId);
-			}
+        dbBean.setPolicyText(policyText);
 
-			XXPolicyRefGroup policyRefGroup = new XXPolicyRefGroup();
+        policyDao.update(dbBean);
 
-			policyRefGroup.setPolicyId(policyId);
-			policyRefGroup.setGroupName(group);
-			policyRefGroup.setGroupId(groupId);
+        try {
+            Set<String> accesses   = new HashSet<>();
+            Set<String> users      = new HashSet<>();
+            Set<String> groups     = new HashSet<>();
+            Set<String> conditions = new HashSet<>();
+            Set<String> dataMasks  = new HashSet<>();
 
-			policyRefGroupDao.create(policyRefGroup);
-		}
+            buildLists(policy.getPolicyItems(), accesses, conditions, users, groups);
+            buildLists(policy.getDenyPolicyItems(), accesses, conditions, users, groups);
+            buildLists(policy.getAllowExceptions(), accesses, conditions, users, groups);
+            buildLists(policy.getDenyExceptions(), accesses, conditions, users, groups);
+            buildLists(policy.getDataMaskPolicyItems(), accesses, conditions, users, groups);
+            buildLists(policy.getRowFilterPolicyItems(), accesses, conditions, users, groups);
 
-		logger.info("<== addGroupNameRef(id=" + policyId + ")");
+            buildList(policy.getDataMaskPolicyItems(), dataMasks);
 
-	}
+            addResourceDefRef(serviceType, policy);
+            addUserNameRef(policy.getId(), users);
+            addGroupNameRef(policy.getId(), groups);
+            addAccessDefRef(serviceType, policy.getId(), accesses);
+            addPolicyConditionDefRef(serviceType, policy.getId(), conditions);
+            addDataMaskDefRef(serviceType, policy.getId(), dataMasks);
 
-	private void addAccessDefRef(String serviceType, Long policyId, Set<String> accesses) throws Exception {
-		logger.info("==> addAccessDefRef(id=" + policyId + ")");
-		// insert policy-id, accessName into Ref table
+            dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_UPDATE);
+        } catch (Exception e) {
+            logger.error("portPolicy(id={}) failed!!", policy.getId());
+            logger.error("Offending policy:{}", policyText);
 
-		Map<String, Long> serviceDefAccessTypeIDMap = accessTypeIdMap.get(serviceType);
+            throw e;
+        }
 
-		if (serviceDefAccessTypeIDMap == null) {
-			serviceDefAccessTypeIDMap = new HashMap<>();
+        logger.info("<== portPolicy(id={})", policy.getId());
+    }
 
-			accessTypeIdMap.put(serviceType, serviceDefAccessTypeIDMap);
+    private void addResourceDefRef(String serviceType, RangerPolicy policy) throws Exception {
+        logger.info("==> addResourceDefRef(id={})", policy.getId());
 
-			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+        Map<String, Long> serviceDefResourceNameIDMap = resourceNameIdMap.get(serviceType);
 
-			for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
-			}
-		}
+        if (serviceDefResourceNameIDMap == null) {
+            serviceDefResourceNameIDMap = new HashMap<>();
 
-		XXPolicyRefAccessTypeDao policyRefAccessTypeDao = daoMgr.getXXPolicyRefAccessType();
+            resourceNameIdMap.put(serviceType, serviceDefResourceNameIDMap);
 
-		for (String access : accesses) {
-			Long accessTypeDefId = serviceDefAccessTypeIDMap.get(access);
+            XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
 
-			if (accessTypeDefId == null) {
-				throw new Exception(access + ": unknown accessType in policy [id=" +  policyId + "; serviceType=" + serviceType + "]. Known accessTypes: " + serviceDefAccessTypeIDMap.keySet());
-			}
+            if (dbServiceDef != null) {
+                for (XXResourceDef resourceDef : daoMgr.getXXResourceDef().findByServiceDefId(dbServiceDef.getId())) {
+                    serviceDefResourceNameIDMap.put(resourceDef.getName(), resourceDef.getId());
+                }
+            }
+        }
 
-			XXPolicyRefAccessType policyRefAccessType = new XXPolicyRefAccessType();
+        Map<String, RangerPolicyResource> policyResources = policy.getResources();
 
-			policyRefAccessType.setPolicyId(policyId);
-			policyRefAccessType.setAccessTypeName(access);
-			policyRefAccessType.setAccessDefId(accessTypeDefId);
+        if (MapUtils.isNotEmpty(policyResources)) {
+            XXPolicyRefResourceDao policyRefResourceDao = daoMgr.getXXPolicyRefResource();
+            Set<String>            resourceNames        = policyResources.keySet();
 
-			policyRefAccessTypeDao.create(policyRefAccessType);
-		}
+            for (String resourceName : resourceNames) {
+                Long resourceDefId = serviceDefResourceNameIDMap.get(resourceName);
 
-		logger.info("<== addAccessDefRef(id=" + policyId + ")");
-	}
+                if (resourceDefId == null) {
+                    throw new Exception(resourceName + ": unknown resource in policy [id=" + policy.getId() + "; name=" + policy.getName() + "; serviceType=" + serviceType + "]. Known resources: " + serviceDefResourceNameIDMap.keySet());
+                }
 
-	private void addPolicyConditionDefRef(String serviceType, Long policyId, Set<String> conditions) throws Exception {
-		logger.info("==> addPolicyConditionDefRef(id=" + policyId + ")");
-		// insert policy-id, conditionName into Ref table
+                // insert policy-id, resourceDefId, resourceName into Ref table
+                XXPolicyRefResource policyRefResource = new XXPolicyRefResource();
 
-		Map<String, Long> serviceDefConditionNameIDMap = conditionNameIdMap.get(serviceType);
+                policyRefResource.setPolicyId(policy.getId());
+                policyRefResource.setResourceDefId(resourceDefId);
+                policyRefResource.setResourceName(resourceName);
 
-		if (serviceDefConditionNameIDMap == null) {
-			serviceDefConditionNameIDMap = new HashMap<>();
+                policyRefResourceDao.create(policyRefResource);
+            }
+        }
 
-			conditionNameIdMap.put(serviceType, serviceDefConditionNameIDMap);
+        logger.info("<== addResourceDefRef(id={})", policy.getId());
+    }
 
-			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+    private void addUserNameRef(Long policyId, Set<String> users) throws Exception {
+        logger.info("==> addUserNameRef(id={})", policyId);
 
-			for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
-			}
-		}
+        XXPolicyRefUserDao policyRefUserDao = daoMgr.getXXPolicyRefUser();
+        XXUserDao          userDao          = daoMgr.getXXUser();
 
-		XXPolicyRefConditionDao policyRefConditionDao = daoMgr.getXXPolicyRefCondition();
+        // insert policy-id, userName into Ref table
+        for (String user : users) {
+            Long userId = userIdMap.get(user);
 
-		for (String condition : conditions) {
-			Long conditionDefId = serviceDefConditionNameIDMap.get(condition);
+            if (userId == null) {
+                XXUser userObject = userDao.findByUserName(user);
 
-			if (conditionDefId == null) {
-				throw new Exception(condition + ": unknown condition in policy [id=" +  policyId + "; serviceType=" + serviceType + "]. Known conditions are: " + serviceDefConditionNameIDMap.keySet());
-			}
+                if (userObject == null) {
+                    logger.info("user is not found, adding user: {}", user);
 
-			XXPolicyRefCondition policyRefCondition = new XXPolicyRefCondition();
+                    TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
-			policyRefCondition.setPolicyId(policyId);
-			policyRefCondition.setConditionName(condition);
-			policyRefCondition.setConditionDefId(conditionDefId);
+                    txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-			policyRefConditionDao.create(policyRefCondition);
-		}
+                    try {
+                        txTemplate.execute(status -> {
+                            xUserMgr.createServiceConfigUserSynchronously(user);
 
-		logger.info("<== addPolicyConditionDefRef(id=" + policyId + ")");
-	}
+                            return null;
+                        });
+                    } catch (Exception exception) {
+                        logger.error("Cannot create ServiceConfigUser({})", user, exception);
+                    }
 
-	private void addDataMaskDefRef(String serviceType, Long policyId, Set<String> datamasks) throws Exception {
-		logger.info("==> addDataMaskDefRef(id=" + policyId + ")");
+                    userObject = userDao.findByUserName(user);
 
-		// insert policy-id, datamaskName into Ref table
+                    if (userObject == null) {
+                        throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
+                    }
+                }
 
-		Map<String, Long> serviceDefDataMaskTypeIDMap = dataMaskTypeIdMap.get(serviceType);
+                userId = userObject.getId();
 
-		if (serviceDefDataMaskTypeIDMap == null) {
-			serviceDefDataMaskTypeIDMap = new HashMap<>();
+                logger.info("userId:{}", userId);
 
-			dataMaskTypeIdMap.put(serviceType, serviceDefDataMaskTypeIDMap);
+                userIdMap.put(user, userId);
+            }
 
-			XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+            XXPolicyRefUser policyRefUser = new XXPolicyRefUser();
 
-			for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
-				serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
-			}
-		}
+            policyRefUser.setPolicyId(policyId);
+            policyRefUser.setUserName(user);
+            policyRefUser.setUserId(userId);
 
-		XXPolicyRefDataMaskTypeDao policyRefDataMaskTypeDao = daoMgr.getXXPolicyRefDataMaskType();
+            policyRefUserDao.create(policyRefUser);
+        }
 
-		for (String datamask : datamasks) {
-			Long dataMaskTypeId = serviceDefDataMaskTypeIDMap.get(datamask);
+        logger.info("<== addUserNameRef(id={})", policyId);
+    }
 
-			if (dataMaskTypeId == null) {
-				throw new Exception(datamask + ": unknown dataMaskType in policy [id=" +  policyId + "; serviceType=" + serviceType + "]. Known dataMaskTypes " + serviceDefDataMaskTypeIDMap.keySet());
-			}
+    private void addGroupNameRef(Long policyId, Set<String> groups) throws Exception {
+        logger.info("==> addGroupNameRef(id={})", policyId);
 
-			XXPolicyRefDataMaskType policyRefDataMaskType = new XXPolicyRefDataMaskType();
+        // insert policy-id, groupName into Ref table
+        XXPolicyRefGroupDao policyRefGroupDao = daoMgr.getXXPolicyRefGroup();
+        XXGroupDao          groupDao          = daoMgr.getXXGroup();
 
-			policyRefDataMaskType.setPolicyId(policyId);
-			policyRefDataMaskType.setDataMaskTypeName(datamask);
-			policyRefDataMaskType.setDataMaskDefId(dataMaskTypeId);
+        for (String group : groups) {
+            Long groupId = groupIdMap.get(group);
 
-			policyRefDataMaskTypeDao.create(policyRefDataMaskType);
-		}
+            if (groupId == null) {
+                XXGroup groupObject = groupDao.findByGroupName(group);
 
-		logger.info("<== addDataMaskDefRef(id=" + policyId + ")");
+                if (groupObject == null) {
+                    throw new Exception(group + ": unknown group in policy [id=" + policyId + "]");
+                }
 
-	}
+                groupId = groupObject.getId();
 
-	private void buildLists(List<? extends RangerPolicyItem> policyItems, Set<String> accesses, Set<String> conditions, Set<String> users, Set<String> groups) {
-		for (RangerPolicyItem item : policyItems) {
-			for (RangerPolicyItemAccess policyAccess : item.getAccesses()) {
-				accesses.add(policyAccess.getType());
-			}
+                groupIdMap.put(group, groupId);
+            }
 
-			for (RangerPolicyItemCondition policyCondition : item.getConditions()) {
-				conditions.add(policyCondition.getType());
-			}
+            XXPolicyRefGroup policyRefGroup = new XXPolicyRefGroup();
 
-			users.addAll(item.getUsers());
-			groups.addAll(item.getGroups());
-		}
-	}
+            policyRefGroup.setPolicyId(policyId);
+            policyRefGroup.setGroupName(group);
+            policyRefGroup.setGroupId(groupId);
 
-	private void buildList(List<RangerDataMaskPolicyItem> dataMaskPolicyItems, Set<String> dataMasks) {
-		for (RangerDataMaskPolicyItem datMaskPolicyItem : dataMaskPolicyItems) {
-			dataMasks.add(datMaskPolicyItem.getDataMaskInfo().getDataMaskType());
-		}
-	}
+            policyRefGroupDao.create(policyRefGroup);
+        }
 
-	static private class RangerPolicyRetriever {
-		static final Log LOG      = LogFactory.getLog(RangerPolicyRetriever.class);
-		static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
+        logger.info("<== addGroupNameRef(id={})", policyId);
+    }
 
-		private final RangerDaoManager daoMgr;
-		private final LookupCache      lookupCache = new LookupCache();
+    private void addAccessDefRef(String serviceType, Long policyId, Set<String> accesses) throws Exception {
+        logger.info("==> addAccessDefRef(id={})", policyId);
+        // insert policy-id, accessName into Ref table
 
-		private final PlatformTransactionManager txManager;
-		private final TransactionTemplate        txTemplate;
+        Map<String, Long> serviceDefAccessTypeIDMap = accessTypeIdMap.get(serviceType);
 
-		RangerPolicyRetriever(RangerDaoManager daoMgr, PlatformTransactionManager txManager) {
-			this.daoMgr    = daoMgr;
-			this.txManager = txManager;
+        if (serviceDefAccessTypeIDMap == null) {
+            serviceDefAccessTypeIDMap = new HashMap<>();
 
-			if (this.txManager != null) {
-				this.txTemplate = new TransactionTemplate(this.txManager);
+            accessTypeIdMap.put(serviceType, serviceDefAccessTypeIDMap);
 
-				this.txTemplate.setReadOnly(true);
-			} else {
-				this.txTemplate = null;
-			}
-		}
+            XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
 
-		private class PolicyLoaderThread extends Thread {
-			final TransactionTemplate txTemplate;
-			final XXService           xService;
-			List<RangerPolicy>        policies;
+            if (dbServiceDef != null) {
+                for (XXAccessTypeDef accessTypeDef : daoMgr.getXXAccessTypeDef().findByServiceDefId(dbServiceDef.getId())) {
+                    serviceDefAccessTypeIDMap.put(accessTypeDef.getName(), accessTypeDef.getId());
+                }
+            }
+        }
 
-			PolicyLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
-				this.txTemplate = txTemplate;
-				this.xService   = xService;
-			}
+        XXPolicyRefAccessTypeDao policyRefAccessTypeDao = daoMgr.getXXPolicyRefAccessType();
 
-			public List<RangerPolicy> getPolicies() {
-				return policies;
-			}
+        for (String access : accesses) {
+            Long accessTypeDefId = serviceDefAccessTypeIDMap.get(access);
 
-			@Override
-			public void run() {
-				txTemplate.setReadOnly(true);
-				policies = txTemplate.execute(new TransactionCallback<List<RangerPolicy>>() {
-					@Override
-					public List<RangerPolicy> doInTransaction(TransactionStatus status) {
-						RetrieverContext ctx = new RetrieverContext(xService);
-						return ctx.getAllPolicies();
-					}
-				});
-			}
-		}
+            if (accessTypeDefId == null) {
+                throw new Exception(access + ": unknown accessType in policy [id=" + policyId + "; serviceType=" + serviceType + "]. Known accessTypes: " + serviceDefAccessTypeIDMap.keySet());
+            }
 
-		public List<RangerPolicy> getServicePolicies(final XXService xService) throws InterruptedException {
-			String serviceName = xService == null ? null : xService.getName();
-			Long   serviceId   = xService == null ? null : xService.getId();
+            XXPolicyRefAccessType policyRefAccessType = new XXPolicyRefAccessType();
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> RangerPolicyRetriever.getServicePolicies(serviceName=" + serviceName + ", serviceId=" + serviceId + ")");
-			}
+            policyRefAccessType.setPolicyId(policyId);
+            policyRefAccessType.setAccessTypeName(access);
+            policyRefAccessType.setAccessDefId(accessTypeDefId);
 
-			List<RangerPolicy> ret  = null;
-			RangerPerfTracer   perf = null;
+            policyRefAccessTypeDao.create(policyRefAccessType);
+        }
 
-			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerPolicyRetriever.getServicePolicies(serviceName=" + serviceName + ",serviceId=" + serviceId + ")");
-			}
+        logger.info("<== addAccessDefRef(id={})", policyId);
+    }
 
-			if (xService != null) {
-				if (txTemplate == null) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Transaction Manager is null; Retrieving policies in the existing transaction");
-					}
+    private void addPolicyConditionDefRef(String serviceType, Long policyId, Set<String> conditions) throws Exception {
+        logger.info("==> addPolicyConditionDefRef(id={})", policyId);
+        // insert policy-id, conditionName into Ref table
 
-					RetrieverContext ctx = new RetrieverContext(xService);
+        Map<String, Long> serviceDefConditionNameIDMap = conditionNameIdMap.get(serviceType);
 
-					ret = ctx.getAllPolicies();
-				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Retrieving policies in a new, read-only transaction");
-					}
+        if (serviceDefConditionNameIDMap == null) {
+            serviceDefConditionNameIDMap = new HashMap<>();
 
-					PolicyLoaderThread t = new PolicyLoaderThread(txTemplate, xService);
-					t.start();
-					t.join();
-					ret = t.getPolicies();
-				}
-			} else {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("RangerPolicyRetriever.getServicePolicies(xService=" + xService + "): invalid parameter");
-				}
-			}
+            conditionNameIdMap.put(serviceType, serviceDefConditionNameIDMap);
 
-			RangerPerfTracer.log(perf);
+            XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== RangerPolicyRetriever.getServicePolicies(serviceName=" + serviceName + ", serviceId=" + serviceId + "): policyCount=" + (ret == null ? 0 : ret.size()));
-			}
+            if (dbServiceDef != null) {
+                for (XXPolicyConditionDef conditionDef : daoMgr.getXXPolicyConditionDef().findByServiceDefId(dbServiceDef.getId())) {
+                    serviceDefConditionNameIDMap.put(conditionDef.getName(), conditionDef.getId());
+                }
+            }
+        }
 
-			return ret;
-		}
+        XXPolicyRefConditionDao policyRefConditionDao = daoMgr.getXXPolicyRefCondition();
 
-		class LookupCache {
-			final Map<Long, String> userNames       = new HashMap<Long, String>();
-			final Map<Long, String> userScreenNames = new HashMap<Long, String>();
-			final Map<Long, String> groupNames      = new HashMap<Long, String>();
-			final Map<Long, String> accessTypes     = new HashMap<Long, String>();
-			final Map<Long, String> conditions      = new HashMap<Long, String>();
-			final Map<Long, String> resourceDefs    = new HashMap<Long, String>();
-			final Map<Long, String> dataMasks       = new HashMap<Long, String>();
-            final Map<Long, String> policyLabels    = new HashMap<Long, String>();
+        for (String condition : conditions) {
+            Long conditionDefId = serviceDefConditionNameIDMap.get(condition);
 
-			String getUserName(Long userId) {
-				String ret = null;
+            if (conditionDefId == null) {
+                throw new Exception(condition + ": unknown condition in policy [id=" + policyId + "; serviceType=" + serviceType + "]. Known conditions are: " + serviceDefConditionNameIDMap.keySet());
+            }
 
-				if (userId != null) {
-					ret = userNames.get(userId);
+            XXPolicyRefCondition policyRefCondition = new XXPolicyRefCondition();
 
-					if (ret == null) {
-						XXUser user = daoMgr.getXXUser().getById(userId);
+            policyRefCondition.setPolicyId(policyId);
+            policyRefCondition.setConditionName(condition);
+            policyRefCondition.setConditionDefId(conditionDefId);
 
-						if (user != null) {
-							ret = user.getName(); // Name is `loginId`
+            policyRefConditionDao.create(policyRefCondition);
+        }
 
-							userNames.put(userId, ret);
-						}
-					}
-				}
+        logger.info("<== addPolicyConditionDefRef(id={})", policyId);
+    }
 
-				return ret;
-			}
+    private void addDataMaskDefRef(String serviceType, Long policyId, Set<String> datamasks) throws Exception {
+        logger.info("==> addDataMaskDefRef(id={})", policyId);
+
+        // insert policy-id, datamaskName into Ref table
+
+        Map<String, Long> serviceDefDataMaskTypeIDMap = dataMaskTypeIdMap.get(serviceType);
+
+        if (serviceDefDataMaskTypeIDMap == null) {
+            serviceDefDataMaskTypeIDMap = new HashMap<>();
+
+            dataMaskTypeIdMap.put(serviceType, serviceDefDataMaskTypeIDMap);
+
+            XXServiceDef dbServiceDef = daoMgr.getXXServiceDef().findByName(serviceType);
+
+            if (dbServiceDef != null) {
+                for (XXDataMaskTypeDef dataMaskTypeDef : daoMgr.getXXDataMaskTypeDef().findByServiceDefId(dbServiceDef.getId())) {
+                    serviceDefDataMaskTypeIDMap.put(dataMaskTypeDef.getName(), dataMaskTypeDef.getId());
+                }
+            }
+        }
+
+        XXPolicyRefDataMaskTypeDao policyRefDataMaskTypeDao = daoMgr.getXXPolicyRefDataMaskType();
+
+        for (String datamask : datamasks) {
+            Long dataMaskTypeId = serviceDefDataMaskTypeIDMap.get(datamask);
+
+            if (dataMaskTypeId == null) {
+                throw new Exception(datamask + ": unknown dataMaskType in policy [id=" + policyId + "; serviceType=" + serviceType + "]. Known dataMaskTypes " + serviceDefDataMaskTypeIDMap.keySet());
+            }
+
+            XXPolicyRefDataMaskType policyRefDataMaskType = new XXPolicyRefDataMaskType();
+
+            policyRefDataMaskType.setPolicyId(policyId);
+            policyRefDataMaskType.setDataMaskTypeName(datamask);
+            policyRefDataMaskType.setDataMaskDefId(dataMaskTypeId);
+
+            policyRefDataMaskTypeDao.create(policyRefDataMaskType);
+        }
+
+        logger.info("<== addDataMaskDefRef(id={})", policyId);
+    }
+
+    private void buildLists(List<? extends RangerPolicyItem> policyItems, Set<String> accesses, Set<String> conditions, Set<String> users, Set<String> groups) {
+        for (RangerPolicyItem item : policyItems) {
+            for (RangerPolicyItemAccess policyAccess : item.getAccesses()) {
+                accesses.add(policyAccess.getType());
+            }
+
+            for (RangerPolicyItemCondition policyCondition : item.getConditions()) {
+                conditions.add(policyCondition.getType());
+            }
+
+            users.addAll(item.getUsers());
+            groups.addAll(item.getGroups());
+        }
+    }
+
+    private void buildList(List<RangerDataMaskPolicyItem> dataMaskPolicyItems, Set<String> dataMasks) {
+        for (RangerDataMaskPolicyItem datMaskPolicyItem : dataMaskPolicyItems) {
+            dataMasks.add(datMaskPolicyItem.getDataMaskInfo().getDataMaskType());
+        }
+    }
+
+    private static class RangerPolicyRetriever {
+        static final Logger LOG      = LoggerFactory.getLogger(RangerPolicyRetriever.class);
+        static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
+
+        private final RangerDaoManager    daoMgr;
+        private final LookupCache         lookupCache = new LookupCache();
+        private final TransactionTemplate txTemplate;
+
+        RangerPolicyRetriever(RangerDaoManager daoMgr, PlatformTransactionManager txManager) {
+            this.daoMgr = daoMgr;
+
+            if (txManager != null) {
+                this.txTemplate = new TransactionTemplate(txManager);
+
+                this.txTemplate.setReadOnly(true);
+            } else {
+                this.txTemplate = null;
+            }
+        }
+
+        static List<XXPolicy> asList(XXPolicy policy) {
+            List<XXPolicy> ret = new ArrayList<>();
+
+            if (policy != null) {
+                ret.add(policy);
+            }
+
+            return ret;
+        }
+
+        public List<RangerPolicy> getServicePolicies(final XXService xService) throws InterruptedException {
+            String serviceName = xService == null ? null : xService.getName();
+            Long   serviceId   = xService == null ? null : xService.getId();
+
+            LOG.debug("==> RangerPolicyRetriever.getServicePolicies(serviceName={}, serviceId={}", serviceName, serviceId);
+
+            List<RangerPolicy> ret  = null;
+            RangerPerfTracer   perf = null;
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerPolicyRetriever.getServicePolicies(serviceName=" + serviceName + ",serviceId=" + serviceId + ")");
+            }
+
+            if (xService != null) {
+                if (txTemplate == null) {
+                    LOG.debug("Transaction Manager is null; Retrieving policies in the existing transaction");
+
+                    RetrieverContext ctx = new RetrieverContext(xService);
+
+                    ret = ctx.getAllPolicies();
+                } else {
+                    LOG.debug("Retrieving policies in a new, read-only transaction");
+
+                    PolicyLoaderThread t = new PolicyLoaderThread(txTemplate, xService);
+                    t.start();
+                    t.join();
+
+                    ret = t.getPolicies();
+                }
+            } else {
+                LOG.debug("RangerPolicyRetriever.getServicePolicies(xService={}): invalid parameter", xService);
+            }
+
+            RangerPerfTracer.log(perf);
+
+            LOG.debug("<== RangerPolicyRetriever.getServicePolicies(serviceName={}, serviceId={}): policyCount={}", (ret == null ? 0 : ret.size()), serviceName, serviceId);
+
+            return ret;
+        }
+
+        private class PolicyLoaderThread extends Thread {
+            final TransactionTemplate txTemplate;
+            final XXService           xService;
+            List<RangerPolicy>        policies;
+
+            PolicyLoaderThread(TransactionTemplate txTemplate, final XXService xService) {
+                this.txTemplate = txTemplate;
+                this.xService   = xService;
+            }
+
+            public List<RangerPolicy> getPolicies() {
+                return policies;
+            }
+
+            @Override
+            public void run() {
+                txTemplate.setReadOnly(true);
+                policies = txTemplate.execute(status -> {
+                    RetrieverContext ctx = new RetrieverContext(xService);
+
+                    return ctx.getAllPolicies();
+                });
+            }
+        }
+
+        class LookupCache {
+            final Map<Long, String> userNames       = new HashMap<>();
+            final Map<Long, String> userScreenNames = new HashMap<>();
+            final Map<Long, String> groupNames      = new HashMap<>();
+            final Map<Long, String> accessTypes     = new HashMap<>();
+            final Map<Long, String> conditions      = new HashMap<>();
+            final Map<Long, String> resourceDefs    = new HashMap<>();
+            final Map<Long, String> dataMasks       = new HashMap<>();
+            final Map<Long, String> policyLabels    = new HashMap<>();
+
+            String getUserName(Long userId) {
+                String ret = null;
+
+                if (userId != null) {
+                    ret = userNames.get(userId);
+
+                    if (ret == null) {
+                        XXUser user = daoMgr.getXXUser().getById(userId);
+
+                        if (user != null) {
+                            ret = user.getName(); // Name is `loginId`
+
+                            userNames.put(userId, ret);
+                        }
+                    }
+                }
+
+                return ret;
+            }
 
             String getPolicyLabelName(Long policyLabelId) {
                 String ret = null;
@@ -696,542 +696,569 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
                 return ret;
             }
 
-			String getUserScreenName(Long userId) {
-				String ret = null;
+            String getUserScreenName(Long userId) {
+                String ret = null;
 
-				if (userId != null) {
-					ret = userScreenNames.get(userId);
+                if (userId != null) {
+                    ret = userScreenNames.get(userId);
 
-					if (ret == null) {
-						XXPortalUser user = daoMgr.getXXPortalUser().getById(userId);
+                    if (ret == null) {
+                        XXPortalUser user = daoMgr.getXXPortalUser().getById(userId);
 
-						if (user != null) {
-							ret = user.getPublicScreenName();
+                        if (user != null) {
+                            ret = user.getPublicScreenName();
 
-							if (StringUtil.isEmpty(ret)) {
-								ret = user.getFirstName();
+                            if (StringUtil.isEmpty(ret)) {
+                                ret = user.getFirstName();
 
-								if (StringUtil.isEmpty(ret)) {
-									ret = user.getLoginId();
-								} else {
-									if (!StringUtil.isEmpty(user.getLastName())) {
-										ret += (" " + user.getLastName());
-									}
-								}
-							}
+                                if (StringUtil.isEmpty(ret)) {
+                                    ret = user.getLoginId();
+                                } else {
+                                    if (!StringUtil.isEmpty(user.getLastName())) {
+                                        ret += (" " + user.getLastName());
+                                    }
+                                }
+                            }
 
-							if (ret != null) {
-								userScreenNames.put(userId, ret);
-							}
-						}
-					}
-				}
+                            if (ret != null) {
+                                userScreenNames.put(userId, ret);
+                            }
+                        }
+                    }
+                }
 
-				return ret;
-			}
+                return ret;
+            }
 
-			String getGroupName(Long groupId) {
-				String ret = null;
+            String getGroupName(Long groupId) {
+                String ret = null;
 
-				if (groupId != null) {
-					ret = groupNames.get(groupId);
+                if (groupId != null) {
+                    ret = groupNames.get(groupId);
 
-					if (ret == null) {
-						XXGroup group = daoMgr.getXXGroup().getById(groupId);
+                    if (ret == null) {
+                        XXGroup group = daoMgr.getXXGroup().getById(groupId);
 
-						if (group != null) {
-							ret = group.getName();
+                        if (group != null) {
+                            ret = group.getName();
 
-							groupNames.put(groupId, ret);
-						}
-					}
-				}
+                            groupNames.put(groupId, ret);
+                        }
+                    }
+                }
 
-				return ret;
-			}
+                return ret;
+            }
 
-			String getAccessType(Long accessTypeId) {
-				String ret = null;
+            String getAccessType(Long accessTypeId) {
+                String ret = null;
 
-				if (accessTypeId != null) {
-					ret = accessTypes.get(accessTypeId);
+                if (accessTypeId != null) {
+                    ret = accessTypes.get(accessTypeId);
 
-					if (ret == null) {
-						XXAccessTypeDef xAccessType = daoMgr.getXXAccessTypeDef().getById(accessTypeId);
+                    if (ret == null) {
+                        XXAccessTypeDef xAccessType = daoMgr.getXXAccessTypeDef().getById(accessTypeId);
 
-						if (xAccessType != null) {
-							ret = xAccessType.getName();
+                        if (xAccessType != null) {
+                            ret = xAccessType.getName();
 
-							accessTypes.put(accessTypeId, ret);
-						} else {
-							LOG.warn("getAccessType(): Canot find name for accessTypeId " + accessTypeId + ". This will cause Ranger policy migration to fail. Please check if all service-defs are migrated correctly!");
-						}
-					}
-				}
+                            accessTypes.put(accessTypeId, ret);
+                        } else {
+                            LOG.warn("getAccessType(): Can't find name for accessTypeId {}. This will cause Ranger policy migration to fail. Please check if all service-defs are migrated correctly!", accessTypeId);
+                        }
+                    }
+                }
 
-				return ret;
-			}
+                return ret;
+            }
 
-			String getConditionType(Long conditionDefId) {
-				String ret = null;
+            String getConditionType(Long conditionDefId) {
+                String ret = null;
 
-				if (conditionDefId != null) {
-					ret = conditions.get(conditionDefId);
+                if (conditionDefId != null) {
+                    ret = conditions.get(conditionDefId);
 
-					if (ret == null) {
-						XXPolicyConditionDef xPolicyConditionDef = daoMgr.getXXPolicyConditionDef()
-								.getById(conditionDefId);
+                    if (ret == null) {
+                        XXPolicyConditionDef xPolicyConditionDef = daoMgr.getXXPolicyConditionDef().getById(conditionDefId);
 
-						if (xPolicyConditionDef != null) {
-							ret = xPolicyConditionDef.getName();
+                        if (xPolicyConditionDef != null) {
+                            ret = xPolicyConditionDef.getName();
 
-							conditions.put(conditionDefId, ret);
-						}
-					}
-				}
+                            conditions.put(conditionDefId, ret);
+                        }
+                    }
+                }
 
-				return ret;
-			}
+                return ret;
+            }
 
-			String getResourceName(Long resourceDefId) {
-				String ret = null;
+            String getResourceName(Long resourceDefId) {
+                String ret = null;
 
-				if (resourceDefId != null) {
-					ret = resourceDefs.get(resourceDefId);
+                if (resourceDefId != null) {
+                    ret = resourceDefs.get(resourceDefId);
 
-					if (ret == null) {
-						XXResourceDef xResourceDef = daoMgr.getXXResourceDef().getById(resourceDefId);
+                    if (ret == null) {
+                        XXResourceDef xResourceDef = daoMgr.getXXResourceDef().getById(resourceDefId);
 
-						if (xResourceDef != null) {
-							ret = xResourceDef.getName();
+                        if (xResourceDef != null) {
+                            ret = xResourceDef.getName();
 
-							resourceDefs.put(resourceDefId, ret);
-						}
-					}
-				}
+                            resourceDefs.put(resourceDefId, ret);
+                        }
+                    }
+                }
 
-				return ret;
-			}
+                return ret;
+            }
 
-			String getDataMaskName(Long dataMaskDefId) {
-				String ret = null;
+            String getDataMaskName(Long dataMaskDefId) {
+                String ret = null;
 
-				if (dataMaskDefId != null) {
-					ret = dataMasks.get(dataMaskDefId);
+                if (dataMaskDefId != null) {
+                    ret = dataMasks.get(dataMaskDefId);
 
-					if (ret == null) {
-						XXDataMaskTypeDef xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getById(dataMaskDefId);
+                    if (ret == null) {
+                        XXDataMaskTypeDef xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getById(dataMaskDefId);
 
-						if (xDataMaskDef != null) {
-							ret = xDataMaskDef.getName();
+                        if (xDataMaskDef != null) {
+                            ret = xDataMaskDef.getName();
 
-							dataMasks.put(dataMaskDefId, ret);
-						}
-					}
-				}
+                            dataMasks.put(dataMaskDefId, ret);
+                        }
+                    }
+                }
 
-				return ret;
-			}
-		}
+                return ret;
+            }
+        }
 
-		static List<XXPolicy> asList(XXPolicy policy) {
-			List<XXPolicy> ret = new ArrayList<XXPolicy>();
-
-			if (policy != null) {
-				ret.add(policy);
-			}
-
-			return ret;
-		}
-
-		class RetrieverContext {
-			final XXService                               service;
-			final ListIterator<XXPolicy>                  iterPolicy;
-			final ListIterator<XXPolicyResource>          iterResources;
-			final ListIterator<XXPolicyResourceMap>       iterResourceMaps;
-			final ListIterator<XXPolicyItem>              iterPolicyItems;
-			final ListIterator<XXPolicyItemUserPerm>      iterUserPerms;
-			final ListIterator<XXPolicyItemGroupPerm>     iterGroupPerms;
-			final ListIterator<XXPolicyItemAccess>        iterAccesses;
-			final ListIterator<XXPolicyItemCondition>     iterConditions;
-			final ListIterator<XXPolicyItemDataMaskInfo>  iterDataMaskInfos;
-			final ListIterator<XXPolicyItemRowFilterInfo> iterRowFilterInfos;
+        class RetrieverContext {
+            final XXService                               service;
+            final ListIterator<XXPolicy>                  iterPolicy;
+            final ListIterator<XXPolicyResource>          iterResources;
+            final ListIterator<XXPolicyResourceMap>       iterResourceMaps;
+            final ListIterator<XXPolicyItem>              iterPolicyItems;
+            final ListIterator<XXPolicyItemUserPerm>      iterUserPerms;
+            final ListIterator<XXPolicyItemGroupPerm>     iterGroupPerms;
+            final ListIterator<XXPolicyItemAccess>        iterAccesses;
+            final ListIterator<XXPolicyItemCondition>     iterConditions;
+            final ListIterator<XXPolicyItemDataMaskInfo>  iterDataMaskInfos;
+            final ListIterator<XXPolicyItemRowFilterInfo> iterRowFilterInfos;
             final ListIterator<XXPolicyLabelMap>          iterPolicyLabels;
 
-			RetrieverContext(XXService xService) {
-				Long           serviceId = xService == null ? null : xService.getId();
-				List<XXPolicy> xPolicies = daoMgr.getXXPolicy().findByServiceId(serviceId);
+            RetrieverContext(XXService xService) {
+                Long           serviceId = xService == null ? null : xService.getId();
+                List<XXPolicy> xPolicies = daoMgr.getXXPolicy().findByServiceId(serviceId);
 
-				this.service    = xService;
-				this.iterPolicy = xPolicies.listIterator();
+                this.service    = xService;
+                this.iterPolicy = xPolicies.listIterator();
 
-				List<XXPolicyResource>          xResources      = daoMgr.getXXPolicyResource().findByServiceId(serviceId);
-				List<XXPolicyResourceMap>       xResourceMaps   = daoMgr.getXXPolicyResourceMap().findByServiceId(serviceId);
-				List<XXPolicyItem>              xPolicyItems    = daoMgr.getXXPolicyItem().findByServiceId(serviceId);
-				List<XXPolicyItemUserPerm>      xUserPerms      = daoMgr.getXXPolicyItemUserPerm().findByServiceId(serviceId);
-				List<XXPolicyItemGroupPerm>     xGroupPerms     = daoMgr.getXXPolicyItemGroupPerm().findByServiceId(serviceId);
-				List<XXPolicyItemAccess>        xAccesses       = daoMgr.getXXPolicyItemAccess().findByServiceId(serviceId);
-				List<XXPolicyItemCondition>     xConditions     = daoMgr.getXXPolicyItemCondition().findByServiceId(serviceId);
-				List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByServiceId(serviceId);
-				List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByServiceId(serviceId);
+                List<XXPolicyResource>          xResources      = daoMgr.getXXPolicyResource().findByServiceId(serviceId);
+                List<XXPolicyResourceMap>       xResourceMaps   = daoMgr.getXXPolicyResourceMap().findByServiceId(serviceId);
+                List<XXPolicyItem>              xPolicyItems    = daoMgr.getXXPolicyItem().findByServiceId(serviceId);
+                List<XXPolicyItemUserPerm>      xUserPerms      = daoMgr.getXXPolicyItemUserPerm().findByServiceId(serviceId);
+                List<XXPolicyItemGroupPerm>     xGroupPerms     = daoMgr.getXXPolicyItemGroupPerm().findByServiceId(serviceId);
+                List<XXPolicyItemAccess>        xAccesses       = daoMgr.getXXPolicyItemAccess().findByServiceId(serviceId);
+                List<XXPolicyItemCondition>     xConditions     = daoMgr.getXXPolicyItemCondition().findByServiceId(serviceId);
+                List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByServiceId(serviceId);
+                List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByServiceId(serviceId);
                 List<XXPolicyLabelMap>          xPolicyLabelMap = daoMgr.getXXPolicyLabelMap().findByServiceId(serviceId);
 
-				this.iterResources      = xResources.listIterator();
-				this.iterResourceMaps   = xResourceMaps.listIterator();
-				this.iterPolicyItems    = xPolicyItems.listIterator();
-				this.iterUserPerms      = xUserPerms.listIterator();
-				this.iterGroupPerms     = xGroupPerms.listIterator();
-				this.iterAccesses       = xAccesses.listIterator();
-				this.iterConditions     = xConditions.listIterator();
-				this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
-				this.iterRowFilterInfos = xRowFilterInfos.listIterator();
+                this.iterResources      = xResources.listIterator();
+                this.iterResourceMaps   = xResourceMaps.listIterator();
+                this.iterPolicyItems    = xPolicyItems.listIterator();
+                this.iterUserPerms      = xUserPerms.listIterator();
+                this.iterGroupPerms     = xGroupPerms.listIterator();
+                this.iterAccesses       = xAccesses.listIterator();
+                this.iterConditions     = xConditions.listIterator();
+                this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
+                this.iterRowFilterInfos = xRowFilterInfos.listIterator();
                 this.iterPolicyLabels   = xPolicyLabelMap.listIterator();
-			}
+            }
 
-			RetrieverContext(XXPolicy xPolicy, XXService xService) {
-				Long           policyId  = xPolicy == null ? null : xPolicy.getId();
-				List<XXPolicy> xPolicies = asList(xPolicy);
+            RetrieverContext(XXPolicy xPolicy, XXService xService) {
+                Long           policyId  = xPolicy == null ? null : xPolicy.getId();
+                List<XXPolicy> xPolicies = asList(xPolicy);
 
-				this.service    = xService;
-				this.iterPolicy = xPolicies.listIterator();
+                this.service    = xService;
+                this.iterPolicy = xPolicies.listIterator();
 
-				List<XXPolicyResource>          xResources      = daoMgr.getXXPolicyResource().findByPolicyId(policyId);
-				List<XXPolicyResourceMap>       xResourceMaps   = daoMgr.getXXPolicyResourceMap().findByPolicyId(policyId);
-				List<XXPolicyItem>              xPolicyItems    = daoMgr.getXXPolicyItem().findByPolicyId(policyId);
-				List<XXPolicyItemUserPerm>      xUserPerms      = daoMgr.getXXPolicyItemUserPerm().findByPolicyId(policyId);
-				List<XXPolicyItemGroupPerm>     xGroupPerms     = daoMgr.getXXPolicyItemGroupPerm().findByPolicyId(policyId);
-				List<XXPolicyItemAccess>        xAccesses       = daoMgr.getXXPolicyItemAccess().findByPolicyId(policyId);
-				List<XXPolicyItemCondition>     xConditions     = daoMgr.getXXPolicyItemCondition().findByPolicyId(policyId);
-				List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByPolicyId(policyId);
-				List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByPolicyId(policyId);
+                List<XXPolicyResource>          xResources      = daoMgr.getXXPolicyResource().findByPolicyId(policyId);
+                List<XXPolicyResourceMap>       xResourceMaps   = daoMgr.getXXPolicyResourceMap().findByPolicyId(policyId);
+                List<XXPolicyItem>              xPolicyItems    = daoMgr.getXXPolicyItem().findByPolicyId(policyId);
+                List<XXPolicyItemUserPerm>      xUserPerms      = daoMgr.getXXPolicyItemUserPerm().findByPolicyId(policyId);
+                List<XXPolicyItemGroupPerm>     xGroupPerms     = daoMgr.getXXPolicyItemGroupPerm().findByPolicyId(policyId);
+                List<XXPolicyItemAccess>        xAccesses       = daoMgr.getXXPolicyItemAccess().findByPolicyId(policyId);
+                List<XXPolicyItemCondition>     xConditions     = daoMgr.getXXPolicyItemCondition().findByPolicyId(policyId);
+                List<XXPolicyItemDataMaskInfo>  xDataMaskInfos  = daoMgr.getXXPolicyItemDataMaskInfo().findByPolicyId(policyId);
+                List<XXPolicyItemRowFilterInfo> xRowFilterInfos = daoMgr.getXXPolicyItemRowFilterInfo().findByPolicyId(policyId);
                 List<XXPolicyLabelMap>          xPolicyLabelMap = daoMgr.getXXPolicyLabelMap().findByPolicyId(policyId);
 
-				this.iterResources      = xResources.listIterator();
-				this.iterResourceMaps   = xResourceMaps.listIterator();
-				this.iterPolicyItems    = xPolicyItems.listIterator();
-				this.iterUserPerms      = xUserPerms.listIterator();
-				this.iterGroupPerms     = xGroupPerms.listIterator();
-				this.iterAccesses       = xAccesses.listIterator();
-				this.iterConditions     = xConditions.listIterator();
-				this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
-				this.iterRowFilterInfos = xRowFilterInfos.listIterator();
+                this.iterResources      = xResources.listIterator();
+                this.iterResourceMaps   = xResourceMaps.listIterator();
+                this.iterPolicyItems    = xPolicyItems.listIterator();
+                this.iterUserPerms      = xUserPerms.listIterator();
+                this.iterGroupPerms     = xGroupPerms.listIterator();
+                this.iterAccesses       = xAccesses.listIterator();
+                this.iterConditions     = xConditions.listIterator();
+                this.iterDataMaskInfos  = xDataMaskInfos.listIterator();
+                this.iterRowFilterInfos = xRowFilterInfos.listIterator();
                 this.iterPolicyLabels   = xPolicyLabelMap.listIterator();
-			}
+            }
 
-			RangerPolicy getNextPolicy() {
-				RangerPolicy ret = null;
+            RangerPolicy getNextPolicy() {
+                RangerPolicy ret = null;
 
-				if (iterPolicy.hasNext()) {
-					XXPolicy xPolicy = iterPolicy.next();
+                if (iterPolicy.hasNext()) {
+                    XXPolicy xPolicy = iterPolicy.next();
 
-					if (xPolicy != null) {
-						ret = new RangerPolicy();
+                    if (xPolicy != null) {
+                        ret = new RangerPolicy();
 
-						ret.setId(xPolicy.getId());
-						ret.setGuid(xPolicy.getGuid());
-						ret.setIsEnabled(xPolicy.getIsEnabled());
-						ret.setCreatedBy(lookupCache.getUserScreenName(xPolicy.getAddedByUserId()));
-						ret.setUpdatedBy(lookupCache.getUserScreenName(xPolicy.getUpdatedByUserId()));
-						ret.setCreateTime(xPolicy.getCreateTime());
-						ret.setUpdateTime(xPolicy.getUpdateTime());
-						ret.setVersion(xPolicy.getVersion());
-						ret.setService(service == null ? null : service.getName());
-						ret.setName(StringUtils.trim(xPolicy.getName()));
-						ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
-						ret.setDescription(xPolicy.getDescription());
-						ret.setResourceSignature(xPolicy.getResourceSignature());
-						ret.setIsAuditEnabled(xPolicy.getIsAuditEnabled());
-						ret.setPolicyPriority(xPolicy.getPolicyPriority());
+                        ret.setId(xPolicy.getId());
+                        ret.setGuid(xPolicy.getGuid());
+                        ret.setIsEnabled(xPolicy.getIsEnabled());
+                        ret.setCreatedBy(lookupCache.getUserScreenName(xPolicy.getAddedByUserId()));
+                        ret.setUpdatedBy(lookupCache.getUserScreenName(xPolicy.getUpdatedByUserId()));
+                        ret.setCreateTime(xPolicy.getCreateTime());
+                        ret.setUpdateTime(xPolicy.getUpdateTime());
+                        ret.setVersion(xPolicy.getVersion());
+                        ret.setService(service == null ? null : service.getName());
+                        ret.setName(StringUtils.trim(xPolicy.getName()));
+                        ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
+                        ret.setDescription(xPolicy.getDescription());
+                        ret.setResourceSignature(xPolicy.getResourceSignature());
+                        ret.setIsAuditEnabled(xPolicy.getIsAuditEnabled());
+                        ret.setPolicyPriority(xPolicy.getPolicyPriority());
 
-						Map<String, String> mapOfOptions = JsonUtils.jsonToMapStringString(xPolicy.getOptions());
+                        Map<String, String> mapOfOptions = JsonUtils.jsonToMapStringString(xPolicy.getOptions());
 
-						if (MapUtils.isNotEmpty(mapOfOptions)) {
-							String validitySchedulesStr = mapOfOptions.get(RangerPolicyService.OPTION_POLICY_VALIDITY_SCHEDULES);
+                        if (MapUtils.isNotEmpty(mapOfOptions)) {
+                            String validitySchedulesStr = mapOfOptions.get(RangerPolicyService.OPTION_POLICY_VALIDITY_SCHEDULES);
 
-							if (StringUtils.isNotEmpty(validitySchedulesStr)) {
-								List<RangerValiditySchedule> validitySchedules = JsonUtils.jsonToRangerValiditySchedule(validitySchedulesStr);
+                            if (StringUtils.isNotEmpty(validitySchedulesStr)) {
+                                List<RangerValiditySchedule> validitySchedules = JsonUtils.jsonToRangerValiditySchedule(validitySchedulesStr);
 
-								ret.setValiditySchedules(validitySchedules);
-							}
-						}
+                                ret.setValiditySchedules(validitySchedules);
+                            }
+                        }
 
-						getPolicyLabels(ret);
-						getResource(ret);
-						getPolicyItems(ret);
-					}
-				}
+                        getPolicyLabels(ret);
+                        getResource(ret);
+                        getPolicyItems(ret);
+                    }
+                }
 
-				return ret;
-			}
+                return ret;
+            }
+
+            List<RangerPolicy> getAllPolicies() {
+                List<RangerPolicy> ret = new ArrayList<>();
+
+                while (iterPolicy.hasNext()) {
+                    RangerPolicy policy = getNextPolicy();
+
+                    if (policy != null) {
+                        ret.add(policy);
+                    }
+                }
+
+                if (!hasProcessedAll()) {
+                    LOG.warn("getAllPolicies(): perhaps one or more policies got updated during retrieval. Falling back to secondary method");
+
+                    ret = getAllPoliciesBySecondary();
+                }
+
+                return ret;
+            }
+
+            List<RangerPolicy> getAllPoliciesBySecondary() {
+                List<RangerPolicy> ret = null;
+
+                if (service != null) {
+                    List<XXPolicy> xPolicies = daoMgr.getXXPolicy().findByServiceId(service.getId());
+
+                    if (CollectionUtils.isNotEmpty(xPolicies)) {
+                        ret = new ArrayList<>(xPolicies.size());
+
+                        for (XXPolicy xPolicy : xPolicies) {
+                            RetrieverContext ctx    = new RetrieverContext(xPolicy, service);
+                            RangerPolicy     policy = ctx.getNextPolicy();
+
+                            if (policy != null) {
+                                ret.add(policy);
+                            }
+                        }
+                    }
+                }
+
+                return ret;
+            }
 
             private void getPolicyLabels(RangerPolicy ret) {
-                List<String> xPolicyLabels = new ArrayList<String>();
+                List<String> xPolicyLabels = new ArrayList<>();
+
                 while (iterPolicyLabels.hasNext()) {
                     XXPolicyLabelMap xPolicyLabel = iterPolicyLabels.next();
+
                     if (xPolicyLabel.getPolicyId().equals(ret.getId())) {
                         String policyLabel = lookupCache.getPolicyLabelName(xPolicyLabel.getPolicyLabelId());
+
                         if (policyLabel != null) {
                             xPolicyLabels.add(policyLabel);
                         }
+
                         ret.setPolicyLabels(xPolicyLabels);
                     } else {
                         if (iterPolicyLabels.hasPrevious()) {
                             iterPolicyLabels.previous();
                         }
+
                         break;
                     }
                 }
             }
 
-			List<RangerPolicy> getAllPolicies() {
-				List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
+            private boolean hasProcessedAll() {
+                boolean moreToProcess = iterPolicy.hasNext() || iterResources.hasNext() || iterResourceMaps.hasNext() || iterPolicyItems.hasNext() || iterUserPerms.hasNext() || iterGroupPerms.hasNext() || iterAccesses.hasNext() || iterConditions.hasNext() || iterDataMaskInfos.hasNext() || iterRowFilterInfos.hasNext() || iterPolicyLabels.hasNext();
 
-				while (iterPolicy.hasNext()) {
-					RangerPolicy policy = getNextPolicy();
+                return !moreToProcess;
+            }
 
-					if (policy != null) {
-						ret.add(policy);
-					}
-				}
+            private void getResource(RangerPolicy policy) {
+                while (iterResources.hasNext()) {
+                    XXPolicyResource xResource = iterResources.next();
 
-				if (!hasProcessedAll()) {
-					LOG.warn("getAllPolicies(): perhaps one or more policies got updated during retrieval. Falling back to secondary method");
+                    if (xResource.getPolicyid().equals(policy.getId())) {
+                        RangerPolicyResource resource = new RangerPolicyResource();
 
-					ret = getAllPoliciesBySecondary();
-				}
+                        resource.setIsExcludes(xResource.getIsexcludes());
+                        resource.setIsRecursive(xResource.getIsrecursive());
 
-				return ret;
-			}
+                        while (iterResourceMaps.hasNext()) {
+                            XXPolicyResourceMap xResourceMap = iterResourceMaps.next();
 
-			List<RangerPolicy> getAllPoliciesBySecondary() {
-				List<RangerPolicy> ret = null;
+                            if (xResourceMap.getResourceid().equals(xResource.getId())) {
+                                resource.addValue(xResourceMap.getValue());
+                            } else {
+                                if (iterResourceMaps.hasPrevious()) {
+                                    iterResourceMaps.previous();
+                                }
 
-				if (service != null) {
-					List<XXPolicy> xPolicies = daoMgr.getXXPolicy().findByServiceId(service.getId());
+                                break;
+                            }
+                        }
 
-					if (CollectionUtils.isNotEmpty(xPolicies)) {
-						ret = new ArrayList<RangerPolicy>(xPolicies.size());
+                        policy.setResource(lookupCache.getResourceName(xResource.getResdefid()), resource);
+                    } else if (xResource.getPolicyid().compareTo(policy.getId()) > 0) {
+                        if (iterResources.hasPrevious()) {
+                            iterResources.previous();
+                        }
 
-						for (XXPolicy xPolicy : xPolicies) {
-							RetrieverContext ctx = new RetrieverContext(xPolicy, service);
+                        break;
+                    }
+                }
+            }
 
-							RangerPolicy policy = ctx.getNextPolicy();
+            private void getPolicyItems(RangerPolicy policy) {
+                while (iterPolicyItems.hasNext()) {
+                    XXPolicyItem xPolicyItem = iterPolicyItems.next();
 
-							if (policy != null) {
-								ret.add(policy);
-							}
-						}
-					}
-				}
+                    if (xPolicyItem.getPolicyid().equals(policy.getId())) {
+                        final RangerPolicyItem          policyItem;
+                        final RangerDataMaskPolicyItem  dataMaskPolicyItem;
+                        final RangerRowFilterPolicyItem rowFilterPolicyItem;
 
-				return ret;
-			}
+                        if (xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK) {
+                            dataMaskPolicyItem  = new RangerDataMaskPolicyItem();
+                            rowFilterPolicyItem = null;
+                            policyItem          = dataMaskPolicyItem;
+                        } else if (xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER) {
+                            dataMaskPolicyItem  = null;
+                            rowFilterPolicyItem = new RangerRowFilterPolicyItem();
+                            policyItem          = rowFilterPolicyItem;
+                        } else {
+                            dataMaskPolicyItem  = null;
+                            rowFilterPolicyItem = null;
+                            policyItem          = new RangerPolicyItem();
+                        }
 
-			private boolean hasProcessedAll() {
-				boolean moreToProcess = iterPolicy.hasNext() || iterResources.hasNext() || iterResourceMaps.hasNext()
-						|| iterPolicyItems.hasNext() || iterUserPerms.hasNext() || iterGroupPerms.hasNext()
-						|| iterAccesses.hasNext() || iterConditions.hasNext() || iterDataMaskInfos.hasNext()
-						|| iterRowFilterInfos.hasNext() || iterPolicyLabels.hasNext();
+                        while (iterAccesses.hasNext()) {
+                            XXPolicyItemAccess xAccess = iterAccesses.next();
 
-				return !moreToProcess;
-			}
+                            if (xAccess.getPolicyitemid().equals(xPolicyItem.getId())) {
+                                policyItem.addAccess(new RangerPolicyItemAccess(lookupCache.getAccessType(xAccess.getType()), xAccess.getIsallowed()));
+                            } else {
+                                if (iterAccesses.hasPrevious()) {
+                                    iterAccesses.previous();
+                                }
 
-			private void getResource(RangerPolicy policy) {
-				while (iterResources.hasNext()) {
-					XXPolicyResource xResource = iterResources.next();
+                                break;
+                            }
+                        }
 
-					if (xResource.getPolicyid().equals(policy.getId())) {
-						RangerPolicyResource resource = new RangerPolicyResource();
+                        while (iterUserPerms.hasNext()) {
+                            XXPolicyItemUserPerm xUserPerm = iterUserPerms.next();
 
-						resource.setIsExcludes(xResource.getIsexcludes());
-						resource.setIsRecursive(xResource.getIsrecursive());
+                            if (xUserPerm.getPolicyitemid().equals(xPolicyItem.getId())) {
+                                String userName = lookupCache.getUserName(xUserPerm.getUserid());
 
-						while (iterResourceMaps.hasNext()) {
-							XXPolicyResourceMap xResourceMap = iterResourceMaps.next();
+                                if (userName != null) {
+                                    policyItem.addUser(userName);
+                                }
+                            } else {
+                                if (iterUserPerms.hasPrevious()) {
+                                    iterUserPerms.previous();
+                                }
 
-							if (xResourceMap.getResourceid().equals(xResource.getId())) {
-								resource.getValues().add(xResourceMap.getValue());
-							} else {
-								if (iterResourceMaps.hasPrevious()) {
-									iterResourceMaps.previous();
-								}
+                                break;
+                            }
+                        }
 
-								break;
-							}
-						}
+                        while (iterGroupPerms.hasNext()) {
+                            XXPolicyItemGroupPerm xGroupPerm = iterGroupPerms.next();
 
-						policy.getResources().put(lookupCache.getResourceName(xResource.getResdefid()), resource);
-					} else if (xResource.getPolicyid().compareTo(policy.getId()) > 0) {
-						if (iterResources.hasPrevious()) {
-							iterResources.previous();
-						}
+                            if (xGroupPerm.getPolicyitemid().equals(xPolicyItem.getId())) {
+                                String groupName = lookupCache.getGroupName(xGroupPerm.getGroupid());
 
-						break;
-					}
-				}
-			}
+                                if (groupName != null) {
+                                    policyItem.addGroup(groupName);
+                                }
+                            } else {
+                                if (iterGroupPerms.hasPrevious()) {
+                                    iterGroupPerms.previous();
+                                }
 
-			private void getPolicyItems(RangerPolicy policy) {
-				while (iterPolicyItems.hasNext()) {
-					XXPolicyItem xPolicyItem = iterPolicyItems.next();
+                                break;
+                            }
+                        }
 
-					if (xPolicyItem.getPolicyid().equals(policy.getId())) {
-						final RangerPolicyItem          policyItem;
-						final RangerDataMaskPolicyItem  dataMaskPolicyItem;
-						final RangerRowFilterPolicyItem rowFilterPolicyItem;
+                        RangerPolicyItemCondition condition         = null;
+                        Long                      prevConditionType = null;
 
-						if (xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK) {
-							dataMaskPolicyItem  = new RangerDataMaskPolicyItem();
-							rowFilterPolicyItem = null;
-							policyItem          = dataMaskPolicyItem;
-						} else if (xPolicyItem.getItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER) {
-							dataMaskPolicyItem  = null;
-							rowFilterPolicyItem = new RangerRowFilterPolicyItem();
-							policyItem          = rowFilterPolicyItem;
-						} else {
-							dataMaskPolicyItem  = null;
-							rowFilterPolicyItem = null;
-							policyItem          = new RangerPolicyItem();
-						}
+                        while (iterConditions.hasNext()) {
+                            XXPolicyItemCondition xCondition = iterConditions.next();
 
-						while (iterAccesses.hasNext()) {
-							XXPolicyItemAccess xAccess = iterAccesses.next();
+                            if (xCondition.getPolicyitemid().equals(xPolicyItem.getId())) {
+                                if (!xCondition.getType().equals(prevConditionType)) {
+                                    condition = new RangerPolicyItemCondition();
 
-							if (xAccess.getPolicyitemid().equals(xPolicyItem.getId())) {
-								policyItem.getAccesses().add(new RangerPolicyItemAccess(lookupCache.getAccessType(xAccess.getType()), xAccess.getIsallowed()));
-							} else {
-								if (iterAccesses.hasPrevious()) {
-									iterAccesses.previous();
-								}
+                                    condition.setType(lookupCache.getConditionType(xCondition.getType()));
+                                    condition.addValue(xCondition.getValue());
 
-								break;
-							}
-						}
+                                    policyItem.addCondition(condition);
 
-						while (iterUserPerms.hasNext()) {
-							XXPolicyItemUserPerm xUserPerm = iterUserPerms.next();
+                                    prevConditionType = xCondition.getType();
+                                } else {
+                                    condition.addValue(xCondition.getValue());
+                                }
+                            } else {
+                                if (iterConditions.hasPrevious()) {
+                                    iterConditions.previous();
+                                }
 
-							if (xUserPerm.getPolicyitemid().equals(xPolicyItem.getId())) {
-								String userName = lookupCache.getUserName(xUserPerm.getUserid());
+                                break;
+                            }
+                        }
 
-								if (userName != null) {
-									policyItem.getUsers().add(userName);
-								}
-							} else {
-								if (iterUserPerms.hasPrevious()) {
-									iterUserPerms.previous();
-								}
+                        policyItem.setDelegateAdmin(xPolicyItem.getDelegateAdmin());
 
-								break;
-							}
-						}
+                        if (dataMaskPolicyItem != null) {
+                            while (iterDataMaskInfos.hasNext()) {
+                                XXPolicyItemDataMaskInfo xDataMaskInfo = iterDataMaskInfos.next();
 
-						while (iterGroupPerms.hasNext()) {
-							XXPolicyItemGroupPerm xGroupPerm = iterGroupPerms.next();
+                                if (xDataMaskInfo.getPolicyItemId().equals(xPolicyItem.getId())) {
+                                    dataMaskPolicyItem.setDataMaskInfo(new RangerPolicyItemDataMaskInfo(lookupCache.getDataMaskName(xDataMaskInfo.getType()), xDataMaskInfo.getConditionExpr(), xDataMaskInfo.getValueExpr()));
+                                } else {
+                                    if (iterDataMaskInfos.hasPrevious()) {
+                                        iterDataMaskInfos.previous();
+                                    }
 
-							if (xGroupPerm.getPolicyitemid().equals(xPolicyItem.getId())) {
-								String groupName = lookupCache.getGroupName(xGroupPerm.getGroupid());
+                                    break;
+                                }
+                            }
+                        }
 
-								if (groupName != null) {
-									policyItem.getGroups().add(groupName);
-								}
-							} else {
-								if (iterGroupPerms.hasPrevious()) {
-									iterGroupPerms.previous();
-								}
+                        if (rowFilterPolicyItem != null) {
+                            while (iterRowFilterInfos.hasNext()) {
+                                XXPolicyItemRowFilterInfo xRowFilterInfo = iterRowFilterInfos.next();
 
-								break;
-							}
-						}
+                                if (xRowFilterInfo.getPolicyItemId().equals(xPolicyItem.getId())) {
+                                    rowFilterPolicyItem.setRowFilterInfo(new RangerPolicyItemRowFilterInfo(xRowFilterInfo.getFilterExpr()));
+                                } else {
+                                    if (iterRowFilterInfos.hasPrevious()) {
+                                        iterRowFilterInfos.previous();
+                                    }
 
-						RangerPolicyItemCondition condition         = null;
-						Long                      prevConditionType = null;
+                                    break;
+                                }
+                            }
+                        }
 
-						while (iterConditions.hasNext()) {
-							XXPolicyItemCondition xCondition = iterConditions.next();
+                        int itemType = xPolicyItem.getItemType() == null ? RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW : xPolicyItem.getItemType();
 
-							if (xCondition.getPolicyitemid().equals(xPolicyItem.getId())) {
-								if (!xCondition.getType().equals(prevConditionType)) {
-									condition = new RangerPolicyItemCondition();
+                        if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW) {
+                            policy.addPolicyItem(policyItem);
+                        } else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
+                            policy.addDenyPolicyItem(policyItem);
+                        } else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS) {
+                            policy.addAllowException(policyItem);
+                        } else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
+                            policy.addDenyPolicyItem(policyItem);
+                        } else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK) {
+                            policy.addDataMaskPolicyItem(dataMaskPolicyItem);
+                        } else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER) {
+                            policy.addRowFilterPolicyItem(rowFilterPolicyItem);
+                        } else { // unknown itemType
+                            LOG.warn("RangerPolicyRetriever.getPolicy(policyId={}): ignoring unknown policyItemType {}", policy.getId(), itemType);
+                        }
+                    } else if (xPolicyItem.getPolicyid().compareTo(policy.getId()) > 0) {
+                        if (iterPolicyItems.hasPrevious()) {
+                            iterPolicyItems.previous();
+                        }
 
-									condition.setType(lookupCache.getConditionType(xCondition.getType()));
-									condition.getValues().add(xCondition.getValue());
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
-									policyItem.getConditions().add(condition);
+    private class PolicyUpdaterThread extends Thread {
+        final TransactionTemplate txTemplate;
+        final RangerService       service;
+        final RangerPolicy        policy;
+        String                    errorMsg;
 
-									prevConditionType = xCondition.getType();
-								} else {
-									condition.getValues().add(xCondition.getValue());
-								}
-							} else {
-								if (iterConditions.hasPrevious()) {
-									iterConditions.previous();
-								}
+        PolicyUpdaterThread(TransactionTemplate txTemplate, final RangerService service, final RangerPolicy policy) {
+            this.txTemplate = txTemplate;
+            this.service    = service;
+            this.policy     = policy;
+            this.errorMsg   = null;
+        }
 
-								break;
-							}
-						}
+        public String getErrorMsg() {
+            return errorMsg;
+        }
 
-						policyItem.setDelegateAdmin(xPolicyItem.getDelegateAdmin());
+        @Override
+        public void run() {
+            errorMsg = txTemplate.execute(status -> {
+                String ret = null;
 
-						if (dataMaskPolicyItem != null) {
-							while (iterDataMaskInfos.hasNext()) {
-								XXPolicyItemDataMaskInfo xDataMaskInfo = iterDataMaskInfos.next();
+                try {
+                    policyRefUpdater.cleanupRefTables(policy);
 
-								if (xDataMaskInfo.getPolicyItemId().equals(xPolicyItem.getId())) {
-									dataMaskPolicyItem.setDataMaskInfo(new RangerPolicyItemDataMaskInfo(lookupCache.getDataMaskName(xDataMaskInfo.getType()), xDataMaskInfo.getConditionExpr(), xDataMaskInfo.getValueExpr()));
-								} else {
-									if (iterDataMaskInfos.hasPrevious()) {
-										iterDataMaskInfos.previous();
-									}
+                    portPolicy(service.getType(), policy);
+                } catch (Throwable e) {
+                    logger.error("PortPolicy failed for policy:[{}]", policy, e);
 
-									break;
-								}
-							}
-						}
+                    ret = e.toString();
+                }
 
-						if (rowFilterPolicyItem != null) {
-							while (iterRowFilterInfos.hasNext()) {
-								XXPolicyItemRowFilterInfo xRowFilterInfo = iterRowFilterInfos.next();
-
-								if (xRowFilterInfo.getPolicyItemId().equals(xPolicyItem.getId())) {
-									rowFilterPolicyItem.setRowFilterInfo(new RangerPolicyItemRowFilterInfo(xRowFilterInfo.getFilterExpr()));
-								} else {
-									if (iterRowFilterInfos.hasPrevious()) {
-										iterRowFilterInfos.previous();
-									}
-
-									break;
-								}
-							}
-						}
-
-						int itemType = xPolicyItem.getItemType() == null ? RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW : xPolicyItem.getItemType();
-
-						if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW) {
-							policy.getPolicyItems().add(policyItem);
-						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
-							policy.getDenyPolicyItems().add(policyItem);
-						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS) {
-							policy.getAllowExceptions().add(policyItem);
-						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
-							policy.getDenyExceptions().add(policyItem);
-						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK) {
-							policy.getDataMaskPolicyItems().add(dataMaskPolicyItem);
-						} else if (itemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER) {
-							policy.getRowFilterPolicyItems().add(rowFilterPolicyItem);
-						} else { // unknown itemType
-							LOG.warn("RangerPolicyRetriever.getPolicy(policyId=" + policy.getId() + "): ignoring unknown policyItemType " + itemType);
-						}
-					} else if (xPolicyItem.getPolicyid().compareTo(policy.getId()) > 0) {
-						if (iterPolicyItems.hasPrevious()) {
-							iterPolicyItems.previous();
-						}
-
-						break;
-					}
-				}
-			}
-		}
-	}
+                return ret;
+            });
+        }
+    }
 }

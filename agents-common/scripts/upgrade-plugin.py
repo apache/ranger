@@ -18,10 +18,7 @@ import xml.etree.ElementTree as ET
 import os,errno,sys
 from os import listdir
 from os.path import isfile, join, dirname
-try:
-	from urllib.parse import urlparse
-except ImportError:
-	from urlparse import urlparse
+from urllib.parse import urlparse
 
 debugLevel = 1
 
