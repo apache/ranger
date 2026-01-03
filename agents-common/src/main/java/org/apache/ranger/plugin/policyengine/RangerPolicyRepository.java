@@ -193,7 +193,7 @@ public class RangerPolicyRepository {
         this.componentServiceDef  = this.serviceDef;
         this.zoneName             = zoneName;
         this.appId                = pluginContext.getConfig().getAppId();
-        this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions());
+        this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions(), new RangerServiceDefHelper(serviceDef, false));
         this.pluginContext        = pluginContext;
 
         if (StringUtils.isEmpty(zoneName)) {
@@ -230,8 +230,6 @@ public class RangerPolicyRepository {
 
         LOG.debug("RangerPolicyRepository : building policy-repository for service[{}], and zone:[{}] with auditMode[{}]", serviceName, zoneName, auditModeEnum);
 
-        init(options);
-
         if (StringUtils.isEmpty(zoneName)) {
             this.contextEnrichers      = buildContextEnrichers(options);
             this.auditPolicyEvaluators = buildAuditPolicyEvaluators(servicePolicies.getServiceConfig());
@@ -239,6 +237,8 @@ public class RangerPolicyRepository {
             this.contextEnrichers      = null;
             this.auditPolicyEvaluators = Collections.emptyList();
         }
+
+        init(options);
 
         if (options.disableTrieLookupPrefilter) {
             policyResourceTrie      = null;
@@ -262,7 +262,7 @@ public class RangerPolicyRepository {
         this.serviceDef           = ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagPolicies.getServiceDef()), componentServiceDef.getName());
         this.componentServiceDef  = componentServiceDef;
         this.appId                = pluginContext.getConfig().getAppId();
-        this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions());
+        this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions(), new RangerServiceDefHelper(serviceDef, false));
         this.pluginContext        = pluginContext;
         this.policies             = normalizeAndPrunePolicies(tagPolicies.getPolicies(), componentServiceDef.getName());
         this.policyVersion        = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
@@ -281,8 +281,6 @@ public class RangerPolicyRepository {
 
         LOG.debug("RangerPolicyRepository : building tag-policy-repository for tag service:[{}], with auditMode[{}]", serviceName, auditModeEnum);
 
-        init(options);
-
         if (StringUtils.isEmpty(zoneName)) {
             this.contextEnrichers      = buildContextEnrichers(options);
             this.auditPolicyEvaluators = buildAuditPolicyEvaluators(tagPolicies.getServiceConfig());
@@ -290,6 +288,8 @@ public class RangerPolicyRepository {
             this.contextEnrichers      = null;
             this.auditPolicyEvaluators = Collections.emptyList();
         }
+
+        init(options);
 
         if (options.disableTrieLookupPrefilter) {
             policyResourceTrie      = null;
@@ -920,10 +920,6 @@ public class RangerPolicyRepository {
     }
 
     private void init(RangerPolicyEngineOptions options) {
-        RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
-
-        options.setServiceDefHelper(serviceDefHelper);
-
         List<RangerPolicyEvaluator> policyEvaluators          = new ArrayList<>();
         List<RangerPolicyEvaluator> dataMaskPolicyEvaluators  = new ArrayList<>();
         List<RangerPolicyEvaluator> rowFilterPolicyEvaluators = new ArrayList<>();
