@@ -104,7 +104,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
                         rootQueue.collectQueueNames(queueNames);
                     }
                 } else if (type.equals(CAPACITY_SCHEDULER) || type.equals(CAPACITY_SCHEDULER_LEAF_QUEUE)) {
-                    if(queueName != null) {
+                    if (queueName != null) {
                         String queueFqdn = parentQueueName == null ? queueName : parentQueueName + "." + queueName;
 
                         queueNames.add(queueFqdn);
@@ -139,9 +139,9 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         }
     }
 
-    @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RootQueue implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -157,7 +157,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         }
 
         public void collectQueueNames(List<String> queueNames) {
-            if (queueName != null){
+            if (queueName != null) {
                 queueNames.add(queueName);
 
                 if (childQueues != null) {
@@ -167,9 +167,9 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         }
     }
 
-    @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ChildQueues implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -180,7 +180,7 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         }
 
         public void collectQueueNames(List<String> queueNames) {
-            if( queue != null) {
+            if (queue != null) {
                 for (RootQueue queue : queue) {
                     queue.collectQueueNames(queueNames);
                 }
