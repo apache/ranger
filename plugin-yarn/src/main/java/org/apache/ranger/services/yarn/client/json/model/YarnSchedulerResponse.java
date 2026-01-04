@@ -142,8 +142,6 @@ public class YarnSchedulerResponse implements java.io.Serializable {
     @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
     @JsonIgnoreProperties(ignoreUnknown=true)
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
     public static class RootQueue implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -172,8 +170,6 @@ public class YarnSchedulerResponse implements java.io.Serializable {
     @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
     @JsonIgnoreProperties(ignoreUnknown=true)
-    @XmlRootElement
-    @XmlAccessorType(XmlAccessType.FIELD)
     public static class ChildQueues implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
