@@ -54,7 +54,7 @@
   "accessTypes": [
     { "itemId": 1, "name": "select",   "label": "SELECT",   "category": "READ",   "impliedGrants": [ "metadata" ] },
     { "itemId": 2, "name": "insert",   "label": "INSERT",   "category": "UPDATE", "impliedGrants": [ "metadata" ] },
-    { "itemId": 3, "name": "update",    "label": "UPDATE",  "category": "UPDATE", "impliedGrants": [ "metadata" ] },
+    { "itemId": 3, "name": "update",   "label": "UPDATE",   "category": "UPDATE", "impliedGrants": [ "metadata" ] },
     { "itemId": 4, "name": "delete",   "label": "DELETE",   "category": "DELETE", "impliedGrants": [ "metadata" ] },
     { "itemId": 5, "name": "alter",    "label": "ALTER",    "category": "CREATE", "impliedGrants": [ "metadata" ] },
     { "itemId": 6, "name": "create",   "label": "CREATE",   "category": "CREATE", "impliedGrants": [ "metadata" ] },
@@ -63,6 +63,6 @@
     { "itemId": 9, "name": "all",      "label": "ALL", "impliedGrants": [ "select", "insert", "update", "delete", "alter", "create", "drop", "metadata" ] }
   ],
   "configs": [
-    { "itemId": 1, "name": "ranger.plugin.audit.filters", "type": "string", "label": "Ranger Default Audit Filters", "defaultValue": "[]" }
+    { "itemId": 1, "name": "ranger.plugin.audit.filters", "type": "string", "mandatory": false, "label": "Ranger Default Audit Filters", "defaultValue": "[]" }
   ]
 }

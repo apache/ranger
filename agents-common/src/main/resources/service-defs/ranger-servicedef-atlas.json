@@ -286,7 +286,7 @@
   "configs": [
     { "itemId": 1, "name": "username",                    "type": "string",   "mandatory": true,  "label": "Username" },
     { "itemId": 2, "name": "password",                    "type": "password", "mandatory": true,  "label": "Password" },
-    { "itemId": 3, "name": "atlas.rest.address",          "type": "string",   "mandatory": true,  "label": "REST Url", "defaultValue": "http://localhost:21000" },
+    { "itemId": 3, "name": "atlas.rest.address",          "type": "string",   "mandatory": true,  "label": "REST URL", "defaultValue": "http://localhost:21000" },
     { "itemId": 4, "name": "commonNameForCertificate",    "type": "string",   "mandatory": false, "label": "Common Name for Certificate" },
     { "itemId": 5, "name": "ranger.plugin.audit.filters", "type": "string",   "mandatory": false, "label": "Ranger Default Audit Filters", "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['atlas'] ,'isAudited':false}, {'accessResult':'ALLOWED', 'isAudited':false, 'actions':['entity-read'], 'accessTypes':['entity-read'], 'users':['nifi']} ]" }
   ]
