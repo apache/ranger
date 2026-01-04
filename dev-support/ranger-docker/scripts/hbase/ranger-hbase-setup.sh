@@ -27,6 +27,9 @@ EOF
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh hbase.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser1.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser2.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser3.keytab
 fi
 
 cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml
