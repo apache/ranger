@@ -9,28 +9,28 @@
   "options":     { "enableDenyAndExceptionsInPolicies": "true" },
   "resources": [
     {
-      "itemId":            1,
-      "name":              "storageaccount",
-      "parent":            "",
-      "level":             10,
-      "type":              "string",
-      "mandatory":         true,
-      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":    { "wildCard": true, "ignoreCase": false },
-      "label":             "Storage Account",
-      "description":       "Storage Account for the Path"
+      "itemId":         1,
+      "name":           "storageaccount",
+      "parent":         "",
+      "level":          10,
+      "type":           "string",
+      "mandatory":      true,
+      "matcher":        "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": false },
+      "label":          "Storage Account",
+      "description":    "Storage Account for the Path"
     },
     {
-      "itemId":            2,
-      "name":              "container",
-      "parent":            "storageaccount",
-      "level":             20,
-      "type":              "string",
-      "mandatory":         true,
-      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":    { "wildCard": true, "ignoreCase": false },
-      "label":             "Storage Account Container",
-      "description":       "Storage Account Container for the Path"
+      "itemId":         2,
+      "name":           "container",
+      "parent":         "storageaccount",
+      "level":          20,
+      "type":           "string",
+      "mandatory":      true,
+      "matcher":        "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": true, "ignoreCase": false },
+      "label":          "Storage Account Container",
+      "description":    "Storage Account Container for the Path"
     },
     {
       "itemId":            3,
