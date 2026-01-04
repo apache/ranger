@@ -4,56 +4,58 @@
   "implClass":   "",
   "label":       "NestedStructure",
   "description": "Plugin to enforce READ and WRITE access control on nested structures such as JSON response objects from microservice API resource calls",
-  "options": {
-    "enableDenyAndExceptionsInPolicies": "true"
-  },
-  "configs": [
-    { "itemId": 1, "name": "commonNameForCertificate",   "type": "string", "mandatory": false },
-    { "itemId": 2, "name": "policy.download.auth.users", "type": "string", "mandatory": false }
-  ],
+  "options":     { "enableDenyAndExceptionsInPolicies": "true" },
   "resources": [
     {
-      "itemId":                 1,
-      "name":                   "schema",
-      "type":                   "string",
-      "level":                  10,
-      "mandatory":              true,
-      "lookupSupported":        false,
-      "recursiveSupported":     false,
-      "excludesSupported":      true,
-      "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":         { "wildCard": "true", "ignoreCase": "true" },
-      "label":                  "NestedStructure Schema",
-      "description":            "Schema of the nested structure returned from Microservice GET, etc",
-      "accessTypeRestrictions": [],
-      "isValidLeaf":            true
+      "itemId":            1,
+      "name":              "schema",
+      "parent":            "",
+      "level":             10,
+      "type":              "string",
+      "mandatory":         true,
+      "excludesSupported": true,
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": "true", "ignoreCase": "true" },
+      "label":             "NestedStructure Schema",
+      "description":       "Schema of the nested structure returned from Microservice GET, etc",
+      "isValidLeaf":       true,
+      "accessTypeRestrictions": [
+      ]
     },
     {
-      "itemId":                  2,
-      "name":                   "field",
-      "type":                   "string",
-      "level":                  20,
-      "parent":                 "schema",
-      "mandatory":              true,
-      "lookupSupported":        false,
-      "recursiveSupported":     false,
-      "excludesSupported":      true,
-      "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":         { "wildCard": "true", "ignoreCase": "true" },
-      "label":                  "NestedStructure Schema Field",
-      "description":            "NestedStructure Schema Field",
-      "accessTypeRestrictions": [],
-      "isValidLeaf":            true
+      "itemId":            2,
+      "name":              "field",
+      "parent":            "schema",
+      "level":             20,
+      "type":              "string",
+      "mandatory":         true,
+      "excludesSupported": true,
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": "true", "ignoreCase": "true" },
+      "label":             "NestedStructure Schema Field",
+      "description":       "NestedStructure Schema Field",
+      "isValidLeaf":       true,
+      "accessTypeRestrictions": [
+
+      ]
     }
   ],
   "accessTypes": [
     { "itemId": 1, "name": "read",  "label": "Read",  "category": "READ" },
     { "itemId": 2, "name": "write", "label": "Write", "category": "UPDATE" }
   ],
-  "policyConditions": [],
-  "contextEnrichers": [],
-  "enums":            [],
+  "configs": [
+    { "itemId": 1, "name": "commonNameForCertificate",   "type": "string", "mandatory": false },
+    { "itemId": 2, "name": "policy.download.auth.users", "type": "string", "mandatory": false }
+  ],
   "dataMaskDef": {
+    "accessTypes": [
+      { "name": "read" }
+    ],
+    "resources": [
+      { "name": "schema", "excludesSupported": false, "matcherOptions": { "wildCard": "false", "ignoreCase": "true" }, "uiHint": "{ \"singleValue\":true }" },
+      { "name": "field",  "excludesSupported": false, "matcherOptions": { "wildCard": "false", "ignoreCase": "true" }, "uiHint": "{ \"singleValue\":true }" }
+    ],
     "maskTypes": [
       {
         "itemId":          1,
@@ -116,71 +118,15 @@
         "description":     "Custom",
         "dataMaskOptions": {}
       }
-    ],
-    "accessTypes": [
-      { "itemId": 1, "name":  "read", "label": "Read" }
-    ],
-    "resources": [
-      {
-        "itemId":                 1,
-        "name":                   "schema",
-        "type":                   "string",
-        "level":                  10,
-        "mandatory":              true,
-        "lookupSupported":        false,
-        "recursiveSupported":     false,
-        "excludesSupported":      false,
-        "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-        "matcherOptions":         { "wildCard": "false", "ignoreCase": "true" },
-        "uiHint":                 "{ \"singleValue\":true }",
-        "label":                  "NestedStructure Schema",
-        "description":            "NestedStructure Schema returned from Microservice GET, etc",
-        "accessTypeRestrictions": [],
-        "isValidLeaf":            false
-      },
-      {
-        "itemId":                 2,
-        "name":                   "field",
-        "type":                   "string",
-        "level":                  20,
-        "parent":                 "schema",
-        "mandatory":              true,
-        "lookupSupported":        false,
-        "recursiveSupported":     false,
-        "excludesSupported":      false,
-        "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-        "matcherOptions":         { "wildCard": "false", "ignoreCase": "true" },
-        "uiHint":                 "{ \"singleValue\":true }",
-        "label":                  "NestedStructure Schema Field",
-        "description":            "NestedStructure Schema Field",
-        "accessTypeRestrictions": [],
-        "isValidLeaf":            true
-      }
     ]
   },
   "rowFilterDef": {
     "accessTypes": [
-      { "itemId": 1, "name": "read",  "label": "Read"  },
-      { "itemId": 2, "name": "write", "label": "Write" }
+      { "name": "read" },
+      { "name": "write" }
     ],
     "resources": [
-      {
-        "itemId":                 1,
-        "name":                   "schema",
-        "type":                   "string",
-        "level":                  10,
-        "mandatory":              true,
-        "lookupSupported":        false,
-        "recursiveSupported":     false,
-        "excludesSupported":      false,
-        "matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-        "matcherOptions":         { "wildCard": "false", "ignoreCase": "true" },
-        "uiHint":                 "{ \"singleValue\":true }",
-        "label":                  "NestedStructure Schema",
-        "description":            "NestedStructure Schema returned from Microservice GET, etc",
-        "accessTypeRestrictions": [],
-        "isValidLeaf":            true
-      }
+      { "name": "schema", "excludesSupported": false, "matcherOptions": { "wildCard": "false", "ignoreCase": "true" }, "uiHint": "{ \"singleValue\":true }" }
     ]
   }
 }
