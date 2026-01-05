@@ -256,6 +256,7 @@ public class RangerAPIList {
     public static final String SEARCH_DATASET_IN_PROJECT = "GdsREST.searchDatasetInProject";
     public static final String GET_DATASET_GRANTS        = "GdsREST.getDataSetGrants";
     public static final String UPDATE_DATASET_GRANTS     = "GdsREST.updateDataSetGrants";
+    public static final String EVALUATE_SHARED_RESOURCES = "GdsREST.evaluateSharedResources";
 
     /**
      * List of APIs for PublicAPIsv2

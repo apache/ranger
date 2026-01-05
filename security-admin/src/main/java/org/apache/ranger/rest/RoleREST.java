@@ -19,8 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +63,8 @@ import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerRoleList;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,11 +89,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -431,30 +434,32 @@ public class RoleREST {
 
     @GET
     @Path("/roles/exportJson")
-    @Produces("application/json")
+    @Produces(MediaType.APPLICATION_JSON) // Use standard MediaType
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAdminRole()")
-    public void getRolesInJson(@Context HttpServletRequest request, @Context HttpServletResponse response) {
+    public Response getRolesInJson(@Context HttpServletRequest request) {
         LOG.debug("==> getRolesInJson()");
 
         try {
             List<RangerRole> roleLists = getAllFilteredRoleList(request);
 
             if (CollectionUtils.isNotEmpty(roleLists)) {
-                svcStore.getObjectInJson(roleLists, response, JSON_FILE_NAME_TYPE.ROLE);
-            } else {
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                Object exportObject = svcStore.getObjectInJson(roleLists, JSON_FILE_NAME_TYPE.ROLE);
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+                String jsonFileName = "Ranger_Roles_" + timeStamp + ".json";
 
+                return Response.ok(exportObject, MediaType.APPLICATION_JSON)
+                        .header("Content-Disposition", "attachment; filename=\"" + jsonFileName + "\"")
+                        .build();
+            } else {
                 LOG.error("There is no Role to Export!!");
+                return Response.noContent().build();
             }
         } catch (WebApplicationException excp) {
             throw excp;
         } catch (Throwable excp) {
-            LOG.error("Error while exporting policy file!!", excp);
-
+            LOG.error("Error while exporting role file!!", excp);
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
-
-        LOG.debug("<== getRolesInJson()");
     }
 
     @POST
@@ -663,7 +668,7 @@ public class RoleREST {
     @Path("/roles/{id}/addUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @QueryParam("isAdmin") Boolean isAdmin) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> addUsersAndGroups(id={}, users={}, groups={}, isAdmin={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()), isAdmin);
         }
@@ -735,7 +740,7 @@ public class RoleREST {
     @Path("/roles/{id}/removeUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
         }
@@ -797,7 +802,7 @@ public class RoleREST {
     @Path("/roles/{id}/removeAdminFromUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups) {
         LOG.debug("==> removeAdminFromUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
 
         RangerRole role;

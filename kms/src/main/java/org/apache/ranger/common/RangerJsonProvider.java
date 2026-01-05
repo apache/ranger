@@ -18,18 +18,22 @@
 
 package org.apache.ranger.common;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Priority;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
 
 @Provider
+@Priority(1) // Highest priority to ensure this provider is selected over MOXy
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Component
@@ -39,6 +43,13 @@ public class RangerJsonProvider extends JacksonJaxbJsonProvider {
     public RangerJsonProvider() {
         super(JsonUtilsV2.getMapper(), JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
 
-        LOG.info("RangerJsonProvider() instantiated");
+        // Configure Jackson features to ensure robust JSON processing
+        ObjectMapper mapper = JsonUtilsV2.getMapper();
+        if (mapper != null) {
+            // Ensure we can handle unknown properties gracefully
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        }
+
+        LOG.info("RangerJsonProvider() instantiated with Jackson JSON processing and enhanced configuration");
     }
 }
