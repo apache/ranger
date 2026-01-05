@@ -21,11 +21,6 @@ package org.apache.ranger.services.kms.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.HadoopKerberosName;
@@ -34,10 +29,17 @@ import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -49,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class KMSClient {
     private static final Logger LOG = LoggerFactory.getLogger(KMSClient.class);
@@ -57,6 +60,7 @@ public class KMSClient {
     private static final String KMS_LIST_API_ENDPOINT = "v1/keys/names"; // GET
     private static final String ERROR_MSG             = " You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
     private static final String AUTH_TYPE_KERBEROS    = "kerberos";
+    private static final ReentrantLock LOCK = new ReentrantLock();
 
     String provider;
     String username;
@@ -186,39 +190,24 @@ public class KMSClient {
         List<String> lret = null;
 
         for (int i = 0; i < providers.length; i++) {
-            lret = new ArrayList<>();
-
             LOG.debug("Getting Kms Key list for keyNameMatching : {}", keyNameMatching);
 
-            String         uri        = providers[i] + (providers[i].endsWith("/") ? KMS_LIST_API_ENDPOINT : ("/" + KMS_LIST_API_ENDPOINT));
-            Client         client     = null;
-            ClientResponse response   = null;
-            boolean        isKerberos = false;
+            String   uri        = providers[i] + (providers[i].endsWith("/") ? KMS_LIST_API_ENDPOINT : ("/" + KMS_LIST_API_ENDPOINT));
+            Client   client     = null;
+            Response response   = null;
+            boolean  isKerberos = false;
 
             try {
-                ClientConfig cc = new DefaultClientConfig();
-
-                cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
-
-                client = Client.create(cc);
+                // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newClient() to prevent MOXy usage
+                client = RangerJersey2ClientBuilder.newClient();
+                Invocation.Builder builder;
+                final Subject sub;
 
                 if (authType != null && authType.equalsIgnoreCase(AUTH_TYPE_KERBEROS)) {
                     isKerberos = true;
                 }
 
-                Subject sub;
-
-                if (!isKerberos) {
-                    uri = uri.concat("?user.name=" + username);
-
-                    WebResource webResource = client.resource(uri);
-
-                    response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
-
-                    LOG.info("Init Login: security not enabled, using username");
-
-                    sub = SecureClientLogin.login(username);
-                } else {
+                if (isKerberos) {
                     if (!StringUtils.isEmpty(rangerPrincipal) && !StringUtils.isEmpty(rangerKeytab)) {
                         LOG.info("Init Lookup Login: security enabled, using rangerPrincipal/rangerKeytab");
 
@@ -241,25 +230,37 @@ public class KMSClient {
 
                         sub = SecureClientLogin.loginUserWithPassword(username, decryptedPwd);
                     }
+                    builder = client.target(uri).request(MediaType.APPLICATION_JSON);
+                } else {
+                    uri = uri.concat("?user.name=" + username);
+                    builder = client.target(uri).request(MediaType.APPLICATION_JSON);
+                    LOG.info("Init Login: security not enabled, using username");
+                    sub = SecureClientLogin.login(username);
                 }
 
-                final WebResource webResource = client.resource(uri);
+                LOG.debug("getKeyList(): calling {}", uri);
 
-                response = Subject.doAs(sub, (PrivilegedAction<ClientResponse>) () -> webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class));
-
-                LOG.debug("getKeyList():calling {}", uri);
+                response = Subject.doAs(sub, (PrivilegedAction<Response>) () -> {
+                    try {
+                        return builder.get();
+                    } catch (ProcessingException | WebApplicationException e) {
+                        LOG.error("Failed to make REST call", e);
+                        return null;
+                    }
+                });
 
                 if (response != null) {
                     LOG.debug("getKeyList():response.getStatus()= {}", response.getStatus());
 
                     if (response.getStatus() == 200) {
-                        String jsonString = response.getEntity(String.class);
+                        String jsonString = response.readEntity(String.class);
                         Gson   gson       = new GsonBuilder().setPrettyPrinting().create();
 
                         @SuppressWarnings("unchecked")
                         List<String> keys = gson.fromJson(jsonString, List.class);
 
                         if (keys != null) {
+                            lret = new ArrayList<>();
                             for (String key : keys) {
                                 if (existingKeyList != null && existingKeyList.contains(key)) {
                                     continue;
@@ -274,21 +275,10 @@ public class KMSClient {
 
                             return lret;
                         }
-                    } else if (response.getStatus() == 401) {
+                    } else if (response.getStatus() == 401 || response.getStatus() == 403) {
                         LOG.info("getKeyList():response.getStatus()= {} for URL {}, so returning null list", response.getStatus(), uri);
 
-                        String          msgDesc      = response.getEntity(String.class);
-                        HadoopException hdpException = new HadoopException(msgDesc);
-
-                        hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
-
-                        lret = null;
-
-                        throw hdpException;
-                    } else if (response.getStatus() == 403) {
-                        LOG.info("getKeyList():response.getStatus()= {} for URL {}, so returning null list", response.getStatus(), uri);
-
-                        String          msgDesc      = response.getEntity(String.class);
+                        String          msgDesc      = response.readEntity(String.class);
                         HadoopException hdpException = new HadoopException(msgDesc);
 
                         hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
@@ -298,7 +288,7 @@ public class KMSClient {
                         throw hdpException;
                     } else {
                         LOG.info("getKeyList():response.getStatus()= {} for URL {}, so returning null list", response.getStatus(), uri);
-                        LOG.info(response.getEntity(String.class));
+                        LOG.info(response.readEntity(String.class));
 
                         lret = null;
                     }
@@ -334,10 +324,6 @@ public class KMSClient {
             } finally {
                 if (response != null) {
                     response.close();
-                }
-
-                if (client != null) {
-                    client.destroy();
                 }
 
                 if (lret == null) {

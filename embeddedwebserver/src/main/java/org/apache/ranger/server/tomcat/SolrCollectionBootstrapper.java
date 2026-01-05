@@ -124,26 +124,11 @@ public class SolrCollectionBootstrapper extends Thread {
         }
 
         solrCollectionName = EmbeddedServerUtil.getConfig(SOLR_COLLECTION_NAME_KEY, DEFAULT_COLLECTION_NAME);
-
-        logger.info("Solr Collection name provided is : " + solrCollectionName);
-
-        solrConfigName = EmbeddedServerUtil.getConfig(SOLR_CONFIG_NAME_KEY, DEFAULT_CONFIG_NAME);
-
-        logger.info("Solr Config name provided is : " + solrConfigName);
-
-        noOfReplicas = EmbeddedServerUtil.getIntConfig(SOLR_NO_REPLICA, DEFAULT_VALUE);
-
-        logger.info("No. of replicas provided is : " + noOfReplicas);
-
-        maxNodePerShards = EmbeddedServerUtil.getIntConfig(SOLR_MAX_SHARD_PER_NODE, DEFAULT_VALUE);
-
-        logger.info("Max no of nodes per shards provided is : " + maxNodePerShards);
-
-        timeInterval = EmbeddedServerUtil.getLongConfig(SOLR_TIME_INTERVAL, DEFAULT_SOLR_TIME_INTERVAL_MS);
-
-        logger.info("Solr time interval provided is : " + timeInterval);
-
-        maxRetry = EmbeddedServerUtil.getIntConfig(SOLR_BOOTSTRP_MAX_RETRY, DEFAULT_SOLR_BOOTSTRP_MAX_RETRY);
+        solrConfigName     = EmbeddedServerUtil.getConfig(SOLR_CONFIG_NAME_KEY, DEFAULT_CONFIG_NAME);
+        noOfReplicas       = EmbeddedServerUtil.getIntConfig(SOLR_NO_REPLICA, DEFAULT_VALUE);
+        maxNodePerShards   = EmbeddedServerUtil.getIntConfig(SOLR_MAX_SHARD_PER_NODE, DEFAULT_VALUE);
+        timeInterval       = EmbeddedServerUtil.getLongConfig(SOLR_TIME_INTERVAL, DEFAULT_SOLR_TIME_INTERVAL_MS);
+        maxRetry           = EmbeddedServerUtil.getIntConfig(SOLR_BOOTSTRP_MAX_RETRY, DEFAULT_SOLR_BOOTSTRP_MAX_RETRY);
 
         if (System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null) {
             System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null");
@@ -153,8 +138,6 @@ public class SolrCollectionBootstrapper extends Thread {
         String solrFileDir = new File(basedir).getParent();
 
         this.customConfigSetLocation = EmbeddedServerUtil.getConfig(CONFIG_SET_LOCATION);
-
-        logger.info("Provided custom configSet location : " + this.customConfigSetLocation);
 
         if (StringUtils.isNotEmpty(this.customConfigSetLocation)) {
             this.configSetFolder = new File(this.customConfigSetLocation);
@@ -166,6 +149,7 @@ public class SolrCollectionBootstrapper extends Thread {
         String sslEnabledProp = EmbeddedServerUtil.getConfig(SSL_ENABLED_PARAM);
 
         isSSLEnabled = ("true".equalsIgnoreCase(sslEnabledProp));
+        logger.info("Solr configs: Collection name:" + solrCollectionName + ", Config name:" + solrConfigName  + ", Total Replicas:" + noOfReplicas + ", Max nodes per shards:" + maxNodePerShards + ", TimeInterval:" + timeInterval + ", Custom config location:" + this.customConfigSetLocation);
     }
 
     public static Map postDataAndGetResponse(CloudSolrClient cloudClient, String uri, ByteBuffer bytarr) throws IOException {

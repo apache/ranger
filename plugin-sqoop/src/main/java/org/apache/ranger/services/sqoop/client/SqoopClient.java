@@ -21,9 +21,6 @@ package org.apache.ranger.services.sqoop.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -32,6 +29,7 @@ import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.apache.http.HttpStatus;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.services.sqoop.client.json.model.SqoopConnectorResponse;
 import org.apache.ranger.services.sqoop.client.json.model.SqoopConnectorsResponse;
 import org.apache.ranger.services.sqoop.client.json.model.SqoopJobResponse;
@@ -42,6 +40,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -128,7 +132,7 @@ public class SqoopClient extends BaseClient {
         }
 
         List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
-            ClientResponse response = getClientResponse(sqoopUrl, SQOOP_CONNECTOR_API_ENDPOINT, userName);
+            Response response = getClientResponse(sqoopUrl, SQOOP_CONNECTOR_API_ENDPOINT, userName);
 
             SqoopConnectorsResponse sqoopConnectorsResponse = getSqoopResourceResponse(response, SqoopConnectorsResponse.class);
             if (sqoopConnectorsResponse == null || CollectionUtils.isEmpty(sqoopConnectorsResponse.getConnectors())) {
@@ -161,7 +165,7 @@ public class SqoopClient extends BaseClient {
         }
 
         List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
-            ClientResponse response = getClientResponse(sqoopUrl, SQOOP_LINK_API_ENDPOINT, userName);
+            Response response = getClientResponse(sqoopUrl, SQOOP_LINK_API_ENDPOINT, userName);
             SqoopLinksResponse sqoopLinksResponse = getSqoopResourceResponse(response, SqoopLinksResponse.class);
             if (sqoopLinksResponse == null || CollectionUtils.isEmpty(sqoopLinksResponse.getLinks())) {
                 return Collections.emptyList();
@@ -191,7 +195,7 @@ public class SqoopClient extends BaseClient {
         }
 
         List<String> ret = Subject.doAs(subj, (PrivilegedAction<List<String>>) () -> {
-            ClientResponse response = getClientResponse(sqoopUrl, SQOOP_JOB_API_ENDPOINT, userName);
+            Response response = getClientResponse(sqoopUrl, SQOOP_JOB_API_ENDPOINT, userName);
 
             SqoopJobsResponse sqoopJobsResponse = getSqoopResourceResponse(response, SqoopJobsResponse.class);
             if (sqoopJobsResponse == null || CollectionUtils.isEmpty(sqoopJobsResponse.getJobs())) {
@@ -214,69 +218,76 @@ public class SqoopClient extends BaseClient {
         return ret;
     }
 
-    private static ClientResponse getClientResponse(String sqoopUrl, String sqoopApi, String userName) {
-        ClientResponse response  = null;
-        String[]       sqoopUrls = sqoopUrl.trim().split("[,;]");
+    private Response getClientResponse(String sqoopUrl, String sqoopApi, String userName) {
+        Response response = null;
+        String[] sqoopUrls = sqoopUrl.trim().split("[,;]");
         if (ArrayUtils.isEmpty(sqoopUrls)) {
             return null;
         }
 
-        Client client = Client.create();
+        // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newClient() to prevent MOXy usage
+        Client client = RangerJersey2ClientBuilder.newClient();
 
-        for (String currentUrl : sqoopUrls) {
-            if (StringUtils.isBlank(currentUrl)) {
-                continue;
-            }
+        try {
+            for (String currentUrl : sqoopUrls) {
+                if (StringUtils.isBlank(currentUrl)) {
+                    continue;
+                }
 
-            String url = currentUrl.trim() + sqoopApi + "?" + PseudoAuthenticator.USER_NAME + "=" + userName;
-            try {
-                response = getClientResponse(url, client);
-
-                if (response != null) {
-                    if (response.getStatus() == HttpStatus.SC_OK) {
+                String url = currentUrl.trim() + sqoopApi + "?" + PseudoAuthenticator.USER_NAME + "=" + userName;
+                try {
+                    response = getClientResponse(url, client);
+                    if (response != null && response.getStatus() == HttpStatus.SC_OK) {
                         break;
-                    } else {
+                    }
+                    if (response != null) {
                         response.close();
                     }
+                } catch (Throwable t) {
+                    String msgDesc = "Exception while getting sqoop response, sqoopUrl: " + url;
+                    LOG.error(msgDesc, t);
                 }
-            } catch (Throwable t) {
-                String msgDesc = "Exception while getting sqoop response, sqoopUrl: " + url;
-                LOG.error(msgDesc, t);
+            }
+        } catch (Exception ex) {
+            String msgDesc = "Exception while getting sqoop response, sqoopUrl: " + sqoopUrl;
+            LOG.error(msgDesc, ex);
+        } finally {
+            if (client != null) {
+                client.close();
             }
         }
-        client.destroy();
 
         return response;
     }
 
-    private static ClientResponse getClientResponse(String url, Client client) {
+    private Response getClientResponse(String url, Client client) {
         LOG.debug("getClientResponse():calling {}", url);
 
-        WebResource webResource = client.resource(url);
+        try {
+            WebTarget webTarget = client.target(url);
+            Response response = webTarget.request(MediaType.APPLICATION_JSON).get();
 
-        ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
-
-        if (response != null) {
-            LOG.debug("getClientResponse():response.getStatus()= {}", response.getStatus());
-
-            if (response.getStatus() != HttpStatus.SC_OK) {
-                LOG.warn("getClientResponse():response.getStatus()= {} for URL {}, failed to get sqoop resource list.", response.getStatus(), url);
-
-                String jsonString = response.getEntity(String.class);
-
-                LOG.warn(jsonString);
+            if (response != null) {
+                LOG.debug("getClientResponse():response.getStatus()= {}", response.getStatus());
+                if (response.getStatus() != HttpStatus.SC_OK) {
+                    LOG.warn("getClientResponse():response.getStatus()= {} for URL {}, failed to get sqoop resource list.", response.getStatus(), url);
+                    String jsonString = response.readEntity(String.class);
+                    LOG.warn(jsonString);
+                }
             }
+            return response;
+        } catch (ProcessingException | WebApplicationException t) {
+            LOG.error("getClientResponse(): Exception on REST call to URL {}.", url, t);
+            return null;
         }
-
-        return response;
     }
 
-    private <T> T getSqoopResourceResponse(ClientResponse response, Class<T> classOfT) {
+    private <T> T getSqoopResourceResponse(Response response, Class<T> classOfT) throws HadoopException {
         T resource;
         try {
             if (response != null) {
                 if (response.getStatus() == HttpStatus.SC_OK) {
-                    String jsonString = response.getEntity(String.class);
+                    String jsonString = response.readEntity(String.class);
                     Gson   gson       = new GsonBuilder().setPrettyPrinting().create();
 
                     resource = gson.fromJson(jsonString, classOfT);

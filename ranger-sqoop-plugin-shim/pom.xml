@@ -65,6 +65,10 @@
                     <artifactId>*</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.codehaus.jettison</groupId>
+                    <artifactId>jettison</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>

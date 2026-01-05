@@ -59,7 +59,6 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-collections:commons-collections</include>
-          <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
           <include>org.apache.commons:commons-configuration2</include>
           <include>com.google.code.gson:gson*</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>

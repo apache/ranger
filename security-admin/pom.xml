@@ -85,7 +85,7 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>3.0</version>
+            <version>${guice.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -121,70 +121,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-bundle</artifactId>
-            <version>${jersey-bundle.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.ws.rs</groupId>
-                    <artifactId>jsr311-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-core</artifactId>
-            <version>${jersey-core.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.ws.rs</groupId>
-                    <artifactId>jsr311-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-multipart</artifactId>
-            <version>${jersey-core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-spring</artifactId>
-            <version>${jersey-spring.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-server</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-aop</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-beans</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-web</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>com.webcohesion.enunciate</groupId>
             <artifactId>enunciate-core-annotations</artifactId>
+            <version>${enunciate.version}</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -248,6 +187,22 @@
             <version>${netty-all.version}</version>
         </dependency>
         <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>${jakarta.ws.rs-api.version}</version>
+        </dependency>
+        <!-- JAXB dependency -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta.xml.bind-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>${javax.inject.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.version}</version>
@@ -301,21 +256,26 @@
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
+                <!-- Exclude Jackson - project uses newer Jackson version -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-json</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-server</artifactId>
+                    <artifactId>*</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>commons-httpclient</groupId>
@@ -393,12 +353,66 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>${hadoop.version}</version>
+            <exclusions>
+                <!-- Exclude Jackson - project uses newer Jackson version -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-mapreduce-client-core</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
+                <!-- Exclude Jackson - project uses newer Jackson version -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>com.fasterxml.jackson.jaxrs</groupId>
-                    <artifactId>jackson-jaxrs-json-provider</artifactId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <!-- Exclude Jersey 1.x - project uses Jersey 2.x -->
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>jersey-guice</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
@@ -547,7 +561,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-core</artifactId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -619,11 +633,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.tomcat</groupId>
-            <artifactId>tomcat-jasper-el</artifactId>
-            <version>${tomcat.embed.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.velocity</groupId>
             <artifactId>velocity-engine-core</artifactId>
             <version>${velocity.version}</version>
@@ -677,9 +686,54 @@
             <version>${javax.persistence.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.hk2</groupId>
+            <artifactId>hk2</artifactId>
+            <version>${glassfish.hk2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.hk2</groupId>
+            <artifactId>spring-bridge</artifactId>
+            <version>${glassfish.hk2.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.hk2.external</groupId>
             <artifactId>cglib</artifactId>
             <version>${cglib.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.hk2.external</groupId>
+            <artifactId>jakarta.inject</artifactId>
+            <version>${glassfish.hk2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-spring4</artifactId>
+            <version>${jersey-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -806,31 +860,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.7.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-commons</artifactId>
-            <version>1.7.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-engine</artifactId>
-            <version>1.7.2</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -880,7 +910,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>3.4.0</version>
+                <version>${maven-war-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>prepare</id>
@@ -932,7 +962,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.7</version>
+                <version>${maven-resources-plugin.version}</version>
                 <executions>
                     <!-- react-webapp copy-resources execution start -->
                     <execution>
@@ -1108,7 +1138,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
+                <version>${maven-enforcer-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>duplicate-sql-patch-file-version-validator</id>

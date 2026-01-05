@@ -40,38 +40,22 @@
 						<outputDirectory>lib</outputDirectory>
 						<unpack>false</unpack>
 						<includes>
-							<include>com.101tec:zkclient</include>
-							<include>com.google.code.gson:gson:jar:${gson.version}</include>
-							<include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
-							<include>com.sun.jersey.contribs:jersey-multipart:jar:${sun-jersey-bundle.version}</include>
-							<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
-							<include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
-							<include>org.apache.atlas:atlas-client-v1:jar:${atlas.version}</include>
-							<include>org.apache.atlas:atlas-client-v2:jar:${atlas.version}</include>
-							<include>org.apache.atlas:atlas-client-common:jar:${atlas.version}</include>
-							<include>org.apache.atlas:atlas-common:jar:${atlas.version}</include>
-							<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-							<include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
-							<include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
-							<include>org.apache.commons:commons-compress</include>
-							<include>org.apache.kafka:kafka-clients:jar:${kafka.version}</include>
-							<include>org.apache.ranger:credentialbuilder</include>
-							<include>org.apache.ranger:ranger-authz-api</include>
-							<include>org.apache.ranger:ranger-plugins-cred</include>
-							<include>org.apache.ranger:ranger-plugins-common</include>
-							<include>org.apache.ranger:ugsync-util</include>
-							<include>org.apache.ranger:ranger-util</include>
-							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-							<include>com.fasterxml.jackson.core:jackson-annotations:jar:${atlas.jackson.version}</include>
-							<include>com.fasterxml.jackson.core:jackson-core:jar:${atlas.jackson.version}</include>
-							<include>com.fasterxml.jackson.core:jackson-databind:jar:${atlas.jackson.databind.version}</include>
-							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${atlas.jackson.version}</include>
-							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${atlas.jackson.version}</include>
-							<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${atlas.jackson.version}</include>
-							<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
-							<include>org.scala-lang:scala-library:jar:${scala.version}</include>
-							<include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
 							<include>aopalliance:aopalliance:jar:${aopalliance.version}</include>
+							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+							<include>ch.qos.logback:logback-core:jar:${logback.version}</include>
+							<include>com.101tec:zkclient</include>
+							<include>com.fasterxml.jackson.core:jackson-annotations</include>
+							<include>com.fasterxml.jackson.core:jackson-core</include>
+							<include>com.fasterxml.jackson.core:jackson-databind</include>
+							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base</include>
+							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider</include>
+							<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations</include>
+							<include>com.fasterxml.woodstox:woodstox-core</include>
+							<include>com.google.code.gson:gson:jar:${gson.version}</include>
+							<include>com.google.guava:guava</include>
+							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
+							<include>com.sun.xml.bind:jaxb-core</include>
+							<include>com.sun.xml.bind:jaxb-impl</include>
 							<include>commons-cli:commons-cli:jar:${commons.cli.version}</include>
 							<include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
 							<include>commons-collections:commons-collections:jar:${commons.collections.version}</include>
@@ -80,29 +64,66 @@
 							<include>commons-lang:commons-lang</include>
 							<include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
 							<include>javax.inject:javax.inject:jar:${javax-inject.version}</include>
+							<include>commons-logging:commons-logging</include>
+							<include>jakarta.activation:jakarta.activation-api</include>
+							<include>jakarta.ws.rs:jakarta.ws.rs-api</include>
+							<include>jakarta.xml.bind:jakarta.xml.bind-api</include>
+							<include>javax.activation:javax.activation-api</include>
+							<include>javax.annotation:javax.annotation-api</include>
+							<include>javax.inject:javax.inject</include>
+							<include>javax.xml.bind:jaxb-api</include>
 							<include>joda-time:joda-time:jar:${joda-time.version}</include>
-							<include>org.codehaus.woodstox:stax2-api</include>
-							<include>com.fasterxml.woodstox:woodstox-core</include>
-							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-							<include>net.java.dev.jna:jna:jar:${jna.version}</include>
 							<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
 							<include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
 							<include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
 							<include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
+							<include>net.java.dev.jna:jna:jar:${jna.version}</include>
+							<include>org.apache.atlas:atlas-client-common:jar:${atlas.version}</include>
+							<include>org.apache.atlas:atlas-client-v1:jar:${atlas.version}</include>
+							<include>org.apache.atlas:atlas-client-v2:jar:${atlas.version}</include>
+							<include>org.apache.atlas:atlas-common:jar:${atlas.version}</include>
+							<include>org.apache.atlas:atlas-intg:jar:${atlas.version}</include>
+							<include>org.apache.atlas:atlas-notification:jar:${atlas.version}</include>
+							<include>org.apache.commons:commons-compress</include>
 							<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-							<include>org.cloudera.logredactor:logredactor</include>
 							<include>org.apache.commons:commons-lang3</include>
-							<include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
-							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
-							<include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-							<include>org.apache.ranger:ranger-common-ha:jar:${project.version}</include>
+							<include>org.apache.commons:commons-lang</include>
+							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
 							<include>org.apache.curator:curator-framework:jar:${curator.version}</include>
 							<include>org.apache.curator:curator-recipes:jar:${curator.version}</include>
-							<include>org.apache.curator:curator-client:jar:${curator.version}</include>
-							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+							<include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+							<include>org.apache.hadoop:hadoop-auth</include>
+							<include>org.apache.hadoop:hadoop-common</include>
+							<include>org.apache.kafka:kafka-clients:jar:${kafka.version}</include>
+							<include>org.apache.ranger:credentialbuilder</include>
+							<include>org.apache.ranger:ranger-authz-api</include>
+							<include>org.apache.ranger:ranger-common-ha:jar:${project.version}</include>
+							<include>org.apache.ranger:ranger-plugins-common</include>
+							<include>org.apache.ranger:ranger-plugins-cred</include>
+							<include>org.apache.ranger:ranger-util</include>
 							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
 							<include>com.google.guava:guava</include>
 							<include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+							<include>org.cloudera.logredactor:logredactor</include>
+							<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
+							<include>org.codehaus.woodstox:stax2-api</include>
+							<include>org.glassfish.hk2.external:jakarta.inject</include>
+							<include>org.glassfish.hk2:class-model</include>
+							<include>org.glassfish.hk2:hk2-api</include>
+							<include>org.glassfish.hk2:hk2-core</include>
+							<include>org.glassfish.hk2:hk2-locator</include>
+							<include>org.glassfish.hk2:hk2-runlevel</include>
+							<include>org.glassfish.hk2:hk2-utils</include>
+							<include>org.glassfish.hk2:hk2</include>
+							<include>org.glassfish.jersey.core:jersey-client</include>
+							<include>org.glassfish.jersey.core:jersey-common</include>
+							<include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
+							<include>org.glassfish.jersey.inject:jersey-hk2</include>
+							<include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+							<include>org.scala-lang:scala-library:jar:${scala.version}</include>
+							<include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
+							<include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
 						</includes>
 					</dependencySet>
 				</dependencySets>

@@ -437,7 +437,7 @@ public class RangerSearchUtilTest {
 //        MockHttpServletRequest request = new MockHttpServletRequest();
 //        request.setParameter("names", "name1", "name2");
 //
-//        when(mockStringUtil.isEmpty(null)).thenReturn(true);
+//        when(mockStringUtil.isEmpty(anyString())).thenReturn(false);
 //
 //        SearchFilter searchFilter = new SearchFilter();
 //        rangerSearchUtil.extractStringList(request, searchFilter, "names", "Names", "nameList", null, null);

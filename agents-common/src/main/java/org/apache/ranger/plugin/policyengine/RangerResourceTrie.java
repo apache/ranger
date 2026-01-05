@@ -1434,6 +1434,7 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
             }
         }
 
+        @SuppressWarnings("PMD.UnusedPrivateMethod") // Method is called on line 275 via node.removeEvaluatorFromSubtree()
         private void removeEvaluatorFromSubtree(U evaluator) {
             LOG.debug("==> removeEvaluatorFromSubtree({})", evaluator.getId());
 

@@ -58,6 +58,21 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-collections:commons-collections</include>
+          <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
+          <include>org.glassfish.jersey.core:jersey-client</include>
+          <include>org.glassfish.jersey.core:jersey-common</include>
+          <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+          <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
+          <include>org.glassfish.jersey.inject:jersey-hk2</include>
+          <include>org.glassfish.hk2.external:jakarta.inject</include>
+          <include>org.glassfish.hk2:hk2</include>
+          <include>org.glassfish.hk2:hk2-utils</include>
+          <include>org.glassfish.hk2:hk2-api</include>
+          <include>org.glassfish.hk2:hk2-core</include>
+          <include>org.glassfish.hk2:hk2-locator</include>
+          <include>org.glassfish.hk2:hk2-runlevel</include>
+          <include>org.glassfish.hk2:class-model</include>
+          <include>javax.inject:javax.inject</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>

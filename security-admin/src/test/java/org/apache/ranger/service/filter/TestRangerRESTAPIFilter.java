@@ -18,21 +18,24 @@
  */
 package org.apache.ranger.service.filter;
 
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerResponse;
 import org.apache.ranger.common.PropertiesUtil;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
+import java.io.IOException;
 import java.net.URI;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
@@ -43,14 +46,29 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
-public class TestRangerRESTAPIFilter {
+class TestRangerRESTAPIFilter {
+    @InjectMocks
+    RangerRESTAPIFilter rangerRESTAPIFilter;
+
     @Mock
-    public ContainerRequest  request;
+    public ContainerRequestContext requestContext;
     @Mock
-    public ContainerResponse response;
+    public ContainerResponseContext responseContext;
+    @Mock
+    public UriInfo uriInfo;
 
     @Test
-    public void test1_init_buildsPatterns_whenEnabled() {
+    void test1Filter() throws IOException {
+        URI uri = URI.create("http://localhost/service/test");
+        when(requestContext.getUriInfo()).thenReturn(uriInfo);
+        when(uriInfo.getAbsolutePath()).thenReturn(uri);
+        when(requestContext.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
+        when(requestContext.getMethod()).thenReturn("GET");
+        rangerRESTAPIFilter.filter(requestContext);
+    }
+
+    @Test
+    void test1_init_buildsPatterns_whenEnabled() {
         // enable filter
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
@@ -70,17 +88,18 @@ public class TestRangerRESTAPIFilter {
     }
 
     @Test
-    public void test2_filter_request_skipsMultipartAndLogs() {
+    void test2_filter_request_skipsMultipartAndLogs() throws IOException {
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
             PropertiesUtil.getPropertiesMap().put("xa.restapi.log.enabled", "true");
             RangerRESTAPIFilter.initDone = false;
             RangerRESTAPIFilter f   = new RangerRESTAPIFilter();
             URI                 uri = URI.create("http://localhost/service/resource");
-            when(request.getRequestUri()).thenReturn(uri);
-            when(request.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
-            ContainerRequest out = f.filter(request);
-            assertNotNull(out);
+            when(requestContext.getUriInfo()).thenReturn(uriInfo);
+            when(uriInfo.getAbsolutePath()).thenReturn(uri);
+            when(requestContext.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
+            when(requestContext.getMethod()).thenReturn("GET");
+            f.filter(requestContext);
         } finally {
             if (old == null) {
                 PropertiesUtil.getPropertiesMap().remove("xa.restapi.log.enabled");
@@ -91,15 +110,14 @@ public class TestRangerRESTAPIFilter {
     }
 
     @Test
-    public void test4_filter_response_skipsSuper_whenImageType() {
+    void test4_filter_response_skipsSuper_whenImageType() throws IOException {
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
             PropertiesUtil.getPropertiesMap().put("xa.restapi.log.enabled", "true");
             RangerRESTAPIFilter.initDone = true;
             RangerRESTAPIFilter f = new RangerRESTAPIFilter();
-            when(response.getMediaType()).thenReturn(new MediaType("image", "png"));
-            ContainerResponse out = f.filter(request, response);
-            assertNotNull(out);
+            when(responseContext.getMediaType()).thenReturn(new MediaType("image", "png"));
+            f.filter(requestContext, responseContext);
         } finally {
             if (old == null) {
                 PropertiesUtil.getPropertiesMap().remove("xa.restapi.log.enabled");
@@ -110,17 +128,17 @@ public class TestRangerRESTAPIFilter {
     }
 
     @Test
-    public void test6_filter_request_skips_whenMultipart() {
+    void test6_filter_request_skips_whenMultipart() throws IOException {
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
             PropertiesUtil.getPropertiesMap().put("xa.restapi.log.enabled", "true");
             RangerRESTAPIFilter.initDone = false;
             RangerRESTAPIFilter f   = new RangerRESTAPIFilter();
             URI                 uri = URI.create("http://localhost/service/resource");
-            when(request.getRequestUri()).thenReturn(uri);
-            when(request.getMediaType()).thenReturn(new MediaType("multipart", "form-data"));
-            ContainerRequest out = f.filter(request);
-            assertNotNull(out);
+            when(requestContext.getUriInfo()).thenReturn(uriInfo);
+            when(uriInfo.getAbsolutePath()).thenReturn(uri);
+            when(requestContext.getMediaType()).thenReturn(new MediaType("multipart", "form-data"));
+            f.filter(requestContext);
         } finally {
             if (old == null) {
                 PropertiesUtil.getPropertiesMap().remove("xa.restapi.log.enabled");
@@ -131,17 +149,17 @@ public class TestRangerRESTAPIFilter {
     }
 
     @Test
-    public void test7_filter_request_skips_whenLogsEndpoint() {
+    void test7_filter_request_skips_whenLogsEndpoint() throws IOException {
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
             PropertiesUtil.getPropertiesMap().put("xa.restapi.log.enabled", "true");
             RangerRESTAPIFilter.initDone = false;
             RangerRESTAPIFilter f   = new RangerRESTAPIFilter();
             URI                 uri = URI.create("http://localhost/service/general/logs");
-            when(request.getRequestUri()).thenReturn(uri);
-            when(request.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
-            ContainerRequest out = f.filter(request);
-            assertNotNull(out);
+            when(requestContext.getUriInfo()).thenReturn(uriInfo);
+            when(uriInfo.getAbsolutePath()).thenReturn(uri);
+            when(requestContext.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
+            f.filter(requestContext);
         } finally {
             if (old == null) {
                 PropertiesUtil.getPropertiesMap().remove("xa.restapi.log.enabled");
@@ -152,17 +170,18 @@ public class TestRangerRESTAPIFilter {
     }
 
     @Test
-    public void test8_filter_request_callsSuper_whenJsonAndNotLogs() {
+    void test8_filter_request_callsSuper_whenJsonAndNotLogs() throws IOException {
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
             PropertiesUtil.getPropertiesMap().put("xa.restapi.log.enabled", "true");
             RangerRESTAPIFilter.initDone = false;
             RangerRESTAPIFilter f   = new RangerRESTAPIFilter();
-            URI                 uri = URI.create("http://localhost/service/resource");
-            when(request.getRequestUri()).thenReturn(uri);
-            when(request.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
-            ContainerRequest out = f.filter(request);
-            assertNotNull(out);
+            URI uri = URI.create("http://localhost/service/resource");
+            when(requestContext.getUriInfo()).thenReturn(uriInfo);
+            when(uriInfo.getAbsolutePath()).thenReturn(uri);
+            when(requestContext.getMediaType()).thenReturn(MediaType.APPLICATION_JSON_TYPE);
+            when(requestContext.getMethod()).thenReturn("GET");
+            f.filter(requestContext);
         } finally {
             if (old == null) {
                 PropertiesUtil.getPropertiesMap().remove("xa.restapi.log.enabled");
@@ -173,7 +192,7 @@ public class TestRangerRESTAPIFilter {
     }
 
     @Test
-    public void test9_init_populatesRegexAndReorders_whenOverlaps() {
+    void test9_init_populatesRegexAndReorders_whenOverlaps() {
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
             PropertiesUtil.getPropertiesMap().put("xa.restapi.log.enabled", "true");
@@ -192,7 +211,7 @@ public class TestRangerRESTAPIFilter {
     }
 
     @Test
-    public void test10_init_skipsCrudAndHasDuplicateForItem() {
+    void test10_init_skipsCrudAndHasDuplicateForItem() {
         String old = PropertiesUtil.getPropertiesMap().get("xa.restapi.log.enabled");
         try {
             PropertiesUtil.getPropertiesMap().put("xa.restapi.log.enabled", "true");
@@ -203,7 +222,7 @@ public class TestRangerRESTAPIFilter {
                     .filter(s -> s.startsWith("GET:/zztest") && s.contains("item") && s.contains("\\Q"))
                     .count();
             boolean hasCrud = f.regexList.stream().anyMatch(s -> s.contains("crudtest"));
-            Assertions.assertFalse(hasCrud);
+            assertFalse(hasCrud);
         } finally {
             if (old == null) {
                 PropertiesUtil.getPropertiesMap().remove("xa.restapi.log.enabled");

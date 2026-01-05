@@ -21,16 +21,20 @@ package org.apache.ranger.services.yarn.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.services.yarn.client.json.model.YarnSchedulerResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
@@ -176,8 +180,10 @@ public class YarnClient extends BaseClient {
                             return null;
                         }
 
-                        Client         client   = Client.create();
-                        ClientResponse response = null;
+                        Client client = null;
+                        Response response = null;
+                        // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newClient() to prevent MOXy usage
+                        client = RangerJersey2ClientBuilder.newClient();
                         for (String currentUrl : yarnQUrls) {
                             if (currentUrl == null || currentUrl.trim().isEmpty()) {
                                 continue;
@@ -187,12 +193,10 @@ public class YarnClient extends BaseClient {
                             try {
                                 response = getQueueResponse(url, client);
 
-                                if (response != null) {
-                                    if (response.getStatus() == 200) {
-                                        break;
-                                    } else {
-                                        response.close();
-                                    }
+                                if (response != null && response.getStatus() == 200) {
+                                    break;
+                                } else if (response != null) {
+                                    response.close();
                                 }
                             } catch (Throwable t) {
                                 String msgDesc = "Exception while getting Yarn Queue List."
@@ -204,7 +208,7 @@ public class YarnClient extends BaseClient {
                         List<String> lret = new ArrayList<>();
                         try {
                             if (response != null && response.getStatus() == 200) {
-                                String                jsonString    = response.getEntity(String.class);
+                                String                jsonString    = response.readEntity(String.class);
                                 Gson                  gson          = new GsonBuilder().setPrettyPrinting().create();
                                 YarnSchedulerResponse yarnQResponse = gson.fromJson(jsonString, YarnSchedulerResponse.class);
                                 if (yarnQResponse != null) {
@@ -246,28 +250,32 @@ public class YarnClient extends BaseClient {
                             }
 
                             if (client != null) {
-                                client.destroy();
+                                client.close();
                             }
                         }
                         return lret;
                     }
 
-                    private ClientResponse getQueueResponse(String url, Client client) {
+                    private Response getQueueResponse(String url, Client client) {
                         LOG.debug("getQueueResponse():calling {}", url);
+                        try {
+                            WebTarget webTarget = client.target(url);
+                            Response response = webTarget.request(MediaType.APPLICATION_JSON).get();
 
-                        WebResource webResource = client.resource(url);
-                        ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+                            if (response != null) {
+                                LOG.debug("getQueueResponse():response.getStatus()= {}", response.getStatus());
+                                if (response.getStatus() != 200) {
+                                    LOG.info("getQueueResponse():response.getStatus()= {} for URL {}, failed to get queue list", response.getStatus(), url);
 
-                        if (response != null) {
-                            LOG.debug("getQueueResponse():response.getStatus()= {}", response.getStatus());
-                            if (response.getStatus() != 200) {
-                                LOG.info("getQueueResponse():response.getStatus()= {} for URL {}, failed to get queue list", response.getStatus(), url);
-
-                                String jsonString = response.getEntity(String.class);
-                                LOG.info(jsonString);
+                                    String jsonString = response.readEntity(String.class);
+                                    LOG.info(jsonString);
+                                }
                             }
+                            return response;
+                        } catch (ProcessingException | WebApplicationException t) {
+                            LOG.error("getQueueResponse(): Exception on REST call to URL {}.", url, t);
+                            return null;
                         }
-                        return response;
                     }
                 });
             }

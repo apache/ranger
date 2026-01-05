@@ -423,6 +423,22 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>ban-legacy-dependencies</id>
+                        <phase>none</phase>
+                        <!-- Skip ban-legacy-dependencies check - this module includes tagsync which requires Apache Atlas (uses Jersey 1.x) -->
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <profiles>
         <profile>
             <id>all</id>

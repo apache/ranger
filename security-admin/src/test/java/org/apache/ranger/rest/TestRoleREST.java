@@ -16,7 +16,6 @@
  */
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -54,6 +53,7 @@ import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
 import org.apache.ranger.view.VXUser;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +69,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.WebApplicationException;
 
 import java.io.File;
@@ -861,14 +860,13 @@ public class TestRoleREST {
 
         // mock
         HttpServletRequest  requestMock  = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
         // stubs
         Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
 
         // test
-        roleRest.getRolesInJson(requestMock, responseMock);
-        Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+        roleRest.getRolesInJson(requestMock);
+        Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, ROLE);
     }
 
     // non-empty request roles (requestParamRoles = 2, dbRoles = 5, return = 2 requestParamRoles)
@@ -885,14 +883,13 @@ public class TestRoleREST {
 
         // mock
         HttpServletRequest  requestMock  = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
         // stubs
         Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
 
         // test
-        roleRest.getRolesInJson(requestMock, responseMock);
-        Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+        roleRest.getRolesInJson(requestMock);
+        Mockito.verify(svcStore).getObjectInJson(rangerRolesProcessed, ROLE);
     }
 
     // non-empty request roles (requestParamRoles = 3, dbRoles = 0, return = 0 dbRoles)
@@ -903,14 +900,13 @@ public class TestRoleREST {
 
         // mock
         HttpServletRequest  requestMock  = Mockito.mock(HttpServletRequest.class);
-        HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
         // stubs
         Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenReturn(rangerRolesProcessed);
 
         // test
-        roleRest.getRolesInJson(requestMock, responseMock);
-        Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+        roleRest.getRolesInJson(requestMock);
+        Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, ROLE);
     }
 
     // getAllFilteredRoleList throws Exception
@@ -922,14 +918,13 @@ public class TestRoleREST {
 
             // mock
             HttpServletRequest  requestMock  = Mockito.mock(HttpServletRequest.class);
-            HttpServletResponse responseMock = Mockito.mock(HttpServletResponse.class);
 
             // stubs
             Mockito.when(roleRest.getAllFilteredRoleList(requestMock)).thenThrow(new Throwable());
 
             // test
-            roleRest.getRolesInJson(requestMock, responseMock);
-            Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, responseMock, ROLE);
+            roleRest.getRolesInJson(requestMock);
+            Mockito.verify(svcStore, Mockito.never()).getObjectInJson(rangerRolesProcessed, ROLE);
             Mockito.verify(restErrorUtil).createRESTException(Mockito.anyString());
         });
     }

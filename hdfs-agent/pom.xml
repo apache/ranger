@@ -32,6 +32,21 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${fasterxml.jackson.databind.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>${netty-all.version}</version>
@@ -56,6 +71,33 @@
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
+                <!-- Exclude Jackson - project uses newer Jackson version -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <!-- Exclude pjfanning jersey-json which depends on Jersey 1.x -->
+                <exclusion>
+                    <groupId>com.github.pjfanning</groupId>
+                    <artifactId>jersey-json</artifactId>
+                </exclusion>
+                <!-- Exclude Jersey 1.x - project uses Jersey 2.x -->
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty-transport-native-epoll</artifactId>
@@ -91,6 +133,28 @@
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
+                <!-- Exclude Jackson - project uses newer Jackson version -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <!-- Exclude Jersey 1.x - project uses Jersey 2.x -->
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty</artifactId>
@@ -129,12 +193,42 @@
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- Jersey 1.x for hadoop-minicluster tests (MiniDFSCluster HTTP server needs it) -->
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-servlet</artifactId>
+            <version>1.19.4</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-minicluster</artifactId>
             <version>${hadoop.version}</version>
             <scope>test</scope>
             <exclusions>
+                <!-- Exclude Jackson - project uses newer Jackson version -->
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <!-- Exclude Jersey 1.x - project uses Jersey 2.x -->
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.sun.jersey.contribs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty</artifactId>
@@ -219,7 +313,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.6</version>
+                <version>${maven-jar-plugin.version}</version>
                 <configuration>
                     <archive>
                         <index>true</index>

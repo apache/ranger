@@ -48,7 +48,6 @@
             <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
             <include>org.slf4j:slf4j-api</include>
             <include>log4j:log4j</include>
-            <include>com.sun.jersey:jersey-bundle</include>
             <include>com.google.code.gson:gson</include>
         </includes>
         <unpack>false</unpack>

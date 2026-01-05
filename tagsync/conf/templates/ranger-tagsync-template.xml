@@ -123,6 +123,50 @@
 		<name>ranger.tagsync.metrics.enabled</name>
 		<value>false</value>
 	</property>
+	<property>
+		<name>ranger.tagsync.service.http.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.https.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.https.attrib.keystore.keyalias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.https.attrib.keystore.credential.alias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.truststore.alias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.https.attrib.client.auth</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.host</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.credential.provider.path</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.keystore.file.type</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.truststore.file.type</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.shutdown.port</name>
+		<value></value>
+	</property>
 
 	<!-- HA property -->
 	<property>

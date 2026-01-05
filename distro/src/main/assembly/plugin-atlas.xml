@@ -59,7 +59,6 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-collections:commons-collections</include>
-          <include>com.sun.jersey:jersey-bundle</include>
           <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
           <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
@@ -80,7 +79,6 @@
           <include>org.apache.knox:gateway-cloud-bindings</include>
           <include>org.apache.knox:gateway-shell</include>
           <include>org.apache.knox:gateway-i18n</include>
-          <include>org.wildfly.openssl:wildfly-openssl:jar:${wildfly.version}</include>
           <include>org.elasticsearch:elasticsearch</include>
           <include>org.elasticsearch:elasticsearch-core</include>
           <include>org.elasticsearch:elasticsearch-x-content</include>

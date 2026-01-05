@@ -28,7 +28,7 @@ import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.util.Properties;
 
-public class TestTagSynchronizer {
+class TestTagSynchronizer {
     private static TagSynchronizer tagSynchronizer;
 
     @BeforeAll
@@ -51,7 +51,7 @@ public class TestTagSynchronizer {
     }
 
     @Test
-    public void testTagSynchronizer() {
+    void testTagSynchronizer() {
         System.out.println("testTagSynchronizer() called");
 
         boolean initDone = tagSynchronizer.initialize();

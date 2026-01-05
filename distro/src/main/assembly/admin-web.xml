@@ -233,7 +233,8 @@
         <includes>
           <include>org.apache.tomcat.embed:tomcat-embed*</include>
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
-          <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
+          <include>org.apache.tomcat:tomcat-jasper-el</include>
+          <include>org.eclipse.jdt.core.compiler:ecj:jar:${ecj.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-authz-api</include>
           <include>org.apache.ranger:ranger-plugins-common</include>
@@ -241,7 +242,6 @@
           <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>org.apache.hadoop:hadoop-common</include>
           <include>commons-logging:commons-logging</include>
-          <include>com.sun.jersey.contribs:jersey-multipart</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-io:commons-io</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
@@ -249,7 +249,7 @@
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>commons-codec:commons-codec</include>
+          <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -267,7 +267,7 @@
           <include>org.elasticsearch.plugin:rank-eval-client</include>
           <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
           <include>org.apache.httpcomponents:httpcore-nio</include>
-          <include>com.fasterxml.jackson.core:jackson-core</include>
+          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
           <include>org.apache.lucene:lucene-core</include>
           <include>com.carrotsearch:hppc</include>
           <include>joda-time:joda-time</include>

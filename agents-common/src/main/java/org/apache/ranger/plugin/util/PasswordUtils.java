@@ -16,7 +16,6 @@
  */
 package org.apache.ranger.plugin.util;
 
-import com.sun.jersey.core.util.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.thirdparty.com.google.common.base.Splitter;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Lists;
@@ -33,6 +32,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 
@@ -73,7 +73,7 @@ public class PasswordUtils {
             iterationCount = Integer.parseInt(cryptAlgoArray[index++]); // 3
 
             if (needsIv(cryptAlgo.getAlgoName())) {
-                iv = Base64.decode(cryptAlgoArray[index++]);
+                iv = Base64.getDecoder().decode(cryptAlgoArray[index++]);
             } else {
                 iv = DEFAULT_INITIAL_VECTOR;
             }
@@ -182,7 +182,7 @@ public class PasswordUtils {
     }
 
     public String getIvAsString() {
-        return new String(Base64.encode(getIv()));
+        return new String(Base64.getEncoder().encodeToString(getIv()));
     }
 
     private String encrypt() throws IOException {
@@ -205,7 +205,7 @@ public class PasswordUtils {
 
             byte[] encryptedStr = engine.doFinal(strToEncrypt.getBytes());
 
-            ret = new String(Base64.encode(encryptedStr));
+            ret = new String(Base64.getEncoder().encodeToString(encryptedStr));
         } catch (Throwable t) {
             LOG.error("Unable to encrypt password due to error", t);
 
@@ -219,7 +219,7 @@ public class PasswordUtils {
         String ret;
 
         try {
-            byte[]           decodedPassword = Base64.decode(password);
+            byte[]           decodedPassword = Base64.getDecoder().decode(password);
             Cipher           engine          = Cipher.getInstance(cryptAlgo.getCipherTransformation());
             PBEKeySpec       keySpec         = getPBEParameterSpec(encryptKey, cryptAlgo);
             SecretKeyFactory skf             = SecretKeyFactory.getInstance(cryptAlgo.getAlgoName());
@@ -253,7 +253,7 @@ public class PasswordUtils {
 
         SecureRandom.getInstance("NativePRNGNonBlocking").nextBytes(iv);
 
-        return new String(Base64.encode(iv));
+        return new String(Base64.getEncoder().encode(iv));
     }
 
     /* Password Generator */
