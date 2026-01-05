@@ -59,7 +59,7 @@
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
-            <version>2.1.6</version>
+            <version>${jakarta.ws.rs-api.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -67,10 +67,19 @@
             <version>${javax.servlet.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-configuration2</artifactId>
+            <version>${commons.configuration.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty</artifactId>
@@ -99,6 +108,10 @@
             <artifactId>gateway-spi</artifactId>
             <version>${knox.gateway.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
@@ -360,6 +373,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven-dependency-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>copy-services</id>

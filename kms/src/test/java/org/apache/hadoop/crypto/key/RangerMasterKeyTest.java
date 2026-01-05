@@ -17,7 +17,7 @@
 
 package org.apache.hadoop.crypto.key;
 
-import com.sun.jersey.core.util.Base64;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 import org.apache.hadoop.crypto.key.kms.server.DerbyTestUtils;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
 import org.apache.ranger.entity.XXRangerMasterKey;

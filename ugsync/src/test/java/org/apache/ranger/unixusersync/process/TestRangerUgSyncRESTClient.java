@@ -19,13 +19,14 @@
 
 package org.apache.ranger.unixusersync.process;
 
-import com.sun.jersey.api.client.Client;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.Extension;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import javax.ws.rs.client.Client;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;

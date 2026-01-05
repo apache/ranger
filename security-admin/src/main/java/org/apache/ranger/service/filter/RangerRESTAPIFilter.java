@@ -19,10 +19,6 @@
 
 package org.apache.ranger.service.filter;
 
-import com.sun.jersey.api.container.filter.LoggingFilter;
-import com.sun.jersey.api.uri.UriTemplate;
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerResponse;
 import org.apache.ranger.common.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +30,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.ext.Provider;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -43,7 +45,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RangerRESTAPIFilter extends LoggingFilter {
+@Provider
+public class RangerRESTAPIFilter implements ContainerRequestFilter, ContainerResponseFilter {
     Logger logger = LoggerFactory.getLogger(RangerRESTAPIFilter.class);
 
     static volatile boolean initDone;
@@ -54,53 +57,33 @@ public class RangerRESTAPIFilter extends LoggingFilter {
     List<String>             regexList            = new ArrayList<>();
     List<String>             loggedRestPathErrors = new ArrayList<>();
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * com.sun.jersey.spi.container.ContainerRequestFilter#filter(com.sun.jersey.spi.container.ContainerRequest)
-     */
     @Override
-    public ContainerRequest filter(ContainerRequest request) {
+    public void filter(ContainerRequestContext requestContext) throws IOException {
         if (!initDone) {
             init();
         }
 
         if (logStdOut) {
-            String path = request.getRequestUri().getPath();
+            String path = requestContext.getUriInfo().getAbsolutePath().getPath();
 
-            if ((request.getMediaType() == null || !"multipart".equals(request.getMediaType().getType())) && !path.endsWith("/service/general/logs")) {
-                try {
-                    request = super.filter(request);
-                } catch (Throwable t) {
-                    logger.error("Error FILTER logging. path = {}", path, t);
-                }
+            if ((requestContext.getMediaType() == null || !"multipart".equals(requestContext.getMediaType().getType())) && !path.endsWith("/service/general/logs")) {
+                logger.info("Jersey 2.x Request: {} {}", requestContext.getMethod(), path);
             }
         }
-
-        return request;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * com.sun.jersey.spi.container.ContainerResponseFilter#filter(com.sun.jersey.spi.container.ContainerRequest, com.sun.jersey.spi.container.ContainerResponse)
-     */
     @Override
-    public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
-        if (logStdOut) {
-            // If it is image, then don't call super
-            if (response.getMediaType() == null) {
-                logger.info("DELETE ME: Response= mediaType is null");
-            }
-
-            if (response.getMediaType() == null || !"image".equals(response.getMediaType().getType())) {
-                response = super.filter(request, response);
-            }
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+        if (!initDone) {
+            init();
         }
 
-        return response;
+        if (logStdOut) {
+            if (responseContext.getMediaType() != null && "image".equals(responseContext.getMediaType().getType())) {
+                return;
+            }
+            logger.info("Jersey 2.x Response for {} {}: Status {}", requestContext.getMethod(), requestContext.getUriInfo().getAbsolutePath().getPath(), responseContext.getStatus());
+        }
     }
 
     void init() {
@@ -115,7 +98,6 @@ public class RangerRESTAPIFilter extends LoggingFilter {
 
             logStdOut = PropertiesUtil.getBooleanProperty("xa.restapi.log.enabled", false);
 
-            // Build hash map
             try {
                 loadPathPatterns();
             } catch (Throwable t) {
@@ -177,9 +159,8 @@ public class RangerRESTAPIFilter extends LoggingFilter {
                             servicePath = "/" + servicePath;
                         }
 
-                        UriTemplate ut = new UriTemplate(servicePath);
-
-                        regEx     = httpMethod + ":" + path.value() + ut.getPattern().getRegex();
+                        String convertedServicePathRegex = servicePath.replaceAll("\\{.*?\\}", "([^/]+)");
+                        regEx = httpMethod + ":" + path.value() + convertedServicePathRegex;
                         fullPath += servicePath;
                     }
 
@@ -198,7 +179,6 @@ public class RangerRESTAPIFilter extends LoggingFilter {
             }
         }
 
-        // ReOrder list
         int i;
 
         for (i = 0; i < 10; i++) {

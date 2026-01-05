@@ -7,8 +7,7 @@
     "resources":[
     {"name":"path","type":"path","level":1,"mandatory":true,"lookupSupported":true,
       "matcher":"org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
-      "matcherOptions":{"wildCard":true, "ignoreCase":true},
-      "startDelimiterChar": "{", "endDelimiterChar": "}", "escapeChar":"%",
+      "matcherOptions":{"wildCard":true, "ignoreCase":true, "replaceTokens":true, "tokenDelimiterStart":"{", "tokenDelimiterEnd":"}", "tokenDelimiterEscape":"%"},
       "label":"Resource Path","description":"HDFS file or directory path"}
     ],
     "accessTypes":[
