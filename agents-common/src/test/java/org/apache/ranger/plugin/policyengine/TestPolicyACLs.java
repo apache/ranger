@@ -119,7 +119,7 @@ public class TestPolicyACLs {
             RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
             RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl(testCase.servicePolicies, pluginContext, null);
 
-            testCase.tests.parallelStream().filter(Objects::nonNull).forEach(oneTest -> {
+            testCase.tests.stream().filter(Objects::nonNull).forEach(oneTest -> {
                 RangerAccessRequestImpl request = new RangerAccessRequestImpl(oneTest.resource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
 
                 request.setResourceMatchingScope(oneTest.resourceMatchingScope);
