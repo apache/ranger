@@ -21,10 +21,8 @@ package org.apache.ranger.services.storm.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.KrbPasswordSaverLoginModule;
 import org.apache.hadoop.security.SecureClientLogin;
@@ -32,6 +30,7 @@ import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.services.storm.client.json.model.Topology;
 import org.apache.ranger.services.storm.client.json.model.TopologyListResponse;
 import org.slf4j.Logger;
@@ -39,9 +38,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
@@ -214,6 +218,8 @@ public class StormClient {
 
     public List<String> getTopologyList(final String topologyNameMatching, final List<String> stormTopologyList) {
         LOG.debug("Getting Storm topology list for topologyNameMatching : {}", topologyNameMatching);
+        final String errMsg = errMessage;
+        List<String> ret = null;
 
         PrivilegedExceptionAction<ArrayList<String>> topologyListGetter = new PrivilegedExceptionAction<ArrayList<String>>() {
             @Override
@@ -223,12 +229,13 @@ public class StormClient {
                 }
 
                 String[] stormUIUrls = stormUIUrl.trim().split("[,;]");
-                if (stormUIUrls == null || stormUIUrls.length == 0) {
+                if (ArrayUtils.isEmpty(stormUIUrls)) {
                     return null;
                 }
 
-                Client         client   = Client.create();
-                ClientResponse response = null;
+                // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newClient() to prevent MOXy usage
+                Client         client   = RangerJersey2ClientBuilder.newClient();
+                Response response = null;
                 for (String currentUrl : stormUIUrls) {
                     if (currentUrl == null || currentUrl.trim().isEmpty()) {
                         continue;
@@ -238,12 +245,10 @@ public class StormClient {
                     try {
                         response = getTopologyResponse(url, client);
 
-                        if (response != null) {
-                            if (response.getStatus() == 200) {
-                                break;
-                            } else {
-                                response.close();
-                            }
+                        if (response != null && response.getStatus() == 200) {
+                            break;
+                        } else if (response != null) {
+                            response.close();
                         }
                     } catch (Throwable t) {
                         String msgDesc = "Exception while getting topology list." + " URL : " + url;
@@ -253,30 +258,25 @@ public class StormClient {
 
                 ArrayList<String> lret = new ArrayList<>();
                 try {
-                    if (response != null) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("getTopologyList():response.getStatus()= {}", response.getStatus());
-                        }
-                        if (response.getStatus() == 200) {
-                            String               jsonString           = response.getEntity(String.class);
-                            Gson                 gson                 = new GsonBuilder().setPrettyPrinting().create();
-                            TopologyListResponse topologyListResponse = gson.fromJson(jsonString, TopologyListResponse.class);
-                            if (topologyListResponse != null) {
-                                if (topologyListResponse.getTopologyList() != null) {
-                                    for (Topology topology : topologyListResponse.getTopologyList()) {
-                                        String topologyName = topology.getName();
-                                        if (stormTopologyList != null && stormTopologyList.contains(topologyName)) {
-                                            continue;
-                                        }
-                                        if (LOG.isDebugEnabled()) {
-                                            LOG.debug("getTopologyList():Found topology {}", topologyName);
-                                            LOG.debug("getTopologyList():topology Name=[{}], topologyNameMatching=[{}], existingStormTopologyList=[{}]", topology.getName(), topologyNameMatching, stormTopologyList);
-                                        }
-                                        if (topologyName != null) {
-                                            if (topologyNameMatching == null || topologyNameMatching.isEmpty() || FilenameUtils.wildcardMatch(topology.getName(), topologyNameMatching + "*")) {
-                                                LOG.debug("getTopologyList():Adding topology {}", topologyName);
-                                                lret.add(topologyName);
-                                            }
+                    if (response != null && response.getStatus() == 200) {
+                        String               jsonString           = response.readEntity(String.class);
+                        Gson                 gson                 = new GsonBuilder().setPrettyPrinting().create();
+                        TopologyListResponse topologyListResponse = gson.fromJson(jsonString, TopologyListResponse.class);
+                        if (topologyListResponse != null) {
+                            if (topologyListResponse.getTopologyList() != null) {
+                                for (Topology topology : topologyListResponse.getTopologyList()) {
+                                    String topologyName = topology.getName();
+                                    if (stormTopologyList != null && stormTopologyList.contains(topologyName)) {
+                                        continue;
+                                    }
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("getTopologyList():Found topology {}", topologyName);
+                                        LOG.debug("getTopologyList():topology Name=[{}], topologyNameMatching=[{}], existingStormTopologyList=[{}]", topology.getName(), topologyNameMatching, stormTopologyList);
+                                    }
+                                    if (topologyName != null) {
+                                        if (topologyNameMatching == null || topologyNameMatching.isEmpty() || FilenameUtils.wildcardMatch(topology.getName(), topologyNameMatching + "*")) {
+                                            LOG.debug("getTopologyList():Adding topology {}", topologyName);
+                                            lret.add(topologyName);
                                         }
                                     }
                                 }
@@ -304,33 +304,37 @@ public class StormClient {
                     }
 
                     if (client != null) {
-                        client.destroy();
+                        client.close();
                     }
                 }
                 return lret;
             }
 
-            private ClientResponse getTopologyResponse(String url, Client client) {
+            private Response getTopologyResponse(String url, Client client) {
                 LOG.debug("getTopologyResponse():calling {}", url);
 
-                WebResource webResource = client.resource(url);
-                ClientResponse response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
+                try {
+                    WebTarget webTarget = client.target(url);
+                    Response response = webTarget.request(MediaType.APPLICATION_JSON).get();
 
-                if (response != null) {
-                    LOG.debug("getTopologyResponse():response.getStatus()= {}", response.getStatus());
-                    if (response.getStatus() != 200) {
-                        LOG.info("getTopologyResponse():response.getStatus()= {} for URL {}, failed to get topology list", response.getStatus(), url);
+                    if (response != null) {
+                        LOG.debug("getTopologyResponse():response.getStatus()= {}", response.getStatus());
+                        if (response.getStatus() != 200) {
+                            LOG.info("getTopologyResponse():response.getStatus()= {} for URL {}, failed to get topology list", response.getStatus(), url);
 
-                        String jsonString = response.getEntity(String.class);
+                            String jsonString = response.readEntity(String.class);
 
-                        LOG.info(jsonString);
+                            LOG.info(jsonString);
+                        }
                     }
+                    return response;
+                } catch (ProcessingException | WebApplicationException t) {
+                    LOG.error("getTopologyResponse(): Exception on REST call to URL {}.", url, t);
+                    return null;
                 }
-                return response;
             }
         };
 
-        List<String> ret = null;
         try {
             ret = executeUnderKerberos(this.userName, this.password, this.lookupPrincipal, this.lookupKeytab, this.nameRules, topologyListGetter);
         } catch (IOException e) {
@@ -377,7 +381,7 @@ public class StormClient {
             AppConfigurationEntry kerberosPwdSaver;
             try {
                 keytabKerberosLogin = new AppConfigurationEntry(KerberosUtil.getKrb5LoginModuleName(), AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, kerberosOptions);
-                kerberosPwdSaver    = new AppConfigurationEntry(KrbPasswordSaverLoginModule.class.getName(), LoginModuleControlFlag.REQUIRED, kerberosOptions);
+                kerberosPwdSaver    = new AppConfigurationEntry(KrbPasswordSaverLoginModule.class.getName(), AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, kerberosOptions);
             } catch (IllegalArgumentException e) {
                 String          msgDesc      = "executeUnderKerberos: Exception while getting Storm TopologyList.";
                 HadoopException hdpException = new HadoopException(msgDesc, e);

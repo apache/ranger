@@ -16,7 +16,6 @@
  */
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -54,6 +53,7 @@ import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
 import org.apache.ranger.view.VXUser;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

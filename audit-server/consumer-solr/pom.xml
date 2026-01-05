@@ -57,29 +57,14 @@
 
         <!-- Jersey -->
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-bundle</artifactId>
-            <version>${jersey-bundle.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-spring</artifactId>
-            <version>${jersey-spring.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.sun.jersey</groupId>
-                    <artifactId>jersey-server</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons.io.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>${jakarta.ws.rs-api.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

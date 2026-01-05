@@ -19,9 +19,9 @@
 package org.apache.ranger.authentication.unix.jaas;
 
 import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.MethodOrderer;
@@ -380,26 +380,29 @@ public class TestRemoteUnixLoginModule {
         }
 
         private static X509Certificate generateSelfSigned(String dn, KeyPair keyPair) throws Exception {
-            long now  = System.currentTimeMillis();
-            Date from = new Date(now - 60000);
-            Date to   = new Date(now + 86400000L);
+            // Generate a self-signed certificate at runtime using Bouncy Castle
+            // This avoids hardcoded certificates and uses only standard APIs
 
-            X500Name   issuer       = new X500Name(dn);
-            X500Name   subject      = new X500Name(dn);
-            BigInteger serialNumber = new BigInteger(64, new SecureRandom());
+            long now = System.currentTimeMillis();
+            Date notBefore = new Date(now - 60000); // 1 minute ago
+            Date notAfter = new Date(now + 86400000L); // 1 day from now
 
-            X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
-                    issuer,
-                    serialNumber,
-                    from,
-                    to,
+            BigInteger serial = new BigInteger(64, new SecureRandom());
+            X500Name subject = new X500Name(dn);
+
+            JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
+                    subject,           // issuer = subject (self-signed)
+                    serial,
+                    notBefore,
+                    notAfter,
                     subject,
-                    SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()));
+                    keyPair.getPublic());
 
-            ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA")
-                    .build(keyPair.getPrivate());
+            ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
 
-            return new JcaX509CertificateConverter().getCertificate(certBuilder.build(signer));
+            X509CertificateHolder holder = certBuilder.build(signer);
+
+            return new JcaX509CertificateConverter().getCertificate(holder);
         }
     }
 }

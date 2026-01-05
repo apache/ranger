@@ -17,7 +17,6 @@
  */
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -109,6 +108,7 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.MethodOrderer;

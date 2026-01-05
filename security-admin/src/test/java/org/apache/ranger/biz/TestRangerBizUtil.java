@@ -737,11 +737,16 @@ public class TestRangerBizUtil {
 
     @Test
     public void testBulkMode_SetAndGet() {
-        // default may be false
-        boolean initial = RangerBizUtil.isBulkMode();
-        Assertions.assertEquals(false, RangerBizUtil.setBulkMode(false));
-        // restore initial to avoid side-effects
-        RangerBizUtil.setBulkMode(initial);
+        RangerContextHolder.resetOpContext();
+        try {
+            Assertions.assertFalse(RangerBizUtil.isBulkMode());
+            Assertions.assertFalse(RangerBizUtil.setBulkMode(false));
+            Assertions.assertFalse(RangerBizUtil.isBulkMode());
+            Assertions.assertTrue(RangerBizUtil.setBulkMode(true));
+            Assertions.assertTrue(RangerBizUtil.isBulkMode());
+        } finally {
+            RangerContextHolder.resetOpContext();
+        }
     }
 
     @Test

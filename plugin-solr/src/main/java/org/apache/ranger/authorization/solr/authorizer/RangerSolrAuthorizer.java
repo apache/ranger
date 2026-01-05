@@ -175,16 +175,16 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                         RangerSolrConstants.AccessType accessType = (perm == PermissionNameProvider.Name.READ_PERM) ? RangerSolrConstants.AccessType.QUERY : RangerSolrConstants.AccessType.UPDATE;
 
                         for (CollectionRequest req : context.getCollectionRequests()) {
-                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.ResourceType.COLLECTION, req.collectionName, accessType));
+                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.COLLECTION, req.collectionName, accessType));
                         }
                         break;
                     }
                     case SECURITY_EDIT_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.AdminType.SECURITY, RangerSolrConstants.AccessType.UPDATE));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.SECURITY, RangerSolrConstants.AccessType.UPDATE));
                         break;
                     }
                     case SECURITY_READ_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.AdminType.SECURITY, RangerSolrConstants.AccessType.QUERY));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.SECURITY, RangerSolrConstants.AccessType.QUERY));
                         break;
                     }
                     case CORE_READ_PERM:
@@ -198,52 +198,52 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
                                 ? RangerSolrConstants.AccessType.QUERY : RangerSolrConstants.AccessType.UPDATE;
 
                         // add admin permissions to the ranger request list
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, adminType, accessType));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, adminType, accessType));
 
                         // add collection level permissions to the ranger request list
                         Map<String, RangerSolrConstants.AccessType> collectionsForAdminOpMap = SolrAuthzUtil.getCollectionsForAdminOp(context);
 
                         String finalIp = ip;
 
-                        collectionsForAdminOpMap.forEach((k, v) -> rangerRequests.add(createRequest(userName, userGroups, finalIp, eventTime, context, RangerSolrConstants.ResourceType.COLLECTION, k, v)));
+                        collectionsForAdminOpMap.forEach((k, v) -> rangerRequests.add(createRequest(userName, userGroups, finalIp, eventTime, RangerSolrConstants.ResourceType.COLLECTION, k, v)));
                         break;
                     }
                     case CONFIG_EDIT_PERM: {
                         for (String s : SolrAuthzUtil.getConfigAuthorizables(context)) {
-                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.ResourceType.CONFIG, s, RangerSolrConstants.AccessType.UPDATE));
+                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.CONFIG, s, RangerSolrConstants.AccessType.UPDATE));
                         }
                         break;
                     }
                     case CONFIG_READ_PERM: {
                         for (String s : SolrAuthzUtil.getConfigAuthorizables(context)) {
-                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.ResourceType.CONFIG, s, RangerSolrConstants.AccessType.QUERY));
+                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.CONFIG, s, RangerSolrConstants.AccessType.QUERY));
                         }
                         break;
                     }
                     case SCHEMA_EDIT_PERM: {
                         for (String s : SolrAuthzUtil.getSchemaAuthorizables(context)) {
-                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.ResourceType.SCHEMA, s, RangerSolrConstants.AccessType.UPDATE));
+                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.SCHEMA, s, RangerSolrConstants.AccessType.UPDATE));
                         }
                         break;
                     }
                     case SCHEMA_READ_PERM: {
                         for (String s : SolrAuthzUtil.getSchemaAuthorizables(context)) {
-                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.ResourceType.SCHEMA, s, RangerSolrConstants.AccessType.QUERY));
+                            rangerRequests.add(createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.SCHEMA, s, RangerSolrConstants.AccessType.QUERY));
                         }
                         break;
                     }
                     case METRICS_HISTORY_READ_PERM:
                     case METRICS_READ_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.AdminType.METRICS, RangerSolrConstants.AccessType.QUERY));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.METRICS, RangerSolrConstants.AccessType.QUERY));
                         break;
                     }
                     case AUTOSCALING_READ_PERM:
                     case AUTOSCALING_HISTORY_READ_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.AdminType.AUTOSCALING, RangerSolrConstants.AccessType.QUERY));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.AUTOSCALING, RangerSolrConstants.AccessType.QUERY));
                         break;
                     }
                     case AUTOSCALING_WRITE_PERM: {
-                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.AdminType.AUTOSCALING, RangerSolrConstants.AccessType.UPDATE));
+                        rangerRequests.add(createAdminRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.AdminType.AUTOSCALING, RangerSolrConstants.AccessType.UPDATE));
                         break;
                     }
                     case ALL: {
@@ -624,13 +624,12 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
      * @param userGroups
      * @param ip
      * @param eventTime
-     * @param context
      * @param resourceType - the type of resource we are requesting permission to access (collection, config, field, etc.)
      * @param resourceName - the name of the resource (e.g. collection) we are requesting permission to access
      * @param accessType - the access type (QUERY, UPDATE, ALL (*)) we are requesting
      * @return RangerAccessRequestImpl
      */
-    private RangerAccessRequestImpl createRequest(String userName, Set<String> userGroups, String ip, Date eventTime, AuthorizationContext context, RangerSolrConstants.ResourceType resourceType, String resourceName, RangerSolrConstants.AccessType accessType) {
+    private RangerAccessRequestImpl createRequest(String userName, Set<String> userGroups, String ip, Date eventTime, RangerSolrConstants.ResourceType resourceType, String resourceName, RangerSolrConstants.AccessType accessType) {
         String                   action         = accessType.toString();
         RangerAccessRequestImpl  rangerRequest  = createBaseRequest(userName, userGroups, ip, eventTime);
         RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
@@ -644,8 +643,8 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
         return rangerRequest;
     }
 
-    private RangerAccessRequestImpl createAdminRequest(String userName, Set<String> userGroups, String ip, Date eventTime, AuthorizationContext context, RangerSolrConstants.AdminType adminType, RangerSolrConstants.AccessType accessType) {
-        return createRequest(userName, userGroups, ip, eventTime, context, RangerSolrConstants.ResourceType.ADMIN, adminType.toString(), accessType);
+    private RangerAccessRequestImpl createAdminRequest(String userName, Set<String> userGroups, String ip, Date eventTime, RangerSolrConstants.AdminType adminType, RangerSolrConstants.AccessType accessType) {
+        return createRequest(userName, userGroups, ip, eventTime, RangerSolrConstants.ResourceType.ADMIN, adminType.toString(), accessType);
     }
 
     private RangerAccessRequestImpl createQueryRequest(String userName, Set<String> userGroups, String ip, Date eventTime, SolrQueryRequest queryRequest) {

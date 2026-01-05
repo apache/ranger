@@ -82,22 +82,6 @@
             </dependency>
 
             <dependency>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-bundle</artifactId>
-                <version>${jersey-bundle.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sun.jersey</groupId>
-                <artifactId>jersey-core</artifactId>
-                <version>${jersey-bundle.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sun.jersey.contribs</groupId>
-                <artifactId>jersey-spring</artifactId>
-                <version>${jersey-spring.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-impl</artifactId>
                 <version>${jaxb-impl.version}</version>
@@ -407,10 +391,10 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>${maven-compiler-plugin.version}</version>
                     <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
+                        <source>${javac.source.version}</source>
+                        <target>${javac.target.version}</target>
                     </configuration>
                 </plugin>
 

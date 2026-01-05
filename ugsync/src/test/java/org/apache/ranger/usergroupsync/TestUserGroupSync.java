@@ -20,8 +20,10 @@
 package org.apache.ranger.usergroupsync;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.ha.HAConfiguration;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -47,8 +49,37 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestUserGroupSync {
+    private Thread userGroupSyncRunThread;
+
+    /** Hadoop Configuration for tests: no classpath defaults, explicit non-HA. */
+    private static Configuration freshNonHaUserSyncConfiguration() {
+        Configuration cfg = new Configuration(false);
+        cfg.set(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, "false");
+        cfg.set(HAConfiguration.RANGER_SERVICE_NAME, "ranger-ugsync");
+        return cfg;
+    }
+
+    @AfterEach
+    public void stopBackgroundUserGroupSyncThread() {
+        if (userGroupSyncRunThread != null) {
+            userGroupSyncRunThread.interrupt();
+            userGroupSyncRunThread = null;
+        }
+    }
+
     @BeforeAll
-    public static void setupHA() {
+    public static void setupHA() throws Exception {
+        // Reset HA singletons to pick up non-HA config
+        Class<?> serviceStateClz = Class.forName("org.apache.ranger.ha.ServiceState");
+        Field serviceStateInstance = serviceStateClz.getDeclaredField("instance");
+        serviceStateInstance.setAccessible(true);
+        serviceStateInstance.set(null, null);
+
+        Class<?> haInitClz = Class.forName("org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl");
+        Field haInstance = haInitClz.getDeclaredField("theInstance");
+        haInstance.setAccessible(true);
+        haInstance.set(null, null);
+
         // Disable HA for unit tests
         UserGroupSyncConfig cfg = UserGroupSyncConfig.getInstance();
         cfg.setProperty("ranger-ugsync.server.ha.enabled", "false");
@@ -114,9 +145,9 @@ public class TestUserGroupSync {
         haInstance.set(null, null);
 
         // Inject a Hadoop Configuration with HA enabled into UserGroupSyncConfig
-        Configuration haCfg = new Configuration();
-        haCfg.set("ranger.service.name", "ranger-ugsync");
-        haCfg.set("ranger-ugsync.server.ha.enabled", "true");
+        Configuration haCfg = new Configuration(false);
+        haCfg.set(HAConfiguration.RANGER_SERVICE_NAME, "ranger-ugsync");
+        haCfg.set(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, "true");
 
         UserGroupSyncConfig config               = UserGroupSyncConfig.getInstance();
         Field               userGroupConfigField = UserGroupSyncConfig.class.getDeclaredField("userGroupConfig");
@@ -149,8 +180,8 @@ public class TestUserGroupSync {
         haInstance.setAccessible(true);
         haInstance.set(null, null);
 
-        // Provide fresh non-HA configuration
-        Configuration       activeCfg            = new Configuration();
+        // Provide fresh non-HA configuration (avoid loading classpath defaults that may enable HA)
+        Configuration       activeCfg            = freshNonHaUserSyncConfiguration();
         UserGroupSyncConfig config               = UserGroupSyncConfig.getInstance();
         Field               userGroupConfigField = UserGroupSyncConfig.class.getDeclaredField("userGroupConfig");
         userGroupConfigField.setAccessible(true);
@@ -165,9 +196,9 @@ public class TestUserGroupSync {
         TestUserGroupSync.StubSource.recordedUpdates = 0;
 
         UserGroupSync userGroupSync = new UserGroupSync();
-        Thread        t             = new Thread(userGroupSync::run);
-        t.setDaemon(true);
-        t.start();
+        userGroupSyncRunThread = new Thread(userGroupSync::run);
+        userGroupSyncRunThread.setDaemon(true);
+        userGroupSyncRunThread.start();
 
         Thread.sleep(200);
     }
@@ -184,8 +215,8 @@ public class TestUserGroupSync {
         haInstance.setAccessible(true);
         haInstance.set(null, null);
 
-        // Provide fresh non-HA configuration
-        Configuration       activeCfg            = new Configuration();
+        // Provide fresh non-HA configuration (avoid loading classpath defaults that may enable HA)
+        Configuration       activeCfg            = freshNonHaUserSyncConfiguration();
         UserGroupSyncConfig config               = UserGroupSyncConfig.getInstance();
         Field               userGroupConfigField = UserGroupSyncConfig.class.getDeclaredField("userGroupConfig");
         userGroupConfigField.setAccessible(true);
@@ -198,11 +229,11 @@ public class TestUserGroupSync {
         config.setProperty("ranger.usersync.source.impl.class", TestUserGroupSync.StubSource.class.getName());
         config.setProperty("ranger.usersync.sink.impl.class", TestUserGroupSync.StubSink.class.getName());
 
-        int    before = TestUserGroupSync.StubSource.recordedUpdates;
-        Thread t      = new Thread(() -> UserGroupSync.main(new String[] {}));
-        t.setDaemon(true);
-        t.start();
-        Thread.sleep(200);
+        int before = TestUserGroupSync.StubSource.recordedUpdates;
+        userGroupSyncRunThread = new Thread(() -> UserGroupSync.main(new String[] {}));
+        userGroupSyncRunThread.setDaemon(true);
+        userGroupSyncRunThread.start();
+        Thread.sleep(500);
         assertTrue(TestUserGroupSync.StubSource.recordedUpdates > before);
     }
 

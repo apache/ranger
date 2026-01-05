@@ -38,6 +38,11 @@
             <version>${fasterxml.jackson.version}</version>
         </dependency>
         <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${javax.ws.rs-api.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-core</artifactId>
             <version>${project.version}</version>
@@ -46,6 +51,21 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${jersey-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+            <version>${jersey-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>${jersey-client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -58,11 +78,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>log4j-over-slf4j</artifactId>
             <version>${slf4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
