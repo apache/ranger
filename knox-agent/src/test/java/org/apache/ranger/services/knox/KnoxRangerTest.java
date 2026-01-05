@@ -28,6 +28,7 @@ import org.apache.knox.gateway.GatewayTestDriver;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -41,6 +42,7 @@ import static org.hamcrest.CoreMatchers.is;
 /**
  * Test Apache Knox secured by Apache Ranger.
  */
+@Disabled("Integration test - requires Knox Gateway services to be running")
 public class KnoxRangerTest {
     private static final GatewayTestDriver driver = new GatewayTestDriver();
 

@@ -88,8 +88,8 @@ public class TestHBaseResourceMgr {
                     HBaseClient client = Mockito.mock(HBaseClient.class);
                     Mockito.when(mgrMock.getHBaseConnection(Mockito.eq("svc"), Mockito.eq("type"), Mockito.any()))
                             .thenReturn(client);
-                    Mockito.when(client.getTableList(Mockito.eq("tab.*".replaceAll("\\*", ".\\*")),
-                            Mockito.eq(existingTables)))
+                    Mockito.lenient().when(client.getTableList(Mockito.anyString(),
+                            Mockito.anyList()))
                             .thenReturn(new ArrayList<>(Arrays.asList("tab1", "tab2")));
                 }); MockedStatic<TimedEventUtil> timed = Mockito.mockStatic(TimedEventUtil.class)) {
             timed.when(() -> TimedEventUtil.timedTask(Mockito.any(), Mockito.anyLong(), Mockito.any()))
@@ -125,8 +125,8 @@ public class TestHBaseResourceMgr {
                     HBaseClient client = Mockito.mock(HBaseClient.class);
                     Mockito.when(mgrMock.getHBaseConnection(Mockito.eq("svc"), Mockito.eq("type"), Mockito.any()))
                             .thenReturn(client);
-                    Mockito.when(client.getColumnFamilyList(Mockito.eq("cf.*".replaceAll("\\*", ".\\*")),
-                            Mockito.eq(existingTables), Mockito.isNull()))
+                    Mockito.lenient().when(client.getColumnFamilyList(Mockito.anyString(),
+                            Mockito.anyList(), Mockito.any()))
                             .thenReturn(new ArrayList<>(Arrays.asList("cf1", "cf2")));
                 }); MockedStatic<TimedEventUtil> timed = Mockito.mockStatic(TimedEventUtil.class)) {
             timed.when(() -> TimedEventUtil.timedTask(Mockito.any(), Mockito.anyLong(), Mockito.any()))

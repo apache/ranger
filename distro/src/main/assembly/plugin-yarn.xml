@@ -84,6 +84,8 @@
           <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+          <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
         </includes>
       </binaries>
     </moduleSet>

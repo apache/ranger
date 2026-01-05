@@ -162,7 +162,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
     final HbaseAuthUtils authUtils = factory.getAuthUtils();
 
     private UserProvider                       userProvider;
-    private RegionCoprocessorEnvironment       regionEnv;
     private final Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
 
     /**
@@ -627,7 +626,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
             coprocessorType = REGIONAL_SERVER_COPROCESSOR_TYPE;
             appType         = "hbaseRegional";
         } else if (env instanceof RegionCoprocessorEnvironment) {
-            regionEnv       = (RegionCoprocessorEnvironment) env;
             coprocessorType = REGIONAL_COPROCESSOR_TYPE;
             appType         = "hbaseRegional";
         }
