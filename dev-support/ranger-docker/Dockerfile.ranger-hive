@@ -44,6 +44,7 @@ COPY ./scripts/hive/hive-log4j2.properties                ${RANGER_SCRIPTS}/
 COPY ./scripts/hive/hive-metastore-log4j2.properties      ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/core-site.xml                       ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                         ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_testusers_keytab.sh               ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf                              /etc/krb5.conf
 
 RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz && \
@@ -63,6 +64,7 @@ RUN cd /opt && tar xzf /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz 
     rm -f /home/ranger/dist/ranger-${HIVE_PLUGIN_VERSION}-hive-plugin.tar.gz && \
     cp -f ${RANGER_SCRIPTS}/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties && \
     chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hive-setup.sh ${RANGER_SCRIPTS}/ranger-hive.sh
 
 ENV HIVE_HOME=/opt/hive

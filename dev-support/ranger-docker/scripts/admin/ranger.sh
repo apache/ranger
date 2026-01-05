@@ -30,9 +30,7 @@ then
     ${RANGER_SCRIPTS}/wait_for_keytab.sh rangeradmin.keytab
     ${RANGER_SCRIPTS}/wait_for_keytab.sh rangerlookup.keytab
     ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
-    ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser1.keytab
-    ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser2.keytab
-    ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser3.keytab
+    ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
   fi
 
   cd "${RANGER_HOME}"/admin || exit

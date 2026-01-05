@@ -29,9 +29,7 @@ then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh hive.keytab
   ${RANGER_SCRIPTS}/wait_for_keytab.sh hdfs.keytab
   ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
-  ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser1.keytab
-  ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser2.keytab
-  ${RANGER_SCRIPTS}/wait_for_keytab.sh testuser3.keytab
+  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
 fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml

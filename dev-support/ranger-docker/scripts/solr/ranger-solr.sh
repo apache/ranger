@@ -22,7 +22,8 @@ if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
 then
   if [ "${KERBEROS_ENABLED}" == "true" ]
   then
-    /home/ranger/scripts/wait_for_keytab.sh HTTP.keytab
+    ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
+    ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
   fi
 
   touch "${SOLR_INSTALL_DIR}"/.setupDone
