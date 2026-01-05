@@ -17,169 +17,142 @@
  * under the License.
  */
 
- package org.apache.ranger.authorization.storm.authorizer;
-
-import java.security.Principal;
-import java.util.Map;
-import java.util.Set;
+package org.apache.ranger.authorization.storm.authorizer;
 
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.storm.StormRangerPlugin;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Sets;
-
 import org.apache.storm.Config;
 import org.apache.storm.security.auth.IAuthorizer;
 import org.apache.storm.security.auth.ReqContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.security.Principal;
+import java.util.Map;
+import java.util.Set;
 
 public class RangerStormAuthorizer implements IAuthorizer {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
+    private static final Logger PERF_STORMAUTH_REQUEST_LOG       = RangerPerfTracer.getPerfLogger("stormauth.request");
+    private static final String STORM_CLIENT_JASS_CONFIG_SECTION = "StormClient";
+    static final Set<String> noAuthzOperations                   = Sets.newHashSet("getNimbusConf", "getClusterInfo");
 
-	private static final Logger PERF_STORMAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("stormauth.request");
+    private static volatile StormRangerPlugin plugin;
 
-	private static final String STORM_CLIENT_JASS_CONFIG_SECTION = "StormClient";
+    /**
+     * Invoked once immediately after construction
+     *
+     * @param aStormConfigMap Storm configuration
+     */
 
-	private static volatile StormRangerPlugin plugin = null;
+    @Override
+    public void prepare(Map aStormConfigMap) {
+        StormRangerPlugin me = plugin;
 
-	static final Set<String> noAuthzOperations = Sets.newHashSet(new String[] { "getNimbusConf", "getClusterInfo" });
+        if (me == null) {
+            synchronized (RangerStormAuthorizer.class) {
+                me = plugin;
 
-	/**
+                if (me == null) {
+                    try {
+                        MiscUtil.setUGIFromJAASConfig(STORM_CLIENT_JASS_CONFIG_SECTION);
+                        LOG.info("LoginUser={}", MiscUtil.getUGILoginUser());
+                    } catch (Throwable t) {
+                        LOG.error("Error while setting UGI for Storm Plugin...", t);
+                    }
+
+                    LOG.info("Creating StormRangerPlugin");
+
+                    plugin = new StormRangerPlugin();
+                    plugin.init();
+                }
+            }
+        }
+    }
+
+    /**
      * permit() method is invoked for each incoming Thrift request.
+     *
      * @param aRequestContext request context includes info about
      * @param aOperationName operation name
      * @param aTopologyConfigMap configuration of targeted topology
      * @return true if the request is authorized, false if reject
      */
-	
-	@Override
-	public boolean permit(ReqContext aRequestContext, String aOperationName, Map aTopologyConfigMap) {
-		
-		boolean accessAllowed = false;
-		boolean isAuditEnabled = false;
 
-		String topologyName = null;
+    @Override
+    public boolean permit(ReqContext aRequestContext, String aOperationName, Map aTopologyConfigMap) {
+        boolean accessAllowed  = false;
+        boolean isAuditEnabled = false;
+        String topologyName    = null;
+        RangerPerfTracer perf  = null;
 
-		RangerPerfTracer perf = null;
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_STORMAUTH_REQUEST_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_STORMAUTH_REQUEST_LOG, "RangerStormAuthorizer.permit()");
+            }
 
-		try {
+            topologyName = (aTopologyConfigMap == null ? "" : (String) aTopologyConfigMap.get(Config.TOPOLOGY_NAME));
 
-			if(RangerPerfTracer.isPerfTraceEnabled(PERF_STORMAUTH_REQUEST_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_STORMAUTH_REQUEST_LOG, "RangerStormAuthorizer.permit()");
-			}
+            LOG.debug("[req {}] Access  from: [{}] user: [{}], op:   [{}],topology: [{}]", aRequestContext.requestID(), aRequestContext.remoteAddress(), aRequestContext.principal(), aOperationName, topologyName);
 
-			topologyName = (aTopologyConfigMap == null ? "" : (String)aTopologyConfigMap.get(Config.TOPOLOGY_NAME));
-	
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[req "+ aRequestContext.requestID()+ "] Access "
-		                + " from: [" + aRequestContext.remoteAddress() + "]"
-		                + " user: [" + aRequestContext.principal() + "],"
-		                + " op:   [" + aOperationName + "],"
-		                + "topology: [" + topologyName + "]");
-				
-				if (aTopologyConfigMap != null) {
-					for(Object keyObj : aTopologyConfigMap.keySet()) {
-						Object valObj = aTopologyConfigMap.get(keyObj);
-						LOG.debug("TOPOLOGY CONFIG MAP [" + keyObj + "] => [" + valObj + "]");
-					}
-				}
-				else {
-					LOG.debug("TOPOLOGY CONFIG MAP is passed as null.");
-				}
-			}
+            if (aTopologyConfigMap != null) {
+                for (Object keyObj : aTopologyConfigMap.keySet()) {
+                    Object valObj = aTopologyConfigMap.get(keyObj);
+                    LOG.debug("TOPOLOGY CONFIG MAP [{}] => [{}]", keyObj, valObj);
+                }
+            } else {
+                LOG.debug("TOPOLOGY CONFIG MAP is passed as null.");
+            }
 
-			if(noAuthzOperations.contains(aOperationName)) {
-				accessAllowed = true;
-			} else if(plugin == null) {
-				LOG.info("Ranger plugin not initialized yet! Skipping authorization;  allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
-			} else {
-				String userName = null;
-				String[] groups = null;
-	
-				Principal user = aRequestContext.principal();
-			
-				if (user != null) {
-					userName = user.getName();
-					if (userName != null) {
-						UserGroupInformation ugi = UserGroupInformation.createRemoteUser(userName);
-						userName = ugi.getShortUserName();
-						groups = ugi.getGroupNames();
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("User found from principal [" + user.getName() + "] => user:[" + userName + "], groups:[" + StringUtil.toString(groups) + "]");
-						}
-					}
-				}
-				
-				
-				if (userName != null) {
-					String clientIp =  (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress() );
-					RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName);
-					RangerAccessResult result = plugin.isAccessAllowed(accessRequest);
-					accessAllowed = result != null && result.getIsAllowed();
-					isAuditEnabled = result != null && result.getIsAudited();
-				
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("User found from principal [" + userName + "], groups [" + StringUtil.toString(groups) + "]: verifying using [" + plugin.getClass().getName() + "], allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
-					}
-				}
-				else {
-					LOG.info("NULL User found from principal [" + user + "]: Skipping authorization;  allowedFlag => [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
-				}
-			}
-		}
-		catch(Throwable t) {
-			LOG.error("RangerStormAuthorizer found this exception", t);
-		}
-		finally {
-			RangerPerfTracer.log(perf);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("[req "+ aRequestContext.requestID()+ "] Access "
-		                + " from: [" + aRequestContext.remoteAddress() + "]"
-		                + " user: [" + aRequestContext.principal() + "],"
-		                + " op:   [" + aOperationName + "],"
-		                + "topology: [" + topologyName + "] => returns [" + accessAllowed + "], Audit Enabled:" + isAuditEnabled);
-			}
-		}
-		
-		return accessAllowed;
-	}
-	
-	/**
-     * Invoked once immediately after construction
-     * @param aStormConfigMap Storm configuration
-     */
+            if (noAuthzOperations.contains(aOperationName)) {
+                accessAllowed = true;
+            } else if (plugin == null) {
+                LOG.info("Ranger plugin not initialized yet! Skipping authorization;  allowedFlag => [{}], Audit Enabled:{}", false, false);
+            } else {
+                String   userName = null;
+                String[] groups   = null;
 
-	@Override
-	public void prepare(Map aStormConfigMap) {
-		StormRangerPlugin me = plugin;
+                Principal user = aRequestContext.principal();
 
-		if (me == null) {
-			synchronized(RangerStormAuthorizer.class) {
-				me = plugin;
+                if (user != null) {
+                    userName = user.getName();
+                    if (userName != null) {
+                        UserGroupInformation ugi = UserGroupInformation.createRemoteUser(userName);
+                        userName = ugi.getShortUserName();
+                        groups   = ugi.getGroupNames();
+                        if (LOG.isDebugEnabled()) { // used due to performance reasons.
+                            LOG.debug("User found from principal [{}] => user:[{}], groups:[{}]", user.getName(), userName, StringUtil.toString(groups));
+                        }
+                    }
+                }
 
-				if (me == null) {
-					try {
-						MiscUtil.setUGIFromJAASConfig(STORM_CLIENT_JASS_CONFIG_SECTION);
-						LOG.info("LoginUser=" + MiscUtil.getUGILoginUser());
-					} catch (Throwable t) {
-						LOG.error("Error while setting UGI for Storm Plugin...", t);
-					}
+                if (userName != null) {
+                    String              clientIp      = (aRequestContext.remoteAddress() == null ? null : aRequestContext.remoteAddress().getHostAddress());
+                    RangerAccessRequest accessRequest = plugin.buildAccessRequest(userName, groups, clientIp, topologyName, aOperationName);
+                    RangerAccessResult  result        = plugin.isAccessAllowed(accessRequest);
+                    accessAllowed  = result != null && result.getIsAllowed();
+                    isAuditEnabled = result != null && result.getIsAudited();
+                    if (LOG.isDebugEnabled()) { // used due to performance reasons.
+                        LOG.debug("User found from principal [{}], groups [{}]: verifying using [{}], allowedFlag => [{}], Audit Enabled:{}", userName, StringUtil.toString(groups), plugin.getClass().getName(), accessAllowed, isAuditEnabled);
+                    }
+                } else {
+                    LOG.info("NULL User found from principal [{}]: Skipping authorization;  allowedFlag => [{}], Audit Enabled:{}", user, false, false);
+                }
+            }
+        } catch (Throwable t) {
+            LOG.error("RangerStormAuthorizer found this exception", t);
+        } finally {
+            RangerPerfTracer.log(perf);
+            LOG.debug("[req {}] Access  from: [{}] user: [{}], op:   [{}],topology: [{}] => returns [{}], Audit Enabled:{}", aRequestContext.requestID(), aRequestContext.remoteAddress(), aRequestContext.principal(), aOperationName, topologyName, accessAllowed, isAuditEnabled);
+        }
 
-					LOG.info("Creating StormRangerPlugin");
-
-					plugin = new StormRangerPlugin();
-					plugin.init();
-				}
-			}
-		}
-	}
-
+        return accessAllowed;
+    }
 }

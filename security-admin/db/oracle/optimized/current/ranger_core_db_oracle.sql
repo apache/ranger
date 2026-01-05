@@ -46,7 +46,7 @@ call spdropsequence('X_POLICY_EXPORT_SEQ');
 call spdropsequence('X_PORTAL_USER_SEQ');
 call spdropsequence('X_PORTAL_USER_ROLE_SEQ');
 call spdropsequence('X_RESOURCE_SEQ');
-call spdropsequence('X_TRX_LOG_SEQ');
+call spdropsequence('X_TRX_LOG_V2_SEQ');
 call spdropsequence('X_USER_SEQ');
 call spdropsequence('V_TRX_LOG_SEQ');
 call spdropsequence('XA_ACCESS_AUDIT_SEQ');
@@ -100,6 +100,16 @@ call spdropsequence('X_RANGER_GLOBAL_STATE_SEQ');
 call spdropsequence('X_SECURITY_ZONE_SEQ');
 call spdropsequence('X_POLICY_CHANGE_LOG_SEQ');
 call spdropsequence('X_TAG_CHANGE_LOG_SEQ');
+call spdropsequence('X_SEC_ZONE_REF_ROLE_SEQ');
+
+call spdropsequence('X_GDS_DATASET_SEQ');
+call spdropsequence('X_GDS_PROJECT_SEQ');
+call spdropsequence('X_GDS_DATA_SHARE_SEQ');
+call spdropsequence('X_GDS_SHARED_RESOURCE_SEQ');
+call spdropsequence('X_GDS_DATA_SHARE_IN_DATASET_SEQ');
+call spdropsequence('X_GDS_DATASET_IN_PROJECT_SEQ');
+call spdropsequence('X_GDS_DATASET_POLICY_MAP_SEQ');
+call spdropsequence('X_GDS_PROJECT_POLICY_MAP_SEQ');
 
 CREATE SEQUENCE SEQ_GEN_IDENTITY START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -116,7 +126,7 @@ CREATE SEQUENCE X_POLICY_EXPORT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_PORTAL_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_PORTAL_USER_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_TRX_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_TRX_LOG_V2_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE V_TRX_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE XA_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -170,6 +180,7 @@ CREATE SEQUENCE X_SEC_ZONE_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCY
 CREATE SEQUENCE X_SEC_ZONE_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_CHANGE_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_TAG_CHANGE_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_SEC_ZONE_REF_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 call spdropsequence('X_DB_VERSION_H_SEQ');
 CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
@@ -178,6 +189,15 @@ CREATE SEQUENCE X_ROLE_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ROLE_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_REF_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ROLE_REF_ROLE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+CREATE SEQUENCE X_GDS_DATASET_SEQ               START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_GDS_PROJECT_SEQ               START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_GDS_DATA_SHARE_SEQ            START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_GDS_SHARED_RESOURCE_SEQ       START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_GDS_DATA_SHARE_IN_DATASET_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_GDS_DATASET_IN_PROJECT_SEQ    START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_GDS_DATASET_POLICY_MAP_SEQ    START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_GDS_PROJECT_POLICY_MAP_SEQ    START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 commit;
 
 CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
@@ -203,7 +223,6 @@ BEGIN
 END;/
 /
 
-call spdropview('vx_trx_log');
 call spdroptable('X_RMS_MAPPING_PROVIDER');
 call spdroptable('X_RMS_RESOURCE_MAPPING');
 call spdroptable('X_RMS_NOTIFICATION');
@@ -257,6 +276,7 @@ call spdroptable('x_service_config_def');
 call spdroptable('x_policy');
 call spdroptable('x_security_zone_ref_group');
 call spdroptable('x_security_zone_ref_user');
+call spdroptable('x_security_zone_ref_role');
 call spdroptable('x_security_zone_ref_tag_srvc');
 call spdroptable('x_security_zone_ref_service');
 call spdroptable('x_ranger_global_state');
@@ -265,7 +285,7 @@ call spdroptable('x_service');
 call spdroptable('x_service_def');
 call spdroptable('x_audit_map');
 call spdroptable('x_perm_map');
-call spdroptable('x_trx_log');
+call spdroptable('x_trx_log_v2');
 call spdroptable('x_resource');
 call spdroptable('x_policy_export_audit');
 call spdroptable('x_group_users');
@@ -281,6 +301,14 @@ call spdroptable('x_portal_user_role');
 call spdroptable('x_portal_user');
 call spdroptable('x_db_version_h');
 
+call spdroptable('x_gds_dataset');
+call spdroptable('x_gds_project');
+call spdroptable('x_gds_data_share');
+call spdroptable('x_gds_shared_resource');
+call spdroptable('x_gds_data_share_in_dataset');
+call spdroptable('x_gds_dataset_in_project');
+call spdroptable('x_gds_dataset_policy_map');
+call spdroptable('x_gds_project_policy_map');
 
 -- create tables
 create table X_DB_VERSION_H  (
@@ -307,9 +335,9 @@ CREATE TABLE x_portal_user (
         email VARCHAR(512) DEFAULT NULL NULL ,
         status NUMBER(11) DEFAULT '0' NOT NULL ,
         user_src NUMBER(11) DEFAULT '0' NOT NULL ,
-        notes VARCHAR(4000) DEFAULT NULL NULL ,
-        other_attributes VARCHAR(4000) DEFAULT NULL NULL,
-        sync_source VARCHAR(4000) DEFAULT NULL NULL,
+        notes CLOB DEFAULT NULL NULL ,
+        other_attributes CLOB DEFAULT NULL NULL,
+        sync_source CLOB DEFAULT NULL NULL,
         old_passwords CLOB DEFAULT NULL,
         password_updated_time DATE DEFAULT NULL,
         PRIMARY KEY (id),
@@ -431,14 +459,14 @@ CREATE TABLE X_GROUP(
         ADDED_BY_ID NUMBER(20,0) DEFAULT NULL,
         UPD_BY_ID NUMBER(20,0) DEFAULT NULL,
         GROUP_NAME VARCHAR2(1024) NOT NULL ENABLE,
-        DESCR VARCHAR2(4000) DEFAULT NULL NULL,
+        DESCR CLOB DEFAULT NULL NULL,
         STATUS NUMBER(11,0) DEFAULT '0' NOT NULL ENABLE,
         GROUP_TYPE NUMBER(11,0) DEFAULT '0' NOT NULL ENABLE,
         CRED_STORE_ID NUMBER(20,0) DEFAULT NULL,
         group_src NUMBER(10) DEFAULT 0 NOT NULL,
         is_visible NUMBER(11) DEFAULT 1 NOT NULL,
-        other_attributes VARCHAR(4000) DEFAULT NULL NULL,
-        sync_source VARCHAR(4000) DEFAULT NULL NULL,
+        other_attributes CLOB DEFAULT NULL NULL,
+        sync_source CLOB DEFAULT NULL NULL,
         PRIMARY KEY (ID),
         CONSTRAINT x_group_UK_group_name UNIQUE (group_name),
         CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY (ADDED_BY_ID) REFERENCES X_PORTAL_USER (ID) ENABLE,
@@ -469,12 +497,12 @@ CREATE TABLE x_user (
         added_by_id NUMBER(20) DEFAULT NULL NULL ,
         upd_by_id NUMBER(20) DEFAULT NULL NULL ,
         user_name VARCHAR(767) NOT NULL,
-        descr VARCHAR(4000) DEFAULT NULL  NULL,
+        descr CLOB DEFAULT NULL  NULL,
         status NUMBER(11) DEFAULT '0' NOT NULL,
         cred_store_id NUMBER(20) DEFAULT NULL NULL ,
         is_visible NUMBER(11) DEFAULT 1 NOT NULL ,
-        other_attributes VARCHAR(4000) DEFAULT NULL NULL ,
-        sync_source VARCHAR(4000) DEFAULT NULL NULL,
+        other_attributes CLOB DEFAULT NULL NULL ,
+        sync_source CLOB DEFAULT NULL NULL,
         PRIMARY KEY (id),
         CONSTRAINT x_user_UK_user_name UNIQUE (user_name),
         CONSTRAINT x_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -554,31 +582,25 @@ CREATE TABLE x_resource (
         CONSTRAINT x_resource_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-
-CREATE TABLE x_trx_log (
+CREATE TABLE x_trx_log_v2 (
         id NUMBER(20) NOT NULL,
         create_time DATE DEFAULT NULL NULL ,
-        update_time DATE DEFAULT NULL NULL ,
         added_by_id NUMBER(20) DEFAULT NULL NULL ,
-        upd_by_id NUMBER(20) DEFAULT NULL NULL ,
         class_type NUMBER(11) DEFAULT '0' NOT NULL ,
         object_id NUMBER(20) DEFAULT NULL NULL ,
         parent_object_id NUMBER(20) DEFAULT NULL NULL ,
         parent_object_class_type NUMBER(11) DEFAULT '0' NOT NULL ,
         parent_object_name VARCHAR(1024) DEFAULT NULL NULL ,
         object_name VARCHAR(1024) DEFAULT NULL NULL ,
-        attr_name VARCHAR(255) DEFAULT NULL NULL ,
-        prev_val CLOB DEFAULT NULL NULL ,
-        new_val CLOB DEFAULT NULL NULL ,
+        change_info CLOB DEFAULT NULL NULL ,
         trx_id VARCHAR(1024) DEFAULT NULL NULL ,
         action VARCHAR(255) DEFAULT NULL NULL ,
         sess_id VARCHAR(512) DEFAULT NULL NULL ,
         req_id VARCHAR(30) DEFAULT NULL NULL ,
         sess_type VARCHAR(30) DEFAULT NULL NULL ,
-        PRIMARY KEY (id),
-        CONSTRAINT x_trx_log_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-        CONSTRAINT x_trx_log_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+        PRIMARY KEY (id)
 );
+
 CREATE TABLE x_perm_map (
         id NUMBER(20) NOT NULL,
         create_time DATE DEFAULT NULL NULL ,
@@ -661,12 +683,14 @@ is_enabled NUMBER(1) DEFAULT '0' NOT NULL,
 tag_service NUMBER(20) DEFAULT NULL NULL,
 tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
+gds_service NUMBER(20) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_service_name UNIQUE (name),
 CONSTRAINT x_service_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_FK_type FOREIGN KEY (type) REFERENCES x_service_def (id),
-CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id)
+CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id),
+CONSTRAINT x_service_FK_gds_service FOREIGN KEY (gds_service) REFERENCES x_service(id)
 );
 
 CREATE TABLE x_security_zone (
@@ -678,6 +702,7 @@ upd_by_id NUMBER(20) DEFAULT NULL NULL,
 version NUMBER(20)  DEFAULT NULL NULL,
 name varchar(255) NOT NULL,
 jsonData CLOB DEFAULT NULL NULL,
+gz_jsondata BLOB DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_security_zone_UK_name UNIQUE(name),
@@ -882,6 +907,7 @@ item_id NUMBER(20) NOT NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
+category NUMBER(6) DEFAULT NULL NULL,
 sort_order NUMBER(10) DEFAULT '0' NULL,
 datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
@@ -1324,6 +1350,8 @@ tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
 role_version NUMBER(20) DEFAULT 0 NOT NULL,
 role_update_time DATE DEFAULT NULL NULL,
+gds_version NUMBER(20) DEFAULT 0 NOT NULL,
+gds_update_time DATE DEFAULT NULL NULL,
 version NUMBER(20) DEFAULT 1 NOT NULL,
 primary key (id),
 CONSTRAINT x_svc_ver_info_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service(id)
@@ -1641,7 +1669,21 @@ CONSTRAINT x_sz_ref_res_FK_res_def_id FOREIGN KEY (resource_def_id) REFERENCES x
 );
 commit;
 
-CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
+CREATE TABLE x_security_zone_ref_role (
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+zone_id NUMBER(20)  DEFAULT NULL NULL,
+role_id NUMBER(20)  DEFAULT NULL NULL,
+role_name varchar(255) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_sz_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_ref_role_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
+CONSTRAINT x_sz_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
+);
 commit;
 
 CREATE INDEX xa_access_audit_added_by_id ON  xa_access_audit(added_by_id);
@@ -1717,10 +1759,10 @@ CREATE INDEX x_resource_FK_asset_id ON x_resource (asset_id);
 CREATE INDEX x_resource_FK_parent_id ON x_resource (parent_id);
 CREATE INDEX x_resource_cr_time ON  x_resource(create_time);
 CREATE INDEX x_resource_up_time ON x_resource (update_time);
-CREATE INDEX x_trx_log_FK_added_by_id ON x_trx_log (added_by_id);
-CREATE INDEX x_trx_log_FK_upd_by_id ON  x_trx_log(upd_by_id);
-CREATE INDEX x_trx_log_cr_time ON x_trx_log (create_time);
-CREATE INDEX x_trx_log_up_time ON x_trx_log (update_time);
+CREATE INDEX x_trx_log_v2_FK_added_by_id ON x_trx_log_v2 (added_by_id);
+CREATE INDEX x_trx_log_v2_action ON x_trx_log_v2 (action);
+CREATE INDEX x_trx_log_v2_cr_time ON x_trx_log_v2 (create_time);
+CREATE INDEX x_trx_log_v2_trx_id ON x_trx_log_v2 (trx_id);
 CREATE INDEX x_user_FK_added_by_id ON x_user (added_by_id);
 CREATE INDEX x_user_FK_upd_by_id ON x_user (upd_by_id);
 CREATE INDEX x_user_FK_cred_store_id ON x_user (cred_store_id);
@@ -1841,11 +1883,11 @@ is_enabled NUMBER(1) DEFAULT '1' NOT NULL,
 service_resource_elements_text CLOB DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_rms_service_res_UK_guid UNIQUE (guid),
+CONSTRAINT x_rms_svc_res_UK_res_sign UNIQUE (resource_signature),
 CONSTRAINT x_rms_svc_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
 );
 
 CREATE INDEX x_rms_svc_res_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_svc_res_IDX_res_sign ON x_rms_service_resource(resource_signature);
 
 CREATE TABLE x_rms_notification (
 id NUMBER(20) NOT NULL,
@@ -1891,6 +1933,218 @@ PRIMARY KEY (id),
 CONSTRAINT x_rms_map_provider_UK_name UNIQUE(name)
 );
 
+CREATE TABLE x_gds_dataset (
+    id              NUMBER(20)    NOT NULL,
+    guid            VARCHAR2(64)  DEFAULT NULL NULL,
+    create_time     DATE          DEFAULT  NULL NULL,
+    update_time     DATE          DEFAULT  NULL NULL,
+    added_by_id     NUMBER(20)    DEFAULT NULL NULL,
+    upd_by_id       NUMBER(20)    DEFAULT NULL NULL,
+    version         NUMBER(20)    DEFAULT '1' NOT NULL,
+    is_enabled      NUMBER(1)     DEFAULT '1' NOT NULL,
+    name            VARCHAR2(512) DEFAULT NULL NULL,
+    description     CLOB          DEFAULT NULL NULL,
+    acl             CLOB          DEFAULT NULL NULL,
+    terms_of_use    CLOB          DEFAULT NULL NULL,
+    options         CLOB          DEFAULT NULL NULL,
+    additional_info CLOB          DEFAULT NULL NULL,
+    primary key (id),
+    CONSTRAINT x_gds_dataset_UK_name UNIQUE(name),
+    CONSTRAINT x_gds_dataset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_dataset_FK_upd_by_id   FOREIGN KEY(upd_by_id)   REFERENCES x_portal_user(id)
+);
+
+CREATE INDEX x_gds_dataset_guid ON x_gds_dataset(guid);
+
+
+CREATE TABLE x_gds_project (
+    id              NUMBER(20)    NOT NULL,
+    guid            VARCHAR2(64)  DEFAULT NULL NULL,
+    create_time     DATE          DEFAULT NULL NULL,
+    update_time     DATE          DEFAULT NULL NULL,
+    added_by_id     NUMBER(20)    DEFAULT NULL NULL,
+    upd_by_id       NUMBER(20)    DEFAULT NULL NULL,
+    version         NUMBER(20)    DEFAULT '1' NOT NULL,
+    is_enabled      NUMBER(1)     DEFAULT '1' NOT NULL,
+    name            VARCHAR2(512) DEFAULT NULL NULL,
+    description     CLOB          DEFAULT NULL NULL,
+    acl             CLOB          DEFAULT NULL NULL,
+    terms_of_use    CLOB          DEFAULT NULL NULL,
+    options         CLOB          DEFAULT NULL NULL,
+    additional_info CLOB          DEFAULT NULL NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT x_gds_project_UK_name UNIQUE(name),
+    CONSTRAINT x_gds_project_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_project_FK_upd_by_id   FOREIGN KEY(upd_by_id)   REFERENCES x_portal_user(id)
+);
+
+CREATE INDEX x_gds_project_guid ON x_gds_project(guid);
+
+
+CREATE TABLE x_gds_data_share (
+    id               NUMBER(20)     NOT NULL,
+    guid             VARCHAR2(64)   DEFAULT NULL NULL,
+    create_time      DATE           DEFAULT NULL NULL,
+    update_time      DATE           DEFAULT NULL NULL,
+    added_by_id      NUMBER(20)     DEFAULT NULL NULL,
+    upd_by_id        NUMBER(20)     DEFAULT NULL NULL,
+    version          NUMBER(20)     DEFAULT '1' NOT NULL,
+    is_enabled       NUMBER(1)      DEFAULT '1' NOT NULL,
+    name             VARCHAR2(512)  NOT NULL,
+    description      CLOB           DEFAULT NULL NULL,
+    acl              CLOB           NOT NULL,
+    service_id           NUMBER(20) NOT NULL,
+    zone_id              NUMBER(20) NOT NULL,
+    condition_expr       CLOB       DEFAULT NULL NULL,
+    default_access_types CLOB       DEFAULT NULL NULL,
+    default_tag_masks    CLOB       DEFAULT NULL NULL,
+    terms_of_use         CLOB       DEFAULT NULL NULL,
+    options              CLOB       DEFAULT NULL NULL,
+    additional_info      CLOB       DEFAULT NULL NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT x_gds_data_share_UK_name UNIQUE(service_id, zone_id, name),
+    CONSTRAINT x_gds_data_share_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_data_share_FK_upd_by_id   FOREIGN KEY(upd_by_id)   REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_data_share_FK_service_id  FOREIGN KEY(service_id)  REFERENCES x_service(id),
+    CONSTRAINT x_gds_data_share_FK_zone_id     FOREIGN KEY(zone_id)     REFERENCES x_security_zone(id)
+);
+
+CREATE INDEX x_gds_data_share_guid       ON x_gds_data_share(guid);
+CREATE INDEX x_gds_data_share_service_id ON x_gds_data_share(service_id);
+CREATE INDEX x_gds_data_share_zone_id    ON x_gds_data_share(zone_id);
+
+
+CREATE TABLE x_gds_shared_resource (
+    id                   NUMBER(20)    NOT NULL,
+    guid                 VARCHAR2(64)  NOT NULL,
+    create_time          DATE          DEFAULT NULL NULL,
+    update_time          DATE          DEFAULT NULL NULL,
+    added_by_id          NUMBER(20)    DEFAULT NULL NULL,
+    upd_by_id            NUMBER(20)    DEFAULT NULL NULL,
+    version              NUMBER(20)    DEFAULT '1' NOT NULL,
+    is_enabled           NUMBER(1)     DEFAULT '1' NOT NULL,
+    name                 VARCHAR2(512) NOT NULL,
+    description          CLOB          DEFAULT NULL NULL,
+    data_share_id        NUMBER(20)    NOT NULL,
+    resource_name        CLOB          NOT NULL,
+    resource_signature   VARCHAR2(128) NOT NULL,
+    sub_resource         CLOB          DEFAULT NULL NULL,
+    sub_resource_type    CLOB          DEFAULT NULL NULL,
+    condition_expr       CLOB          DEFAULT NULL NULL,
+    access_types         CLOB          DEFAULT NULL NULL,
+    row_filter           CLOB          DEFAULT NULL NULL,
+    sub_resource_masks   CLOB          DEFAULT NULL NULL,
+    profiles             CLOB          DEFAULT NULL NULL,
+    options              CLOB          DEFAULT NULL NULL,
+    additional_info      CLOB          DEFAULT NULL NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT x_gds_shared_resource_UK_name UNIQUE(data_share_id, name),
+    CONSTRAINT x_gds_shared_resource_UK_resource_signature UNIQUE(data_share_id, resource_signature),
+    CONSTRAINT x_gds_shared_resource_FK_added_by_id   FOREIGN KEY(added_by_id)   REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_shared_resource_FK_upd_by_id     FOREIGN KEY(upd_by_id)     REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_shared_resource_FK_data_share_id FOREIGN KEY(data_share_id) REFERENCES x_gds_data_share(id)
+);
+
+CREATE INDEX x_gds_shared_resource_guid          ON x_gds_shared_resource(guid);
+CREATE INDEX x_gds_shared_resource_data_share_id ON x_gds_shared_resource(data_share_id);
+
+
+CREATE TABLE x_gds_data_share_in_dataset (
+    id                NUMBER(20)    NOT NULL,
+    guid              VARCHAR2(64)  NOT NULL,
+    create_time       DATE          DEFAULT NULL NULL,
+    update_time       DATE          DEFAULT NULL NULL,
+    added_by_id       NUMBER(20)    DEFAULT NULL NULL,
+    upd_by_id         NUMBER(20)    DEFAULT NULL NULL,
+    version           NUMBER(20)    DEFAULT '1' NOT NULL,
+    is_enabled        NUMBER(1)     DEFAULT '1' NOT NULL,
+    description       CLOB          DEFAULT NULL NULL,
+    data_share_id     NUMBER(20)    NOT NULL,
+    dataset_id        NUMBER(20)    NOT NULL,
+    status            NUMBER(5)     NOT NULL,
+    validity_period   CLOB          DEFAULT NULL NULL,
+    profiles          CLOB          DEFAULT NULL NULL,
+    options           CLOB          DEFAULT NULL NULL,
+    additional_info   CLOB          DEFAULT NULL NULL,
+    approver_id       NUMBER(20)    DEFAULT NULL NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT x_gds_dshid_UK_data_share_id_dataset_id UNIQUE(data_share_id, dataset_id),
+    CONSTRAINT x_gds_dshid_FK_added_by_id    FOREIGN KEY (added_by_id)    REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_dshid_FK_upd_by_id      FOREIGN KEY (upd_by_id)      REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_dshid_FK_data_share_id  FOREIGN KEY (data_share_id)  REFERENCES x_gds_data_share(id),
+    CONSTRAINT x_gds_dshid_FK_dataset_id     FOREIGN KEY (dataset_id)     REFERENCES x_gds_dataset(id),
+    CONSTRAINT x_gds_dshid_FK_approver_id    FOREIGN KEY (approver_id)    REFERENCES x_portal_user(id)
+);
+
+CREATE INDEX x_gds_dshid_guid                     ON x_gds_data_share_in_dataset(guid);
+CREATE INDEX x_gds_dshid_data_share_id            ON x_gds_data_share_in_dataset(data_share_id);
+CREATE INDEX x_gds_dshid_dataset_id               ON x_gds_data_share_in_dataset(dataset_id);
+
+
+CREATE TABLE x_gds_dataset_in_project (
+    id               NUMBER(20)    NOT NULL,
+    guid             VARCHAR2(64)  NOT NULL,
+    create_time      DATE          DEFAULT NULL NULL,
+    update_time      DATE          DEFAULT NULL NULL,
+    added_by_id      NUMBER(20)    DEFAULT NULL NULL,
+    upd_by_id        NUMBER(20)    DEFAULT NULL NULL,
+    version          NUMBER(20)    DEFAULT '1' NOT NULL,
+    is_enabled       NUMBER(1)     DEFAULT '1' NOT NULL,
+    description      CLOB          DEFAULT NULL NULL,
+    dataset_id       NUMBER(20)    NOT NULL,
+    project_id       NUMBER(20)    NOT NULL,
+    status           NUMBER(5)     NOT NULL,
+    validity_period  CLOB          DEFAULT NULL NULL,
+    profiles         CLOB          DEFAULT NULL NULL,
+    options          CLOB          DEFAULT NULL NULL,
+    additional_info  CLOB          DEFAULT NULL NULL,
+    approver_id      NUMBER(20)    DEFAULT NULL NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT x_gds_dip_UK_data_share_id_dataset_id UNIQUE(dataset_id, project_id),
+    CONSTRAINT x_gds_dip_FK_added_by_id  FOREIGN KEY (added_by_id)  REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_dip_FK_upd_by_id    FOREIGN KEY (upd_by_id)    REFERENCES x_portal_user(id),
+    CONSTRAINT x_gds_dip_FK_dataset_id   FOREIGN KEY (dataset_id)   REFERENCES x_gds_dataset(id),
+    CONSTRAINT x_gds_dip_FK_project_id   FOREIGN KEY (project_id)   REFERENCES x_gds_project(id),
+    CONSTRAINT x_gds_dip_FK_approver_id  FOREIGN KEY (approver_id)  REFERENCES x_portal_user(id)
+);
+
+CREATE INDEX x_gds_dip_guid       ON x_gds_dataset_in_project(guid);
+CREATE INDEX x_gds_dip_dataset_id ON x_gds_dataset_in_project(dataset_id);
+CREATE INDEX x_gds_dip_project_id ON x_gds_dataset_in_project(project_id);
+
+
+CREATE TABLE x_gds_dataset_policy_map (
+    id         NUMBER(20) NOT NULL,
+    dataset_id NUMBER(20) NOT NULL,
+    policy_id  NUMBER(20) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT x_gds_dpm_UK_dataset_id_policy_id UNIQUE (dataset_id, policy_id),
+    CONSTRAINT x_gds_dpm_FK_dataset_id FOREIGN KEY (dataset_id) REFERENCES x_gds_dataset(id),
+    CONSTRAINT x_gds_dpm_FK_policy_id  FOREIGN KEY (policy_id)  REFERENCES x_policy(id)
+);
+
+CREATE INDEX x_gds_dpm_dataset_id ON x_gds_dataset_policy_map(dataset_id);
+CREATE INDEX x_gds_dpm_policy_id  ON x_gds_dataset_policy_map(policy_id);
+
+
+CREATE TABLE x_gds_project_policy_map (
+    id         NUMBER(20) NOT NULL,
+    project_id NUMBER(20) NOT NULL,
+    policy_id  NUMBER(20) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT x_gds_ppm_UK_project_id_policy_id UNIQUE (project_id, policy_id),
+    CONSTRAINT x_gds_ppm_FK_project_id FOREIGN KEY (project_id) REFERENCES x_gds_project(id),
+    CONSTRAINT x_gds_ppm_FK_policy_id  FOREIGN KEY (policy_id)  REFERENCES x_policy(id)
+);
+
+CREATE INDEX x_gds_ppm_project_id ON x_gds_project_policy_map(project_id);
+CREATE INDEX x_gds_ppm_policy_id  ON x_gds_project_policy_map(policy_id);
+
+CREATE VIEW vx_principal as
+        (SELECT u.user_name  AS principal_name, 0 AS principal_type, u.status AS status, u.is_visible AS is_visible, u.other_attributes AS other_attributes, u.create_time AS create_time, u.update_time AS update_time, u.added_by_id AS added_by_id, u.upd_by_id AS upd_by_id FROM x_user u)  UNION ALL
+        (SELECT g.group_name AS principal_name, 1 AS principal_type, g.status AS status, g.is_visible AS is_visible, g.other_attributes AS other_attributes, g.create_time AS create_time, g.update_time AS update_time, g.added_by_id AS added_by_id, g.upd_by_id AS upd_by_id FROM x_group g) UNION ALL
+        (SELECT r.name       AS principal_name, 2 AS principal_type, 1        AS status, 1            AS is_visible, null               AS other_attributes, r.create_time AS create_time, r.update_time AS update_time, r.added_by_id AS added_by_id, r.upd_by_id AS upd_by_id FROM x_role r);
+
 commit;
 
 insert into x_portal_user (id,CREATE_TIME, UPDATE_TIME,FIRST_NAME, LAST_NAME, PUB_SCR_NAME, LOGIN_ID, PASSWORD, EMAIL, STATUS) values (X_PORTAL_USER_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), 'Admin', '', 'Admin', 'admin', 'ceb4f32325eda6142bd65215f4c0f371', '', 1);
@@ -1918,6 +2172,7 @@ INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc
 INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Key Manager','');
 INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Tag Based Policies','');
 INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
+INSERT INTO x_modules_master VALUES(X_MODULES_MASTER_SEQ.NEXTVAL,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Governed Data Sharing','');
 INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (X_SECURITY_ZONE_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '','Unzoned zone');
 commit;
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'CORE_DB_SCHEMA',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
@@ -1972,6 +2227,19 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '057',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '058',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '059',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '060',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '065',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '066',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '067',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '068',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '069',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '070',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '071',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '072',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '073',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '074',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '075',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '076',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
@@ -1997,6 +2265,9 @@ INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,add
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Governed Data Sharing'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Governed Data Sharing'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Governed Data Sharing'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 
 INSERT INTO x_ranger_global_state (id,create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (X_RANGER_GLOBAL_STATE_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerRole','{"Version":"1"}');
 INSERT INTO x_ranger_global_state (id,create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (X_RANGER_GLOBAL_STATE_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerUserStore','{"Version":"1"}');
@@ -2047,5 +2318,10 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10054',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10055',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10056',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10060',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10061',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10062',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10063',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'J10064',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval,'JAVA_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 commit;

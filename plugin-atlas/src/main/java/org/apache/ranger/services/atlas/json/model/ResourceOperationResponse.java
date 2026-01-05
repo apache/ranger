@@ -21,63 +21,61 @@ package org.apache.ranger.services.atlas.json.model;
 import java.util.List;
 
 public class ResourceOperationResponse {
-	private String requestId;
-	private String query;
-	private String queryType;
-	private List<Results> results;
+    private String        requestId;
+    private String        query;
+    private String        queryType;
+    private List<Results> results;
 
-	public String getRequestId() {
-		return requestId;
-	}
+    public String getRequestId() {
+        return requestId;
+    }
 
-	public void setRequestId(String requestId) {
-		this.requestId = requestId;
-	}
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
-	public String getQuery() {
-		return query;
-	}
+    public String getQuery() {
+        return query;
+    }
 
-	public void setQuery(String query) {
-		this.query = query;
-	}
+    public void setQuery(String query) {
+        this.query = query;
+    }
 
-	public String getQueryType() {
-		return queryType;
-	}
+    public String getQueryType() {
+        return queryType;
+    }
 
-	public void setQueryType(String queryType) {
-		this.queryType = queryType;
-	}
+    public void setQueryType(String queryType) {
+        this.queryType = queryType;
+    }
 
-	public List<Results> getResults() {
-		return results;
-	}
+    public List<Results> getResults() {
+        return results;
+    }
 
-	public void setResults(List<Results> results) {
-		this.results = results;
-	}
+    public void setResults(List<Results> results) {
+        this.results = results;
+    }
 
-	public class Results {
+    public static class Results {
+        private String result;
+        private String count;
 
-		private String result;
-		private String count;
+        public String getResult() {
+            return result;
+        }
 
-		public String getResult() {
-			return result;
-		}
+        public void setResult(String result) {
+            this.result = result;
+        }
 
-		public void setResult(String result) {
-			this.result = result;
-		}
+        public String getCount() {
+            return count;
+        }
 
-		public String getCount() {
-			return count;
-		}
-
-		public void setCount(String count) {
-			this.count = count;
-		}
-	}
-
+        public void setCount(String count) {
+            this.count = count;
+        }
+    }
 }

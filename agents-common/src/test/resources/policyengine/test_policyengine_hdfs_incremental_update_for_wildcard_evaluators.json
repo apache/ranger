@@ -1,0 +1,125 @@
+{
+  "serviceName": "hdfsdev",
+  "serviceDef": {
+    "name": "hdfs",
+    "id": 1,
+    "resources": [
+      {
+        "name": "path",
+        "type": "path",
+        "level": 1,
+        "mandatory": true,
+        "lookupSupported": true,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher",
+        "matcherOptions": {
+          "wildCard": true,
+          "ignoreCase": true
+        },
+        "label": "Resource Path",
+        "description": "HDFS file or directory path"
+      }
+    ],
+    "accessTypes": [
+      {
+        "name": "read",
+        "label": "Read"
+      },
+      {
+        "name": "write",
+        "label": "Write"
+      },
+      {
+        "name": "execute",
+        "label": "Execute"
+      }
+    ],
+    "contextEnrichers": [
+      {
+        "itemId": 1,
+        "name": "GeolocationEnricher",
+        "enricher": "org.apache.ranger.plugin.contextenricher.RangerFileBasedGeolocationProvider",
+        "enricherOptions": {
+          "FilePath": "/etc/ranger/geo/geo.txt",
+          "ForceRead": "false",
+          "IPInDotFormat": "true",
+          "geolocation.meta.prefix": "TEST_"
+        }
+      }
+    ],
+    "policyConditions": [
+      {
+        "itemId": 1,
+        "name": "ScriptConditionEvaluator",
+        "evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator",
+        "evaluatorOptions": {
+          "engineName": "JavaScript"
+        },
+        "label": "Script",
+        "description": "Script to execute"
+      }
+    ]
+  },
+  "policies": [
+    {
+      "id": 162,
+      "name": "read to mybu-analyst",
+      "isEnabled": true, "isAuditEnabled": true,
+      "resources": {"path": {"values": ["/mybu/analyst"], "isRecursive": true}},
+      "policyItems": [
+        {"accesses": [{"type": "execute", "isAllowed": true}, {"type": "read", "isAllowed": true}], "users": ["superman"]}
+      ]
+    },
+    {
+      "id": 163,
+      "name": "write to mybu-admin",
+      "isEnabled": true, "isAuditEnabled": true,
+      "resources": {"path": {"values": ["/mybu/analyst", "/mybu/admin"], "isRecursive": true}},
+      "policyItems": [
+        {"accesses": [{"type": "write", "isAllowed": true}, {"type": "execute", "isAllowed": true}], "users": ["superman"]}
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "name": "ALLOW 'read /mybu/analyst' for u=superman",
+      "request": {"resource": {"elements": {"path": "/mybu/analyst"}},
+        "accessType": "read",
+        "user": "superman", "userGroups": [], "requestData": "read /mybu/analyst for u=superman"
+      },
+      "result": {"isAudited": true, "isAllowed": true, "policyId": 162}
+    },
+    {
+      "name": "ALLOW 'write /mybu/analyst' for u=superman",
+      "request": {"resource": {"elements": {"path": "/mybu/analyst"}},
+        "accessType": "write",
+        "user": "superman", "userGroups": [], "requestData": "write /mybu/analyst for u=superman"
+      },
+      "result": {"isAudited": true, "isAllowed": true, "policyId": 163}
+    }
+  ],
+  "updatedPolicies": {
+    "policyDeltas": [
+      {"changeType": 1,
+        "policy": {"version": 1, "serviceType":"hdfs", "policyType": 0,
+          "id": 163,
+          "name": "write to mybu-analyst",
+          "isEnabled": true, "isAuditEnabled": true,
+          "resources": {"path": {"values": ["/mybu/analyst", "/mybu/admin","/mybu/test"], "isRecursive": true}},
+          "policyItems": [
+            {"accesses": [{"type": "write", "isAllowed": true}, {"type": "execute", "isAllowed": true}], "users": ["superman"]}
+          ]
+        }
+      }
+    ]
+  },
+  "updatedTests": [
+    {
+      "name": "ALLOW 'read /mybu/analyst' for u=superman",
+      "request": {"resource": {"elements": {"path": "/mybu/analyst"}},
+        "accessType": "read",
+        "user": "superman", "userGroups": [], "requestData": "read /mybu/analyst for u=superman"
+      },
+      "result": {"isAudited": true, "isAllowed": true, "policyId": 162}
+    }
+  ]
+}

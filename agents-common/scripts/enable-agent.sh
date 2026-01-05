@@ -222,9 +222,9 @@ elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
     fi
 elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
-	#Configure ranger plugin location for trino docker environment
+    #Configure ranger plugin location for trino docker environment
     if [ "${INSTALL_ENV}" = "docker" ];then
-	   HCOMPONENT_LIB_DIR=/usr/lib/trino/plugin/ranger
+        HCOMPONENT_LIB_DIR=/usr/lib/trino/plugin/ranger
     fi
 
     if [ ! -d "${HCOMPONENT_LIB_DIR}" ]; then
@@ -263,8 +263,8 @@ elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
 elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
-	if [ "${INSTALL_ENV}" = "docker" ];then
-	   HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}
+    if [ "${INSTALL_ENV}" = "docker" ];then
+        HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}
     fi
 fi
 

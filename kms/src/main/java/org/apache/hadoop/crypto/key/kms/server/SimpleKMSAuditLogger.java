@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,17 +17,17 @@
  */
 package org.apache.hadoop.crypto.key.kms.server;
 
-import static org.apache.hadoop.crypto.key.kms.server.KMSAudit.KMS_LOGGER_NAME;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.thirdparty.com.google.common.base.Joiner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import org.apache.hadoop.conf.Configuration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.hadoop.crypto.key.kms.server.KMSAudit.KMS_LOGGER_NAME;
 
 /**
  * A simple text format audit logger. This is the default.
@@ -39,58 +39,54 @@ import org.slf4j.LoggerFactory;
  * and will haunt the consumer tools / developers. Don't do it.
  */
 class SimpleKMSAuditLogger implements KMSAuditLogger {
-  final private Logger auditLog = LoggerFactory.getLogger(KMS_LOGGER_NAME);
+    private final Logger auditLog = LoggerFactory.getLogger(KMS_LOGGER_NAME);
 
-  @Override
-  public void cleanup() throws IOException {
-  }
+    @Override
+    public void cleanup() throws IOException {
+    }
 
-  @Override
-  public void initialize(Configuration conf) throws IOException {
-  }
+    @Override
+    public void initialize(Configuration conf) throws IOException {
+    }
 
-  @Override
-  public void logAuditEvent(final OpStatus status, final AuditEvent event) {
-    if (!Strings.isNullOrEmpty(event.getUser()) && !Strings
-        .isNullOrEmpty(event.getKeyName()) && (event.getOp() != null)
-        && KMSAudit.AGGREGATE_OPS_WHITELIST.contains(event.getOp())) {
-      switch (status) {
-      case OK:
-        auditLog.info(
-            "{}[op={}, key={}, user={}, accessCount={}, interval={}ms] {}",
-            status, event.getOp(), event.getKeyName(), event.getUser(),
-            event.getAccessCount().get(),
-            (event.getEndTime() - event.getStartTime()), event.getExtraMsg());
-        break;
-      case UNAUTHORIZED:
-        logAuditSimpleFormat(status, event);
-        break;
-      default:
-        logAuditSimpleFormat(status, event);
-        break;
-      }
-    } else {
-      logAuditSimpleFormat(status, event);
+    @Override
+    public void logAuditEvent(final OpStatus status, final AuditEvent event) {
+        if (!StringUtils.isEmpty(event.getUser()) && !StringUtils.isEmpty(event.getKeyName()) && (event.getOp() != null)
+                && KMSAudit.AGGREGATE_OPS_WHITELIST.contains(event.getOp())) {
+            switch (status) {
+                case OK:
+                    auditLog.info("{}[op={}, key={}, user={}, accessCount={}, interval={}ms] {}",
+                            status, event.getOp(), event.getKeyName(), event.getUser(),
+                            event.getAccessCount().get(), (event.getEndTime() - event.getStartTime()), event.getExtraMsg());
+                    break;
+                case UNAUTHORIZED:
+                    logAuditSimpleFormat(status, event);
+                    break;
+                default:
+                    logAuditSimpleFormat(status, event);
+                    break;
+            }
+        } else {
+            logAuditSimpleFormat(status, event);
+        }
     }
-  }
 
-  private void logAuditSimpleFormat(final OpStatus status,
-      final AuditEvent event) {
-    final List<String> kvs = new LinkedList<>();
-    if (event.getOp() != null) {
-      kvs.add("op=" + event.getOp());
+    private void logAuditSimpleFormat(final OpStatus status, final AuditEvent event) {
+        final List<String> kvs = new LinkedList<>();
+        if (event.getOp() != null) {
+            kvs.add("op=" + event.getOp());
+        }
+        if (!StringUtils.isEmpty(event.getKeyName())) {
+            kvs.add("key=" + event.getKeyName());
+        }
+        if (!StringUtils.isEmpty(event.getUser())) {
+            kvs.add("user=" + event.getUser());
+        }
+        if (kvs.isEmpty()) {
+            auditLog.info("{} {}", status, event.getExtraMsg());
+        } else {
+            final String join = Joiner.on(", ").join(kvs);
+            auditLog.info("{}[{}] {}", status, join, event.getExtraMsg());
+        }
     }
-    if (!Strings.isNullOrEmpty(event.getKeyName())) {
-      kvs.add("key=" + event.getKeyName());
-    }
-    if (!Strings.isNullOrEmpty(event.getUser())) {
-      kvs.add("user=" + event.getUser());
-    }
-    if (kvs.isEmpty()) {
-      auditLog.info("{} {}", status, event.getExtraMsg());
-    } else {
-      final String join = Joiner.on(", ").join(kvs);
-      auditLog.info("{}[{}] {}", status, join, event.getExtraMsg());
-    }
-  }
 }

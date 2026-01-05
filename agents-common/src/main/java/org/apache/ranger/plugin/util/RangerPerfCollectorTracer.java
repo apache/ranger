@@ -21,17 +21,31 @@ package org.apache.ranger.plugin.util;
 
 import org.slf4j.Logger;
 
+import java.lang.management.ThreadInfo;
+
 public class RangerPerfCollectorTracer extends RangerPerfTracer {
-	private final long   startTimeNanos;
+    public RangerPerfCollectorTracer(Logger logger, String tag, String data, ThreadInfo threadInfo) {
+        super(logger, tag, data, threadInfo);
+    }
 
-	public RangerPerfCollectorTracer(Logger logger, String tag, String data) {
-		super(logger, tag, data);
-		startTimeNanos = System.nanoTime();
-	}
+    @Override
+    public void log() {
+        // Uncomment following line if the perf log for each individual call details to this needs to be logged in the perf log
+        //super.log();
+        long elapsedTime        = Math.max(getElapsedUserTime(), getElapsedCpuTime());
+        long reportingThreshold = threadInfo == null ? 0L : (1000000 / 1000 - 1); // just about a microsecond
 
-	@Override
-	public void log() {
-		// Collect elapsed time in microseconds
-		PerfDataRecorder.recordStatistic(tag, ((System.nanoTime() - startTimeNanos) + 500) / 1000);
-	}
+        if (elapsedTime > reportingThreshold) {
+            PerfDataRecorder.recordStatistic(tag, (getElapsedCpuTime() + 500) / 1000, (getElapsedUserTime() + 500) / 1000);
+        }
+    }
+
+    @Override
+    public void logAlways() {
+        // Uncomment following line if the perf log for each individual call details to this needs to be logged in the perf log
+        //super.logAlways();
+
+        // Collect elapsed time in microseconds
+        PerfDataRecorder.recordStatistic(tag, (getElapsedCpuTime() + 500) / 1000, (getElapsedUserTime() + 500) / 1000);
+    }
 }

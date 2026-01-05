@@ -20,11 +20,10 @@ package org.apache.ranger.entity;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
+
 import java.util.Objects;
 
 @MappedSuperclass
-@XmlRootElement
 public abstract class XXSecurityZoneBase extends XXDBBase {
     private static final long serialVersionUID = 1L;
 
@@ -38,33 +37,58 @@ public abstract class XXSecurityZoneBase extends XXDBBase {
     @Column(name = "jsonData")
     protected String jsonData;
 
+    @Column(name = "gz_jsonData")
+    protected byte[] gzJsonData;
+
     @Column(name = "description")
     protected String description;
 
-    public Long getVersion() { return version; }
-    public String getName() { return name; }
-    public String getJsonData() { return jsonData; }
-    public String getDescription() { return description; }
+    public Long getVersion() {
+        return version;
+    }
+
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getJsonData() {
+        return jsonData;
+    }
+
     public void setJsonData(String jsonData) {
         this.jsonData = jsonData;
     }
+
+    public byte[] getGzJsonData() {
+        return gzJsonData;
+    }
+
+    public void setGzJsonData(byte[] gzJsonData) {
+        this.gzJsonData = gzJsonData;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), version, name, jsonData, gzJsonData);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
@@ -72,19 +96,15 @@ public abstract class XXSecurityZoneBase extends XXDBBase {
 
         return Objects.equals(version, other.version) &&
                 Objects.equals(name, other.name) &&
-                Objects.equals(jsonData, other.jsonData);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), version, name, jsonData);
+                Objects.equals(jsonData, other.jsonData) &&
+                Objects.equals(gzJsonData, other.gzJsonData);
     }
 
     @Override
     public String toString() {
         String str = "XXSecurityZoneBase={";
         str += super.toString();
-        str += " [version=" + version + ", name=" + name + ", jsonData=" + jsonData + "]";
+        str += " [version=" + version + ", name=" + name + ", jsonData=" + jsonData + ", gzJsonData=" + gzJsonData + "]";
         str += "}";
         return str;
     }

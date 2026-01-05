@@ -19,31 +19,43 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-import org.junit.Test;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class RangerAbstractResourceMatcherTest {
-
     @Test
     public void test_isAllPossibleValues() {
         RangerAbstractResourceMatcher matcher = new AbstractMatcherWrapper();
-        for (String resource : new String[] { null, "", "*"}) {
+
+        for (String resource : new String[] {null, "", "*"}) {
             assertTrue(matcher.isAllValuesRequested(resource));
         }
 
-        for (String resource : new String[] { " ", "\t", "\n", "foo"}) {
+        for (String resource : new String[] {" ", "\t", "\n", "foo"}) {
             assertFalse(matcher.isAllValuesRequested(resource));
         }
     }
 
     static class AbstractMatcherWrapper extends RangerAbstractResourceMatcher {
+        @Override
+        public ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+            fail("This method is not expected to be used by test!");
+
+            return RangerAccessRequest.ResourceElementMatchType.NONE;
+        }
 
         @Override
-        public boolean isMatch(Object resource, Map<String, Object> evalContext) {
+        public boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
             fail("This method is not expected to be used by test!");
+
             return false;
         }
     }

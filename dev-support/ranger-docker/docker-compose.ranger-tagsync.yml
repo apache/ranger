@@ -1,14 +1,23 @@
-version: '3'
 services:
   ranger-tagsync:
     build:
       context: .
       dockerfile: Dockerfile.ranger-tagsync
       args:
-        - RANGER_VERSION=${RANGER_VERSION}
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
+        - TAGSYNC_VERSION=${TAGSYNC_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-tagsync
     container_name: ranger-tagsync
-    hostname: ranger-tagsync.example.com
+    hostname: ranger-tagsync.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-tagsync:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/tagsync/ranger-tagsync-tags.json:/home/ranger/scripts/ranger-tagsync-tags.json
+      - ./scripts/tagsync/ranger-tagsync-install.properties:/opt/ranger/tagsync/install.properties
     stdin_open: true
     tty: true
     networks:
@@ -17,7 +26,9 @@ services:
       ranger:
         condition: service_started
     environment:
-      - RANGER_VERSION
+      - TAGSYNC_VERSION
+      - DEBUG_TAGSYNC=${DEBUG_TAGSYNC:-false}
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

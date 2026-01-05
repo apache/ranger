@@ -19,26 +19,20 @@
 
 package org.apache.ranger.plugin.store;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Map;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StoredServiceResource implements java.io.Serializable {
     private final Map<String, RangerPolicy.RangerPolicyResource> resourceElements;
-    private final String                            ownerName;
-    private final Map<String, String>               additionalInfo;
+    private final String                                         ownerName;
+    private final Map<String, String>                            additionalInfo;
 
     public StoredServiceResource() {
         this(null, null, null);
@@ -53,9 +47,11 @@ public class StoredServiceResource implements java.io.Serializable {
     public Map<String, RangerPolicy.RangerPolicyResource> getResourceElements() {
         return resourceElements;
     }
+
     public String getOwnerName() {
         return ownerName;
     }
+
     public Map<String, String> getAdditionalInfo() {
         return additionalInfo;
     }

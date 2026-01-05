@@ -32,15 +32,15 @@ END IF;
 GO
 
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_portal_user' and cname = 'other_attributes') THEN
-		ALTER TABLE dbo.x_portal_user ADD other_attributes varchar(4000) DEFAULT NULL NULL;
+		ALTER TABLE dbo.x_portal_user ADD other_attributes text DEFAULT NULL NULL;
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_user' and cname = 'other_attributes') THEN
-		ALTER TABLE dbo.x_user ADD other_attributes varchar(4000) DEFAULT NULL NULL;
+		ALTER TABLE dbo.x_user ADD other_attributes text DEFAULT NULL NULL;
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_group' and cname = 'other_attributes') THEN
-		ALTER TABLE dbo.x_group ADD other_attributes varchar(4000) DEFAULT NULL NULL;
+		ALTER TABLE dbo.x_group ADD other_attributes text DEFAULT NULL NULL;
 END IF;
 GO
 exit

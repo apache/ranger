@@ -19,14 +19,13 @@
 
 package org.apache.ranger.plugin.store;
 
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
 
-public interface SecurityZoneStore {
+import java.util.List;
+import java.util.Map;
 
+public interface SecurityZoneStore {
     void init() throws Exception;
 
     RangerSecurityZone createSecurityZone(RangerSecurityZone securityZone) throws Exception;
@@ -44,6 +43,4 @@ public interface SecurityZoneStore {
     List<RangerSecurityZone> getSecurityZones(SearchFilter filter) throws Exception;
 
     Map<String, RangerSecurityZone.RangerSecurityZoneService> getSecurityZonesForService(String serviceName);
-
 }
-

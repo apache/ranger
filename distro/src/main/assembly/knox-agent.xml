@@ -42,9 +42,13 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-plugins-audit</include>
+        <include>org.apache.ranger:ranger-audit-core</include>
+        <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
+        <include>org.apache.ranger:ranger-audit-dest-solr</include>
+        <include>org.apache.ranger:ranger-authz-api</include>
         <include>org.apache.ranger:ranger-plugins-cred</include>
         <include>org.apache.ranger:ranger-plugins-common</include>
+        <include>org.apache.ranger:ugsync-util</include>
         <include>org.apache.ranger:ranger-knox-plugin</include>
       </includes>
       <binaries>
@@ -64,9 +68,9 @@
           <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
           <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
-          <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
-          <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
@@ -83,6 +87,11 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -98,21 +107,19 @@
         <includeDependencies>true</includeDependencies>
         <unpack>false</unpack>
         <includes>
+          <include>com.fasterxml.woodstox:woodstox-core</include>
           <include>commons-cli:commons-cli</include>
           <include>commons-collections:commons-collections</include>
-          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-          <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
-          <include>commons-lang:commons-lang</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
-          <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-          <include>org.codehaus.woodstox:stax2-api</include>
-          <include>com.fasterxml.woodstox:woodstox-core</include>
-          <include>org.apache.htrace:htrace-core4</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+          <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>org.codehaus.woodstox:stax2-api</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
         </includes>
       </binaries>
     </moduleSet>

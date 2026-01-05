@@ -19,82 +19,109 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
 
+import static org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType.NONE;
 
 public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultResourceMatcher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultResourceMatcher.class);
 
-	@Override
-	public boolean isMatch(Object resource, Map<String, Object> evalContext) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + ")");
-		}
+    @Override
+    public ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        LOG.debug("==> RangerDefaultResourceMatcher.getMatchType({}, {})", resource, evalContext);
 
-		boolean ret = false;
-		boolean allValuesRequested = isAllValuesRequested(resource);
+        ResourceElementMatchType ret                = NONE;
+        boolean                  allValuesRequested = isAllValuesRequested(resource);
+        boolean                  isPrefixMatch      = matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX;
 
-		if(allValuesRequested || isMatchAny) {
-			ret = isMatchAny;
-		} else {
-			if (resource instanceof String) {
-				String strValue = (String) resource;
+        if (isMatchAny || (allValuesRequested && !isPrefixMatch)) {
+            ret = isMatchAny ? ResourceElementMatchType.SELF : NONE;
+        } else {
+            if (resource instanceof String) {
+                String strValue = (String) resource;
 
-				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
-					ret = resourceMatcher.isMatch(strValue, evalContext);
-					if (ret) {
-						break;
-					}
-				}
-			} else if (resource instanceof Collection) {
-				@SuppressWarnings("unchecked")
-				Collection<String> collValue = (Collection<String>) resource;
+                for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
+                    ResourceElementMatchType matchType = resourceMatcher.getMatchType(strValue, matchingScope, evalContext);
 
-				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
-					ret = resourceMatcher.isMatchAny(collValue, evalContext);
-					if (ret) {
-						break;
-					}
-				}
-			}
+                    if (matchType != NONE) {
+                        ret = matchType;
+                    }
 
-		}
+                    if (ret == ResourceElementMatchType.SELF) {
+                        break;
+                    }
+                }
+            } else if (resource instanceof Collection) {
+                @SuppressWarnings("unchecked")
+                Collection<String> resourceValues = (Collection<String>) resource;
 
-		ret = applyExcludes(allValuesRequested, ret);
+                for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
+                    for (String resourceValue : resourceValues) {
+                        ResourceElementMatchType matchType = resourceMatcher.getMatchType(resourceValue, matchingScope, evalContext);
 
-		if (ret == false) {
-			if(LOG.isDebugEnabled()) {
-				StringBuilder sb = new StringBuilder();
-				sb.append("[");
-				for (String policyValue: policyValues) {
-					sb.append(policyValue);
-					sb.append(" ");
-				}
-				sb.append("]");
+                        if (matchType != NONE) {
+                            ret = matchType;
+                        }
 
-				LOG.debug("RangerDefaultResourceMatcher.isMatch returns FALSE, (resource=" + resource + ", policyValues=" + sb.toString() + ")");
-			}
-		}
+                        if (ret == ResourceElementMatchType.SELF) {
+                            break;
+                        }
+                    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + "): " + ret);
-		}
+                    if (ret == ResourceElementMatchType.SELF) {
+                        break;
+                    }
+                }
+            }
+        }
 
-		return ret;
-	}
+        ret = applyExcludes(allValuesRequested, ret);
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("RangerDefaultResourceMatcher={");
+        LOG.debug("<== RangerDefaultResourceMatcher.getMatchType({}, {}): {}", resource, evalContext, ret);
 
-		super.toString(sb);
+        return ret;
+    }
 
-		sb.append("}");
+    @Override
+    public boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        LOG.debug("==> RangerDefaultResourceMatcher.isMatch({}, {})", resource, evalContext);
 
-		return sb;
-	}
+        ResourceElementMatchType matchType = getMatchType(resource, matchingScope, evalContext);
+        boolean                  ret       = ResourceMatcher.isMatch(matchType, matchingScope);
+
+        if (!ret) {
+            if (LOG.isDebugEnabled()) {
+                StringBuilder sb = new StringBuilder();
+
+                sb.append("[");
+                for (String policyValue : policyValues) {
+                    sb.append(policyValue);
+                    sb.append(" ");
+                }
+                sb.append("]");
+
+                LOG.debug("RangerDefaultResourceMatcher.isMatch returns FALSE, (resource={}, policyValues={})", resource, sb);
+            }
+        }
+
+        LOG.debug("<== RangerDefaultResourceMatcher.isMatch({}, {}): {}", resource, evalContext, ret);
+
+        return ret;
+    }
+
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerDefaultResourceMatcher={");
+
+        super.toString(sb);
+
+        sb.append("}");
+
+        return sb;
+    }
 }

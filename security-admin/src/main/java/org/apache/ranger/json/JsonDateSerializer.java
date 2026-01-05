@@ -17,34 +17,29 @@
  * under the License.
  */
 
- package org.apache.ranger.json;
+package org.apache.ranger.json;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.springframework.stereotype.Component;
-
 /**
  * Used to serialize Java.util.Date, which is not a common JSON type, so we have
  * to create a custom serialize method;.
- *
  */
 @Component
 public class JsonDateSerializer extends JsonSerializer<Date> {
+    private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
-	private static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
-	@Override
-	public void serialize(Date date, JsonGenerator gen,
-			SerializerProvider provider) throws IOException,
-			JsonProcessingException {
+    @Override
+    public void serialize(Date date, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        String formattedDate = new SimpleDateFormat(DATE_FORMAT).format(date);
 
-		String formattedDate = new SimpleDateFormat(DATE_FORMAT).format(date);
-		gen.writeString(formattedDate);
-	}
-
+        gen.writeString(formattedDate);
+    }
 }

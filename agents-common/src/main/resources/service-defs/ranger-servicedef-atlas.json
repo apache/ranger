@@ -21,8 +21,8 @@
 				"wildCard": "true",
 				"ignoreCase": "true"
 			},
-			"label": "Type Catagory",
-			"description": "Type Catagory"
+			"label": "Type Category",
+			"description": "Type Category"
 		},
 		{
 			"itemId": 2,
@@ -323,6 +323,7 @@
 			"itemId": 1,
 			"name": "type-create",
 			"label": "Create Type",
+			"category": "MANAGE",
 			"impliedGrants":
 			[
 				"type-read"
@@ -332,6 +333,7 @@
 			"itemId": 2,
 			"name": "type-update",
 			"label": "Update Type",
+			"category": "MANAGE",
 			"impliedGrants":
 			[
 				"type-read"
@@ -341,6 +343,7 @@
 			"itemId": 3,
 			"name": "type-delete",
 			"label": "Delete Type",
+			"category": "MANAGE",
 			"impliedGrants":
 			[
 				"type-read"
@@ -349,92 +352,110 @@
 		{
 			"itemId": 4,
 			"name": "entity-read",
-			"label": "Read Entity"
+			"label": "Read Entity",
+			"category": "READ"
 		},
 		{
 			"itemId": 5,
 			"name": "entity-create",
-			"label": "Create Entity"
+			"label": "Create Entity",
+			"category": "CREATE"
 		},
 		{
 			"itemId": 6,
 			"name": "entity-update",
-			"label": "Update Entity"
+			"label": "Update Entity",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 7,
 			"name": "entity-delete",
-			"label": "Delete Entity"
+			"label": "Delete Entity",
+			"category": "DELETE"
 		},
 		{
 			"itemId": 8,
 			"name": "entity-add-classification",
-			"label": "Add Classification"
+			"label": "Add Classification",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 9,
 			"name": "entity-update-classification",
-			"label": "Update Classification"
+			"label": "Update Classification",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 10,
 			"name": "entity-remove-classification",
-			"label": "Remove Classification"
+			"label": "Remove Classification",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 11,
 			"name": "admin-export",
-			"label": "Admin Export"
+			"label": "Admin Export",
+			"category": "MANAGE"
 		},
 		{
 			"itemId": 12,
 			"name": "admin-import",
-			"label": "Admin Import"
+			"label": "Admin Import",
+			"category": "MANAGE"
 		},
 		{
 			"itemId": 13,
 			"name": "add-relationship",
-			"label": "Add Relationship"
+			"label": "Add Relationship",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 14,
 			"name": "update-relationship",
-			"label": "Update Relationship"
+			"label": "Update Relationship",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 15,
 			"name": "remove-relationship",
-			"label": "Remove Relationship"
+			"label": "Remove Relationship",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 16,
 			"name": "admin-purge",
-			"label": "Admin Purge"
+			"label": "Admin Purge",
+			"category": "MANAGE"
 		},
 		{
 			"itemId": 17,
 			"name": "entity-add-label",
-			"label": "Add Label"
+			"label": "Add Label",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 18,
 			"name": "entity-remove-label",
-			"label": "Remove Label"
+			"label": "Remove Label",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 19,
 			"name": "entity-update-business-metadata",
-			"label": "Update Business Metadata"
+			"label": "Update Business Metadata",
+			"category": "UPDATE"
 		},
 		{
 			"itemId": 20,
 			"name": "type-read",
-			"label": "Read Type"
+			"label": "Read Type",
+			"category": "READ"
 		},
 		{
 			"itemId": 21,
 			"name": "admin-audits",
-			"label": "Admin Audits"
+			"label": "Admin Audits",
+			"category": "MANAGE"
 		}
 	],
 	"configs": [
@@ -481,6 +502,7 @@
 		}
 	],
 	"options": {
-		"enableDenyAndExceptionsInPolicies": "true"
+		"enableDenyAndExceptionsInPolicies": "true",
+		"enableTagBasedPolicies":"false"
 	}
 }

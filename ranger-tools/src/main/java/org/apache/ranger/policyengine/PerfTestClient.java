@@ -19,9 +19,12 @@
 
 package org.apache.ranger.policyengine;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,130 +33,120 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class PerfTestClient extends Thread {
-	static final Logger LOG      = LoggerFactory.getLogger(PerfTestClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PerfTestClient.class);
 
-	final PerfTestEngine perfTestEngine;
-	final int clientId;
-	final URL requestFileURL;
-	final int maxCycles;
+    private static final Gson gson;
 
-	List<RequestData> requests = null;
-	private static Gson gson  = null;
+    final PerfTestEngine perfTestEngine;
+    final int            clientId;
+    final URL            requestFileURL;
+    final int            maxCycles;
 
-	static {
-		GsonBuilder builder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z");
-		gson = builder
-				.setPrettyPrinting()
-				.registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer(builder))
-				.registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer(builder))
-				.create();
-	}
+    List<RequestData> requests;
 
-	public PerfTestClient(final PerfTestEngine perfTestEngine, final int clientId,  final URL requestFileURL, final int maxCycles) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> PerfTestClient(clientId=" + clientId + ", maxCycles=" + maxCycles +")" );
-		}
+    public PerfTestClient(final PerfTestEngine perfTestEngine, final int clientId, final URL requestFileURL, final int maxCycles) {
+        LOG.debug("==> PerfTestClient(clientId={}, maxCycles={})", clientId, maxCycles);
 
-		this.perfTestEngine = perfTestEngine;
-		this.clientId = clientId;
-		this.requestFileURL = requestFileURL;
-		this.maxCycles = maxCycles;
+        this.perfTestEngine = perfTestEngine;
+        this.clientId       = clientId;
+        this.requestFileURL = requestFileURL;
+        this.maxCycles      = maxCycles;
 
-		setName("PerfTestClient-" + clientId);
-		setDaemon(true);
+        setName("PerfTestClient-" + clientId);
+        setDaemon(true);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== PerfTestClient(clientId=" + clientId + ", maxCycles=" + maxCycles +")" );
-		}
-	}
+        LOG.debug("<== PerfTestClient(clientId={}, maxCycles={})", clientId, maxCycles);
+    }
 
-	public boolean init() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> init()" );
-		}
+    public boolean init() {
+        LOG.debug("==> init()");
 
-		boolean ret = false;
+        boolean ret    = false;
 
-		Reader reader = null;
+        try (InputStream in = requestFileURL.openStream()) {
+            try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                Type listType = new TypeToken<List<RequestData>>() {}.getType();
 
-		try {
+                requests = gson.fromJson(reader, listType);
 
-			InputStream in = requestFileURL.openStream();
+                ret = true;
+            }
+        } catch (Exception excp) {
+            LOG.error("Error opening request data stream or loading load request data from file, URL={}", requestFileURL, excp);
+        }
 
-			reader = new InputStreamReader(in, Charset.forName("UTF-8"));
+        LOG.debug("<== init() : {}", ret);
 
-			Type listType = new TypeToken<List<RequestData>>() {
-			}.getType();
+        return ret;
+    }
 
-			requests = gson.fromJson(reader, listType);
+    @Override
+    public void run() {
+        LOG.debug("==> run()");
 
-			ret = true;
-		}
-		catch (Exception excp) {
-			LOG.error("Error opening request data stream or loading load request data from file, URL=" + requestFileURL, excp);
-		}
-		finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (Exception excp) {
-					LOG.error("Error closing file ", excp);
-				}
-			}
-		}
+        try {
+            for (int i = 0; i < maxCycles; i++) {
+                for (RequestData data : requests) {
+                    data.setResult(perfTestEngine.execute(data.getRequest()));
+                }
+            }
+        } catch (Exception excp) {
+            LOG.error("PerfTestClient.run() : interrupted! Exiting thread", excp);
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== init() : " + ret );
-		}
-		return ret;
-	}
+        LOG.debug("<== run()");
+    }
 
-	@Override
-	public void run() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> run()" );
-		}
+    private static class RequestData {
+        private String              name;
+        private RangerAccessRequest request;
+        private RangerAccessResult  result;
 
-		try {
-			for (int i = 0; i < maxCycles; i++) {
-				for (RequestData data : requests) {
-					data.setResult(perfTestEngine.execute(data.getRequest()));
-				}
-			}
-		} catch (Exception excp) {
-			LOG.error("PerfTestClient.run() : interrupted! Exiting thread", excp);
-		}
+        public RequestData() {
+            this(null, null, null);
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== run()" );
-		}
-	}
+        public RequestData(String name, RangerAccessRequest request, RangerAccessResult result) {
+            setName(name);
+            setRequest(request);
+            setResult(result);
+        }
 
-	private static class RequestData {
-		private String              name;
-		private RangerAccessRequest request;
-		private RangerAccessResult result;
+        public String getName() {
+            return name;
+        }
 
-		public RequestData() {
-			this(null, null, null);
-		}
+        public void setName(String name) {
+            this.name = name;
+        }
 
-		public RequestData(String name, RangerAccessRequest request, RangerAccessResult result) {
-			setName(name);
-			setRequest(request);
-			setResult(result);
-		}
+        public RangerAccessRequest getRequest() {
+            return request;
+        }
 
-		public String getName() {return name;}
-		public RangerAccessRequest getRequest() { return request;}
-		public RangerAccessResult getResult() { return result;}
+        public void setRequest(RangerAccessRequest request) {
+            this.request = request;
+        }
 
-		public void setName(String name) { this.name = name;}
-		public void setRequest(RangerAccessRequest request) { this.request = request;}
-		public void setResult(RangerAccessResult result) { this.result = result;}
-	}
+        public RangerAccessResult getResult() {
+            return result;
+        }
+
+        public void setResult(RangerAccessResult result) {
+            this.result = result;
+        }
+    }
+
+    static {
+        GsonBuilder builder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z");
+        gson = builder
+                .setPrettyPrinting()
+                .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer(builder))
+                .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer(builder))
+                .create();
+    }
 }

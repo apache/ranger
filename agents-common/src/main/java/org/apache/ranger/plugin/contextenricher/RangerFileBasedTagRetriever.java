@@ -19,149 +19,191 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class RangerFileBasedTagRetriever extends RangerTagRetriever {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerFileBasedTagRetriever.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerFileBasedTagRetriever.class);
 
+    int     tagFilesCount;
+    int     currentTagFileIndex;
+    boolean isInitial = true;
 
-	private URL serviceTagsFileURL;
-	private String serviceTagsFileName;
-	private Gson gsonBuilder;
-	private boolean deDupTags;
+    private URL    serviceTagsFileURL;
+    private String serviceTagsFileName;
 
-	@Override
-	public void init(Map<String, String> options) {
+    @Override
+    public void init(Map<String, String> options) {
+        LOG.debug("==> init()");
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> init()" );
-		}
+        String serviceTagsFileNameProperty = "serviceTagsFileName";
+        String serviceTagsDefaultFileName  = "/testdata/test_servicetags_hive.json";
+        String tagFilesCountProperty       = "tagFileCount";
 
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-				.setPrettyPrinting()
-				.create();
+        if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
+            // Open specified file from options- it should contain service-tags
+            serviceTagsFileName = options != null ? options.get(serviceTagsFileNameProperty) : null;
+            serviceTagsFileName = serviceTagsFileName == null ? serviceTagsDefaultFileName : serviceTagsFileName;
 
-		String serviceTagsFileNameProperty = "serviceTagsFileName";
-		String serviceTagsDefaultFileName = "/testdata/test_servicetags_hive.json";
-		String deDupTagsProperty          = "deDupTags";
+            if (options != null) {
+                String tagFilesCountStr = options.get(tagFilesCountProperty);
 
-		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
-			InputStream serviceTagsFileStream = null;
+                if (!StringUtils.isNotEmpty(tagFilesCountStr)) {
+                    try {
+                        tagFilesCount = Integer.parseInt(tagFilesCountStr);
+                    } catch (Exception e) {
+                        LOG.error("Exception while parsing tagFileCount option value:[{}]", tagFilesCountStr);
+                        LOG.error("Setting tagFilesCount to 0");
+                    }
+                }
+            }
 
+            if (StringUtils.isNotBlank(serviceTagsFileName)) {
+                serviceTagsFileURL = getTagFileURL(serviceTagsFileName);
+            }
 
-			// Open specified file from options- it should contain service-tags
+            isInitial = true;
+        } else {
+            LOG.error("FATAL: Cannot find service/serviceDef/serviceTagsFile to use for retrieving tags. Will NOT be able to retrieve tags.");
+        }
 
-			serviceTagsFileName = options != null? options.get(serviceTagsFileNameProperty) : null;
-			String deDupTagsVal = options != null? options.get(deDupTagsProperty) : "false";
-			deDupTags           = Boolean.parseBoolean(deDupTagsVal);
+        LOG.debug("<== init() : serviceTagsFileName={}", serviceTagsFileName);
+    }
 
-			serviceTagsFileName = serviceTagsFileName == null ? serviceTagsDefaultFileName : serviceTagsFileName;
+    @Override
+    public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) {
+        LOG.debug("==> retrieveTags(lastKnownVersion={}, lastActivationTimeInMillis={}, serviceTagsFilePath={}", lastKnownVersion, lastActivationTimeInMillis, serviceTagsFileName);
 
-			File f = new File(serviceTagsFileName);
+        ServiceTags serviceTags = readFromFile();
 
-			if (f.exists() && f.isFile() && f.canRead()) {
-				try {
-					serviceTagsFileStream = new FileInputStream(f);
-					serviceTagsFileURL = f.toURI().toURL();
-				} catch (FileNotFoundException exception) {
-					LOG.error("Error processing input file:" + serviceTagsFileName + " or no privilege for reading file " + serviceTagsFileName, exception);
-				} catch (MalformedURLException malformedException) {
-					LOG.error("Error processing input file:" + serviceTagsFileName + " cannot be converted to URL " + serviceTagsFileName, malformedException);
-				}
-			} else {
-				URL fileURL = getClass().getResource(serviceTagsFileName);
-				if (fileURL == null && !serviceTagsFileName.startsWith("/")) {
-					fileURL = getClass().getResource("/" + serviceTagsFileName);
-				}
+        LOG.debug("<== retrieveTags(lastKnownVersion={}, lastActivationTimeInMillis={}", lastKnownVersion, lastActivationTimeInMillis);
 
-				if (fileURL == null) {
-					fileURL = ClassLoader.getSystemClassLoader().getResource(serviceTagsFileName);
-					if (fileURL == null && !serviceTagsFileName.startsWith("/")) {
-						fileURL = ClassLoader.getSystemClassLoader().getResource("/" + serviceTagsFileName);
-					}
-				}
+        return serviceTags;
+    }
 
-				if (fileURL != null) {
-					try {
-						serviceTagsFileStream = fileURL.openStream();
-						serviceTagsFileURL = fileURL;
-					} catch (Exception exception) {
-						LOG.error(serviceTagsFileName + " is not a file", exception);
-					}
-				} else {
-					LOG.warn("Error processing input file: URL not found for " + serviceTagsFileName + " or no privilege for reading file " + serviceTagsFileName);
-				}
-			}
+    URL getTagFileURL(String fileName) {
+        URL         fileURL       = null;
+        InputStream tagFileStream = null;
+        File        f             = new File(fileName);
 
-			if (serviceTagsFileStream != null) {
-				try {
-					serviceTagsFileStream.close();
-				} catch (Exception e) {
-					// Ignore
-				}
-			}
+        if (f.exists() && f.isFile() && f.canRead()) {
+            try {
+                tagFileStream = new FileInputStream(f);
+                fileURL       = f.toURI().toURL();
+            } catch (FileNotFoundException exception) {
+                LOG.error("Error processing input file:{} or no privilege for reading file {}", fileName, fileName, exception);
+            } catch (MalformedURLException malformedException) {
+                LOG.error("Error processing input file:{} cannot be converted to URL {}", fileName, fileName, malformedException);
+            }
+        } else {
+            fileURL = getClass().getResource(fileName);
 
-		} else {
-			LOG.error("FATAL: Cannot find service/serviceDef/serviceTagsFile to use for retrieving tags. Will NOT be able to retrieve tags.");
-		}
+            if (fileURL == null) {
+                if (!fileName.startsWith("/")) {
+                    fileURL = getClass().getResource("/" + fileName);
+                }
+            }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== init() : serviceTagsFileName=" + serviceTagsFileName);
-		}
-	}
+            if (fileURL == null) {
+                fileURL = ClassLoader.getSystemClassLoader().getResource(fileName);
 
-	@Override
-	public ServiceTags retrieveTags(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+                if (fileURL == null) {
+                    if (!fileName.startsWith("/")) {
+                        fileURL = ClassLoader.getSystemClassLoader().getResource("/" + fileName);
+                    }
+                }
+            }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> retrieveTags(lastKnownVersion=" + lastKnownVersion + ", lastActivationTimeInMillis=" + lastActivationTimeInMillis + ", serviceTagsFilePath=" + serviceTagsFileName);
-		}
+            if (fileURL != null) {
+                try {
+                    tagFileStream = fileURL.openStream();
+                } catch (Exception exception) {
+                    fileURL = null;
 
-		ServiceTags serviceTags = null;
+                    LOG.error("{} is not a file", fileName, exception);
+                }
+            } else {
+                LOG.warn("Error processing input file: URL not found for {} or no privilege for reading file {}", fileName, fileName);
+            }
+        }
 
-		if (serviceTagsFileURL != null) {
-			try (
-				InputStream serviceTagsFileStream = serviceTagsFileURL.openStream();
-				Reader reader = new InputStreamReader(serviceTagsFileStream, Charset.forName("UTF-8"))
-			) {
+        if (tagFileStream != null) {
+            try {
+                tagFileStream.close();
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
 
-				serviceTags = gsonBuilder.fromJson(reader, ServiceTags.class);
+        return fileURL;
+    }
 
-				if (serviceTags.getTagVersion() <= lastKnownVersion) {
-					// No change in serviceTags
-					serviceTags = null;
-				} else {
-					if (deDupTags) {
-						final int countOfDuplicateTags = serviceTags.dedupTags();
-						LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + serviceTags.getTags().size() + "].");
-					}
-				}
-			} catch (IOException e) {
-				LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName);
-				throw e;
-			}
-		} else {
-			LOG.error("Error reading file: " + serviceTagsFileName);
-			throw new Exception("serviceTagsFileURL is null!");
-		}
+    private ServiceTags readFromFile() {
+        LOG.debug("==> RangerFileBasedTagRetriever.readFromFile: sourceFileName={}", serviceTagsFileName);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== retrieveTags(lastKnownVersion=" + lastKnownVersion + ", lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-		}
+        ServiceTags ret      = null;
+        String      fileName = serviceTagsFileName;
 
-		return serviceTags;
-	}
+        if (isInitial) {
+            isInitial = false;
 
+            if (serviceTagsFileURL != null) {
+                try (InputStream fileStream = serviceTagsFileURL.openStream(); Reader reader = new InputStreamReader(fileStream, StandardCharsets.UTF_8)) {
+                    ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
+
+                    if (ret.getIsTagsDeduped()) {
+                        final int countOfDuplicateTags = ret.dedupTags();
+
+                        LOG.info("Number of duplicate tags removed from the received serviceTags:[{}]. Number of tags in the de-duplicated serviceTags :[{}].", countOfDuplicateTags, ret.getTags().size());
+                    }
+                } catch (IOException e) {
+                    LOG.warn("Error processing input file: or no privilege for reading file {}", fileName, e);
+                }
+            } else {
+                LOG.error("Error reading file: {}", fileName);
+            }
+        } else if (tagFilesCount > 0) {
+            currentTagFileIndex = currentTagFileIndex % tagFilesCount;
+            fileName            = serviceTagsFileName + "_" + currentTagFileIndex + ".json";
+
+            URL fileURL = getTagFileURL(fileName);
+
+            if (fileURL != null) {
+                try (InputStream fileStream = fileURL.openStream(); Reader reader = new InputStreamReader(fileStream, StandardCharsets.UTF_8)) {
+                    ret = JsonUtils.jsonToObject(reader, ServiceTags.class);
+
+                    currentTagFileIndex++;
+
+                    if (ret.getIsTagsDeduped()) {
+                        final int countOfDuplicateTags = ret.dedupTags();
+
+                        LOG.info("Number of duplicate tags removed from the received serviceTags:[{}]. Number of tags in the de-duplicated serviceTags :[{}].", countOfDuplicateTags, ret.getTags().size());
+                    }
+                } catch (IOException e) {
+                    LOG.warn("Error processing input file: or no privilege for reading file {}", fileName, e);
+                }
+            } else {
+                LOG.error("Error reading file: {}", fileName);
+            }
+        }
+
+        LOG.debug("<== RangerFileBasedTagRetriever.readFromFile: sourceFileName={}", fileName);
+
+        return ret;
+    }
 }
-

@@ -43,15 +43,15 @@ delimiter ;;
 create procedure add_column_in_x_user_and_x_portal_user_and_x_group() begin
 
 if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_user' and column_name='other_attributes') then
-        ALTER TABLE x_user ADD other_attributes varchar(4000) DEFAULT NULL;
+        ALTER TABLE x_user ADD other_attributes text DEFAULT NULL;
 end if;
 
 if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_portal_user' and column_name='other_attributes') then
-        ALTER TABLE x_portal_user ADD other_attributes varchar(4000) DEFAULT NULL;
+        ALTER TABLE x_portal_user ADD other_attributes text DEFAULT NULL;
 end if;
 
 if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_group' and column_name='other_attributes') then
-        ALTER TABLE x_group ADD other_attributes varchar(4000) DEFAULT NULL;
+        ALTER TABLE x_group ADD other_attributes text DEFAULT NULL;
 end if;
 
 end;;

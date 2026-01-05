@@ -17,7 +17,7 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.security.web.filter;
@@ -27,11 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-public class RangerUsernamePasswordAuthenticationFilter extends
-	UsernamePasswordAuthenticationFilter {
-
-    private static final Logger logger = LoggerFactory
-	    .getLogger(RangerUsernamePasswordAuthenticationFilter.class);
+public class RangerUsernamePasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerUsernamePasswordAuthenticationFilter.class);
 
     /*
      * (non-Javadoc)
@@ -43,11 +40,10 @@ public class RangerUsernamePasswordAuthenticationFilter extends
      */
     @Override
     public void setRememberMeServices(RememberMeServices rememberMeServices) {
-	if (logger.isDebugEnabled()) {
-	    logger.debug("setRememberMeServices() enter: rememberMeServices="
-		    + rememberMeServices.toString());
-	}
-	super.setRememberMeServices(rememberMeServices);
-    }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("setRememberMeServices() enter: rememberMeServices={}", rememberMeServices.toString());
+        }
 
+        super.setRememberMeServices(rememberMeServices);
+    }
 }

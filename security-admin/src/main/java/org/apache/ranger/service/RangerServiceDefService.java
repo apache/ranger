@@ -17,11 +17,7 @@
 
 package org.apache.ranger.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -29,63 +25,80 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
-	private final RangerAdminConfig config;
+    private final RangerAdminConfig config;
 
-	public RangerServiceDefService() {
-		super();
+    public RangerServiceDefService() {
+        super();
 
-		this.config = RangerAdminConfig.getInstance();
-	}
+        this.config = RangerAdminConfig.getInstance();
+    }
 
-	@Override
-	protected void validateForCreate(RangerServiceDef vObj) {
+    public List<RangerServiceDef> getAllServiceDefs() {
+        List<XXServiceDef>     xxServiceDefList = getDao().getAll();
+        List<RangerServiceDef> serviceDefList   = new ArrayList<>();
 
-	}
+        for (XXServiceDef xxServiceDef : xxServiceDefList) {
+            RangerServiceDef serviceDef = populateViewBean(xxServiceDef);
 
-	@Override
-	protected void validateForUpdate(RangerServiceDef vObj, XXServiceDef entityObj) {
+            serviceDefList.add(serviceDef);
+        }
 
-	}
+        return serviceDefList;
+    }
 
-	@Override
-	protected XXServiceDef mapViewToEntityBean(RangerServiceDef vObj, XXServiceDef xObj, int OPERATION_CONTEXT) {
-		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
-	}
+    public RangerServiceDef getPopulatedViewObject(XXServiceDef xServiceDef) {
+        return this.populateViewBean(xServiceDef);
+    }
 
-	@Override
-	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDef xObj) {
-		RangerServiceDef ret =  super.mapEntityToViewBean(vObj, xObj);
+    @Override
+    protected void validateForCreate(RangerServiceDef vObj) {
+    }
 
-		Map<String, String> serviceDefOptions = ret.getOptions();
+    @Override
+    protected void validateForUpdate(RangerServiceDef vObj, XXServiceDef entityObj) {
+    }
 
-		if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES) == null) {
-			boolean enableDenyAndExceptionsInPoliciesHiddenOption = config.getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true);
-			if (enableDenyAndExceptionsInPoliciesHiddenOption || StringUtils.equalsIgnoreCase(ret.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-				serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "true");
-			} else {
-				serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "false");
-			}
-			ret.setOptions(serviceDefOptions);
-		}
-		return ret;
-	}
+    @Override
+    protected XXServiceDef mapViewToEntityBean(RangerServiceDef vObj, XXServiceDef xObj, int operationContext) {
+        return super.mapViewToEntityBean(vObj, xObj, operationContext);
+    }
 
-	public List<RangerServiceDef> getAllServiceDefs() {
-		List<XXServiceDef> xxServiceDefList = getDao().getAll();
-		List<RangerServiceDef> serviceDefList = new ArrayList<RangerServiceDef>();
+    @Override
+    protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDef xObj) {
+        RangerServiceDef    ret               = super.mapEntityToViewBean(vObj, xObj);
+        Map<String, String> serviceDefOptions = ret.getOptions();
 
-		for (XXServiceDef xxServiceDef : xxServiceDefList) {
-			RangerServiceDef serviceDef = populateViewBean(xxServiceDef);
-			serviceDefList.add(serviceDef);
-		}
-		return serviceDefList;
-	}
+        if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES) == null) {
+            boolean enableDenyAndExceptionsInPoliciesHiddenOption = config.getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true);
 
-	public RangerServiceDef getPopulatedViewObject(XXServiceDef xServiceDef) {
-		return this.populateViewBean(xServiceDef);
-	}
+            if (enableDenyAndExceptionsInPoliciesHiddenOption || StringUtils.equalsIgnoreCase(ret.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+                serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "true");
+            } else {
+                serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, "false");
+            }
+
+            ret.setOptions(serviceDefOptions);
+        }
+
+        if (serviceDefOptions.get(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES) == null) {
+            boolean enableTagBasedPoliciesHiddenOption = config.getBoolean("ranger.servicedef.enableTagBasedPolicies", true);
+
+            if (enableTagBasedPoliciesHiddenOption) {
+                serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, "true");
+            } else {
+                serviceDefOptions.put(RangerServiceDef.OPTION_ENABLE_TAG_BASED_POLICIES, "false");
+            }
+
+            ret.setOptions(serviceDefOptions);
+        }
+
+        return ret;
+    }
 }

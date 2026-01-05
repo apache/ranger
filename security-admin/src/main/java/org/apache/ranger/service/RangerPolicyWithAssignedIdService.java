@@ -17,7 +17,6 @@
 
 package org.apache.ranger.service;
 
-
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.entity.XXPolicyWithAssignedId;
@@ -27,44 +26,37 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RangerPolicyWithAssignedIdService extends RangerPolicyServiceBase<XXPolicyWithAssignedId, RangerPolicy> {
+    @Autowired
+    JSONUtil jsonUtil;
 
-	@Autowired
-	JSONUtil jsonUtil;
+    public RangerPolicy getPopulatedViewObject(XXPolicyWithAssignedId xPolicy) {
+        return this.populateViewBean(xPolicy);
+    }
 
-	@Override
-	protected XXPolicyWithAssignedId mapViewToEntityBean(RangerPolicy vObj, XXPolicyWithAssignedId xObj,
-			int OPERATION_CONTEXT) {
-		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
-	}
+    @Override
+    protected XXPolicyWithAssignedId mapViewToEntityBean(RangerPolicy vObj, XXPolicyWithAssignedId xObj, int operationContext) {
+        return super.mapViewToEntityBean(vObj, xObj, operationContext);
+    }
 
-	@Override
-	protected RangerPolicy mapEntityToViewBean(RangerPolicy vObj, XXPolicyWithAssignedId xObj) {
-		return super.mapEntityToViewBean(vObj, xObj);
-	}
+    @Override
+    protected RangerPolicy mapEntityToViewBean(RangerPolicy vObj, XXPolicyWithAssignedId xObj) {
+        return super.mapEntityToViewBean(vObj, xObj);
+    }
 
-	@Override
-	protected void validateForCreate(RangerPolicy vObj) {
-		// TODO Auto-generated method stub
+    @Override
+    protected RangerPolicy populateViewBean(XXPolicyWithAssignedId xPolicy) {
+        RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
 
-	}
+        return retriever.getPolicy(xPolicy.getId());
+    }
 
-	@Override
-	protected void validateForUpdate(RangerPolicy vObj, XXPolicyWithAssignedId entityObj) {
-		// TODO Auto-generated method stub
+    @Override
+    protected void validateForCreate(RangerPolicy vObj) {
+        // TODO Auto-generated method stub
+    }
 
-	}
-
-	@Override
-	protected RangerPolicy populateViewBean(XXPolicyWithAssignedId xPolicy) {
-		RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
-
-		RangerPolicy vPolicy = retriever.getPolicy(xPolicy.getId());
-
-		return vPolicy;
-	}
-
-	public RangerPolicy getPopulatedViewObject(XXPolicyWithAssignedId xPolicy) {
-		return this.populateViewBean(xPolicy);
-	}
-
+    @Override
+    protected void validateForUpdate(RangerPolicy vObj, XXPolicyWithAssignedId entityObj) {
+        // TODO Auto-generated method stub
+    }
 }

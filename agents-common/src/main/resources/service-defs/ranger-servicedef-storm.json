@@ -33,6 +33,7 @@
 			"itemId": 1,
 			"name": "submitTopology",
 			"label": "Submit Topology",
+			"category": "UPDATE",
 			"impliedGrants":
 			[
 				"fileUpload",
@@ -43,67 +44,78 @@
 		{
 			"itemId": 2,
 			"name": "fileUpload",
-			"label": "File Upload"
+			"label": "File Upload",
+			"category": "UPDATE"
 		},
 
 		{
 			"itemId": 5,
 			"name": "fileDownload",
-			"label": "File Download"
+			"label": "File Download",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 6,
 			"name": "killTopology",
-			"label": "Kill Topology"
+			"label": "Kill Topology",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 7,
 			"name": "rebalance",
-			"label": "Rebalance"
+			"label": "Rebalance",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 8,
 			"name": "activate",
-			"label": "Activate"
+			"label": "Activate",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 9,
 			"name": "deactivate",
-			"label": "Deactivate"
+			"label": "Deactivate",
+			"category": "MANAGE"
 		},
 
 		{
 			"itemId": 10,
 			"name": "getTopologyConf",
-			"label": "Get Topology Conf"
+			"label": "Get Topology Conf",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 11,
 			"name": "getTopology",
-			"label": "Get Topology"
+			"label": "Get Topology",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 12,
 			"name": "getUserTopology",
-			"label": "Get User Topology"
+			"label": "Get User Topology",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 13,
 			"name": "getTopologyInfo",
-			"label": "Get Topology Info"
+			"label": "Get Topology Info",
+			"category": "READ"
 		},
 
 		{
 			"itemId": 14,
 			"name": "uploadNewCredentials",
-			"label": "Upload New Credential"
+			"label": "Upload New Credential",
+			"category": "MANAGE"
 		}
 	],
 

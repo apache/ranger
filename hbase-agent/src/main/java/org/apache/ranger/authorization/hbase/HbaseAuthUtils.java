@@ -22,21 +22,21 @@ import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 
 public interface HbaseAuthUtils {
-	String ACCESS_TYPE_READ   = "read";
-	String ACCESS_TYPE_WRITE  = "write";
-	String ACCESS_TYPE_CREATE = "create";
-	String ACCESS_TYPE_ADMIN  = "admin";
-	String ACCESS_TYPE_EXECUTE  = "execute";
+    String ACCESS_TYPE_READ    = "read";
+    String ACCESS_TYPE_WRITE   = "write";
+    String ACCESS_TYPE_CREATE  = "create";
+    String ACCESS_TYPE_ADMIN   = "admin";
+    String ACCESS_TYPE_EXECUTE = "execute";
 
-	String getAccess(Action action);
+    String getAccess(Action action);
 
-	String getActionName(String access);
+    String getActionName(String access);
 
-	boolean isReadAccess(String access);
-	
-	boolean isWriteAccess(String access);
+    boolean isReadAccess(String access);
 
-	boolean isExecuteAccess(String access);
+    boolean isWriteAccess(String access);
 
-	String getTable(RegionCoprocessorEnvironment regionServerEnv);
+    boolean isExecuteAccess(String access);
+
+    String getTable(RegionCoprocessorEnvironment regionServerEnv);
 }

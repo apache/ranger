@@ -20,15 +20,12 @@
         Apache Ranger Build Release Tasks
     </description>
 	
-    <property name="release-dir"  value="target" />
-    <property name="incubationstr" value="" />     <!-- value="-incubating" -->
-	<property name="release-name" value="apache-ranger${incubationstr}-${ranger-release-version}" />
-
-	<property name="build-release-tar-file" value="${release-name}.tar.gz" />
+    <property name="release-dir"  value="target"/>
+	<property name="release-name" value="apache-ranger-${ranger-release-version}"/>
+	<property name="build-release-tar-file" value="${release-name}.tar.gz"/>
 
  	<target name="version-check">
-		<fail message="Missing ranger-release-version; -Dranger-release-version=&lt;version-number&gt; should be defined" 
-			  unless="ranger-release-version" />
+		<fail message="Missing ranger-release-version; -Dranger-release-version=&lt;version-number&gt; should be defined" unless="ranger-release-version"/>
     </target>
 	
 	<target name="build-release" depends="version-check">
@@ -41,37 +38,33 @@
 			<tarfileset prefix="${release-name}" dir=".">
 				<exclude name="*/bin/**" />
 				<exclude name="git" />
-				<exclude name="**/.DS_Store" />
-				<exclude name="**/.classpath" />
-				<exclude name="**/.gitignore" />
-				<exclude name="**/.project" />
-				<exclude name="**/.settings/**" />
-				<exclude name="**/target/**" />
-				<exclude name="hdfs-agent/dependency-reduced-pom.xml" />
-				<exclude name="winpkg/*" />
+				<exclude name="**/.DS_Store"/>
+				<exclude name="**/.classpath"/>
+				<exclude name="**/.gitignore"/>
+				<exclude name=".idea/**"/>
+				<exclude name="**/.project"/>
+				<exclude name="**/.settings/**"/>
+				<exclude name="**/target/**"/>
+				<exclude name="dev-support/ranger-docker/dist/**"/>
+				<exclude name="dev-support/ranger-docker/downloads/**"/>
+				<exclude name="hdfs-agent/dependency-reduced-pom.xml"/>
+				<exclude name="winpkg/*"/>
 			</tarfileset>
 		</tar>
-
 		<exec executable="gpg">
-			<arg value="--armor" />
-			<arg value="--output" />
-			<arg value="${release-dir}/${build-release-tar-file}.asc" />
-			<arg value="--detach-sig" />
-			<arg value="${release-dir}/${build-release-tar-file}" />
+			<arg value="--armor"/>
+			<arg value="--local-user"/>
+			<arg value="${signing-key}"/>
+			<arg value="--output"/>
+			<arg value="${release-dir}/${build-release-tar-file}.asc"/>
+			<arg value="--detach-sig"/>
+			<arg value="${release-dir}/${build-release-tar-file}"/>
 		</exec>
-
-                <exec executable="gpg" output="${release-dir}/${build-release-tar-file}.sha256" dir="${release-dir}">
-                        <arg value="--print-md" />
-                        <arg value="SHA256" />
-                        <arg value="${build-release-tar-file}" />
-                </exec>
-
-                <exec executable="gpg" output="${release-dir}/${build-release-tar-file}.sha512" dir="${release-dir}">
-                        <arg value="--print-md" />
-                        <arg value="SHA512" />
-                        <arg value="${build-release-tar-file}" />
-                </exec>
-
+		<exec executable="sha512sum" output="${release-dir}/${build-release-tar-file}.sha512" dir="${release-dir}">
+			<arg value="${build-release-tar-file}"/>
+		</exec>
+		<exec executable="sha256sum" output="${release-dir}/${build-release-tar-file}.sha256" dir="${release-dir}">
+			<arg value="${build-release-tar-file}"/>
+		</exec>
 	</target>
-
 </project>

@@ -24,21 +24,21 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RangerAuditFields<T extends XXDBBase> {
+    public <T extends XXDBBase, PARENT extends XXDBBase> T populateAuditFields(T xObj, PARENT parentObj) {
+        xObj.setCreateTime(parentObj.getCreateTime());
+        xObj.setUpdateTime(parentObj.getUpdateTime());
+        xObj.setAddedByUserId(parentObj.getAddedByUserId());
+        xObj.setUpdatedByUserId(parentObj.getUpdatedByUserId());
 
-	public <T extends XXDBBase, PARENT extends XXDBBase> T populateAuditFields(T xObj, PARENT parentObj) {
-		xObj.setCreateTime(parentObj.getCreateTime());
-		xObj.setUpdateTime(parentObj.getUpdateTime());
-		xObj.setAddedByUserId(parentObj.getAddedByUserId());
-		xObj.setUpdatedByUserId(parentObj.getUpdatedByUserId());
-		return xObj;
-	}
+        return xObj;
+    }
 
-	public <T extends XXDBBase> T populateAuditFieldsForCreate(T xObj) {
-		xObj.setCreateTime(DateUtil.getUTCDate());
-		xObj.setUpdateTime(DateUtil.getUTCDate());
-		xObj.setAddedByUserId(ContextUtil.getCurrentUserId());
-		xObj.setUpdatedByUserId(ContextUtil.getCurrentUserId());
-		return xObj;
-	}
+    public <T extends XXDBBase> T populateAuditFieldsForCreate(T xObj) {
+        xObj.setCreateTime(DateUtil.getUTCDate());
+        xObj.setUpdateTime(DateUtil.getUTCDate());
+        xObj.setAddedByUserId(ContextUtil.getCurrentUserId());
+        xObj.setUpdatedByUserId(ContextUtil.getCurrentUserId());
 
+        return xObj;
+    }
 }

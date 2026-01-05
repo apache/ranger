@@ -17,36 +17,33 @@
  * under the License.
  */
 
- package org.apache.ranger.unixusersync.model;
+package org.apache.ranger.unixusersync.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.apache.ranger.ugsyncutil.model.XUserInfo;
 
 import java.util.List;
 
-import com.google.gson.annotations.SerializedName;
-import org.apache.ranger.ugsyncutil.model.XUserInfo;
-
+@JsonSerialize
 public class GetXUserListResponse {
+    @JsonProperty("vXUsers")
+    List<XUserInfo> xuserInfoList;
+    private int totalCount;
 
-	private int totalCount;
+    public int getTotalCount() {
+        return totalCount;
+    }
 
-	@SerializedName("vXUsers")
-	List<XUserInfo> xuserInfoList;
-	
-	public int getTotalCount() {
-		return totalCount;
-	}
+    public void setTotalCount(int totalCount) {
+        this.totalCount = totalCount;
+    }
 
-	public void setTotalCount(int totalCount) {
-		this.totalCount = totalCount;
-	}
+    public List<XUserInfo> getXuserInfoList() {
+        return xuserInfoList;
+    }
 
-	public List<XUserInfo> getXuserInfoList() {
-		return xuserInfoList;
-	}
-
-	public void setXuserInfoList(List<XUserInfo> xuserInfoList) {
-		this.xuserInfoList = xuserInfoList;
-	}
-
-	
-	
+    public void setXuserInfoList(List<XUserInfo> xuserInfoList) {
+        this.xuserInfoList = xuserInfoList;
+    }
 }

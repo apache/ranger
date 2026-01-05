@@ -19,30 +19,26 @@
 
 package org.apache.ranger.plugin.model;
 
-
-import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 
-
 public class TestRangerService {
-
     @Test
     public void test_configToString() {
         RangerService svc = new RangerService("hdfs", "dev_hdfs", "HDFS", "dev_tag", new HashMap<>());
         String        str = svc.toString();
 
-        Assert.assertTrue(!StringUtils.containsIgnoreCase(str, RangerService.CONFIG_PASSWORD));
-
+        Assertions.assertFalse(StringUtils.containsIgnoreCase(str, RangerService.CONFIG_PASSWORD));
 
         svc.getConfigs().put(RangerService.CONFIG_PASSWORD, "test1234");
 
         str = svc.toString();
 
-        Assert.assertTrue(StringUtils.containsIgnoreCase(str, RangerService.CONFIG_PASSWORD));
-        Assert.assertTrue(!StringUtils.containsIgnoreCase(str, "test1234"));
-        Assert.assertTrue(StringUtils.containsIgnoreCase(str, RangerService.MASKED_PASSWORD_VALUE));
+        Assertions.assertTrue(StringUtils.containsIgnoreCase(str, RangerService.CONFIG_PASSWORD));
+        Assertions.assertFalse(StringUtils.containsIgnoreCase(str, "test1234"));
+        Assertions.assertTrue(StringUtils.containsIgnoreCase(str, RangerService.MASKED_PASSWORD_VALUE));
     }
 }

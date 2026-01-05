@@ -18,42 +18,33 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-import java.util.Set;
-
 import org.apache.hadoop.hbase.security.User;
 
+import java.util.Set;
+
 public interface HbaseUserUtils {
-	/**
-	 * Returns user's short name or empty string if null is passed in.
-	 * @param user
-	 * @return
-	 */
-	String getUserAsString(User user);
+    /**
+     * Returns user's short name or empty string if null is passed in.
+     */
+    String getUserAsString(User user);
 
-	/**
-	 * Returns the groups to which user belongs to as known to User object.  For null values it returns an empty set.
-	 * @param user
-	 * @return
-	 */
-	Set<String> getUserGroups(User user);
+    /**
+     * Returns the groups to which user belongs to as known to User object.  For null values it returns an empty set.
+     */
+    Set<String> getUserGroups(User user);
 
-	/**
-	 * May return null in case of an error
-	 * @return
-	 */
-	User getUser();
-	
-	/**
-	 * Returns the user short name.  Returns an empty string if Hbase User of context can't be found.
-	 * @param request
-	 * @return
-	 */
-	String getUserAsString();
+    /**
+     * May return null in case of an error
+     */
+    User getUser();
 
-	/**
-	 * Returns true of specified user is configured to be a super user
-	 * @param user
-	 * @return
-	 */
-	boolean isSuperUser(User user);
+    /**
+     * Returns the user short name.  Returns an empty string if Hbase User of context can't be found.
+     */
+    String getUserAsString();
+
+    /**
+     * Returns true of specified user is configured to be a superuser
+     */
+    boolean isSuperUser(User user);
 }

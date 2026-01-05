@@ -19,27 +19,21 @@
 
 package org.apache.ranger.plugin.model;
 
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerServiceTags implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -47,7 +41,7 @@ public class RangerServiceTags implements java.io.Serializable {
     public static final String OP_DELETE  = "delete";  // delete tags associated with the given serviceResources
     public static final String OP_REPLACE = "replace"; // replace all resources and tags in the given serviceName with the given serviceResources and tags
 
-    private String                      op = OP_SET;
+    private String                      op               = OP_SET;
     private String                      serviceName;
     private Map<Long, RangerTagDef>     tagDefinitions;
     private Map<Long, RangerTag>        tags;
@@ -61,8 +55,8 @@ public class RangerServiceTags implements java.io.Serializable {
     }
 
     public RangerServiceTags(String op, String serviceName, Map<Long, RangerTagDef> tagDefinitions,
-                             Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources,
-                             Map<Long, List<Long>> resourceToTagIds, Long tagVersion, Date tagUpdateTime) {
+            Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources,
+            Map<Long, List<Long>> resourceToTagIds, Long tagVersion, Date tagUpdateTime) {
         setOp(op);
         setServiceName(serviceName);
         setTagDefinitions(tagDefinitions);
@@ -73,6 +67,31 @@ public class RangerServiceTags implements java.io.Serializable {
         setTagUpdateTime(tagUpdateTime);
     }
 
+    public static ServiceTags toServiceTags(RangerServiceTags tags) {
+        ServiceTags ret = null;
+
+        if (tags != null) {
+            ret = new ServiceTags(toServiceTagsOp(tags.getOp()), tags.getServiceName(),
+                    tags.tagVersion, tags.getTagUpdateTime(), tags.getTagDefinitions(), tags.getTags(),
+                    tags.getServiceResources(), tags.getResourceToTagIds(), false,
+                    ServiceTags.TagsChangeExtent.ALL, false);
+        }
+
+        return ret;
+    }
+
+    public static RangerServiceTags toRangerServiceTags(ServiceTags tags) {
+        RangerServiceTags ret = null;
+
+        if (tags != null) {
+            ret = new RangerServiceTags(toRangerServiceTagsOp(tags.getOp()), tags.getServiceName(),
+                    tags.getTagDefinitions(), tags.getTags(), tags.getServiceResources(),
+                    tags.getResourceToTagIds(), tags.getTagVersion(), tags.getTagUpdateTime());
+        }
+
+        return ret;
+    }
+
     /**
      * @return the op
      */
@@ -81,17 +100,17 @@ public class RangerServiceTags implements java.io.Serializable {
     }
 
     /**
-     * @return the serviceName
-     */
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    /**
      * @param op the op to set
      */
     public void setOp(String op) {
         this.op = op;
+    }
+
+    /**
+     * @return the serviceName
+     */
+    public String getServiceName() {
+        return serviceName;
     }
 
     /**
@@ -149,9 +168,8 @@ public class RangerServiceTags implements java.io.Serializable {
         this.tagUpdateTime = tagUpdateTime;
     }
 
-
     @Override
-    public String toString( ) {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         toString(sb);
@@ -161,36 +179,11 @@ public class RangerServiceTags implements java.io.Serializable {
 
     public StringBuilder toString(StringBuilder sb) {
         sb.append("RangerServiceTags={")
-          .append("op=").append(op).append(", ")
-          .append("serviceName=").append(serviceName).append(", ")
-          .append("}");
+                .append("op=").append(op).append(", ")
+                .append("serviceName=").append(serviceName).append(", ")
+                .append("}");
 
         return sb;
-    }
-
-    public static ServiceTags toServiceTags(RangerServiceTags tags) {
-        ServiceTags ret = null;
-
-        if (tags != null) {
-            ret = new ServiceTags(toServiceTagsOp(tags.getOp()), tags.getServiceName(),
-                                  tags.tagVersion, tags.getTagUpdateTime(), tags.getTagDefinitions(), tags.getTags(),
-                                  tags.getServiceResources(), tags.getResourceToTagIds(), false,
-                                  ServiceTags.TagsChangeExtent.ALL);
-        }
-
-        return ret;
-    }
-
-    public static RangerServiceTags toRangerServiceTags(ServiceTags tags) {
-        RangerServiceTags ret = null;
-
-        if (tags != null) {
-            ret = new RangerServiceTags(toRangerServiceTagsOp(tags.getOp()), tags.getServiceName(),
-                                        tags.getTagDefinitions(), tags.getTags(), tags.getServiceResources(),
-                                        tags.getResourceToTagIds(), tags.getTagVersion(), tags.getTagUpdateTime());
-        }
-
-        return ret;
     }
 
     private static String toServiceTagsOp(String rangerServiceTagsOp) {

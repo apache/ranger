@@ -19,8 +19,6 @@
 
 package org.apache.ranger.biz;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.ranger.amazon.cloudwatch.CloudWatchAccessAuditsService;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.SearchCriteria;
@@ -36,112 +34,134 @@ import org.apache.ranger.view.VXTrxLogList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.http.HttpServletResponse;
+
 @Component
 public class XAuditMgr extends XAuditMgrBase {
+    @Autowired
+    SolrAccessAuditsService solrAccessAuditsService;
 
-	@Autowired
-	SolrAccessAuditsService solrAccessAuditsService;
+    @Autowired
+    ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
 
-	@Autowired
-	ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
+    @Autowired
+    CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
 
-	@Autowired
-	CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
+    @Autowired
+    RangerBizUtil rangerBizUtil;
 
-	@Autowired
-	RangerBizUtil rangerBizUtil;
+    public VXTrxLog getXTrxLog(Long id) {
+        checkAllAdminsAccess();
 
-	public VXTrxLog getXTrxLog(Long id) {
-		checkAdminAccess();
-		return super.getXTrxLog(id);
-	}
+        return super.getXTrxLog(id);
+    }
 
-	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
-		checkAdminAccess();
-                rangerBizUtil.blockAuditorRoleUser();
-		return super.createXTrxLog(vXTrxLog);
-	}
+    public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
+        checkAdminAccess();
 
-	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
-		checkAdminAccess();
-                rangerBizUtil.blockAuditorRoleUser();
-		return super.updateXTrxLog(vXTrxLog);
-	}
+        rangerBizUtil.blockAuditorRoleUser();
 
-	public void deleteXTrxLog(Long id, boolean force) {
-		checkAdminAccess();
-                rangerBizUtil.blockAuditorRoleUser();
-		super.deleteXTrxLog(id, force);
-	}
+        return super.createXTrxLog(vXTrxLog);
+    }
 
-	public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
-		checkAdminAccess();
-		return super.searchXTrxLogs(searchCriteria);
-	}
+    public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
+        checkAdminAccess();
 
-	public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
-		checkAdminAccess();
-		return super.getXTrxLogSearchCount(searchCriteria);
-	}
+        rangerBizUtil.blockAuditorRoleUser();
 
-	public VXAccessAudit createXAccessAudit(VXAccessAudit vXAccessAudit) {
-		checkAdminAccess();
-		return super.createXAccessAudit(vXAccessAudit);
-	}
+        return super.updateXTrxLog(vXTrxLog);
+    }
 
-	public VXAccessAudit updateXAccessAudit(VXAccessAudit vXAccessAudit) {
-		checkAdminAccess();
-		return super.updateXAccessAudit(vXAccessAudit);
-	}
+    public void deleteXTrxLog(Long id, boolean force) {
+        checkAdminAccess();
 
-	public void deleteXAccessAudit(Long id, boolean force) {
-		checkAdminAccess();
-		super.deleteXAccessAudit(id, force);
-	}
+        rangerBizUtil.blockAuditorRoleUser();
 
-	public void checkAdminAccess() {
-		UserSessionBase session = ContextUtil.getCurrentUserSession();
-		if (session != null) {
-			if (!session.isUserAdmin()) {
-                                throw restErrorUtil.create403RESTException("Operation"
-                                                + " denied. LoggedInUser="
-                                                + session.getXXPortalUser().getId()
-						+ " ,isn't permitted to perform the action.");
-			}
-		} else {
-			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
-			vXResponse.setMsgDesc("Bad Credentials");
-			throw restErrorUtil.generateRESTException(vXResponse);
-		}
-	}
+        super.deleteXTrxLog(id, force);
+    }
 
-	@Override
-	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
-		String auditDBType = rangerBizUtil.getAuditDBType();
-		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
-			return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(auditDBType)) {
-			return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_CloudWatch.equalsIgnoreCase(auditDBType)) {
-			return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
-		} else {
-			return super.searchXAccessAudits(searchCriteria);
-		}
-	}
+    public VXTrxLogList searchXTrxLogs(SearchCriteria searchCriteria) {
+        checkAllAdminsAccess();
 
-	@Override
-	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
-		String auditDBType = rangerBizUtil.getAuditDBType();
-		if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
-			return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(auditDBType)) {
-			return elasticSearchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
-		} else if (RangerBizUtil.AUDIT_STORE_CloudWatch.equalsIgnoreCase(auditDBType)) {
-			return cloudWatchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
-		} else {
-			return super.getXAccessAuditSearchCount(searchCriteria);
-		}
-	}
+        return super.searchXTrxLogs(searchCriteria);
+    }
 
+    public VXLong getXTrxLogSearchCount(SearchCriteria searchCriteria) {
+        checkAllAdminsAccess();
+
+        return super.getXTrxLogSearchCount(searchCriteria);
+    }
+
+    public VXAccessAudit createXAccessAudit(VXAccessAudit vXAccessAudit) {
+        checkAdminAccess();
+
+        return super.createXAccessAudit(vXAccessAudit);
+    }
+
+    public VXAccessAudit updateXAccessAudit(VXAccessAudit vXAccessAudit) {
+        checkAdminAccess();
+
+        return super.updateXAccessAudit(vXAccessAudit);
+    }
+
+    public void deleteXAccessAudit(Long id, boolean force) {
+        checkAdminAccess();
+
+        super.deleteXAccessAudit(id, force);
+    }
+
+    @Override
+    public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
+        String auditDBType = rangerBizUtil.getAuditDBType();
+
+        if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
+            return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
+            return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(auditDBType)) {
+            return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else {
+            return super.searchXAccessAudits(searchCriteria);
+        }
+    }
+
+    @Override
+    public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
+        String auditDBType = rangerBizUtil.getAuditDBType();
+
+        if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(auditDBType)) {
+            return solrAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_ELASTIC_SEARCH.equalsIgnoreCase(auditDBType)) {
+            return elasticSearchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_CLOUD_WATCH.equalsIgnoreCase(auditDBType)) {
+            return cloudWatchAccessAuditsService.getXAccessAuditSearchCount(searchCriteria);
+        } else {
+            return super.getXAccessAuditSearchCount(searchCriteria);
+        }
+    }
+
+    public void checkAdminAccess() {
+        UserSessionBase session = ContextUtil.getCurrentUserSession();
+
+        if (session != null) {
+            if (!session.isUserAdmin()) {
+                throw restErrorUtil.create403RESTException("Operation" + " denied. LoggedInUser=" + session.getXXPortalUser().getId() + " ,isn't permitted to perform the action.");
+            }
+        } else {
+            VXResponse vXResponse = new VXResponse();
+
+            vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
+            vXResponse.setMsgDesc("Bad Credentials");
+
+            throw restErrorUtil.generateRESTException(vXResponse);
+        }
+    }
+
+    private boolean checkAllAdminsAccess() {
+        if (rangerBizUtil.isAdmin() || rangerBizUtil.isKeyAdmin() || rangerBizUtil.isAuditAdmin() || rangerBizUtil.isAuditKeyAdmin()) {
+            return true;
+        } else {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User doesn't have permissions to perform this action", true);
+        }
+    }
 }

@@ -30,3 +30,10 @@ else
 fi
 
 ./setup.py
+
+if [ "${DEBUG_TAGSYNC}" == "true" ]
+then
+  # shellcheck disable=SC2164
+  cd "${RANGER_HOME}"/tagsync/conf
+  xmlstarlet ed -L -u "//root/@level" -v "debug" logback.xml
+fi

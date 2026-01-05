@@ -29,18 +29,25 @@ class RangerBase(dict):
         return self.get(attr)
 
     def __setattr__(self, key, value):
-        self.__setitem__(key, value)
+        if value is None:
+            self.__delitem__(key)
+        else:
+            self.__setitem__(key, value)
 
     def __setitem__(self, key, value):
-        super(RangerBase, self).__setitem__(key, value)
-        self.__dict__.update({key: value})
+        if value is None:
+            self.__delitem__(key)
+        else:
+            super(RangerBase, self).__setitem__(key, value)
+            self.__dict__.update({key: value})
 
     def __delattr__(self, item):
         self.__delitem__(item)
 
     def __delitem__(self, key):
-        super(RangerBase, self).__delitem__(key)
-        del self.__dict__[key]
+        if key in self.__dict__:
+            super(RangerBase, self).__delitem__(key)
+            del self.__dict__[key]
 
     def __repr__(self):
         return json.dumps(self)
@@ -64,3 +71,27 @@ class RangerBaseModelObject(RangerBase):
         self.createTime = attrs.get('createTime')
         self.updateTime = attrs.get('updateTime')
         self.version    = attrs.get('version')
+
+class PList(RangerBase):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
+        RangerBase.__init__(self, attrs)
+
+        self.startIndex  = attrs.get('startIndex')
+        self.pageSize    = attrs.get('pageSize')
+        self.totalCount  = attrs.get('totalCount')
+        self.resultSize  = attrs.get('resultSize')
+        self.sortType    = attrs.get('sortType')
+        self.sortBy      = attrs.get('sortBy')
+        self.queryTimeMS = attrs.get('queryTimeMS')
+        self.list        = attrs.get('list')
+
+    def type_coerce_attrs(self):
+        super(PList, self).type_coerce_attrs()
+
+    def type_coerce_list(self, elemType):
+        self.list = type_coerce_list(self.list, elemType)
+
+        return self

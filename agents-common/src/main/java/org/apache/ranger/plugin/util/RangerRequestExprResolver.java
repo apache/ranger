@@ -25,80 +25,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
+
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 public class RangerRequestExprResolver {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerRequestExprResolver.class);
-
-    private static final String  REGEX_GROUP_EXPR   = "expr";
-    private static final String  SCRIPT_ENGINE_NAME = "JavaScript";
-    private static final Pattern PATTERN            = Pattern.compile("\\$\\{\\{(?<" + REGEX_GROUP_EXPR + ">.*?)\\}\\}");
-    public  static final String  EXPRESSION_START   = "${{";
-
-    private final String  str;
-    private final String  serviceType;
-    private final boolean hasTokens;
-
+    public static final  String  EXPRESSION_START = "${{";
+    private static final Logger  LOG              = LoggerFactory.getLogger(RangerRequestExprResolver.class);
+    private static final String  REGEX_GROUP_EXPR = "expr";
+    private static final Pattern PATTERN          = Pattern.compile("\\$\\{\\{(?<" + REGEX_GROUP_EXPR + ">.*?)\\}\\}");
+    private final        String  str;
+    private final        String  serviceType;
+    private final        boolean hasTokens;
 
     public RangerRequestExprResolver(String str, String serviceType) {
         this.str         = str;
         this.serviceType = serviceType;
         this.hasTokens   = hasExpressions(str);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("RangerRequestExprResolver(" + str + "): hasTokens=" + hasTokens);
-        }
+        LOG.debug("RangerRequestExprResolver({}): hasTokens={}", str, hasTokens);
     }
 
-    public String resolveExpressions(RangerAccessRequest request) {
-        String ret = str;
+    public static boolean hasExpressions(String str) {
+        boolean ret = false;
 
-        if (hasTokens) {
-            RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request);
-            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(SCRIPT_ENGINE_NAME, serviceType);
-            StringBuffer                 sb              = new StringBuffer();
-            Matcher                      matcher         = PATTERN.matcher(str);
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
 
-            while (matcher.find()) {
-                String expr = matcher.group(REGEX_GROUP_EXPR);
-                String val  = Objects.toString(scriptEvaluator.evaluateScript(scriptEngine, expr));
-
-                matcher.appendReplacement(sb, val);
-            }
-
-            matcher.appendTail(sb);
-
-            ret = sb.toString();
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("RangerRequestExprResolver.processExpressions(" + str + "): ret=" + ret);
-            }
+            ret = matcher.find();
         }
 
         return ret;
     }
 
-    public static boolean hasExpressions(String str) {
-        Matcher matcher = PATTERN.matcher(str);
-
-        return matcher.find();
-    }
-
     public static boolean hasUserAttributeInExpression(String str) {
         boolean ret = false;
-        Matcher matcher = PATTERN.matcher(str);
 
-        while (matcher.find()) {
-            String expr = matcher.group(REGEX_GROUP_EXPR);
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
 
-            if (RangerRequestScriptEvaluator.hasUserAttributeReference(expr)) {
-                ret = true;
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
 
-                break;
+                if (RangerRequestScriptEvaluator.hasUserAttributeReference(expr)) {
+                    ret = true;
+
+                    break;
+                }
             }
         }
 
@@ -106,16 +82,19 @@ public class RangerRequestExprResolver {
     }
 
     public static boolean hasGroupAttributeInExpression(String str) {
-        boolean ret     = false;
-        Matcher matcher = PATTERN.matcher(str);
+        boolean ret = false;
 
-        while (matcher.find()) {
-            String expr = matcher.group(REGEX_GROUP_EXPR);
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
 
-            if (RangerRequestScriptEvaluator.hasGroupAttributeReference(expr)) {
-                ret = true;
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
 
-                break;
+                if (RangerRequestScriptEvaluator.hasGroupAttributeReference(expr)) {
+                    ret = true;
+
+                    break;
+                }
             }
         }
 
@@ -123,16 +102,19 @@ public class RangerRequestExprResolver {
     }
 
     public static boolean hasUserGroupAttributeInExpression(String str) {
-        boolean ret     = false;
-        Matcher matcher = PATTERN.matcher(str);
+        boolean ret = false;
 
-        while (matcher.find()) {
-            String expr = matcher.group(REGEX_GROUP_EXPR);
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
 
-            if (RangerRequestScriptEvaluator.hasUserGroupAttributeReference(expr)) {
-                ret = true;
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
 
-                break;
+                if (RangerRequestScriptEvaluator.hasUserGroupAttributeReference(expr)) {
+                    ret = true;
+
+                    break;
+                }
             }
         }
 
@@ -182,6 +164,72 @@ public class RangerRequestExprResolver {
                     break;
                 }
             }
+        }
+
+        return ret;
+    }
+
+    /*
+     * replaces expressions in this.str with corresponding values in exprValues map (argument).
+     * For example, given the following:
+     *   1. this.str has value:   "dept = '${{USER.dept}}'"
+     *   2. exprValues has value: { "dept": "marketing" }
+     * This method returns: "dept = 'marketing'"
+     */
+    public String resolveExpressions(Map<String, Object> exprValues) {
+        String ret = str;
+
+        if (hasTokens) {
+            StringBuffer sb      = new StringBuffer();
+            Matcher      matcher = PATTERN.matcher(str);
+
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
+                Object oVal = exprValues.get(expr);
+                String val  = oVal == null ? "" : Objects.toString(oVal);
+
+                matcher.appendReplacement(sb, val);
+            }
+
+            matcher.appendTail(sb);
+
+            ret = sb.toString();
+
+            LOG.debug("RangerRequestExprResolver.resolveExpressions({}): ret={}", str, ret);
+        }
+
+        return ret;
+    }
+
+    /*
+     * replaces expressions in this.str with corresponding values in request (argument).
+     * For example, given the following:
+     *   1. this.str has value:                         "dept = '${{USER.dept}}'"
+     *   2. request.user has attribute dept with value: "marketing"
+     * This method returns: "dept = 'marketing'"
+     */
+    public String resolveExpressions(RangerAccessRequest request) {
+        String ret = str;
+
+        if (hasTokens) {
+            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(serviceType);
+            RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request, scriptEngine, RangerRequestScriptEvaluator.needsJsonCtxEnabled(str));
+            StringBuffer                 sb              = new StringBuffer();
+            Matcher                      matcher         = PATTERN.matcher(str);
+
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
+                Object oVal = scriptEvaluator.evaluateScript(expr);
+                String val  = oVal == null ? "" : Objects.toString(oVal);
+
+                matcher.appendReplacement(sb, val);
+            }
+
+            matcher.appendTail(sb);
+
+            ret = sb.toString();
+
+            LOG.debug("RangerRequestExprResolver.processExpressions({}): ret={}", str, ret);
         }
 
         return ret;

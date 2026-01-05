@@ -97,6 +97,7 @@
 			"itemId":1,
 			"name":"publish",
 			"label":"Publish",
+			"category": "UPDATE",
 			"impliedGrants":[
 				"describe"
 			]
@@ -105,6 +106,7 @@
 			"itemId":2,
 			"name":"consume",
 			"label":"Consume",
+			"category": "READ",
 			"impliedGrants":[
 				"describe"
 			]
@@ -113,6 +115,7 @@
 			"itemId":5,
 			"name":"configure",
 			"label":"Configure",
+			"category": "MANAGE",
 			"impliedGrants":[
 				"describe"
 			]
@@ -120,12 +123,14 @@
 		{
 			"itemId":6,
 			"name":"describe",
-			"label":"Describe"
+			"label":"Describe",
+			"category": "READ"
 		},
 		{
 			"itemId":7,
 			"name":"kafka_admin",
 			"label":"Kafka Admin",
+			"category": "MANAGE",
 			"impliedGrants":[
 				"publish",
 				"consume",
@@ -143,12 +148,14 @@
 		{
 			"itemId":8,
 			"name":"create",
-			"label":"Create"
+			"label":"Create",
+			"category": "CREATE"
 		},
 		{
 			"itemId":9,
 			"name":"delete",
 			"label":"Delete",
+			"category": "DELETE",
 			"impliedGrants":[
 				"describe"
 			]
@@ -156,17 +163,20 @@
 		{
 			"itemId":10,
 			"name":"idempotent_write",
-			"label":"Idempotent Write"
+			"label":"Idempotent Write",
+			"category": "UPDATE"
 		},
 		{
 			"itemId":11,
 			"name":"describe_configs",
-			"label":"Describe Configs"
+			"label":"Describe Configs",
+			"category": "READ"
 		},
 		{
 			"itemId":12,
 			"name":"alter_configs",
 			"label":"Alter Configs",
+			"category": "MANAGE",
 			"impliedGrants":[
 				"describe_configs"
 			]
@@ -174,12 +184,14 @@
 		{
 			"itemId":13,
 			"name":"cluster_action",
-			"label":"Cluster Action"
+			"label":"Cluster Action",
+			"category": "MANAGE"
 		},
 		{
 			"itemId":14,
 			"name":"alter",
-			"label":"Alter"
+			"label":"Alter",
+			"category": "MANAGE"
 		}
 	],
 	"configs":[
@@ -223,7 +235,7 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Ranger Default Audit Filters",
-			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES','ATLAS_HOOK','ATLAS_SPARK_HOOK']}},'users':['atlas'],'actions':['describe','publish','consume'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_HOOK']}},'users':['hive','hbase','impala','nifi'],'actions':['publish','describe'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['*']}},'users':['atlas','rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['kafka'],'isAudited':false}]"
+			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES','ATLAS_HOOK','ATLAS_SPARK_HOOK']}},'users':['atlas'],'actions':['describe','publish','consume'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_HOOK']}},'users':['hive','hbase','impala','nifi'],'actions':['publish','describe'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['consume','describe'],'isAudited':false},{'resources':{'consumergroup':{'values':['*']}},'users':['atlas','rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['kafka'],'isAudited':false},{'resources':{'topic':{'values':['__CruiseControlMetrics']}},'users':['cc_metric_reporter'],'actions':['describe','publish','consume'],'isAudited':false}]"
 		}
 	],
 	"enums":[
@@ -239,9 +251,9 @@
 			},
 			"validationRegEx":"",
 			"validationMessage":"",
-			"uiHint":"",
 			"label":"IP Address Range",
-			"description":"IP Address Range"
+			"description":"IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 	]
 }

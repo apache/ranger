@@ -18,78 +18,76 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
-
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+
 public class ColumnIterator implements Iterator<String> {
-	// TODO write tests for this class
-	
-	private static final Logger LOG = LoggerFactory.getLogger(ColumnIterator.class.getName());
-	Iterator<byte[]> _setIterator;
-	Iterator<Cell> _listIterator;
-	
-	@SuppressWarnings("unchecked")
-	public ColumnIterator(Collection<?> columnCollection) {
-		if (columnCollection != null) {
-			if (columnCollection instanceof Set) {
-				_setIterator = ((Set<byte[]>)columnCollection).iterator();
-			} else if (columnCollection instanceof List) {
-				_listIterator = ((List<Cell>)columnCollection).iterator();
-			} else { // unexpected
-				// TODO make message better
-				LOG.error("Unexpected type " + columnCollection.getClass().getName() + " passed as value in column family collection");
-			}
-		}
-	}
+    private static final Logger LOG = LoggerFactory.getLogger(ColumnIterator.class.getName());
 
-	@Override
-	public boolean hasNext() {
-		if (_setIterator != null) {
-			return _setIterator.hasNext();
-		} else if (_listIterator != null) {
-			return _listIterator.hasNext();
-		} else {
-			return false;
-		}
-	}
+    Iterator<byte[]> setIterator;
+    Iterator<Cell>   listIterator;
 
-	/**
-	 * Never returns a null value.  Will return empty string in case of null value.
-	 */
-	@Override
-	public String next() {
-		String value = "";
-		if (_setIterator != null) {
-			byte[] valueBytes = _setIterator.next();
-			if (valueBytes != null) {
-				value = Bytes.toString(valueBytes);
-			}
-		} else if (_listIterator != null) {
-			Cell cell = _listIterator.next();
-			byte[] v = CellUtil.cloneQualifier(cell);
-			if (v != null) {
-				value = Bytes.toString(v);
-			}
-		} else {
-			// TODO make the error message better
-			throw new NoSuchElementException("Empty values passed in!");
-		}
-		return value;
-	}
+    @SuppressWarnings("unchecked")
+    public ColumnIterator(Collection<?> columnCollection) {
+        if (columnCollection != null) {
+            if (columnCollection instanceof Set) {
+                setIterator = ((Set<byte[]>) columnCollection).iterator();
+            } else if (columnCollection instanceof List) {
+                listIterator = ((List<Cell>) columnCollection).iterator();
+            } else { // unexpected
+                // TODO make message better
+                LOG.error("Unexpected type {} passed as value in column family collection", columnCollection.getClass().getName());
+            }
+        }
+    }
 
-	@Override
-	public void remove() {
-		// TODO make the error message better
-		throw new UnsupportedOperationException("Remove not supported from iterator!");
-	}
+    @Override
+    public boolean hasNext() {
+        if (setIterator != null) {
+            return setIterator.hasNext();
+        } else if (listIterator != null) {
+            return listIterator.hasNext();
+        } else {
+            return false;
+        }
+    }
 
+    /**
+     * Never returns a null value.  Will return empty string in case of null value.
+     */
+    @Override
+    public String next() {
+        final String value;
+
+        if (setIterator != null) {
+            byte[] valueBytes = setIterator.next();
+
+            value = (valueBytes != null) ? Bytes.toString(valueBytes) : "";
+        } else if (listIterator != null) {
+            Cell   cell = listIterator.next();
+            byte[] v    = CellUtil.cloneQualifier(cell);
+
+            value = Bytes.toString(v);
+        } else {
+            // TODO make the error message better
+            throw new NoSuchElementException("Empty values passed in!");
+        }
+
+        return value;
+    }
+
+    @Override
+    public void remove() {
+        // TODO make the error message better
+        throw new UnsupportedOperationException("Remove not supported from iterator!");
+    }
 }

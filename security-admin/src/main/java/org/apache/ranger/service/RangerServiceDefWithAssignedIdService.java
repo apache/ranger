@@ -23,30 +23,25 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RangerServiceDefWithAssignedIdService extends RangerServiceDefServiceBase<XXServiceDefWithAssignedId, RangerServiceDef> {
+    public RangerServiceDef getPopulatedViewObject(XXServiceDefWithAssignedId xServiceDef) {
+        return this.populateViewBean(xServiceDef);
+    }
 
-	@Override
-	protected XXServiceDefWithAssignedId mapViewToEntityBean(RangerServiceDef vObj, XXServiceDefWithAssignedId xObj,
-			int OPERATION_CONTEXT) {
-		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
-	}
+    @Override
+    protected XXServiceDefWithAssignedId mapViewToEntityBean(RangerServiceDef vObj, XXServiceDefWithAssignedId xObj, int operationContext) {
+        return super.mapViewToEntityBean(vObj, xObj, operationContext);
+    }
 
-	@Override
-	protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDefWithAssignedId xObj) {
-		return super.mapEntityToViewBean(vObj, xObj);
-	}
+    @Override
+    protected RangerServiceDef mapEntityToViewBean(RangerServiceDef vObj, XXServiceDefWithAssignedId xObj) {
+        return super.mapEntityToViewBean(vObj, xObj);
+    }
 
-	@Override
-	protected void validateForCreate(RangerServiceDef vObj) {
+    @Override
+    protected void validateForCreate(RangerServiceDef vObj) {
+    }
 
-	}
-
-	@Override
-	protected void validateForUpdate(RangerServiceDef vServiceDef, XXServiceDefWithAssignedId xServiceDef) {
-
-	}
-
-	public RangerServiceDef getPopulatedViewObject(XXServiceDefWithAssignedId xServiceDef) {
-		return this.populateViewBean(xServiceDef);
-	}
-
+    @Override
+    protected void validateForUpdate(RangerServiceDef vServiceDef, XXServiceDefWithAssignedId xServiceDef) {
+    }
 }

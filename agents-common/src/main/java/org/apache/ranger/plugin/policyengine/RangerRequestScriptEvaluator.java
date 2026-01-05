@@ -20,14 +20,17 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
+import org.apache.ranger.plugin.util.JavaScriptEdits;
 import org.apache.ranger.plugin.util.MacroProcessor;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerTimeRangeChecker;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,1117 +38,1308 @@ import org.slf4j.LoggerFactory;
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
-
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACCESS_TIME;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACCESS_TYPE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_ACTION;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLIENT_IP_ADDRESS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLIENT_TYPE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLUSTER_NAME;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_CLUSTER_TYPE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_FORWARDED_ADDRESSES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_REMOTE_IP_ADDRESS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_REQUEST;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_REQUEST_DATA;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_RESOURCE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_RESOURCE_MATCHING_SCOPE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_TAG;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_TAGS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_TAG_NAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_UGA;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_USER;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_USER_ATTRIBUTES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_USER_GROUPS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_USER_GROUP_ATTRIBUTES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD_USER_ROLES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__MATCH_TYPE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__NAME;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__OWNER_USER;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_FIELD__TYPE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_ATTR;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_ATTR_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_ATTR_NAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_ATTR_NAMES_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_ATTR_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_ATTR_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_NAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_TAG_NAMES_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_ATTR;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_ATTR_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_ATTR_NAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_ATTR_NAMES_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_ATTR_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_ATTR_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_NAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UG_NAMES_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UR_NAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_UR_NAMES_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_USER_ATTR;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_USER_ATTR_NAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_USER_ATTR_NAMES_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_GET_USER_ATTR_Q;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_HAS_ANY_TAG;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_HAS_NO_TAG;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_HAS_TAG;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_HAS_TAG_ATTR;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_HAS_UG_ATTR;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_HAS_USER_ATTR;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_ACCESS_TIME_AFTER;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_ACCESS_TIME_BEFORE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_ACCESS_TIME_BETWEEN;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_IN_ANY_GROUP;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_IN_ANY_ROLE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_IN_GROUP;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_IN_ROLE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_TAG_ATTR_NAMES_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_TAG_ATTR_NAMES_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_TAG_NAMES_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_TAG_NAMES_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_UG_ATTR_NAMES_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_UG_NAMES_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_UG_NAMES_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_UR_NAMES_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_UR_NAMES_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_USER_ATTR_NAMES_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_POLYFILL_INCLUDES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_POLYFILL_INTERSECTS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_REQ;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_RES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_TAG;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_TAGNAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_TAGS;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_UG;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_UGA;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_UGNAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_URNAMES;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_USER;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR__CTX;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR__CTX_JSON;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_ctx;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_tag;
+import static org.apache.ranger.plugin.util.RangerCommonConstants.SCRIPT_VAR_tagAttr;
 
 public final class RangerRequestScriptEvaluator {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerRequestScriptEvaluator.class);
-
-	private static final Logger PERF_POLICY_CONDITION_SCRIPT_TOJSON         = RangerPerfTracer.getPerfLogger("policy.condition.script.tojson");
-	private static final Logger PERF_POLICY_CONDITION_SCRIPT_EVAL           = RangerPerfTracer.getPerfLogger("policy.condition.script.eval");
-	private static final String TAG_ATTR_DATE_FORMAT_PROP                   = "ranger.plugin.tag.attr.additional.date.formats";
-	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR              = "||";
-	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX        = "\\|\\|";
-	private static final String DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT    = "yyyy/MM/dd";
-	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
-	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-	private static final String SCRIPT_PREEXEC                              = SCRIPT_VAR__CTX + "=JSON.parse(" + SCRIPT_VAR__CTX_JSON + "); J=JSON.stringify;" +
-                                                                                 SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
-                                                                                 SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
-                                                                                 SCRIPT_VAR_USER + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ATTRIBUTES + ";" +
-                                                                                 SCRIPT_VAR_UGNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
-                                                                                 SCRIPT_VAR_UG + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
-                                                                                 SCRIPT_VAR_UGA + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_UGA + ";" +
-                                                                                 SCRIPT_VAR_URNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
-                                                                                 SCRIPT_VAR_TAG + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG + ";" +
-                                                                                 SCRIPT_VAR_TAGS + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAGS + ";" +
-                                                                                 SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
-	private static final Pattern JSON_VAR_NAMES_PATTERN   = Pattern.compile(getJsonVarNamesPattern());
-	private static final Pattern USER_ATTRIBUTES_PATTERN  = Pattern.compile(getUserAttributesPattern());
-	private static final Pattern GROUP_ATTRIBUTES_PATTERN = Pattern.compile(getGroupAttributesPattern());
-	private static final Character CHAR_QUOTE = '\'';
-	private static final Character CHAR_COMMA = ',';
-
-	private static final MacroProcessor MACRO_PROCESSOR = new MacroProcessor(getMacrosMap());
-
-	private static String[] dateFormatStrings = null;
-
-	private final RangerAccessRequest              accessRequest;
-	private       boolean                          initDone   = false;
-	private       Map<String, String>              userAttrs  = Collections.emptyMap();
-	private       Map<String, Map<String, String>> groupAttrs = Collections.emptyMap();
-	private       Map<String, Map<String, Object>> tags       = Collections.emptyMap();
-	private       Map<String, Object>              tag        = Collections.emptyMap();
-	private       Collection<String>               userGroups = Collections.emptySet();
-	private       Collection<String>               userRoles  = Collections.emptySet();
-	private       Collection<String>               tagNames   = Collections.emptySet();
-	private       Boolean                          result     = false;
-
-	static {
-		init(null);
-	}
-
-	private static final ThreadLocal<List<SimpleDateFormat>> THREADLOCAL_DATE_FORMATS =
-			new ThreadLocal<List<SimpleDateFormat>>() {
-				@Override protected List<SimpleDateFormat> initialValue() {
-					List<SimpleDateFormat> ret = new ArrayList<>();
-
-					for (String dateFormatString : dateFormatStrings) {
-						try {
-							if (StringUtils.isNotBlank(dateFormatString)) {
-								if (StringUtils.equalsIgnoreCase(dateFormatString, DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME)) {
-									dateFormatString = DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT;
-								}
-								SimpleDateFormat df = new SimpleDateFormat(dateFormatString);
-								df.setLenient(false);
-								ret.add(df);
-							}
-						} catch (Exception exception) {
-							// Ignore
-						}
-					}
-
-					return ret;
-				}
-			};
-
-
-	public static boolean needsJsonCtxEnabled(String script) {
-		Matcher matcher = JSON_VAR_NAMES_PATTERN.matcher(script);
-
-		boolean ret = matcher.find();
-
-		return ret;
-	}
-
-	public static boolean hasUserAttributeReference(String script) {
-		Matcher matcher = USER_ATTRIBUTES_PATTERN.matcher(script);
-
-		boolean ret = matcher.find();
-
-		return ret;
-	}
-
-	public static boolean hasGroupAttributeReference(String script) {
-		Matcher matcher = GROUP_ATTRIBUTES_PATTERN.matcher(script);
-
-		boolean ret = matcher.find();
-
-		return ret;
-	}
-
-	public static boolean hasUserGroupAttributeReference(String script) {
-		return hasUserAttributeReference(script) || hasGroupAttributeReference(script);
-	}
-
-	public static boolean hasUserGroupAttributeReference(Collection<String> scripts) {
-		boolean ret = false;
+    private static final Logger LOG = LoggerFactory.getLogger(RangerRequestScriptEvaluator.class);
+
+    private static final Logger  PERF_POLICY_CONDITION_SCRIPT_TOJSON          = RangerPerfTracer.getPerfLogger("policy.condition.script.tojson");
+    private static final Logger  PERF_POLICY_CONDITION_SCRIPT_EVAL            = RangerPerfTracer.getPerfLogger("policy.condition.script.eval");
+    private static final String  TAG_ATTR_DATE_FORMAT_PROP                    = "ranger.plugin.tag.attr.additional.date.formats";
+    private static final String  TAG_ATTR_DATE_FORMAT_SEPARATOR               = "||";
+    private static final String  TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX         = "\\|\\|";
+    private static final String  DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy/MM/dd";
+    private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
+    private static final String  DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT      = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    private static final String  SCRIPT_SAFE_PREEXEC                          = "Object.defineProperty(this,'engine',{value:null,writable:false});Object.defineProperty(this,'context',{value:null,writable:false});Object.defineProperty(this,'__noSuchProperty__',{value:null,writable:false});Object.defineProperty(this,'loadWithNewGlobal',{value:null,writable:false});exit=null;quit=null;";
+    private static final String  SCRIPT_PREEXEC                               = SCRIPT_VAR__CTX + "=JSON.parse(" + SCRIPT_VAR__CTX_JSON + "); J=JSON.stringify;" +
+            SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
+            SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
+            SCRIPT_VAR_USER + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ATTRIBUTES + ";" +
+            SCRIPT_VAR_UGNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
+            SCRIPT_VAR_UG + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
+            SCRIPT_VAR_UGA + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_UGA + ";" +
+            SCRIPT_VAR_URNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
+            SCRIPT_VAR_TAG + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG + ";" +
+            SCRIPT_VAR_TAGS + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAGS + ";" +
+            SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
+    private static final Pattern JSON_VAR_NAMES_PATTERN                       = Pattern.compile(getJsonVarNamesPattern());
+    private static final Pattern USER_ATTRIBUTES_PATTERN                      = Pattern.compile(getUserAttributesPattern());
+    private static final Pattern GROUP_ATTRIBUTES_PATTERN                     = Pattern.compile(getGroupAttributesPattern());
+    private static final String  STR_QUOTE                                    = "'";
+    private static final String  STR_COMMA                                    = ",";
+
+    private static final MacroProcessor MACRO_PROCESSOR = new MacroProcessor(getMacrosMap());
+
+    private static       String[]                            dateFormatStrings        = {};
+    private static final ThreadLocal<List<SimpleDateFormat>> THREADLOCAL_DATE_FORMATS = ThreadLocal.withInitial(() -> {
+        List<SimpleDateFormat> ret = new ArrayList<>();
+
+        for (String dateFormatString : dateFormatStrings) {
+            try {
+                if (StringUtils.isNotBlank(dateFormatString)) {
+                    if (StringUtils.equalsIgnoreCase(dateFormatString, DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME)) {
+                        dateFormatString = DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT;
+                    }
+                    SimpleDateFormat df = new SimpleDateFormat(dateFormatString);
+                    df.setLenient(false);
+                    ret.add(df);
+                }
+            } catch (Exception exception) {
+                // Ignore
+            }
+        }
+
+        return ret;
+    });
+
+    private final RangerAccessRequest                 accessRequest;
+    private final ScriptEngine                        scriptEngine;
+    private final Bindings                            bindings;
+    private       boolean                             initDone;
+    private       Map<String, String>                 userAttrs  = Collections.emptyMap();
+    private       Map<String, Map<String, String>>    groupAttrs = Collections.emptyMap();
+    private       Map<String, Map<String, Object>>    tags       = Collections.emptyMap();
+    private       Map<String, Object>                 tag        = Collections.emptyMap();
+    private       Collection<String>                  userGroups = Collections.emptySet();
+    private       Collection<String>                  userRoles  = Collections.emptySet();
+    private       Collection<String>                  tagNames   = Collections.emptySet();
+    private       boolean                             result;
+
+    public RangerRequestScriptEvaluator(RangerAccessRequest accessRequest, ScriptEngine scriptEngine) {
+        this(accessRequest, scriptEngine, true);
+    }
+
+    public RangerRequestScriptEvaluator(RangerAccessRequest accessRequest, ScriptEngine scriptEngine, boolean enableJsonCtx) {
+        this.accessRequest = accessRequest.getReadOnlyCopy();
+        this.scriptEngine  = scriptEngine;
+        this.bindings      = scriptEngine.createBindings();
+
+        RangerTagForEval    currentTag = this.getCurrentTag();
+        Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+
+        bindings.put(SCRIPT_VAR_ctx, this);
+        bindings.put(SCRIPT_VAR_tag, currentTag);
+        bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
+
+        String preExecScript = "";
+
+        if (enableJsonCtx) {
+            bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
+
+            preExecScript += SCRIPT_PREEXEC;
+        }
+
+        if (StringUtils.isNotBlank(preExecScript)) {
+            try {
+                scriptEngine.eval(preExecScript, bindings);
+            } catch (ScriptException excp) {
+                LOG.error("RangerRequestScriptEvaluator(): initialization failed", excp);
+            }
+        }
+    }
+
+    public static boolean needsJsonCtxEnabled(String script) {
+        boolean ret = false;
+
+        if (script != null) {
+            Matcher matcher = JSON_VAR_NAMES_PATTERN.matcher(script);
 
-		if (scripts != null) {
-			for (String script : scripts) {
-				if (hasUserGroupAttributeReference(script)) {
-					ret = true;
+            ret = matcher.find();
+        }
 
-					break;
-				}
-			}
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public static boolean hasUserAttributeReference(String script) {
+        boolean ret = false;
 
-	public static String expandMacros(String script) {
-		return MACRO_PROCESSOR.expandMacros(script);
-	}
+        if (script != null) {
+            Matcher matcher = USER_ATTRIBUTES_PATTERN.matcher(script);
 
-	public RangerRequestScriptEvaluator(final RangerAccessRequest accessRequest) {
-		this.accessRequest = accessRequest.getReadOnlyCopy();
-	}
+            ret = matcher.find();
+        }
 
-	public Object evaluateScript(ScriptEngine scriptEngine, String script) {
-		script = expandMacros(script);
+        return ret;
+    }
 
-		return evaluateScript(scriptEngine, script, needsJsonCtxEnabled(script));
-	}
+    public static boolean hasGroupAttributeReference(String script) {
+        boolean ret = false;
 
-	public Object evaluateConditionScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		script = expandMacros(script);
+        if (script != null) {
+            Matcher matcher = GROUP_ATTRIBUTES_PATTERN.matcher(script);
 
-		Object ret = evaluateScript(scriptEngine, script, enableJsonCtx);
+            ret = matcher.find();
+        }
 
-		if (ret == null) {
-			ret = getResult();
-		}
+        return ret;
+    }
 
-		if (ret instanceof Boolean) {
-			result = (Boolean) ret;
-		}
+    public static boolean hasUserGroupAttributeReference(String script) {
+        return hasUserAttributeReference(script) || hasGroupAttributeReference(script);
+    }
 
-		return ret;
-	}
+    public static boolean hasUserGroupAttributeReference(Collection<String> scripts) {
+        return scripts != null && scripts.stream().anyMatch(RangerRequestScriptEvaluator::hasUserGroupAttributeReference);
+    }
 
-	private Object evaluateScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		Object              ret        = null;
-		Bindings            bindings   = scriptEngine.createBindings();
-		RangerTagForEval    currentTag = this.getCurrentTag();
-		Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+    public static String expandMacros(String script) {
+        return MACRO_PROCESSOR.expandMacros(script);
+    }
 
-		bindings.put(SCRIPT_VAR_ctx, this);
-		bindings.put(SCRIPT_VAR_tag, currentTag);
-		bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
+    public static void init(Configuration config) {
+        StringBuilder sb = new StringBuilder(DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT);
 
-		if (enableJsonCtx) {
-			bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
+        sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME);
 
-			script = SCRIPT_PREEXEC + script;
-		}
+        String additionalDateFormatsValue = config != null ? config.get(TAG_ATTR_DATE_FORMAT_PROP) : null;
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerRequestScriptEvaluator.evaluateScript(): script={" + script + "}");
-		}
+        if (StringUtils.isNotBlank(additionalDateFormatsValue)) {
+            sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(additionalDateFormatsValue);
+        }
 
-		RangerPerfTracer perf = null;
+        String[] formatStrings = sb.toString().split(TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX);
 
-		try {
-			long requestHash = accessRequest.hashCode();
+        Arrays.sort(formatStrings, (first, second) -> Integer.compare(second.length(), first.length()));
 
-			if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_EVAL)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_EVAL, "RangerRequestScriptEvaluator.evaluateScript(requestHash=" + requestHash + ")");
-			}
+        RangerRequestScriptEvaluator.dateFormatStrings = formatStrings;
+    }
 
-			ret = scriptEngine.eval(script, bindings);
-		} catch (NullPointerException nullp) {
-			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): eval called with NULL argument(s)", nullp);
+    public Object evaluateScript(String script) {
+        script = expandMacros(script);
 
-		} catch (ScriptException exception) {
-			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script," +
-					" exception=" + exception);
-		} finally {
-			RangerPerfTracer.log(perf);
-		}
+        return evaluateScriptImpl(script);
+    }
 
-		return ret;
-	}
+    public Object evaluateConditionScript(String script) {
+        Object ret = evaluateScript(script);
 
-	private String toJson() {
-		RangerPerfTracer perf = null;
+        if (ret == null) {
+            ret = getResult();
+        }
 
-		long requestHash = accessRequest.hashCode();
+        if (ret instanceof Boolean) {
+            result = (Boolean) ret;
+        }
 
-		if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_TOJSON)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_TOJSON, "RangerRequestScriptEvaluator.toJson(requestHash=" + requestHash + ")");
-		}
+        return ret;
+    }
 
-		Map<String, Object> ret        = new HashMap<>();
-		Map<String, Object> request    = new HashMap<>();
-		Date                accessTime = accessRequest.getAccessTime();
+    public String getResource() {
+        String               ret = null;
+        RangerAccessResource val = RangerAccessRequestUtil.getCurrentResourceFromContext(getRequestContext());
 
-		init();
+        if (val != null) {
+            ret = val.getAsString();
+        }
 
-		if (accessTime != null) {
-			request.put(SCRIPT_FIELD_ACCESS_TIME, accessTime.getTime());
-		}
+        return ret;
+    }
 
-		request.put(SCRIPT_FIELD_ACCESS_TYPE, accessRequest.getAccessType());
-		request.put(SCRIPT_FIELD_ACTION, accessRequest.getAction());
-		request.put(SCRIPT_FIELD_CLIENT_IP_ADDRESS, accessRequest.getClientIPAddress());
-		request.put(SCRIPT_FIELD_CLIENT_TYPE, accessRequest.getClientType());
-		request.put(SCRIPT_FIELD_CLUSTER_NAME, accessRequest.getClusterName());
-		request.put(SCRIPT_FIELD_CLUSTER_TYPE, accessRequest.getClusterType());
-		request.put(SCRIPT_FIELD_FORWARDED_ADDRESSES, accessRequest.getForwardedAddresses());
-		request.put(SCRIPT_FIELD_REMOTE_IP_ADDRESS, accessRequest.getRemoteIPAddress());
-		request.put(SCRIPT_FIELD_REQUEST_DATA, accessRequest.getRequestData());
+    public String getResourceZone() {
+        String ret = RangerAccessRequestUtil.getResourceZoneNameFromContext(getRequestContext());
 
-		if (accessRequest.getResource() != null) {
-			Map<String, Object> resource = new HashMap<>(accessRequest.getResource().getAsMap());
+        return ret != null ? ret : StringUtils.EMPTY;
+    }
 
-			resource.put(SCRIPT_FIELD__OWNER_USER, accessRequest.getResource().getOwnerUser());
+    public Set<String> getResourceZones() {
+        Set<String> ret = RangerAccessRequestUtil.getResourceZoneNamesFromContext(getRequestContext());
 
-			request.put(SCRIPT_FIELD_RESOURCE, resource);
-		}
+        return ret != null ? ret : Collections.emptySet();
+    }
 
-		request.put(SCRIPT_FIELD_RESOURCE_MATCHING_SCOPE, accessRequest.getResourceMatchingScope());
+    public String getRequestContextAttribute(String attributeName) {
+        String ret = null;
 
-		request.put(SCRIPT_FIELD_USER, getUser());
-		request.put(SCRIPT_FIELD_USER_GROUPS, userGroups);
-		request.put(SCRIPT_FIELD_USER_ROLES, userRoles);
+        if (StringUtils.isNotBlank(attributeName)) {
+            Object val = getRequestContext().get(attributeName);
 
-		request.put(SCRIPT_FIELD_USER_ATTRIBUTES, userAttrs);
+            if (val != null) {
+                ret = val.toString();
+            }
+        }
 
-		request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
-		request.put(SCRIPT_FIELD_UGA, new UserGroupsAttributes(userGroups, groupAttrs).getAttributes());
+        return ret;
+    }
 
-		ret.put(SCRIPT_FIELD_REQUEST, request);
+    public boolean isAccessTypeAny() {
+        return accessRequest.isAccessTypeAny();
+    }
 
-		ret.put(SCRIPT_FIELD_TAGS, tags);
-		ret.put(SCRIPT_FIELD_TAG_NAMES, tagNames);
-		ret.put(SCRIPT_FIELD_TAG, tag);
+    public boolean isAccessTypeDelegatedAdmin() {
+        return accessRequest.isAccessTypeDelegatedAdmin();
+    }
 
-		String strRet = JsonUtils.objectToJson(ret);
+    public String getUser() {
+        return accessRequest.getUser();
+    }
 
-		RangerPerfTracer.log(perf);
+    public Set<String> getUserGroups() {
+        return accessRequest.getUserGroups();
+    }
 
-		return strRet;
-	}
+    public Set<String> getUserRoles() {
+        return RangerAccessRequestUtil.getUserRoles(accessRequest);
+    }
 
-	public static void init(Configuration config) {
-		StringBuilder sb = new StringBuilder(DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT);
+    public Date getAccessTime() {
+        return accessRequest.getAccessTime() != null ? accessRequest.getAccessTime() : new Date();
+    }
 
-		sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME);
+    public String getClientIPAddress() {
+        return accessRequest.getClientIPAddress();
+    }
 
-		String additionalDateFormatsValue = config != null ? config.get(TAG_ATTR_DATE_FORMAT_PROP) : null;
+    public String getClientType() {
+        return accessRequest.getClientType();
+    }
 
-		if (StringUtils.isNotBlank(additionalDateFormatsValue)) {
-			sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(additionalDateFormatsValue);
-		}
+    public String getAction() {
+        return accessRequest.getAction();
+    }
 
-		String[] formatStrings = sb.toString().split(TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX);
+    public String getRequestData() {
+        return accessRequest.getRequestData();
+    }
 
-		Arrays.sort(formatStrings, new Comparator<String>() {
-			@Override
-			public int compare(String first, String second) {
-				return Integer.compare(second.length(), first.length());
-			}
-		});
+    public String getSessionId() {
+        return accessRequest.getSessionId();
+    }
 
-		RangerRequestScriptEvaluator.dateFormatStrings = formatStrings;
-	}
+    public RangerTagForEval getCurrentTag() {
+        RangerTagForEval ret = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
 
-	public String getResource() {
-		String ret = null;
-		RangerAccessResource val = RangerAccessRequestUtil.getCurrentResourceFromContext(getRequestContext());
+        if (ret == null) {
+            if (LOG.isDebugEnabled()) {
+                logDebug("RangerRequestScriptEvaluator.getCurrentTag() - No current TAG object. Script execution must be for resource-based policy.");
+            }
+        }
+        return ret;
+    }
 
-		if(val != null) {
-			ret = val.getAsString();
-		}
+    public String getCurrentTagType() {
+        RangerTagForEval tagObject = getCurrentTag();
+        return (tagObject != null) ? tagObject.getType() : null;
+    }
 
-		return ret;
-	}
+    public Set<String> getAllTagTypes() {
+        init();
 
-	public String getRequestContextAttribute(String attributeName) {
-		String ret = null;
+        return Collections.unmodifiableSet(tags.keySet());
+    }
 
-		if (StringUtils.isNotBlank(attributeName)) {
-			Object val = getRequestContext().get(attributeName);
+    public Map<String, String> getTagAttributes(final String tagType) {
+        Set<RangerTagForEval> tags = StringUtils.isBlank(tagType) ? null : getAllTags();
 
-			if(val != null) {
-				ret = val.toString();
-			}
-		}
+        // Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO**
+        // This will get attributes of the first tagType that matches
+        return CollectionUtils.isEmpty(tags) ? null :
+                tags.stream()
+                        .filter(tag -> tagType.equals(tag.getType()))
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .findFirst()
+                        .orElse(null);
+    }
 
-		return ret;
-	}
+    public List<Map<String, String>> getTagAttributesForAllMatchingTags(final String tagType) {
+        Set<RangerTagForEval> tags = StringUtils.isBlank(tagType) ? null : getAllTags();
 
-	public boolean isAccessTypeAny() { return accessRequest.isAccessTypeAny(); }
+        return CollectionUtils.isEmpty(tags) ? null :
+                tags.stream()
+                        .filter(tag -> tagType.equals(tag.getType()))
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .collect(Collectors.toList());
+    }
 
-	public boolean isAccessTypeDelegatedAdmin() { return accessRequest.isAccessTypeDelegatedAdmin(); }
+    public Set<String> getAttributeNames(final String tagType) {
+        Map<String, String> attributes = getTagAttributes(tagType);
 
-	public String getUser() { return accessRequest.getUser(); }
+        return attributes == null ? null : attributes.keySet();
+    }
 
-	public Set<String> getUserGroups() { return accessRequest.getUserGroups(); }
+    public String getAttributeValue(final String tagType, final String attributeName) {
+        Map<String, String> attributes = (StringUtils.isBlank(tagType) || StringUtils.isBlank(attributeName)) ? null : getTagAttributes(tagType);
 
-	public Set<String> getUserRoles() { return accessRequest.getUserRoles(); }
+        return attributes == null ? null : attributes.get(attributeName);
+    }
 
-	public Date getAccessTime() { return accessRequest.getAccessTime() != null ? accessRequest.getAccessTime() : new Date(); }
+    public List<String> getAttributeValueForAllMatchingTags(final String tagType, final String attributeName) {
+        Set<RangerTagForEval> tags = StringUtils.isBlank(tagType) || StringUtils.isBlank(attributeName) ? null : getAllTags();
 
-	public String getClientIPAddress() { return accessRequest.getClientIPAddress(); }
+        return CollectionUtils.isEmpty(tags) ? null :
+                tags.stream()
+                        .filter(tag -> tagType.equals(tag.getType()))
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(MapUtils::isNotEmpty)
+                        .map(tagAttrs -> tagAttrs.get(attributeName))
+                        .filter(Objects::nonNull)
+                        .sorted()
+                        .collect(Collectors.toList());
+    }
 
-	public String getClientType() { return accessRequest.getClientType(); }
+    public String getAttributeValue(final String attributeName) {
+        RangerTagForEval    tag        = StringUtils.isBlank(attributeName) ? null : getCurrentTag();
+        Map<String, String> attributes = tag == null ? null : tag.getAttributes();
 
-	public String getAction() { return accessRequest.getAction(); }
+        return attributes == null ? null : attributes.get(attributeName);
+    }
 
-	public String getRequestData() { return accessRequest.getRequestData(); }
+    public boolean getResult() {
+        return result;
+    }
 
-	public String getSessionId() { return accessRequest.getSessionId(); }
+    public void setResult(final boolean result) {
+        this.result = result;
+    }
 
-	public RangerTagForEval getCurrentTag() {
-		RangerTagForEval ret = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
+    public Date getAsDate(String value) {
+        Date ret = StringUtils.isBlank(value) ? null : THREADLOCAL_DATE_FORMATS.get().stream()
+                .map(dateFormat -> getAsDate(value, dateFormat))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
-		if(ret == null ) {
-			if (LOG.isDebugEnabled()) {
-				logDebug("RangerRequestScriptEvaluator.getCurrentTag() - No current TAG object. Script execution must be for resource-based policy.");
-			}
-		}
-		return ret;
-	}
+        if (ret == null) {
+            logError("RangerRequestScriptEvaluator.getAsDate() - Could not convert [" + value + "] to Date using any of the Format-Strings: " + Arrays.toString(dateFormatStrings));
+        } else {
+            ret = StringUtil.getUTCDateForLocalDate(ret);
+        }
 
-	public String getCurrentTagType() {
-		RangerTagForEval tagObject = getCurrentTag();
-		return (tagObject != null) ? tagObject.getType() : null;
-	}
+        return ret;
+    }
 
-	public Set<String> getAllTagTypes() {
-		Set<String>     allTagTypes   = null;
-		Set<RangerTagForEval> tagObjectList = getAllTags();
+    public Date getTagAttributeAsDate(String tagType, String attributeName) {
+        String attrValue = getAttributeValue(tagType, attributeName);
 
-		if (CollectionUtils.isNotEmpty(tagObjectList)) {
-			for (RangerTagForEval tag : tagObjectList) {
-				String tagType = tag.getType();
-				if (allTagTypes == null) {
-					allTagTypes = new HashSet<>();
-				}
-				allTagTypes.add(tagType);
-			}
-		}
+        return getAsDate(attrValue);
+    }
 
-		return allTagTypes;
-	}
+    public boolean isAccessedAfter(String tagType, String attributeName) {
+        Date accessDate = getAccessTime();
+        Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
-	public Map<String, String> getTagAttributes(final String tagType) {
-		Map<String, String> ret = null;
+        return expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate);
+    }
 
-		if (StringUtils.isNotBlank(tagType)) {
-			Set<RangerTagForEval> tagObjectList = getAllTags();
+    public boolean isAccessedAfter(String attributeName) {
+        Date accessDate = getAccessTime();
+        Date expiryDate = getAsDate(getAttributeValue(attributeName));
 
-			// Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
-			// This will get attributes of the first tagType that matches
-			if (CollectionUtils.isNotEmpty(tagObjectList)) {
-				for (RangerTagForEval tag : tagObjectList) {
-					if (tag.getType().equals(tagType)) {
-						ret = tag.getAttributes();
-						break;
-					}
-				}
-			}
-		}
+        return expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate);
+    }
 
-		return ret;
-	}
+    public boolean isAccessedBefore(String tagType, String attributeName) {
+        Date accessDate = getAccessTime();
+        Date expiryDate = getTagAttributeAsDate(tagType, attributeName);
 
-	public List<Map<String, String>> getTagAttributesForAllMatchingTags(final String tagType) {
-		List<Map<String, String>> ret = null;
+        return !(expiryDate == null || accessDate.after(expiryDate));
+    }
 
-		if (StringUtils.isNotBlank(tagType)) {
-			Set<RangerTagForEval> tagObjectList = getAllTags();
+    public boolean isAccessedBefore(String attributeName) {
+        Date accessDate = getAccessTime();
+        Date expiryDate = getAsDate(getAttributeValue(attributeName));
 
-			// Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
-			// This will get attributes of the first tagType that matches
-			if (CollectionUtils.isNotEmpty(tagObjectList)) {
-				for (RangerTagForEval tag : tagObjectList) {
-					if (tag.getType().equals(tagType)) {
-						Map<String, String> tagAttributes = tag.getAttributes();
-						if (tagAttributes != null) {
-							if (ret == null) {
-								ret = new ArrayList<>();
-							}
-							ret.add(tagAttributes);
-						}
-						break;
-					}
-				}
-			}
-		}
+        return !(expiryDate == null || accessDate.after(expiryDate));
+    }
 
-		return ret;
-	}
+    public String tagNames(Object... args) {
+        init();
 
-	public Set<String> getAttributeNames(final String tagType) {
-		Set<String>         ret        = null;
-		Map<String, String> attributes = getTagAttributes(tagType);
+        return toCsv(tagNames, args);
+    }
 
-		if (attributes != null) {
-			ret = attributes.keySet();
-		}
+    public String tagNamesQ(Object... args) {
+        init();
 
-		return ret;
-	}
+        return toCsvQ(tagNames, args);
+    }
 
-	public String getAttributeValue(final String tagType, final String attributeName) {
-		String ret = null;
+    public String tagAttrNames(Object... args) {
+        init();
 
-		if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
-			Map<String, String> attributes = getTagAttributes(tagType);
+        return toCsv(getTagAttrNames(), args);
+    }
 
-			if (attributes != null) {
-				ret = attributes.get(attributeName);
-			}
-		}
-		return ret;
-	}
+    public String tagAttrNamesQ(Object... args) {
+        init();
 
-	public List<String> getAttributeValueForAllMatchingTags(final String tagType, final String attributeName) {
-		List<String> ret = null;
+        return toCsvQ(getTagAttrNames(), args);
+    }
 
-		if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
-			Map<String, String> attributes = getTagAttributes(tagType);
+    public String tagAttr(String attrName, Object... args) {
+        init();
 
-			if (attributes != null && attributes.get(attributeName) != null) {
-				if (ret == null) {
-					ret = new ArrayList<>();
-				}
-				ret.add(attributes.get(attributeName));
-			}
-		}
-		return ret;
-	}
+        return toCsv(getTagAttr(attrName), args);
+    }
 
-	public String getAttributeValue(final String attributeName) {
-		String ret = null;
+    public String tagAttrQ(String attrName, Object... args) {
+        init();
 
-		if (StringUtils.isNotBlank(attributeName)) {
-			RangerTagForEval tag = getCurrentTag();
-			Map<String, String> attributes = null;
-			if (tag != null) {
-				attributes = tag.getAttributes();
-			}
-			if (attributes != null) {
-				ret = attributes.get(attributeName);
-			}
-		}
+        return toCsvQ(getTagAttr(attrName), args);
+    }
 
-		return ret;
-	}
+    public String ugNames(Object... args) {
+        init();
 
-	public boolean getResult() {
-		return result;
+        return toCsv(userGroups, args);
+    }
 
-	}
+    public String ugNamesQ(Object... args) {
+        init();
 
-	public void setResult(final boolean result) {
-		this.result = result;
-	}
+        return toCsvQ(userGroups, args);
+    }
 
-	private Date getAsDate(String value, SimpleDateFormat df) {
-		Date ret = null;
+    public String ugAttrNames(Object... args) {
+        init();
 
-		TimeZone savedTimeZone = df.getTimeZone();
-		try {
-			ret = df.parse(value);
-		} catch (ParseException exception) {
-			// Ignore
-		} finally {
-			df.setTimeZone(savedTimeZone);
-		}
+        return toCsv(getUgAttrNames(), args);
+    }
 
-		return ret;
-	}
+    public String ugAttrNamesQ(Object... args) {
+        init();
 
-	public Date getAsDate(String value) {
-		Date ret = null;
+        return toCsvQ(getUgAttrNames(), args);
+    }
 
-		if (StringUtils.isNotBlank(value)) {
-			for (SimpleDateFormat simpleDateFormat : THREADLOCAL_DATE_FORMATS.get()) {
-				ret = getAsDate(value, simpleDateFormat);
-				if (ret != null) {
-					if (LOG.isDebugEnabled()) {
-						logDebug("RangerRequestScriptEvaluator.getAsDate() -The best match found for Format-String:[" + simpleDateFormat.toPattern() + "], date:[" + ret +"]");
-					}
-					break;
-				}
-			}
-		}
+    public String ugAttr(String attrName, Object... args) {
+        init();
 
-		if (ret == null) {
-			logError("RangerRequestScriptEvaluator.getAsDate() - Could not convert [" + value + "] to Date using any of the Format-Strings: " + Arrays.toString(dateFormatStrings));
-		} else {
-			ret = StringUtil.getUTCDateForLocalDate(ret);
-		}
+        return toCsv(getUgAttr(attrName), args);
+    }
 
-		return ret;
-	}
+    public String ugAttrQ(String attrName, Object... args) {
+        init();
 
-	public Date getTagAttributeAsDate(String tagType, String attributeName) {
-		String attrValue = getAttributeValue(tagType, attributeName);
+        return toCsvQ(getUgAttr(attrName), args);
+    }
 
-		return getAsDate(attrValue);
-	}
+    public String urNames(Object... args) {
+        init();
 
-	public boolean isAccessedAfter(String tagType, String attributeName) {
-		boolean ret        = false;
-		Date    accessDate = getAccessTime();
-		Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
+        return toCsv(userRoles, args);
+    }
 
-		if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
-			ret = true;
-		}
+    public String urNamesQ(Object... args) {
+        init();
 
-		return ret;
-	}
+        return toCsvQ(userRoles, args);
+    }
 
-	public boolean isAccessedAfter(String attributeName) {
-		boolean ret        = false;
-		Date    accessDate = getAccessTime();
-		Date    expiryDate = getAsDate(getAttributeValue(attributeName));
+    public String userAttrNames(Object... args) {
+        init();
 
-		if (expiryDate == null || accessDate.after(expiryDate) || accessDate.equals(expiryDate)) {
-			ret = true;
-		}
+        return toCsv(getUserAttrNames(), args);
+    }
 
-		return ret;
-	}
+    public String userAttrNamesQ(Object... args) {
+        init();
 
-	public boolean isAccessedBefore(String tagType, String attributeName) {
-		boolean ret        = true;
-		Date    accessDate = getAccessTime();
-		Date    expiryDate = getTagAttributeAsDate(tagType, attributeName);
+        return toCsvQ(getUserAttrNames(), args);
+    }
 
-		if (expiryDate == null || accessDate.after(expiryDate)) {
-			ret = false;
-		}
+    public String userAttr(String attrName, Object... args) {
+        init();
 
-		return ret;
-	}
+        String attrVal = userAttrs.get(attrName);
 
-	public boolean isAccessedBefore(String attributeName) {
-		boolean ret        = true;
-		Date    accessDate = getAccessTime();
-		Date    expiryDate = getAsDate(getAttributeValue(attributeName));
+        return toCsv(Collections.singletonList(attrVal), args);
+    }
 
-		if (expiryDate == null || accessDate.after(expiryDate)) {
-			ret = false;
-		}
+    public String userAttrQ(String attrName, Object... args) {
+        init();
 
-		return ret;
-	}
+        String attrVal = userAttrs.get(attrName);
 
-	public String ugNamesCsv() {
-		init();
+        return toCsvQ(Collections.singletonList(attrVal), args);
+    }
 
-		return toCsv(userGroups);
-	}
+    public boolean hasTag(String tagName) {
+        init();
 
-	public String ugNamesCsvQ() {
-		init();
+        return tags.containsKey(tagName);
+    }
 
-		return toCsvQ(userGroups);
-	}
+    public boolean hasAnyTag() {
+        init();
 
-	public String urNamesCsv() {
-		init();
+        return !tags.isEmpty();
+    }
 
-		return toCsv(userRoles);
-	}
+    public boolean hasUserAttr(String attrName) {
+        init();
 
-	public String urNamesCsvQ() {
-		init();
+        return userAttrs.containsKey(attrName);
+    }
 
-		return toCsvQ(userRoles);
-	}
+    public boolean hasUgAttr(String attrName) {
+        init();
 
-	public String tagNamesCsv() {
-		init();
+        return groupAttrs.values().stream().anyMatch(attrs -> attrs.containsKey(attrName));
+    }
 
-		return toCsv(tagNames);
-	}
+    public boolean hasTagAttr(String attrName) {
+        init();
 
-	public String tagNamesCsvQ() {
-		init();
+        Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
 
-		return toCsvQ(tagNames);
-	}
+        return tags != null && tags.stream().anyMatch(tag -> tag.getAttributes().containsKey(attrName));
+    }
 
-	public String userAttrNamesCsv() {
-		init();
+    public boolean isInGroup(String groupName) {
+        init();
 
-		return toCsv(getUserAttrNames());
-	}
+        return userGroups.contains(groupName);
+    }
 
-	public String userAttrNamesCsvQ() {
-		init();
+    public boolean isInRole(String roleName) {
+        init();
 
-		return toCsvQ(getUserAttrNames());
-	}
+        return userRoles.contains(roleName);
+    }
 
-	public String ugAttrNamesCsv() {
-		init();
+    public boolean isInAnyGroup() {
+        init();
 
-		return toCsv(getUgAttrNames());
-	}
+        return !userGroups.isEmpty();
+    }
 
-	public String ugAttrNamesCsvQ() {
-		return toCsvQ(getUgAttrNames());
-	}
+    public boolean isInAnyRole() {
+        init();
 
-	public String tagAttrNamesCsv() {
-		init();
+        return !userRoles.isEmpty();
+    }
 
-		return toCsv(getTagAttrNames());
-	}
+    public boolean isAccessTimeAfter(String strTime) {
+        return isAccessTimeBetween(strTime, null, null);
+    }
 
-	public String tagAttrNamesCsvQ() {
-		init();
+    public boolean isAccessTimeAfter(String strTime, String timeZone) {
+        return isAccessTimeBetween(strTime, null, timeZone);
+    }
 
-		return toCsvQ(getTagAttrNames());
-	}
+    public boolean isAccessTimeBefore(String strTime) {
+        return isAccessTimeBetween(null, strTime, null);
+    }
 
-	public String ugAttrCsv(String attrName) {
-		init();
+    public boolean isAccessTimeBefore(String strTime, String timeZone) {
+        return isAccessTimeBetween(null, strTime, timeZone);
+    }
 
-		return toCsv(getUgAttr(attrName));
-	}
+    public boolean isAccessTimeBetween(String fromTime, String toTime) {
+        return isAccessTimeBetween(fromTime, toTime, null);
+    }
 
-	public String ugAttrCsvQ(String attrName) {
-		init();
+    public boolean isAccessTimeBetween(String fromTime, String toTime, String timeZone) {
+        RangerTimeRangeChecker evaluator = new RangerTimeRangeChecker(fromTime, toTime, timeZone);
 
-		return toCsvQ(getUgAttr(attrName));
-	}
+        return evaluator.isInRange(getAccessTime().getTime());
+    }
 
-	public String tagAttrCsv(String attrName) {
-		init();
+    // for backward compatibility
+    public String ugNamesCsv() {
+        return ugNames(null, STR_COMMA);
+    }
 
-		return toCsv(getTagAttr(attrName));
-	}
+    public String ugNamesCsvQ() {
+        return ugNamesQ(null, STR_COMMA, STR_QUOTE);
+    }
 
-	public String tagAttrCsvQ(String attrName) {
-		init();
+    public String urNamesCsv() {
+        return urNames(null, STR_COMMA);
+    }
 
-		return toCsvQ(getTagAttr(attrName));
-	}
+    public String urNamesCsvQ() {
+        return urNamesQ(null, STR_COMMA, STR_QUOTE);
+    }
 
-	public boolean hasTag(String tagName) {
-		init();
+    public String tagNamesCsv() {
+        return tagNames(null, STR_COMMA);
+    }
 
-		return tags.containsKey(tagName);
-	}
+    public String tagNamesCsvQ() {
+        return tagNamesQ(null, STR_COMMA, STR_QUOTE);
+    }
 
-	public boolean hasAnyTag() {
-		init();
+    public String userAttrNamesCsv() {
+        return userAttrNames(null, STR_COMMA);
+    }
 
-		return !tags.isEmpty();
-	}
+    public String userAttrNamesCsvQ() {
+        return userAttrNamesQ(null, STR_COMMA, STR_QUOTE);
+    }
 
-	public boolean hasUserAttr(String attrName) {
-		init();
+    public String ugAttrNamesCsv() {
+        return ugAttrNames(null, STR_COMMA);
+    }
 
-		return userAttrs.containsKey(attrName);
-	}
+    public String ugAttrNamesCsvQ() {
+        return ugAttrNamesQ(null, STR_COMMA, STR_QUOTE);
+    }
 
-	public boolean hasUgAttr(String attrName) {
-		init();
+    public String tagAttrNamesCsv() {
+        return tagAttrNames(null, STR_COMMA);
+    }
 
-		boolean ret = false;
+    public String tagAttrNamesCsvQ() {
+        return tagAttrNamesQ(null, STR_COMMA, STR_QUOTE);
+    }
 
-		for (Map<String, String> attrs : groupAttrs.values()) {
-			if (attrs.containsKey(attrName)) {
-				ret = true;
+    public String ugAttrCsv(String attrName) {
+        return ugAttr(attrName, null, STR_COMMA);
+    }
 
-				break;
-			}
-		}
+    public String ugAttrCsvQ(String attrName) {
+        return ugAttrQ(attrName, null, STR_COMMA, STR_QUOTE);
+    }
 
-		return ret;
-	}
+    public String tagAttrCsv(String attrName) {
+        return tagAttr(attrName, null, STR_COMMA);
+    }
 
-	public boolean hasTagAttr(String attrName) {
-		init();
+    public String tagAttrCsvQ(String attrName) {
+        return tagAttrQ(attrName, null, STR_COMMA, STR_QUOTE);
+    }
 
-		boolean               ret  = false;
-		Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
+    public void logDebug(Object msg) {
+        LOG.debug(Objects.toString(msg));
+    }
 
-		if (tags != null) {
-			for (RangerTagForEval tag : tags) {
-				if (tag.getAttributes().containsKey(attrName)) {
-					ret = true;
+    public void logInfo(Object msg) {
+        LOG.info(Objects.toString(msg));
+    }
 
-					break;
-				}
-			}
-		}
+    public void logWarn(Object msg) {
+        LOG.warn(Objects.toString(msg));
+    }
 
-		return ret;
-	}
+    public void logError(Object msg) {
+        LOG.error(Objects.toString(msg));
+    }
 
-	public boolean isInGroup(String groupName) {
-		init();
+    public void logFatal(Object msg) {
+        LOG.error(Objects.toString(msg));
+    }
 
-		return userGroups.contains(groupName);
-	}
+    private Object evaluateScriptImpl(String script) {
+        Object           ret  = null;
+        RangerPerfTracer perf = null;
 
-	public boolean isInRole(String roleName) {
-		init();
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_EVAL)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_EVAL, "RangerRequestScriptEvaluator.evaluateScript(requestHash=" + accessRequest.hashCode() + ")");
+            }
 
-		return userRoles.contains(roleName);
-	}
+            String preExec = SCRIPT_SAFE_PREEXEC;
 
-	public boolean isInAnyGroup() {
-		init();
+            if (script.contains(".includes(")) {
+                preExec += SCRIPT_POLYFILL_INCLUDES;
+            }
 
-		return !userGroups.isEmpty();
-	}
+            if (script.contains(".intersects(")) {
+                preExec += SCRIPT_POLYFILL_INTERSECTS;
+            }
 
-	public boolean isInAnyRole() {
-		init();
+            if (JavaScriptEdits.hasDoubleBrackets(script)) {
+                script = JavaScriptEdits.replaceDoubleBrackets(script);
+            }
 
-		return !userRoles.isEmpty();
-	}
+            ret = scriptEngine.eval(preExec + script, bindings);
+        } catch (NullPointerException nullp) {
+            LOG.error("RangerRequestScriptEvaluator.evaluateScript(): eval called with NULL argument(s)", nullp);
+        } catch (ScriptException excp) {
+            LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", excp);
+        } catch (Throwable t) {
+            LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", t);
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
 
-	private void init() {
-		if (!initDone) {
-			RangerUserStore                  userStore        = RangerAccessRequestUtil.getRequestUserStoreFromContext(accessRequest.getContext());
-			Map<String, Map<String, String>> userAttrMapping  = userStore != null ? userStore.getUserAttrMapping() : Collections.emptyMap();
-			Map<String, Map<String, String>> groupAttrMapping = userStore != null ? userStore.getGroupAttrMapping() : Collections.emptyMap();
+        return ret;
+    }
 
-			userGroups = getSorted(getUserGroups());
-			userRoles  = getSorted(getUserRoles());
-			userAttrs  = copyMap(userAttrMapping.get(accessRequest.getUser()));
-			groupAttrs = new HashMap<>();
+    private String toJson() {
+        RangerPerfTracer perf = null;
 
-			userAttrs.put(SCRIPT_FIELD__NAME, getUser());
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_TOJSON)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_TOJSON, "RangerRequestScriptEvaluator.toJson(requestHash=" + accessRequest.hashCode() + ")");
+        }
 
-			for (String groupName : userGroups) {
-				Map<String, String> attrs = groupAttrMapping.get(groupName);
+        Map<String, Object> ret        = new HashMap<>();
+        Map<String, Object> request    = new HashMap<>();
+        Date                accessTime = accessRequest.getAccessTime();
 
-				attrs = attrs != null ? new HashMap<>(attrs) : new HashMap<>();
+        init();
 
-				attrs.put(SCRIPT_FIELD__NAME, groupName);
+        if (accessTime != null) {
+            request.put(SCRIPT_FIELD_ACCESS_TIME, accessTime.getTime());
+        }
 
-				groupAttrs.put(groupName, attrs);
-			}
+        request.put(SCRIPT_FIELD_ACCESS_TYPE, accessRequest.getAccessType());
+        request.put(SCRIPT_FIELD_ACTION, accessRequest.getAction());
+        request.put(SCRIPT_FIELD_CLIENT_IP_ADDRESS, accessRequest.getClientIPAddress());
+        request.put(SCRIPT_FIELD_CLIENT_TYPE, accessRequest.getClientType());
+        request.put(SCRIPT_FIELD_CLUSTER_NAME, accessRequest.getClusterName());
+        request.put(SCRIPT_FIELD_CLUSTER_TYPE, accessRequest.getClusterType());
+        request.put(SCRIPT_FIELD_FORWARDED_ADDRESSES, accessRequest.getForwardedAddresses());
+        request.put(SCRIPT_FIELD_REMOTE_IP_ADDRESS, accessRequest.getRemoteIPAddress());
+        request.put(SCRIPT_FIELD_REQUEST_DATA, accessRequest.getRequestData());
 
-			Set<RangerTagForEval> requestTags = RangerAccessRequestUtil.getRequestTagsFromContext(getRequestContext());
+        if (accessRequest.getResource() != null) {
+            Map<String, Object> resource = new HashMap<>(accessRequest.getResource().getAsMap());
 
-			if (CollectionUtils.isNotEmpty(requestTags)) {
-				RangerTagForEval currentTag = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
+            resource.put(SCRIPT_FIELD__OWNER_USER, accessRequest.getResource().getOwnerUser());
 
-				tags = new HashMap();
-				tag  = (currentTag != null) ? toMap(currentTag) : Collections.emptyMap();
+            request.put(SCRIPT_FIELD_RESOURCE, resource);
+        }
 
-				for (RangerTagForEval tag : requestTags) {
-					tags.put(tag.getType(), toMap(tag));
-				}
+        request.put(SCRIPT_FIELD_RESOURCE_MATCHING_SCOPE, accessRequest.getResourceMatchingScope());
 
-				tagNames = getSorted(tags.keySet());
-			} else {
-				tags     = Collections.emptyMap();
-				tagNames = Collections.emptySet();
-				tag      = Collections.emptyMap();
-			}
+        request.put(SCRIPT_FIELD_USER, getUser());
+        request.put(SCRIPT_FIELD_USER_GROUPS, userGroups);
+        request.put(SCRIPT_FIELD_USER_ROLES, userRoles);
 
-			initDone = true;
-		}
-	}
+        request.put(SCRIPT_FIELD_USER_ATTRIBUTES, userAttrs);
 
-	private Map<String, Object> getRequestContext() {
-		return accessRequest.getContext();
-	}
+        request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
+        request.put(SCRIPT_FIELD_UGA, new UserGroupsAttributes(userGroups, groupAttrs).getAttributes());
 
-	private Set<RangerTagForEval> getAllTags() {
-		Set<RangerTagForEval> ret = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
-		if(ret == null) {
-			if (LOG.isDebugEnabled()) {
-				String resource = accessRequest.getResource().getAsString();
+        ret.put(SCRIPT_FIELD_REQUEST, request);
 
-				logDebug("RangerRequestScriptEvaluator.getAllTags() - No TAGS. No TAGS for the RangerAccessResource=" + resource);
-			}
-		}
+        ret.put(SCRIPT_FIELD_TAGS, tags);
+        ret.put(SCRIPT_FIELD_TAG_NAMES, tagNames);
+        ret.put(SCRIPT_FIELD_TAG, tag);
 
-		return ret;
-	}
+        String strRet = JsonUtils.objectToJson(ret);
 
-	private static Map<String, Object> toMap(RangerTagForEval tag) {
-		Map<String, Object> ret = new HashMap<>();
+        RangerPerfTracer.log(perf);
 
-		if (tag.getAttributes() != null) {
-			ret.putAll(tag.getAttributes());
-		}
+        return strRet;
+    }
 
-		ret.put(SCRIPT_FIELD__TYPE, tag.getType());
-		ret.put(SCRIPT_FIELD__MATCH_TYPE, tag.getMatchType());
+    private Date getAsDate(String value, SimpleDateFormat df) {
+        Date ret = null;
 
-		return ret;
-	}
+        TimeZone savedTimeZone = df.getTimeZone();
+        try {
+            ret = df.parse(value);
+        } catch (ParseException exception) {
+            // Ignore
+        } finally {
+            df.setTimeZone(savedTimeZone);
+        }
 
-	private Collection<String> getSorted(Collection<String> values) {
-		final Collection<String> ret;
+        return ret;
+    }
 
-		if (values == null) {
-			ret = Collections.emptyList();
-		} else if (values.size() > 1) {
-			List lst = new ArrayList<>(values);
+    private void init() {
+        if (!initDone) {
+            RangerUserStore                  userStore        = RangerAccessRequestUtil.getRequestUserStoreFromContext(accessRequest.getContext());
+            Map<String, Map<String, String>> userAttrMapping  = userStore != null ? userStore.getUserAttrMapping() : Collections.emptyMap();
+            Map<String, Map<String, String>> groupAttrMapping = userStore != null ? userStore.getGroupAttrMapping() : Collections.emptyMap();
 
-			Collections.sort(lst);
+            userGroups = getSorted(getUserGroups());
+            userRoles  = getSorted(getUserRoles());
+            userAttrs  = copyMap(userAttrMapping.get(accessRequest.getUser()));
+            groupAttrs = new HashMap<>();
 
-			ret = lst;
-		} else {
-			ret = values;
-		}
+            userAttrs.put(SCRIPT_FIELD__NAME, getUser());
 
-		return ret;
-	}
+            for (String groupName : userGroups) {
+                Map<String, String> attrs = groupAttrMapping.get(groupName);
 
-	private Map<String, String> copyMap(Map<String, String> obj) { return obj == null ? new HashMap<>() : new HashMap<>(obj); }
+                attrs = attrs != null ? new HashMap<>(attrs) : new HashMap<>();
 
-	private List<Object> getUgAttr(String attrName) {
-		List<Object> ret = new ArrayList<>();
+                attrs.put(SCRIPT_FIELD__NAME, groupName);
 
-		for (String groupName : userGroups) {
-			Map<String, String> attrs = groupAttrs.get(groupName);
-			Object      val           = attrs != null ? attrs.get(attrName) : null;
+                groupAttrs.put(groupName, attrs);
+            }
 
-			if (val != null) {
-				ret.add(val);
-			}
-		}
+            Set<RangerTagForEval> requestTags = RangerAccessRequestUtil.getRequestTagsFromContext(getRequestContext());
 
-		return ret;
-	}
+            if (CollectionUtils.isNotEmpty(requestTags)) {
+                RangerTagForEval currentTag = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
 
-	private List<Object> getTagAttr(String attrName) {
-		List<Object> ret = new ArrayList<>();
+                tag  = (currentTag != null) ? toMap(currentTag) : Collections.emptyMap();
+                tags = requestTags.stream().collect(Collectors.toMap(RangerTagForEval::getType, RangerRequestScriptEvaluator::toMap, (oldVal, newVal) -> newVal));
 
-		for (String tagName : tagNames) {
-			Map<String, Object> attrs = tags.get(tagName);
-			Object              val   = attrs != null ? attrs.get(attrName) : null;
+                tagNames = getSorted(tags.keySet());
+            } else {
+                tags     = Collections.emptyMap();
+                tagNames = Collections.emptySet();
+                tag      = Collections.emptyMap();
+            }
 
-			if (val != null) {
-				ret.add(val);
-			}
-		}
+            initDone = true;
+        }
+    }
 
-		return ret;
-	}
+    private Map<String, Object> getRequestContext() {
+        return accessRequest.getContext();
+    }
 
-	private Collection<String> getUserAttrNames() {
-		Collection<String> ret = getSorted(userAttrs.keySet());
+    private Set<RangerTagForEval> getAllTags() {
+        Set<RangerTagForEval> ret = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
+        if (ret == null) {
+            if (LOG.isDebugEnabled()) {
+                String resource = accessRequest.getResource().getAsString();
 
-		if (ret.contains(SCRIPT_FIELD__NAME)) {
-			ret.remove(SCRIPT_FIELD__NAME);
-		}
+                logDebug("RangerRequestScriptEvaluator.getAllTags() - No TAGS. No TAGS for the RangerAccessResource=" + resource);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	private Collection<String> getUgAttrNames() {
-		Set<String> ret = new HashSet<>();
+    private static Map<String, Object> toMap(RangerTagForEval tag) {
+        Map<String, Object> ret = new HashMap<>();
 
-		for (Map<String, String> attrs : groupAttrs.values()) {
-			ret.addAll(attrs.keySet());
-		}
+        if (tag.getAttributes() != null) {
+            ret.putAll(tag.getAttributes());
+        }
 
-		ret.remove(SCRIPT_FIELD__NAME);
+        ret.put(SCRIPT_FIELD__TYPE, tag.getType());
+        ret.put(SCRIPT_FIELD__MATCH_TYPE, tag.getMatchType());
 
-		return getSorted(ret);
-	}
+        return ret;
+    }
 
-	private Collection<String> getTagAttrNames() {
-		Set<String> ret = new HashSet<>();
+    private Collection<String> getSorted(Collection<String> values) {
+        final Collection<String> ret;
 
-		for (Map<String, Object> attrs : tags.values()) {
-			ret.addAll(attrs.keySet());
-		}
+        if (values == null) {
+            ret = Collections.emptyList();
+        } else if (values.size() > 1) {
+            List<String> lst = new ArrayList<>(values);
 
-		ret.remove(SCRIPT_FIELD__TYPE);
-		ret.remove(SCRIPT_FIELD__MATCH_TYPE);
+            Collections.sort(lst);
 
-		return getSorted(ret);
-	}
+            ret = lst;
+        } else {
+            ret = values;
+        }
 
-	private String toCsv(Collection<? extends Object> values) {
-		StringBuilder sb = new StringBuilder();
+        return ret;
+    }
 
-		for (Object value : values) {
-			if (value == null) {
-				continue;
-			}
+    private Map<String, String> copyMap(Map<String, String> obj) {
+        return obj == null ? new HashMap<>() : new HashMap<>(obj);
+    }
 
-			if (sb.length() > 0) {
-				sb.append(CHAR_COMMA);
-			}
+    private List<Object> getUgAttr(String attrName) {
+        return userGroups.stream()
+                .map(groupAttrs::get)
+                .filter(Objects::nonNull)
+                .map(attrs -> attrs.get(attrName))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
 
-			sb.append(value);
-		}
+    private List<Object> getTagAttr(String attrName) {
+        Set<RangerTagForEval> tags = StringUtils.isBlank(attrName) ? null : getAllTags();
 
-		return sb.toString();
-	}
+        return tags == null ? Collections.emptyList() : tags.stream()
+                .map(RangerTagForEval::getAttributes)
+                .filter(Objects::nonNull)
+                .map(attrs -> attrs.get(attrName))
+                .filter(Objects::nonNull)
+                .sorted()
+                .collect(Collectors.toList());
+    }
 
-	private String toCsvQ(Collection<? extends Object> values) {
-		StringBuilder sb = new StringBuilder();
+    private Collection<String> getUserAttrNames() {
+        Collection<String> ret = getSorted(userAttrs.keySet());
 
-		for (Object value : values) {
-			if (value == null) {
-				continue;
-			}
+        if (ret.contains(SCRIPT_FIELD__NAME)) {
+            if (ret.size() == 1) { // SCRIPT_FIELD__NAME is the only entry; return empty list
+                ret = Collections.emptyList();
+            } else { // ret is safe to mutate when size > 1 - see getSorted()
+                ret.remove(SCRIPT_FIELD__NAME);
+            }
+        }
 
-			if (sb.length() > 0) {
-				sb.append(CHAR_COMMA);
-			}
+        return ret;
+    }
 
-			sb.append(CHAR_QUOTE).append(value).append(CHAR_QUOTE);
-		}
+    private Collection<String> getUgAttrNames() {
+        return getSorted(
+                groupAttrs.values().stream()
+                        .flatMap(attrs -> attrs.keySet().stream())
+                        .filter(attr -> !SCRIPT_FIELD__NAME.equals(attr))
+                        .collect(Collectors.toSet()));
+    }
 
-		return sb.toString();
-	}
+    private Collection<String> getTagAttrNames() {
+        Set<RangerTagForEval> tags = getAllTags();
 
-	private static String getJsonVarNamesPattern() {
-		List<String> varNames = new ArrayList<>();
+        return tags == null ? Collections.emptySet() : getSorted(
+                tags.stream()
+                        .map(RangerTagForEval::getAttributes)
+                        .filter(Objects::nonNull)
+                        .flatMap(attrs -> attrs.keySet().stream())
+                        .filter(attr -> !SCRIPT_FIELD__TYPE.equals(attr) && !SCRIPT_FIELD__MATCH_TYPE.equals(attr))
+                        .collect(Collectors.toSet()));
+    }
 
-		/* include only variables setup by JSON.parse()
-		 *
-		varNames.add(SCRIPT_VAR_ctx);
-		varNames.add(SCRIPT_VAR_tag);
-		varNames.add(SCRIPT_VAR_tagAttr);
-		 *
-		 */
-		varNames.add(SCRIPT_VAR__CTX);
-		varNames.add(SCRIPT_VAR_REQ);
-		varNames.add(SCRIPT_VAR_RES);
-		varNames.add(SCRIPT_VAR_TAG);
-		varNames.add(SCRIPT_VAR_TAGNAMES);
-		varNames.add(SCRIPT_VAR_TAGS);
-		varNames.add(SCRIPT_VAR_UGA);
-		varNames.add(SCRIPT_VAR_UG);
-		varNames.add(SCRIPT_VAR_UGNAMES);
-		varNames.add(SCRIPT_VAR_URNAMES);
-		varNames.add(SCRIPT_VAR_USER);
+    private String toCsv(Collection<?> values, Object[] args) {
+        String separator = getSeparator(args);
+        String ret       = values.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.joining(separator));
 
-		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
-	}
+        if (StringUtils.isEmpty(ret)) {
+            ret = getDefaultValue(args);
+        }
 
-	private static String getUserAttributesPattern() {
-		List<String> varNames = new ArrayList<>();
+        return ret == null ? StringUtils.EMPTY : ret;
+    }
 
-		varNames.add(SCRIPT_VAR_USER);
-		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_CSV);
-		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV);
-		varNames.add(SCRIPT_MACRO_HAS_USER_ATTR);
+    private String toCsvQ(Collection<?> values, Object[] args) {
+        String openQuote  = getOpenQuote(args);
+        String closeQuote = getCloseQuote(args, openQuote);
+        String separator  = getSeparator(args);
+        String ret        = values.stream().filter(Objects::nonNull).map(value -> openQuote + value + closeQuote).collect(Collectors.joining(separator));
 
-		varNames.add("userAttrNamesCsv");
-		varNames.add("userAttrNamesCsvQ");
-		varNames.add("hasUserAttr");
+        if (StringUtils.isEmpty(ret)) {
+            String defValue = getDefaultValue(args);
 
-		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
-	}
+            if (defValue != null) {
+                ret = (openQuote + defValue + closeQuote);
+            }
+        }
 
-	private static String getGroupAttributesPattern() {
-		List<String> varNames = new ArrayList<>();
+        return ret;
+    }
 
-		varNames.add(SCRIPT_VAR_UG);
-		varNames.add(SCRIPT_VAR_UGA);
+    private String getDefaultValue(Object[] args) {
+        Object ret = (args != null && args.length > 0) ? args[0] : null;
 
-		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_CSV);
-		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV);
-		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_CSV);
-		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV);
-		varNames.add(SCRIPT_MACRO_HAS_UG_ATTR);
+        return ret != null ? ret.toString() : null;
+    }
 
-		varNames.add("ugAttrCsv");
-		varNames.add("ugAttrCsvQ");
-		varNames.add("ugAttrNamesCsv");
-		varNames.add("ugAttrNamesCsvQ");
-		varNames.add("hasUgAttr");
+    private String getSeparator(Object[] args) {
+        Object ret = (args != null && args.length > 1) ? args[1] : STR_COMMA;
 
-		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
-	}
+        return ret != null ? ret.toString() : "";
+    }
 
-	private static Map<String, String> getMacrosMap() {
-		Map<String, String> ret = new HashMap<>();
+    private String getOpenQuote(Object[] args) {
+        Object ret = (args != null && args.length > 2) ? args[2] : STR_QUOTE;
 
-		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_CSV,      "ctx.tagAttrCsv");
-		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_Q_CSV,    "ctx.tagAttrCsvQ");
-		ret.put(SCRIPT_MACRO_GET_UG_ATTR_CSV,       "ctx.ugAttrCsv");
-		ret.put(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV,     "ctx.ugAttrCsvQ");
-		ret.put(SCRIPT_MACRO_TAG_ATTR_NAMES_CSV,    "ctx.tagAttrNamesCsv()");
-		ret.put(SCRIPT_MACRO_TAG_ATTR_NAMES_Q_CSV,  "ctx.tagAttrNamesCsvQ()");
-		ret.put(SCRIPT_MACRO_TAG_NAMES_CSV,         "ctx.tagNamesCsv()");
-		ret.put(SCRIPT_MACRO_TAG_NAMES_Q_CSV,       "ctx.tagNamesCsvQ()");
-		ret.put(SCRIPT_MACRO_UG_ATTR_NAMES_CSV,     "ctx.ugAttrNamesCsv()");
-		ret.put(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV,   "ctx.ugAttrNamesCsvQ()");
-		ret.put(SCRIPT_MACRO_UG_NAMES_CSV,          "ctx.ugNamesCsv()");
-		ret.put(SCRIPT_MACRO_UG_NAMES_Q_CSV,        "ctx.ugNamesCsvQ()");
-		ret.put(SCRIPT_MACRO_UR_NAMES_CSV,          "ctx.urNamesCsv()");
-		ret.put(SCRIPT_MACRO_UR_NAMES_Q_CSV,        "ctx.urNamesCsvQ()");
-		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_CSV,   "ctx.userAttrNamesCsv()");
-		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV, "ctx.userAttrNamesCsvQ()");
-		ret.put(SCRIPT_MACRO_HAS_TAG,               "ctx.hasTag");
-		ret.put(SCRIPT_MACRO_HAS_ANY_TAG,           "ctx.hasAnyTag()");
-		ret.put(SCRIPT_MACRO_HAS_NO_TAG,            "!ctx.hasAnyTag()");
-		ret.put(SCRIPT_MACRO_HAS_USER_ATTR,         "ctx.hasUserAttr");
-		ret.put(SCRIPT_MACRO_HAS_UG_ATTR,           "ctx.hasUgAttr");
-		ret.put(SCRIPT_MACRO_HAS_TAG_ATTR,          "ctx.hasTagAttr");
-		ret.put(SCRIPT_MACRO_IS_IN_GROUP,           "ctx.isInGroup");
-		ret.put(SCRIPT_MACRO_IS_IN_ROLE,            "ctx.isInRole");
-		ret.put(SCRIPT_MACRO_IS_IN_ANY_GROUP,       "ctx.isInAnyGroup()");
-		ret.put(SCRIPT_MACRO_IS_IN_ANY_ROLE,        "ctx.isInAnyRole()");
-		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP,   "!ctx.isInAnyGroup()");
-		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE,    "!ctx.isInAnyRole()");
+        return ret != null ? ret.toString() : "";
+    }
 
-		return ret;
-	}
+    private String getCloseQuote(Object[] args, String openQuote) {
+        Object ret = (args != null && args.length > 3) ? args[3] : null;
 
+        return ret != null ? ret.toString() : openQuote;
+    }
 
-	public void logDebug(Object msg) {
-		LOG.debug(Objects.toString(msg));
-	}
+    private static String getJsonVarNamesPattern() {
+        List<String> varNames = new ArrayList<>();
 
-	public void logInfo(Object msg) {
-		LOG.info(Objects.toString(msg));
-	}
+        /* include only variables setup by JSON.parse()
+         *
+        varNames.add(SCRIPT_VAR_ctx);
+        varNames.add(SCRIPT_VAR_tag);
+        varNames.add(SCRIPT_VAR_tagAttr);
+         *
+         */
+        varNames.add(SCRIPT_VAR__CTX);
+        varNames.add(SCRIPT_VAR_REQ);
+        varNames.add(SCRIPT_VAR_RES);
+        varNames.add(SCRIPT_VAR_TAG);
+        varNames.add(SCRIPT_VAR_TAGNAMES);
+        varNames.add(SCRIPT_VAR_TAGS);
+        varNames.add(SCRIPT_VAR_UGA);
+        varNames.add(SCRIPT_VAR_UG);
+        varNames.add(SCRIPT_VAR_UGNAMES);
+        varNames.add(SCRIPT_VAR_URNAMES);
+        varNames.add(SCRIPT_VAR_USER);
 
-	public void logWarn(Object msg) {
-		LOG.warn(Objects.toString(msg));
-	}
+        return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
+    }
 
-	public void logError(Object msg) {
-		LOG.error(Objects.toString(msg));
-	}
+    private static String getUserAttributesPattern() {
+        List<String> varNames = new ArrayList<>();
 
-	public void logFatal(Object msg) {
-		LOG.error(Objects.toString(msg));
-	}
+        varNames.add(SCRIPT_VAR_USER);
 
-	public static class UserGroupsAttributes {
-		private final Collection<String>               groupNames;
-		private final Map<String, Map<String, String>> groupAttributes;
+        varNames.add(SCRIPT_MACRO_GET_USER_ATTR);
+        varNames.add(SCRIPT_MACRO_GET_USER_ATTR_Q);
 
-		public UserGroupsAttributes(Collection<String> groupNames, Map<String, Map<String, String>> groupAttributes) {
-			this.groupNames      = groupNames;
-			this.groupAttributes = groupAttributes;
-		}
+        varNames.add(SCRIPT_MACRO_GET_USER_ATTR_NAMES);
+        varNames.add(SCRIPT_MACRO_GET_USER_ATTR_NAMES_Q);
+        varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_CSV);
+        varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV);
 
-		/*
-		  {
-		    sVal: {
-		      attr1: val1,
-		      attr2: val2
-		    },
-		    mVal: {
-		      attr1: [ val1, val1_2 ],
-		      attr2: [ val2, val2_2 ]
-		    }
-		  }
-		 */
-		public Map<String, Map<String, Object>> getAttributes() {
-			Map<String, Map<String, Object>> ret       = new HashMap<>();
-			Map<String, String>              valueMap  = new HashMap<>();
-			Map<String, List<String>>        valuesMap = new HashMap<>();
+        varNames.add(SCRIPT_MACRO_HAS_USER_ATTR);
 
-			ret.put("sVal", (Map) valueMap);
-			ret.put("mVal", (Map) valuesMap);
+        varNames.add("userAttr");
+        varNames.add("userAttrQ");
+        varNames.add("userAttrNames");
+        varNames.add("userAttrNamesQ");
+        varNames.add("userAttrNamesCsv");
+        varNames.add("userAttrNamesCsvQ");
+        varNames.add("hasUserAttr");
 
-			if (groupNames != null && groupAttributes != null) {
-				for (String groupName : groupNames) {
-					Map<String, String> attributes = groupAttributes.get(groupName);
+        return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
+    }
 
-					if (attributes != null) {
-						for (Map.Entry<String, String> entry : attributes.entrySet()) {
-							String attrName  = entry.getKey();
-							String attrValue = entry.getValue();
+    private static String getGroupAttributesPattern() {
+        List<String> varNames = new ArrayList<>();
 
-							if (!valueMap.containsKey(attrName)) {
-								valueMap.put(attrName, attrValue);
-							}
+        varNames.add(SCRIPT_VAR_UG);
+        varNames.add(SCRIPT_VAR_UGA);
 
-							List<String> values = valuesMap.get(attrName);
+        varNames.add(SCRIPT_MACRO_GET_UG_ATTR);
+        varNames.add(SCRIPT_MACRO_GET_UG_ATTR_Q);
+        varNames.add(SCRIPT_MACRO_GET_UG_ATTR_CSV);
+        varNames.add(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV);
 
-							if (values == null) {
-								values = new ArrayList<>();
+        varNames.add(SCRIPT_MACRO_GET_UG_ATTR_NAMES);
+        varNames.add(SCRIPT_MACRO_GET_UG_ATTR_NAMES_Q);
+        varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_CSV);
+        varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV);
 
-								valuesMap.put(attrName, values);
-							}
+        varNames.add(SCRIPT_MACRO_HAS_UG_ATTR);
 
-							values.add(attrValue);
-						}
-					}
-				}
-			}
+        varNames.add("ugAttr");
+        varNames.add("ugAttrQ");
+        varNames.add("ugAttrCsv");
+        varNames.add("ugAttrCsvQ");
 
-			return ret;
-		}
-	}
+        varNames.add("ugAttrNames");
+        varNames.add("ugAttrNamesQ");
+        varNames.add("ugAttrNamesCsv");
+        varNames.add("ugAttrNamesCsvQ");
+
+        varNames.add("hasUgAttr");
+
+        return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
+    }
+
+    private static Map<String, String> getMacrosMap() {
+        Map<String, String> ret = new HashMap<>();
+
+        ret.put(SCRIPT_MACRO_GET_TAG_NAMES, "ctx.tagNames");
+        ret.put(SCRIPT_MACRO_GET_TAG_NAMES_Q, "ctx.tagNamesQ");
+        ret.put(SCRIPT_MACRO_GET_TAG_ATTR_NAMES, "ctx.tagAttrNames");
+        ret.put(SCRIPT_MACRO_GET_TAG_ATTR_NAMES_Q, "ctx.tagAttrNamesQ");
+        ret.put(SCRIPT_MACRO_GET_TAG_ATTR, "ctx.tagAttr");
+        ret.put(SCRIPT_MACRO_GET_TAG_ATTR_Q, "ctx.tagAttrQ");
+        ret.put(SCRIPT_MACRO_GET_UG_NAMES, "ctx.ugNames");
+        ret.put(SCRIPT_MACRO_GET_UG_NAMES_Q, "ctx.ugNamesQ");
+        ret.put(SCRIPT_MACRO_GET_UG_ATTR_NAMES, "ctx.ugAttrNames");
+        ret.put(SCRIPT_MACRO_GET_UG_ATTR_NAMES_Q, "ctx.ugAttrNamesQ");
+        ret.put(SCRIPT_MACRO_GET_UG_ATTR, "ctx.ugAttr");
+        ret.put(SCRIPT_MACRO_GET_UG_ATTR_Q, "ctx.ugAttrQ");
+        ret.put(SCRIPT_MACRO_GET_UR_NAMES, "ctx.urNames");
+        ret.put(SCRIPT_MACRO_GET_UR_NAMES_Q, "ctx.urNamesQ");
+        ret.put(SCRIPT_MACRO_GET_USER_ATTR_NAMES, "ctx.userAttrNames");
+        ret.put(SCRIPT_MACRO_GET_USER_ATTR_NAMES_Q, "ctx.userAttrNamesQ");
+        ret.put(SCRIPT_MACRO_GET_USER_ATTR, "ctx.userAttr");
+        ret.put(SCRIPT_MACRO_GET_USER_ATTR_Q, "ctx.userAttrQ");
+
+        ret.put(SCRIPT_MACRO_GET_TAG_ATTR_CSV, "ctx.tagAttrCsv");
+        ret.put(SCRIPT_MACRO_GET_TAG_ATTR_Q_CSV, "ctx.tagAttrCsvQ");
+        ret.put(SCRIPT_MACRO_GET_UG_ATTR_CSV, "ctx.ugAttrCsv");
+        ret.put(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV, "ctx.ugAttrCsvQ");
+        ret.put(SCRIPT_MACRO_TAG_ATTR_NAMES_CSV, "ctx.tagAttrNamesCsv()");
+        ret.put(SCRIPT_MACRO_TAG_ATTR_NAMES_Q_CSV, "ctx.tagAttrNamesCsvQ()");
+        ret.put(SCRIPT_MACRO_TAG_NAMES_CSV, "ctx.tagNamesCsv()");
+        ret.put(SCRIPT_MACRO_TAG_NAMES_Q_CSV, "ctx.tagNamesCsvQ()");
+        ret.put(SCRIPT_MACRO_UG_ATTR_NAMES_CSV, "ctx.ugAttrNamesCsv()");
+        ret.put(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV, "ctx.ugAttrNamesCsvQ()");
+        ret.put(SCRIPT_MACRO_UG_NAMES_CSV, "ctx.ugNamesCsv()");
+        ret.put(SCRIPT_MACRO_UG_NAMES_Q_CSV, "ctx.ugNamesCsvQ()");
+        ret.put(SCRIPT_MACRO_UR_NAMES_CSV, "ctx.urNamesCsv()");
+        ret.put(SCRIPT_MACRO_UR_NAMES_Q_CSV, "ctx.urNamesCsvQ()");
+        ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_CSV, "ctx.userAttrNamesCsv()");
+        ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV, "ctx.userAttrNamesCsvQ()");
+        ret.put(SCRIPT_MACRO_HAS_TAG, "ctx.hasTag");
+        ret.put(SCRIPT_MACRO_HAS_ANY_TAG, "ctx.hasAnyTag()");
+        ret.put(SCRIPT_MACRO_HAS_NO_TAG, "!ctx.hasAnyTag()");
+        ret.put(SCRIPT_MACRO_HAS_USER_ATTR, "ctx.hasUserAttr");
+        ret.put(SCRIPT_MACRO_HAS_UG_ATTR, "ctx.hasUgAttr");
+        ret.put(SCRIPT_MACRO_HAS_TAG_ATTR, "ctx.hasTagAttr");
+        ret.put(SCRIPT_MACRO_IS_IN_GROUP, "ctx.isInGroup");
+        ret.put(SCRIPT_MACRO_IS_IN_ROLE, "ctx.isInRole");
+        ret.put(SCRIPT_MACRO_IS_IN_ANY_GROUP, "ctx.isInAnyGroup()");
+        ret.put(SCRIPT_MACRO_IS_IN_ANY_ROLE, "ctx.isInAnyRole()");
+        ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP, "!ctx.isInAnyGroup()");
+        ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE, "!ctx.isInAnyRole()");
+        ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_AFTER, "ctx.isAccessTimeAfter");
+        ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_BEFORE, "ctx.isAccessTimeBefore");
+        ret.put(SCRIPT_MACRO_IS_ACCESS_TIME_BETWEEN, "ctx.isAccessTimeBetween");
+
+        return ret;
+    }
+
+    public static class UserGroupsAttributes {
+        private final Collection<String>               groupNames;
+        private final Map<String, Map<String, String>> groupAttributes;
+
+        public UserGroupsAttributes(Collection<String> groupNames, Map<String, Map<String, String>> groupAttributes) {
+            this.groupNames      = groupNames;
+            this.groupAttributes = groupAttributes;
+        }
+
+        /*
+          {
+            sVal: {
+              attr1: val1,
+              attr2: val2
+            },
+            mVal: {
+              attr1: [ val1, val1_2 ],
+              attr2: [ val2, val2_2 ]
+            }
+          }
+         */
+        public Map<String, Map<String, Object>> getAttributes() {
+            Map<String, Map<String, Object>> ret       = new HashMap<>();
+            Map<String, String>              valueMap  = new HashMap<>();
+            Map<String, List<String>>        valuesMap = new HashMap<>();
+
+            ret.put("sVal", (Map) valueMap);
+            ret.put("mVal", (Map) valuesMap);
+
+            if (groupNames != null && groupAttributes != null) {
+                for (String groupName : groupNames) {
+                    Map<String, String> attributes = groupAttributes.get(groupName);
+
+                    if (attributes != null) {
+                        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+                            String attrName  = entry.getKey();
+                            String attrValue = entry.getValue();
+
+                            if (!valueMap.containsKey(attrName)) {
+                                valueMap.put(attrName, attrValue);
+                            }
+
+                            List<String> values = valuesMap.computeIfAbsent(attrName, k -> new ArrayList<>());
+
+                            values.add(attrValue);
+                        }
+                    }
+                }
+            }
+
+            return ret;
+        }
+    }
+
+    static {
+        init(null);
+    }
 }

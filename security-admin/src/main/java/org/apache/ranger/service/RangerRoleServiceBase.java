@@ -18,8 +18,10 @@
 package org.apache.ranger.service;
 
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -27,43 +29,46 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class RangerRoleServiceBase<T extends XXRole, V extends RangerRole> extends RangerBaseModelService<T, V> {
-
+public abstract class RangerRoleServiceBase<T extends XXRole, V extends RangerRole> extends RangerAuditedModelService<T, V> {
     public RangerRoleServiceBase() {
-        super();
+        super(AppConstants.CLASS_TYPE_RANGER_ROLE);
 
         searchFields.add(new SearchField(SearchFilter.ROLE_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.ROLE_NAME, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField(SearchFilter.GROUP_NAME, "xXRoleRefGroup.groupName",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXRoleRefGroup xXRoleRefGroup",
-				"xXRoleRefGroup.roleId = obj.id"));
-		searchFields.add(new SearchField(SearchFilter.USER_NAME, "xXRoleRefUser.userName", SearchField.DATA_TYPE.STRING,
-				SearchField.SEARCH_TYPE.FULL, "XXRoleRefUser xXRoleRefUser", "xXRoleRefUser.roleId = obj.id"));
-		searchFields.add(new SearchField(SearchFilter.ROLE_NAME_PARTIAL, "obj.name", SearchField.DATA_TYPE.STRING,
-				SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField(SearchFilter.GROUP_NAME_PARTIAL, "xXRoleRefGroup.groupName",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefGroup xXRoleRefGroup",
-				"xXRoleRefGroup.roleId = obj.id"));
-		searchFields.add(new SearchField(SearchFilter.USER_NAME_PARTIAL, "xXRoleRefUser.userName",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefUser xXRoleRefUser",
-				"xXRoleRefUser.roleId = obj.id"));
+        searchFields.add(new SearchField(SearchFilter.GROUP_NAME, "xXRoleRefGroup.groupName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXRoleRefGroup xXRoleRefGroup", "xXRoleRefGroup.roleId = obj.id"));
+        searchFields.add(new SearchField(SearchFilter.USER_NAME, "xXRoleRefUser.userName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXRoleRefUser xXRoleRefUser", "xXRoleRefUser.roleId = obj.id"));
+        searchFields.add(new SearchField(SearchFilter.ROLE_NAME_PARTIAL, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        searchFields.add(new SearchField(SearchFilter.GROUP_NAME_PARTIAL, "xXRoleRefGroup.groupName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefGroup xXRoleRefGroup", "xXRoleRefGroup.roleId = obj.id"));
+        searchFields.add(new SearchField(SearchFilter.USER_NAME_PARTIAL, "xXRoleRefUser.userName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefUser xXRoleRefUser", "xXRoleRefUser.roleId = obj.id"));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
         sortFields.add(new SortField(SearchFilter.ROLE_ID, "obj.id", true, SortField.SORT_ORDER.ASC));
         sortFields.add(new SortField(SearchFilter.ROLE_NAME, "obj.name"));
 
+        trxLogAttrs.put("name", new VTrxLogAttr("name", "Role Name", false, true));
+        trxLogAttrs.put("description", new VTrxLogAttr("description", "Role Description"));
+        trxLogAttrs.put("options", new VTrxLogAttr("options", "Options"));
+        trxLogAttrs.put("users", new VTrxLogAttr("users", "Users"));
+        trxLogAttrs.put("adminUsers", new VTrxLogAttr("adminUsers", "Admin Users"));
+        trxLogAttrs.put("groups", new VTrxLogAttr("groups", "Groups"));
+        trxLogAttrs.put("adminGroups", new VTrxLogAttr("adminGroups", "Admin Groups"));
+        trxLogAttrs.put("roles", new VTrxLogAttr("roles", "Roles"));
+        trxLogAttrs.put("adminRoles", new VTrxLogAttr("adminRoles", "Admin Roles"));
+        trxLogAttrs.put("createdByUser", new VTrxLogAttr("createdByUser", "Created By User"));
     }
 
     @Override
-    protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
+    protected T mapViewToEntityBean(V vObj, T xObj, int operationContext) {
         xObj.setName(vObj.getName());
         xObj.setDescription(vObj.getDescription());
 
         Map<String, Object> options = vObj.getOptions();
+
         if (options == null) {
             options = new HashMap<>();
         }
+
         xObj.setOptions(JsonUtils.mapToJson(options));
 
         return xObj;
@@ -77,4 +82,3 @@ public abstract class RangerRoleServiceBase<T extends XXRole, V extends RangerRo
         return vObj;
     }
 }
-

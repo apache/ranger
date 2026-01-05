@@ -36,10 +36,15 @@ class RangerServiceException(Exception):
         print(response)
 
         if api is not None and response is not None:
-            respJson = response.json()
+            if response.content:
+              try:
+                respJson         = response.json()
+                self.msgDesc     = respJson['msgDesc']     if respJson is not None and 'msgDesc'     in respJson else None
+                self.messageList = respJson['messageList'] if respJson is not None and 'messageList' in respJson else None
+              except Exception:
+                self.msgDesc     = response.content
+                self.messageList = [ response.content ]
 
             self.statusCode  = response.status_code
-            self.msgDesc     = respJson['msgDesc']     if respJson is not None and 'msgDesc'     in respJson else None
-            self.messageList = respJson['messageList'] if respJson is not None and 'messageList' in respJson else None
 
         Exception.__init__(self, "{} {} failed: expected_status={}, status={}, message={}".format(self.method, self.path, self.expected_status, self.statusCode, self.msgDesc))

@@ -19,31 +19,29 @@
 
 package org.apache.ranger.plugin.service;
 
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.collections.ListUtils;
-import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RangerDefaultService extends RangerBaseService {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultService.class);
-		
-	@Override
-	public  Map<String, Object> validateConfig() throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("RangerDefaultService.validateConfig Service: (" + serviceName + " ), returning empty map");
-		}
-		return MapUtils.EMPTY_MAP;
-	}
-	
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("RangerDefaultService.lookupResource Context: (" + context + "), returning empty list");
-		}
-		return ListUtils.EMPTY_LIST;
-	}
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
+public class RangerDefaultService extends RangerBaseService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultService.class);
+
+    public static final String ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED = "Configuration validation is not implemented";
+
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        LOG.debug("RangerDefaultService.validateConfig Service({}): {}", serviceName, ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED);
+
+        throw new Exception(ERROR_MSG_VALIDATE_CONFIG_NOT_IMPLEMENTED);
+    }
+
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        LOG.debug("RangerDefaultService.lookupResource Context: ({}), returning empty list", context);
+
+        return Collections.emptyList();
+    }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.service;
 
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
@@ -34,26 +35,27 @@ public abstract class RangerChainedPlugin {
     protected final String           serviceType;
     protected final String           serviceName;
     protected final RangerBasePlugin plugin;
+    protected final boolean          skipAccessCheckIfAlreadyDetermined;
 
     protected RangerChainedPlugin(RangerBasePlugin rootPlugin, String serviceType, String serviceName) {
-        LOG.info("RangerChainedPlugin(" + serviceType + ", " + serviceName + ")");
+        LOG.info("RangerChainedPlugin({}, {})", serviceType, serviceName);
 
         this.rootPlugin  = rootPlugin;
         this.serviceType = serviceType;
         this.serviceName = serviceName;
         this.plugin      = buildChainedPlugin(serviceType, serviceName, rootPlugin.getAppId());
+
+        RangerPluginConfig rootPluginConfig = rootPlugin.getPluginContext().getConfig();
+
+        skipAccessCheckIfAlreadyDetermined = rootPluginConfig.getBoolean(rootPluginConfig.getPropertyPrefix() + ".bypass.chained.plugin.evaluation.if.access.is.determined", false);
     }
 
     public void init() {
-        LOG.info("==> RangerChainedPlugin.init(" + serviceType + ", " + serviceName + ")");
+        LOG.info("==> RangerChainedPlugin.init({}, {})", serviceType, serviceName);
 
         this.plugin.init();
 
-        LOG.info("<== RangerChainedPlugin.init(" + serviceType + ", " + serviceName + ")");
-    }
-
-    protected RangerBasePlugin buildChainedPlugin(String serviceType, String serviceName, String appId) {
-        return new RangerBasePlugin(serviceType, serviceName, appId);
+        LOG.info("<== RangerChainedPlugin.init({}, {})", serviceType, serviceName);
     }
 
     public abstract RangerAccessResult isAccessAllowed(RangerAccessRequest request);
@@ -64,7 +66,9 @@ public abstract class RangerChainedPlugin {
 
     public abstract RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer policyType);
 
-    public boolean  isAuthorizeOnlyWithChainedPlugin() { return false; }
+    public boolean isAuthorizeOnlyWithChainedPlugin() {
+        return false;
+    }
 
     public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request) {
         return null; // no-op
@@ -72,5 +76,9 @@ public abstract class RangerChainedPlugin {
 
     public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request) {
         return null; // no-op
+    }
+
+    protected RangerBasePlugin buildChainedPlugin(String serviceType, String serviceName, String appId) {
+        return new RangerBasePlugin(serviceType, serviceName, appId);
     }
 }

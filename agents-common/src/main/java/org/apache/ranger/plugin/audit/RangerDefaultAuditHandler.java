@@ -19,12 +19,8 @@
 
 package org.apache.ranger.plugin.audit;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
@@ -32,7 +28,11 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
+import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -40,272 +40,276 @@ import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultAuditHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultAuditHandler.class);
 
-	private static final String       CONF_AUDIT_ID_STRICT_UUID     = "xasecure.audit.auditid.strict.uuid";
-	private static final boolean      DEFAULT_AUDIT_ID_STRICT_UUID  = false;
+    private static final String  CONF_AUDIT_ID_STRICT_UUID    = "xasecure.audit.auditid.strict.uuid";
+    private static final boolean DEFAULT_AUDIT_ID_STRICT_UUID = false;
 
+    protected final String moduleName;
 
-	private   final boolean         auditIdStrictUUID;
-	protected final String          moduleName;
-	private   final RangerRESTUtils restUtils      = new RangerRESTUtils();
-	private         long            sequenceNumber = 0;
-	private         String          UUID           = MiscUtil.generateUniqueId();
-	private         AtomicInteger   counter        =  new AtomicInteger(0);
+    private final boolean         auditIdStrictUUID;
+    private       long            sequenceNumber;
+    private final RangerRESTUtils restUtils = new RangerRESTUtils();
+    private       String          uuid      = MiscUtil.generateUniqueId();
+    private       AtomicInteger   counter   = new AtomicInteger(0);
 
+    public RangerDefaultAuditHandler() {
+        auditIdStrictUUID = DEFAULT_AUDIT_ID_STRICT_UUID;
+        moduleName        = RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME;
+    }
 
+    public RangerDefaultAuditHandler(Configuration config) {
+        auditIdStrictUUID = config.getBoolean(CONF_AUDIT_ID_STRICT_UUID, DEFAULT_AUDIT_ID_STRICT_UUID);
+        moduleName        = config.get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP, RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
+    }
 
-	public RangerDefaultAuditHandler() {
-		auditIdStrictUUID = DEFAULT_AUDIT_ID_STRICT_UUID;
-		moduleName        = RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME;
-	}
+    @Override
+    public void processResult(RangerAccessResult result) {
+        LOG.debug("==> RangerDefaultAuditHandler.processResult({})", result);
 
-	public RangerDefaultAuditHandler(Configuration config) {
-		auditIdStrictUUID = config.getBoolean(CONF_AUDIT_ID_STRICT_UUID, DEFAULT_AUDIT_ID_STRICT_UUID);
-		moduleName        = config.get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
-	}
+        AuthzAuditEvent event = getAuthzEvents(result);
 
-	@Override
-	public void processResult(RangerAccessResult result) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.processResult(" + result + ")");
-		}
+        logAuthzAudit(event);
 
-		AuthzAuditEvent event = getAuthzEvents(result);
+        LOG.debug("<== RangerDefaultAuditHandler.processResult({})", result);
+    }
 
-		logAuthzAudit(event);
+    @Override
+    public void processResults(Collection<RangerAccessResult> results) {
+        LOG.debug("==> RangerDefaultAuditHandler.processResults({})", results);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.processResult(" + result + ")");
-		}
-	}
+        Collection<AuthzAuditEvent> events = getAuthzEvents(results);
 
-	@Override
-	public void processResults(Collection<RangerAccessResult> results) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.processResults(" + results + ")");
-		}
+        if (events != null) {
+            logAuthzAudits(events);
+        }
 
-		Collection<AuthzAuditEvent> events = getAuthzEvents(results);
+        LOG.debug("<== RangerDefaultAuditHandler.processResults({})", results);
+    }
 
-		if (events != null) {
-			logAuthzAudits(events);
-		}
+    public AuthzAuditEvent getAuthzEvents(RangerAccessResult result) {
+        LOG.debug("==> RangerDefaultAuditHandler.getAuthzEvents({})", result);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.processResults(" + results + ")");
-		}
-	}
+        AuthzAuditEvent ret = null;
 
+        RangerAccessRequest request = result != null ? result.getAccessRequest() : null;
 
-	public AuthzAuditEvent getAuthzEvents(RangerAccessResult result) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.getAuthzEvents(" + result + ")");
-		}
+        if (request != null && result.getIsAudited()) {
+            //RangerServiceDef     serviceDef   = result.getServiceDef();
+            RangerAccessResource resource     = request.getResource();
+            String               resourceType = resource == null ? null : resource.getLeafName();
+            String               resourcePath = resource == null ? null : resource.getAsString();
 
-		AuthzAuditEvent ret = null;
+            ret = createAuthzAuditEvent();
 
-		RangerAccessRequest request = result != null ? result.getAccessRequest() : null;
+            ret.setRepositoryName(result.getServiceName());
+            ret.setRepositoryType(result.getServiceType());
+            ret.setResourceType(resourceType);
+            ret.setResourcePath(resourcePath);
+            ret.setRequestData(request.getRequestData());
+            ret.setEventTime(request.getAccessTime() != null ? request.getAccessTime() : new Date());
+            ret.setUser(request.getUser());
+            ret.setAction(request.getAccessType());
+            ret.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
+            ret.setPolicyId(result.getPolicyId());
+            ret.setAccessType(request.getAction());
+            ret.setClientIP(request.getClientIPAddress());
+            ret.setClientType(request.getClientType());
+            ret.setSessionId(request.getSessionId());
+            ret.setAclEnforcer(RangerAccessRequestUtil.getAclEnforcerOrDefault(request.getContext(), moduleName));
 
-		if(request != null && result != null && result.getIsAudited()) {
-			//RangerServiceDef     serviceDef   = result.getServiceDef();
-			RangerAccessResource resource     = request.getResource();
-			String               resourceType = resource == null ? null : resource.getLeafName();
-			String               resourcePath = resource == null ? null : resource.getAsString();
+            Set<String> tags = getTags(request);
+            if (tags != null) {
+                ret.setTags(tags);
+            }
 
-			ret = createAuthzAuditEvent();
+            ret.setDatasets(getDatasets(request));
+            ret.setProjects(getProjects(request));
+            ret.setDatasetIds(getDatasetIds(request));
+            ret.setAdditionalInfo(getAdditionalInfo(request));
+            ret.setClusterName(request.getClusterName());
+            ret.setZoneName(result.getZoneName());
+            ret.setAgentHostname(restUtils.getAgentHostname());
+            ret.setPolicyVersion(result.getPolicyVersion());
 
-			ret.setRepositoryName(result.getServiceName());
-			ret.setRepositoryType(result.getServiceType());
-			ret.setResourceType(resourceType);
-			ret.setResourcePath(resourcePath);
-			ret.setRequestData(request.getRequestData());
-			ret.setEventTime(request.getAccessTime() != null ? request.getAccessTime() : new Date());
-			ret.setUser(request.getUser());
-			ret.setAction(request.getAccessType());
-			ret.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
-			ret.setPolicyId(result.getPolicyId());
-			ret.setAccessType(request.getAction());
-			ret.setClientIP(request.getClientIPAddress());
-			ret.setClientType(request.getClientType());
-			ret.setSessionId(request.getSessionId());
-			ret.setAclEnforcer(moduleName);
-			Set<String> tags = getTags(request);
-			if (tags != null) {
-				ret.setTags(tags);
-			}
-			ret.setAdditionalInfo(getAdditionalInfo(request));
-			ret.setClusterName(request.getClusterName());
-			ret.setZoneName(result.getZoneName());
-			ret.setAgentHostname(restUtils.getAgentHostname());
-			ret.setPolicyVersion(result.getPolicyVersion());
+            populateDefaults(ret);
 
-			populateDefaults(ret);
+            result.setAuditLogId(ret.getEventId());
+        }
 
-			result.setAuditLogId(ret.getEventId());
-		}
+        LOG.debug("<== RangerDefaultAuditHandler.getAuthzEvents({}): {}", result, ret);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.getAuthzEvents(" + result + "): " + ret);
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public Collection<AuthzAuditEvent> getAuthzEvents(Collection<RangerAccessResult> results) {
+        LOG.debug("==> RangerDefaultAuditHandler.getAuthzEvents({})", results);
 
-	public Collection<AuthzAuditEvent> getAuthzEvents(Collection<RangerAccessResult> results) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.getAuthzEvents(" + results + ")");
-		}
+        List<AuthzAuditEvent> ret = null;
 
-		List<AuthzAuditEvent> ret = null;
+        if (results != null) {
+            // TODO: optimize the number of audit logs created
+            for (RangerAccessResult result : results) {
+                AuthzAuditEvent event = getAuthzEvents(result);
 
-		if(results != null) {
-			// TODO: optimize the number of audit logs created
-			for(RangerAccessResult result : results) {
-				AuthzAuditEvent event = getAuthzEvents(result);
+                if (event == null) {
+                    continue;
+                }
 
-				if(event == null) {
-					continue;
-				}
+                if (ret == null) {
+                    ret = new ArrayList<>();
+                }
 
-				if(ret == null) {
-					ret = new ArrayList<>();
-				}
+                ret.add(event);
+            }
+        }
 
-				ret.add(event);
-			}
-		}
+        LOG.debug("<== RangerDefaultAuditHandler.getAuthzEvents({}): {}", results, ret);
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.getAuthzEvents(" + results + "): " + ret);
-		}
+        return ret;
+    }
 
-		return ret;
-	}
+    public void logAuthzAudit(AuthzAuditEvent auditEvent) {
+        LOG.debug("==> RangerDefaultAuditHandler.logAuthzAudit({})", auditEvent);
 
-	public void logAuthzAudit(AuthzAuditEvent auditEvent) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAuthzAudit(" + auditEvent + ")");
-		}
+        if (auditEvent != null) {
+            populateDefaults(auditEvent);
 
-		if(auditEvent != null) {
-			populateDefaults(auditEvent);
+            AuditHandler auditProvider = RangerBasePlugin.getAuditProvider(auditEvent.getRepositoryName());
+            if (auditProvider == null || !auditProvider.log(auditEvent)) {
+                MiscUtil.logErrorMessageByInterval(LOG, "fail to log audit event " + auditEvent);
+            }
+        }
 
-			AuditHandler auditProvider = RangerBasePlugin.getAuditProvider(auditEvent.getRepositoryName());
-			if (auditProvider == null || !auditProvider.log(auditEvent)) {
-				MiscUtil.logErrorMessageByInterval(LOG, "fail to log audit event " + auditEvent);
-			}
-		}
+        LOG.debug("<== RangerDefaultAuditHandler.logAuthzAudit({})", auditEvent);
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAuthzAudit(" + auditEvent + ")");
-		}
-	}
+    public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {
+        LOG.debug("==> RangerDefaultAuditHandler.logAuthzAudits({})", auditEvents);
 
-	private void populateDefaults(AuthzAuditEvent auditEvent) {
-		if( auditEvent.getAclEnforcer() == null || auditEvent.getAclEnforcer().isEmpty()) {
-			auditEvent.setAclEnforcer("ranger-acl"); // TODO: review
-		}
+        if (auditEvents != null) {
+            for (AuthzAuditEvent auditEvent : auditEvents) {
+                logAuthzAudit(auditEvent);
+            }
+        }
 
-		if (auditEvent.getAgentHostname() == null || auditEvent.getAgentHostname().isEmpty()) {
-			auditEvent.setAgentHostname(MiscUtil.getHostname());
-		}
+        LOG.debug("<== RangerDefaultAuditHandler.logAuthzAudits({})", auditEvents);
+    }
 
-		if (auditEvent.getLogType() == null || auditEvent.getLogType().isEmpty()) {
-			auditEvent.setLogType("RangerAudit");
-		}
+    public AuthzAuditEvent createAuthzAuditEvent() {
+        return new AuthzAuditEvent();
+    }
 
-		if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
-			auditEvent.setEventId(generateNextAuditEventId());
-		}
+    public final Set<String> getDatasets(RangerAccessRequest request) {
+        GdsAccessResult gdsResult = RangerAccessRequestUtil.getGdsResultFromContext(request.getContext());
 
-		if (auditEvent.getAgentId() == null) {
-			auditEvent.setAgentId(MiscUtil.getApplicationType());
-		}
+        return gdsResult != null ? gdsResult.getDatasets() : null;
+    }
 
-		auditEvent.setSeqNum(sequenceNumber++);
-	}
+    public final Set<String> getProjects(RangerAccessRequest request) {
+        GdsAccessResult gdsResult = RangerAccessRequestUtil.getGdsResultFromContext(request.getContext());
 
-	public void logAuthzAudits(Collection<AuthzAuditEvent> auditEvents) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.logAuthzAudits(" + auditEvents + ")");
-		}
+        return gdsResult != null ? gdsResult.getProjects() : null;
+    }
 
-		if(auditEvents != null) {
-			for(AuthzAuditEvent auditEvent : auditEvents) {
-				logAuthzAudit(auditEvent);
-			}
-		}
+    public final Set<Long> getDatasetIds(RangerAccessRequest request) {
+        GdsAccessResult gdsResult = RangerAccessRequestUtil.getGdsResultFromContext(request.getContext());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.logAuthzAudits(" + auditEvents + ")");
-		}
-	}
+        return gdsResult != null ? gdsResult.getDatasetIds() : null;
+    }
 
-	public AuthzAuditEvent createAuthzAuditEvent() {
-		return new AuthzAuditEvent();
-	}
+    public String getAdditionalInfo(RangerAccessRequest request) {
+        if (StringUtils.isBlank(request.getRemoteIPAddress()) && CollectionUtils.isEmpty(request.getForwardedAddresses())) {
+            return null;
+        }
 
-	protected final Set<String> getTags(RangerAccessRequest request) {
-		Set<String>     ret  = null;
-		Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+        Map<String, String> addInfomap = new HashMap<>();
+        addInfomap.put("forwarded-ip-addresses", "[" + StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
+        addInfomap.put("remote-ip-address", request.getRemoteIPAddress());
 
-		if (CollectionUtils.isNotEmpty(tags)) {
-			ret = new HashSet<>();
+        return JsonUtils.mapToJson(addInfomap);
+    }
 
-			for (RangerTagForEval tag : tags) {
-				ret.add(writeObjectAsString(tag));
-			}
-		}
+    protected final Set<String> getTags(RangerAccessRequest request) {
+        Set<String>           ret  = null;
+        Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
-		return ret;
-	}
+        if (CollectionUtils.isNotEmpty(tags)) {
+            ret = new HashSet<>();
 
-	public 	String getAdditionalInfo(RangerAccessRequest request) {
-		if (StringUtils.isBlank(request.getRemoteIPAddress()) && CollectionUtils.isEmpty(request.getForwardedAddresses())) {
-			return null;
-		}
-		Map<String,String> addInfomap=new HashMap<String,String>();
-		addInfomap.put("forwarded-ip-addresses", "[" + StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
-		addInfomap.put("remote-ip-address", request.getRemoteIPAddress());
-		String addInfojsonStr = JsonUtils.mapToJson(addInfomap);
-		return addInfojsonStr;
+            for (RangerTagForEval tag : tags) {
+                ret.add(writeObjectAsString(tag));
+            }
+        }
 
-	}
+        return ret;
+    }
 
-	private String generateNextAuditEventId() {
-		final String ret;
+    private void populateDefaults(AuthzAuditEvent auditEvent) {
+        if (auditEvent.getAclEnforcer() == null || auditEvent.getAclEnforcer().isEmpty()) {
+            auditEvent.setAclEnforcer("ranger-acl"); // TODO: review
+        }
 
-		if (auditIdStrictUUID) {
-			ret = MiscUtil.generateGuid();
-		} else {
-			int nextId = counter.getAndIncrement();
+        if (auditEvent.getAgentHostname() == null || auditEvent.getAgentHostname().isEmpty()) {
+            auditEvent.setAgentHostname(MiscUtil.getHostname());
+        }
 
-			if (nextId == Integer.MAX_VALUE) {
-				// reset UUID and counter
-				UUID    = MiscUtil.generateUniqueId();
-				counter = new AtomicInteger(0);
-			}
+        if (auditEvent.getLogType() == null || auditEvent.getLogType().isEmpty()) {
+            auditEvent.setLogType("RangerAudit");
+        }
 
-			ret = UUID + "-" + Integer.toString(nextId);
-		}
+        if (auditEvent.getEventId() == null || auditEvent.getEventId().isEmpty()) {
+            auditEvent.setEventId(generateNextAuditEventId());
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("generateNextAuditEventId(): " + ret);
-		}
+        if (auditEvent.getAgentId() == null) {
+            auditEvent.setAgentId(MiscUtil.getApplicationType());
+        }
 
-		return ret;
-	 }
+        auditEvent.setSeqNum(sequenceNumber++);
+    }
 
-	private String writeObjectAsString(Serializable obj) {
-		String jsonStr = StringUtils.EMPTY;
-		try {
-			jsonStr = JsonUtilsV2.objToJson(obj);
-		} catch (Exception e) {
-			LOG.error("Cannot create JSON string for object:[" + obj + "]", e);
-		}
-		return jsonStr;
-	}
+    private String generateNextAuditEventId() {
+        final String ret;
+
+        if (auditIdStrictUUID) {
+            ret = MiscUtil.generateGuid();
+        } else {
+            int nextId = counter.getAndIncrement();
+
+            if (nextId == Integer.MAX_VALUE) {
+                // reset UUID and counter
+                uuid    = MiscUtil.generateUniqueId();
+                counter = new AtomicInteger(0);
+            }
+
+            ret = uuid + "-" + nextId;
+        }
+
+        LOG.debug("generateNextAuditEventId(): {}", ret);
+
+        return ret;
+    }
+
+    private String writeObjectAsString(Serializable obj) {
+        String jsonStr = StringUtils.EMPTY;
+        try {
+            jsonStr = JsonUtilsV2.objToJson(obj);
+        } catch (Exception e) {
+            LOG.error("Cannot create JSON string for object:[{}]", obj, e);
+        }
+        return jsonStr;
+    }
 }

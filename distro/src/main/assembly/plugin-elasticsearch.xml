@@ -37,7 +37,6 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-collections:commons-collections</include>
-          <include>commons-lang:commons-lang</include>
           <include>org.slf4j:slf4j-api</include>
           <include>org.slf4j:slf4j-log4j12</include>
         </includes>
@@ -47,9 +46,13 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-plugins-audit</include>
+        <include>org.apache.ranger:ranger-audit-core</include>
+        <include>org.apache.ranger:ranger-audit-dest-es</include>
+        <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
+        <include>org.apache.ranger:ranger-authz-api</include>
         <include>org.apache.ranger:ranger-plugins-cred</include>
         <include>org.apache.ranger:ranger-plugins-common</include>
+        <include>org.apache.ranger:ugsync-util</include>
         <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
       </includes>
       <binaries>
@@ -69,15 +72,15 @@
           <include>com.sun.jersey:jersey-bundle</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>commons-io:commons-io</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.noggit:noggit:jar:${noggit.version}</include>
-          <include>org.codehaus.jackson:jackson-core-asl</include>
-          <include>org.codehaus.jackson:jackson-jaxrs</include>
-          <include>org.codehaus.jackson:jackson-mapper-asl</include>
-          <include>org.codehaus.jackson:jackson-xc</include>
+          <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.core:jackson-databind:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>commons-codec:commons-codec</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
@@ -95,37 +98,11 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
-        </includes>
-      </binaries>
-    </moduleSet>
-
-    <moduleSet>
-      <useAllReactorProjects>true</useAllReactorProjects>
-      <includes>
-        <include>org.apache.ranger:ranger-plugins-audit</include>
-        <include>org.apache.ranger:ranger-plugins-cred</include>
-        <include>org.apache.ranger:ranger-plugins-common</include>
-        <include>org.apache.ranger:ranger-elasticsearch-plugin</include>
-      </includes>
-      <binaries>
-        <outputDirectory>install/lib</outputDirectory>
-        <includeDependencies>false</includeDependencies>
-        <unpack>false</unpack>
-        <directoryMode>755</directoryMode>
-        <fileMode>644</fileMode>
-        <includes>
-          <include>commons-cli:commons-cli</include>
-          <include>commons-collections:commons-collections</include>
-          <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
-          <include>commons-io:commons-io:jar:${commons.io.version}</include>
-          <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
-          <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-          <include>com.google.guava:guava:jar:${google.guava.version}</include>
-          <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-          <include>org.apache.ranger:ranger-plugins-cred</include>
-          <include>org.apache.ranger:credentialbuilder</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
+          <include>org.apache.orc:orc-core:jar:${orc.version}</include>
+          <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -138,8 +115,26 @@
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
-        <includeDependencies>true</includeDependencies>
+        <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <includes>
+          <include>com.fasterxml.woodstox:woodstox-core</include>
+          <include>commons-cli:commons-cli</include>
+          <include>commons-collections:commons-collections</include>
+          <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
+          <include>commons-io:commons-io:jar:${commons.io.version}</include>
+          <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+          <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+          <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+          <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
+          <include>org.apache.ranger:ranger-plugins-cred</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
+        </includes>
       </binaries>
     </moduleSet>
   </moduleSets>

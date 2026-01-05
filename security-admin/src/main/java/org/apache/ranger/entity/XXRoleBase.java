@@ -20,11 +20,10 @@ package org.apache.ranger.entity;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
+
 import java.util.Objects;
 
 @MappedSuperclass
-@XmlRootElement
 public abstract class XXRoleBase extends XXDBBase {
     private static final long serialVersionUID = 1L;
 
@@ -44,35 +43,52 @@ public abstract class XXRoleBase extends XXDBBase {
     @Column(name = "role_text")
     protected String roleText;
 
+    public Long getVersion() {
+        return version;
+    }
 
-    public Long getVersion() { return version; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public String getOptions() { return options; }
-    public String getRoleText() { return roleText; }
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getDescription() {
+        return description;
+    }
+
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getOptions() {
+        return options;
+    }
+
     public void setOptions(String options) {
         this.options = options;
     }
+
+    public String getRoleText() {
+        return roleText;
+    }
+
     public void setRoleText(String roleText) {
         this.roleText = roleText;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), version, name, options, roleText);
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        if (!super.equals(obj)) {
+        } else if (!super.equals(obj)) {
             return false;
         }
 
@@ -85,11 +101,6 @@ public abstract class XXRoleBase extends XXDBBase {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), version, name, options, roleText);
-    }
-
-    @Override
     public String toString() {
         String str = "XXRoleBase={";
         str += super.toString();
@@ -98,4 +109,3 @@ public abstract class XXRoleBase extends XXDBBase {
         return str;
     }
 }
-

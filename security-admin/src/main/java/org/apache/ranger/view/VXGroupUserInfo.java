@@ -17,50 +17,44 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * UserGroupInfo
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.*;
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class VXGroupUserInfo extends VXDataObject implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+    VXGroup      xgroupInfo;
+    List<VXUser> xuserInfo;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-public class VXGroupUserInfo extends VXDataObject implements java.io.Serializable  {
-	
-	private static final long serialVersionUID = 1L;
-	
-	VXGroup xgroupInfo;
-	List<VXUser> xuserInfo;
-	
-	public VXGroupUserInfo ( ) {
-	}
+    public VXGroupUserInfo() {
+    }
 
-	public VXGroup getXgroupInfo() {
-		return xgroupInfo;
-	}
+    public VXGroup getXgroupInfo() {
+        return xgroupInfo;
+    }
 
-	public void setXgroupInfo(VXGroup xgroupInfo) {
-		this.xgroupInfo = xgroupInfo;
-	}
+    public void setXgroupInfo(VXGroup xgroupInfo) {
+        this.xgroupInfo = xgroupInfo;
+    }
 
-	public List<VXUser> getXuserInfo() {
-		return xuserInfo;
-	}
+    public List<VXUser> getXuserInfo() {
+        return xuserInfo;
+    }
 
-	public void setXuserInfo(List<VXUser> xuserInfo) {
-		this.xuserInfo = xuserInfo;
-	}
-
+    public void setXuserInfo(List<VXUser> xuserInfo) {
+        this.xuserInfo = xuserInfo;
+    }
 }

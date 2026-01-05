@@ -17,10 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
-import java.util.ArrayList;
-import java.util.List;
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
@@ -31,163 +28,119 @@ import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXAuthSession;
 import org.apache.ranger.view.VXAuthSessionList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Scope("singleton")
-public class AuthSessionService extends
-		AbstractBaseResourceService<XXAuthSession, VXAuthSession> {
-	@Autowired
-	StringUtil stringUtil;
+public class AuthSessionService extends AbstractBaseResourceService<XXAuthSession, VXAuthSession> {
+    public static final String NAME = "AuthSession";
 
-	public static final String NAME = "AuthSession";
+    public static final List<SortField>   AUTH_SESSION_SORT_FLDS   = new ArrayList<>();
+    public static final List<SearchField> AUTH_SESSION_SEARCH_FLDS = new ArrayList<>();
 
-	public static final List<SortField> AUTH_SESSION_SORT_FLDS = new ArrayList<SortField>();
-	static {
-		AUTH_SESSION_SORT_FLDS.add(new SortField("id", "obj.id"));
-		AUTH_SESSION_SORT_FLDS.add(new SortField("authTime", "obj.authTime",
-				true, SortField.SORT_ORDER.DESC));
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXAuthSessionList search(SearchCriteria searchCriteria) {
+        VXAuthSessionList   returnList = new VXAuthSessionList();
+        List<VXAuthSession> viewList   = new ArrayList<>();
 
-	public static List<SearchField> AUTH_SESSION_SEARCH_FLDS = new ArrayList<SearchField>();
-	static {
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createLong("id", "obj.id"));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("loginId",
-				"obj.loginId", SearchField.SEARCH_TYPE.PARTIAL,
-				StringUtil.VALIDATION_LOGINID));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createLong("userId",
-				"obj.userId"));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createEnum("authStatus",
-				"obj.authStatus", "statusList", XXAuthSession.AuthStatus_MAX));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createEnum("authType",
-				"obj.authType", "Authentication Type",
-				XXAuthSession.AuthType_MAX));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createEnum("deviceType",
-				"obj.deviceType", "Device Type", RangerConstants.DeviceType_MAX));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("requestIP",
-				"obj.requestIP", SearchField.SEARCH_TYPE.PARTIAL,
-				StringUtil.VALIDATION_IP_ADDRESS));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString(
-				"requestUserAgent", "obj.requestUserAgent",
-				SearchField.SEARCH_TYPE.PARTIAL, null));
-		AUTH_SESSION_SEARCH_FLDS.add(new SearchField("firstName",
-				"obj.user.firstName", SearchField.DATA_TYPE.STRING,
-				SearchField.SEARCH_TYPE.PARTIAL));
-		AUTH_SESSION_SEARCH_FLDS.add(new SearchField("lastName",
-				"obj.user.lastName", SearchField.DATA_TYPE.STRING,
-				SearchField.SEARCH_TYPE.PARTIAL));
-		AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("requestIP",
-				"obj.requestIP", SearchField.SEARCH_TYPE.PARTIAL,
-				StringUtil.VALIDATION_IP_ADDRESS));	
-		AUTH_SESSION_SEARCH_FLDS.add(new SearchField("startDate", "obj.createTime",
-				SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
-		AUTH_SESSION_SEARCH_FLDS.add(new SearchField("endDate", "obj.createTime",
-				SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
-	}
+        List<XXAuthSession> resultList = searchResources(searchCriteria, AUTH_SESSION_SEARCH_FLDS, AUTH_SESSION_SORT_FLDS, returnList);
 
-	@Override
-	protected String getResourceName() {
-		return NAME;
-	}
+        // Iterate over the result list and create the return list
+        for (XXAuthSession gjObj : resultList) {
+            VXAuthSession viewObj = populateViewBean(gjObj);
 
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	protected XXAuthSession createEntityObject() {
-		return new XXAuthSession();
-	}
+            viewList.add(viewObj);
+        }
 
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	protected VXAuthSession createViewObject() {
-		return new VXAuthSession();
-	}
+        returnList.setVXAuthSessions(viewList);
 
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	protected void validateForCreate(VXAuthSession vXAuthSession) {
-		logger.error("This method is not required and shouldn't be called.",
-				new Throwable().fillInStackTrace());
-	}
+        return returnList;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	protected void validateForUpdate(VXAuthSession vXAuthSession,
-			XXAuthSession mObj) {
-		logger.error("This method is not required and shouldn't be called.",
-				new Throwable().fillInStackTrace());
-	}
+    @Override
+    protected void validateForCreate(VXAuthSession vXAuthSession) {
+        logger.error("This method is not required and shouldn't be called.", new Throwable().fillInStackTrace());
+    }
 
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	protected XXAuthSession mapViewToEntityBean(VXAuthSession vXAuthSession,
-			XXAuthSession t, int OPERATION_CONTEXT) {
-		logger.error("This method is not required and shouldn't be called.",
-				new Throwable().fillInStackTrace());
-		return null;
-	}
+    @Override
+    protected void validateForUpdate(VXAuthSession vXAuthSession, XXAuthSession mObj) {
+        logger.error("This method is not required and shouldn't be called.", new Throwable().fillInStackTrace());
+    }
 
-	/*
-	 * (non-Javadoc)
-	 */
-	@Override
-	protected VXAuthSession mapEntityToViewBean(VXAuthSession viewObj,
-			XXAuthSession resource) {
-		viewObj.setLoginId(resource.getLoginId());
-		viewObj.setAuthTime(resource.getAuthTime());
-		viewObj.setAuthStatus(resource.getAuthStatus());
-		viewObj.setAuthType(resource.getAuthType());
-		viewObj.setDeviceType(resource.getDeviceType());
-		viewObj.setId(resource.getId());
-		viewObj.setRequestIP(resource.getRequestIP());
+    @Override
+    protected XXAuthSession mapViewToEntityBean(VXAuthSession vXAuthSession, XXAuthSession t, int operationContext) {
+        logger.error("This method is not required and shouldn't be called.", new Throwable().fillInStackTrace());
 
-		viewObj.setRequestUserAgent(resource.getRequestUserAgent());
+        return null;
+    }
 
-		if (resource.getUserId() != null) {
-			viewObj.setUserId(resource.getUserId());
+    @Override
+    protected VXAuthSession mapEntityToViewBean(VXAuthSession viewObj, XXAuthSession resource) {
+        viewObj.setLoginId(resource.getLoginId());
+        viewObj.setAuthTime(resource.getAuthTime());
+        viewObj.setAuthStatus(resource.getAuthStatus());
+        viewObj.setAuthType(resource.getAuthType());
+        viewObj.setDeviceType(resource.getDeviceType());
+        viewObj.setId(resource.getId());
+        viewObj.setRequestIP(resource.getRequestIP());
+        viewObj.setRequestUserAgent(resource.getRequestUserAgent());
 
-			XXPortalUser gjUser = daoManager.getXXPortalUser().getById(resource.getUserId());
-			if (gjUser != null) {
-				viewObj.setEmailAddress(gjUser.getEmailAddress());
-				viewObj.setFamilyScreenName(gjUser.getLastName());
-				viewObj.setFirstName(gjUser.getFirstName());
-				viewObj.setLastName(gjUser.getLastName());
-				viewObj.setPublicScreenName(gjUser.getPublicScreenName());
-			}
-		}
+        if (resource.getUserId() != null) {
+            viewObj.setUserId(resource.getUserId());
 
-		return viewObj;
-	}
+            XXPortalUser gjUser = daoManager.getXXPortalUser().getById(resource.getUserId());
+            if (gjUser != null) {
+                viewObj.setEmailAddress(gjUser.getEmailAddress());
+                viewObj.setFamilyScreenName(gjUser.getLastName());
+                viewObj.setFirstName(gjUser.getFirstName());
+                viewObj.setLastName(gjUser.getLastName());
+                viewObj.setPublicScreenName(gjUser.getPublicScreenName());
+            }
+        }
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXAuthSessionList search(SearchCriteria searchCriteria) {
-		VXAuthSessionList returnList = new VXAuthSessionList();
-		List<VXAuthSession> viewList = new ArrayList<VXAuthSession>();
+        return viewObj;
+    }
 
-		List<XXAuthSession> resultList = searchResources(searchCriteria,
-				AUTH_SESSION_SEARCH_FLDS, AUTH_SESSION_SORT_FLDS, returnList);
+    @Override
+    protected String getResourceName() {
+        return NAME;
+    }
 
-		// Iterate over the result list and create the return list
-		for (XXAuthSession gjObj : resultList) {
-			VXAuthSession viewObj = populateViewBean(gjObj);
-			viewList.add(viewObj);
-		}
+    @Override
+    protected XXAuthSession createEntityObject() {
+        return new XXAuthSession();
+    }
 
-		returnList.setVXAuthSessions(viewList);
-		return returnList;
-	}
+    @Override
+    protected VXAuthSession createViewObject() {
+        return new VXAuthSession();
+    }
+
+    static {
+        AUTH_SESSION_SORT_FLDS.add(new SortField("id", "obj.id"));
+        AUTH_SESSION_SORT_FLDS.add(new SortField("authTime", "obj.authTime", true, SortField.SORT_ORDER.DESC));
+    }
+
+    static {
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createLong("id", "obj.id"));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("loginId", "obj.loginId", SearchField.SEARCH_TYPE.PARTIAL, StringUtil.VALIDATION_LOGINID));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createLong("userId", "obj.userId"));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createEnum("authStatus", "obj.authStatus", "statusList", XXAuthSession.AuthStatus_MAX));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createEnum("authType", "obj.authType", "Authentication Type", XXAuthSession.AuthType_MAX));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createEnum("deviceType", "obj.deviceType", "Device Type", RangerConstants.DeviceType_MAX));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("requestIP", "obj.requestIP", SearchField.SEARCH_TYPE.PARTIAL, StringUtil.VALIDATION_IP_ADDRESS));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("requestUserAgent", "obj.requestUserAgent", SearchField.SEARCH_TYPE.PARTIAL, null));
+        AUTH_SESSION_SEARCH_FLDS.add(new SearchField("firstName", "obj.user.firstName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        AUTH_SESSION_SEARCH_FLDS.add(new SearchField("lastName", "obj.user.lastName", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
+        AUTH_SESSION_SEARCH_FLDS.add(SearchField.createString("requestIP", "obj.requestIP", SearchField.SEARCH_TYPE.PARTIAL, StringUtil.VALIDATION_IP_ADDRESS));
+        AUTH_SESSION_SEARCH_FLDS.add(new SearchField("startDate", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.GREATER_EQUAL_THAN));
+        AUTH_SESSION_SEARCH_FLDS.add(new SearchField("endDate", "obj.createTime", SearchField.DATA_TYPE.DATE, SearchField.SEARCH_TYPE.LESS_EQUAL_THAN));
+    }
 }

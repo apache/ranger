@@ -18,45 +18,68 @@
  */
 package org.apache.ranger.plugin.policyevaluator;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-
+import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 
 public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolicyItemEvaluator implements RangerDataMaskPolicyItemEvaluator {
-	final private RangerDataMaskPolicyItem dataMaskPolicyItem;
+    private final RangerDataMaskPolicyItem  dataMaskPolicyItem;
+    private final RangerRequestExprResolver maskedValueExprResolver;
+    private final RangerRequestExprResolver maskConditionExprResolver;
 
-	public RangerDefaultDataMaskPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerDataMaskPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
-		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK, policyItemIndex, options);
+    public RangerDefaultDataMaskPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerDataMaskPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
+        super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK, policyItemIndex, options);
 
-		dataMaskPolicyItem = policyItem;
-	}
+        dataMaskPolicyItem = policyItem;
 
-	@Override
-	public RangerPolicyItemDataMaskInfo getDataMaskInfo() {
-		return dataMaskPolicyItem == null ? null : dataMaskPolicyItem.getDataMaskInfo();
-	}
+        RangerPolicyItemDataMaskInfo dataMaskInfo  = dataMaskPolicyItem != null ? dataMaskPolicyItem.getDataMaskInfo() : null;
+        String                       maskedValue   = dataMaskInfo != null ? dataMaskInfo.getValueExpr() : null;
+        String                       maskCondition = dataMaskInfo != null ? dataMaskInfo.getConditionExpr() : null;
 
-	@Override
-	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
-		RangerPolicyItemDataMaskInfo dataMaskInfo = getDataMaskInfo();
+        if (StringUtils.isNotBlank(maskedValue) && RangerRequestExprResolver.hasExpressions(maskedValue)) {
+            maskedValueExprResolver = new RangerRequestExprResolver(maskedValue, getServiceType());
+        } else {
+            maskedValueExprResolver = null;
+        }
 
-		if (dataMaskInfo != null) {
-			result.setMaskType(dataMaskInfo.getDataMaskType());
-			result.setMaskCondition(dataMaskInfo.getConditionExpr());
-			result.setMaskedValue(dataMaskInfo.getValueExpr());
-			result.setIsAccessDetermined(true);
-			result.setPolicyPriority(policyEvaluator.getPolicyPriority());
-			result.setPolicyId(policyEvaluator.getPolicyId());
-			result.setReason(getComments());
-			result.setPolicyVersion(policyEvaluator.getPolicy().getVersion());
+        if (StringUtils.isNotBlank(maskCondition) && RangerRequestExprResolver.hasExpressions(maskCondition)) {
+            maskConditionExprResolver = new RangerRequestExprResolver(maskCondition, getServiceType());
+        } else {
+            maskConditionExprResolver = null;
+        }
+    }
 
-			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
-		}
-	}
+    @Override
+    public RangerPolicyItemDataMaskInfo getDataMaskInfo() {
+        return dataMaskPolicyItem == null ? null : dataMaskPolicyItem.getDataMaskInfo();
+    }
 
+    @Override
+    public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
+        RangerPolicyItemDataMaskInfo dataMaskInfo = getDataMaskInfo();
+
+        if (dataMaskInfo != null) {
+            result.setMaskType(dataMaskInfo.getDataMaskType());
+
+            if (maskedValueExprResolver != null) {
+                result.setMaskedValue(maskedValueExprResolver.resolveExpressions(result.getAccessRequest()));
+            } else {
+                result.setMaskedValue(dataMaskInfo.getValueExpr());
+            }
+
+            if (maskConditionExprResolver != null) {
+                result.setMaskCondition(maskConditionExprResolver.resolveExpressions(result.getAccessRequest()));
+            } else {
+                result.setMaskCondition(dataMaskInfo.getConditionExpr());
+            }
+
+            policyEvaluator.updateAccessResult(result, matchType, true, getComments());
+        }
+    }
 }

@@ -25,15 +25,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
+
 import java.util.Objects;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_role")
 public class XXRole extends XXRoleBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
+
     @Id
     @SequenceGenerator(name = "x_role_SEQ", sequenceName = "x_role_SEQ", initialValue = 1, allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_role_SEQ")
@@ -41,8 +41,26 @@ public class XXRole extends XXRoleBase implements java.io.Serializable {
     protected Long id;
 
     @Override
-    public void setId(Long id) {
-        this.id = id;
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
+
+        XXRole other = (XXRole) obj;
+
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public String toString() {
+        return "Role [id=" + id + "]";
     }
 
     @Override
@@ -51,26 +69,7 @@ public class XXRole extends XXRoleBase implements java.io.Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (getClass() != obj.getClass())
-            return false;
-        if (!super.equals(obj))
-            return false;
-
-        XXRole other = (XXRole) obj;
-
-        return Objects.equals(id, other.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.hashCode(), id);
-    }
-
-    @Override
-    public String toString() {
-        return "Role [id=" + id + "]";
+    public void setId(Long id) {
+        this.id = id;
     }
 }

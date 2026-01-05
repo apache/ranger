@@ -111,6 +111,15 @@
     "tags_str": {
       "type": "text"
     },
+    "datasets": {
+      "type": "keyword"
+    },
+    "projects": {
+      "type": "keyword"
+    },
+    "datasetIds": {
+      "type": "long"
+    },
     "text": {
       "type": "text"
     },

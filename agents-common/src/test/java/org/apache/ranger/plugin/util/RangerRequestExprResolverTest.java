@@ -19,16 +19,24 @@
 
 package org.apache.ranger.plugin.util;
 
+import org.apache.ranger.authorization.utils.TestStringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,6 +50,7 @@ public class RangerRequestExprResolverTest {
 
         exprValue.put("s3://mybucket/users/${{USER._name}}/${{USER.state}}/test.txt", "s3://mybucket/users/test-user/CA/test.txt");
         exprValue.put("state == '${{USER.state}}' AND dept == '${{UGA.sVal.dept}}'", "state == 'CA' AND dept == 'ENGG'");
+        exprValue.put("state == '${{USER.state}}' AND group IN (${{GET_UG_NAMES_Q()}})", "state == 'CA' AND group IN ('test-group1','test-group2')");
         exprValue.put("attr1 == '${{TAG.attr1}}'", "attr1 == 'PII_value'");
 
         exprValue.put("${{USER._name}}", "test-user");
@@ -56,8 +65,8 @@ public class RangerRequestExprResolverTest {
         exprValue.put("${{UG['test-group1'].site}}", "10");
         exprValue.put("${{UG['test-group2'].dept}}", "PROD");
         exprValue.put("${{UG['test-group2'].site}}", "20");
-        exprValue.put("${{UG['test-group3']}}", "null");
-        exprValue.put("${{UG['test-group1'].notExists}}", "null");
+        exprValue.put("${{UG['test-group3']}}", "");
+        exprValue.put("${{UG['test-group1'].notExists}}", "");
 
         exprValue.put("${{URNAMES.indexOf('test-role1') != -1}}", "true");
         exprValue.put("${{URNAMES.indexOf('test-role2') != -1}}", "true");
@@ -65,10 +74,10 @@ public class RangerRequestExprResolverTest {
 
         exprValue.put("${{UGA.sVal.dept}}", "ENGG");
         exprValue.put("${{UGA.sVal.site}}", "10");
-        exprValue.put("${{UGA.sVal.notExists}}", "null");
+        exprValue.put("${{UGA.sVal.notExists}}", "");
         exprValue.put("${{J(UGA.mVal.dept)}}", "[\"ENGG\",\"PROD\"]");
         exprValue.put("${{J(UGA.mVal.site)}}", "[\"10\",\"20\"]");
-        exprValue.put("${{J(UGA.mVal.notExists)}}", "null");
+        exprValue.put("${{J(UGA.mVal.notExists)}}", "");
         exprValue.put("${{UGA.mVal['dept'].indexOf('ENGG') != -1}}", "true");
         exprValue.put("${{UGA.mVal['dept'].indexOf('PROD') != -1}}", "true");
         exprValue.put("${{UGA.mVal['dept'].indexOf('EXEC') == -1}}", "true");
@@ -92,6 +101,7 @@ public class RangerRequestExprResolverTest {
         exprValue.put("${{TAGNAMES.length}}", "2");
         exprValue.put("${{TAGNAMES.indexOf('PII') != -1}}", "true");
         exprValue.put("${{TAGNAMES.indexOf('PCI') != -1}}", "true");
+        exprValue.put("${{var s=USER['state'];}}state == '${{s}}'", "state == 'CA'");
 
         for (Map.Entry<String, String> entry : exprValue.entrySet()) {
             String                    expr        = entry.getKey();
@@ -99,10 +109,9 @@ public class RangerRequestExprResolverTest {
             RangerRequestExprResolver resolver    = new RangerRequestExprResolver(expr, null);
             String                    resolvedVal = resolver.resolveExpressions(request);
 
-            Assert.assertEquals(expr, value, resolvedVal);
+            Assertions.assertEquals(value, resolvedVal, expr);
         }
     }
-
 
     RangerAccessRequest createRequest(List<String> resourceTags) {
         RangerAccessResource resource = mock(RangerAccessResource.class);
@@ -135,7 +144,7 @@ public class RangerRequestExprResolverTest {
             RangerTagForEval      currentTag        = null;
 
             for (String resourceTag : resourceTags) {
-                RangerTag tag        = new RangerTag(UUID.randomUUID().toString(), resourceTag, Collections.singletonMap("attr1", resourceTag + "_value"), null, null, null);
+                RangerTag        tag        = new RangerTag(UUID.randomUUID().toString(), resourceTag, Collections.singletonMap("attr1", resourceTag + "_value"), null, null, null);
                 RangerTagForEval tagForEval = new RangerTagForEval(tag, RangerPolicyResourceMatcher.MatchType.SELF);
 
                 rangerTagForEvals.add(tagForEval);
@@ -147,7 +156,7 @@ public class RangerRequestExprResolverTest {
 
             RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), rangerTagForEvals);
             RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), currentTag);
-        }  else {
+        } else {
             RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), null);
         }
 
@@ -158,13 +167,12 @@ public class RangerRequestExprResolverTest {
         Map<String, Map<String, String>> userAttrMapping  = Collections.singletonMap("test-user", Collections.singletonMap("state", "CA"));
         Map<String, Map<String, String>> groupAttrMapping = new HashMap<>();
 
-        groupAttrMapping.put("test-group1", new HashMap<String, String>() {{ put("dept", "ENGG"); put("site", "10"); }});
-        groupAttrMapping.put("test-group2", new HashMap<String, String>() {{ put("dept", "PROD"); put("site", "20"); }});
+        groupAttrMapping.put("test-group1", TestStringUtil.mapFromStrings("dept", "ENGG", "site", "10"));
+        groupAttrMapping.put("test-group2", TestStringUtil.mapFromStrings("dept", "PROD", "site", "20"));
 
         when(userStore.getUserAttrMapping()).thenReturn(userAttrMapping);
         when(userStore.getGroupAttrMapping()).thenReturn(groupAttrMapping);
 
         return request;
     }
-
 }

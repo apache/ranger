@@ -94,6 +94,7 @@
     <exclude name="AvoidReassigningLoopVariables" />
     <exclude name="JUnitTestContainsTooManyAsserts" />
     <exclude name="JUnitTestsShouldIncludeAssert" />
+    <exclude name="JUnit4TestShouldUseTestAnnotation" />
     <exclude name="UseAssertSameInsteadOfAssertTrue" />
     <exclude name="UseAssertNullInsteadOfAssertTrue" />
     <exclude name="UseAssertTrueInsteadOfAssertEquals" />

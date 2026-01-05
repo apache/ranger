@@ -52,7 +52,8 @@
 		{
 			"itemId": 1,
 			"name": "allow",
-			"label": "Allow"
+			"label": "Allow",
+			"category": "READ"
 		}
 	],
 
@@ -135,9 +136,9 @@
 			"evaluatorOptions": { },
 			"validationRegEx":"",
 			"validationMessage": "",
-			"uiHint":"",
 			"label": "IP Address Range",
-			"description": "IP Address Range"
+			"description": "IP Address Range",
+			"uiHint" : "{ \"isMultiValue\":true }"
 		}
 	]
 }

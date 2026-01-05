@@ -19,44 +19,44 @@
 
 package org.apache.ranger.db;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.persistence.NoResultException;
-
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZoneRefResource;
 
-public class XXSecurityZoneRefResourceDao extends BaseDao<XXSecurityZoneRefResource>{
+import javax.persistence.NoResultException;
 
-	public XXSecurityZoneRefResourceDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+import java.util.Collections;
+import java.util.List;
 
-	public List<XXSecurityZoneRefResource> findByZoneId(Long zoneId) {
+public class XXSecurityZoneRefResourceDao extends BaseDao<XXSecurityZoneRefResource> {
+    public XXSecurityZoneRefResourceDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
+
+    public List<XXSecurityZoneRefResource> findByZoneId(Long zoneId) {
         if (zoneId == null) {
             return null;
         }
+
         try {
-        	List<XXSecurityZoneRefResource> xxZoneRefResource = getEntityManager()
+            return  getEntityManager()
                     .createNamedQuery("XXSecurityZoneRefResource.findByZoneId", tClass)
                     .setParameter("zoneId", zoneId)
                     .getResultList();
-            return xxZoneRefResource;
         } catch (NoResultException e) {
             return null;
         }
     }
 
-	public List<XXSecurityZoneRefResource> findByResourceDefId(Long resourceDefId) {
-		if (resourceDefId == null) {
-			return Collections.emptyList();
-		}
-		try {
-			return getEntityManager().createNamedQuery("XXSecurityZoneRefResource.findByResourceDefId", tClass)
-					.setParameter("resourceDefId", resourceDefId).getResultList();
-		} catch (NoResultException e) {
-			return Collections.emptyList();
-		}
-	}
+    public List<XXSecurityZoneRefResource> findByResourceDefId(Long resourceDefId) {
+        if (resourceDefId == null) {
+            return Collections.emptyList();
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXSecurityZoneRefResource.findByResourceDefId", tClass)
+                    .setParameter("resourceDefId", resourceDefId).getResultList();
+        } catch (NoResultException e) {
+            return Collections.emptyList();
+        }
+    }
 }

@@ -92,8 +92,12 @@ if [ "${action}" == "START" ]; then
 
 	cd ${cdir}
 
+	if [ -z "${TAGSYNC_CONF_DIR}" ]; then
+	    TAGSYNC_CONF_DIR=${cdir}/conf
+	fi
+
 	SLEEP_TIME_AFTER_START=5
-	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${RANGER_TAGSYNC_LOG_DIR}" -Dlogback.configurationFile=file:/etc/ranger/tagsync/conf/logback.xml -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${RANGER_TAGSYNC_LOG_DIR}/tagsync.out 2>&1 &
+	nohup java -Dproc_rangertagsync ${JAVA_OPTS} -Dlogdir="${RANGER_TAGSYNC_LOG_DIR}" -Dlogback.configurationFile=file:${TAGSYNC_CONF_DIR}/logback.xml -Duser=${USER} -Dhostname=${HOSTNAME} -cp "${cp}" org.apache.ranger.tagsync.process.TagSynchronizer  > ${RANGER_TAGSYNC_LOG_DIR}/tagsync.out 2>&1 &
 	VALUE_OF_PID=$!
 	echo "Starting Apache Ranger Tagsync Service"
 	sleep $SLEEP_TIME_AFTER_START

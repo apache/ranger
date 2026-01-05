@@ -17,24 +17,22 @@
  * under the License.
  */
 
- package org.apache.ranger.authentication.unix.jaas;
+package org.apache.ranger.authentication.unix.jaas;
 
 import java.io.Serializable;
 import java.security.Principal;
 
 public class UnixUserPrincipal implements Principal, Serializable {
+    private static final long   serialVersionUID = -3568658536591178268L;
 
-	private static final long serialVersionUID = -3568658536591178268L;
-	
-	private String userName;
-	
-	public UnixUserPrincipal(String userName) {
-		this.userName = userName;
-	}
+    private final String userName;
 
-	@Override
-	public String getName() {
-		return userName;
-	}
+    public UnixUserPrincipal(String userName) {
+        this.userName = userName;
+    }
 
+    @Override
+    public String getName() {
+        return userName;
+    }
 }

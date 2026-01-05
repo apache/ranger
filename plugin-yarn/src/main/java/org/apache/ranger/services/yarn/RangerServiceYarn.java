@@ -17,129 +17,121 @@
 
 package org.apache.ranger.services.yarn;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
+import org.apache.ranger.plugin.service.RangerBaseService;
+import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.services.yarn.client.YarnResourceMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
-import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
-import org.apache.ranger.plugin.service.RangerBaseService;
-import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.services.yarn.client.YarnResourceMgr;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RangerServiceYarn extends RangerBaseService {
+    private static final Logger LOG                    = LoggerFactory.getLogger(RangerServiceYarn.class);
+    public static final  String ACCESS_TYPE_SUBMIT_APP = "submit-app";
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceYarn.class);
-	public static final String ACCESS_TYPE_SUBMIT_APP  = "submit-app";
-	
-	public RangerServiceYarn() {
-		super();
-	}
-	
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    public RangerServiceYarn() {
+        super();
+    }
 
-	@Override
-	public Map<String,Object> validateConfig() throws Exception {
-		Map<String, Object> ret = new HashMap<String, Object>();
-		String 	serviceName  	    = getServiceName();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceYarn.validateConfig Service: (" + serviceName + " )");
-		}
-		if ( configs != null) {
-			try  {
-				ret = YarnResourceMgr.validateConfig(serviceName, configs);
-			} catch (Exception e) {
-				LOG.error("<== RangerServiceYarn.validateConfig Error:" + e);
-				throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceYarn.validateConfig Response : (" + ret + " )");
-		}
-		return ret;
-	}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-		
-		List<String> ret 		   = new ArrayList<String>();
-		String 	serviceName  	   = getServiceName();
-		Map<String,String> configs = getConfigs();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceYarn.lookupResource Context: (" + context + ")");
-		}
-		if (context != null) {
-			try {
-				ret  = YarnResourceMgr.getYarnResources(serviceName,configs,context);
-			} catch (Exception e) {
-			  LOG.error( "<==RangerServiceYarn.lookupResource Error : " + e);
-			  throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceYarn.lookupResource Response: (" + ret + ")");
-		}
-		return ret;
-	}
+    @Override
+    public Map<String, Object> validateConfig() {
+        Map<String, Object> ret         = new HashMap<>();
+        String              serviceName = getServiceName();
 
-	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceYarn.getDefaultRangerPolicies() ");
-		}
+        LOG.debug("==> RangerServiceYarn.validateConfig Service: ({} )", serviceName);
 
-		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+        if (configs != null) {
+            try {
+                ret = YarnResourceMgr.validateConfig(serviceName, configs);
+            } catch (Exception e) {
+                LOG.error("<== RangerServiceYarn.validateConfig Error:{}", String.valueOf(e));
+                throw e;
+            }
+        }
 
-		String queueResourceName = RangerYarnAuthorizer.KEY_RESOURCE_QUEUE;
+        LOG.debug("<== RangerServiceYarn.validateConfig Response : ({} )", ret);
 
-		for (RangerPolicy defaultPolicy : ret) {
-			if(defaultPolicy.getName().contains("all")){
-				RangerPolicy.RangerPolicyResource queuePolicyResource = defaultPolicy.getResources().get(queueResourceName);
+        return ret;
+    }
 
-				if (StringUtils.isNotBlank(lookUpUser)) {
-					RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
-					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-					policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_SUBMIT_APP)));
-					policyItemForLookupUser.setDelegateAdmin(false);
-					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
-				}
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) {
+        List<String>        ret         = new ArrayList<>();
+        String              serviceName = getServiceName();
+        Map<String, String> configs     = getConfigs();
 
-				if (queuePolicyResource != null) {
-					List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
-					RangerServiceDef.RangerResourceDef queueResourceDef = null;
-					for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
-						if (resourceDef.getName().equals(queueResourceName)) {
-							queueResourceDef = resourceDef;
-							break;
-						}
-					}
-					if (queueResourceDef != null) {
-						queuePolicyResource.setValue(RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
-					} else {
-						LOG.warn("No resourceDef found in YARN service-definition for '" + queueResourceName + "'");
-					}
-				} else {
-					LOG.warn("No '" + queueResourceName + "' found in default policy");
-				}
-			}
-		}
+        LOG.debug("==> RangerServiceYarn.lookupResource Context: ({})", context);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceYarn.getDefaultRangerPolicies() : " + ret);
-		}
-		return ret;
-	}
+        if (context != null) {
+            try {
+                ret = YarnResourceMgr.getYarnResources(serviceName, configs, context);
+            } catch (Exception e) {
+                LOG.error("<==RangerServiceYarn.lookupResource Error : {}", String.valueOf(e));
+                throw e;
+            }
+        }
+
+        LOG.debug("<== RangerServiceYarn.lookupResource Response: ({})", ret);
+
+        return ret;
+    }
+
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        LOG.debug("==> RangerServiceYarn.getDefaultRangerPolicies() ");
+
+        List<RangerPolicy> ret   = super.getDefaultRangerPolicies();
+        String queueResourceName = RangerYarnAuthorizer.KEY_RESOURCE_QUEUE;
+
+        for (RangerPolicy defaultPolicy : ret) {
+            if (defaultPolicy.getName().contains("all")) {
+                RangerPolicy.RangerPolicyResource queuePolicyResource = defaultPolicy.getResources().get(queueResourceName);
+
+                if (StringUtils.isNotBlank(lookUpUser)) {
+                    RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+                    policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+                    policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_SUBMIT_APP)));
+                    policyItemForLookupUser.setDelegateAdmin(false);
+                    defaultPolicy.addPolicyItem(policyItemForLookupUser);
+                }
+
+                if (queuePolicyResource != null) {
+                    List<RangerServiceDef.RangerResourceDef> resourceDefs     = serviceDef.getResources();
+                    RangerServiceDef.RangerResourceDef       queueResourceDef = null;
+                    for (RangerServiceDef.RangerResourceDef resourceDef : resourceDefs) {
+                        if (resourceDef.getName().equals(queueResourceName)) {
+                            queueResourceDef = resourceDef;
+                            break;
+                        }
+                    }
+                    if (queueResourceDef != null) {
+                        queuePolicyResource.setValue(RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
+                    } else {
+                        LOG.warn("No resourceDef found in YARN service-definition for '{}'", queueResourceName);
+                    }
+                } else {
+                    LOG.warn("No '{}' found in default policy", queueResourceName);
+                }
+            }
+        }
+
+        LOG.debug("<== RangerServiceYarn.getDefaultRangerPolicies() : {}", ret);
+        return ret;
+    }
 }
-

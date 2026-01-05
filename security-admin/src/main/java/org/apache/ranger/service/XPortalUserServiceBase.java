@@ -17,79 +17,84 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
+package org.apache.ranger.service;
 
-/**
- *
- */
-
-import java.util.ArrayList;
-import java.util.List;
-
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 
-public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends VXPortalUser>
-		extends AbstractBaseResourceService<T, V> {
-	public static final String NAME = "XPortalUser";
+import java.util.ArrayList;
+import java.util.List;
 
-	public XPortalUserServiceBase() {
+public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends VXPortalUser> extends AbstractAuditedResourceService<T, V> {
+    public static final String NAME = "XPortalUser";
 
-	}
+    public XPortalUserServiceBase() {
+        super(AppConstants.CLASS_TYPE_USER_PROFILE);
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
-		mObj.setFirstName( vObj.getFirstName());
-		mObj.setLastName( vObj.getLastName());
-		mObj.setPublicScreenName( vObj.getPublicScreenName());
-		mObj.setLoginId( vObj.getLoginId());
-		mObj.setPassword( vObj.getPassword());
-		mObj.setEmailAddress( vObj.getEmailAddress());
-		mObj.setStatus( vObj.getStatus());
-		mObj.setUserSource( vObj.getUserSource());
-		mObj.setNotes( vObj.getNotes());
-		mObj.setOtherAttributes(vObj.getOtherAttributes());
-		mObj.setSyncSource(vObj.getSyncSource());
-		return mObj;
-	}
+        trxLogAttrs.put("loginId", new VTrxLogAttr("loginId", "Login ID", false, true));
+        trxLogAttrs.put("status", new VTrxLogAttr("status", "Activation Status"));
+        trxLogAttrs.put("firstName", new VTrxLogAttr("firstName", "First Name"));
+        trxLogAttrs.put("lastName", new VTrxLogAttr("lastName", "Last Name"));
+        trxLogAttrs.put("emailAddress", new VTrxLogAttr("emailAddress", "Email Address"));
+        trxLogAttrs.put("publicScreenName", new VTrxLogAttr("publicScreenName", "Public Screen Name"));
+    }
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		vObj.setFirstName( mObj.getFirstName());
-		vObj.setLastName( mObj.getLastName());
-		vObj.setPublicScreenName( mObj.getPublicScreenName());
-		vObj.setLoginId( mObj.getLoginId());
-		vObj.setPassword( mObj.getPassword());
-		vObj.setEmailAddress( mObj.getEmailAddress());
-		vObj.setStatus( mObj.getStatus());
-		vObj.setUserSource( mObj.getUserSource());
-		vObj.setNotes( mObj.getNotes());
-		vObj.setOtherAttributes(mObj.getOtherAttributes());
-		vObj.setSyncSource(mObj.getSyncSource());
-		return vObj;
-	}
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXPortalUserList searchXPortalUsers(SearchCriteria searchCriteria) {
+        VXPortalUserList   returnList      = new VXPortalUserList();
+        List<VXPortalUser> xPortalUserList = new ArrayList<>();
+        List<T>            resultList      = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXPortalUserList searchXPortalUsers(SearchCriteria searchCriteria) {
-		VXPortalUserList returnList = new VXPortalUserList();
-		List<VXPortalUser> xPortalUserList = new ArrayList<VXPortalUser>();
+        // Iterate over the result list and create the return list
+        for (T gjXPortalUser : resultList) {
+            VXPortalUser vXPortalUser = populateViewBean(gjXPortalUser);
 
-		List<T> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+            xPortalUserList.add(vXPortalUser);
+        }
 
-		// Iterate over the result list and create the return list
-		for (T gjXPortalUser : resultList) {
-			VXPortalUser vXPortalUser = populateViewBean(gjXPortalUser);
-			xPortalUserList.add(vXPortalUser);
-		}
+        returnList.setVXPortalUsers(xPortalUserList);
 
-		returnList.setVXPortalUsers(xPortalUserList);
-		return returnList;
-	}
+        return returnList;
+    }
 
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        mObj.setFirstName(vObj.getFirstName());
+        mObj.setLastName(vObj.getLastName());
+        mObj.setPublicScreenName(vObj.getPublicScreenName());
+        mObj.setLoginId(vObj.getLoginId());
+        mObj.setPassword(vObj.getPassword());
+        mObj.setEmailAddress(vObj.getEmailAddress());
+        mObj.setStatus(vObj.getStatus());
+        mObj.setUserSource(vObj.getUserSource());
+        mObj.setNotes(vObj.getNotes());
+        mObj.setOtherAttributes(vObj.getOtherAttributes());
+        mObj.setSyncSource(vObj.getSyncSource());
+
+        return mObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        vObj.setFirstName(mObj.getFirstName());
+        vObj.setLastName(mObj.getLastName());
+        vObj.setPublicScreenName(mObj.getPublicScreenName());
+        vObj.setLoginId(mObj.getLoginId());
+        vObj.setPassword(mObj.getPassword());
+        vObj.setEmailAddress(mObj.getEmailAddress());
+        vObj.setStatus(mObj.getStatus());
+        vObj.setUserSource(mObj.getUserSource());
+        vObj.setNotes(mObj.getNotes());
+        vObj.setOtherAttributes(mObj.getOtherAttributes());
+        vObj.setSyncSource(mObj.getSyncSource());
+
+        return vObj;
+    }
 }

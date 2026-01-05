@@ -17,19 +17,10 @@
  * under the License.
  */
 
- /**
+/**
  *
  */
 package org.apache.ranger.security.web.filter;
-
-import java.io.IOException;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +30,25 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.rememberme.RememberMeAuthenticationFilter;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
+
 /**
- *
  *
  */
 @SuppressWarnings("deprecation")
 public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
+    private static final Logger LOG = LoggerFactory.getLogger(MyRememberMeFilter.class);
 
     public MyRememberMeFilter(AuthenticationManager authenticationManager, RememberMeServices rememberMeServices) {
-		super(authenticationManager, rememberMeServices);
-	}
-
-    private static final Logger logger = LoggerFactory.getLogger(MyRememberMeFilter.class);
+        super(authenticationManager, rememberMeServices);
+    }
 
     /*
      * (non-Javadoc)
@@ -60,11 +58,12 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
      * javax.servlet.ServletResponse, javax.servlet.FilterChain)
      */
     @Override
-    public void doFilter(ServletRequest arg0, ServletResponse arg1,
-	    FilterChain arg2) throws IOException, ServletException {
-    	HttpServletResponse res = (HttpServletResponse)arg1;
-    	res.setHeader("X-Frame-Options", "DENY" );
-    	super.doFilter(arg0, res, arg2);
+    public void doFilter(ServletRequest arg0, ServletResponse arg1, FilterChain arg2) throws IOException, ServletException {
+        HttpServletResponse res = (HttpServletResponse) arg1;
+
+        res.setHeader("X-Frame-Options", "DENY");
+
+        super.doFilter(arg0, res, arg2);
     }
 
     /*
@@ -77,13 +76,12 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
      * org.springframework.security.core.Authentication)
      */
     @Override
-    protected void onSuccessfulAuthentication(HttpServletRequest request,
-	    HttpServletResponse response, Authentication authResult) {
-    	response.setHeader("X-Frame-Options", "DENY" );
-	super.onSuccessfulAuthentication(request, response, authResult);
-	// if (logger.isDebugEnabled()) {
-	logger.info("onSuccessfulAuthentication() authResult=" + authResult);
-	// }
+    protected void onSuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, Authentication authResult) {
+        response.setHeader("X-Frame-Options", "DENY");
+
+        super.onSuccessfulAuthentication(request, response, authResult);
+
+        LOG.info("onSuccessfulAuthentication() authResult={}", authResult);
     }
 
     /*
@@ -96,12 +94,11 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
      * org.springframework.security.core.AuthenticationException)
      */
     @Override
-    protected void onUnsuccessfulAuthentication(HttpServletRequest request,
-	    HttpServletResponse response, AuthenticationException failed) {
-	logger.error("Authentication failure. failed=" + failed,
-		new Throwable());
-	response.setHeader("X-Frame-Options", "DENY" );
-	super.onUnsuccessfulAuthentication(request, response, failed);
-    }
+    protected void onUnsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) {
+        LOG.error("Authentication failure. failed={}", failed, new Throwable());
 
+        response.setHeader("X-Frame-Options", "DENY");
+
+        super.onUnsuccessfulAuthentication(request, response, failed);
+    }
 }

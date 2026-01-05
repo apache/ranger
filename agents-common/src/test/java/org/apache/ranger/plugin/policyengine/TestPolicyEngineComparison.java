@@ -18,11 +18,8 @@ package org.apache.ranger.plugin.policyengine;
  * under the License.
  */
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.util.List;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -31,108 +28,106 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPolicyEngineComparison {
     private static Gson gsonBuilder;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
                 .setPrettyPrinting()
                 .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
                 .create();
-
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() throws Exception {
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
     }
 
     @Test
-    public void testComparePolicyEngines() throws Exception {
+    public void testComparePolicyEngines() {
         String[] tests = {"/policyengine/test_compare_policyengines.json"};
 
         runTestsFromResourceFiles(tests);
     }
 
-    private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
+    private void runTestsFromResourceFiles(String[] resourceNames) {
         for (String resourceName : resourceNames) {
-            InputStream inStream = this.getClass().getResourceAsStream(resourceName);
-            InputStreamReader reader = new InputStreamReader(inStream);
+            InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+            InputStreamReader reader   = new InputStreamReader(inStream);
 
             runTests(reader, resourceName);
         }
     }
-    private void runTests(InputStreamReader reader, String testName) throws Exception {
 
+    private void runTests(InputStreamReader reader, String testName) {
         ComparisonTests testCases = gsonBuilder.fromJson(reader, ComparisonTests.class);
 
-        assertTrue("invalid input: " + testName, testCases != null && testCases.testCases != null);
+        assertTrue(testCases != null && testCases.testCases != null, "invalid input: " + testName);
 
         RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
         options.optimizeTrieForRetrieval = true;
 
-
         for (ComparisonTests.TestCase testCase : testCases.testCases) {
+            assertTrue(testCase.me != null && testCase.other != null, "invalid input: " + testCase.name);
 
-            assertTrue("invalid input: " + testCase.name ,testCase.me != null && testCase.other != null);
-
-            ComparisonTests.TestCase.PolicyEngineData myData = testCase.me;
+            ComparisonTests.TestCase.PolicyEngineData myData    = testCase.me;
             ComparisonTests.TestCase.PolicyEngineData otherData = testCase.other;
 
-            assertFalse("invalid input: " + testCase.name, myData.servicePoliciesFile == null || otherData.servicePoliciesFile == null);
-            assertTrue("invalid input: " + testCase.name, myData.serviceTagsFile == null || otherData.serviceTagsFile != null);
+            assertFalse(myData.servicePoliciesFile == null || otherData.servicePoliciesFile == null, "invalid input: " + testCase.name);
+            assertTrue(myData.serviceTagsFile == null || otherData.serviceTagsFile != null, "invalid input: " + testCase.name);
 
             // Read servicePoliciesFile
-            ServicePolicies myServicePolicies = readServicePolicies(myData.servicePoliciesFile);
+            ServicePolicies myServicePolicies    = readServicePolicies(myData.servicePoliciesFile);
             ServicePolicies otherServicePolicies = readServicePolicies(otherData.servicePoliciesFile);
 
-            assertFalse("invalid input: " + testCase.name, myServicePolicies == null || otherServicePolicies == null);
+            assertFalse(myServicePolicies == null || otherServicePolicies == null, "invalid input: " + testCase.name);
 
-            ServiceTags myServiceTags = null;
+            ServiceTags myServiceTags    = null;
             ServiceTags otherServiceTags = null;
 
             if (myData.serviceTagsFile != null) {
-                myServiceTags = readServiceTags(myData.serviceTagsFile);
+                myServiceTags    = readServiceTags(myData.serviceTagsFile);
                 otherServiceTags = readServiceTags(otherData.serviceTagsFile);
 
-                assertFalse("invalid input: " + testCase.name, myServiceTags == null || otherServiceTags == null);
+                assertFalse(myServiceTags == null || otherServiceTags == null, "invalid input: " + testCase.name);
             }
 
             boolean isPolicyEnginesEqual = true;
-            boolean isTagsEqual = true;
+            boolean isTagsEqual          = true;
 
             if (myServicePolicies != null) {
-                RangerPluginContext myPluginContext = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-my-tags", null, null, options));
-                RangerPluginContext otherPluginContext = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-other-tags", null, null, options));
-                RangerPolicyEngineImpl myPolicyEngine = new RangerPolicyEngineImpl(myServicePolicies, myPluginContext, null);
-                RangerPolicyEngineImpl otherPolicyEngine = new RangerPolicyEngineImpl(otherServicePolicies, otherPluginContext, null);
+                RangerPluginContext    myPluginContext    = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-my-tags", null, null, options));
+                RangerPluginContext    otherPluginContext = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-other-tags", null, null, options));
+                RangerPolicyEngineImpl myPolicyEngine     = new RangerPolicyEngineImpl(myServicePolicies, myPluginContext, null);
+                RangerPolicyEngineImpl otherPolicyEngine  = new RangerPolicyEngineImpl(otherServicePolicies, otherPluginContext, null);
 
                 isPolicyEnginesEqual = TestPolicyEngine.compare(myPolicyEngine.getPolicyEngine(), otherPolicyEngine.getPolicyEngine()) && TestPolicyEngine.compare(otherPolicyEngine.getPolicyEngine(), myPolicyEngine.getPolicyEngine());
 
-
                 if (myServiceTags != null) {
-                    RangerTagEnricher myTagEnricher = new RangerTagEnricher();
+                    RangerTagEnricher myTagEnricher    = new RangerTagEnricher();
                     RangerTagEnricher otherTagEnricher = new RangerTagEnricher();
 
                     myTagEnricher.setAppId("test-compare-my-tags");
@@ -150,32 +145,30 @@ public class TestPolicyEngineComparison {
                     otherTagEnricher.setServiceTags(otherServiceTags);
 
                     isTagsEqual = TestPolicyEngine.compare(myTagEnricher, otherTagEnricher) && TestPolicyEngine.compare(otherTagEnricher, myTagEnricher);
-
                 }
             }
-            assertEquals("PolicyEngines are not equal " + testCase.name, isPolicyEnginesEqual, testCase.isPolicyEnginesEqual);
-            assertEquals("Tags are not equal " + testCase.name,isTagsEqual, testCase.isTagsEqual);
+            assertEquals(isPolicyEnginesEqual, testCase.isPolicyEnginesEqual, "PolicyEngines are not equal " + testCase.name);
+            assertEquals(isTagsEqual, testCase.isTagsEqual, "Tags are not equal " + testCase.name);
         }
-
     }
 
     private ServicePolicies readServicePolicies(String fileName) {
-        InputStream inStream = this.getClass().getResourceAsStream(fileName);
-        InputStreamReader reader = new InputStreamReader(inStream);
+        InputStream       inStream = this.getClass().getResourceAsStream(fileName);
+        InputStreamReader reader   = new InputStreamReader(inStream);
         return gsonBuilder.fromJson(reader, ServicePolicies.class);
     }
 
     private ServiceTags readServiceTags(String fileName) {
-        InputStream inStream = this.getClass().getResourceAsStream(fileName);
-        InputStreamReader reader = new InputStreamReader(inStream);
+        InputStream       inStream = this.getClass().getResourceAsStream(fileName);
+        InputStreamReader reader   = new InputStreamReader(inStream);
         return gsonBuilder.fromJson(reader, ServiceTags.class);
     }
 
     static class ComparisonTests {
         List<TestCase> testCases;
 
-        class TestCase {
-            String          name;
+        static class TestCase {
+            String           name;
             PolicyEngineData me;
             PolicyEngineData other;
             boolean          isPolicyEnginesEqual;
@@ -191,7 +184,7 @@ public class TestPolicyEngineComparison {
     static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
         @Override
         public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-                                                JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
         }
     }

@@ -19,62 +19,56 @@
 
 package org.apache.ranger.plugin.conditionevaluator;
 
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
-import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 //PolicyCondition to check if resource Tags does not contain any of the tags in the policy condition
 
 public class RangerNoneOfExpectedTagsPresentConditionEvaluator extends RangerAbstractConditionEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerNoneOfExpectedTagsPresentConditionEvaluator.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerNoneOfExpectedTagsPresentConditionEvaluator.class);
+    private final Set<String> policyConditionTags = new HashSet<>();
 
-	private final Set<String> policyConditionTags = new HashSet<>();
+    @Override
+    public void init() {
+        LOG.debug("==> RangerNoneOfExpectedTagsPresentConditionEvaluator.init({})", condition);
 
-	@Override
-	public void init() {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerNoneOfExpectedTagsPresentConditionEvaluator.init(" + condition + ")");
-		}
+        super.init();
 
-		super.init();
+        if (condition != null) {
+            for (String value : condition.getValues()) {
+                policyConditionTags.add(value.trim());
+            }
+        }
 
-		if (condition != null ) {
-			for (String value : condition.getValues()) {
-				policyConditionTags.add(value.trim());
-			}
-		}
+        LOG.debug("<== RangerNoneOfExpectedTagsPresentConditionEvaluator.init({}): Tags[{}]", condition, policyConditionTags);
+    }
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerNoneOfExpectedTagsPresentConditionEvaluator.init(" + condition + "): Tags[" + policyConditionTags + "]");
-		}
-	}
+    @Override
+    public boolean isMatched(RangerAccessRequest request) {
+        LOG.debug("==> RangerNoneOfExpectedTagsPresentConditionEvaluator.isMatched({})", request);
 
-	@Override
-	public boolean isMatched(RangerAccessRequest request) {
+        boolean               matched      = true;
+        Set<RangerTagForEval> resourceTags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerNoneOfExpectedTagsPresentConditionEvaluator.isMatched(" + request + ")");
-		}
+        if (resourceTags != null) {
+            // check if resource Tags does not contain any tags in the policy condition
+            for (RangerTagForEval tag : resourceTags) {
+                if (policyConditionTags.contains(tag.getType())) {
+                    matched = false;
+                    break;
+                }
+            }
+        }
 
-		boolean                      matched      = true;
-		RangerRequestScriptEvaluator evaluator    = new RangerRequestScriptEvaluator(request);
-		Set<String>                  resourceTags = evaluator.getAllTagTypes();
+        LOG.debug("<== RangerNoneOfExpectedTagsPresentConditionEvaluator.isMatched({}): {}", request, matched);
 
-		if (resourceTags != null) {
-			// check if resource Tags does not contain any tags in the policy condition
-			matched = (Collections.disjoint(resourceTags, policyConditionTags));
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerNoneOfExpectedTagsPresentConditionEvaluator.isMatched(" + request+ "): " + matched);
-		}
-
-		return matched;
-	}
+        return matched;
+    }
 }

@@ -25,52 +25,55 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.JavaScriptEdits;
 import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 
-
 public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPolicyItemEvaluator implements RangerRowFilterPolicyItemEvaluator {
-	final private RangerRowFilterPolicyItem rowFilterPolicyItem;
-	final private String                    rowFilterExpr;
-	final private RangerRequestExprResolver exprResolver;
+    private final RangerRowFilterPolicyItem rowFilterPolicyItem;
+    private final String                    rowFilterExpr;
+    private final RangerRequestExprResolver exprResolver;
 
-	public RangerDefaultRowFilterPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerRowFilterPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
-		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK, policyItemIndex, options);
+    public RangerDefaultRowFilterPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerRowFilterPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
+        super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER, policyItemIndex, options);
 
-		rowFilterPolicyItem = policyItem;
+        rowFilterPolicyItem = policyItem;
 
-		RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
+        RangerPolicyItemRowFilterInfo rowFilterInfo = getRowFilterInfo();
 
-		if (rowFilterInfo != null && rowFilterInfo.getFilterExpr() != null) {
-			rowFilterExpr = rowFilterInfo.getFilterExpr();
-		} else {
-			rowFilterExpr = null;
-		}
+        if (rowFilterInfo != null && rowFilterInfo.getFilterExpr() != null) {
+            String rowFilterExpr = rowFilterInfo.getFilterExpr();
 
-		if (rowFilterExpr != null && RangerRequestExprResolver.hasExpressions(rowFilterExpr)) {
-			exprResolver = new RangerRequestExprResolver(rowFilterExpr, getServiceType());
-		} else {
-			exprResolver = null;
-		}
-	}
+            if (JavaScriptEdits.hasDoubleBrackets(rowFilterExpr)) {
+                rowFilterExpr = JavaScriptEdits.replaceDoubleBrackets(rowFilterExpr);
+            }
 
-	@Override
-	public RangerPolicyItemRowFilterInfo getRowFilterInfo() {
-		return rowFilterPolicyItem == null ? null : rowFilterPolicyItem.getRowFilterInfo();
-	}
+            this.rowFilterExpr = rowFilterExpr;
+        } else {
+            rowFilterExpr = null;
+        }
 
-	@Override
-	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
-		if (result.getFilterExpr() == null) {
-			if (exprResolver != null) {
-				result.setFilterExpr(exprResolver.resolveExpressions(result.getAccessRequest()));
-			} else if (rowFilterExpr != null) {
-				result.setFilterExpr(rowFilterExpr);
-			}
+        if (rowFilterExpr != null && RangerRequestExprResolver.hasExpressions(rowFilterExpr)) {
+            exprResolver = new RangerRequestExprResolver(rowFilterExpr, getServiceType());
+        } else {
+            exprResolver = null;
+        }
+    }
 
-			if (result.getFilterExpr() != null) {
-				policyEvaluator.updateAccessResult(result, matchType, true, getComments());
-				result.setIsAccessDetermined(true);
-			}
-		}
-	}
+    @Override
+    public RangerPolicyItemRowFilterInfo getRowFilterInfo() {
+        return rowFilterPolicyItem == null ? null : rowFilterPolicyItem.getRowFilterInfo();
+    }
+
+    @Override
+    public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
+        if (exprResolver != null) {
+            result.setFilterExpr(exprResolver.resolveExpressions(result.getAccessRequest()));
+        } else if (rowFilterExpr != null) {
+            result.setFilterExpr(rowFilterExpr);
+        }
+
+        if (result.getFilterExpr() != null) {
+            policyEvaluator.updateAccessResult(result, matchType, true, getComments());
+        }
+    }
 }

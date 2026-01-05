@@ -14,27 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger-base:latest
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
-ARG RANGER_VERSION
+ARG TAGSYNC_VERSION
 
-COPY ./dist/version                                  /home/ranger/dist/
-COPY ./dist/ranger-${RANGER_VERSION}-tagsync.tar.gz /home/ranger/dist/
+COPY ./dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz     /home/ranger/dist/
+COPY ./scripts/tagsync/ranger-tagsync.sh                 ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_keytab.sh                        ${RANGER_SCRIPTS}/
 
-COPY ./scripts/ranger-tagsync.sh                 ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-tagsync-install.properties ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-tagsync-tags.json          ${RANGER_SCRIPTS}/
-
-RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
-    ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
-    rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-tagsync.tar.gz && \
-    mkdir -p /opt/ranger/tagsync/data && \
+RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
+    ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
+    rm -f /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz && \
+    rm -f ${RANGER_HOME}/tagsync/install.properties && \
+    mkdir -p /opt/ranger/tagsync/data /var/run/ranger /var/log/ranger/tagsync /etc/ranger && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-install.properties ${RANGER_HOME}/tagsync/install.properties && \
     cp -f ${RANGER_SCRIPTS}/ranger-tagsync-tags.json ${RANGER_HOME}/tagsync/data/tags.json && \
-    mkdir -p /var/run/ranger && \
-    mkdir -p /var/log/ranger/tagsync && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
-    mkdir -p /etc/ranger && \
+    mkdir /etc/init.d || true && \
+    mkdir /etc/rc2.d  || true && \
+    mkdir /etc/rc3.d  || true && \
     touch /etc/init.d/ranger-tagsync && \
     ln -s /etc/init.d/ranger-tagsync /etc/rc2.d/S99ranger-tagsync && \
     ln -s /etc/init.d/ranger-tagsync /etc/rc2.d/K00ranger-tagsync && \
@@ -42,6 +41,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-tagsync.tar.gz --directo
     ln -s /etc/init.d/ranger-tagsync /etc/rc3.d/K00ranger-tagsync && \
     ln -s ${RANGER_HOME}/tagsync/ranger-tagsync-services.sh /usr/bin/ranger-tagsync-services.sh && \
     chown -R ranger:ranger ${RANGER_HOME}/tagsync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-tagsync && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-tagsync.sh
 
 USER ranger

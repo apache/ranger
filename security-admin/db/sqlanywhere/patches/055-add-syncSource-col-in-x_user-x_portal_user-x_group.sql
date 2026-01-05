@@ -14,15 +14,15 @@
 -- limitations under the License.
 
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_portal_user' and cname = 'sync_source') THEN
-		ALTER TABLE dbo.x_portal_user ADD sync_source varchar(4000) DEFAULT NULL NULL;
+		ALTER TABLE dbo.x_portal_user ADD sync_source text DEFAULT NULL NULL;
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_user' and cname = 'sync_source') THEN
-		ALTER TABLE dbo.x_user ADD sync_source varchar(4000) DEFAULT NULL NULL;
+		ALTER TABLE dbo.x_user ADD sync_source text DEFAULT NULL NULL;
 END IF;
 GO
 IF NOT EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_group' and cname = 'sync_source') THEN
-		ALTER TABLE dbo.x_group ADD sync_source varchar(4000) DEFAULT NULL NULL;
+		ALTER TABLE dbo.x_group ADD sync_source text DEFAULT NULL NULL;
 END IF;
 GO
 exit

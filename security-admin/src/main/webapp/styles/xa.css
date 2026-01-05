@@ -1670,7 +1670,7 @@ body.login {
   border: solid #dedede;
   border-width: 0 0 1px 0;
   height: 30px;
-  padding: 0 10px;
+  padding: 0 32px 0 10px;
   width: 100%;
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
@@ -1782,7 +1782,7 @@ margin-bottom: 5px;
 }
 .include-toggle{
 	margin-left: 360px;
-	margin-top: -29px;
+	margin-top: -35px;
 	width:80px;
   position: relative;
   top: 7px;
@@ -2248,7 +2248,7 @@ input.textFiledInputPadding ~ span {
 }
 .include-toggle-1{
   margin-left: 23vw;
-  margin-top: -29px;
+  margin-top: -4px;
 }
 .expanded-contant .include-toggle-1{
   margin-left: 18.4vw;
@@ -2498,6 +2498,27 @@ textarea:read-only{
 } */
 
 /* Security Zone */
+.zone-administration .form-control{
+  height: auto !important;
+}
+.role-form .form-control {
+  height: auto !important;
+}
+.permissions-table .form-control {
+  height: auto !important;
+}
+.groups-permission {
+  min-width: 480px;
+}
+.groups-permission .select2-container{
+  width: 100%;
+}
+.users-permission {
+  min-width: 480px;
+}
+.users-permission .select2-container{
+  width: 100%;
+}
 .security-panel {
   background-color: #fff;
   border-radius: 3px;
@@ -4093,7 +4114,7 @@ button.btn.btn-secondary.dropdown-toggle {
 */
 .ranger-policy .form-group.field-isEnabled .policy-enable-disable{
     margin-left: 38vw;
-    margin-top: -75px;
+    margin-top: -69px;
     width: 100px
 }
 
@@ -4103,7 +4124,7 @@ button.btn.btn-secondary.dropdown-toggle {
 
 .ranger-policy .form-group.field-policyPriority .policy-priority{
     margin-left: 45vw;
-    margin-top: -80px;
+    margin-top: -73px;
     width: 100px
 }
 .expanded-contant .form-group.field-policyPriority .policy-priority {
@@ -4147,8 +4168,7 @@ ul.tagit{
 }
 
 .addbtngroup .select2-container{
-  width: 300px !important;
-  display: inline-block;
+ display: inline-block;
 }
 
 .dropdown-menu a:hover{
@@ -4426,10 +4446,6 @@ ul.tagit input[type="text"]{
 }
 .policy-form [fieldclass="resorces-css"] .control-label{
   top: -30px;
-}
-
-.form-group.field-policyLabels {
-    margin-bottom: 40px;
 }
 
 .ranger-policy .form-group.field-isEnabled > label,
@@ -4717,4 +4733,36 @@ input.textFiledInputPadding:disabled {
   background: #eeeeee;
   width: 100%;
   display: inline-block;
+}
+
+.js-formInput .policy-resources .select2-container {
+  width: 274px !important;
+}
+.form-resources.policy-resources .form-control.rosource-boder {
+  padding: 0px !important;
+  height: 100%;
+}
+.form-resources.policy-resources .sameLevelDropdown {
+  margin-right: 31px !important;
+  margin-left: -150px !important;
+}
+.show-all-resource {
+  margin-top: -50px;
+}
+.policy-resources .form-group[fieldclass="resorces-css"] {
+  margin-bottom: 0px !important;
+}
+.wrap.position-relative.additional-resource{
+  padding: 20px 20px 0px 20px !important;
+}
+.excludeRecursiveSupport {
+  position: absolute;
+  top: 30px;
+}
+.password-icon {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-size: 15px;
+  cursor: pointer;
 }

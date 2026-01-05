@@ -22,8 +22,6 @@ package org.apache.ranger.services.nifi.registry.client;
  * Possible authentication types for NiFi Registry.
  */
 public enum NiFiRegistryAuthType {
-
     NONE,
     SSL
-
 }
