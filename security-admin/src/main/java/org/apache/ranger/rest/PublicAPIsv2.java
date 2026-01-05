@@ -897,7 +897,7 @@ public class PublicAPIsv2 {
     @Path("/api/roles/{id}/addUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin, @Context HttpServletRequest request) {
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @QueryParam("isAdmin") Boolean isAdmin, @Context HttpServletRequest request) {
         return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin);
     }
 
@@ -908,7 +908,7 @@ public class PublicAPIsv2 {
     @Path("/api/roles/{id}/removeUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
         return roleREST.removeUsersAndGroups(roleId, users, groups);
     }
 
@@ -919,7 +919,7 @@ public class PublicAPIsv2 {
     @Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
         return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups);
     }
 

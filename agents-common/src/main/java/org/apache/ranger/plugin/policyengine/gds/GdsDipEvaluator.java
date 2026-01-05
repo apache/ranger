@@ -73,7 +73,8 @@ public class GdsDipEvaluator {
         boolean ret = isActive();
 
         if (ret) {
-            // TODO:
+            // TODO: Implement DIP-specific access validation logic
+            LOG.debug("DIP evaluation for request: {} - returning active status", request);
         }
 
         return ret;

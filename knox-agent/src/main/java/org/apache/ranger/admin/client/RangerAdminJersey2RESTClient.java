@@ -33,6 +33,7 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -50,7 +51,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
@@ -422,14 +422,16 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
                 hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
             }
 
-            client = ClientBuilder.newBuilder()
+            // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder patterns to prevent MOXy usage
+            client = RangerJersey2ClientBuilder.newBuilder()
                     .sslContext(sslContext)
                     .hostnameVerifier(hv)
                     .build();
         }
 
         if (client == null) {
-            client = ClientBuilder.newClient();
+            // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newClient() to prevent MOXy usage
+            client = RangerJersey2ClientBuilder.newClient();
         }
 
         return client;
