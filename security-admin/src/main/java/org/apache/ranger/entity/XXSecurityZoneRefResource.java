@@ -33,7 +33,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_resource")
-public class XXSecurityZoneRefResource extends XXDBBase implements java.io.Serializable {
+public class XXSecurityZoneRefResource implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -66,7 +66,6 @@ public class XXSecurityZoneRefResource extends XXDBBase implements java.io.Seria
     @Column(name = "resource_name")
     protected String resourceName;
 
-    @Override
     public Long getId() {
         return id;
     }
@@ -78,7 +77,6 @@ public class XXSecurityZoneRefResource extends XXDBBase implements java.io.Seria
      * @param id Value to set member attribute <b> id</b>
      */
 
-    @Override
     public void setId(Long id) {
         this.id = id;
     }

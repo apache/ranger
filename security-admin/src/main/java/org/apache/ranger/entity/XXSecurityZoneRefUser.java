@@ -33,7 +33,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_user")
-public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializable {
+public class XXSecurityZoneRefUser implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -74,7 +74,6 @@ public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializa
     @Column(name = "user_type")
     protected Integer userType;
 
-    @Override
     public Long getId() {
         return id;
     }
@@ -86,7 +85,6 @@ public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializa
      * @param id Value to set member attribute <b> id</b>
      */
 
-    @Override
     public void setId(Long id) {
         this.id = id;
     }

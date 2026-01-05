@@ -36,7 +36,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_role_ref_user")
-public class XXRoleRefUser extends XXDBBase implements Serializable {
+public class XXRoleRefUser implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**

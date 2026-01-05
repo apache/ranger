@@ -37,7 +37,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_group")
-public class XXPolicyRefGroup extends XXDBBase implements Serializable {
+public class XXPolicyRefGroup implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -96,7 +96,7 @@ public class XXPolicyRefGroup extends XXDBBase implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), id, policyId, groupId, groupName);
+        return Objects.hash(id, policyId, groupId, groupName);
     }
 
     /*

@@ -37,7 +37,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_role")
-public class XXPolicyRefRole extends XXDBBase implements Serializable {
+public class XXPolicyRefRole implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
