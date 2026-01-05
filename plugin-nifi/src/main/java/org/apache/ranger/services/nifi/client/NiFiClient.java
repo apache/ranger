@@ -20,16 +20,11 @@ package org.apache.ranger.services.nifi.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +32,14 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.io.InputStream;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
@@ -46,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Client to communicate with NiFi and retrieve available resources.
@@ -60,11 +62,22 @@ public class NiFiClient {
     private final SSLContext       sslContext;
     private final HostnameVerifier hostnameVerifier;
     private final ObjectMapper     mapper = new ObjectMapper();
+    private final Client client;
 
     public NiFiClient(final String url, final SSLContext sslContext) {
         this.url              = url;
         this.sslContext       = sslContext;
         this.hostnameVerifier = new NiFiHostnameVerifier();
+        this.client           = buildClient();
+    }
+
+    protected Client buildClient() {
+        // Use RangerJersey2ClientBuilder instead of unsafe ClientBuilder.newBuilder() to prevent MOXy usage
+        if (sslContext != null) {
+            return RangerJersey2ClientBuilder.createSecureClient(sslContext, hostnameVerifier, 30000, 30000);
+        } else {
+            return RangerJersey2ClientBuilder.createStandardClient();
+        }
     }
 
     public HashMap<String, Object> connectionTest() {
@@ -73,8 +86,8 @@ public class NiFiClient {
         HashMap<String, Object> responseData = new HashMap<>();
 
         try {
-            final WebResource    resource = getWebResource();
-            final ClientResponse response = getResponse(resource, "application/json");
+            final WebTarget webTarget = getWebTarget();
+            final Response response = getResponse(webTarget, MediaType.APPLICATION_JSON);
 
             LOG.debug("Got response from NiFi with status code {}", response.getStatus());
 
@@ -82,8 +95,16 @@ public class NiFiClient {
                 connectivityStatus = true;
             } else {
                 connectivityStatus = false;
-                errMsg             = "Status Code = " + response.getStatus();
+                errMsg = "Status Code = " + response.getStatus();
+                // Read the error message from the response entity
+                try (InputStream is = response.readEntity(InputStream.class)) {
+                    errMsg += ": " + IOUtils.toString(is);
+                }
             }
+        } catch (ProcessingException | WebApplicationException e) {
+            LOG.error("Connection to NiFi failed due to {}", e.getMessage(), e);
+            connectivityStatus = false;
+            errMsg = Optional.ofNullable(e.getMessage()).orElse("Unknown error");
         } catch (Exception e) {
             LOG.error("Connection to NiFi failed due to {}", e.getMessage(), e);
             connectivityStatus = false;
@@ -102,15 +123,16 @@ public class NiFiClient {
     }
 
     public List<String> getResources(ResourceLookupContext context) throws Exception {
-        final WebResource    resource = getWebResource();
-        final ClientResponse response = getResponse(resource, "application/json");
+        final WebTarget webTarget = getWebTarget();
+        final Response response = getResponse(webTarget, MediaType.APPLICATION_JSON);
 
         if (Response.Status.OK.getStatusCode() != response.getStatus()) {
-            String errorMsg = IOUtils.toString(response.getEntityInputStream());
+            String errorMsg = response.readEntity(String.class);
             throw new Exception("Unable to retrieve resources from NiFi due to: " + errorMsg);
         }
 
-        JsonNode rootNode = mapper.readTree(response.getEntityInputStream());
+        InputStream inputStream = response.readEntity(InputStream.class);
+        JsonNode rootNode = mapper.readTree(inputStream);
         if (rootNode == null) {
             throw new Exception("Unable to retrieve resources from NiFi");
         }
@@ -146,19 +168,12 @@ public class NiFiClient {
         return hostnameVerifier;
     }
 
-    protected WebResource getWebResource() {
-        final ClientConfig config = new DefaultClientConfig();
-        if (sslContext != null) {
-            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES,
-                    new HTTPSProperties(hostnameVerifier, sslContext));
-        }
-
-        final Client client = Client.create(config);
-        return client.resource(url);
+    protected WebTarget getWebTarget() {
+        return client.target(url);
     }
 
-    protected ClientResponse getResponse(WebResource resource, String accept) {
-        return resource.accept(accept).get(ClientResponse.class);
+    protected Response getResponse(WebTarget webTarget, String accept) {
+        return webTarget.request(accept).get();
     }
 
     /**

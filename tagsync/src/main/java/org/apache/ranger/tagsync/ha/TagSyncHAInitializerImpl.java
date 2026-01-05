@@ -35,8 +35,9 @@ import java.util.List;
 import java.util.Set;
 
 public class TagSyncHAInitializerImpl extends RangerHAInitializer {
-    private static final    org.slf4j.Logger         LOG = LoggerFactory.getLogger(TagSyncHAInitializerImpl.class);
-    private static volatile TagSyncHAInitializerImpl theInstance;
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(TagSyncHAInitializerImpl.class);
+
+    private static TagSyncHAInitializerImpl theInstance;
     ActiveInstanceElectorService activeInstanceElectorService;
     List<HARangerService>        haRangerService;
     ServiceManager               serviceManager;

@@ -53,7 +53,6 @@
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>commons-collections:commons-collections</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
                     <include>commons-io:commons-io</include>
                     <include>org.apache.commons:commons-lang3</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>

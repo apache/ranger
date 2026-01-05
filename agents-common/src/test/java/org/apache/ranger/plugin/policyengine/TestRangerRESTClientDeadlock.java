@@ -160,6 +160,7 @@ public class TestRangerRESTClientDeadlock {
         HttpServer httpServer2 = HttpServer.create(new InetSocketAddress(0), 0);
         httpServer2.createContext("/", exchange -> {
             LOG.info("Server2: Received request, returning 503...");
+            serverReceivedRequest.countDown(); // Count down the latch for server2 as well
             exchange.sendResponseHeaders(503, -1);
             exchange.close();
         });

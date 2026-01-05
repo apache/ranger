@@ -19,8 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +63,8 @@ import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerRoleList;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -663,7 +663,7 @@ public class RoleREST {
     @Path("/roles/{id}/addUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @QueryParam("isAdmin") Boolean isAdmin) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> addUsersAndGroups(id={}, users={}, groups={}, isAdmin={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()), isAdmin);
         }
@@ -735,7 +735,7 @@ public class RoleREST {
     @Path("/roles/{id}/removeUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
         }
@@ -797,7 +797,7 @@ public class RoleREST {
     @Path("/roles/{id}/removeAdminFromUsersAndGroups")
     @Consumes("application/json")
     @Produces("application/json")
-    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups) {
         LOG.debug("==> removeAdminFromUsersAndGroups(id={}, users={}, groups={})", roleId, Arrays.toString(users.toArray()), Arrays.toString(groups.toArray()));
 
         RangerRole role;

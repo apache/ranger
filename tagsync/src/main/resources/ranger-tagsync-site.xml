@@ -165,6 +165,10 @@
 		<value></value>
 	</property>
 	<property>
+		<name>ranger-tagsync.server.ha.address.id3</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger-tagsync.server.ha.zookeeper.retry.sleeptime.ms</name>
 		<value>1000</value>
 	</property>
@@ -190,6 +194,47 @@
 	</property>
 	<property>
 		<name>ranger-tagsync.service.https.port</name>
+                <value></value>
+        </property>
+		<!-- WEBAPP property -->
+	<property>
+		<name>ranger.tagsync.http.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.https.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.shutdown.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.truststore.file.type</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.keystore.file.type</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.credential.provider.path</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.host</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.https.attrib.client.auth</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.truststore.alias</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.service.https.attrib.keystore.credential.alias</name>
 		<value></value>
 	</property>
 </configuration>

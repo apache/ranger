@@ -19,7 +19,6 @@
 
 package org.apache.ranger.unixusersync.process;
 
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -43,11 +42,13 @@ import org.slf4j.LoggerFactory;
 import javax.security.auth.Subject;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -141,7 +142,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
     String              keytab;
     String              policyMgrUserName;
     String              nameRules;
-    List<NewCookie>     cookieList        = new ArrayList<>();
+    Collection<NewCookie> cookieList = new ArrayList<>();
     Map<String, String> userMap           = new LinkedHashMap<>();
     Map<String, String> groupMap          = new LinkedHashMap<>();
     Map<String, String> whiteListUserMap  = new LinkedHashMap<>();
@@ -482,7 +483,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         while (retrievedCount < totalCount) {
             String              response   = null;
-            ClientResponse      clientResp;
+            Response      clientResp;
             Map<String, String> queryParams = new HashMap<>();
 
             queryParams.put("pageSize", recordsToPullPerCall);
@@ -495,7 +496,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     clientResp = ldapUgSyncClient.get(PM_GROUP_LIST_URI, queryParams);
 
                     if (clientResp != null) {
-                        response = clientResp.getEntity(String.class);
+                        response = clientResp.readEntity(String.class);
                     }
                 } catch (Exception e) {
                     LOG.error("Failed to get groups from Ranger, Error is : {}", e.getMessage());
@@ -537,7 +538,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         while (retrievedCount < totalCount) {
             String              response   = null;
-            ClientResponse      clientResp;
+            Response      clientResp;
             Map<String, String> queryParams = new HashMap<>();
 
             queryParams.put("pageSize", recordsToPullPerCall);
@@ -550,7 +551,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     clientResp = ldapUgSyncClient.get(PM_USER_LIST_URI, queryParams);
 
                     if (clientResp != null) {
-                        response = clientResp.getEntity(String.class);
+                        response = clientResp.readEntity(String.class);
                     }
                 } catch (Exception e) {
                     LOG.error("Failed to get users from Ranger admin, Error is : {}", e.getMessage());
@@ -587,7 +588,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupUserLinkList()");
 
         String         response   = null;
-        ClientResponse clientResp;
+        Response clientResp;
 
         if (isRangerCookieEnabled) {
             response = cookieBasedGetEntity(PM_GET_ALL_GROUP_USER_MAP_LIST_URI, 0);
@@ -596,7 +597,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 clientResp = ldapUgSyncClient.get(PM_GET_ALL_GROUP_USER_MAP_LIST_URI, null);
 
                 if (clientResp != null) {
-                    response = clientResp.getEntity(String.class);
+                    response = clientResp.readEntity(String.class);
                 }
             } catch (Exception e) {
                 LOG.error("Failed to get response, group user mappings from Ranger admin. Error is : {}", e.getMessage());
@@ -1086,15 +1087,21 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         if (isRangerCookieEnabled) {
             response = cookieBasedUploadEntity(pagedList, uri);
         } else {
+            Response clientRes = null;
+
             try {
-                ClientResponse clientRes = ldapUgSyncClient.post(uri, null, pagedList);
+                clientRes = ldapUgSyncClient.post(uri, null, pagedList);
 
                 if (clientRes != null) {
-                    response = clientRes.getEntity(String.class);
+                    response = clientRes.readEntity(String.class);
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
                 throw t;
+            } finally {
+                if (clientRes != null) {
+                    clientRes.close();
+                }
             }
         }
 
@@ -1222,9 +1229,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         while (uploadedCount < totalCount) {
             checkStatus();
 
-            int pagedGroupUserInfoListLen              = uploadedCount + pageSize;
+            int pagedGroupUserInfoListLen = uploadedCount + pageSize;
             List<GroupUserInfo> pagedGroupUserInfoList = groupUserInfoList.subList(uploadedCount, pagedGroupUserInfoListLen > totalCount ? totalCount : pagedGroupUserInfoListLen);
-            String response                            = getDataFromLdap(PM_ADD_GROUP_USER_LIST_URI, pagedGroupUserInfoList);
+
+            String response = getDataFromLdap(PM_ADD_GROUP_USER_LIST_URI, pagedGroupUserInfoList);
 
             if (StringUtils.isNotEmpty(response)) {
                 try {
@@ -1300,7 +1308,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                     pagedUgRoleAssignmentsList.setLastPage(true);
                 }
 
-                ClientResponse clientRes;
+                Response clientRes;
                 String         url        = PM_UPDATE_USERS_ROLES_URI;
                 String         jsonString = JsonUtils.objectToJson(pagedUgRoleAssignmentsList);
 
@@ -1313,7 +1321,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                         clientRes = ldapUgSyncClient.post(url, null, ugRoleAssignments);
 
                         if (clientRes != null) {
-                            response = clientRes.getEntity(String.class);
+                            response = clientRes.readEntity(String.class);
                         }
                     } catch (Throwable t) {
                         LOG.error("Failed to get response: ", t);
@@ -1369,7 +1377,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         checkStatus();
 
         String         response  = null;
-        ClientResponse clientRes;
+        Response clientRes = null;
 
         if (isRangerCookieEnabled) {
             response = cookieBasedUploadEntity(userInfo, PM_AUDIT_INFO_URI);
@@ -1378,7 +1386,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 clientRes = ldapUgSyncClient.post(PM_AUDIT_INFO_URI, null, userInfo);
 
                 if (clientRes != null) {
-                    response = clientRes.getEntity(String.class);
+                    response = clientRes.readEntity(String.class);
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
@@ -1429,7 +1437,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("==> PolicyMgrUserGroupBuilder.tryUploadEntityWithCookie()");
 
         String         response   = null;
-        ClientResponse clientResp = null;
+        Response clientResp = null;
 
         try {
             clientResp = ldapUgSyncClient.post(apiURL, null, obj, sessionId);
@@ -1439,22 +1447,20 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
-
+                //clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                clientResp = Response.status(HttpStatus.SC_NOT_FOUND).entity("Resource not found.").build();
                 sessionId           = null;
                 isValidRangerCookie = false;
             } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 sessionId           = null;
                 isValidRangerCookie = false;
             } else if (clientResp.getStatus() == HttpStatus.SC_NO_CONTENT || clientResp.getStatus() == HttpStatus.SC_OK) {
-                List<NewCookie> respCookieList = clientResp.getCookies();
-
+                Collection<NewCookie> respCookieList = clientResp.getCookies().values();
                 for (NewCookie cookie : respCookieList) {
                     if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
                         if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
                             sessionId = cookie.toCookie();
                         }
-
                         isValidRangerCookie = true;
                         break;
                     }
@@ -1468,7 +1474,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             }
 
             clientResp.bufferEntity();
-            response = clientResp.getEntity(String.class);
+            response = clientResp.readEntity(String.class);
         }
 
         LOG.debug("<== PolicyMgrUserGroupBuilder.tryUploadEntityWithCookie()");
@@ -1480,10 +1486,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("==> PolicyMgrUserGroupBuilder.tryUploadEntityInfoWithCred()");
 
         String         response   = null;
-        ClientResponse clientResp = null;
-        String         jsonString = JsonUtils.objectToJson(obj);
-
-        LOG.debug("User Group Mapping: {}", jsonString);
+        Response clientResp = null;
 
         try {
             clientResp = ldapUgSyncClient.post(apiURL, null, obj);
@@ -1493,12 +1496,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
+                clientResp = Response.status(HttpStatus.SC_NOT_FOUND).entity("Resource not found.").build();
             } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 LOG.warn("Credentials response from ranger is 401.");
             } else if (clientResp.getStatus() == HttpStatus.SC_OK || clientResp.getStatus() == HttpStatus.SC_NO_CONTENT) {
-                cookieList = clientResp.getCookies();
-
+                cookieList = clientResp.getCookies().values();
                 for (NewCookie cookie : cookieList) {
                     if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
                         sessionId           = cookie.toCookie();
@@ -1518,7 +1520,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
             clientResp.bufferEntity();
 
-            response = clientResp.getEntity(String.class);
+            response = clientResp.readEntity(String.class);
         }
 
         LOG.debug("<== PolicyMgrUserGroupBuilder.tryUploadEntityInfoWithCred()");
@@ -1530,7 +1532,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("==> PolicyMgrUserGroupBuilder.tryGetEntityWithCred()");
 
         String              response    = null;
-        ClientResponse      clientResp  = null;
+        Response      clientResp  = null;
         Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put("pageSize", recordsToPullPerCall);
@@ -1544,11 +1546,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
+                //clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                clientResp = Response.status(HttpStatus.SC_NOT_FOUND).entity("Resource not found.").build();
             } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 LOG.warn("Credentials response from ranger is 401.");
             } else if (clientResp.getStatus() == HttpStatus.SC_OK || clientResp.getStatus() == HttpStatus.SC_NO_CONTENT) {
-                cookieList = clientResp.getCookies();
+                cookieList = clientResp.getCookies().values();
 
                 for (NewCookie cookie : cookieList) {
                     if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
@@ -1569,7 +1572,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
             clientResp.bufferEntity();
 
-            response = clientResp.getEntity(String.class);
+            response = clientResp.readEntity(String.class);
         }
 
         LOG.debug("<== PolicyMgrUserGroupBuilder.tryGetEntityWithCred()");
@@ -1581,7 +1584,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
         LOG.debug("==> PolicyMgrUserGroupBuilder.tryGetEntityWithCookie()");
 
         String              response    = null;
-        ClientResponse      clientResp  = null;
+        Response      clientResp  = null;
         Map<String, String> queryParams = new HashMap<>();
 
         queryParams.put("pageSize", recordsToPullPerCall);
@@ -1595,7 +1598,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
+                //clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                clientResp = Response.status(HttpStatus.SC_NOT_FOUND).entity("Resource not found.").build();
 
                 sessionId           = null;
                 isValidRangerCookie = false;
@@ -1603,7 +1607,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 sessionId           = null;
                 isValidRangerCookie = false;
             } else if (clientResp.getStatus() == HttpStatus.SC_NO_CONTENT || clientResp.getStatus() == HttpStatus.SC_OK) {
-                List<NewCookie> respCookieList = clientResp.getCookies();
+                Collection<NewCookie> respCookieList = clientResp.getCookies().values();
 
                 for (NewCookie cookie : respCookieList) {
                     if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
@@ -1624,7 +1628,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
             clientResp.bufferEntity();
 
-            response = clientResp.getEntity(String.class);
+            response = clientResp.readEntity(String.class);
         }
 
         LOG.debug("<== PolicyMgrUserGroupBuilder.tryGetEntityWithCookie()");
@@ -1789,7 +1793,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         int            ret;
         String         response  = null;
-        ClientResponse clientRes;
+        Response clientRes = null;
 
         if (isRangerCookieEnabled) {
             response = cookieBasedUploadEntity(deletedGroups.keySet(), PM_UPDATE_DELETED_GROUPS_URI);
@@ -1798,7 +1802,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 clientRes = ldapUgSyncClient.post(PM_UPDATE_DELETED_GROUPS_URI, null, deletedGroups.keySet());
 
                 if (clientRes != null) {
-                    response = clientRes.getEntity(String.class);
+                    response = clientRes.readEntity(String.class);
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
@@ -1903,7 +1907,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         int            ret;
         String         response  = null;
-        ClientResponse clientRes;
+        Response clientRes = null;
 
         if (isRangerCookieEnabled) {
             response = cookieBasedUploadEntity(deletedUsers.keySet(), PM_UPDATE_DELETED_USERS_URI);
@@ -1911,7 +1915,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             try {
                 clientRes = ldapUgSyncClient.post(PM_UPDATE_DELETED_USERS_URI, null, deletedUsers.keySet());
                 if (clientRes != null) {
-                    response = clientRes.getEntity(String.class);
+                    response = clientRes.readEntity(String.class);
                 }
             } catch (Throwable t) {
                 LOG.error("Failed to get response, Error is : ", t);
