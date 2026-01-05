@@ -82,7 +82,7 @@
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
-            <version>${javax.annotation-api}</version>
+            <version>${javax.annotation-api.version}</version>
         </dependency>
 
         <dependency>
@@ -160,5 +160,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

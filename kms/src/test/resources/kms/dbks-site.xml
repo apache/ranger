@@ -27,7 +27,7 @@
     	Password used for encrypting Master Key
     </description>
   </property>
-  
+
    <!-- db Details -->
   
   <property>
@@ -59,7 +59,7 @@
     <value>org.apache.derby.jdbc.EmbeddedDriver</value>
     <description>
       Driver used for database
-    </description>    
+    </description>
   </property>
-  
+
 </configuration>

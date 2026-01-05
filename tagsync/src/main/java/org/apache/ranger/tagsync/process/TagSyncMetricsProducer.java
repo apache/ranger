@@ -71,17 +71,16 @@ public class TagSyncMetricsProducer implements Runnable {
 
     private void writeJVMMetrics(String logFileNameWithPath, TagSyncConfig config) throws Throwable {
         try {
-            File userMetricFile;
-            userMetricFile = new File(logFileNameWithPath);
+            File userMetricFile = new File(logFileNameWithPath);
             if (!userMetricFile.exists()) {
                 userMetricFile.createNewFile();
             }
             RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
             if (config.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
-                if (TagSyncConfig.isTagSyncServiceActive()) {
-                    RangerMetricsUtil.setIsRoleActive(1);
+                if (config.isTagSyncServiceActive()) {
+                    rangerMetricsUtil.setIsRoleActive(1);
                 } else {
-                    RangerMetricsUtil.setIsRoleActive(0);
+                    rangerMetricsUtil.setIsRoleActive(0);
                 }
             }
             rangerMetricsUtil.writeMetricsToFile(userMetricFile);

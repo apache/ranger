@@ -19,21 +19,17 @@
 
 package org.apache.ranger.unixusersync.process;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.plugin.util.RangerJersey2ClientBuilder;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
+import javax.ws.rs.client.Client;
 
 public class RangerUgSyncRESTClient extends RangerRESTClient {
     public RangerUgSyncRESTClient(String policyMgrBaseUrls, String ugKeyStoreFile, String ugKeyStoreFilepwd, String ugKeyStoreType, String ugTrustStoreFile, String ugTrustStoreFilepwd, String ugTrustStoreType, String authenticationType, String principal, String keytab, String polMgrUsername, String polMgrPassword) {
@@ -41,35 +37,36 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 
         String authKerberos = "kerberos";
 
-        if (!(authKerberos.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
+        UserGroupSyncConfig userGroupSyncConfig = UserGroupSyncConfig.getInstance();
+        if (!(authenticationType != null && authKerberos.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
             setBasicAuthInfo(polMgrUsername, polMgrPassword);
         }
 
         if (isSSL()) {
             setKeyStoreType(ugKeyStoreType);
             setTrustStoreType(ugTrustStoreType);
+            KeyManager[]   kmList       = getKeyManagers(ugKeyStoreFile, ugKeyStoreFilepwd);
+            TrustManager[] tmList       = getTrustManagers(ugTrustStoreFile, ugTrustStoreFilepwd);
+            SSLContext     sslContext   = getSSLContext(kmList, tmList);
 
-            KeyManager[]   kmList     = getKeyManagers(ugKeyStoreFile, ugKeyStoreFilepwd);
-            TrustManager[] tmList     = getTrustManagers(ugTrustStoreFile, ugTrustStoreFilepwd);
-            SSLContext     sslContext = getSSLContext(kmList, tmList);
-            ClientConfig   config     = new DefaultClientConfig();
+            HostnameVerifier hv = new HostnameVerifier() {
+                public boolean verify(String urlHostName, SSLSession session) {
+                    return session.getPeerHost().equals(urlHostName);
+                }
+            };
 
-            config.getClasses().add(JacksonJsonProvider.class); // to handle List<> unmarshalling
+            // Use RangerJersey2ClientBuilder to create secure client with MOXy prevention
+            Client secureClient = RangerJersey2ClientBuilder.createSecureClient(sslContext, hv, getRestClientConnTimeOutMs(), getRestClientReadTimeOutMs());
+            setClient(secureClient);
 
-            HostnameVerifier hv = (urlHostName, session) -> session.getPeerHost().equals(urlHostName);
-
-            config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
-
-            setClient(Client.create(config));
-
-            if (StringUtils.isNotEmpty(getUsername()) && StringUtils.isNotEmpty(getPassword())) {
-                getClient().addFilter(new HTTPBasicAuthFilter(getUsername(), getPassword()));
+            // Basic authentication is already handled by the base class RangerRESTClient
+            if (userGroupSyncConfig.isUserSyncRangerCookieEnabled()) {
+                Client  client = getClient();
+                setCookieAuthClient(client);
             }
         }
 
-        UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
-
-        super.setMaxRetryAttempts(config.getPolicyMgrMaxRetryAttempts());
-        super.setRetryIntervalMs(config.getPolicyMgrRetryIntervalMs());
+        super.setMaxRetryAttempts(userGroupSyncConfig.getPolicyMgrMaxRetryAttempts());
+        super.setRetryIntervalMs(userGroupSyncConfig.getPolicyMgrRetryIntervalMs());
     }
 }

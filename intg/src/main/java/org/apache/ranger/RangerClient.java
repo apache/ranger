@@ -19,7 +19,6 @@
 package org.apache.ranger;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
@@ -509,8 +508,8 @@ public class RangerClient {
         }
     }
 
-    private ClientResponse invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {
-        final ClientResponse clientResponse;
+    private Response invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {
+        final Response clientResponse;
         try {
             switch (api.getMethod()) {
                 case HttpMethod.POST:
@@ -540,8 +539,8 @@ public class RangerClient {
         return clientResponse;
     }
 
-    private ClientResponse responseHandler(API api, Map<String, String> params, Object request) throws RangerServiceException {
-        final ClientResponse clientResponse;
+    private Response responseHandler(API api, Map<String, String> params, Object request) throws RangerServiceException {
+        final Response clientResponse;
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Call         : {} {}", api.getMethod(), api.getNormalizedPath());
@@ -554,7 +553,7 @@ public class RangerClient {
 
         if (isSecureMode) {
             try {
-                clientResponse = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+                clientResponse = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
                     try {
                         return invokeREST(api, params, request);
                     } catch (RangerServiceException e) {
@@ -577,7 +576,7 @@ public class RangerClient {
             throw new RangerServiceException(api, null);
         } else if (clientResponse.getStatus() == api.getExpectedStatus().getStatusCode()) {
             return clientResponse;
-        } else if (clientResponse.getStatus() == ClientResponse.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
+        } else if (clientResponse.getStatus() == Response.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
             LOG.error("Ranger Admin unavailable. HTTP Status: {}", clientResponse.getStatus());
         } else {
             throw new RangerServiceException(api, clientResponse);
@@ -603,7 +602,7 @@ public class RangerClient {
             LOG.debug("==> callAPI({},{},{})", api, params, request);
             LOG.debug("------------------------------------------------------");
         }
-        final ClientResponse clientResponse = responseHandler(api, params, request);
+        final Response clientResponse = responseHandler(api, params, request);
         if (responseType != null) {
             try {
                 ret = JsonUtilsV2.readResponse(clientResponse, responseType);
@@ -626,7 +625,7 @@ public class RangerClient {
             LOG.debug("==> callAPI({},{},{})", api, params, request);
             LOG.debug("------------------------------------------------------");
         }
-        final ClientResponse clientResponse = responseHandler(api, params, request);
+        final Response clientResponse = responseHandler(api, params, request);
         if (responseType != null) {
             try {
                 ret = JsonUtilsV2.readResponse(clientResponse, responseType);
