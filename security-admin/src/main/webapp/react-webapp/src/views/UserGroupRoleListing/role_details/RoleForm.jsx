@@ -634,6 +634,8 @@ function RoleForm() {
                             data-name="usersSelect"
                             data-cy="usersSelect"
                             styles={selectInputCustomStyles}
+                            tabSelectsValue={false}
+                            placeholder="Select Users"
                           />
                         </div>
                         <div className="col-sm-3">
@@ -741,6 +743,8 @@ function RoleForm() {
                             data-name="groupsSelect"
                             data-cy="groupsSelect"
                             styles={selectInputCustomStyles}
+                            tabSelectsValue={false}
+                            placeholder="Select Groups"
                           />
                         </div>
                         <div className="col-sm-3">
@@ -848,6 +852,8 @@ function RoleForm() {
                             data-name="rolesSelect"
                             data-cy="rolesSelect"
                             styles={selectInputCustomStyles}
+                            tabSelectsValue={false}
+                            placeholder="Select Roles"
                           />
                         </div>
                         <div className="col-sm-3">

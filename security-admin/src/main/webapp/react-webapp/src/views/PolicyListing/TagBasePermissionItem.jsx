@@ -373,6 +373,7 @@ export default function TagBasePermissionItem(props) {
                         isClearable={false}
                         isSearchable={true}
                         placeholder="Select Service Name"
+                        tabSelectsValue={false}
                       />
                     </FormB.Group>
                   )}
