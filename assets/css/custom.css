@@ -1,0 +1,102 @@
+@font-face {
+  font-family: 'Satoshi';
+  src: url("../brand/Satoshi-Variable.ttf") format("truetype");
+  font-display: swap;
+}
+
+/* This file is used to add custom styles to the MkDocs Material theme. */
+/* It overrides only dark mode colors to create a "slate" theme. */
+:root, [data-md-color-scheme="slate"] {
+  --md-default-bg-color: rgb(26, 26, 27);
+  --md-primary-fg-color: rgb(15, 15, 15);
+  --md-primary-fg-color--light: #5FFFD7;
+  --md-primary-fg-color--dark:  #FCDB17;
+  --md-primary-bg-color: rgba(0,0,0,.75);
+  --md-primary-bg-color--light: rgba(0,0,0,.54);
+  --md-accent-fg-color: #FCDB17; /* this is also good: #00bad6 but only for the landing page */
+  --pg-light-border: rgb(47, 47, 47);
+  --hb-hero-color: #5FFFD7;
+  /* --md-footer-bg-color--dark: var(--md-default-bg-color); */
+}
+
+/* Tested: === Common font styling === */
+.md-header__topic:first-child,
+.md-typeset h1,
+h2,
+h3 {
+  font-family: 'Satoshi';
+}
+
+/* Tested: === Dark mode (slate) overrides === */
+[data-md-color-scheme="slate"] .md-typeset h1 {
+  color: var(--md-typeset-a-color);
+}
+
+/* Tested: === Dark mode button hover and click */
+[data-md-color-scheme="slate"] .md-typeset .md-button:hover,
+[data-md-color-scheme="slate"] .md-typeset .md-button:focus,
+[data-md-color-scheme="slate"] .md-typeset .md-button:active {
+  background-color: var(--md-accent-fg-color);
+  color: #000000;
+  border-color: var(--md-accent-fg-color);
+}
+
+
+#typewriter {
+  color: var(--md-accent-fg-color);
+}
+
+[data-md-color-scheme="slate"] > * {
+  --md-typeset-a-color: #5FFFD7;
+}
+
+[data-md-color-scheme="slate"] .md-header >*, [data-md-color-scheme="slate"] .md-tabs {
+  color: #fff;
+}
+
+[data-md-color-scheme="slate"] .md-header, [data-md-color-scheme="slate"] .md-tabs { /* firefox fallback */
+  background-color: rgba(9, 9, 9, 0.95);
+}
+
+@supports ((-webkit-backdrop-filter: none) or (backdrop-filter: none)) {
+  [data-md-color-scheme="slate"] .md-header, [data-md-color-scheme="slate"] .md-tabs {
+      background-color: rgba(0, 0, 0, 0.5);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+  }
+}
+
+[data-md-color-scheme="slate"] .md-nav--primary .md-nav__title[for="__drawer"] {
+  color: var(--md-typeset-a-color)
+}
+
+[data-md-color-scheme="slate"] .light-logo {
+  display: none;
+}
+
+/* Accent color */
+.accent {
+  color: var(--md-typeset-a-color);
+}
+.accent a {
+  font-weight: 500;
+}
+
+/* Primary buttons */
+.md-main .md-button--primary {
+  color: var(--md-primary-fg-color);
+  background-color: var(--hb-hero-color);
+  border-color: transparent;
+}
+
+.md-typeset hr {
+  margin-top: 5rem;
+  margin-bottom: 5rem;
+}
+
+/* logo size */
+.md-header__button.md-logo img {
+  height: 2rem;
+  width: auto;       /* preserve aspect ratio */
+  max-height: 40px;  /* keep header tidy on small screens */
+}
