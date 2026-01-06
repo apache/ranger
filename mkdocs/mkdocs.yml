@@ -1,0 +1,144 @@
+
+# Project info
+site_name: Apache Ranger
+site_url: https://apache.github.io/ranger/
+
+# Repository
+repo_name: 'apache/ranger'
+repo_url: 'https://github.com/apache/ranger'
+edit_uri: 'https://github.com/apache/ranger/blob/master/'
+
+copyright: Copyright &copy; 2014-2025 The Apache Software Foundation
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/brand/merged-logo.svg
+  favicon: assets/brand/favicon.ico
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - scheme: default
+      accent: deep purple
+      toggle:
+        icon: material/brightness-5  # ☀️
+        name: Switch to dark mode
+    - scheme: slate
+      accent: amber
+      toggle:
+        icon: material/brightness-2  # 🌙
+        name: Switch to light mode
+  font: # comment it out and see subtle difference
+    text: Noto Sans
+    code: Roboto Mono
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.top
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.path
+    - navigation.indexes
+    - navigation.prune
+    - content.code.copy
+    - toc.follow
+    - announce.dismiss
+
+plugins:
+  - search
+  - table-reader
+  - git-revision-date-localized:
+      fallback_to_build_date: true
+      type: date
+      timezone: America/Los_Angeles
+  - social:
+      cards_layout_options:
+        background_color: "#151819"
+        color: "#5FFFD7"
+
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: getting-started/install.md
+      - Trino with Ranger: getting-started/trino-with-ranger.md
+  - Architecture:
+    - Overview: arch/architecture.md
+  - Plugins:
+    - Trino: plugins/trino.md
+  - Services:
+    - Ranger Admin: services/admin/service.md
+    - Ranger KMS: services/kms/service.md
+    - Ranger UserSync: services/usersync/service.md
+    - Ranger TagSync: services/tagsync/service.md
+  - Features:
+      - Governed Data Sharing: features/gds/gds_intro.md
+      - Security Zones:
+          - Introduction: features/sec-zone/intro.md
+      - Client Libraries:
+          - Introduction: features/client-interface/intro.md
+  - Project:
+      - Contributing: project/contributing.md
+      - Code Style Guide: project/java-code-style.md
+      - Release Process: project/release-process.md
+      - ASF:
+          - ASF: project/asf-index.md
+          - Sponsorship: "https://www.apache.org/foundation/sponsorship.html"
+          - Events: "https://www.apache.org/events/current-event.html"
+          - Privacy: "https://privacy.apache.org/policies/privacy-policy-public.html"
+          - License: "https://www.apache.org/licenses/"
+          - Security: "https://www.apache.org/security/"
+          - Sponsors: "https://www.apache.org/foundation/sponsors.html"
+
+      - Security:
+          - Vulnerabilities Found: project/cve-list.md
+  - Releases:
+      - Releases: release-notes/index.md
+  - Blog:
+      - blog/blog.md
+
+extra:
+  homepage: https://ranger.apache.org
+  social:
+    - icon: fontawesome/brands/slack
+      link: https://the-asf.slack.com/archives/C4SC5NXAA
+    - icon: fontawesome/solid/envelope
+      link: mailto:dev@ranger.apache.org
+    - icon: fontawesome/brands/github
+      link: https://github.com/apache/ranger
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/r/apache/ranger
+
+extra_css:
+  - assets/css/custom.css
+  - assets/css/table.css
+
+extra_javascript:
+  - assets/js/typewriter.js
+  - https://unpkg.com/typewriter-effect@latest/dist/core.js
+  - https://cdn.jsdelivr.net/npm/vega@5
+  - https://cdn.jsdelivr.net/npm/vega-lite@5
+  - https://cdn.jsdelivr.net/npm/vega-embed@6
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - def_list
+  - footnotes
+  - md_in_html
+  - codehilite
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      options:
+        custom_icons:
+          - simple
+
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+  - tables

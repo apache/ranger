@@ -1,0 +1,30 @@
+/* 1) Target Material's table wrapper + the table itself */
+.md-page--cve-list .md-typeset__table { width: 100%; }
+.md-page--cve-list .md-typeset__table > table {
+  table-layout: fixed;   /* equal, predictable columns */
+  width: 100%;
+}
+
+/* 2) Lock first/second column widths for 2-col CVE tables */
+/* Scope table rules only to cve-list.md */
+.md-page--cve-list .md-typeset__table > table th:first-child,
+.md-page--cve-list .md-typeset__table > table td:first-child {
+  width: 22ch;   /* CVE / field name */
+}
+
+.md-page--cve-list .md-typeset__table > table th:nth-child(2),
+.md-page--cve-list .md-typeset__table > table td:nth-child(2) {
+  width: auto;   /* description/value */
+}
+
+/* Prevent content from blowing up column width */
+.md-page--cve-list .md-typeset__table > table td,
+.md-page--cve-list .md-typeset__table > table th {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Allow code to wrap normally inside cells */
+.md-page--cve-list .md-typeset__table > table code {
+  white-space: normal;
+}
