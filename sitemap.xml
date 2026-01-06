@@ -1,79 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/</loc>
+         <loc>https://apache.github.io/ranger/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/arch/architecture/</loc>
+         <loc>https://apache.github.io/ranger/arch/architecture/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/blog/blog/</loc>
+         <loc>https://apache.github.io/ranger/blog/blog/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/features/client-interface/intro/</loc>
+         <loc>https://apache.github.io/ranger/features/client-interface/intro/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/features/gds/gds_intro/</loc>
+         <loc>https://apache.github.io/ranger/features/gds/gds_intro/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/features/sec-zone/intro/</loc>
+         <loc>https://apache.github.io/ranger/features/sec-zone/intro/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/getting-started/install/</loc>
+         <loc>https://apache.github.io/ranger/getting-started/install/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/getting-started/trino-with-ranger/</loc>
+         <loc>https://apache.github.io/ranger/getting-started/trino-with-ranger/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/plugins/trino/</loc>
+         <loc>https://apache.github.io/ranger/plugins/trino/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/project/asf-index/</loc>
+         <loc>https://apache.github.io/ranger/project/asf-index/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/project/contributing/</loc>
+         <loc>https://apache.github.io/ranger/project/contributing/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/project/cve-list/</loc>
+         <loc>https://apache.github.io/ranger/project/cve-list/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/project/java-code-style/</loc>
+         <loc>https://apache.github.io/ranger/project/java-code-style/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/project/release-process/</loc>
+         <loc>https://apache.github.io/ranger/project/release-process/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/release-notes/</loc>
+         <loc>https://apache.github.io/ranger/release-notes/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/services/admin/service/</loc>
+         <loc>https://apache.github.io/ranger/services/admin/service/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/services/kms/service/</loc>
+         <loc>https://apache.github.io/ranger/services/kms/service/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/services/tagsync/service/</loc>
+         <loc>https://apache.github.io/ranger/services/tagsync/service/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
     <url>
-         <loc>https://kumaab.github.io/ranger-mkdocs/services/usersync/service/</loc>
+         <loc>https://apache.github.io/ranger/services/usersync/service/</loc>
          <lastmod>2026-01-06</lastmod>
     </url>
 </urlset>
