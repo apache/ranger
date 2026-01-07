@@ -627,6 +627,8 @@
                         <exclude>**/docs/src/site/resources/override-banner.js</exclude>
                         <exclude>**/docs/src/site/resources/smooth-scroll.js</exclude>
                         <exclude>**/importRole/*.json</exclude>
+                        <exclude>mkdocs/docs/assets/**</exclude>
+                        <exclude>mkdocs/requirements.txt</exclude>
                     </excludes>
                 </configuration>
                 <executions>

@@ -17,6 +17,7 @@ title: "Ranger Client Libraries"
  - See the License for the specific language governing permissions and
  - limitations under the License.
  -->
+
 # Introduction
 
 Ranger provides client libraries in Java and Python to access Ranger REST APIs programmatically with ease.
