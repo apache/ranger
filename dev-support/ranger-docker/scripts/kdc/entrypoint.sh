@@ -74,6 +74,9 @@ function create_keytabs() {
   create_principal_and_keytab rangeradmin  ranger
   create_principal_and_keytab rangerlookup ranger
 
+  create_principal_and_keytab HTTP               ranger-audit
+  create_principal_and_keytab rangerauditserver  ranger-audit
+
   create_principal_and_keytab rangertagsync ranger-tagsync
 
   create_principal_and_keytab rangerusersync ranger-usersync

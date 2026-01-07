@@ -64,6 +64,7 @@
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
                     <include>org.apache.ranger:ranger-audit-core</include>
+                    <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
                     <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
                     <include>org.apache.ranger:ranger-audit-dest-solr</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>

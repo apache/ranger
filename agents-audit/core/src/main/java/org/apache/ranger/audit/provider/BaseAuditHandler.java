@@ -74,16 +74,17 @@ public abstract class BaseAuditHandler implements AuditHandler {
 
     int     errorLogIntervalMS = 30 * 1000; // Every 30 seconds
     long    lastErrorLogMS;
-    long    totalCount;
-    long    totalSuccessCount;
-    long    totalFailedCount;
-    long    totalStashedCount;
-    long    totalDeferredCount;
-    long    lastIntervalCount;
-    long    lastIntervalSuccessCount;
-    long    lastIntervalFailedCount;
-    long    lastStashedCount;
-    long    lastDeferredCount;
+    // Thread-safe counters using AtomicLong for concurrent access by multiple worker threads
+    AtomicLong totalCount              = new AtomicLong(0);
+    AtomicLong totalSuccessCount       = new AtomicLong(0);
+    AtomicLong totalFailedCount        = new AtomicLong(0);
+    AtomicLong totalStashedCount       = new AtomicLong(0);
+    AtomicLong totalDeferredCount      = new AtomicLong(0);
+    AtomicLong lastIntervalCount       = new AtomicLong(0);
+    AtomicLong lastIntervalSuccessCount = new AtomicLong(0);
+    AtomicLong lastIntervalFailedCount = new AtomicLong(0);
+    AtomicLong lastStashedCount        = new AtomicLong(0);
+    AtomicLong lastDeferredCount       = new AtomicLong(0);
     boolean statusLogEnabled    = DEFAULT_AUDIT_LOG_STATUS_LOG_ENABLED;
     long    statusLogIntervalMS = DEFAULT_AUDIT_LOG_STATUS_LOG_INTERVAL_SEC * 1000;
     long    lastStatusLogTime   = System.currentTimeMillis();
@@ -237,61 +238,51 @@ public abstract class BaseAuditHandler implements AuditHandler {
     }
 
     public long addTotalCount(int count) {
-        totalCount += count;
-
-        return totalCount;
+        return totalCount.addAndGet(count);
     }
 
     public long addSuccessCount(int count) {
-        totalSuccessCount += count;
-
-        return totalSuccessCount;
+        return totalSuccessCount.addAndGet(count);
     }
 
     public long addFailedCount(int count) {
-        totalFailedCount += count;
-
-        return totalFailedCount;
+        return totalFailedCount.addAndGet(count);
     }
 
     public long addStashedCount(int count) {
-        totalStashedCount += count;
-
-        return totalStashedCount;
+        return totalStashedCount.addAndGet(count);
     }
 
     public long addDeferredCount(int count) {
-        totalDeferredCount += count;
-
-        return totalDeferredCount;
+        return totalDeferredCount.addAndGet(count);
     }
 
     public long getTotalCount() {
-        return totalCount;
+        return totalCount.get();
     }
 
     public long getTotalSuccessCount() {
-        return totalSuccessCount;
+        return totalSuccessCount.get();
     }
 
     public long getTotalFailedCount() {
-        return totalFailedCount;
+        return totalFailedCount.get();
     }
 
     public long getTotalStashedCount() {
-        return totalStashedCount;
+        return totalStashedCount.get();
     }
 
     public long getLastStashedCount() {
-        return lastStashedCount;
+        return lastStashedCount.get();
     }
 
     public long getTotalDeferredCount() {
-        return totalDeferredCount;
+        return totalDeferredCount.get();
     }
 
     public long getLastDeferredCount() {
-        return lastDeferredCount;
+        return lastDeferredCount.get();
     }
 
     public boolean isStatusLogEnabled() {
@@ -312,21 +303,27 @@ public abstract class BaseAuditHandler implements AuditHandler {
             lastStatusLogTime = currTime;
             nextStatusLogTime = currTime + statusLogIntervalMS;
 
-            long diffCount    = totalCount - lastIntervalCount;
-            long diffSuccess  = totalSuccessCount - lastIntervalSuccessCount;
-            long diffFailed   = totalFailedCount - lastIntervalFailedCount;
-            long diffStashed  = totalStashedCount - lastStashedCount;
-            long diffDeferred = totalDeferredCount - lastDeferredCount;
+            long currentTotalCount   = totalCount.get();
+            long currentSuccessCount = totalSuccessCount.get();
+            long currentFailedCount  = totalFailedCount.get();
+            long currentStashedCount = totalStashedCount.get();
+            long currentDeferredCount = totalDeferredCount.get();
+
+            long diffCount    = currentTotalCount - lastIntervalCount.get();
+            long diffSuccess  = currentSuccessCount - lastIntervalSuccessCount.get();
+            long diffFailed   = currentFailedCount - lastIntervalFailedCount.get();
+            long diffStashed  = currentStashedCount - lastStashedCount.get();
+            long diffDeferred = currentDeferredCount - lastDeferredCount.get();
 
             if (diffCount == 0 && diffSuccess == 0 && diffFailed == 0 && diffStashed == 0 && diffDeferred == 0) {
                 return;
             }
 
-            lastIntervalCount        = totalCount;
-            lastIntervalSuccessCount = totalSuccessCount;
-            lastIntervalFailedCount  = totalFailedCount;
-            lastStashedCount         = totalStashedCount;
-            lastDeferredCount        = totalDeferredCount;
+            lastIntervalCount.set(currentTotalCount);
+            lastIntervalSuccessCount.set(currentSuccessCount);
+            lastIntervalFailedCount.set(currentFailedCount);
+            lastStashedCount.set(currentStashedCount);
+            lastDeferredCount.set(currentDeferredCount);
 
             if (statusLogEnabled) {
                 String finalPath  = "";
@@ -475,6 +472,12 @@ public abstract class BaseAuditHandler implements AuditHandler {
     }
 
     private void logAuditStatus(long diffTime, long diffCount, long diffSuccess, long diffFailed, long diffStashed, long diffDeferred, String finalPath) {
+        long currentTotalCount        = totalCount.get();
+        long currentTotalSuccessCount = totalSuccessCount.get();
+        long currentTotalFailedCount  = totalFailedCount.get();
+        long currentTotalStashedCount = totalStashedCount.get();
+        long currentTotalDeferredCount = totalDeferredCount.get();
+
         String msg = "Audit Status Log: name="
                 + getName()
                 + finalPath
@@ -489,14 +492,14 @@ public abstract class BaseAuditHandler implements AuditHandler {
                 + (diffDeferred > 0 ? (", deferredCount=" + diffDeferred)
                 : "")
                 + ", totalEvents="
-                + totalCount
-                + (totalSuccessCount > 0 ? (", totalSuccessCount=" + totalSuccessCount)
+                + currentTotalCount
+                + (currentTotalSuccessCount > 0 ? (", totalSuccessCount=" + currentTotalSuccessCount)
                 : "")
-                + (totalFailedCount > 0 ? (", totalFailedCount=" + totalFailedCount)
+                + (currentTotalFailedCount > 0 ? (", totalFailedCount=" + currentTotalFailedCount)
                 : "")
-                + (totalStashedCount > 0 ? (", totalStashedCount=" + totalStashedCount)
+                + (currentTotalStashedCount > 0 ? (", totalStashedCount=" + currentTotalStashedCount)
                 : "")
-                + (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
+                + (currentTotalDeferredCount > 0 ? (", totalDeferredCount=" + currentTotalDeferredCount)
                 : "");
         LOG.info(msg);
     }

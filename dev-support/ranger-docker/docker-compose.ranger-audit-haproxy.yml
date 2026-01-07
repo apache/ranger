@@ -1,0 +1,60 @@
+services:
+  ranger-audit:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-audit-haproxy
+    image: ranger-audit-haproxy:2.9
+    container_name: ranger-audit
+    hostname: ranger-audit
+    domainname: rangernw
+    networks:
+      ranger:
+        aliases:
+          - ranger-audit.rangernw
+    ports:
+      - "7081:7081"
+    depends_on:
+      - ranger-audit-svc
+
+  # ============================================================
+  # Real audit server (scale this)
+  # ============================================================
+  ranger-audit-svc:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-audit
+      args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
+        - RANGER_VERSION=${RANGER_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
+    image: ranger-audit
+    hostname: ranger-audit
+    domainname: rangernw
+    stdin_open: true
+    tty: true
+    expose:
+      - "7081"
+    # no container_name here -> supports scaling
+    networks:
+      ranger: {}
+    volumes:
+      - ./dist/keytabs/ranger-audit:/etc/keytabs:ro
+      - audit-logs:/opt/ranger-audit/logs
+      - audit-spool:/var/log/audit-server/audit
+    environment:
+      JAVA_HOME: /opt/java/openjdk
+      AUDIT_SERVER_HOME_DIR: /opt/ranger-audit
+      AUDIT_SERVER_CONF_DIR: /opt/ranger-audit/conf
+      AUDIT_SERVER_LOG_DIR: /opt/ranger-audit/logs
+      AUDIT_SERVER_HEAP: "-Xms512m -Xmx2g"
+      RANGER_VERSION: ${RANGER_VERSION}
+      KERBEROS_ENABLED: ${KERBEROS_ENABLED}
+
+volumes:
+  audit-logs:
+  audit-spool:
+
+networks:
+  ranger:
+    name: rangernw

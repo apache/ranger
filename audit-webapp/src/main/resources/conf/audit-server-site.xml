@@ -1,0 +1,510 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+    <property>
+        <name>log.dir</name>
+        <value>${audit.server.log.dir}</value>
+        <description>
+            log directory for audit server
+        </description>
+    </property>
+    <property>
+        <name>ranger.audit.service.webapp.dir</name>
+        <value>.</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.contextName</name>
+        <value>/</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.host</name>
+        <value>ranger-audit.rangernw</value>
+        <description>
+            - In Docker: Use full service name with domain (e.g., ranger-audit.rangernw)
+            - In VM: Use the actual FQDN (e.g., ranger.example.com)
+            - Should match ranger.audit.server.bind.address for consistency
+        </description>
+    </property>
+    <property>
+        <name>ranger.audit.service.http.port</name>
+        <value>7081</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.https.port</name>
+        <value>7182</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.http.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.enableTLS</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.https.attrib.ssl.enabled</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.https.attrib.keystore.keyalias</name>
+        <value>myKey</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.https.attrib.keystore.pass</name>
+        <value>_</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.https.attrib.keystore.file</name>
+        <value>/etc/ranger/audit-server/keys/server.jks</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.https.attrib.keystore.credential.alias</name>
+        <value>keyStoreCredentialAlias</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.tomcat.ciphers</name>
+        <value></value>
+    </property>
+    <property>
+        <name>ranger.audit.service.destination.class</name>
+        <value></value>
+    </property>
+
+    <!-- Kerberos principal and keytab for audit service authenticating into kafka for creation topic, producer and consumer creation -->
+    <property>
+        <name>ranger.audit.service.authentication.method</name>
+        <value>KERBEROS</value>
+    </property>
+    <property>
+        <name>ranger.audit.service.kerberos.principal</name>
+        <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
+        <description>
+            rangerauditserver user kerberos principal for authentication into kafka
+        </description>
+    </property>
+    <property>
+        <name>ranger.audit.service.kerberos.keytab</name>
+        <value>/etc/keytabs/rangerauditserver.keytab</value>
+        <description>
+            keytab of the rangerauditserver principal
+        </description>
+    </property>
+
+    <!-- JWT Authentication Configuration -->
+    <property>
+        <name>config.prefix</name>
+        <value>ranger.audit.jwt.auth</value>
+        <description>Configuration prefix for JWT authentication</description>
+    </property>
+    <property>
+        <name>ranger.audit.jwt.auth.enabled</name>
+        <value>false</value>
+        <description>Enable JWT authentication for audit REST API</description>
+    </property>
+    <property>
+        <name>ranger.audit.jwt.auth.provider-url</name>
+        <value>http://localhost:9180/rest/jwks</value>
+        <description>JWKS provider URL for JWT token validation</description>
+    </property>
+    <property>
+        <name>ranger.audit.jwt.auth.public-key</name>
+        <value></value>
+        <description>JWT public key in PEM format (alternative to provider-url)</description>
+    </property>
+    <property>
+        <name>ranger.audit.jwt.auth.cookie.name</name>
+        <value>hadoop-jwt</value>
+        <description>Name of the cookie containing JWT token</description>
+    </property>
+    <property>
+        <name>ranger.audit.jwt.auth.audiences</name>
+        <value></value>
+        <description>Expected audiences for JWT validation (comma-separated)</description>
+    </property>
+
+    <!-- Kerberos/Delegation Token Authentication Configuration for REST API -->
+    <property>
+        <name>ranger.audit.kerberos.enabled</name>
+        <value>true</value>
+        <description>Enable Kerberos authentication for incoming REST API requests</description>
+    </property>
+    <property>
+        <name>ranger.audit.kerberos.type</name>
+        <value>kerberos</value>
+        <description>Authentication type: kerberos or simple</description>
+    </property>
+    <property>
+        <name>ranger.audit.kerberos.principal</name>
+        <value>HTTP/_HOST@EXAMPLE.COM</value>
+        <description>
+            INCOMING: SPNEGO HTTP principal for authenticating REST API requests FROM plugins.
+            This principal must be present in the keytab file.
+        </description>
+    </property>
+    <property>
+        <name>ranger.audit.kerberos.keytab</name>
+        <value>/etc/keytabs/HTTP.keytab</value>
+        <description>
+            Keytab file containing HTTP principal for SPNEGO authentication
+        </description>
+    </property>
+    <property>
+        <name>ranger.audit.kerberos.name.rules</name>
+        <value>DEFAULT</value>
+        <description>Kerberos name rules for principal mapping</description>
+    </property>
+    <property>
+        <name>ranger.audit.server.bind.address</name>
+        <value>ranger-audit.rangernw</value>
+        <description>
+            Hostname for Kerberos principal _HOST resolution in HTTP principal
+            - Example: If set to "myhost.example.com" and principal is "HTTP/_HOST@REALM",
+            it becomes "HTTP/myhost.example.com@REALM"
+            - In Docker: Use full service name with domain (e.g., ranger-audit.rangernw)
+            - In VM: Use the actual FQDN (e.g., ranger.example.com)
+            - MUST match the hostname in the keytab principal
+        </description>
+    </property>
+    <property>
+        <name>ranger.audit.kerberos.cookie.path</name>
+        <value>/</value>
+        <description>Cookie path for delegation token</description>
+    </property>
+
+    <!-- Audit destination configurations -->
+    <property>
+        <name>xasecure.audit.is.enabled</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>xasecure.audit.provider.summary.enabled</name>
+        <value>true</value>
+    </property>
+
+    <!-- HDFS destination configuration -->
+    <property>
+        <name>xasecure.audit.destination.hdfs</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.hdfs.batch.filespool.dir</name>
+        <value>/var/log/%app-type%/audit/hdfs/spool</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.hdfs.dir</name>
+        <value>hdfs://ranger-hadoop:9000/ranger/audit</value>
+        <description>
+            Namenode host for HDFS audit destination.
+            example:hdfs://hdfs-namenode:8020/ranger/audit
+            In Docker, use the service name of the namenode: hdfs://ranger-hadoop:9000/ranger/audit
+        </description>
+    </property>
+
+    <!-- OpenSearch Audit Destination Configurations -->
+    <property>
+        <name>xasecure.audit.destination.opensearch</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.opensearch.urls</name>
+        <value>localhost</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.opensearch.batch.filespool.dir</name>
+        <value>/var/log/%app-type%/audit/opensearch/spool</value>
+    </property>
+
+    <!-- Kafka queue configuration -->
+    <property>
+        <name>xasecure.audit.destination.kafka</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.bootstrap.servers</name>
+        <value>ranger-kafka:9092</value>
+        <description>
+            Kafka broker hosts for Kafka audit destination.
+            example: kafka-broker1:9092,kafka-broker2:9092,kafka-broker3:9092
+            In Docker, use the service name of the kafka brokers: ranger-kafka:9092
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.topic.name</name>
+        <value>ranger_audits</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.number.of.partitions</name>
+        <value></value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.replication.factor</name>
+        <value>3</value>
+        <description>
+            Replication factor for the Kafka audit topic.
+            Default: 3
+            Development/Single broker: Set to 1
+            Must not exceed the number of available Kafka brokers.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.security.protocol</name>
+        <value>SASL_PLAINTEXT</value>
+        <description>
+            Security protocol for Kafka audit destination.
+            example: PLAINTEXT for non-Kerberos mode, SASL_PLAINTEXT for Kerberos mode, SASL_SSL for SSL mode
+            In Docker, use the service name of the kafka brokers: kafka://ranger-kafka:9092
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.sasl.mechanism</name>
+        <value>GSSAPI</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.request.timeout.ms</name>
+        <value>60000</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.connections.max.idle.ms</name>
+        <value>90000</value>
+    </property>
+
+    <!-- Kafka Topic partition and overrides configs -->
+    <property>
+        <name>xasecure.audit.destination.kafka.configured.appIds</name>
+        <description>
+            Comma separate list of AppIds this audit server handles.
+            Each AppId will get 2 partition by default
+            e.g. hdfs, hiveServer2, hiveMetaStore, impala etc.
+            default values: hdfs,hiveServer2,hiveMetaStore,hbaseMaster,hbaseRegional,knox,kms,kafka,solr,impala
+        </description>
+        <value></value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.partition.allocation.factor</name>
+        <value></value>
+        <description>
+            partition allocation factor for each appId.
+            Default : 1.0, which allocates 1 partition per appId
+        </description>
+    </property>
+    <!-- config to override each appId's partition allocation -->
+    <property>
+        <name>xasecure.audit.destination.kafka.partitioner.override.hdfs</name>
+        <value>3</value>
+        <description>
+            Number of partitions allocated to hdfs appId.
+            High-volume component, allocate more partitions for better parallelism.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.partitioner.override.hiveServer2</name>
+        <value>3</value>
+        <description>
+            Number of partitions allocated to hiveServer2 appId.
+            High-volume component, allocate more partitions for better parallelism.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.partitioner.override.hbaseMaster</name>
+        <value>3</value>
+        <description>
+            Number of partitions allocated to hbaseMaster appId.
+            Medium-volume component.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.partitioner.override.kafka</name>
+        <value>3</value>
+        <description>
+            Number of partitions allocated to kafka appId.
+            Medium-volume component.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.min.partitions.threshold</name>
+        <value>20</value>
+        <description>
+            Minimum partition threshold for Kafka audit topic.
+            If calculated partitions from configured appIds is less than this threshold,
+            the topic will be created with this many partitions.
+
+            This ensures reserved partitions are available for unconfigured appIds.
+
+            Example scenarios:
+            1. If only hdfs=2 and hive=2 are configured (total=4), but threshold=20,
+               then 20 partitions will be created with 16 reserved for unconfigured appIds.
+            2. If hdfs=5, hive=5, hbase=5, knox=5 are configured (total=20), and threshold=20,
+               then exactly 20 partitions will be created with no reserved partitions.
+            3. If total configured > threshold, the configured total is used.
+
+            When unconfigured appIds (e.g., kafka, sqoop, atlas) send audit messages,
+            they will be routed to the reserved partition pool instead of sharing
+            partitions with configured appIds.
+
+            Default: 20
+            Recommended: Set based on expected total number of plugins in your environment.
+        </description>
+    </property>
+
+    <!--- SOLR Consumer Config -->
+    <property>
+        <name>xasecure.audit.destination.solr</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.solr.urls</name>
+        <value>http://ranger-solr:8983/solr/ranger_audits</value>
+        <description>
+            Solr URLs for audits when SolrCloud is not enabled.
+            Docker supports only standalone mode for now,
+            configure http://ranger-solr:8983/solr/ranger_audits
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.solr.zookeepers</name>
+        <value></value>
+        <description>
+            Zookeepers for Solr audit destination.
+            example: zookeeper-host1:2181,zookeeper-host2:2181,zookeeper-host3:2181
+            In Docker, use the service name of the zookeepers: ranger-zk:2181/ranger_audits
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.solr.batch.filespool.dir</name>
+        <value>/var/log/hive/audit/solr/spool</value>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.solr.force.use.inmemory.jaas.config</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.loginModuleName</name>
+        <value>com.sun.security.auth.module.Krb5LoginModule</value>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.loginModuleControlFlag</name>
+        <value>required</value>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.useKeyTab</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.storeKey</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.useTicketCache</name>
+        <value>true</value>
+        <description>
+            Allow use of cached Kerberos tickets for Solr authentication.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.serviceName</name>
+        <value>solr</value>
+        <description>
+            Kerberos service name for Solr. This should match the Solr service configuration.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.principal</name>
+        <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
+        <description>
+            Principal for Solr authentication.
+        </description>
+    </property>
+    <property>
+        <name>xasecure.audit.jaas.Client.option.keyTab</name>
+        <value>/etc/keytabs/rangerauditserver.keytab</value>
+        <description>
+            Keytab for Solr authentication.
+        </description>
+    </property>
+
+    <!-- Audit Recovery Configuration -->
+    <property>
+        <name>ranger.audit.kafka.recovery.enabled</name>
+        <value>true</value>
+        <description>
+            Enable audit message recovery system. When enabled, failed audit messages are written to local spool files
+            and retried to Kafka automatically.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.kafka.recovery.spool.dir</name>
+        <value>/var/log/audit-server/audit/spool</value>
+        <description>
+            Directory for storing .failed files with audit messages that failed to send to Kafka.
+            Files remain here until successfully processed, then moved to archive as .processed files.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.kafka.recovery.archive.dir</name>
+        <value>/var/log/audit-server/audit/archive</value>
+        <description>
+            Directory for successfully processed files. Files are moved here with .processed extension
+            after all messages are successfully retried to Kafka. Old .processed files are automatically
+            deleted based on retention policy (max.processed.files).
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.kafka.recovery.file.rotation.interval.sec</name>
+        <value>300</value>
+        <description>
+            Time interval in seconds for rotating spool files. Default is 300 seconds (5 minutes).
+            A new spool file is created after this interval.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.kafka.recovery.max.messages.per.file</name>
+        <value>10000</value>
+        <description>
+            Maximum number of messages to write per spool file before rotation.
+            File is closed and moved to archive after reaching this limit.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.kafka.recovery.retry.interval.sec</name>
+        <value>60</value>
+        <description>
+            Time interval in seconds between retry attempts for archived files.
+            Default is 60 seconds (1 minute).
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.kafka.recovery.archive.max.processed.files</name>
+        <value>100</value>
+        <description>
+            Maximum number of .processed files to retain in archive directory.
+            Oldest .processed files are deleted when this limit is exceeded.
+            Failed messages remain in spool directory as .failed files for retry.
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.kafka.recovery.retry.max.attempts</name>
+        <value>3</value>
+        <description>
+            Maximum number of retry attempts per message before keeping file as .failed in spool.
+            Default is 3 attempts with exponential backoff.
+        </description>
+    </property>
+</configuration>

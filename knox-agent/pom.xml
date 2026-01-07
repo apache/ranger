@@ -127,6 +127,11 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-dest-auditserver</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-hdfs</artifactId>
             <version>${project.version}</version>
             <!-- TO DEBUG JERSEY2 code: uncomment this exclusion

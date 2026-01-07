@@ -213,5 +213,21 @@
 	<property>
 		<name>xasecure.audit.solr.solr_url</name>
 		<value>http://localhost:6083/solr/ranger_audits</value>
-	</property>	
+	</property>
+
+	<!-- Audit Server destination -->
+	<property>
+		<name>xasecure.audit.destination.auditserver</name>
+		<value>true</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.destination.auditserver.url</name>
+		<value>http://localhost:7081</value>
+	</property>
+
+	<property>
+		<name>xasecure.audit.destination.auditserver.batch.filespool.dir</name>
+		<value>/var/log/hive/audit/http/spool</value>
+	</property>
 </configuration>

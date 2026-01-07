@@ -37,25 +37,41 @@ cd ${RANGER_HOME}/ranger-kafka-plugin
 
 sed -i 's/localhost:2181/ranger-zk.rangernw:2181/' ${KAFKA_HOME}/config/server.properties
 
-cat <<EOF >> ${KAFKA_HOME}/config/server.properties
-# Enable SASL/GSSAPI mechanism
-sasl.enabled.mechanisms=GSSAPI
-sasl.mechanism.inter.broker.protocol=GSSAPI
-security.inter.broker.protocol=SASL_PLAINTEXT
+if [ "${KERBEROS_ENABLED}" == "true" ]; then
+  echo "Configuring Kafka with Kerberos (SASL_PLAINTEXT)"
+  cat <<EOF >> ${KAFKA_HOME}/config/server.properties
 
-# Listener configuration
-listeners=SASL_PLAINTEXT://:9092
-advertised.listeners=SASL_PLAINTEXT://ranger-kafka.rangernw:9092
+    # Enable SASL/GSSAPI mechanism
+    sasl.enabled.mechanisms=GSSAPI
+    sasl.mechanism.inter.broker.protocol=GSSAPI
+    security.inter.broker.protocol=SASL_PLAINTEXT
 
-# JAAS configuration for Kerberos
-listener.name.sasl_plaintext.gssapi.sasl.jaas.config=com.sun.security.auth.module.Krb5LoginModule required \
-useKeyTab=true \
-storeKey=true \
-keyTab="/etc/keytabs/kafka.keytab" \
-principal="kafka/ranger-kafka.rangernw@EXAMPLE.COM";
+    # Listener configuration
+    listeners=SASL_PLAINTEXT://:9092
+    advertised.listeners=SASL_PLAINTEXT://ranger-kafka.rangernw:9092
 
-# Kerberos service name
-sasl.kerberos.service.name=kafka
+    # JAAS configuration for Kerberos
+    listener.name.sasl_plaintext.gssapi.sasl.jaas.config=com.sun.security.auth.module.Krb5LoginModule required \
+    useKeyTab=true \
+    storeKey=true \
+    keyTab="/etc/keytabs/kafka.keytab" \
+    principal="kafka/ranger-kafka.rangernw@EXAMPLE.COM";
 
-authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer
+    # Kerberos service name
+    sasl.kerberos.service.name=kafka
+
+    # Ranger authorization
+    authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer
 EOF
+else
+  echo "Configuring Kafka with PLAINTEXT (no Kerberos)"
+  cat <<EOF >> ${KAFKA_HOME}/config/server.properties
+    # Listener configuration (PLAINTEXT - no authentication)
+    listeners=PLAINTEXT://:9092
+    advertised.listeners=PLAINTEXT://ranger-kafka.rangernw:9092
+
+    # Ranger authorization
+    # disabling Ranger Plugin for now.
+    # authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer
+EOF
+fi

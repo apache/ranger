@@ -487,9 +487,9 @@ public class SolrAuditDestination extends AuditDestination {
 
             if (kerberosUser != null) {
                 // execute the privileged action as the given keytab user
-                final KerberosAction kerberosAction = new KerberosAction<>(kerberosUser, action, LOG);
+                final KerberosAction<UpdateResponse> kerberosAction = new KerberosAction<>(kerberosUser, action, LOG);
 
-                ret = (UpdateResponse) kerberosAction.execute();
+                ret = kerberosAction.execute();
             } else {
                 ret = action.run();
             }

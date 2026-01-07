@@ -286,15 +286,17 @@ public class TestRangerDefaultAuditHandler {
     public void test08_getAdditionalInfo_nullAndNonNull() {
         RangerDefaultAuditHandler handler = new RangerDefaultAuditHandler();
         RangerAccessRequestImpl req = new RangerAccessRequestImpl();
+        RangerAccessResult      res  = new RangerAccessResult(0, "svc", null, req);
         req.setRemoteIPAddress(null);
         req.setForwardedAddresses(new ArrayList<>());
-        Assertions.assertNull(handler.getAdditionalInfo(req));
+        Assertions.assertNull(handler.getAdditionalInfo(req, res));
 
         RangerAccessRequestImpl req2 = new RangerAccessRequestImpl();
+        RangerAccessResult      res2 = new RangerAccessResult(0, "svc", null, req);
         req2.setRemoteIPAddress("10.1.1.1");
         List<String> fwd = new ArrayList<>(Arrays.asList("1.1.1.1"));
         req2.setForwardedAddresses(fwd);
-        String info = handler.getAdditionalInfo(req2);
+        String info = handler.getAdditionalInfo(req2, res2);
         Assertions.assertNotNull(info);
         Assertions.assertTrue(info.contains("10.1.1.1"));
     }

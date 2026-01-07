@@ -259,6 +259,16 @@ public class RangerAccessResult {
         return ret;
     }
 
+    public String getServiceTypeName() {
+        String ret = null;
+
+        if (serviceDef != null && serviceDef.getName() != null) {
+            ret = serviceDef.getName();
+        }
+
+        return ret;
+    }
+
     public Map<String, Object> getAdditionalInfo() {
         return additionalInfo;
     }

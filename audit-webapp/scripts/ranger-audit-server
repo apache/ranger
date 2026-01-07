@@ -1,0 +1,315 @@
+#!/bin/bash
+
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Ranger Audit Server Control Script
+
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AUDIT_HOME="$(cd "$SCRIPTS_DIR/.." && pwd)"
+CONF_DIR="${AUDIT_SERVER_CONF_DIR:-$AUDIT_HOME/conf}"
+
+# ========================================
+# User Enforcement
+# ========================================
+# The audit-webapp should run as the 'ranger' user for consistency with ranger-admin and rms-webapp.
+
+RANGER_USER="${RANGER_USER:-ranger}"
+# CURRENT_USER="$(whoami)"
+
+# # Check if running as the correct user
+# if [ "$CURRENT_USER" != "$RANGER_USER" ]; then
+#     echo "WARNING: Running as user '$CURRENT_USER' instead of recommended user '$RANGER_USER'"
+#     echo ""
+#     echo "For production deployments, the audit-webapp should run as the 'ranger' user to:"
+#     echo "  - Share the same keytab as ranger-admin and rms-webapp"
+#     echo "  - Maintain consistent ownership of files and processes"
+#     echo "  - Use the same OS-level permissions as other Ranger services"
+#     echo ""
+#     echo "To run as the 'ranger' user, either:"
+#     echo "  1. Switch to ranger user: sudo su - ranger"
+#     echo "  2. Use sudo: sudo -u ranger $0 $@"
+#     echo "  3. Set RANGER_USER environment variable to override: export RANGER_USER=\$(whoami)"
+#     echo ""
+
+#     # Check if we're in an interactive terminal
+#     if [ -t 0 ]; then
+#         read -p "Continue anyway? (y/n) " -n 1 -r
+#         echo
+#         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+#             echo "Aborted."
+#             exit 1
+#         fi
+#     else
+#         echo "Non-interactive mode detected - continuing with current user"
+#     fi
+# fi
+
+# Export directories for audit_start.py to use
+export AUDIT_SERVER_HOME_DIR="$AUDIT_HOME"
+export AUDIT_SERVER_CONF_DIR="$CONF_DIR"
+
+# ========================================
+# JVM Performance Tuning Configuration
+# ========================================
+#
+# Scaling Recommendations for Busy Audit APIs:
+# - 1-10 services:  -Xms2g -Xmx4g
+# - 10-50 services: -Xms4g -Xmx8g (default)
+# - 50+ services:   -Xms8g -Xmx16g
+#
+# Override by setting AUDIT_SERVER_HEAP before running this script
+# or by creating conf/audit-server-env.sh
+# ========================================
+
+# Default JVM Heap Settings
+# For high-traffic audit API with many services sending audits, increase these values
+if [ -z "$AUDIT_SERVER_HEAP" ]; then
+    export AUDIT_SERVER_HEAP="-Xms4g -Xmx8g"
+fi
+
+# Default JVM Options
+# Optimized for high-throughput, low-latency audit processing
+if [ -z "$AUDIT_SERVER_OPTS" ]; then
+    # Detect Java version
+    JAVA_VERSION=$("$JAVA_HOME/bin/java" -version 2>&1 | awk -F '"' '/version/ {print $2}' | awk -F '.' '{print $1}')
+
+    # Base JVM options
+    export AUDIT_SERVER_OPTS="-XX:+UseG1GC \
+        -XX:MaxGCPauseMillis=200 \
+        -XX:InitiatingHeapOccupancyPercent=35 \
+        -XX:ConcGCThreads=4 \
+        -XX:ParallelGCThreads=8 \
+        -XX:+PrintGCDetails \
+        -XX:+PrintGCDateStamps \
+        -Xloggc:logs/gc.log \
+        -XX:+UseGCLogFileRotation \
+        -XX:NumberOfGCLogFiles=10 \
+        -XX:GCLogFileSize=10M"
+
+    # Java 17+ requires --add-opens for Kerberos/JAAS (strong encapsulation enforced)
+    # Minimal set required for Kerberos/JAAS to work:
+    # - sun.security.krb5: Core Kerberos implementation
+    # - javax.security.auth.*: JAAS authentication framework
+    # - sun.security.jgss: GSS-API/Kerberos integration
+    if [ "$JAVA_VERSION" -ge 17 ]; then
+        echo "Detected Java $JAVA_VERSION - Adding required module access options for Kerberos/JAAS"
+        export AUDIT_SERVER_OPTS="$AUDIT_SERVER_OPTS \
+            --add-opens java.base/sun.security.krb5=ALL-UNNAMED \
+            --add-opens java.base/javax.security.auth=ALL-UNNAMED \
+            --add-opens java.base/javax.security.auth.login=ALL-UNNAMED \
+            --add-opens java.base/javax.security.auth.kerberos=ALL-UNNAMED \
+            --add-opens java.security.jgss/sun.security.krb5=ALL-UNNAMED"
+    fi
+fi
+
+# Load custom environment settings if available
+# This allows users to override the defaults above
+if [ -f "$CONF_DIR/audit-server-env.sh" ]; then
+    echo "Loading custom JVM settings from $CONF_DIR/audit-server-env.sh"
+    source "$CONF_DIR/audit-server-env.sh"
+fi
+
+# Check if Python is available
+PYTHON_CMD="python"
+if ! command -v python &> /dev/null; then
+    if command -v python3 &> /dev/null; then
+        PYTHON_CMD="python3"
+    else
+        echo "ERROR: Python is not available in PATH"
+        exit 1
+    fi
+fi
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 {start|stop|restart|status}"
+    echo ""
+    echo "Commands:"
+    echo "  start    - Start the Ranger Audit Server"
+    echo "  stop     - Stop the Ranger Audit Server gracefully"
+    echo "  restart  - Restart the Ranger Audit Server"
+    echo "  status   - Check if the Ranger Audit Server is running"
+    echo ""
+    echo "Options:"
+    echo "  --force  - Force stop (use with stop command)"
+    exit 1
+}
+
+# Function to check if server is running
+is_running() {
+    local pid_file="${AUDIT_SERVER_PID_DIR:-$AUDIT_HOME/logs}/audit-server.pid"
+
+    if [ ! -f "$pid_file" ]; then
+        return 1
+    fi
+
+    local pid=$(cat "$pid_file" 2>/dev/null)
+
+    if [ -z "$pid" ]; then
+        return 1
+    fi
+
+    if ps -p "$pid" > /dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to get PID
+get_pid() {
+    local pid_file="${AUDIT_SERVER_PID_DIR:-$AUDIT_HOME/logs}/audit-server.pid"
+
+    if [ -f "$pid_file" ]; then
+        cat "$pid_file" 2>/dev/null
+    fi
+}
+
+# Function to start the server
+start_server() {
+    echo "Starting Ranger Audit Server..."
+
+    if is_running; then
+        echo "Ranger Audit Server is already running (PID: $(get_pid))"
+        return 1
+    fi
+
+    if [ ! -f "$SCRIPTS_DIR/audit_start.py" ]; then
+        echo "ERROR: audit_start.py not found at $SCRIPTS_DIR/audit_start.py"
+        exit 1
+    fi
+
+    # Export environment variables for Python script
+    # Remove line continuations and extra whitespace from AUDIT_SERVER_OPTS
+    if [ -n "$AUDIT_SERVER_OPTS" ]; then
+        export AUDIT_SERVER_OPTS=$(echo "$AUDIT_SERVER_OPTS" | tr '\n' ' ' | tr -s ' ')
+    fi
+
+    # Ensure AUDIT_SERVER_HEAP is exported
+    if [ -n "$AUDIT_SERVER_HEAP" ]; then
+        export AUDIT_SERVER_HEAP
+    fi
+
+    echo ""
+    echo "=== Audit Server Configuration ==="
+    echo "AUDIT_HOME: $AUDIT_SERVER_HOME_DIR"
+    echo "CONF_DIR: $AUDIT_SERVER_CONF_DIR"
+    echo "JVM Heap: $AUDIT_SERVER_HEAP"
+    echo "JVM Options: $AUDIT_SERVER_OPTS"
+    echo "=================================="
+    echo ""
+
+    $PYTHON_CMD "$SCRIPTS_DIR/audit_start.py"
+    local ret=$?
+
+    if [ $ret -eq 0 ]; then
+        echo ""
+        echo "Check logs at: $AUDIT_HOME/logs/audit-server.log"
+    fi
+
+    return $ret
+}
+
+# Function to stop the server
+stop_server() {
+    echo "Stopping Ranger Audit Server..."
+
+    if ! is_running; then
+        echo "Ranger Audit Server is not running"
+        return 1
+    fi
+
+    if [ ! -f "$SCRIPTS_DIR/audit_stop.py" ]; then
+        echo "ERROR: audit_stop.py not found at $SCRIPTS_DIR/audit_stop.py"
+        exit 1
+    fi
+
+    # Pass any additional arguments (like --force) to stop script
+    $PYTHON_CMD "$SCRIPTS_DIR/audit_stop.py" "$@"
+    return $?
+}
+
+# Function to show status
+show_status() {
+    if is_running; then
+        local pid=$(get_pid)
+        echo "Ranger Audit Server is running (PID: $pid)"
+        return 0
+    else
+        echo "Ranger Audit Server is not running"
+        return 1
+    fi
+}
+
+# Function to restart the server
+restart_server() {
+    echo "Restarting Ranger Audit Server..."
+
+    if is_running; then
+        stop_server "$@"
+
+        # Wait for server to stop
+        local count=0
+        while is_running && [ $count -lt 30 ]; do
+            echo -n "."
+            sleep 1
+            count=$((count + 1))
+        done
+        echo ""
+
+        if is_running; then
+            echo "ERROR: Failed to stop Ranger Audit Server"
+            return 1
+        fi
+    fi
+
+    # Start the server
+    start_server
+    return $?
+}
+
+# Main script logic
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+COMMAND=$1
+shift
+
+case "$COMMAND" in
+    start)
+        start_server "$@"
+        ;;
+    stop)
+        stop_server "$@"
+        ;;
+    restart)
+        restart_server "$@"
+        ;;
+    status)
+        show_status
+        ;;
+    *)
+        echo "ERROR: Unknown command '$COMMAND'"
+        echo ""
+        usage
+        ;;
+esac
+
+exit $?
+

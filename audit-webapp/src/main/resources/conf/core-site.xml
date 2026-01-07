@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+    <!--
+        Hadoop security settings for Ranger Audit WebApp
+        Note: The audit-webapp authenticates directly as the rangeradmin principal
+        and writes all audits to HDFS as that user.
+        written to HDFS as rangeradmin in service-specific directories:
+        /ranger/audit/<serviceType>/<appId>/
+    -->
+    <property>
+        <name>hadoop.security.authentication</name>
+            <value>kerberos</value>
+        <description>Authentication method for Hadoop services:- simple or kerberos </description>
+    </property>
+
+    <property>
+        <name>hadoop.security.auth_to_local</name>
+        <value>
+            RULE:[1:$1@$0](rangerauditserver@EXAMPLE\.COM)s/.*/rangerauditserver/
+            RULE:[1:$1/$2@$0](rangerauditserver/ranger-audit.rangernw@EXAMPLE\.COM)s/.*/rangerauditserver/
+            DEFAULT
+        </value>
+        <description>
+            Kerberos principal to local user name mapping rules for Ranger Audit Server.
+            Note: rangerauditserver/hostname@REALM and rangerauditserver@REALM both map to 'ranger' OS user
+        </description>
+    </property>
+</configuration>

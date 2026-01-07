@@ -472,6 +472,7 @@
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/sample-client.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-webapp.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>

@@ -94,7 +94,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
                 setRequestData();
 
                 auditEvent.setAction(getAccessType(request.getAccessType()));
-                auditEvent.setAdditionalInfo(getAdditionalInfo(request));
+                auditEvent.setAdditionalInfo(getAdditionalInfo(request, result));
 
                 Set<String> tags = getTags(request);
 
@@ -108,8 +108,8 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
     }
 
     @Override
-    public String getAdditionalInfo(RangerAccessRequest request) {
-        String              additionalInfo = super.getAdditionalInfo(request);
+    public String getAdditionalInfo(RangerAccessRequest request, RangerAccessResult result) {
+        String              additionalInfo = super.getAdditionalInfo(request, result);
         Map<String, String> addInfoMap     = JsonUtils.jsonToMapStringString(additionalInfo);
 
         if (addInfoMap == null || addInfoMap.isEmpty()) {

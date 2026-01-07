@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<assembly>
+  <id>audit-webapp</id>
+  <formats>
+    <format>tar.gz</format>
+  </formats>
+  <baseDirectory>${project.parent.name}-${project.version}-audit-webapp</baseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <outputDirectory>bin</outputDirectory>
+      <directory>${project.parent.basedir}/audit-webapp/scripts</directory>
+      <includes>
+        <include>audit_config.py</include>
+        <include>audit_start.py</include>
+        <include>audit_stop.py</include>
+        <include>audit_stop.sh</include>
+        <include>ranger-audit-server</include>
+      </includes>
+      <fileMode>755</fileMode>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>conf</outputDirectory>
+      <directory>${project.parent.basedir}/audit-webapp/src/main/resources/conf</directory>
+      <includes>
+        <include>audit-server-site.xml</include>
+        <include>core-site.xml</include>
+        <include>hdfs-site.xml</include>
+        <include>audit-log4j2.properties</include>
+      </includes>
+      <fileMode>544</fileMode>
+    </fileSet>
+
+    <!-- version file -->
+    <fileSet>
+      <outputDirectory></outputDirectory>
+      <directory>${project.build.directory}</directory>
+      <includes>
+        <include>version</include>
+      </includes>
+      <fileMode>444</fileMode>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>libext</outputDirectory>
+      <excludes>
+        <exclude>**/*</exclude>
+      </excludes>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory></outputDirectory>
+      <directory>${project.parent.basedir}/audit-webapp/</directory>
+      <includes>
+        <include>NOTICE.txt</include>
+      </includes>
+      <fileMode>644</fileMode>
+    </fileSet>
+  </fileSets>
+
+  <files>
+    <file>
+      <outputDirectory>webapp</outputDirectory>
+      <source>${project.parent.basedir}/audit-webapp/target/audit-webapp-${project.version}.war</source>
+      <destName>audit-webapp.war</destName>
+    </file>
+  </files>
+</assembly>

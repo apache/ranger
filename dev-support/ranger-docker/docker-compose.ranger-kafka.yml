@@ -19,7 +19,7 @@ services:
     networks:
       - ranger
     ports:
-      - "6667:6667"
+      - "9092:9092"
     depends_on:
       ranger:
         condition: service_started
