@@ -4,41 +4,33 @@
   "implClass":   "org.apache.ranger.services.gds.RangerServiceGds",
   "label":       "GDS",
   "description": "GDS Service Definition",
-  "options": {
-    "enableDenyInPolicies": "false"
-  },
+  "options":     { "enableDenyInPolicies": "false" },
   "resources": [
     {
-      "itemId":              1,
-      "name":               "dataset-id",
-      "type":               "string",
-      "level":              1,
-      "parent":             "",
-      "mandatory":          true,
-      "lookupSupported":    false,
-      "recursiveSupported": false,
-      "excludesSupported":  false,
-      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":     { "wildCard": false, "ignoreCase": false },
-      "uiHint":             "{ \"singleValue\": true }",
-      "label":              "Dataset ID",
-      "description":        "Dataset ID"
+      "itemId":         1,
+      "name":           "dataset-id",
+      "parent":         "",
+      "level":          1,
+      "type":           "string",
+      "mandatory":      true,
+      "matcher":        "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": false, "ignoreCase": false },
+      "uiHint":         "{ \"singleValue\": true }",
+      "label":          "Dataset ID",
+      "description":    "Dataset ID"
     },
     {
-      "itemId":              2,
-      "name":               "project-id",
-      "type":               "string",
-      "level":              1,
-      "parent":             "",
-      "mandatory":          true,
-      "lookupSupported":    false,
-      "recursiveSupported": false,
-      "excludesSupported":  false,
-      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions":     { "wildCard": false, "ignoreCase": false },
-      "uiHint":             "{ \"singleValue\": true }",
-      "label":              "Project ID",
-      "description":        "Project ID"
+      "itemId":         2,
+      "name":           "project-id",
+      "parent":         "",
+      "level":          1,
+      "type":           "string",
+      "mandatory":      true,
+      "matcher":        "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": { "wildCard": false, "ignoreCase": false },
+      "uiHint":         "{ \"singleValue\": true }",
+      "label":          "Project ID",
+      "description":    "Project ID"
     }
   ],
 
@@ -61,10 +53,6 @@
       "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
     }
   ],
-
-  "enums": [ ],
-
-  "contextEnrichers": [ ],
 
   "policyConditions":
   [

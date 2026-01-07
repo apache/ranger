@@ -1,277 +1,128 @@
 {
-  "id": 202,
-  "name": "schema-registry",
-  "implClass": "org.apache.ranger.services.schema.registry.RangerServiceSchemaRegistry",
-  "label": "Schema Registry",
+  "id":          202,
+  "name":        "schema-registry",
+  "implClass":   "org.apache.ranger.services.schema.registry.RangerServiceSchemaRegistry",
+  "label":       "Schema Registry",
   "description": "Schema Registry",
-  "resources":
-  [
-
+  "resources": [
     {
-      "itemId": 1,
-      "name": "registry-service",
-      "type": "string",
-      "level": 10,
-      "parent": "",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
+      "itemId":            1,
+      "name":              "registry-service",
+      "parent":            "",
+      "level":             10,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
       "excludesSupported": true,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx": "^\\*$",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Schema Registry Service",
-      "description": "Schema Registry Service"
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": true },
+      "label":             "Schema Registry Service",
+      "description":       "Schema Registry Service"
     },
-
     {
-      "itemId": 2,
-      "name": "schema-group",
-      "type": "string",
-      "level": 10,
-      "parent": "",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
+      "itemId":           2,
+      "name":             "schema-group",
+      "parent":            "",
+      "level":             10,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
       "excludesSupported": true,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Schema Group",
-      "description": "Schema Group"
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": true },
+      "label":             "Schema Group",
+      "description":       "Schema Group"
     },
-
     {
-      "itemId": 3,
-      "name": "schema-metadata",
-      "type": "string",
-      "level": 20,
-      "parent": "schema-group",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
+      "itemId":            3,
+      "name":              "schema-metadata",
+      "parent":            "schema-group",
+      "level":             20,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
       "excludesSupported": true,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Schema Name",
-      "description": "Schema Name",
-      "isValidLeaf": "true"
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": true },
+      "label":             "Schema Name",
+      "description":       "Schema Name",
+      "isValidLeaf":       "true"
     },
-
-
     {
-      "itemId": 4,
-      "name": "schema-branch",
-      "type": "string",
-      "level": 30,
-      "parent": "schema-metadata",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
+      "itemId":            4,
+      "name":              "schema-branch",
+      "parent":            "schema-metadata",
+      "level":             30,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
       "excludesSupported": true,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Schema Branch",
-      "description": "Schema Branch",
-      "isValidLeaf": "true"
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": true },
+      "label":             "Schema Branch",
+      "description":       "Schema Branch",
+      "isValidLeaf":       "true"
     },
-
     {
-      "itemId": 5,
-      "name": "schema-version",
-      "type": "string",
-      "level": 40,
-      "parent": "schema-branch",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
+      "itemId":            5,
+      "name":              "schema-version",
+      "parent":            "schema-branch",
+      "level":             40,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
       "excludesSupported": true,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx": "^\\*$",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Schema Version",
-      "description": "Schema Version"
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": true },
+      "label":             "Schema Version",
+      "description":       "Schema Version"
     },
-
     {
-      "itemId": 6,
-      "name": "serde",
-      "type": "string",
-      "level": 10,
-      "parent": "",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
+      "itemId":            6,
+      "name":              "serde",
+      "parent":            "",
+      "level":             10,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
       "excludesSupported": true,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx": "^\\*$",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Serializer/Deserializer",
-      "description": "Serializer/Deserializer"
-    }
-
-  ],
-
-  "accessTypes":
-  [
-    {
-      "itemId": 1,
-      "name": "create",
-      "label": "Create",
-      "category": "CREATE"
-    },
-
-    {
-      "itemId": 2,
-      "name": "read",
-      "label": "Read",
-      "category": "READ"
-    },
-
-    {
-      "itemId": 3,
-      "name": "update",
-      "label": "Update",
-      "category": "UPDATE"
-    },
-
-    {
-      "itemId": 4,
-      "name": "delete",
-      "label": "Delete",
-      "category": "DELETE"
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": true },
+      "label":             "Serializer/Deserializer",
+      "description":       "Serializer/Deserializer"
     }
   ],
-
-  "configs":
-  [
-    {
-      "itemId": 1,
-      "name": "schema.registry.url",
-      "type": "string",
-      "mandatory": true,
-      "defaultValue": "",
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Schema Registry URL"
-    },
-
-    {
-      "itemId": 2,
-      "name": "schema-registry.authentication",
-      "type": "enum",
-      "subType": "authType",
-      "mandatory": true,
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Authentication Type",
-      "defaultValue": "KERBEROS"
-    },
-
-    {
-      "itemId": 3,
-      "name": "commonNameForCertificate",
-      "type": "string",
-      "mandatory": false,
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Ranger Plugin SSL CName"
-    },
-
-    {
-      "itemId": 4,
-      "name": "ranger.plugin.audit.filters",
-      "type": "string",
-      "subType": "",
-      "mandatory": false,
-      "validationRegEx":"",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "Ranger Default Audit Filters",
-      "defaultValue": "[]"
-    }
-
+  "accessTypes": [
+    { "itemId": 1, "name": "create", "label": "Create", "category": "CREATE" },
+    { "itemId": 2, "name": "read",   "label": "Read",   "category": "READ" },
+    { "itemId": 3, "name": "update", "label": "Update", "category": "UPDATE" },
+    { "itemId": 4, "name": "delete", "label": "Delete", "category": "DELETE" }
   ],
-
+  "configs": [
+    { "itemId": 1, "name": "schema.registry.url",            "type": "string", "mandatory": true,  "label": "Schema Registry URL",          "defaultValue": "" },
+    { "itemId": 2, "name": "schema-registry.authentication", "type": "enum",   "mandatory": true,  "label": "Authentication Type",          "defaultValue": "KERBEROS", "subType": "authType" },
+    { "itemId": 3, "name": "commonNameForCertificate",       "type": "string", "mandatory": false, "label": "Ranger Plugin SSL CName" },
+    { "itemId": 4, "name": "ranger.plugin.audit.filters",    "type": "string", "mandatory": false, "label": "Ranger Default Audit Filters", "defaultValue": "[]" }
+  ],
   "enums":
   [
     {
-      "itemId": 1,
-      "name": "authType",
-      "elements":
-      [
-        {
-          "itemId": 1,
-          "name": "NONE",
-          "label": "None"
-        },
-        {
-          "itemId": 2,
-          "name": "KERBEROS",
-          "label": "Kerberos"
-        }
-      ],
-
-      "defaultIndex": 0
+      "itemId": 1, "name": "authType", "defaultIndex": 0,
+      "elements": [
+        { "itemId": 1, "name": "NONE",     "label": "None" },
+        { "itemId": 2, "name": "KERBEROS", "label": "Kerberos" }
+      ]
     }
   ],
-
-  "contextEnrichers":
-  [
-
-  ],
-
   "policyConditions":
   [
-
     {
-      "itemId":1,
-      "name":"ip-range",
-      "evaluator":"org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
-      "evaluatorOptions":{
-
-      },
-      "validationRegEx":"",
-      "validationMessage":"",
-      "label":"IP Address Range",
-      "description":"IP Address Range",
-      "uiHint" : "{ \"isMultiValue\":true }"
+      "itemId":      1,
+      "name":        "ip-range",
+      "evaluator":   "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+      "label":       "IP Address Range",
+      "description": "IP Address Range",
+      "uiHint" :     "{ \"isMultiValue\":true }"
     }
-
   ]
 }

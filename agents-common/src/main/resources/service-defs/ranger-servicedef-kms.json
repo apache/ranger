@@ -1,154 +1,41 @@
 {
-	"id":7,
-	"name": "kms",
-	"displayName": "kms",
-	"implClass": "org.apache.ranger.services.kms.RangerServiceKMS",
-	"label": "KMS",
-	"description": "KMS",
-    "options":
+  "id":          7,
+  "name":        "kms",
+  "displayName": "kms",
+  "implClass":   "org.apache.ranger.services.kms.RangerServiceKMS",
+  "label":       "KMS",
+  "description": "KMS",
+  "options":     { "ui.pages":"encryption", "security.allowed.roles":"keyadmin" },
+  "resources": [
     {
-        "ui.pages":"encryption",
-        "security.allowed.roles":"keyadmin"
-    },
-	"resources": 
-	[
-		{
-			"itemId": 1,
-			"name": "keyname",
-			"type": "string",
-			"level": 10,
-			"parent": "",
-			"mandatory": true,
-			"lookupSupported": true,
-			"recursiveSupported": false,
-			"excludesSupported": false,
-			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": { "wildCard":true, "ignoreCase":false },
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Key Name",
-			"description": "Key Name"
-		}
-	],
-
-	"accessTypes": 
-	[
-		{
-			"itemId": 1,
-			"name": "create",
-			"label": "Create",
-			"category": "CREATE"
-		},
-
-		{
-			"itemId": 2,
-			"name": "delete",
-			"label": "Delete",
-			"category": "DELETE"
-		},
-
-		{
-			"itemId": 3,
-			"name": "rollover",
-			"label": "Rollover",
-			"category": "UPDATE"
-		},
-		
-		{
-			"itemId": 4,
-			"name": "setkeymaterial",
-			"label": "Set Key Material",
-			"category": "UPDATE"
-		},
-		
-		{
-			"itemId": 5,
-			"name": "get",
-			"label": "Get",
-			"category": "READ"
-		},
-		
-		{
-			"itemId": 6,
-			"name": "getkeys",
-			"label": "Get Keys",
-			"category": "READ"
-		},
-		
-		{
-			"itemId": 7,
-			"name": "getmetadata",
-			"label": "Get Metadata",
-			"category": "READ"
-		},
-		
-		{
-			"itemId": 8,
-			"name": "generateeek",
-			"label": "Generate EEK",
-			"category": "UPDATE"
-		},
-		
-		{
-			"itemId": 9,
-			"name": "decrypteek",
-			"label": "Decrypt EEK",
-			"category": "UPDATE"
-		}
-	],
-
-	"configs": 
-	[
-		{
-			"itemId": 1,
-			"name": "provider",
-			"type": "string",
-			"mandatory": true,
-			"label": "KMS URL"
-		},
-		
-		{
-			"itemId": 2,
-			"name": "username",
-			"type": "string",
-			"mandatory": true,
-			"label": "Username"
-		},
-
-		{
-			"itemId": 3,
-			"name": "password",
-			"type": "password",
-			"mandatory": true,
-			"label": "Password"
-		},
-
-		{
-			"itemId": 4,
-			"name": "ranger.plugin.audit.filters",
-			"type": "string",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage":"",
-			"uiHint":"",
-			"label": "Ranger Default Audit Filters",
-			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['keyadmin'] ,'isAudited':false} ]"
-		}
-	],
-
-	"enums": 
-	[
-		
-	],
-
-	"contextEnrichers": 
-	[
-		
-	],
-
-	"policyConditions": 
-	[
-	
-	]
+      "itemId":          1,
+      "name":            "keyname",
+      "parent":          "",
+      "level":           10,
+      "type":            "string",
+      "mandatory":       true,
+      "lookupSupported": true,
+      "matcher":         "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":  { "wildCard": true, "ignoreCase": false },
+      "label":           "Key Name",
+      "description":     "Key Name"
+    }
+  ],
+  "accessTypes": [
+    { "itemId": 1, "name": "create",         "label": "Create",           "category": "CREATE" },
+    { "itemId": 2, "name": "delete",         "label": "Delete",           "category": "DELETE" },
+    { "itemId": 3, "name": "rollover",       "label": "Rollover",         "category": "UPDATE" },
+    { "itemId": 4, "name": "setkeymaterial", "label": "Set Key Material", "category": "UPDATE" },
+    { "itemId": 5, "name": "get",            "label": "Get",              "category": "READ" },
+    { "itemId": 6, "name": "getkeys",        "label": "Get Keys",         "category": "READ" },
+    { "itemId": 7, "name": "getmetadata",    "label": "Get Metadata",     "category": "READ" },
+    { "itemId": 8, "name": "generateeek",    "label": "Generate EEK",     "category": "UPDATE" },
+    { "itemId": 9, "name": "decrypteek",     "label": "Decrypt EEK",      "category": "UPDATE" }
+  ],
+  "configs": [
+    { "itemId": 1, "name": "provider",                    "type": "string",   "mandatory": true,  "label": "KMS URL" },
+    { "itemId": 2, "name": "username",                    "type": "string",   "mandatory": true,  "label": "Username" },
+    { "itemId": 3, "name": "password",                    "type": "password", "mandatory": true,  "label": "Password" },
+    { "itemId": 4, "name": "ranger.plugin.audit.filters", "type": "string",   "mandatory": false, "label": "Ranger Default Audit Filters", "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['keyadmin'] ,'isAudited':false} ]" }
+  ]
 }
