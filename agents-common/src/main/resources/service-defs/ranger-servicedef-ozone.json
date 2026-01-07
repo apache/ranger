@@ -1,295 +1,122 @@
 {
-	"id":201,
-	"name": "ozone",
-	"displayName": "ozone",
-	"implClass": "org.apache.ranger.services.ozone.RangerServiceOzone",
-	"label": "OZONE",
-	"description": "Ozone Repository",
-	"guid": "",
-	"resources":
-	[
-		{
-			"itemId": 1,
-			"name": "volume",
-			"type": "string",
-			"level": 10,
-			"parent": "",
-			"mandatory": true,
-			"lookupSupported": true,
-			"recursiveSupported": false,
-			"excludesSupported": true,
-			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": { "wildCard":true, "ignoreCase":false },
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Ozone Volume",
-			"description": "Ozone Volume",
-			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
-			"isValidLeaf": true
-		},
-		{
-			"itemId": 2,
-			"name": "bucket",
-			"type": "string",
-			"level": 20,
-			"parent": "volume",
-			"mandatory": true,
-			"lookupSupported": true,
-			"recursiveSupported": false,
-			"excludesSupported": true,
-			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": { "wildCard":true, "ignoreCase":true },
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Ozone Bucket",
-			"description": "Ozone Bucket",
-			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
-			"isValidLeaf": true
-		},
-		{
-			"itemId": 3,
-			"name": "key",
-			"type": "string",
-			"level": 30,
-			"parent": "bucket",
-			"mandatory": true,
-			"lookupSupported": true,
-			"recursiveSupported": true,
-			"excludesSupported": true,
-			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions": { "wildCard":true, "ignoreCase":true },
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Ozone Key",
-			"description": "Ozone Key",
-			"accessTypeRestrictions": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all" ],
-			"isValidLeaf": true
-		},
-		{
-			"itemId":                 4,
-			"name":                   "role",
-			"type":                   "string",
-			"level":                  10,
-			"parent":                 "",
-			"mandatory":              true,
-			"lookupSupported":        true,
-			"recursiveSupported":     false,
-			"excludesSupported":      false,
-			"matcher":                "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-			"matcherOptions":         { "wildCard":true, "ignoreCase":false },
-			"label":                  "Role",
-			"description":            "Role",
-			"accessTypeRestrictions": [ "assume_role" ],
-			"isValidLeaf":            true
-		}
-	],
-
-	"accessTypes":
-	[
-		{
-                        "itemId": 8,
-                        "name": "all",
-                        "label": "All",
-                        "impliedGrants":
-                        [
-                                "read",
-                                "write",
-                                "create",
-                                "list",
-                                "delete",
-				"read_acl",
-				"write_acl"
-                        ]
-                },
-		{
-			"itemId": 1,
-			"name": "read",
-			"label": "Read",
-			"category": "READ"
-		},
-
-		{
-			"itemId": 2,
-			"name": "write",
-			"label": "Write",
-			"category": "UPDATE"
-		},
-
-		{
-			"itemId": 3,
-			"name": "create",
-			"label": "Create",
-			"category": "CREATE"
-		},
-
-		{
-			"itemId": 4,
-			"name": "list",
-			"label": "List",
-			"category": "READ"
-		},
-
-		{
-			"itemId": 5,
-			"name": "delete",
-			"label": "Delete",
-			"category": "DELETE"
-		},
-		{
-			"itemId": 6,
-			"name": "read_acl",
-			"label": "Read_ACL",
-			"category": "READ"
-		},
-		{
-			"itemId": 7,
-			"name": "write_acl",
-			"label": "Write_ACL",
-			"category": "UPDATE"
-		},
-		{
-			"itemId":   8,
-			"name":     "assume_role",
-			"label":    "Assume_Role",
-			"category": "MANAGE"
-		}
-	],
-
-	"configs":
-	[
-		{
-			"itemId": 1,
-			"name": "username",
-			"type": "string",
-			"subType": "",
-			"mandatory": true,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Username"
-		},
-
-		{
-			"itemId": 2,
-			"name": "password",
-			"type": "password",
-			"subType": "",
-			"mandatory": true,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Password"
-		},
-
-		{
-			"itemId": 3,
-			"name": "ozone.om.http-address",
-			"type": "string",
-			"subType": "",
-			"mandatory": true,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"For Ozone Url, eg.<br>&lt;host&gt;:&lt;port&gt;<br>\"}",
-			"label": "Ozone URL"
-		},
-
-		{
-			"itemId": 4,
-			"name": "hadoop.security.authorization",
-			"type": "bool",
-			"subType": "YesTrue:NoFalse",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Authorization Enabled",
-			"defaultValue": "false"
-		},
-
-		{
-			"itemId": 5,
-			"name": "hadoop.security.authentication",
-			"type": "enum",
-			"subType": "authnType",
-			"mandatory": true,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Authentication Type",
-			"defaultValue": "simple"
-		},
-
-		{
-			"itemId": 6,
-			"name": "hadoop.security.auth_to_local",
-			"type": "string",
-			"subType": "",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":""
-		},
-
-		{
-			"itemId": 7,
-			"name": "ranger.plugin.audit.filters",
-			"type": "string",
-			"subType": "",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Ranger Default Audit Filters",
-			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
-		}
-	],
-
-	"enums":
-	[
-		{
-			"itemId": 1,
-			"name": "authnType",
-			"elements":
-			[
-				{
-					"itemId": 1,
-					"name": "simple",
-					"label": "Simple"
-				},
-
-				{
-					"itemId": 2,
-					"name": "kerberos",
-					"label": "Kerberos"
-				}
-			],
-
-			"defaultIndex": 0
-		}
-	],
-
-	"contextEnrichers":
-	[
-	],
-
-	"policyConditions":
-
-	[
-
-		{
-			"itemId": 1,
-			"name": "ip-range",
-			"evaluator": "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
-			"evaluatorOptions": { },
-			"validationRegEx":"",
-			"validationMessage": "",
-			"label": "IP Address Range",
-			"description": "IP Address Range",
-			"uiHint" : "{ \"isMultiValue\":true }"
-		}
-
-	]
+  "id":          201,
+  "name":        "ozone",
+  "displayName": "ozone",
+  "implClass":   "org.apache.ranger.services.ozone.RangerServiceOzone",
+  "label":       "OZONE",
+  "description": "Ozone Repository",
+  "guid": "",
+  "resources": [
+    {
+      "itemId":            1,
+      "name":              "volume",
+      "parent":            "",
+      "level":             10,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
+      "excludesSupported": true,
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": false },
+      "label":             "Ozone Volume",
+      "description":       "Ozone Volume",
+      "isValidLeaf":       true,
+      "accessTypeRestrictions": [
+        "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all"
+      ]
+    },
+    {
+      "itemId":            2,
+      "name":              "bucket",
+      "parent":            "volume",
+      "level":             20,
+      "type":              "string",
+      "mandatory":         true,
+      "lookupSupported":   true,
+      "excludesSupported": true,
+      "matcher":           "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":    { "wildCard": true, "ignoreCase": true },
+      "label":             "Ozone Bucket",
+      "description":       "Ozone Bucket",
+      "isValidLeaf":       true,
+      "accessTypeRestrictions": [
+        "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all"
+      ]
+    },
+    {
+      "itemId":             3,
+      "name":               "key",
+      "parent":             "bucket",
+      "level":              30,
+      "type":               "string",
+      "mandatory":          true,
+      "lookupSupported":    true,
+      "recursiveSupported": true,
+      "excludesSupported":  true,
+      "matcher":            "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":     { "wildCard": true, "ignoreCase": true },
+      "label":              "Ozone Key",
+      "description":        "Ozone Key",
+      "isValidLeaf":        true,
+      "accessTypeRestrictions": [
+        "read", "write", "create", "list", "delete", "read_acl", "write_acl", "all"
+      ]
+    },
+    {
+      "itemId":          4,
+      "name":            "role",
+      "type":            "string",
+      "level":           10,
+      "parent":          "",
+      "mandatory":       true,
+      "lookupSupported": true,
+      "matcher":         "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions":  { "wildCard": true, "ignoreCase": false },
+      "label":           "Role",
+      "description":     "Role",
+      "isValidLeaf":     true,
+      "accessTypeRestrictions": [
+        "assume_role"
+      ]
+    }
+  ],
+  "accessTypes": [
+    { "itemId": 8, "name": "all",         "label": "All", "impliedGrants": [ "read", "write", "create", "list", "delete", "read_acl", "write_acl" ] },
+    { "itemId": 1, "name": "read",        "label": "Read",        "category": "READ" },
+    { "itemId": 2, "name": "write",       "label": "Write",       "category": "UPDATE" },
+    { "itemId": 3, "name": "create",      "label": "Create",      "category": "CREATE" },
+    { "itemId": 4, "name": "list",        "label": "List",        "category": "READ" },
+    { "itemId": 5, "name": "delete",      "label": "Delete",      "category": "DELETE" },
+    { "itemId": 6, "name": "read_acl",    "label": "Read_ACL",    "category": "READ" },
+    { "itemId": 7, "name": "write_acl",   "label": "Write_ACL",   "category": "UPDATE" },
+    { "itemId": 8, "name": "assume_role", "label": "Assume_Role", "category": "MANAGE" }
+  ],
+  "configs": [
+    { "itemId": 1, "name": "username",                       "type": "string",   "mandatory": true, "label": "Username" },
+    { "itemId": 2, "name": "password",                       "type": "password", "mandatory": true, "label": "Password" },
+    { "itemId": 3, "name": "ozone.om.http-address",          "type": "string",   "mandatory": true, "label": "Ozone URL", "uiHint":"{\"TextFieldWithIcon\":true, \"info\": \"For Ozone Url, eg.<br>&lt;host&gt;:&lt;port&gt;<br>\"}" },
+    { "itemId": 4, "name": "hadoop.security.authorization",  "type": "bool",     "mandatory": false, "label": "Authorization Enabled",        "defaultValue": "false",  "subType": "YesTrue:NoFalse" },
+    { "itemId": 5, "name": "hadoop.security.authentication", "type": "enum",     "mandatory": true,  "label": "Authentication Type",          "defaultValue": "simple", "subType": "authnType" },
+    { "itemId": 6, "name": "hadoop.security.auth_to_local",  "type": "string",   "mandatory": false },
+    { "itemId": 7, "name": "ranger.plugin.audit.filters",    "type": "string",   "mandatory": false, "label": "Ranger Default Audit Filters", "defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]" }
+  ],
+  "enums": [
+    {
+      "itemId": 1, "name": "authnType", "defaultIndex": 0,
+      "elements": [
+        { "itemId": 1, "name": "simple",   "label": "Simple" },
+        { "itemId": 2, "name": "kerberos", "label": "Kerberos" }
+      ]
+    }
+  ],
+  "policyConditions": [
+    {
+      "itemId":      1,
+      "name":        "ip-range",
+      "evaluator":   "org.apache.ranger.plugin.conditionevaluator.RangerIpMatcher",
+      "label":       "IP Address Range",
+      "description": "IP Address Range",
+      "uiHint" :     "{ \"isMultiValue\":true }"
+    }
+  ]
 }
