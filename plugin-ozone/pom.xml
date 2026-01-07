@@ -118,12 +118,6 @@ limitations under the License.
             <artifactId>ranger-audit-dest-hdfs</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- Add Log4J destination for Ozone in docker deployment -->
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-dest-log4j</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-dest-solr</artifactId>
