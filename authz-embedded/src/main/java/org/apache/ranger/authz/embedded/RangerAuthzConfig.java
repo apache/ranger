@@ -120,18 +120,4 @@ public class RangerAuthzConfig {
     public String getDefaultServiceNameForServiceType(String serviceType) {
         return properties.getProperty(PROP_PREFIX_SERVICE_TYPE + serviceType + ".default.service");
     }
-
-    /*
-    private void collectPluginProperties(String prefix, Properties serviceProps) {
-        for (String propName : properties.stringPropertyNames()) {
-            if (propName.startsWith(prefix)) {
-                String propValue = properties.getProperty(propName);
-
-                String pluginPropName = propName.substring(prefix.length());
-
-                serviceProps.setProperty(pluginPropName, propValue);
-            }
-        }
-    }
-     */
 }
