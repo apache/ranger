@@ -106,12 +106,12 @@ public class RangerAuthzResult {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PermissionResult {
-        private String                        permission;
-        private AccessResult                  access;
-        private DataMaskResult                dataMask;
-        private RowFilterResult               rowFilter;
-        private Map<String, PermissionResult> subResources;
-        private Map<String, Object>           additionalInfo;
+        private String                  permission;
+        private AccessResult            access;
+        private DataMaskResult          dataMask;
+        private RowFilterResult         rowFilter;
+        private Map<String, Object>     additionalInfo;
+        private Map<String, ResultInfo> subResources;
 
         public PermissionResult() {
         }
@@ -120,14 +120,20 @@ public class RangerAuthzResult {
             this(permission, null, null);
         }
 
-        public PermissionResult(String permission, AccessResult access) {
-            this(permission, access, null);
+        public PermissionResult(String permission, ResultInfo result) {
+            this(permission, result, null);
         }
 
-        public PermissionResult(String permission, AccessResult access, Map<String, Object> additionalInfo) {
-            this.permission     = permission;
-            this.access         = access;
-            this.additionalInfo = additionalInfo;
+        public PermissionResult(String permission, ResultInfo result, Map<String, ResultInfo> subResources) {
+            this.permission   = permission;
+            this.subResources = subResources;
+
+            if (result != null) {
+                this.access         = result.getAccess();
+                this.dataMask       = result.getDataMask();
+                this.rowFilter      = result.getRowFilter();
+                this.additionalInfo = result.getAdditionalInfo();
+            }
         }
 
         // Getters and Setters
@@ -163,28 +169,6 @@ public class RangerAuthzResult {
             this.rowFilter = rowFilter;
         }
 
-        public Map<String, PermissionResult> getSubResources() {
-            return subResources;
-        }
-
-        public void setSubResources(Map<String, PermissionResult> subResources) {
-            this.subResources = subResources;
-        }
-
-        public PermissionResult getdSubResourceResult(String resourceName) {
-            Map<String, PermissionResult> subResources = getSubResources();
-
-            return subResources != null ? subResources.get(resourceName) : null;
-        }
-
-        public void addSubResourceResult(String resourceName, PermissionResult result) {
-            if (subResources == null) {
-                subResources = new HashMap<>();
-            }
-
-            subResources.put(resourceName, result);
-        }
-
         public Map<String, Object> getAdditionalInfo() {
             return additionalInfo;
         }
@@ -193,9 +177,31 @@ public class RangerAuthzResult {
             this.additionalInfo = additionalInfo;
         }
 
+        public Map<String, ResultInfo> getSubResources() {
+            return subResources;
+        }
+
+        public void setSubResources(Map<String, ResultInfo> subResources) {
+            this.subResources = subResources;
+        }
+
+        public ResultInfo getSubResourceResult(String resourceName) {
+            Map<String, ResultInfo> subResources = getSubResources();
+
+            return subResources != null ? subResources.get(resourceName) : null;
+        }
+
+        public void addSubResourceResult(String resourceName, ResultInfo result) {
+            if (subResources == null) {
+                subResources = new HashMap<>();
+            }
+
+            subResources.put(resourceName, result);
+        }
+
         @Override
         public int hashCode() {
-            return Objects.hash(permission, access, dataMask, rowFilter, subResources, additionalInfo);
+            return Objects.hash(permission, access, dataMask, rowFilter, additionalInfo, subResources);
         }
 
         @Override
@@ -212,8 +218,8 @@ public class RangerAuthzResult {
                     Objects.equals(access, that.access) &&
                     Objects.equals(dataMask, that.dataMask) &&
                     Objects.equals(rowFilter, that.rowFilter) &&
-                    Objects.equals(subResources, that.subResources) &&
-                    Objects.equals(additionalInfo, that.additionalInfo);
+                    Objects.equals(additionalInfo, that.additionalInfo) &&
+                    Objects.equals(subResources, that.subResources);
         }
 
         @Override
@@ -223,7 +229,90 @@ public class RangerAuthzResult {
                     ", access=" + access +
                     ", dataMask=" + dataMask +
                     ", rowFilter=" + rowFilter +
+                    ", additionalInfo=" + additionalInfo +
                     ", subResources=" + subResources +
+                    '}';
+        }
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ResultInfo {
+        private AccessResult        access;
+        private DataMaskResult      dataMask;
+        private RowFilterResult     rowFilter;
+        private Map<String, Object> additionalInfo;
+
+        public ResultInfo() {
+        }
+
+        public ResultInfo(AccessResult access, DataMaskResult dataMask, RowFilterResult rowFilter, Map<String, Object> additionalInfo) {
+            this.access         = access;
+            this.dataMask       = dataMask;
+            this.rowFilter      = rowFilter;
+            this.additionalInfo = additionalInfo;
+        }
+
+        public AccessResult getAccess() {
+            return access;
+        }
+
+        public void setAccess(AccessResult access) {
+            this.access = access;
+        }
+
+        public DataMaskResult getDataMask() {
+            return dataMask;
+        }
+
+        public void setDataMask(DataMaskResult dataMask) {
+            this.dataMask = dataMask;
+        }
+
+        public RowFilterResult getRowFilter() {
+            return rowFilter;
+        }
+
+        public void setRowFilter(RowFilterResult rowFilter) {
+            this.rowFilter = rowFilter;
+        }
+
+        public Map<String, Object> getAdditionalInfo() {
+            return additionalInfo;
+        }
+
+        public void setAdditionalInfo(Map<String, Object> additionalInfo) {
+            this.additionalInfo = additionalInfo;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(access, dataMask, rowFilter, additionalInfo);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            } else if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            ResultInfo that = (ResultInfo) o;
+
+            return Objects.equals(access, that.access) &&
+                    Objects.equals(dataMask, that.dataMask) &&
+                    Objects.equals(rowFilter, that.rowFilter) &&
+                    Objects.equals(additionalInfo, that.additionalInfo);
+        }
+
+        @Override
+        public String toString() {
+            return "ResultInfo{" +
+                    "access=" + access +
+                    ", dataMask=" + dataMask +
+                    ", rowFilter=" + rowFilter +
                     ", additionalInfo=" + additionalInfo +
                     '}';
         }

@@ -36,8 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 public class TestRangerResourceNameParser {
-    private static final char RRN_RESOURCE_SEP_CHAR = '/';
-
     @Test
     public void testValidTemplates() throws Exception {
         Object[][] testData = {
@@ -62,7 +60,7 @@ public class TestRangerResourceNameParser {
             String                   template         = (String) test[0];
             String                   resourceType     = (String) test[1];
             int                      resourceCount    = (Integer) test[2];
-            RangerResourceNameParser resourceTemplate = new RangerResourceNameParser(template, RRN_RESOURCE_SEP_CHAR);
+            RangerResourceNameParser resourceTemplate = new RangerResourceNameParser(template);
 
             assertEquals(resourceType, resourceTemplate.getResourceType(), template);
             assertEquals(resourceCount, resourceTemplate.count(), template);
@@ -83,7 +81,7 @@ public class TestRangerResourceNameParser {
         };
 
         for (String template : templates) {
-            RangerAuthzException excp = assertThrowsExactly(RangerAuthzException.class, () -> new RangerResourceNameParser(template, RRN_RESOURCE_SEP_CHAR), template);
+            RangerAuthzException excp = assertThrowsExactly(RangerAuthzException.class, () -> new RangerResourceNameParser(template), template);
 
             assertEquals(INVALID_RESOURCE_TEMPLATE_EMPTY_VALUE.getCode(), excp.getErrorCode().getCode(), template);
         }
@@ -303,13 +301,13 @@ public class TestRangerResourceNameParser {
     private static Map<String, RangerResourceNameParser> getHiveTemplates() throws Exception {
         Map<String, RangerResourceNameParser> ret = new HashMap<>();
 
-        ret.put("database", new RangerResourceNameParser("database", RRN_RESOURCE_SEP_CHAR));
-        ret.put("table", new RangerResourceNameParser("database/table", RRN_RESOURCE_SEP_CHAR));
-        ret.put("column", new RangerResourceNameParser("database/table/column", RRN_RESOURCE_SEP_CHAR));
-        ret.put("udf", new RangerResourceNameParser("database/udf", RRN_RESOURCE_SEP_CHAR));
-        ret.put("url", new RangerResourceNameParser("url", RRN_RESOURCE_SEP_CHAR));
-        ret.put("hiveservice", new RangerResourceNameParser("hiveservice", RRN_RESOURCE_SEP_CHAR));
-        ret.put("global", new RangerResourceNameParser("global", RRN_RESOURCE_SEP_CHAR));
+        ret.put("database", new RangerResourceNameParser("database"));
+        ret.put("table", new RangerResourceNameParser("database/table"));
+        ret.put("column", new RangerResourceNameParser("database/table/column"));
+        ret.put("udf", new RangerResourceNameParser("database/udf"));
+        ret.put("url", new RangerResourceNameParser("url"));
+        ret.put("hiveservice", new RangerResourceNameParser("hiveservice"));
+        ret.put("global", new RangerResourceNameParser("global"));
 
         return ret;
     }
@@ -317,8 +315,8 @@ public class TestRangerResourceNameParser {
     private static Map<String, RangerResourceNameParser> getS3Templates() throws Exception {
         Map<String, RangerResourceNameParser> ret = new HashMap<>();
 
-        ret.put("bucket", new RangerResourceNameParser("bucket", RRN_RESOURCE_SEP_CHAR));
-        ret.put("path", new RangerResourceNameParser("bucket/path", RRN_RESOURCE_SEP_CHAR));
+        ret.put("bucket", new RangerResourceNameParser("bucket"));
+        ret.put("path", new RangerResourceNameParser("bucket/path"));
 
         return ret;
     }
@@ -326,8 +324,8 @@ public class TestRangerResourceNameParser {
     private static Map<String, RangerResourceNameParser> getAdlsGen2Templates() throws Exception {
         Map<String, RangerResourceNameParser> ret = new HashMap<>();
 
-        ret.put("container", new RangerResourceNameParser("storageaccount/container", RRN_RESOURCE_SEP_CHAR));
-        ret.put("relativepath", new RangerResourceNameParser("storageaccount/container/relativepath", RRN_RESOURCE_SEP_CHAR));
+        ret.put("container", new RangerResourceNameParser("storageaccount/container"));
+        ret.put("relativepath", new RangerResourceNameParser("storageaccount/container/relativepath"));
 
         return ret;
     }
@@ -335,19 +333,19 @@ public class TestRangerResourceNameParser {
     private static Map<String, RangerResourceNameParser> getTrinoTemplates() throws Exception {
         Map<String, RangerResourceNameParser> ret = new HashMap<>();
 
-        ret.put("catalog", new RangerResourceNameParser("catalog", RRN_RESOURCE_SEP_CHAR));
-        ret.put("schema", new RangerResourceNameParser("catalog/schema", RRN_RESOURCE_SEP_CHAR));
-        ret.put("table", new RangerResourceNameParser("catalog/schema/table", RRN_RESOURCE_SEP_CHAR));
-        ret.put("column", new RangerResourceNameParser("catalog/schema/table/column", RRN_RESOURCE_SEP_CHAR));
-        ret.put("trinouser", new RangerResourceNameParser("trinouser", RRN_RESOURCE_SEP_CHAR));
-        ret.put("systemproperty", new RangerResourceNameParser("systemproperty", RRN_RESOURCE_SEP_CHAR));
-        ret.put("sessionproperty", new RangerResourceNameParser("catalog/sessionproperty", RRN_RESOURCE_SEP_CHAR));
-        ret.put("function", new RangerResourceNameParser("function", RRN_RESOURCE_SEP_CHAR));
-        ret.put("procedure", new RangerResourceNameParser("catalog/schema/procedure", RRN_RESOURCE_SEP_CHAR));
-        ret.put("schemafunction", new RangerResourceNameParser("catalog/schema/schemafunction", RRN_RESOURCE_SEP_CHAR));
-        ret.put("queryid", new RangerResourceNameParser("queryid", RRN_RESOURCE_SEP_CHAR));
-        ret.put("sysinfo", new RangerResourceNameParser("sysinfo", RRN_RESOURCE_SEP_CHAR));
-        ret.put("role", new RangerResourceNameParser("role", RRN_RESOURCE_SEP_CHAR));
+        ret.put("catalog", new RangerResourceNameParser("catalog"));
+        ret.put("schema", new RangerResourceNameParser("catalog/schema"));
+        ret.put("table", new RangerResourceNameParser("catalog/schema/table"));
+        ret.put("column", new RangerResourceNameParser("catalog/schema/table/column"));
+        ret.put("trinouser", new RangerResourceNameParser("trinouser"));
+        ret.put("systemproperty", new RangerResourceNameParser("systemproperty"));
+        ret.put("sessionproperty", new RangerResourceNameParser("catalog/sessionproperty"));
+        ret.put("function", new RangerResourceNameParser("function"));
+        ret.put("procedure", new RangerResourceNameParser("catalog/schema/procedure"));
+        ret.put("schemafunction", new RangerResourceNameParser("catalog/schema/schemafunction"));
+        ret.put("queryid", new RangerResourceNameParser("queryid"));
+        ret.put("sysinfo", new RangerResourceNameParser("sysinfo"));
+        ret.put("role", new RangerResourceNameParser("role"));
 
         return ret;
     }

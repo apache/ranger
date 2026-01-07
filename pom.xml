@@ -812,6 +812,7 @@
                 <module>agents-cred</module>
                 <module>agents-installer</module>
                 <module>authz-api</module>
+                <module>authz-embedded</module>
                 <module>credentialbuilder</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
@@ -1139,6 +1140,7 @@
                 <module>agents-cred</module>
                 <module>agents-installer</module>
                 <module>authz-api</module>
+                <module>authz-embedded</module>
                 <module>credentialbuilder</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
@@ -1229,6 +1231,7 @@
                 <module>agents-cred</module>
                 <module>agents-installer</module>
                 <module>authz-api</module>
+                <module>authz-embedded</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
                 <module>hbase-agent</module>

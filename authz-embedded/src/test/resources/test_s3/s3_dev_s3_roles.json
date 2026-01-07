@@ -1,0 +1,8 @@
+{
+  "serviceName":"dev_s3",
+  "roleVersion":6,
+  "rangerRoles":[
+    { "id": 1, "name":"tag1-readers",  "users": [ { "name": "user1" } ],  "groups": [ { "name": "group1" } ],  "roles": [ { "name": "role1" } ] },
+    { "id": 2, "name":"tag1-updaters", "users": [ { "name": "user11" } ], "groups": [ { "name": "group11" } ], "roles": [ { "name": "role11" } ] }
+  ]
+}
