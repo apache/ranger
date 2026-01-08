@@ -40,19 +40,20 @@ public class RangerAuthzAuditHandler extends RangerDefaultAuditHandler implement
 
     @Override
     public void processResult(RangerAccessResult result) {
-        AuthzAuditEvent auditEvent = getAuthzEvents(result);
+        if (!deniedExists) { // if a denied audit already exists, ignore all others
+            AuthzAuditEvent auditEvent = getAuthzEvents(result);
 
-        // in case denied access, log only the first denied access; ignore all others
-        if (auditEvent != null && !deniedExists) {
-            auditEvent.setAgentId(plugin.getAppId());
+            if (auditEvent != null) {
+                auditEvent.setAgentId(plugin.getAppId());
 
-            if (result.getIsAccessDetermined() && !result.getIsAllowed()) {
-                deniedExists = true;
+                if (result.getIsAccessDetermined() && !result.getIsAllowed()) {
+                    deniedExists = true;
 
-                auditEvents.clear();
+                    auditEvents.clear();
+                }
+
+                auditEvents.add(auditEvent);
             }
-
-            auditEvents.add(auditEvent);
         }
     }
 
