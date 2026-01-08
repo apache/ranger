@@ -1,0 +1,73 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This workflow will build and deploy the MkDocs documentation to GitHub Pages on pushes to specific branches.
+name: docs
+
+on:
+  push:
+    branches: [ ranger_5353, master ]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # weekly cache for mkdocs' .cache to speed up rebuilds
+      - name: Compute cache key
+        run: echo "cache_id=$(date --utc +%V)" >> "$GITHUB_ENV"
+
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+
+      - name: Install dependencies
+        run: |
+          cd mkdocs
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # enable strict mode later
+      - name: Build (fail on warnings)
+        run: |
+          cd mkdocs
+          mkdocs build
+
+      - name: Deploy to GitHub Pages
+        run: |
+          cd mkdocs
+          mkdocs gh-deploy --force

@@ -1,0 +1,6 @@
+mkdocs-material
+mkdocs-material-extensions
+mkdocs-static-i18n
+mkdocs-table-reader-plugin
+mkdocs-material[imaging]
+mkdocs-git-revision-date-localized-plugin
