@@ -56,6 +56,7 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         this.config = new RangerAuthzConfig(properties);
     }
 
+    @Override
     public void init() throws RangerAuthzException {
         AuditProviderFactory.getInstance().init(config.getAuditProperties(), "ranger-authz");
 
