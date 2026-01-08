@@ -1,0 +1,20 @@
+{
+  "serviceName":"dev_s3", "tagVersion":2,
+  "op":"add_or_update",
+  "tagDefinitions": {
+    "1": { "name": "TAG1" },
+    "2": { "name": "TAG2" }
+  },
+  "tags": {
+    "1": { "type": "TAG1" },
+    "2": { "type": "TAG2" }
+  },
+  "serviceResources": [
+    { "id": 1, "serviceName": "dev_s3", "resourceElements": { "bucket": { "values": [ "mybucket" ] }, "path": { "values": [ "data/tag1" ], "isRecursive": true } } },
+    { "id": 2, "serviceName": "dev_s3", "resourceElements": { "bucket": { "values": [ "mybucket" ] }, "path": { "values": [ "data/tag2" ], "isRecursive": true } } }
+  ],
+  "resourceToTagIds": {
+    "1": [ "1" ],
+    "2": [ "2" ]
+  }
+}
