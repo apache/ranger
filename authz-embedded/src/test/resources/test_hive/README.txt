@@ -18,9 +18,9 @@
    6. database=mydb, table=tbl_ds1, column=*
       dataset=ds1
       user=ds1-r-user, permission=select
-   6. database=mydb, table=tbl_ds2, column=*
+   7. database=mydb, table=tbl_ds2, column=*
       dataset=ds2
       user=ds2-r-user, permission=select
-   7. database=mydb, table=tbl_ds3, column=col1,col2,col3
+   8. database=mydb, table=tbl_ds3, column=col1,col2,col3
       dataset=ds3, col1=mask_hash, row-filter=(year=current_year())
       user=ds3-r-user, permission=select
