@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<assembly>
+    <id>liquibase-upgrade</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <baseDirectory>${project.parent.name}-${project.version}-liquibase-upgrade</baseDirectory>
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <moduleSets>
+        <moduleSet>
+            <useAllReactorProjects>true</useAllReactorProjects>
+            <includes>
+                <include>org.apache.ranger:ranger-liquibase-upgrade:jar:${project.version}</include>
+            </includes>
+            <binaries>
+                <outputDirectory>lib</outputDirectory>
+                <includeDependencies>true</includeDependencies>
+                <unpack>false</unpack>
+                <directoryMode>755</directoryMode>
+                <fileMode>644</fileMode>
+                <includes>
+                    <include>org.liquibase:liquibase-core:jar:${liquibase.version}</include>
+                    <include>com.beust:jcommander:jar:${jcommander.version}</include>
+                    <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
+<!--                    for liquibase-->
+                    <include>org.slf4j:jul-to-slf4j:jar:${slf4j.version}</include>
+<!--                    spring related dependencies-->
+                    <include>org.springframework:spring-context:jar:${springframework.version}</include>
+                    <include>org.springframework:spring-beans:jar:${springframework.version}</include>
+                    <include>org.springframework:spring-core:jar:${springframework.version}</include>
+                    <include>org.springframework:spring-aop:jar:${springframework.version}</include>
+                    <include>org.springframework:spring-expression:jar:${springframework.version}</include>
+                </includes>
+            </binaries>
+        </moduleSet>
+    </moduleSets>
+    <fileSets>
+        <fileSet>
+            <directory>${project.parent.basedir}/liquibase-database-upgrade/target/scripts</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>*.sh</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.parent.basedir}/liquibase-database-upgrade/target/changelogs</directory>
+            <outputDirectory>lib</outputDirectory>
+            <includes>
+                <include>**</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.parent.basedir}/liquibase-database-upgrade/target/classes</directory>
+            <outputDirectory>sample_resources</outputDirectory>
+            <includes>
+                <include>*.properties</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>
