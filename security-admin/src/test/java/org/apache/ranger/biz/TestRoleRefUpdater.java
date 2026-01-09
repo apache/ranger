@@ -34,7 +34,6 @@ import org.apache.ranger.entity.XXRoleRefRole;
 import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerRole;
-import org.apache.ranger.service.RangerAuditFields;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -121,18 +120,13 @@ public class TestRoleRefUpdater {
         XXRoleRefUserDao urd = mock(XXRoleRefUserDao.class);
         XXRoleRefGroupDao grd = mock(XXRoleRefGroupDao.class);
         XXRoleRefRoleDao rrd = mock(XXRoleRefRoleDao.class);
-        RangerAuditFields<?> audit = (RangerAuditFields<?>) mock(RangerAuditFields.class);
         when(dao.getXXUser()).thenReturn(xUserDao);
         when(dao.getXXGroup()).thenReturn(xGroupDao);
         when(dao.getXXRole()).thenReturn(xRoleDao);
         when(dao.getXXRoleRefUser()).thenReturn(urd);
         when(dao.getXXRoleRefGroup()).thenReturn(grd);
         when(dao.getXXRoleRefRole()).thenReturn(rrd);
-        when(audit.populateAuditFieldsForCreate(any(XXRoleRefUser.class))).thenAnswer(a -> a.getArgument(0));
-        when(audit.populateAuditFieldsForCreate(any(XXRoleRefGroup.class))).thenAnswer(a -> a.getArgument(0));
-        when(audit.populateAuditFieldsForCreate(any(XXRoleRefRole.class))).thenAnswer(a -> a.getArgument(0));
         setField(updater, RoleRefUpdater.class, "daoMgr", dao);
-        setField(updater, RoleRefUpdater.class, "rangerAuditFields", audit);
         setField(updater, RoleRefUpdater.class, "rangerTransactionSynchronizationAdapter",
                 mock(RangerTransactionSynchronizationAdapter.class));
         setField(updater, RoleRefUpdater.class, "xaBizUtil", mock(RangerBizUtil.class));

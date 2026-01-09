@@ -2294,11 +2294,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_resource] (
   [id] [bigint] IDENTITY (1, 1) NOT NULL,
-  [guid] [varchar](1024) DEFAULT NULL NULL,
-  [create_time] [datetime2] DEFAULT NULL NULL,
-  [update_time] [datetime2] DEFAULT NULL NULL,
-  [added_by_id] [bigint] DEFAULT NULL NULL,
-  [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [resource_def_id] [bigint] NOT NULL,
   [resource_name] [varchar](4000) DEFAULT NULL NULL,
@@ -2316,11 +2311,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_access_type] (
   [id] [bigint] IDENTITY (1, 1) NOT NULL,
-  [guid] [varchar](1024) DEFAULT NULL NULL,
-  [create_time] [datetime2] DEFAULT NULL NULL,
-  [update_time] [datetime2] DEFAULT NULL NULL,
-  [added_by_id] [bigint] DEFAULT NULL NULL,
-  [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [access_def_id] [bigint] NOT NULL,
   [access_type_name] [varchar](4000) DEFAULT NULL NULL,
@@ -2338,11 +2328,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_condition] (
   [id] [bigint] IDENTITY (1, 1) NOT NULL,
-  [guid] [varchar](1024) DEFAULT NULL NULL,
-  [create_time] [datetime2] DEFAULT NULL NULL,
-  [update_time] [datetime2] DEFAULT NULL NULL,
-  [added_by_id] [bigint] DEFAULT NULL NULL,
-  [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [condition_def_id] [bigint] NOT NULL,
   [condition_name] [varchar](4000) DEFAULT NULL NULL,
@@ -2360,11 +2345,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_datamask_type] (
   [id] [bigint] IDENTITY (1, 1) NOT NULL,
-  [guid] [varchar](1024) DEFAULT NULL NULL,
-  [create_time] [datetime2] DEFAULT NULL NULL,
-  [update_time] [datetime2] DEFAULT NULL NULL,
-  [added_by_id] [bigint] DEFAULT NULL NULL,
-  [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [datamask_def_id] [bigint] NOT NULL,
   [datamask_type_name] [varchar](4000) DEFAULT NULL NULL,
@@ -2382,11 +2362,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_user] (
   [id] [bigint] IDENTITY (1, 1) NOT NULL,
-  [guid] [varchar](1024) DEFAULT NULL NULL,
-  [create_time] [datetime2] DEFAULT NULL NULL,
-  [update_time] [datetime2] DEFAULT NULL NULL,
-  [added_by_id] [bigint] DEFAULT NULL NULL,
-  [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [user_id] [bigint] NOT NULL,
   [user_name] [nvarchar](4000) DEFAULT NULL NULL,
@@ -2404,11 +2379,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_group] (
   [id] [bigint] IDENTITY (1, 1) NOT NULL,
-  [guid] [varchar](1024) DEFAULT NULL NULL,
-  [create_time] [datetime2] DEFAULT NULL NULL,
-  [update_time] [datetime2] DEFAULT NULL NULL,
-  [added_by_id] [bigint] DEFAULT NULL NULL,
-  [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [group_id] [bigint] NOT NULL,
   [group_name] [nvarchar](4000) DEFAULT NULL NULL,
@@ -2426,10 +2396,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_security_zone_ref_service](
         [id] [bigint] IDENTITY(1,1) NOT NULL,
-        [create_time] [datetime2] DEFAULT NULL NULL,
-        [update_time] [datetime2] DEFAULT NULL NULL,
-        [added_by_id] [bigint] DEFAULT NULL NULL,
-        [upd_by_id] [bigint] DEFAULT NULL NULL,
         [zone_id] [bigint] DEFAULT NULL NULL,
         [service_id] [bigint] DEFAULT NULL NULL,
         [service_name] [varchar](255) DEFAULT NULL NULL,
@@ -2438,10 +2404,6 @@ CREATE TABLE [dbo].[x_security_zone_ref_service](
         [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
 ) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_service] WITH CHECK ADD CONSTRAINT [x_sz_ref_service_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_service] WITH CHECK ADD CONSTRAINT [x_sz_ref_service_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
 ALTER TABLE [dbo].[x_security_zone_ref_service] WITH CHECK ADD CONSTRAINT [x_sz_ref_service_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
 GO
@@ -2464,10 +2426,6 @@ CREATE TABLE [dbo].[x_security_zone_ref_tag_srvc](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
 ) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
 ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
 GO
 ALTER TABLE [dbo].[x_security_zone_ref_tag_srvc] WITH CHECK ADD CONSTRAINT [x_sz_ref_tag_service_FK_tag_srvc_id] FOREIGN KEY([tag_srvc_id]) REFERENCES [dbo].[x_service] ([id])
@@ -2479,10 +2437,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_security_zone_ref_resource](
         [id] [bigint] IDENTITY(1,1) NOT NULL,
-        [create_time] [datetime2] DEFAULT NULL NULL,
-        [update_time] [datetime2] DEFAULT NULL NULL,
-        [added_by_id] [bigint] DEFAULT NULL NULL,
-        [upd_by_id] [bigint] DEFAULT NULL NULL,
         [zone_id] [bigint] DEFAULT NULL NULL,
         [resource_def_id] [bigint] DEFAULT NULL NULL,
         [resource_name] [varchar](255) DEFAULT NULL NULL,
@@ -2491,10 +2445,6 @@ CREATE TABLE [dbo].[x_security_zone_ref_resource](
         [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
 ) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_resource] WITH CHECK ADD CONSTRAINT [x_sz_ref_resource_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_resource] WITH CHECK ADD CONSTRAINT [x_sz_ref_resource_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
 ALTER TABLE [dbo].[x_security_zone_ref_resource] WITH CHECK ADD CONSTRAINT [x_sz_ref_resource_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
 GO
@@ -2505,10 +2455,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_security_zone_ref_user](
         [id] [bigint] IDENTITY(1,1) NOT NULL,
-        [create_time] [datetime2] DEFAULT NULL NULL,
-        [update_time] [datetime2] DEFAULT NULL NULL,
-        [added_by_id] [bigint] DEFAULT NULL NULL,
-        [upd_by_id] [bigint] DEFAULT NULL NULL,
         [zone_id] [bigint] DEFAULT NULL NULL,
         [user_id] [bigint] DEFAULT NULL NULL,
         [user_name] [nvarchar](767) DEFAULT NULL NULL,
@@ -2518,10 +2464,6 @@ CREATE TABLE [dbo].[x_security_zone_ref_user](
         [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
 ) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_user] WITH CHECK ADD CONSTRAINT [x_sz_ref_user_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_user] WITH CHECK ADD CONSTRAINT [x_sz_ref_user_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
 ALTER TABLE [dbo].[x_security_zone_ref_user] WITH CHECK ADD CONSTRAINT [x_sz_ref_user_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
 GO
@@ -2534,10 +2476,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_security_zone_ref_group](
         [id] [bigint] IDENTITY(1,1) NOT NULL,
-        [create_time] [datetime2] DEFAULT NULL NULL,
-        [update_time] [datetime2] DEFAULT NULL NULL,
-        [added_by_id] [bigint] DEFAULT NULL NULL,
-        [upd_by_id] [bigint] DEFAULT NULL NULL,
         [zone_id] [bigint] DEFAULT NULL NULL,
         [group_id] [bigint] DEFAULT NULL NULL,
         [group_name] [nvarchar](767) DEFAULT NULL NULL,
@@ -2548,10 +2486,6 @@ CREATE TABLE [dbo].[x_security_zone_ref_group](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
 ) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[x_security_zone_ref_group] WITH CHECK ADD CONSTRAINT [x_sz_ref_group_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_group] WITH CHECK ADD CONSTRAINT [x_sz_ref_group_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
 ALTER TABLE [dbo].[x_security_zone_ref_group] WITH CHECK ADD CONSTRAINT [x_sz_ref_group_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
 GO
 ALTER TABLE [dbo].[x_security_zone_ref_group] WITH CHECK ADD CONSTRAINT [x_sz_ref_group_FK_group_id] FOREIGN KEY([group_id]) REFERENCES [dbo].[x_group] ([id])
@@ -2561,7 +2495,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_change_log](
         [id] [bigint] IDENTITY(1,1) NOT NULL,
-        [create_time] [datetime2] DEFAULT NULL NULL,
         [service_id] [bigint] NOT NULL,
         [change_type] [int] NOT NULL,
         [policy_version] [bigint] DEFAULT 0 NOT NULL,
@@ -2599,10 +2532,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_role](
  [id] [bigint] IDENTITY(1,1) NOT NULL,
-[create_time] [datetime2] DEFAULT NULL NULL,
-[update_time] [datetime2] DEFAULT NULL NULL,
-[added_by_id] [bigint] DEFAULT NULL NULL,
-[upd_by_id] [bigint] DEFAULT NULL NULL,
 [version] [bigint] DEFAULT NULL NULL,
 [name] [nvarchar](255) NOT NULL,
 [description] [nvarchar](1024) DEFAULT NULL NULL,
@@ -2619,20 +2548,12 @@ CREATE TABLE [dbo].[x_role](
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[x_role] WITH CHECK ADD CONSTRAINT [x_role_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_role] WITH CHECK ADD CONSTRAINT [x_role_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
 
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_role_ref_user](
 [id] [bigint] IDENTITY(1,1) NOT NULL,
-[create_time] [datetime2] DEFAULT NULL NULL,
-[update_time] [datetime2] DEFAULT NULL NULL,
-[added_by_id] [bigint] DEFAULT NULL NULL,
-[upd_by_id] [bigint] DEFAULT NULL NULL,
 [role_id] [bigint] NOT NULL,
 [user_id] [bigint] DEFAULT NULL NULL,
 [user_name] [nvarchar](767) DEFAULT NULL NULL,
@@ -2642,10 +2563,6 @@ CREATE TABLE [dbo].[x_role_ref_user](
         [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[x_role_ref_user] WITH CHECK ADD CONSTRAINT [x_role_ref_user_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_role_ref_user] WITH CHECK ADD CONSTRAINT [x_role_ref_user_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
 ALTER TABLE [dbo].[x_role_ref_user] WITH CHECK ADD CONSTRAINT [x_role_ref_user_FK_role_id] FOREIGN KEY([role_id]) REFERENCES [dbo].[x_role] ([id])
 GO
@@ -2657,10 +2574,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_role_ref_group](
 [id] [bigint] IDENTITY(1,1) NOT NULL,
-[create_time] [datetime2] DEFAULT NULL NULL,
-[update_time] [datetime2] DEFAULT NULL NULL,
-[added_by_id] [bigint] DEFAULT NULL NULL,
-[upd_by_id] [bigint] DEFAULT NULL NULL,
 [role_id] [bigint] NOT NULL,
 [group_id] [bigint] DEFAULT NULL NULL,
 [group_name] [nvarchar](767) DEFAULT NULL NULL,
@@ -2670,10 +2583,6 @@ CREATE TABLE [dbo].[x_role_ref_group](
         [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[x_role_ref_group] WITH CHECK ADD CONSTRAINT [x_role_ref_group_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_role_ref_group] WITH CHECK ADD CONSTRAINT [x_role_ref_group_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
 ALTER TABLE [dbo].[x_role_ref_group] WITH CHECK ADD CONSTRAINT [x_role_ref_group_FK_role_id] FOREIGN KEY([role_id]) REFERENCES [dbo].[x_role] ([id])
 GO
@@ -2685,10 +2594,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_policy_ref_role](
 [id] [bigint] IDENTITY(1,1) NOT NULL,
-[create_time] [datetime2] DEFAULT NULL NULL,
-[update_time] [datetime2] DEFAULT NULL NULL,
-[added_by_id] [bigint] DEFAULT NULL NULL,
-[upd_by_id] [bigint] DEFAULT NULL NULL,
 [policy_id] [bigint] NOT NULL,
 [role_id] [bigint] NOT NULL,
 [role_name] [nvarchar](255) DEFAULT NULL NULL,
@@ -2702,10 +2607,6 @@ CREATE TABLE [dbo].[x_policy_ref_role](
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[x_policy_ref_role] WITH CHECK ADD CONSTRAINT [x_policy_ref_role_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_policy_ref_role] WITH CHECK ADD CONSTRAINT [x_policy_ref_role_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
 ALTER TABLE [dbo].[x_policy_ref_role] WITH CHECK ADD CONSTRAINT [x_policy_ref_role_FK_policy_id] FOREIGN KEY([policy_id]) REFERENCES [dbo].[x_policy] ([id])
 GO
 ALTER TABLE [dbo].[x_policy_ref_role] WITH CHECK ADD CONSTRAINT [x_policy_ref_role_FK_role_id] FOREIGN KEY([role_id]) REFERENCES [dbo].[x_role] ([id])
@@ -2716,10 +2617,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_role_ref_role](
 [id] [bigint] IDENTITY(1,1) NOT NULL,
-[create_time] [datetime2] DEFAULT NULL NULL,
-[update_time] [datetime2] DEFAULT NULL NULL,
-[added_by_id] [bigint] DEFAULT NULL NULL,
-[upd_by_id] [bigint] DEFAULT NULL NULL,
 [role_ref_id] [bigint] DEFAULT NULL NULL,
 [role_id] [bigint] NOT NULL,
 [role_name] [nvarchar](255) DEFAULT NULL NULL,
@@ -2730,10 +2627,6 @@ CREATE TABLE [dbo].[x_role_ref_role](
   ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 )ON [PRIMARY]
 GO
-ALTER TABLE [dbo].[x_role_ref_role] WITH CHECK ADD CONSTRAINT [x_role_ref_role_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_role_ref_role] WITH CHECK ADD CONSTRAINT [x_role_ref_role_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
 ALTER TABLE [dbo].[x_role_ref_role] WITH CHECK ADD CONSTRAINT [x_role_ref_role_FK_role_ref_id] FOREIGN KEY([role_ref_id]) REFERENCES [dbo].[x_role] ([id])
 GO
 
@@ -2742,10 +2635,6 @@ SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
 CREATE TABLE [dbo].[x_security_zone_ref_role](
         [id] [bigint] IDENTITY(1,1) NOT NULL,
-        [create_time] [datetime2] DEFAULT NULL NULL,
-        [update_time] [datetime2] DEFAULT NULL NULL,
-        [added_by_id] [bigint] DEFAULT NULL NULL,
-        [upd_by_id] [bigint] DEFAULT NULL NULL,
         [zone_id] [bigint] DEFAULT NULL NULL,
         [role_id] [bigint] DEFAULT NULL NULL,
         [role_name] [nvarchar](767) DEFAULT NULL NULL
@@ -2754,10 +2643,6 @@ CREATE TABLE [dbo].[x_security_zone_ref_role](
         [id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
 ) ON [PRIMARY]
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_role] WITH CHECK ADD CONSTRAINT [x_sz_ref_role_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
-GO
-ALTER TABLE [dbo].[x_security_zone_ref_role] WITH CHECK ADD CONSTRAINT [x_sz_ref_role_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 GO
 ALTER TABLE [dbo].[x_security_zone_ref_role] WITH CHECK ADD CONSTRAINT [x_sz_ref_role_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
 GO
@@ -2770,7 +2655,6 @@ SET ANSI_PADDING ON
 
 CREATE TABLE [dbo].[x_tag_change_log] (
 [id] [bigint] IDENTITY(1,1) NOT NULL,
-[create_time] [datetime2] DEFAULT NULL NULL,
 [service_id] [bigint] NOT NULL,
 [change_type] [int] NOT NULL,
 [service_tags_version] [bigint] DEFAULT 0 NOT NULL,
@@ -3159,44 +3043,27 @@ ALTER TABLE [dbo].[x_policy_ref_resource] CHECK CONSTRAINT [x_policy_ref_resourc
 ALTER TABLE [dbo].[x_policy_ref_resource] WITH CHECK ADD CONSTRAINT [x_policy_ref_resource_FK_res_def_id] FOREIGN KEY ([resource_def_id])
 REFERENCES [dbo].[x_resource_def] ([id])
 ALTER TABLE [dbo].[x_policy_ref_resource] CHECK CONSTRAINT [x_policy_ref_resource_FK_res_def_id]
-ALTER TABLE [dbo].[x_policy_ref_resource] WITH CHECK ADD CONSTRAINT [x_policy_ref_resource_FK_added_by] FOREIGN KEY ([added_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_policy_ref_resource] CHECK CONSTRAINT [x_policy_ref_resource_FK_added_by]
-ALTER TABLE [dbo].[x_policy_ref_resource] WITH CHECK ADD CONSTRAINT [x_policy_ref_resource_FK_upd_by] FOREIGN KEY ([upd_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
+
 ALTER TABLE [dbo].[x_policy_ref_access_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_access_type_FK_policy_id] FOREIGN KEY ([policy_id])
 REFERENCES [dbo].[x_policy] ([id])
 ALTER TABLE [dbo].[x_policy_ref_access_type] CHECK CONSTRAINT [x_policy_ref_access_type_FK_policy_id]
 ALTER TABLE [dbo].[x_policy_ref_access_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_access_type_FK_access_def_id] FOREIGN KEY ([access_def_id])
 REFERENCES [dbo].[x_access_type_def] ([id])
 ALTER TABLE [dbo].[x_policy_ref_access_type] CHECK CONSTRAINT [x_policy_ref_access_type_FK_access_def_id]
-ALTER TABLE [dbo].[x_policy_ref_access_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_access_type_FK_added_by] FOREIGN KEY ([added_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_policy_ref_access_type] CHECK CONSTRAINT [x_policy_ref_access_type_FK_added_by]
-ALTER TABLE [dbo].[x_policy_ref_access_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_access_type_FK_upd_by] FOREIGN KEY ([upd_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
+
 ALTER TABLE [dbo].[x_policy_ref_condition] WITH CHECK ADD CONSTRAINT [x_policy_ref_condition_FK_policy_id] FOREIGN KEY ([policy_id])
 REFERENCES [dbo].[x_policy] ([id])
 ALTER TABLE [dbo].[x_policy_ref_condition] CHECK CONSTRAINT [x_policy_ref_condition_FK_policy_id]
 ALTER TABLE [dbo].[x_policy_ref_condition] WITH CHECK ADD CONSTRAINT [x_policy_ref_condition_FK_res_def_id] FOREIGN KEY ([condition_def_id])
 REFERENCES [dbo].[x_policy_condition_def] ([id])
 ALTER TABLE [dbo].[x_policy_ref_condition] CHECK CONSTRAINT [x_policy_ref_condition_FK_res_def_id]
-ALTER TABLE [dbo].[x_policy_ref_condition] WITH CHECK ADD CONSTRAINT [x_policy_ref_condition_FK_added_by] FOREIGN KEY ([added_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_policy_ref_condition] CHECK CONSTRAINT [x_policy_ref_condition_FK_added_by]
-ALTER TABLE [dbo].[x_policy_ref_condition] WITH CHECK ADD CONSTRAINT [x_policy_ref_condition_FK_upd_by] FOREIGN KEY ([upd_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
+
 ALTER TABLE [dbo].[x_policy_ref_datamask_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_datamask_type_FK_policy_id] FOREIGN KEY ([policy_id])
 REFERENCES [dbo].[x_policy] ([id])
 ALTER TABLE [dbo].[x_policy_ref_datamask_type] CHECK CONSTRAINT [x_policy_ref_datamask_type_FK_policy_id]
 ALTER TABLE [dbo].[x_policy_ref_datamask_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_datamask_type_FK_res_def_id] FOREIGN KEY ([datamask_def_id])
 REFERENCES [dbo].[x_datamask_type_def] ([id])
 ALTER TABLE [dbo].[x_policy_ref_datamask_type] CHECK CONSTRAINT [x_policy_ref_datamask_type_FK_res_def_id]
-ALTER TABLE [dbo].[x_policy_ref_datamask_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_datamask_type_FK_added_by] FOREIGN KEY ([added_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_policy_ref_datamask_type] CHECK CONSTRAINT [x_policy_ref_datamask_type_FK_added_by]
-ALTER TABLE [dbo].[x_policy_ref_datamask_type] WITH CHECK ADD CONSTRAINT [x_policy_ref_datamask_type_FK_upd_by] FOREIGN KEY ([upd_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
 
 ALTER TABLE [dbo].[x_policy_ref_user] WITH CHECK ADD CONSTRAINT [x_policy_ref_user_FK_policy_id] FOREIGN KEY ([policy_id])
 REFERENCES [dbo].[x_policy] ([id])
@@ -3206,12 +3073,6 @@ ALTER TABLE [dbo].[x_policy_ref_user] WITH CHECK ADD CONSTRAINT [x_policy_ref_us
 REFERENCES [dbo].[x_user] ([id])
 ALTER TABLE [dbo].[x_policy_ref_user] CHECK CONSTRAINT [x_policy_ref_user_FK_user_id]
 
-ALTER TABLE [dbo].[x_policy_ref_user] WITH CHECK ADD CONSTRAINT [x_policy_ref_user_FK_added_by] FOREIGN KEY ([added_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_policy_ref_user] CHECK CONSTRAINT [x_policy_ref_user_FK_added_by]
-
-ALTER TABLE [dbo].[x_policy_ref_user] WITH CHECK ADD CONSTRAINT [x_policy_ref_user_FK_upd_by] FOREIGN KEY ([upd_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
 ALTER TABLE [dbo].[x_policy_ref_user] CHECK CONSTRAINT [x_policy_ref_user_FK_upd_by]
 
 ALTER TABLE [dbo].[x_policy_ref_group] WITH CHECK ADD CONSTRAINT [x_policy_ref_group_FK_policy_id] FOREIGN KEY ([policy_id])
@@ -3220,11 +3081,6 @@ ALTER TABLE [dbo].[x_policy_ref_group] CHECK CONSTRAINT [x_policy_ref_group_FK_p
 ALTER TABLE [dbo].[x_policy_ref_group] WITH CHECK ADD CONSTRAINT [x_policy_ref_group_FK_group_id] FOREIGN KEY ([group_id])
 REFERENCES [dbo].[x_group] ([id])
 ALTER TABLE [dbo].[x_policy_ref_group] CHECK CONSTRAINT [x_policy_ref_group_FK_group_id]
-ALTER TABLE [dbo].[x_policy_ref_group] WITH CHECK ADD CONSTRAINT [x_policy_ref_group_FK_added_by] FOREIGN KEY ([added_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
-ALTER TABLE [dbo].[x_policy_ref_group] CHECK CONSTRAINT [x_policy_ref_group_FK_added_by]
-ALTER TABLE [dbo].[x_policy_ref_group] WITH CHECK ADD CONSTRAINT [x_policy_ref_group_FK_upd_by] FOREIGN KEY ([upd_by_id])
-REFERENCES [dbo].[x_portal_user] ([id])
 ALTER TABLE [dbo].[x_security_zone] WITH CHECK ADD CONSTRAINT [x_security_zone_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 ALTER TABLE [dbo].[x_security_zone] WITH CHECK ADD CONSTRAINT [x_security_zone_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
 ALTER TABLE [dbo].[x_ranger_global_state] WITH CHECK ADD CONSTRAINT [x_ranger_global_state_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
@@ -4655,6 +4511,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('074',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('076',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);

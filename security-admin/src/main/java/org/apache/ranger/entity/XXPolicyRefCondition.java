@@ -32,7 +32,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_condition")
-public class XXPolicyRefCondition extends XXDBBase implements java.io.Serializable {
+public class XXPolicyRefCondition implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     /**

@@ -50,7 +50,6 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceService;
 import org.junit.jupiter.api.Assertions;
@@ -130,11 +129,9 @@ public class TestSecurityZoneRefUpdater {
         SecurityZoneRefUpdater up = new SecurityZoneRefUpdater();
         RangerDaoManager dao = mock(RangerDaoManager.class);
         RangerServiceService svcService = mock(RangerServiceService.class);
-        RangerAuditFields<?> audit = (RangerAuditFields<?>) mock(RangerAuditFields.class);
         RESTErrorUtil rest = mock(RESTErrorUtil.class);
         setField(up, SecurityZoneRefUpdater.class, "daoMgr", dao);
         setField(up, SecurityZoneRefUpdater.class, "svcService", svcService);
-        setField(up, SecurityZoneRefUpdater.class, "rangerAuditFields", audit);
         setField(up, SecurityZoneRefUpdater.class, "restErrorUtil", rest);
 
         // zone-ref DAOs for create() verifications
@@ -173,14 +170,6 @@ public class TestSecurityZoneRefUpdater {
         when(svcService.getPopulatedViewObject(xsvc)).thenReturn(rs);
         when(xServiceDefDao.findByName("hdfs")).thenReturn(xsd);
         when(xResourceDefDao.findByNameAndServiceDefId("path", 100L)).thenReturn(xrd);
-        when(audit.populateAuditFieldsForCreate(any(XXSecurityZoneRefService.class))).thenAnswer(a -> a.getArgument(0));
-        when(audit.populateAuditFieldsForCreate(any(XXSecurityZoneRefResource.class)))
-                .thenAnswer(a -> a.getArgument(0));
-        when(audit.populateAuditFieldsForCreate(any(XXSecurityZoneRefTagService.class)))
-                .thenAnswer(a -> a.getArgument(0));
-        when(audit.populateAuditFieldsForCreate(any(XXSecurityZoneRefUser.class))).thenAnswer(a -> a.getArgument(0));
-        when(audit.populateAuditFieldsForCreate(any(XXSecurityZoneRefGroup.class))).thenAnswer(a -> a.getArgument(0));
-        when(audit.populateAuditFieldsForCreate(any(XXSecurityZoneRefRole.class))).thenAnswer(a -> a.getArgument(0));
 
         RangerSecurityZone zone = new RangerSecurityZone();
         zone.setId(5L);
@@ -257,11 +246,9 @@ public class TestSecurityZoneRefUpdater {
         SecurityZoneRefUpdater up = new SecurityZoneRefUpdater();
         RangerDaoManager dao = mock(RangerDaoManager.class);
         RangerServiceService svcService = mock(RangerServiceService.class);
-        RangerAuditFields<?> audit = (RangerAuditFields<?>) mock(RangerAuditFields.class);
         RESTErrorUtil rest = mock(RESTErrorUtil.class);
         setField(up, SecurityZoneRefUpdater.class, "daoMgr", dao);
         setField(up, SecurityZoneRefUpdater.class, "svcService", svcService);
-        setField(up, SecurityZoneRefUpdater.class, "rangerAuditFields", audit);
         setField(up, SecurityZoneRefUpdater.class, "restErrorUtil", rest);
 
         // Mocks for cleanupRefTables and service lookup
