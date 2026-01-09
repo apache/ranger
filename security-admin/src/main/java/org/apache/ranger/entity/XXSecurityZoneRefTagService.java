@@ -31,7 +31,7 @@ import javax.persistence.Table;
 @Entity
 @Cacheable
 @Table(name = "x_security_zone_ref_tag_srvc")
-public class XXSecurityZoneRefTagService extends XXDBBase implements java.io.Serializable{
+public class XXSecurityZoneRefTagService implements java.io.Serializable{
         private static final long serialVersionUID = 1L;
 	@Id
     @SequenceGenerator(name = "x_sec_zone_ref_tag_srvc_SEQ", sequenceName = "x_sec_zone_ref_tag_srvc_SEQ", allocationSize = 1)
@@ -48,12 +48,10 @@ public class XXSecurityZoneRefTagService extends XXDBBase implements java.io.Ser
 	@Column(name = "tag_srvc_name")
         protected String tagServiceName;
 
-        @Override
         public void setId(Long id) {
                 this.id=id;
         }
 
-        @Override
         public Long getId() {
                 return id;
         }

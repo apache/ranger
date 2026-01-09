@@ -24,8 +24,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_user")
-public class XXPolicyRefUser extends XXDBBase implements
-		java.io.Serializable {
+public class XXPolicyRefUser implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
 	 * id of the XXPolicyRefUser
@@ -183,7 +182,4 @@ public class XXPolicyRefUser extends XXDBBase implements
 		return "XXPolicyRefUser [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", userId="
 				+ userId + ", userName=" + userName +  "]";
 	}
-
-
-
 }

@@ -52,7 +52,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceService;
 import org.slf4j.Logger;
@@ -66,9 +65,6 @@ public class SecurityZoneRefUpdater {
 
 	@Autowired
 	RangerDaoManager daoMgr;
-
-	@Autowired
-	RangerAuditFields<?> rangerAuditFields;
 
 	@Autowired
 	RangerServiceService svcService;
@@ -116,7 +112,7 @@ public class SecurityZoneRefUpdater {
 			XXService xService = daoMgr.getXXService().findByName(serviceName);
 			RangerService rService = svcService.getPopulatedViewObject(xService);
 			XXServiceDef xServiceDef = daoMgr.getXXServiceDef().findByName(rService.getType());
-			XXSecurityZoneRefService xZoneService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefService());
+			XXSecurityZoneRefService xZoneService = new XXSecurityZoneRefService();
 
 			xZoneService.setZoneId(zoneId);
 			xZoneService.setServiceId(xService.getId());
@@ -140,7 +136,7 @@ public class SecurityZoneRefUpdater {
 			for (String resourceName : resourceDefNames) {
 				XXResourceDef xResourceDef = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
 
-				XXSecurityZoneRefResource xZoneResource = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefResource());
+				XXSecurityZoneRefResource xZoneResource = new XXSecurityZoneRefResource();
 
 				xZoneResource.setZoneId(zoneId);
 				xZoneResource.setResourceDefId(xResourceDef.getId());
@@ -163,7 +159,7 @@ public class SecurityZoneRefUpdater {
                                                         MessageEnums.INVALID_INPUT_DATA);
                                 }
 
-                                XXSecurityZoneRefTagService xZoneTagService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefTagService());
+                                XXSecurityZoneRefTagService xZoneTagService = new XXSecurityZoneRefTagService();
 
                                 xZoneTagService.setZoneId(zoneId);
                                 xZoneTagService.setTagServiceId(xService.getId());
@@ -187,7 +183,7 @@ public class SecurityZoneRefUpdater {
 							MessageEnums.INVALID_INPUT_DATA);
 				}
 
-				XXSecurityZoneRefUser xZoneUser = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefUser());
+				XXSecurityZoneRefUser xZoneUser = new XXSecurityZoneRefUser();
 
 				xZoneUser.setZoneId(zoneId);
 				xZoneUser.setUserId(xUser.getId());
@@ -212,7 +208,7 @@ public class SecurityZoneRefUpdater {
 							MessageEnums.INVALID_INPUT_DATA);
 				}
 
-				XXSecurityZoneRefGroup xZoneGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefGroup());
+				XXSecurityZoneRefGroup xZoneGroup = new XXSecurityZoneRefGroup();
 
 				xZoneGroup.setZoneId(zoneId);
 				xZoneGroup.setGroupId(xGroup.getId());
@@ -236,7 +232,7 @@ public class SecurityZoneRefUpdater {
 							MessageEnums.INVALID_INPUT_DATA);
 				}
 
-				XXSecurityZoneRefRole xZoneRole = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefRole());
+				XXSecurityZoneRefRole xZoneRole = new XXSecurityZoneRefRole();
 
 				xZoneRole.setZoneId(zoneId);
 				xZoneRole.setRoleId(xRole.getId());

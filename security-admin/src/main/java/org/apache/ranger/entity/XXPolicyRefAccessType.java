@@ -24,8 +24,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_access_type")
-public class XXPolicyRefAccessType extends XXDBBase implements
-		java.io.Serializable {
+public class XXPolicyRefAccessType implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
 	 * id of the XXPolicyRefAccessType
@@ -183,7 +182,4 @@ public class XXPolicyRefAccessType extends XXDBBase implements
 		return "XXPolicyRefAccessType [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", accessDefId="
 				+ accessDefId + ", accessTypeName=" + accessTypeName +  "]";
 	}
-
-
-
 }

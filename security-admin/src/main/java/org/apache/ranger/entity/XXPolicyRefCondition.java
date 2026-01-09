@@ -24,8 +24,7 @@ import java.util.Objects;
 @Entity
 @Cacheable
 @Table(name = "x_policy_ref_condition")
-public class XXPolicyRefCondition extends XXDBBase implements
-		java.io.Serializable {
+public class XXPolicyRefCondition implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
 	 * id of the XXPolicyRefCondition
@@ -183,7 +182,4 @@ public class XXPolicyRefCondition extends XXDBBase implements
 		return "XXPolicyRefCondition [" + super.toString() + " id=" + id + ", policyId=" + policyId + ", conditionDefId="
 				+ conditionDefId + ", conditionName=" + conditionName + "]";
 	}
-
-
-
 }
