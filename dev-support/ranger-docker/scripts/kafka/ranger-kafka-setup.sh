@@ -25,6 +25,7 @@ EOF
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh kafka.keytab
+  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
 fi
 
 cp ${RANGER_SCRIPTS}/core-site.xml          ${KAFKA_HOME}/config/

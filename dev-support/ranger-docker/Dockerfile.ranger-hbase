@@ -33,6 +33,7 @@ COPY ./scripts/hbase/ranger-hbase-plugin-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/hbase/hbase-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/core-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                           ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_testusers_keytab.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf                                /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
@@ -43,6 +44,7 @@ RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/op
     rm -f /home/ranger/dist/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin.tar.gz && \
     cp -f ${RANGER_SCRIPTS}/ranger-hbase-plugin-install.properties /opt/ranger/ranger-hbase-plugin/install.properties && \
     chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh
 
 RUN apt-get update && \

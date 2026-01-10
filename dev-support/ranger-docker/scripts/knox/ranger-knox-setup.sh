@@ -25,6 +25,7 @@ EOF
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh knox.keytab
+  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
 fi
 
 chown -R knox:knox /opt/knox/

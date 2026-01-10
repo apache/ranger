@@ -33,6 +33,7 @@ COPY ./scripts/kafka/ranger-kafka-plugin-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/kafka/kafka-server-jaas.conf                 ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/core-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                           ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_testusers_keytab.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf                                /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/ && \
@@ -43,6 +44,7 @@ RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/
     rm -f /home/ranger/dist/ranger-${KAFKA_PLUGIN_VERSION}-kafka-plugin.tar.gz && \
     cp -f ${RANGER_SCRIPTS}/ranger-kafka-plugin-install.properties /opt/ranger/ranger-kafka-plugin/install.properties && \
     chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-kafka-setup.sh ${RANGER_SCRIPTS}/ranger-kafka.sh
 
 ENV KAFKA_HOME=/opt/kafka

@@ -28,6 +28,7 @@ then
   if [ "${KERBEROS_ENABLED}" == "true" ]
   then
     ${RANGER_SCRIPTS}/wait_for_keytab.sh rangerusersync.keytab
+    ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
   fi
 
   cd "${RANGER_HOME}"/usersync || exit
