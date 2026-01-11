@@ -17,46 +17,46 @@
 
 package org.apache.ranger.view;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.common.view.VList;
 import org.apache.ranger.plugin.model.RangerServiceResourceWithTags;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RangerServiceResourceWithTagsList extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	List<RangerServiceResourceWithTags> resourceList;
+    List<RangerServiceResourceWithTags> resourceList;
 
-	public RangerServiceResourceWithTagsList() {
-		super();
-	}
+    public RangerServiceResourceWithTagsList() {
+        super();
+    }
 
-	public RangerServiceResourceWithTagsList(List<RangerServiceResourceWithTags> objList) {
-		super(objList);
+    public RangerServiceResourceWithTagsList(List<RangerServiceResourceWithTags> objList) {
+        super(objList);
 
-		this.resourceList = objList;
-	}
+        this.resourceList = objList;
+    }
 
-	public List<RangerServiceResourceWithTags> getResourceList() {
-		return resourceList;
-	}
+    public List<RangerServiceResourceWithTags> getResourceList() {
+        return resourceList;
+    }
 
-	public void setResourceList(List<RangerServiceResourceWithTags> resourceList) {
-		this.resourceList = resourceList;
-	}
+    public void setResourceList(List<RangerServiceResourceWithTags> resourceList) {
+        this.resourceList = resourceList;
+    }
 
-	@Override
-	public int getListSize() {
-		return (resourceList != null) ? resourceList.size() : 0;
-	}
+    @Override
+    public int getListSize() {
+        return (resourceList != null) ? resourceList.size() : 0;
+    }
 
-	@Override
-	public List<RangerServiceResourceWithTags> getList() {
-		return resourceList;
-	}
+    @Override
+    public List<RangerServiceResourceWithTags> getList() {
+        return resourceList;
+    }
 }

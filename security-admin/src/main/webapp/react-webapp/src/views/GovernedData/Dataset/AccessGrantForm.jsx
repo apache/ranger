@@ -310,8 +310,8 @@ function AccessGrantForm({
               obj.type == "USER"
                 ? userGreyIcon
                 : obj.type == "GROUP"
-                ? groupGreyIcon
-                : roleGreyIcon
+                  ? groupGreyIcon
+                  : roleGreyIcon
             }
             height="20px"
             width="20px"

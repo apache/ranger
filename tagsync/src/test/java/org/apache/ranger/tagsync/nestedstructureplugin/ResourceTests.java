@@ -19,17 +19,21 @@
 
 package org.apache.ranger.tagsync.nestedstructureplugin;
 
-import junit.framework.TestCase;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Map;
 
 import static org.apache.ranger.tagsync.nestedstructureplugin.AtlasNestedStructureResourceMapper.QUALIFIED_NAME_DELIMITER;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-public class ResourceTests extends TestCase {
+public class ResourceTests {
     private AtlasNestedStructureResourceMapper mapper = new AtlasNestedStructureResourceMapper();
 
     @Test
@@ -39,9 +43,8 @@ public class ResourceTests extends TestCase {
         String   schemaName  = resources.length > 0 ? resources[0] : null;
         String   fieldName   = resources.length > 1 ? resources[1] : null;
 
-
-        assertEquals("schemaName does not match expected value", "json_object.foo.v1", schemaName);
-        assertEquals("fieldName does not match expected value", "partner", fieldName);
+        assertEquals("json_object.foo.v1", schemaName, "schemaName does not match expected value");
+        assertEquals("partner", fieldName, "fieldName does not match expected value");
         System.out.println(schemaName);
         System.out.println(fieldName);
     }
@@ -53,8 +56,8 @@ public class ResourceTests extends TestCase {
         String   schemaName  = resources.length > 0 ? resources[0] : null;
         String   fieldName   = resources.length > 1 ? resources[1] : null;
 
-        assertEquals("schemaName does not match expected value", resourceStr, schemaName);
-        assertNull("fieldName does not match expected value", fieldName);
+        assertEquals(schemaName, resourceStr, "schemaName does not match expected value");
+        assertNull(fieldName, "fieldName does not match expected value");
         System.out.println(schemaName);
         System.out.println(fieldName);
     }
@@ -69,14 +72,14 @@ public class ResourceTests extends TestCase {
             RangerAtlasEntity     entity     = new RangerAtlasEntity(typeName, guid, attributes);
             RangerServiceResource resource   = mapper.buildResource(entity);
 
-            assertTrue("Resource elements list is empty", resource.getResourceElements().size() > 0);
-            assertEquals("Resource elements list size does not match expected", 2, resource.getResourceElements().size());
-            assertNotNull("Resource element missing value for schema", resource.getResourceElements().get("schema"));
-            assertEquals("Resource element schema value does not match", Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues());
-            assertNotNull("Resource element missing value for field", resource.getResourceElements().get("field"));
-            assertEquals("Resource element field value does not match", Collections.singletonList("channel"), resource.getResourceElements().get("field").getValues());
-            assertEquals("serviceName does not match expected value", "null_nestedstructure", resource.getServiceName());
-        } catch(Exception e) {
+            assertTrue(resource.getResourceElements().size() > 0, "Resource elements list is empty");
+            assertEquals(2, resource.getResourceElements().size(), "Resource elements list size does not match expected");
+            assertNotNull(resource.getResourceElements().get("schema"), "Resource element missing value for schema");
+            assertEquals(Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues(), "Resource element schema value does not match");
+            assertNotNull(resource.getResourceElements().get("field"), "Resource element missing value for field");
+            assertEquals(Collections.singletonList("channel"), resource.getResourceElements().get("field").getValues(), "Resource element field value does not match");
+            assertEquals("null_nestedstructure", resource.getServiceName(), "serviceName does not match expected value");
+        } catch (Exception e) {
             e.printStackTrace();
             fail("An error occurred while processing resource");
         }
@@ -87,14 +90,14 @@ public class ResourceTests extends TestCase {
             RangerAtlasEntity     entity     = new RangerAtlasEntity(typeName, guid, attributes);
             RangerServiceResource resource   = mapper.buildResource(entity);
 
-            assertTrue("Resource elements list is empty", resource.getResourceElements().size() > 0);
-            assertEquals("Resource elements list size does not match expected", 2, resource.getResourceElements().size());
-            assertNotNull("Resource element missing value for schema", resource.getResourceElements().get("schema"));
-            assertEquals("Resource element schema value does not match", Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues());
-            assertNotNull("Resource element missing value for field", resource.getResourceElements().get("field"));
-            assertEquals("Resource element field value does not match", Collections.singletonList("channel"), resource.getResourceElements().get("field").getValues());
-            assertEquals("serviceName does not match expected value", "dev_nestedstructure", resource.getServiceName());
-        } catch(Exception e) {
+            assertTrue(resource.getResourceElements().size() > 0, "Resource elements list is empty");
+            assertEquals(2, resource.getResourceElements().size(), "Resource elements list size does not match expected");
+            assertNotNull(resource.getResourceElements().get("schema"), "Resource element missing value for schema");
+            assertEquals(Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues(), "Resource element schema value does not match");
+            assertNotNull(resource.getResourceElements().get("field"), "Resource element missing value for field");
+            assertEquals(Collections.singletonList("channel"), resource.getResourceElements().get("field").getValues(), "Resource element field value does not match");
+            assertEquals("dev_nestedstructure", resource.getServiceName(), "serviceName does not match expected value");
+        } catch (Exception e) {
             e.printStackTrace();
             fail("An error occurred while processing resource");
         }
@@ -110,11 +113,11 @@ public class ResourceTests extends TestCase {
             RangerAtlasEntity     entity     = new RangerAtlasEntity(typeName, guid, attributes);
             RangerServiceResource resource   = mapper.buildResource(entity);
 
-            assertTrue("Resource elements list is empty", resource.getResourceElements().size() > 0);
-            assertEquals("Resource elements list size does not match expected", 1, resource.getResourceElements().size());
-            assertNotNull("Resource element missing value for schema", resource.getResourceElements().get("schema"));
-            assertEquals("Resource element schema value does not match", Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues());
-            assertEquals("serviceName does not match expected value", "null_nestedstructure", resource.getServiceName());
+            assertTrue(resource.getResourceElements().size() > 0, "Resource elements list is empty");
+            assertEquals(1, resource.getResourceElements().size(), "Resource elements list size does not match expected");
+            assertNotNull(resource.getResourceElements().get("schema"), "Resource element missing value for schema");
+            assertEquals(Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues(), "Resource element schema value does not match");
+            assertEquals("null_nestedstructure", resource.getServiceName(), "serviceName does not match expected value");
         } catch (Exception e) {
             e.printStackTrace();
             fail("An error occurred while processing resource");
@@ -126,11 +129,11 @@ public class ResourceTests extends TestCase {
             RangerAtlasEntity     entity     = new RangerAtlasEntity(typeName, guid, attributes);
             RangerServiceResource resource   = mapper.buildResource(entity);
 
-            assertTrue("Resource elements list is empty", resource.getResourceElements().size() > 0);
-            assertEquals("Resource elements list size does not match expected", 1, resource.getResourceElements().size());
-            assertNotNull("Resource element missing value for schema", resource.getResourceElements().get("schema"));
-            assertEquals("Resource element schema value does not match", Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues());
-            assertEquals("serviceName does not match expected value", "dev_nestedstructure", resource.getServiceName());
+            assertTrue(resource.getResourceElements().size() > 0, "Resource elements list is empty");
+            assertEquals(1, resource.getResourceElements().size(), "Resource elements list size does not match expected");
+            assertNotNull(resource.getResourceElements().get("schema"), "Resource element missing value for schema");
+            assertEquals(Collections.singletonList("json_object.foo.v1"), resource.getResourceElements().get("schema").getValues(), "Resource element schema value does not match");
+            assertEquals("dev_nestedstructure", resource.getServiceName(), "serviceName does not match expected value");
         } catch (Exception e) {
             e.printStackTrace();
             fail("An error occurred while processing resource");

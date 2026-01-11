@@ -26,24 +26,24 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Set;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestNestedStructureAuthorizer {
     static Gson gsonBuilder;
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
-                                       .setPrettyPrinting()
-                                       .create();
+    @BeforeAll
+    public static void setUpBeforeClass() {
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ").setPrettyPrinting().create();
     }
 
     @Test
@@ -52,25 +52,23 @@ public class TestNestedStructureAuthorizer {
     }
 
     private void runTestsFromResourceFile(String resourceName) {
-        try(InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-            InputStreamReader reader   = new InputStreamReader(inStream)) {
+        try (InputStream inStream = this.getClass().getResourceAsStream(resourceName);
+                InputStreamReader reader = new InputStreamReader(inStream)) {
             runTests(reader, resourceName);
-        } catch (IOException excp) {
-            // ignore
+        } catch (IOException ignored) {
         }
     }
 
     private void runTests(InputStreamReader reader, String testName) {
         NestedStructureTestCase testCase = gsonBuilder.fromJson(reader, NestedStructureTestCase.class);
 
-        assertTrue("invalid input: " + testName, testCase != null && testCase.policies != null && testCase.tests != null);
+        assertTrue(testCase != null && testCase.policies != null && testCase.tests != null, "invalid input: " + testName);
 
         if (testCase.policies.getServiceDef() == null && StringUtils.isNotBlank(testCase.serviceDefFilename)) {
-            try (InputStream       inStream   = this.getClass().getResourceAsStream(testCase.serviceDefFilename);
-                 InputStreamReader sdefReader = new InputStreamReader(inStream)) {
+            try (InputStream inStream = this.getClass().getResourceAsStream(testCase.serviceDefFilename);
+                    InputStreamReader sdefReader = new InputStreamReader(inStream)) {
                 testCase.policies.setServiceDef(gsonBuilder.fromJson(sdefReader, RangerServiceDef.class));
-            } catch (IOException excp) {
-                // ignore
+            } catch (IOException ignored) {
             }
         }
 
@@ -80,8 +78,8 @@ public class TestNestedStructureAuthorizer {
             AccessResult expected = test.result;
             AccessResult result   = authorizer.authorize(test.schema, test.user, test.userGroups, test.json, NestedStructureAccessType.getAccessType(test.accessType));
 
-            assertEquals(test.name + ": hasAccess doesn't match: expected=" + expected.hasAccess() + ", actual=" + result.hasAccess(), expected.hasAccess(), result.hasAccess());
-            assertEquals(test.name + ": json doesn't match: expected=" + expected.getJson() + ", actual=" + result.getJson(), expected.getJson(), result.getJson());
+            assertEquals(expected.hasAccess(), result.hasAccess(), test.name + ": hasAccess doesn't match: expected=" + expected.hasAccess() + ", actual=" + result.hasAccess());
+            assertEquals(expected.getJson(), result.getJson(), test.name + ": json doesn't match: expected=" + expected.getJson() + ", actual=" + result.getJson());
         }
     }
 

@@ -24,62 +24,78 @@ import org.apache.ranger.entity.XXGdsDatasetPolicyMap;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.Collections;
 import java.util.List;
 
-
 @Service
 public class XXGdsDatasetPolicyMapDao extends BaseDao<XXGdsDatasetPolicyMap> {
-	public XXGdsDatasetPolicyMapDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXGdsDatasetPolicyMapDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXGdsDatasetPolicyMap getDatasetPolicyMap(Long datasetId, Long policyId) {
-		XXGdsDatasetPolicyMap ret = null;
+    public XXGdsDatasetPolicyMap getDatasetPolicyMap(Long datasetId, Long policyId) {
+        XXGdsDatasetPolicyMap ret = null;
 
-		if (datasetId != null && policyId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetPolicyMap", tClass)
-				                        .setParameter("datasetId", datasetId)
-				                        .setParameter("policyId", policyId)
-				                        .getSingleResult();
-			} catch (NoResultException e) {
-				// ignore
-			}
-		}
+        if (datasetId != null && policyId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetPolicyMap", tClass)
+                        .setParameter("datasetId", datasetId)
+                        .setParameter("policyId", policyId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<XXGdsDatasetPolicyMap> getDatasetPolicyMaps(Long datasetId) {
-		List<XXGdsDatasetPolicyMap> ret = Collections.emptyList();
+    public List<XXGdsDatasetPolicyMap> getDatasetPolicyMaps(Long datasetId) {
+        List<XXGdsDatasetPolicyMap> ret = Collections.emptyList();
 
-		if (datasetId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetPolicyMaps", tClass)
-				                        .setParameter("datasetId", datasetId)
-				                        .getResultList();
-			} catch (NoResultException e) {
-				// ignore
-			}
-		}
+        if (datasetId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetPolicyMaps", tClass)
+                        .setParameter("datasetId", datasetId)
+                        .getResultList();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<Long> getDatasetPolicyIds(Long datasetId) {
-		List<Long> ret = Collections.emptyList();
+    public List<Long> getDatasetPolicyIds(Long datasetId) {
+        List<Long> ret = Collections.emptyList();
 
-		if (datasetId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetPolicyIds", Long.class)
-				                        .setParameter("datasetId", datasetId)
-				                        .getResultList();
-			} catch (NoResultException e) {
-				// ignore
-			}
-		}
+        if (datasetId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetPolicyIds", Long.class)
+                        .setParameter("datasetId", datasetId)
+                        .getResultList();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
+
+    public Long getDatasetIdForPolicy(Long policyId) {
+        Long ret = null;
+
+        if (policyId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsDatasetPolicyMap.getDatasetIdForPolicy", Long.class)
+                        .setParameter("policyId", policyId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+
+        return ret;
+    }
 }

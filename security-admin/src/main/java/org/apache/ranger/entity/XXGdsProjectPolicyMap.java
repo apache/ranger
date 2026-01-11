@@ -21,14 +21,22 @@ package org.apache.ranger.entity;
 
 import org.apache.ranger.common.AppConstants;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 @Entity
 @Cacheable
-@Table(name="x_gds_project_policy_map")
+@Table(name = "x_gds_project_policy_map")
 @XmlRootElement
 public class XXGdsProjectPolicyMap implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -45,26 +53,40 @@ public class XXGdsProjectPolicyMap implements Serializable {
     @Column(name = "policy_id")
     protected Long policyId;
 
-    public XXGdsProjectPolicyMap() { }
+    public XXGdsProjectPolicyMap() {}
 
     public XXGdsProjectPolicyMap(Long projectId, Long policyId) {
         setProjectId(projectId);
         setPolicyId(policyId);
     }
 
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getId() { return id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getProjectId() { return projectId; }
+    public Long getProjectId() {
+        return projectId;
+    }
 
-    public void setProjectId(Long projectId) { this.projectId = projectId; }
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
+    }
 
-    public Long getPolicyId() { return policyId; }
+    public Long getPolicyId() {
+        return policyId;
+    }
 
-    public void setPolicyId(Long policyId) { this.policyId = policyId; }
+    public void setPolicyId(Long policyId) {
+        this.policyId = policyId;
+    }
 
-    public int getMyClassType() { return AppConstants.CLASS_TYPE_GDS_PROJECT_POLICY_MAP; }
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_GDS_PROJECT_POLICY_MAP;
+    }
 
     @Override
     public int hashCode() {
@@ -75,6 +97,8 @@ public class XXGdsProjectPolicyMap implements Serializable {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
+        } else if (obj == null) {
+            return false;
         } else if (getClass() != obj.getClass()) {
             return false;
         } else if (!super.equals(obj)) {
@@ -84,8 +108,8 @@ public class XXGdsProjectPolicyMap implements Serializable {
         XXGdsProjectPolicyMap other = (XXGdsProjectPolicyMap) obj;
 
         return Objects.equals(id, other.id) &&
-               Objects.equals(projectId, other.projectId) &&
-               Objects.equals(policyId, other.policyId);
+                Objects.equals(projectId, other.projectId) &&
+                Objects.equals(policyId, other.policyId);
     }
 
     @Override
@@ -94,12 +118,11 @@ public class XXGdsProjectPolicyMap implements Serializable {
     }
 
     public StringBuilder toString(StringBuilder sb) {
-        sb.append("XXGdsProjectPolicyMap={ ")
-          .append(super.toString() + "} ")
-          .append("id={").append(id).append("} ")
-          .append("projectId={").append(projectId).append("} ")
-          .append("policyId={").append(policyId).append("} ")
-          .append(" }");
+        sb.append("XXGdsProjectPolicyMap={ ").append(super.toString()).append("} ")
+                .append("id={").append(id).append("} ")
+                .append("projectId={").append(projectId).append("} ")
+                .append("policyId={").append(policyId).append("} ")
+                .append(" }");
 
         return sb;
     }

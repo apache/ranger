@@ -44,9 +44,7 @@
 							<include>com.sun.jersey:jersey-bundle</include>
 							<include>commons-cli:commons-cli</include>
 							<include>commons-collections:commons-collections</include>
-							<include>commons-lang:commons-lang</include>
 							<include>commons-logging:commons-logging</include>
-							<include>com.google.guava:guava</include>
 							<include>org.apache.hadoop:hadoop-auth</include>
 							<include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
 							<include>org.apache.hadoop:hadoop-common</include>
@@ -56,7 +54,9 @@
 							<include>commons-io:commons-io:jar:${commons.io.version}</include>
 							<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
 							<include>commons-codec:commons-codec</include>
+                                                        <include>org.apache.ranger:ranger-authz-api</include>
 							<include>org.apache.ranger:ranger-plugins-common</include>
+							<include>org.apache.ranger:ugsync-util</include>
 							<include>org.apache.ranger:ranger-common-ha:jar:${project.version}</include>
 							<include>org.apache.curator:curator-framework:jar:${curator.version}</include>
 							<include>org.apache.curator:curator-recipes:jar:${curator.version}</include>
@@ -64,7 +64,6 @@
 							<include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
 							<include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
 							<include>org.apache.ranger:ugsync-util</include>
-							<include>org.apache.htrace:htrace-core4</include>
 							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
 							<include>net.java.dev.jna:jna:jar:${jna.version}</include>
 							<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -78,11 +77,7 @@
 							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
 							<include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
 							<include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
-							<include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
-							<include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
-							<include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
 							<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
-							<include>org.codehaus.jackson:jackson-xc:jar:${codehaus.jackson.version}</include>
 							<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
 							<include>org.apache.commons:commons-lang3</include>
 							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
@@ -97,7 +92,6 @@
 						<includes>
 							<include>commons-cli:commons-cli</include>
 							<include>org.apache.commons:commons-configuration2</include>
-							<include>commons-lang:commons-lang</include>
 							<include>commons-logging:commons-logging</include>
 						</includes>
 					</dependencySet>

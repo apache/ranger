@@ -21,7 +21,7 @@
 # ./dev-support/ranger-docker/README.md
 #
 # Using this command, you should be able to build and run Apache Ranger
-# within few minites (in a docker container)
+# within few minutes (in a docker container)
 #
 # Pre Request:
 #
@@ -61,14 +61,11 @@ ENABLED_RANGER_SERVICE_FILE=${HOME}/.ranger_docker_services
 
    export ENABLE_DB_MOUNT
 
+CORE_SERVICES="ranger,ranger-usersync"
 if [ "${ENABLE_DB_MOUNT}" = "true" ];
 then
-    DB_SERVICE_NAME="ranger-${RANGER_DB_TYPE}-mounted"
-else
-    DB_SERVICE_NAME="ranger-${RANGER_DB_TYPE}"
+    CORE_SERVICES="ranger,ranger-db-mounted,ranger-usersync"
 fi
-
-CORE_SERVICES="ranger-base,ranger,${DB_SERVICE_NAME},ranger-usersync"
 
 if [ -z "${ENABLED_RANGER_SERVICES}" ]
 then
@@ -105,12 +102,6 @@ do
     [ -f ${serviceFile} ] && OPT="${OPT} -f ${serviceFile}"
 done
 
-#
-# This is needed to build ranger-base build based on architecture
-#
-DOCKER_BUILDKIT=1
-export DOCKER_BUILDKIT
-
 if [ $# -eq 1 ]
 then
     DOCKER_ACTION="$1"
@@ -133,11 +124,11 @@ then
     exit 1
 fi
 
-docker-compose --version > /dev/null 2>&1
+docker compose --version > /dev/null 2>&1
 
 if [ $? -ne 0 ]
 then
-    echo "ERROR: You must have a valid DOCKER installed on your system to do a docker build. (error running docker-compose command)"
+    echo "ERROR: You must have a valid DOCKER and Docker Compose V2 installed on your system to do a docker build. (error running docker compose command)"
     exit 1
 fi
 
@@ -157,7 +148,6 @@ then
 fi
 
 build_ranger=0
-build_base_image=0
 
 cd ${RD_HOME}
 
@@ -175,33 +165,16 @@ then
         then
             #echo "Found only [${noOfFiles}] RANGER tar files. Enabling RANGER BUILD."
             build_ranger=1
-            build_base_image=1
         #else
             #echo "Found [${noOfFiles}] RANGER tar files. Skipping RANGER BUILD. To Force RANGER BUILD, please set RANGER_REBUILD=1 before running this script."
         fi
     else
         #echo "Found [RANGER_REBUILD as ${RANGER_REBUILD}]. Enabling RANGER BUILD."
-        build_base_image=1
         build_ranger=1
     fi
 
 
     cd ${RD_HOME}
-
-    if [ ${build_base_image} -eq 0 ]
-    then
-        docker images ranger-base:latest 2> /dev/null  | grep ranger-base  > /dev/null 2>&1
-        if [ $? -ne 0 ]
-        then
-            build_base_image=1
-        fi
-    fi
-
-    if [ ${build_base_image} -eq 1 ]
-    then
-        echo "+ docker-compose -f docker-compose.ranger-base.yml build --no-cache"
-        docker-compose -f docker-compose.ranger-base.yml build --no-cache
-    fi
 
     if [ ${build_ranger} -eq 1 ]
     then
@@ -209,11 +182,11 @@ then
         then
             cd ${RD_HOME}
 
-            echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans"
-            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans
+            echo "+ docker compose -f docker-compose.ranger-build.yml down --remove-orphans"
+            docker compose -f docker-compose.ranger-build.yml down --remove-orphans
 
-            echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up"
-            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
+            echo "+ docker compose -f docker-compose.ranger-build.yml up"
+            docker compose -f docker-compose.ranger-build.yml up
             if [ $? -ne 0 ]
             then
                 echo "ERROR: Unable to complete RANGER build using DOCKER. Exiting ...."
@@ -237,7 +210,7 @@ fi
 
 cd ${RD_HOME}
 
-docker-compose ${OPT} ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
+docker compose ${OPT} ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
 
 echo
 echo "################### LIST OF DOCKER PROCESSES EXPOSING PORTS #####################"

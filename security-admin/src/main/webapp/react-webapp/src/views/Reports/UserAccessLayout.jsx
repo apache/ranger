@@ -47,12 +47,11 @@ import {
 } from "lodash";
 import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
-import { useQuery } from "../../components/CommonComponents";
+import { useQuery, selectInputCustomStyles } from "Components/CommonComponents";
 import SearchPolicyTable from "./SearchPolicyTable";
-import { isAuditor, isKeyAdmin, isKMSAuditor } from "../../utils/XAUtils";
-import CustomBreadcrumb from "../CustomBreadcrumb";
+import { isAuditor, isKeyAdmin, isKMSAuditor } from "Utils/XAUtils";
 import moment from "moment-timezone";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 
 function UserAccessLayout() {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
@@ -94,10 +93,10 @@ function UserAccessLayout() {
 
     try {
       servicesResp = await fetchApi({
-        url: "plugins/services"
+        url: "public/v2/api/service-headers"
       });
 
-      resourceServices = filter(servicesResp.data.services, (service) =>
+      resourceServices = filter(servicesResp?.data, (service) =>
         isKMSRole ? service.type == "kms" : service.type != "kms"
       );
     } catch (error) {
@@ -413,18 +412,11 @@ function UserAccessLayout() {
     }
   };
 
-  const exportPolicy = async (exportType) => {
-    let exportResp;
-    let exportApiUrl = "/plugins/policies/exportJson";
-
-    if (exportType === "downloadExcel") {
-      exportApiUrl = "/plugins/policies/downloadExcel";
-    } else if (exportType === "csv") {
-      exportApiUrl = "/plugins/policies/csv";
-    }
+  const exportPolicy = async () => {
+    const exportApiUrl = "/plugins/policies/exportJson";
 
     try {
-      exportResp = await fetchApi({
+      const exportResp = await fetchApi({
         url: exportApiUrl,
         params: searchParamsObj,
         responseType: "blob"
@@ -432,7 +424,6 @@ function UserAccessLayout() {
 
       if (exportResp.status === 200) {
         downloadFile({
-          exportType: exportType,
           apiResponse: exportResp.data
         });
       } else {
@@ -443,16 +434,8 @@ function UserAccessLayout() {
     }
   };
 
-  const downloadFile = ({ exportType, apiResponse }) => {
-    let fileExtension;
-
-    if (exportType === "downloadExcel") {
-      fileExtension = ".xls";
-    } else if (exportType === "csv") {
-      fileExtension = ".csv";
-    } else {
-      fileExtension = ".json";
-    }
+  const downloadFile = ({ apiResponse }) => {
+    const fileExtension = ".json";
 
     const fileName =
       "Ranger_Policies_" +
@@ -496,7 +479,6 @@ function UserAccessLayout() {
       <div className="clearfix">
         <div className="header-wraper">
           <h3 className="wrap-header bold">Reports</h3>
-          <CustomBreadcrumb />
         </div>
       </div>
       <div className="wrap report-page">
@@ -573,8 +555,9 @@ function UserAccessLayout() {
                                   isMulti
                                   isClearable={false}
                                   options={serviceDefOpts}
-                                  placeholder="Select Component Type"
                                   menuPlacement="auto"
+                                  placeholder="Select Component Type"
+                                  styles={selectInputCustomStyles}
                                 />
                               )}
                             </Field>
@@ -612,6 +595,7 @@ function UserAccessLayout() {
                                   isClearable={true}
                                   loadOptions={fetchPolicyLabels}
                                   placeholder="Select Policy Label"
+                                  styles={selectInputCustomStyles}
                                 />
                               )}
                             </Field>
@@ -632,6 +616,7 @@ function UserAccessLayout() {
                                       options={zoneNameOpts}
                                       menuPlacement="auto"
                                       placeholder="Select Zone Name"
+                                      styles={selectInputCustomStyles}
                                     />
                                   )}
                                 </Field>
@@ -705,40 +690,32 @@ function UserAccessLayout() {
           </Col>
         </Row>
         <Row>
-          <Col sm={12} className="mt-3 text-end">
-            <Dropdown
-              as={ButtonGroup}
-              key="left"
-              drop="start"
-              size="sm"
-              className="manage-export"
-              title="Export all below policies"
-            >
-              <Dropdown.Toggle
-                data-name="downloadFormatBtn"
-                data-cy="downloadFormatBtn"
+          {!isAuditRole && (
+            <Col sm={12} className="mt-3 text-end">
+              <Dropdown
+                as={ButtonGroup}
+                key="left"
+                drop="start"
+                size="sm"
+                className="manage-export"
+                title="Export all below policies"
               >
-                <i className="fa-fw fa fa-external-link-square"></i> Export
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={() => exportPolicy("downloadExcel")}>
-                  Excel file
-                </Dropdown.Item>
-                <Dropdown.Divider />
-                <Dropdown.Item onClick={() => exportPolicy("csv")}>
-                  CSV file
-                </Dropdown.Item>
-                {!isAuditRole && (
+                <Dropdown.Toggle
+                  data-name="downloadFormatBtn"
+                  data-cy="downloadFormatBtn"
+                >
+                  <i className="fa-fw fa fa-external-link-square"></i> Export
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
                   <React.Fragment>
-                    <Dropdown.Divider />
-                    <Dropdown.Item onClick={() => exportPolicy("exportJson")}>
+                    <Dropdown.Item onClick={() => exportPolicy()}>
                       JSON file
                     </Dropdown.Item>
                   </React.Fragment>
-                )}
-              </Dropdown.Menu>
-            </Dropdown>
-          </Col>
+                </Dropdown.Menu>
+              </Dropdown>
+            </Col>
+          )}
         </Row>
         {filterServiceDefs?.map((serviceDef) => (
           <SearchPolicyTable
@@ -797,15 +774,15 @@ function SearchByAsyncSelect(props) {
     let optsList = [];
     let serverResp = [];
 
-    if (inputValue) {
-      params["name"] = inputValue || "";
-    }
     if (searchByOptName.value == "searchByGroup") {
       apiUrl = "xusers/lookup/groups";
+      params["name"] = inputValue || "";
     } else if (searchByOptName.value == "searchByUser") {
       apiUrl = "xusers/lookup/users";
+      params["name"] = inputValue || "";
     } else if (searchByOptName.value == "searchByRole") {
-      apiUrl = "roles/roles";
+      apiUrl = "roles/lookup/roles/names";
+      params["roleNamePartial"] = inputValue || "";
     }
     if (!isEmpty(apiUrl)) {
       serverResp = await fetchApi({
@@ -813,23 +790,10 @@ function SearchByAsyncSelect(props) {
         params: params
       });
     }
-
-    if (searchByOptName.value == "searchByUser") {
-      optsList = serverResp.data.vXStrings.map((obj) => ({
-        label: obj["value"],
-        value: obj["value"]
-      }));
-    } else if (searchByOptName.value == "searchByRole") {
-      optsList = serverResp.data.roles.map(({ name }) => ({
-        label: name,
-        value: name
-      }));
-    } else {
-      optsList = serverResp.data.vXStrings.map((obj) => ({
-        label: obj["value"],
-        value: obj["value"]
-      }));
-    }
+    optsList = serverResp?.data?.vXStrings.map((obj) => ({
+      label: obj["value"],
+      value: obj["value"]
+    }));
 
     return optsList;
   };

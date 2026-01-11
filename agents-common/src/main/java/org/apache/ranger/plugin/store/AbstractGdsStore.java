@@ -19,119 +19,178 @@
 
 package org.apache.ranger.plugin.store;
 
-import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
-import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
+import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.util.SearchFilter;
 
+import java.util.List;
 
 public abstract class AbstractGdsStore implements GdsStore {
     @Override
-    public RangerDataset createDataset(RangerDataset dataset) throws Exception { return null; }
+    public RangerDataset createDataset(RangerDataset dataset) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerDataset updateDataset(RangerDataset dataset) throws Exception { return null; }
+    public RangerDataset updateDataset(RangerDataset dataset) throws Exception {
+        return null;
+    }
 
     @Override
-    public void deleteDataset(Long datasetId, boolean forceDelete) throws Exception { }
+    public void deleteDataset(Long datasetId, boolean forceDelete) throws Exception {
+    }
 
     @Override
-    public RangerDataset getDataset(Long datasetId) throws Exception { return null; }
+    public RangerDataset getDataset(Long datasetId) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerDataset getDatasetByName(String name) throws Exception { return null; }
+    public RangerDataset getDatasetByName(String name) throws Exception {
+        return null;
+    }
 
     @Override
-    public PList<String> getDatasetNames(SearchFilter filter) throws Exception { return null; }
+    public PList<String> getDatasetNames(SearchFilter filter) throws Exception {
+        return null;
+    }
 
     @Override
-    public PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception { return null; }
-
-
-    @Override
-    public RangerProject createProject(RangerProject dataset) throws Exception { return null; }
+    public PList<RangerDataset> searchDatasets(SearchFilter filter) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerProject updateProject(RangerProject dataset) throws Exception { return null; }
+    public RangerProject createProject(RangerProject dataset) throws Exception {
+        return null;
+    }
 
     @Override
-    public void deleteProject(Long datasetId, boolean forceDelete) throws Exception { }
+    public RangerProject updateProject(RangerProject dataset) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerProject getProject(Long projectId) throws Exception { return null; }
+    public void deleteProject(Long datasetId, boolean forceDelete) throws Exception {
+    }
 
     @Override
-    public RangerProject getProjectByName(String name) throws Exception { return null; }
+    public RangerProject getProject(Long projectId) throws Exception {
+        return null;
+    }
 
     @Override
-    public PList<String> getProjectNames(SearchFilter filter) throws Exception { return null; }
+    public RangerProject getProjectByName(String name) throws Exception {
+        return null;
+    }
 
     @Override
-    public PList<RangerProject> searchProjects(SearchFilter filter) throws Exception { return null; }
-
-
-    @Override
-    public RangerDataShare createDataShare(RangerDataShare dataShare) throws Exception { return null; }
+    public PList<String> getProjectNames(SearchFilter filter) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerDataShare updateDataShare(RangerDataShare dataShare) throws Exception { return null; }
+    public PList<RangerProject> searchProjects(SearchFilter filter) throws Exception {
+        return null;
+    }
 
     @Override
-    public void deleteDataShare(Long dataShareId, boolean forceDelete) throws Exception { }
+    public RangerDataShare createDataShare(RangerDataShare dataShare) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerDataShare getDataShare(Long dataShareId) throws Exception { return null; }
+    public RangerDataShare updateDataShare(RangerDataShare dataShare) throws Exception {
+        return null;
+    }
 
     @Override
-    public PList<RangerDataShare> searchDataShares(SearchFilter filter) throws Exception { return null; }
-
-
-    @Override
-    public RangerSharedResource addSharedResource(RangerSharedResource resource) throws Exception { return null; }
+    public void deleteDataShare(Long dataShareId, boolean forceDelete) throws Exception {
+    }
 
     @Override
-    public RangerSharedResource updateSharedResource(RangerSharedResource resource) throws Exception { return null; }
+    public RangerDataShare getDataShare(Long dataShareId) throws Exception {
+        return null;
+    }
 
     @Override
-    public void removeSharedResource(Long sharedResourceId) throws Exception { }
+    public PList<RangerDataShare> searchDataShares(SearchFilter filter) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception { return null; }
+    public List<RangerSharedResource> addSharedResources(List<RangerSharedResource> resources) throws Exception {
+        return null;
+    }
 
     @Override
-    public PList<RangerSharedResource> searchSharedResources(SearchFilter filter) throws Exception { return null; }
-
-
-    @Override
-    public RangerDataShareInDataset addDataShareInDataset(RangerDataShareInDataset dataShareInDataset) throws Exception { return null; }
+    public RangerSharedResource updateSharedResource(RangerSharedResource resource) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerDataShareInDataset updateDataShareInDataset(RangerDataShareInDataset dataShareInDataset) throws Exception { return null; }
+    public void removeSharedResources(List<Long> sharedResourceIds) throws Exception {
+    }
 
     @Override
-    public void removeDataShareInDataset(Long dataShareInDatasetId) throws Exception { }
+    public RangerSharedResource getSharedResource(Long sharedResourceId) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerDataShareInDataset getDataShareInDataset(Long dataShareInDatasetId) throws Exception { return null; }
+    public PList<RangerSharedResource> searchSharedResources(SearchFilter filter) throws Exception {
+        return null;
+    }
 
     @Override
-    public PList<RangerDataShareInDataset> searchDataShareInDatasets(SearchFilter filter) throws Exception { return null; }
-
-
-    @Override
-    public RangerDatasetInProject addDatasetInProject(RangerDatasetInProject datasetInProject) throws Exception { return null; }
+    public RangerDataShareInDataset addDataShareInDataset(RangerDataShareInDataset dataShareInDataset) throws Exception {
+        return null;
+    }
 
     @Override
-    public RangerDatasetInProject updateDatasetInProject(RangerDatasetInProject datasetInProject) throws Exception { return null; }
+    public RangerDataShareInDataset updateDataShareInDataset(RangerDataShareInDataset dataShareInDataset) throws Exception {
+        return null;
+    }
 
     @Override
-    public void removeDatasetInProject(Long datasetInProjectId) throws Exception { }
-
-    @Override public RangerDatasetInProject getDatasetInProject(Long datasetInProjectId) throws Exception { return null; }
+    public void removeDataShareInDataset(Long dataShareInDatasetId) throws Exception {
+    }
 
     @Override
-    public PList<RangerDatasetInProject> searchDatasetInProjects(SearchFilter filter) throws Exception { return null; }
+    public RangerDataShareInDataset getDataShareInDataset(Long dataShareInDatasetId) throws Exception {
+        return null;
+    }
+
+    @Override
+    public PList<RangerDataShareInDataset> searchDataShareInDatasets(SearchFilter filter) throws Exception {
+        return null;
+    }
+
+    @Override
+    public RangerDatasetInProject addDatasetInProject(RangerDatasetInProject datasetInProject) throws Exception {
+        return null;
+    }
+
+    @Override
+    public RangerDatasetInProject updateDatasetInProject(RangerDatasetInProject datasetInProject) throws Exception {
+        return null;
+    }
+
+    @Override
+    public void removeDatasetInProject(Long datasetInProjectId) throws Exception {
+    }
+
+    @Override
+    public RangerDatasetInProject getDatasetInProject(Long datasetInProjectId) throws Exception {
+        return null;
+    }
+
+    @Override
+    public PList<RangerDatasetInProject> searchDatasetInProjects(SearchFilter filter) throws Exception {
+        return null;
+    }
 }

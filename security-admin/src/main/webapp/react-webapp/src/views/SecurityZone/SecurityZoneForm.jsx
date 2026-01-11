@@ -30,6 +30,7 @@ import {
   isEmpty,
   pickBy,
   find,
+  filter,
   maxBy,
   sortBy,
   map,
@@ -38,18 +39,19 @@ import {
 import { Table } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
-import ModalResourceComp from "../Resources/ModalResourceComp";
+import ModalResourceComp from "Views/Resources/ModalResourceComp";
 import { RegexValidation } from "Utils/XAEnums";
 import { toast } from "react-toastify";
-import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
+import { commonBreadcrumb, serverError } from "Utils/XAUtils";
 import {
   BlockUi,
   Loader,
   scrollToError,
-  selectCustomStyles
-} from "../../components/CommonComponents";
+  selectInputCustomStyles,
+  selectInputCustomErrorStyles
+} from "Components/CommonComponents";
 import usePrompt from "Hooks/usePrompt";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 
 const noneOptions = {
   label: "None",
@@ -168,11 +170,12 @@ const SecurityZoneForm = () => {
   };
 
   const fetchResourceServices = async () => {
-    const serviceDefnsResp = await fetchApi({
-      url: "plugins/services"
+    const servicesResp = await fetchApi({
+      url: "public/v2/api/service-headers"
     });
 
-    const filterServices = serviceDefnsResp.data.services.filter(
+    const filterServices = filter(
+      servicesResp?.data,
       (obj) => obj.type !== "tag" && obj.type !== "kms"
     );
 
@@ -573,33 +576,33 @@ const SecurityZoneForm = () => {
 
     try {
       const roleResp = await fetchApi({
-        url: "roles/roles",
+        url: "roles/lookup/roles/names",
         params: params
       });
-      op = roleResp.data.roles;
+      op = roleResp?.data?.vXStrings;
     } catch (error) {
       console.error(`Error occurred while fetching Roles! ${error}`);
       serverError(error);
     }
     return op.map((obj) => ({
-      label: obj.name,
-      value: obj.name
+      label: obj.value,
+      value: obj.value
     }));
   };
 
   const fetchTagServices = async (inputValue) => {
-    let params = {};
-    if (inputValue) {
-      params["serviceNamePartial"] = inputValue || "";
-      params["serviceType"] = "tag" || "";
-    }
+    const params = {
+      ...(inputValue && { serviceNamePrefix: inputValue }),
+      serviceType: "tag"
+    };
+
     const serviceResp = await fetchApi({
-      url: "plugins/services",
+      url: "public/v2/api/service-headers",
       params: params
     });
-    const filterServices = serviceResp.data.services.filter(
-      (obj) => obj.type == "tag"
-    );
+
+    const filterServices = filter(serviceResp?.data || [], ["type", "tag"]);
+
     return filterServices.map(({ name }) => ({
       label: name,
       value: name
@@ -847,8 +850,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -870,7 +873,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select User"
+                              placeholder="Select Users"
                             />
                           </Col>
                         </Row>
@@ -888,17 +891,17 @@ const SecurityZoneForm = () => {
                           </Col>
                           <Col xs={4}>
                             <AsyncSelect
+                              {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
                                   ? "isError"
                                   : "adminUserGroups"
                               }
-                              {...input}
                               cacheOptions
                               loadOptions={fetchGroupsData}
                               onFocus={() => {
@@ -914,7 +917,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Group"
+                              placeholder="Select Groups"
                             />
                           </Col>
                         </Row>
@@ -935,8 +938,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -958,7 +961,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Role"
+                              placeholder="Select Roles"
                             />
                             {meta.touched && meta.error && (
                               <span className="invalid-field">
@@ -984,8 +987,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -1007,7 +1010,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select User"
+                              placeholder="Select Users"
                             />
                           </Col>
                         </Row>
@@ -1028,8 +1031,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -1051,7 +1054,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Group"
+                              placeholder="Select Groups"
                             />
                           </Col>
                         </Row>
@@ -1072,8 +1075,8 @@ const SecurityZoneForm = () => {
                               {...input}
                               styles={
                                 meta.error && meta.touched
-                                  ? selectCustomStyles
-                                  : ""
+                                  ? selectInputCustomErrorStyles
+                                  : selectInputCustomStyles
                               }
                               id={
                                 meta.error && meta.touched
@@ -1095,7 +1098,7 @@ const SecurityZoneForm = () => {
                                 IndicatorSeparator: () => null
                               }}
                               isClearable={true}
-                              placeholder="Select Role"
+                              placeholder="Select Roles"
                             />
                             {meta.error && meta.touched && (
                               <span className="invalid-field">
@@ -1114,7 +1117,7 @@ const SecurityZoneForm = () => {
                         <Row className="form-group">
                           <Col xs={3}>
                             <label className="form-label float-end">
-                              Select Tag Services
+                              Tag Services
                             </label>
                           </Col>
                           <Col xs={6}>
@@ -1136,6 +1139,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Tag Services"
+                              styles={selectInputCustomStyles}
                             />
                           </Col>
                         </Row>
@@ -1148,7 +1152,7 @@ const SecurityZoneForm = () => {
                         <Row className="form-group">
                           <Col xs={3}>
                             <label className="form-label float-end">
-                              Select Resource Services
+                              Resource Services
                             </label>
                           </Col>
                           <Col xs={6}>
@@ -1171,7 +1175,8 @@ const SecurityZoneForm = () => {
                               options={resourceServicesOpt}
                               isClearable={false}
                               isSearchable={true}
-                              placeholder="Select Service Name"
+                              placeholder="Select Resource Services"
+                              styles={selectInputCustomStyles}
                             />
                           </Col>
                         </Row>

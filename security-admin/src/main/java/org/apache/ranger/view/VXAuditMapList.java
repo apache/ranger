@@ -17,62 +17,64 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXAuditMap
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAuditMapList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXAuditMap> vXAuditMaps = new ArrayList<VXAuditMap>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXAuditMap> vXAuditMaps = new ArrayList<>();
 
     public VXAuditMapList() {
-	super();
+        super();
     }
 
     public VXAuditMapList(List<VXAuditMap> objList) {
-	super(objList);
-	this.vXAuditMaps = objList;
+        super(objList);
+        this.vXAuditMaps = objList;
     }
 
     /**
      * @return the vXAuditMaps
      */
+    @JsonProperty("vXAuditMaps")
     public List<VXAuditMap> getVXAuditMaps() {
-	return vXAuditMaps;
+        return vXAuditMaps;
     }
 
     /**
      * @param vXAuditMaps
      *            the vXAuditMaps to set
      */
+    @JsonProperty("vXAuditMaps")
     public void setVXAuditMaps(List<VXAuditMap> vXAuditMaps) {
-	this.vXAuditMaps = vXAuditMaps;
+        this.vXAuditMaps = vXAuditMaps;
     }
 
     @Override
     public int getListSize() {
-	if (vXAuditMaps != null) {
-	    return vXAuditMaps.size();
-	}
-	return 0;
+        if (vXAuditMaps != null) {
+            return vXAuditMaps.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXAuditMap> getList() {
-	return vXAuditMaps;
+        return vXAuditMaps;
     }
-
 }

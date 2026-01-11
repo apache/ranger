@@ -32,8 +32,7 @@ import {
 import { Loader } from "Components/CommonComponents";
 import TopNavBar from "../SideBar/TopNavBar";
 import { cloneDeep, isEmpty, map, sortBy } from "lodash";
-import { RangerPolicyType } from "../../utils/XAEnums";
-import { getServiceDef } from "../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -102,7 +101,7 @@ export const PolicyListingTabView = () => {
         url: `plugins/services/${params.serviceId}`
       });
       getAllServicesData = await fetchApi({
-        url: `plugins/services?serviceType=${getServiceData?.data?.type}`
+        url: `public/v2/api/service-headers?serviceType=${getServiceData?.data?.type}`
       });
       getServiceDefData = serviceDefs?.allServiceDefs?.find((serviceDef) => {
         return serviceDef.name == getServiceData?.data?.type;
@@ -131,7 +130,7 @@ export const PolicyListingTabView = () => {
 
     dispatch({
       type: "SERVICES_DATA",
-      allServicesData: getAllServicesData?.data?.services,
+      allServicesData: getAllServicesData?.data || [],
       serviceData: getServiceData?.data,
       serviceDefData: getServiceDefData
     });
@@ -153,8 +152,8 @@ export const PolicyListingTabView = () => {
     let filterService = [];
 
     filterService = sortBy(
-      map(services, function ({ displayName }) {
-        return { label: displayName, value: displayName };
+      map(services, function ({ id, displayName }) {
+        return { label: displayName, value: id };
       }),
       "label"
     );
@@ -163,15 +162,8 @@ export const PolicyListingTabView = () => {
   };
 
   const handleServiceChange = async (e) => {
-    if (e !== "") {
-      let selectedServiceData = allServicesData?.find((service) => {
-        if (service.displayName == e?.label) {
-          return service;
-        }
-      });
-      navigate(
-        `/service/${selectedServiceData?.id}/policies/${params.policyType}`
-      );
+    if (e && e !== undefined) {
+      navigate(`/service/${e.value}/policies/${params.policyType}`);
       localStorage.removeItem("zoneDetails");
     }
   };
@@ -229,7 +221,7 @@ export const PolicyListingTabView = () => {
         serviceData={serviceData}
         handleServiceChange={handleServiceChange}
         getServices={getServices}
-        allServicesData={sortBy(allServicesData, "name")}
+        allServicesData={allServicesData}
         policyLoader={loader}
         currentServiceZone={getServiceZone()}
         handleZoneChange={handleZoneChange}

@@ -17,57 +17,58 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXTrxLogV2List extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     List<VXTrxLogV2> vXTrxLogs = new ArrayList<>();
 
     public VXTrxLogV2List() {
-	super();
+        super();
     }
 
     public VXTrxLogV2List(List<VXTrxLogV2> objList) {
-	super(objList);
-	this.vXTrxLogs = objList;
+        super(objList);
+        this.vXTrxLogs = objList;
     }
 
     /**
      * @return the vXTrxLogs
      */
+    @JsonProperty("vXTrxLogs")
     public List<VXTrxLogV2> getVXTrxLogs() {
-	return vXTrxLogs;
+        return vXTrxLogs;
     }
 
     /**
-     * @param vXTrxLogs
-     *            the vXTrxLogs to set
+     * @param vXTrxLogs the vXTrxLogs to set
      */
+    @JsonProperty("vXTrxLogs")
     public void setVXTrxLogs(List<VXTrxLogV2> vXTrxLogs) {
-	this.vXTrxLogs = vXTrxLogs;
+        this.vXTrxLogs = vXTrxLogs;
     }
 
     @Override
     public int getListSize() {
-	if (vXTrxLogs != null) {
-	    return vXTrxLogs.size();
-	}
-	return 0;
+        if (vXTrxLogs != null) {
+            return vXTrxLogs.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXTrxLogV2> getList() {
-	return vXTrxLogs;
+        return vXTrxLogs;
     }
-
 }

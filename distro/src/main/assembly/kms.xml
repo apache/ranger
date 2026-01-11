@@ -42,7 +42,6 @@
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
-                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
                     <include>com.codahale.metrics:metrics-core</include>
@@ -62,7 +61,6 @@
                     <include>org.apache.directory.api:api-asn1-api</include>
                     <include>org.apache.directory.api:api-i18n</include>
                     <include>org.apache.directory.api:api-util</include>
-                    <include>org.apache.avro:avro</include>
                     <include>commons-beanutils:commons-beanutils</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
@@ -88,9 +86,8 @@
                     <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-                    <include>com.fasterxml.jackson.core:jackson-core</include>
-                    <include>com.fasterxml.jackson.core:jackson-annotations</include>
-                    <include>com.fasterxml.jackson.core:jackson-databind</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>org.apache.kerby:kerb-core:jar:${kerby.version}</include>
                     <include>org.apache.kerby:kerb-util:jar:${kerby.version}</include>
                     <include>org.apache.kerby:kerb-crypto:jar:${kerby.version}</include>
@@ -107,7 +104,7 @@
                     <include>com.squareup.retrofit2:retrofit</include>
                     <include>com.squareup.retrofit2:adapter-rxjava</include>
                     <include>com.squareup.okhttp3:okhttp-urlconnection</include>
-                    <include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
+                    <include>com.fasterxml.jackson.datatype:jackson-datatype-joda:jar:${fasterxml.jackson.version}</include>
                     <include>joda-time:okhttp-urlconnection</include>
                     <include>joda-time:joda-time</include>
                     <include>com.nimbusds:oauth2-oidc-sdk</include>
@@ -117,8 +114,8 @@
                     <include>com.sun.mail:javax.mail</include>
                     <include>com.nimbusds:nimbus-jose-jwt</include>
                     <include>com.microsoft.azure:azure-keyvault-webkey</include>
-                    <include>org.bouncycastle:bcprov-jdk15on</include>
-                    <include>org.bouncycastle:bcpkix-jdk15on</include>
+                    <include>org.bouncycastle:bcprov-jdk18on</include>
+                    <include>org.bouncycastle:bcpkix-jdk18on</include>
                     <include>com.microsoft.azure:azure-mgmt-resources</include>
                     <include>com.microsoft.azure:azure-client-authentication</include>
                     <include>com.microsoft.azure:azure-mgmt-graph-rbac</include>
@@ -210,13 +207,15 @@
                     <include>org.apache.tomcat.embed:tomcat-embed*</include>
                     <include>org.apache.tomcat:tomcat-annotations-api*</include>
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
+                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+                    <include>org.apache.ranger:ranger-authz-api</include>
                     <include>org.apache.ranger:ranger-plugins-common</include>
+                    <include>org.apache.ranger:ugsync-util</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -224,20 +223,17 @@
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-lang3</include>
                     <include>org.apache.commons:commons-configuration2</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>commons-collections:commons-collections</include>
                     <include>commons-logging:commons-logging</include>
                     <include>org.slf4j:slf4j-api</include>
                     <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
                     <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
                     <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-                    <include>com.google.guava:guava</include>
                     <include>com.google.code.gson:gson</include>
                     <include>com.sun.jersey:jersey-bundle</include>
-                    <include>org.codehaus.jackson:jackson-core-asl</include>
-                    <include>org.codehaus.jackson:jackson-jaxrs</include>
-                    <include>org.codehaus.jackson:jackson-mapper-asl</include>
-                    <include>org.codehaus.jackson:jackson-xc</include>
+                    <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
+                    <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
@@ -284,9 +280,12 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
-                <include>org.apache.ranger:ranger-plugins-audit</include>
+                <include>org.apache.ranger:ranger-audit-core</include>
+                <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
+                <include>org.apache.ranger:ranger-audit-dest-solr</include>
                 <include>org.apache.ranger:ranger-plugins-cred</include>
                 <include>org.apache.ranger:ranger-plugins-common</include>
+                <include>org.apache.ranger:ugsync-util</include>
                 <include>org.apache.ranger:ranger-kms-plugin</include>
             </includes>
             <binaries>
@@ -306,7 +305,6 @@
                             <include>org.eclipse.persistence:javax.persistence</include>
                             <include>commons-collections:commons-collections</include>
                             <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                            <include>com.google.guava:guava:jar:${google.guava.version}</include>
                             <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
                             <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
                             <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
@@ -340,21 +338,19 @@
                         <directoryMode>755</directoryMode>
                         <fileMode>644</fileMode>
                         <includes>
+                            <include>com.fasterxml.woodstox:woodstox-core</include>
                             <include>commons-cli:commons-cli</include>
                             <include>commons-collections:commons-collections</include>
-                            <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                             <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                            <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                             <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                            <include>com.google.guava:guava:jar:${google.guava.version}</include>
-                            <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-                            <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
+                            <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+                            <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+                            <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
                             <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                            <include>org.apache.ranger:ranger-plugins-cred</include>
-                            <include>org.apache.ranger:credentialbuilder</include>
-                            <include>org.codehaus.woodstox:stax2-api</include>
-                            <include>com.fasterxml.woodstox:woodstox-core</include>
+                            <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                             <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+                            <include>org.codehaus.woodstox:stax2-api</include>
+                            <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -391,13 +387,10 @@
                     <include>commons-collections:commons-collections</include>
                     <include>org.apache.commons:commons-configuration2</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging</include>
-                    <include>com.google.guava:guava</include>
                     <include>org.slf4j:slf4j-api</include>
                     <include>org.apache.hadoop:hadoop-common</include>
                     <include>org.apache.hadoop:hadoop-auth</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>

@@ -17,14 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.service;
-
-/**
- *
- */
-
-import java.util.ArrayList;
-import java.util.List;
+package org.apache.ranger.service;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.SearchCriteria;
@@ -33,58 +26,63 @@ import org.apache.ranger.entity.XXAuditMap;
 import org.apache.ranger.view.VXAuditMap;
 import org.apache.ranger.view.VXAuditMapList;
 
-public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAuditMap>
-		extends AbstractAuditedResourceService<T, V> {
-	public static final String NAME = "XAuditMap";
+import java.util.ArrayList;
+import java.util.List;
 
-	public XAuditMapServiceBase() {
-		super(AppConstants.CLASS_TYPE_XA_AUDIT_MAP, AppConstants.CLASS_TYPE_XA_RESOURCE);
-		//	trxLogAttrs.put("groupId", new VTrxLogAttr("groupId", "Group Audit", false));
-		//	trxLogAttrs.put("userId", new VTrxLogAttr("userId", "User Audit", false));
-		trxLogAttrs.put("auditType", new VTrxLogAttr("auditType", "Audit Type", true));
-	}
+public abstract class XAuditMapServiceBase<T extends XXAuditMap, V extends VXAuditMap> extends AbstractAuditedResourceService<T, V> {
+    public static final String NAME = "XAuditMap";
 
-	@Override
-	protected T mapViewToEntityBean(V vObj, T mObj, int OPERATION_CONTEXT) {
-		mObj.setResourceId( vObj.getResourceId());
-		mObj.setGroupId( vObj.getGroupId());
-		mObj.setUserId( vObj.getUserId());
-		mObj.setAuditType( vObj.getAuditType());
-		return mObj;
-	}
+    public XAuditMapServiceBase() {
+        super(AppConstants.CLASS_TYPE_XA_AUDIT_MAP, AppConstants.CLASS_TYPE_XA_RESOURCE);
 
-	@Override
-	protected V mapEntityToViewBean(V vObj, T mObj) {
-		vObj.setResourceId( mObj.getResourceId());
-		vObj.setGroupId( mObj.getGroupId());
-		vObj.setUserId( mObj.getUserId());
-		vObj.setAuditType( mObj.getAuditType());
-		return vObj;
-	}
+        //trxLogAttrs.put("groupId", new VTrxLogAttr("groupId", "Group Audit", false));
+        //trxLogAttrs.put("userId", new VTrxLogAttr("userId", "User Audit", false));
+        trxLogAttrs.put("auditType", new VTrxLogAttr("auditType", "Audit Type", true));
+    }
 
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
-		VXAuditMapList returnList = new VXAuditMapList();
-		List<VXAuditMap> xAuditMapList = new ArrayList<VXAuditMap>();
+    /**
+     * @param searchCriteria
+     * @return
+     */
+    public VXAuditMapList searchXAuditMaps(SearchCriteria searchCriteria) {
+        VXAuditMapList   returnList    = new VXAuditMapList();
+        List<VXAuditMap> xAuditMapList = new ArrayList<>();
+        List<T>          resultList    = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
-		List<T> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+        // Iterate over the result list and create the return list
+        for (T gjXAuditMap : resultList) {
+            VXAuditMap vXAuditMap = populateViewBean(gjXAuditMap);
 
-		// Iterate over the result list and create the return list
-		for (T gjXAuditMap : resultList) {
-			VXAuditMap vXAuditMap = populateViewBean(gjXAuditMap);
-			xAuditMapList.add(vXAuditMap);
-		}
+            xAuditMapList.add(vXAuditMap);
+        }
 
-		returnList.setVXAuditMaps(xAuditMapList);
-		return returnList;
-	}
+        returnList.setVXAuditMaps(xAuditMapList);
 
-	@Override
-	public Long getParentObjectId(V obj, V oldObj) {
-		return obj != null ? obj.getResourceId() : null;
-	}
+        return returnList;
+    }
+
+    @Override
+    public Long getParentObjectId(V obj, V oldObj) {
+        return obj != null ? obj.getResourceId() : null;
+    }
+
+    @Override
+    protected T mapViewToEntityBean(V vObj, T mObj, int operationContext) {
+        mObj.setResourceId(vObj.getResourceId());
+        mObj.setGroupId(vObj.getGroupId());
+        mObj.setUserId(vObj.getUserId());
+        mObj.setAuditType(vObj.getAuditType());
+
+        return mObj;
+    }
+
+    @Override
+    protected V mapEntityToViewBean(V vObj, T mObj) {
+        vObj.setResourceId(mObj.getResourceId());
+        vObj.setGroupId(mObj.getGroupId());
+        vObj.setUserId(mObj.getUserId());
+        vObj.setAuditType(mObj.getAuditType());
+
+        return vObj;
+    }
 }

@@ -17,12 +17,12 @@
 
 package org.apache.ranger.services.schema.registry;
 
-import org.apache.ranger.services.schema.registry.client.AutocompletionAgent;
-import org.apache.ranger.services.schema.registry.client.SchemaRegistryResourceMgr;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.services.schema.registry.client.AutocompletionAgent;
+import org.apache.ranger.services.schema.registry.client.SchemaRegistryResourceMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,9 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class RangerServiceSchemaRegistry extends RangerBaseService {
-
     private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSchemaRegistry.class);
-
 
     @Override
     public void init(RangerServiceDef serviceDef, RangerService service) {
@@ -42,47 +40,38 @@ public class RangerServiceSchemaRegistry extends RangerBaseService {
 
     @Override
     public HashMap<String, Object> validateConfig() {
-        HashMap<String, Object> ret = new HashMap<String, Object>();
+        HashMap<String, Object> ret = new HashMap<>();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceSchemaRegistry.validateConfig(" + serviceName + ")");
-        }
+        LOG.debug("==> RangerServiceSchemaRegistry.validateConfig({})", serviceName);
 
         if (configs != null) {
             try {
                 AutocompletionAgent autocompletionAgent = new AutocompletionAgent(serviceName, configs);
                 ret = autocompletionAgent.connectionTest();
             } catch (Exception e) {
-                LOG.error("<== RangerServiceSchemaRegistry.validateConfig Error:" + e);
+                LOG.error("<== RangerServiceSchemaRegistry.validateConfig Error:{}", String.valueOf(e));
                 throw e;
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceSchemaRegistry.validateConfig(" + serviceName + "): ret=" + ret);
-        }
+        LOG.debug("<== RangerServiceSchemaRegistry.validateConfig({}): ret={}", serviceName, ret);
 
         return ret;
     }
 
     @Override
     public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerServiceSchemaRegistry.lookupResource(" + serviceName + ")");
-        }
+        LOG.debug("==> RangerServiceSchemaRegistry.lookupResource({})", serviceName);
 
         if (configs != null) {
             AutocompletionAgent autocompletionAgent = new AutocompletionAgent(serviceName, configs);
             ret = SchemaRegistryResourceMgr.getSchemaRegistryResources(serviceName, configs, context, autocompletionAgent);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerServiceSchemaRegistry.lookupResource(" + serviceName + "): ret=" + ret);
-        }
+        LOG.debug("<== RangerServiceSchemaRegistry.lookupResource({}): ret={}", serviceName, ret);
 
         return ret;
     }
-
 }

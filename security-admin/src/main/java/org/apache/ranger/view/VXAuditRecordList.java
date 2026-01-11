@@ -17,47 +17,47 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAuditRecordList extends VList {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = 1L;
-	List<VXAuditRecord> vXAuditRecords = new ArrayList<VXAuditRecord>();
+    List<VXAuditRecord> vXAuditRecords = new ArrayList<>();
 
-	public List<VXAuditRecord> getvAudits() {
-		return vXAuditRecords;
-	}
+    public VXAuditRecordList() {
+        super();
+    }
 
-	public void setvAudits(List<VXAuditRecord> vXAuditRecords) {
-		this.vXAuditRecords = vXAuditRecords;
-	}
+    @JsonProperty("vXAuditRecords")
+    public List<VXAuditRecord> getvAudits() {
+        return vXAuditRecords;
+    }
 
-	public VXAuditRecordList() {
-		super();
-	}
+    @JsonProperty("vXAuditRecords")
+    public void setvAudits(List<VXAuditRecord> vXAuditRecords) {
+        this.vXAuditRecords = vXAuditRecords;
+    }
 
-	@Override
-	public int getListSize() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
+    @Override
+    public int getListSize() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
 
-	@Override
-	public List<?> getList() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public List<?> getList() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

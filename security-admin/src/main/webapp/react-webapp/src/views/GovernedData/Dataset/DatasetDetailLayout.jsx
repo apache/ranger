@@ -25,39 +25,33 @@ import React, {
   useRef
 } from "react";
 import withRouter from "Hooks/withRouter";
-import { fetchApi } from "../../../utils/fetchAPI";
+import { fetchApi } from "Utils/fetchAPI";
 import dateFormat from "dateformat";
-import XATableLayout from "../../../components/XATableLayout";
-import { ClassTypes } from "../../../utils/XAEnums";
+import XATableLayout from "Components/XATableLayout";
+import { ClassTypes } from "Utils/XAEnums";
 import {
   Button,
   Tab,
   Tabs,
   Modal,
   Accordion,
-  Card,
   DropdownButton,
   Dropdown
 } from "react-bootstrap";
-import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import AccessGrantForm from "./AccessGrantForm";
 import { toast } from "react-toastify";
 import { Form } from "react-final-form";
-import { CustomTooltip, Loader } from "../../../components/CommonComponents";
+import { CustomTooltip, Loader } from "Components/CommonComponents";
 import moment from "moment-timezone";
-import {
-  useParams,
-  useNavigate,
-  useLocation,
-  useSearchParams
-} from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   getTableSortBy,
   getTableSortType,
   serverError,
   isSystemAdmin,
   parseSearchFilter
-} from "../../../utils/XAUtils";
+} from "Utils/XAUtils";
 import Select from "react-select";
 import userColourIcon from "../../../images/user-colour.svg";
 import groupColourIcon from "../../../images/group-colour.svg";
@@ -67,10 +61,10 @@ import arrayMutators from "final-form-arrays";
 import { groupBy, isEmpty, isArray } from "lodash";
 import PrinciplePermissionComp from "./PrinciplePermissionComp";
 import ReactPaginate from "react-paginate";
-import CustomBreadcrumb from "../../CustomBreadcrumb";
-import ErrorPage from "../../../views/ErrorPage";
+import CustomBreadcrumb from "Views/CustomBreadcrumb";
+import ErrorPage from "Views/ErrorPage";
 import DatashareInDatasetListComp from "./DatashareInDatasetListComp";
-import OperationAdminModal from "../../AuditEvent/OperationAdminModal";
+import OperationAdminModal from "Views/AuditEvent/Admin/OperationAdminModal";
 
 const initialState = {
   loader: false,
@@ -814,10 +808,6 @@ const DatasetDetailLayout = () => {
     indicatorsContainer: (provided) => ({
       ...provided
     })
-  };
-
-  const dropDownStyle = {
-    control: (provided) => ({ ...provided, display: none })
   };
 
   const onChangeSharedWithPrincipleName = (event) => {

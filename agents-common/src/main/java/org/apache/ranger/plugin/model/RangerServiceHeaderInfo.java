@@ -17,14 +17,14 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import static org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class RangerServiceHeaderInfo extends RangerBaseModelObject implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -57,6 +57,16 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
         setDisplayName(displayName);
         setType(type);
         setIsTagService(EMBEDDED_SERVICEDEF_TAG_NAME.equals(type));
+    }
+
+    public RangerServiceHeaderInfo(Long id, String name, String displayName, String type, Boolean isEnabled) {
+        super();
+        setId(id);
+        setName(name);
+        setDisplayName(displayName);
+        setType(type);
+        setIsTagService(EMBEDDED_SERVICEDEF_TAG_NAME.equals(type));
+        setIsEnabled(isEnabled);
     }
 
     public String getName() {

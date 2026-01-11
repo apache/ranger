@@ -17,54 +17,53 @@
 
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.common.view.VList;
+import org.apache.ranger.plugin.model.RangerPolicy;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RangerPolicyList extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+    List<RangerPolicy> policies = new ArrayList<>();
 
-	public RangerPolicyList() {
-		super();
-	}
+    public RangerPolicyList() {
+        super();
+    }
 
-	public RangerPolicyList(List<RangerPolicy> objList) {
-		super(objList);
-		this.policies = objList;
-	}
+    public RangerPolicyList(List<RangerPolicy> objList) {
+        super(objList);
+        this.policies = objList;
+    }
 
-	public List<RangerPolicy> getPolicies() {
-		return policies;
-	}
+    public List<RangerPolicy> getPolicies() {
+        return policies;
+    }
 
-	public void setPolicies(List<RangerPolicy> policies) {
-		this.policies = policies;
-	}
+    public void setPolicies(List<RangerPolicy> policies) {
+        this.policies = policies;
+    }
 
-	public <T> void setGenericPolicies(List<T> policies) {
-		this.policies = (List<RangerPolicy>) policies;
-	}
+    public <T> void setGenericPolicies(List<T> policies) {
+        this.policies = (List<RangerPolicy>) policies;
+    }
 
-	@Override
-	public int getListSize() {
-		if (policies != null) {
-			return policies.size();
-		}
-		return 0;
-	}
+    @Override
+    public int getListSize() {
+        if (policies != null) {
+            return policies.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public List<?> getList() {
-		return policies;
-	}
-
+    @Override
+    public List<?> getList() {
+        return policies;
+    }
 }

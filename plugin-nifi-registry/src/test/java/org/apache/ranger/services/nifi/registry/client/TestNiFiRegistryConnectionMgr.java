@@ -18,65 +18,66 @@
  */
 package org.apache.ranger.services.nifi.registry.client;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestNiFiRegistryConnectionMgr {
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-    @Test (expected = IllegalArgumentException.class)
+public class TestNiFiRegistryConnectionMgr {
+    @Test
     public void testValidURLWithWrongEndPoint() throws Exception {
         final String nifiRegistryUrl = "http://localhost:18080/nifi-registry";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiRegistryConfigs.NIFI_REG_URL, nifiRegistryUrl);
         configs.put(NiFiRegistryConfigs.NIFI_REG_AUTHENTICATION_TYPE, NiFiRegistryAuthType.NONE.name());
 
-        NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs));
     }
 
-    @Test (expected = IllegalArgumentException.class)
+    @Test
     public void testInvalidURL() throws Exception {
         final String nifiRegistryUrl = "not a url";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiRegistryConfigs.NIFI_REG_URL, nifiRegistryUrl);
         configs.put(NiFiRegistryConfigs.NIFI_REG_AUTHENTICATION_TYPE, NiFiRegistryAuthType.NONE.name());
 
-        NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs));
     }
 
     @Test
     public void testAuthTypeNone() throws Exception {
         final String nifiRegistryUrl = "http://localhost:18080/nifi-registry-api/policies/resources";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiRegistryConfigs.NIFI_REG_URL, nifiRegistryUrl);
         configs.put(NiFiRegistryConfigs.NIFI_REG_AUTHENTICATION_TYPE, NiFiRegistryAuthType.NONE.name());
 
         NiFiRegistryClient client = NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi", configs);
-        Assert.assertNotNull(client);
-        Assert.assertEquals(nifiRegistryUrl, client.getUrl());
-        Assert.assertNull(client.getSslContext());
+        Assertions.assertNotNull(client);
+        Assertions.assertEquals(nifiRegistryUrl, client.getUrl());
+        Assertions.assertNull(client.getSslContext());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAuthTypeNoneMissingURL() throws Exception {
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiRegistryConfigs.NIFI_REG_URL, null);
         configs.put(NiFiRegistryConfigs.NIFI_REG_AUTHENTICATION_TYPE, NiFiRegistryAuthType.NONE.name());
 
-        NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs));
     }
 
-    @Test(expected = FileNotFoundException.class)
+    @Test
     public void testAuthTypeSSL() throws Exception {
         final String nifiRegistryUrl = "https://localhost:18080/nifi-registry-api/policies/resources";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiRegistryConfigs.NIFI_REG_URL, nifiRegistryUrl);
         configs.put(NiFiRegistryConfigs.NIFI_REG_AUTHENTICATION_TYPE, NiFiRegistryAuthType.SSL.name());
 
@@ -88,14 +89,14 @@ public class TestNiFiRegistryConnectionMgr {
         configs.put(NiFiRegistryConfigs.NIFI_REG_SSL_TRUSTSTORE_PASSWORD, "password");
         configs.put(NiFiRegistryConfigs.NIFI_REG_SSL_TRUSTSTORE_TYPE, "JKS");
 
-        NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs);
+        assertThrows(FileNotFoundException.class, () -> NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAuthTypeSSLWithNonHttpsUrl() throws Exception {
         final String nifiRegistryUrl = "http://localhost:18080/nifi-registry-api/policies/resources";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiRegistryConfigs.NIFI_REG_URL, nifiRegistryUrl);
         configs.put(NiFiRegistryConfigs.NIFI_REG_AUTHENTICATION_TYPE, NiFiRegistryAuthType.SSL.name());
 
@@ -107,18 +108,17 @@ public class TestNiFiRegistryConnectionMgr {
         configs.put(NiFiRegistryConfigs.NIFI_REG_SSL_TRUSTSTORE_PASSWORD, "password");
         configs.put(NiFiRegistryConfigs.NIFI_REG_SSL_TRUSTSTORE_TYPE, "JKS");
 
-        NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAuthTypeSSLMissingConfigs() throws Exception {
         final String nifiRegistryUrl = "http://localhost:18080/nifi-registry";
 
-        Map<String,String> configs = new HashMap<>();
+        Map<String, String> configs = new HashMap<>();
         configs.put(NiFiRegistryConfigs.NIFI_REG_URL, nifiRegistryUrl);
         configs.put(NiFiRegistryConfigs.NIFI_REG_AUTHENTICATION_TYPE, NiFiRegistryAuthType.SSL.name());
 
-        NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs);
+        assertThrows(IllegalArgumentException.class, () -> NiFiRegistryConnectionMgr.getNiFiRegistryClient("nifi-registry", configs));
     }
-
 }

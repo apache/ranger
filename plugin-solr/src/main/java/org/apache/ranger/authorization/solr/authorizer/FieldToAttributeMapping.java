@@ -19,8 +19,8 @@
 
 package org.apache.ranger.authorization.solr.authorizer;
 
-import com.google.common.base.Splitter;
-import com.google.common.collect.Sets;
+import org.apache.hadoop.thirdparty.com.google.common.base.Splitter;
+import org.apache.hadoop.thirdparty.com.google.common.collect.Sets;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -33,47 +33,35 @@ import java.util.regex.Pattern;
  * to the fq
  */
 public class FieldToAttributeMapping {
-
     private static final Splitter ATTR_NAME_SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-    private final String fieldName;
+    private final String             allUsersValue;
+    private final String             extraOpts;
+    private final String             fieldName;
     private final Collection<String> attributes;
-    private final FilterType filterType;
-    private final boolean acceptEmpty;
-    private final String allUsersValue;
-    private final Pattern attrValueRegex;
-    private final String extraOpts;
-
-    /**
-     * The four filter types currently supported, AND, OR, LessThanOrEqualTo (LTE), GreaterThanOrEqualTo (GTE)
-     * Expected to be expanded in the future
-     */
-    enum FilterType {
-        AND,
-        OR,
-        LTE,
-        GTE
-    }
+    private final FilterType         filterType;
+    private final boolean            acceptEmpty;
+    private final Pattern            attrValueRegex;
 
     /**
      * @param fieldName The field being mapped
-     * @param ldapAttributeNames comma delimited list of attributes which will be used to acquire values for this field
+     * @param ldapAttributeNames comma-delimited list of attributes which will be used to acquire values for this field
      * @param filterType filter type can be any one of {@link FilterType}
      * @param acceptEmpty true if an empty value in the Solr field should be counted as a match (i.e. doc returned)
      * @param allUsersValue the value which the field may contain that would indicate that all users should see this doc
      * @param valueFilterRegex String representation of a {@link Pattern} that will be applied to attributes retrieved
-     *                         from the attribute source. Note: If match groups are used, the last non-null match-group
-     *                         will be applied as the value for this filter
+     * from the attribute source. Note: If match groups are used, the last non-null match-group
+     * will be applied as the value for this filter
      * @param extraOpts Any extra options that should be passed to the filter as constructed before appending to the fq
      */
     public FieldToAttributeMapping(String fieldName, String ldapAttributeNames, String filterType, boolean acceptEmpty, String allUsersValue, String valueFilterRegex, String extraOpts) {
-        this.fieldName = fieldName;
-        this.attributes = Collections.unmodifiableSet(Sets.newHashSet(ATTR_NAME_SPLITTER.split(ldapAttributeNames)));
-        this.filterType = FilterType.valueOf(filterType);
-        this.acceptEmpty = acceptEmpty;
-        this.allUsersValue = allUsersValue;
+        this.fieldName      = fieldName;
+        this.attributes     = Collections.unmodifiableSet(Sets.newHashSet(ATTR_NAME_SPLITTER.split(ldapAttributeNames)));
+        this.filterType     = FilterType.valueOf(filterType);
+        this.acceptEmpty    = acceptEmpty;
+        this.allUsersValue  = allUsersValue;
         this.attrValueRegex = Pattern.compile(valueFilterRegex);
-        this.extraOpts = extraOpts;
+        this.extraOpts      = extraOpts;
     }
 
     public String getFieldName() {
@@ -101,6 +89,17 @@ public class FieldToAttributeMapping {
     }
 
     public Pattern getAttrValueRegex() {
-    	return attrValueRegex;
+        return attrValueRegex;
+    }
+
+    /**
+     * The four filter types currently supported, AND, OR, LessThanOrEqualTo (LTE), GreaterThanOrEqualTo (GTE)
+     * Expected to be expanded in the future
+     */
+    enum FilterType {
+        AND,
+        OR,
+        LTE,
+        GTE
     }
 }

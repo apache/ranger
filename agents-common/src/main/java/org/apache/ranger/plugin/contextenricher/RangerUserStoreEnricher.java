@@ -19,16 +19,17 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.service.RangerAuthContext;
-import org.apache.ranger.plugin.util.DownloaderTask;
 import org.apache.ranger.plugin.util.DownloadTrigger;
-import org.apache.ranger.plugin.util.RangerUserStore;
-import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.DownloaderTask;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerUserStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
@@ -41,19 +42,17 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
     public static final String USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION = "userStoreRefresherPollingInterval";
     public static final String USERSTORE_RETRIEVER_CLASSNAME_OPTION       = "userStoreRetrieverClassName";
 
+    private final BlockingQueue<DownloadTrigger> userStoreDownloadQueue = new LinkedBlockingQueue<>();
     private       RangerUserStoreRefresher       userStoreRefresher;
     private       RangerUserStoreRetriever       userStoreRetriever;
     private       RangerUserStore                rangerUserStore;
     private       boolean                        disableCacheIfServiceNotFound = true;
     private       boolean                        dedupStrings                  = true;
-    private final BlockingQueue<DownloadTrigger> userStoreDownloadQueue = new LinkedBlockingQueue<>();
     private       Timer                          userStoreDownloadTimer;
 
     @Override
     public void init() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerUserStoreEnricher.init()");
-        }
+        LOG.debug("==> RangerUserStoreEnricher.init()");
 
         super.init();
 
@@ -64,30 +63,29 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
         dedupStrings = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 
         if (StringUtils.isNotBlank(userStoreRetrieverClassName)) {
-
             try {
                 @SuppressWarnings("unchecked")
                 Class<RangerUserStoreRetriever> userStoreRetriverClass = (Class<RangerUserStoreRetriever>) Class.forName(userStoreRetrieverClassName);
 
                 userStoreRetriever = userStoreRetriverClass.newInstance();
-
             } catch (ClassNotFoundException exception) {
-                LOG.error("Class " + userStoreRetrieverClassName + " not found, exception=" + exception);
+                LOG.error("Class {} not found, exception={}", userStoreRetrieverClassName, exception);
             } catch (ClassCastException exception) {
-                LOG.error("Class " + userStoreRetrieverClassName + " is not a type of RangerUserStoreRetriever, exception=" + exception);
+                LOG.error("Class {} is not a type of RangerUserStoreRetriever, exception={}", userStoreRetrieverClassName, exception);
             } catch (IllegalAccessException exception) {
-                LOG.error("Class " + userStoreRetrieverClassName + " illegally accessed, exception=" + exception);
+                LOG.error("Class {} illegally accessed, exception={}", userStoreRetrieverClassName, exception);
             } catch (InstantiationException exception) {
-                LOG.error("Class " + userStoreRetrieverClassName + " could not be instantiated, exception=" + exception);
+                LOG.error("Class {} could not be instantiated, exception={}", userStoreRetrieverClassName, exception);
             }
 
             if (userStoreRetriever != null) {
                 disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
+
                 String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
                 String cacheFilename = String.format("%s_%s_userstore.json", appId, serviceName);
 
-                cacheFilename = cacheFilename.replace(File.separatorChar,  '_');
-                cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
+                cacheFilename = cacheFilename.replace(File.separatorChar, '_');
+                cacheFilename = cacheFilename.replace(File.pathSeparatorChar, '_');
 
                 String cacheFile = cacheDir == null ? null : (cacheDir + File.separator + cacheFilename);
 
@@ -99,7 +97,8 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
                 userStoreRetriever.init(enricherDef.getEnricherOptions());
 
                 userStoreRefresher = new RangerUserStoreRefresher(userStoreRetriever, this, null, -1L, userStoreDownloadQueue, cacheFile);
-                LOG.info("Created Thread(RangerUserStoreRefresher(" + getName() + ")");
+
+                LOG.info("Created Thread(RangerUserStoreRefresher({})", getName());
 
                 try {
                     userStoreRefresher.populateUserStoreInfo();
@@ -114,44 +113,26 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
                 try {
                     userStoreDownloadTimer.schedule(new DownloaderTask(userStoreDownloadQueue), pollingIntervalMs, pollingIntervalMs);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Scheduled userStoreDownloadRefresher to download userstore every " + pollingIntervalMs + " milliseconds");
-                    }
+
+                    LOG.debug("Scheduled userStoreDownloadRefresher to download userstore every {} milliseconds", pollingIntervalMs);
                 } catch (IllegalStateException exception) {
                     LOG.error("Error scheduling userStoreDownloadTimer:", exception);
-                    LOG.error("*** UserStore information will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
+                    LOG.error("*** UserStore information will NOT be downloaded every {} milliseconds ***", pollingIntervalMs);
                     userStoreDownloadTimer = null;
                 }
             }
         } else {
-            LOG.error("No value specified for " + USERSTORE_RETRIEVER_CLASSNAME_OPTION + " in the RangerUserStoreEnricher options");
+            LOG.error("No value specified for {} in the RangerUserStoreEnricher options", USERSTORE_RETRIEVER_CLASSNAME_OPTION);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerUserStoreEnricher.init()");
-        }
-    }
-
-    @Override
-    public void enrich(RangerAccessRequest request) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerUserStoreEnricher.enrich(" + request + ")");
-        }
-
-        enrich(request, null);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerUserStoreEnricher.enrich(" + request + ")");
-        }
+        LOG.debug("<== RangerUserStoreEnricher.init()");
     }
 
     @Override
     public void enrich(RangerAccessRequest request, Object dataStore) {
-
         // Unused by Solr plugin as document level authorization gets RangerUserStore from AuthContext
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerUserStoreEnricher.enrich(" + request + ") with dataStore:[" + dataStore + "]");
-        }
+        LOG.debug("==> RangerUserStoreEnricher.enrich({}) with dataStore:[{}]", request, dataStore);
+
         final RangerUserStore rangerUserStore;
 
         if (dataStore instanceof RangerUserStore) {
@@ -160,66 +141,18 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
             rangerUserStore = this.rangerUserStore;
 
             if (dataStore != null) {
-                LOG.warn("Incorrect type of dataStore :[" + dataStore.getClass().getName() + "], falling back to original enrich");
+                LOG.warn("Incorrect type of dataStore :[{}], falling back to original enrich", dataStore.getClass().getName());
             }
         }
 
         RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), rangerUserStore);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerUserStoreEnricher.enrich(" + request + ") with dataStore:[" + dataStore + "])");
-        }
-    }
-
-    public boolean isDisableCacheIfServiceNotFound() {
-        return disableCacheIfServiceNotFound;
-    }
-
-    public RangerUserStore getRangerUserStore() {return this.rangerUserStore;}
-
-    public void setRangerUserStore(final RangerUserStore rangerUserStore) {
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerUserStoreEnricher.setRangerUserStore(rangerUserStore=" + rangerUserStore + ")");
-        }
-
-        if (rangerUserStore == null) {
-            LOG.info("UserStore information is null for service " + serviceName);
-            this.rangerUserStore = null;
-        } else  {
-            RangerPerfTracer perf = null;
-
-            if(RangerPerfTracer.isPerfTraceEnabled(PERF_SET_USERSTORE_LOG)) {
-                perf = RangerPerfTracer.getPerfTracer(PERF_SET_USERSTORE_LOG, "RangerUserStoreEnricher.setRangerUserStore(newUserStoreVersion=" + rangerUserStore.getUserStoreVersion() + ")");
-            }
-
-            if (dedupStrings) {
-                rangerUserStore.dedupStrings();
-            }
-
-            this.rangerUserStore = rangerUserStore;
-
-            RangerPerfTracer.logAlways(perf);
-        }
-
-        setRangerUserStoreInPlugin();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerUserStoreEnricher.setRangerUserStore(rangerUserStore=" + rangerUserStore + ")");
-        }
-
-    }
-
-    public Long getUserStoreVersion() {
-        RangerUserStore localUserStore = this.rangerUserStore;
-
-        return localUserStore != null ? localUserStore.getUserStoreVersion() : null;
+        LOG.debug("<== RangerUserStoreEnricher.enrich({}) with dataStore:[{}]", request, dataStore);
     }
 
     @Override
     public boolean preCleanup() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerUserStoreEnricher.preCleanup()");
-        }
+        LOG.debug("==> RangerUserStoreEnricher.preCleanup()");
 
         super.preCleanup();
 
@@ -233,16 +166,64 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
             userStoreRefresher = null;
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerUserStoreEnricher.preCleanup() : result=" + true);
-        }
+        LOG.debug("<== RangerUserStoreEnricher.preCleanup() : result={}", true);
+
         return true;
     }
 
-    private void setRangerUserStoreInPlugin() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> setRangerUserStoreInPlugin()");
+    @Override
+    public void enrich(RangerAccessRequest request) {
+        LOG.debug("==> RangerUserStoreEnricher.enrich({})", request);
+
+        enrich(request, null);
+
+        LOG.debug("<== RangerUserStoreEnricher.enrich({})", request);
+    }
+
+    public boolean isDisableCacheIfServiceNotFound() {
+        return disableCacheIfServiceNotFound;
+    }
+
+    public RangerUserStore getRangerUserStore() {
+        return this.rangerUserStore;
+    }
+
+    public void setRangerUserStore(final RangerUserStore rangerUserStore) {
+        LOG.debug("==> RangerUserStoreEnricher.setRangerUserStore(rangerUserStore={})", rangerUserStore);
+
+        if (rangerUserStore == null) {
+            LOG.info("UserStore information is null for service {}", serviceName);
+
+            this.rangerUserStore = null;
+        } else {
+            RangerPerfTracer perf = null;
+
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_SET_USERSTORE_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_SET_USERSTORE_LOG, "RangerUserStoreEnricher.setRangerUserStore(newUserStoreVersion=" + rangerUserStore.getUserStoreVersion() + ")");
+            }
+
+            if (dedupStrings) {
+                rangerUserStore.dedupStrings();
+            }
+
+            this.rangerUserStore = rangerUserStore;
+
+            RangerPerfTracer.logAlways(perf);
         }
+
+        setRangerUserStoreInPlugin();
+
+        LOG.debug("<== RangerUserStoreEnricher.setRangerUserStore(rangerUserStore={})", rangerUserStore);
+    }
+
+    public Long getUserStoreVersion() {
+        RangerUserStore localUserStore = this.rangerUserStore;
+
+        return localUserStore != null ? localUserStore.getUserStoreVersion() : null;
+    }
+
+    private void setRangerUserStoreInPlugin() {
+        LOG.debug("==> setRangerUserStoreInPlugin()");
 
         RangerAuthContext authContext = getAuthContext();
 
@@ -252,9 +233,6 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
             notifyAuthContextChanged();
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== setRangerUserStoreInPlugin()");
-        }
+        LOG.debug("<== setRangerUserStoreInPlugin()");
     }
-
 }

@@ -19,10 +19,9 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 
 import java.util.ArrayList;
@@ -31,11 +30,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     private String                                   name;
     private String                                   description;
@@ -81,19 +80,25 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
         }
     }
 
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public Map<String, RangerSecurityZoneServiceV2> getServices() { return services; }
+    public Map<String, RangerSecurityZoneServiceV2> getServices() {
+        return services;
+    }
 
     public void setServices(Map<String, RangerSecurityZoneServiceV2> services) {
         this.services = services == null ? new HashMap<>() : services;
@@ -107,13 +112,17 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
         this.tagServices = (tagServices != null) ? tagServices : new ArrayList<>();
     }
 
-    public List<RangerPrincipal> getAdmins() { return admins; }
+    public List<RangerPrincipal> getAdmins() {
+        return admins;
+    }
 
     public void setAdmins(List<RangerPrincipal> admins) {
         this.admins = admins == null ? new ArrayList<>() : admins;
     }
 
-    public List<RangerPrincipal> getAuditors() { return auditors; }
+    public List<RangerPrincipal> getAuditors() {
+        return auditors;
+    }
 
     public void setAuditors(List<RangerPrincipal> auditors) {
         this.auditors = auditors == null ? new ArrayList<>() : auditors;
@@ -151,18 +160,56 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
 
     @Override
     public String toString() {
-        return    "{name=" + name
-                + ", description="+ description
+        return "{name=" + name
+                + ", description=" + description
                 + ", services=" + services
                 + ", tagServices=" + tagServices
                 + ", admins=" + admins
                 + ", auditors=" + auditors
-                +"}";
+                + "}";
     }
 
-    @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    private void fromPrincipals(List<RangerPrincipal> principals, List<String> users, List<String> groups, List<String> roles) {
+        if (principals != null) {
+            for (RangerPrincipal principal : principals) {
+                if (principal.getType() == RangerPrincipal.PrincipalType.USER) {
+                    users.add(principal.getName());
+                } else if (principal.getType() == RangerPrincipal.PrincipalType.GROUP) {
+                    groups.add(principal.getName());
+                } else if (principal.getType() == RangerPrincipal.PrincipalType.ROLE) {
+                    roles.add(principal.getName());
+                }
+            }
+        }
+    }
+
+    private List<RangerPrincipal> toPrincipals(List<String> users, List<String> groups, List<String> roles) {
+        List<RangerPrincipal> ret = new ArrayList<>();
+
+        if (users != null) {
+            for (String name : users) {
+                ret.add(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, name));
+            }
+        }
+
+        if (groups != null) {
+            for (String name : groups) {
+                ret.add(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, name));
+            }
+        }
+
+        if (roles != null) {
+            for (String name : roles) {
+                ret.add(new RangerPrincipal(RangerPrincipal.PrincipalType.ROLE, name));
+            }
+        }
+
+        return ret;
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RangerSecurityZoneServiceV2 implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -190,7 +237,9 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
             }
         }
 
-        public List<RangerSecurityZoneResource> getResources() { return resources; }
+        public List<RangerSecurityZoneResource> getResources() {
+            return resources;
+        }
 
         public void setResources(List<RangerSecurityZoneResource> resources) {
             this.resources = resources == null ? new ArrayList<>() : resources;
@@ -201,7 +250,7 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
 
             if (resources != null) {
                 for (RangerSecurityZoneResource resource : resources) {
-                    ret.getResources().add((HashMap<String, List<String>> ) resource.getResource());
+                    ret.getResources().add((HashMap<String, List<String>>) resource.getResource());
                     ret.getResourcesBaseInfo().add(new RangerSecurityZoneResourceBase(resource));
                 }
             }
@@ -232,17 +281,17 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
         }
     }
 
-    @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RangerSecurityZoneResourceBase implements java.io.Serializable {
-        private Long    id;
-        private String  createdBy;
-        private String  updatedBy;
-        private Date    createTime;
-        private Date    updateTime;
+        private Long   id;
+        private String createdBy;
+        private String updatedBy;
+        private Date   createTime;
+        private Date   updateTime;
 
-        public RangerSecurityZoneResourceBase() { }
+        public RangerSecurityZoneResourceBase() {}
 
         public RangerSecurityZoneResourceBase(RangerSecurityZoneResourceBase other) {
             if (other != null) {
@@ -305,25 +354,27 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
             }
 
             sb.append("{id=").append(id)
-              .append(", createdBy=").append(createdBy)
-              .append(", createTime=").append(createTime)
-              .append(", updatedBy=").append(updatedBy)
-              .append(", updateTime=").append(updateTime)
-              .append("}");
+                    .append(", createdBy=").append(createdBy)
+                    .append(", createTime=").append(createTime)
+                    .append(", updatedBy=").append(updatedBy)
+                    .append(", updateTime=").append(updateTime)
+                    .append("}");
 
             return sb;
         }
     }
 
-    @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RangerSecurityZoneResource extends RangerSecurityZoneResourceBase implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private Map<String, List<String>> resource;
 
-        public RangerSecurityZoneResource() { this(null, null); }
+        public RangerSecurityZoneResource() {
+            this(null, null);
+        }
 
         public RangerSecurityZoneResource(Map<String, List<String>> resource) {
             this(resource, null);
@@ -335,9 +386,13 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
             setResource(resource);
         }
 
-        public Map<String, List<String>> getResource() { return resource; }
+        public Map<String, List<String>> getResource() {
+            return resource;
+        }
 
-        public void setResource(Map<String, List<String>> resource) { this.resource = resource == null ? new HashMap<>() : resource; }
+        public void setResource(Map<String, List<String>> resource) {
+            this.resource = resource == null ? new HashMap<>() : resource;
+        }
 
         @Override
         public String toString() {
@@ -355,7 +410,7 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
             if (resource != null) {
                 for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
                     sb.append("{resource-def-name=").append(entry.getKey())
-                      .append(", values=").append(entry.getValue()).append("} ");
+                            .append(", values=").append(entry.getValue()).append("} ");
                 }
             }
             sb.append("}");
@@ -364,9 +419,9 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
         }
     }
 
-    @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RangerSecurityZoneChangeRequest implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -381,7 +436,7 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
         private List<RangerPrincipal>                    auditorsToAdd;
         private List<RangerPrincipal>                    auditorsToRemove;
 
-        public RangerSecurityZoneChangeRequest() { }
+        public RangerSecurityZoneChangeRequest() {}
 
         public String getName() {
             return name;
@@ -462,46 +517,5 @@ public class RangerSecurityZoneV2 extends RangerBaseModelObject implements java.
         public void setAuditorsToRemove(List<RangerPrincipal> auditorsToRemove) {
             this.auditorsToRemove = auditorsToRemove;
         }
-
-
-    }
-
-    private void fromPrincipals(List<RangerPrincipal> principals, List<String> users, List<String> groups, List<String> roles) {
-        if (principals != null) {
-            for (RangerPrincipal principal : principals) {
-                if (principal.getType() == RangerPrincipal.PrincipalType.USER) {
-                    users.add(principal.getName());
-                } else if (principal.getType() == RangerPrincipal.PrincipalType.GROUP) {
-                    groups.add(principal.getName());
-                } else if (principal.getType() == RangerPrincipal.PrincipalType.ROLE) {
-                    roles.add(principal.getName());
-                }
-            }
-        }
-    }
-
-    private List<RangerPrincipal> toPrincipals(List<String> users, List<String> groups, List<String> roles) {
-        List<RangerPrincipal> ret = new ArrayList<>();
-
-        if (users != null) {
-            for (String name : users) {
-                ret.add(new RangerPrincipal(RangerPrincipal.PrincipalType.USER, name));
-            }
-        }
-
-        if (groups != null) {
-            for (String name : groups) {
-                ret.add(new RangerPrincipal(RangerPrincipal.PrincipalType.GROUP, name));
-            }
-        }
-
-        if (roles != null) {
-            for (String name : roles) {
-                ret.add(new RangerPrincipal(RangerPrincipal.PrincipalType.ROLE, name));
-            }
-        }
-
-        return ret;
     }
 }
-

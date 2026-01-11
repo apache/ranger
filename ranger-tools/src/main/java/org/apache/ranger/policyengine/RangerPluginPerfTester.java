@@ -24,7 +24,7 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,225 +32,214 @@ import org.apache.hadoop.fs.Path;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.File;
 
 public class RangerPluginPerfTester {
+    private static String  serviceType;
+    private static String  serviceName;
+    private static String  appId;
+    private static String  rangerHostName;
+    private static int     socketReadTimeout        = 30 * 1000;
+    private static int     pollingInterval          = 30 * 1000;
+    private static String  policyCacheDir;
+    private static boolean useCachedPolicyEvaluator;
 
-	static RangerBasePlugin plugin = null;
+    private static final Options options = new Options();
 
-	private static String serviceType;
-	private static String serviceName;
-	private static String appId;
-	private static String rangerHostName;
-	private static int socketReadTimeout = 30*1000;
-	private static int pollingInterval = 30*1000;
-	private static String policyCacheDir;
-	private static boolean useCachedPolicyEvaluator = false;
+    private RangerPluginPerfTester() {
+        // to block instantiation
+    }
 
-	private static Options options = new Options();
+    public static void main(String[] args) {
+        if (!parseArguments(args)) {
+            System.err.println("Exiting.. ");
+            System.exit(-1);
+        }
 
-	public static void main(String[] args) {
+        System.out.println("Arguments:");
+        System.out.println("\t\tservice-type:\t\t\t" + serviceType);
+        System.out.println("\t\tservice-name:\t\t\t" + serviceName);
+        System.out.println("\t\tapp-id:\t\t\t\t" + appId);
+        System.out.println("\t\tranger-host:\t\t\t" + rangerHostName);
+        System.out.println("\t\tsocket-read-timeout:\t\t" + socketReadTimeout);
+        System.out.println("\t\tpolling-interval:\t\t" + pollingInterval);
+        System.out.println("\t\tpolicy-cache-dir:\t\t" + policyCacheDir);
+        System.out.println("\t\tuse-cached-policy-evaluator:\t" + useCachedPolicyEvaluator);
+        System.out.println("\n\n");
 
-		if (!parseArguments(args)) {
-			System.err.println("Exiting.. ");
-			System.exit(-1);
-		}
+        Path filePath = buildConfigurationFile();
 
+        if (filePath != null) {
+            RangerBasePlugin plugin = new RangerBasePlugin(serviceType, appId);
 
+            plugin.getConfig().addResource(filePath);
 
-		System.out.println("Arguments:");
-		System.out.println("\t\tservice-type:\t\t\t" + serviceType);
-		System.out.println("\t\tservice-name:\t\t\t" + serviceName);
-		System.out.println("\t\tapp-id:\t\t\t\t" + appId);
-		System.out.println("\t\tranger-host:\t\t\t" + rangerHostName);
-		System.out.println("\t\tsocket-read-timeout:\t\t" + socketReadTimeout);
-		System.out.println("\t\tpolling-interval:\t\t" + pollingInterval);
-		System.out.println("\t\tpolicy-cache-dir:\t\t" + policyCacheDir);
-		System.out.println("\t\tuse-cached-policy-evaluator:\t" + useCachedPolicyEvaluator);
-		System.out.println("\n\n");
+            Runtime runtime = Runtime.getRuntime();
+            runtime.gc();
 
+            long totalMemory = runtime.totalMemory();
+            long freeMemory  = runtime.freeMemory();
 
-		Path filePath = buildConfigurationFile();
+            System.out.println("Initial Memory Statistics:");
+            System.out.println("\t\tMaximum Memory available for the process:\t" + runtime.maxMemory());
+            System.out.println("\t\tInitial In-Use memory:\t\t\t\t" + (totalMemory - freeMemory));
+            System.out.println("\t\tInitial Free memory:\t\t\t\t" + freeMemory);
 
-		if (filePath != null) {
-			plugin = new RangerBasePlugin(serviceType, appId);
+            System.out.println("\n\n");
 
-			plugin.getConfig().addResource(filePath);
+            plugin.init();
 
-			Runtime runtime = Runtime.getRuntime();
-			runtime.gc();
+            while (true) {
+                runtime.gc();
 
-			long totalMemory = runtime.totalMemory();
-			long freeMemory = runtime.freeMemory();
+                freeMemory  = runtime.freeMemory();
+                totalMemory = runtime.totalMemory();
 
-			System.out.println("Initial Memory Statistics:");
-			System.out.println("\t\tMaximum Memory available for the process:\t" + runtime.maxMemory());
-			System.out.println("\t\tInitial In-Use memory:\t\t\t\t" + (totalMemory-freeMemory));
-			System.out.println("\t\tInitial Free memory:\t\t\t\t" + freeMemory);
+                System.out.println("Memory Statistics:");
+                System.out.println("\t\tCurrently In-Use memory:\t" + (totalMemory - freeMemory));
+                System.out.println("\t\tCurrently Free memory:\t\t" + freeMemory);
 
-			System.out.println("\n\n");
+                System.out.println("\n\n");
 
-			plugin.init();
+                try {
+                    Thread.sleep(60 * 1000);
+                } catch (InterruptedException e) {
+                    System.err.println("Main thread interrupted..., exiting...");
 
-			while (true) {
+                    break;
+                }
+            }
+        } else {
+            System.err.println("Failed to build configuration file");
+        }
+    }
 
-				runtime.gc();
+    static Path buildConfigurationFile() {
+        Path   ret                 = null;
+        String propertyPrefix      = "ranger.plugin." + serviceType;
+        String policyEvaluatorType = useCachedPolicyEvaluator ? RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED : RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
 
-				freeMemory = runtime.freeMemory();
-				totalMemory = runtime.totalMemory();
+        try {
+            File file = File.createTempFile("ranger-plugin-test-site", ".xml");
 
-				System.out.println("Memory Statistics:");
-				System.out.println("\t\tCurrently In-Use memory:\t" + (totalMemory-freeMemory));
-				System.out.println("\t\tCurrently Free memory:\t\t" + freeMemory);
+            file.deleteOnExit();
 
-				System.out.println("\n\n");
+            String             filePathStr = file.getAbsolutePath();
+            Path               filePath    = new Path(filePathStr);
+            FileSystem         fs          = filePath.getFileSystem(new Configuration());
+            FSDataOutputStream outStream   = fs.create(filePath, true);
 
-				try {
-					Thread.sleep(60 * 1000);
-				} catch (InterruptedException e) {
+            try (OutputStreamWriter writer = new OutputStreamWriter(outStream)) {
+                writer.write("<configuration>\n" +
+                        "        <property>\n" +
+                        "                <name>" + propertyPrefix + ".policy.pollIntervalMs</name>\n" +
+                        "                <value>" + pollingInterval + "</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>" + propertyPrefix + ".policy.cache.dir</name>\n" +
+                        "                <value>" + policyCacheDir + "</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>" + propertyPrefix + ".policy.rest.url</name>\n" +
+                        "                <value>" + rangerHostName + ":6080" + "</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>" + propertyPrefix + ".policy.source.impl</name>\n" +
+                        "                <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>" + propertyPrefix + ".policy.rest.client.read.timeoutMs</name>\n" +
+                        "                <value>" + socketReadTimeout + "</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>" + propertyPrefix + ".policyengine.option.evaluator.type</name>\n" +
+                        "                <value>" + policyEvaluatorType + "</value>\n" +
+                        "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>" + propertyPrefix + ".service.name</name>\n" +
+                        "                <value>" + serviceName + "</value>\n" +
+                        "        </property>\n" +
 
-					System.err.println("Main thread interrupted..., exiting...");
-					break;
-				}
-			}
-		} else {
-			System.err.println("Failed to build configuration file");
-		}
-	}
+                        "        <property>\n" +
+                        "                <name>xasecure.audit.is.enabled</name>\n" +
+                        "                <value>false</value>\n" +
+                        "        </property>\n" +
+                        "</configuration>\n");
 
-	static Path buildConfigurationFile() {
+                ret = filePath;
+            }
+        } catch (IOException exception) {
+            //Ignore
+        }
 
-		Path ret = null;
+        return ret;
+    }
 
-		String propertyPrefix    = "ranger.plugin." + serviceType;
-		String policyEvaluatorType = useCachedPolicyEvaluator ? RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED : RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
+    static boolean parseArguments(final String[] args) {
+        boolean ret = false;
 
-		try {
+        options.addOption("h", "help", false, "show help.");
+        options.addOption("s", "service-type", true, "Service-Type");
+        options.addOption("n", "service-name", true, "Ranger service-name ");
+        options.addOption("a", "app-id", true, "Application-Id");
+        options.addOption("r", "ranger-host", true, "Ranger host-name");
+        options.addOption("t", "socket-read-timeout", true, "Read timeout on socket in milliseconds");
+        options.addOption("p", "polling-interval", true, "Polling Interval in milliseconds");
+        options.addOption("c", "policy-cache-dir", true, "Policy-Cache directory ");
+        options.addOption("e", "policy-evaluator-type", true, "Policy-Evaluator-Type (Cached/Other");
 
-			File file = File.createTempFile("ranger-plugin-test-site", ".xml");
-			file.deleteOnExit();
+        DefaultParser commandLineParser = new DefaultParser();
 
-			String filePathStr =  file.getAbsolutePath();
+        try {
+            CommandLine commandLine = commandLineParser.parse(options, args);
 
-			Path filePath = new Path(filePathStr);
+            if (commandLine.hasOption("h")) {
+                showUsage();
 
-			FileSystem fs = filePath.getFileSystem(new Configuration());
+                return false;
+            }
 
-			FSDataOutputStream outStream = fs.create(filePath, true);
+            serviceType    = commandLine.getOptionValue("s");
+            serviceName    = commandLine.getOptionValue("n");
+            appId          = commandLine.getOptionValue("a");
+            rangerHostName = commandLine.getOptionValue("r");
+            policyCacheDir = commandLine.getOptionValue("c");
 
-			try (OutputStreamWriter writer = new OutputStreamWriter(outStream)) {
-				writer.write("<configuration>\n" +
-									 "        <property>\n" +
-									 "                <name>" + propertyPrefix + ".policy.pollIntervalMs</name>\n" +
-									 "                <value>" + pollingInterval + "</value>\n" +
-									 "        </property>\n" +
-									 "        <property>\n" +
-									 "                <name>" + propertyPrefix + ".policy.cache.dir</name>\n" +
-									 "                <value>" + policyCacheDir + "</value>\n" +
-									 "        </property>\n" +
-									 "        <property>\n" +
-									 "                <name>" + propertyPrefix + ".policy.rest.url</name>\n" +
-									 "                <value>" + rangerHostName + ":6080" + "</value>\n" +
-									 "        </property>\n" +
-									 "        <property>\n" +
-									 "                <name>" + propertyPrefix + ".policy.source.impl</name>\n" +
-									 "                <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>\n" +
-									 "        </property>\n" +
-									 "        <property>\n" +
-									 "                <name>" + propertyPrefix + ".policy.rest.client.read.timeoutMs</name>\n" +
-									 "                <value>" + socketReadTimeout + "</value>\n" +
-									 "        </property>\n" +
-									 "        <property>\n" +
-									 "                <name>" + propertyPrefix + ".policyengine.option.evaluator.type</name>\n" +
-									 "                <value>" + policyEvaluatorType + "</value>\n" +
-									 "        </property>\n" +
-									 "        <property>\n" +
-									 "                <name>" + propertyPrefix + ".service.name</name>\n" +
-									 "                <value>" + serviceName + "</value>\n" +
-									 "        </property>\n" +
+            try {
+                String pollingIntervalStr = commandLine.getOptionValue("p");
 
-									 "        <property>\n" +
-									 "                <name>xasecure.audit.is.enabled</name>\n" +
-									 "                <value>false</value>\n" +
-									 "        </property>\n" +
-									 "</configuration>\n");
+                pollingInterval = Integer.parseInt(pollingIntervalStr);
+            } catch (NumberFormatException exception) {
+                // Ignore
+            }
 
-				ret = filePath;
+            String useCachedPolicyEvaluatorStr = commandLine.getOptionValue("e");
 
-			}
-		} catch (IOException exception) {
-			//Ignore
-		}
+            if (StringUtils.equalsIgnoreCase(useCachedPolicyEvaluatorStr, "cache")) {
+                useCachedPolicyEvaluator = true;
+            }
 
-		return ret;
+            try {
+                String socketReadTimeoutStr = commandLine.getOptionValue("t");
 
-	}
+                socketReadTimeout = Integer.parseInt(socketReadTimeoutStr);
+            } catch (NumberFormatException exception) {
+                // Ignore
+            }
 
+            ret = true;
+        } catch (ParseException exception) {
+            System.err.println("Failed to parse arguments:" + exception);
+        }
 
-	static boolean parseArguments(final String[] args) {
-
-		boolean ret = false;
-
-		options.addOption("h", "help", false, "show help.");
-		options.addOption("s", "service-type", true, "Service-Type");
-		options.addOption("n", "service-name", true, "Ranger service-name ");
-		options.addOption("a", "app-id", true, "Application-Id");
-		options.addOption("r", "ranger-host", true, "Ranger host-name");
-		options.addOption("t", "socket-read-timeout", true, "Read timeout on socket in milliseconds");
-		options.addOption("p", "polling-interval", true, "Polling Interval in milliseconds");
-		options.addOption("c", "policy-cache-dir", true, "Policy-Cache directory ");
-		options.addOption("e", "policy-evaluator-type", true, "Policy-Evaluator-Type (Cached/Other");
-
-		DefaultParser commandLineParser = new DefaultParser();
-
-		try {
-			CommandLine commandLine = commandLineParser.parse(options, args);
-
-			if (commandLine.hasOption("h")) {
-				showUsage();
-				return false;
-			}
-
-			serviceType = commandLine.getOptionValue("s");
-			serviceName = commandLine.getOptionValue("n");
-			appId = commandLine.getOptionValue("a");
-			rangerHostName = commandLine.getOptionValue("r");
-			policyCacheDir = commandLine.getOptionValue("c");
-
-			try {
-				String pollingIntervalStr = commandLine.getOptionValue("p");
-				pollingInterval = Integer.parseInt(pollingIntervalStr);
-			} catch (NumberFormatException exception) {
-				// Ignore
-			}
-
-			String useCachedPolicyEvaluatorStr = commandLine.getOptionValue("e");
-			if (StringUtils.equalsIgnoreCase(useCachedPolicyEvaluatorStr, "cache")) {
-				useCachedPolicyEvaluator = true;
-			}
-
-			try {
-				String socketReadTimeoutStr = commandLine.getOptionValue("t");
-				socketReadTimeout = Integer.parseInt(socketReadTimeoutStr);
-			} catch (NumberFormatException exception) {
-				// Ignore
-			}
-
-			ret = true;
-
-		} catch (ParseException exception) {
-			System.err.println("Failed to parse arguments:" + exception);
-		}
-
-		return ret;
-	}
+        return ret;
+    }
 
     static void showUsage() {
         HelpFormatter formater = new HelpFormatter();
+
         formater.printHelp("plugin-tester", options);
     }
-
 }
-

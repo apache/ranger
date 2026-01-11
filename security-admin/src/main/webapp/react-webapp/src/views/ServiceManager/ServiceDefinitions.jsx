@@ -28,15 +28,15 @@ import {
   isKeyAdmin,
   isAuditor,
   isKMSAuditor,
-  isUser
+  isUser,
+  serverError
 } from "Utils/XAUtils";
 import withRouter from "Hooks/withRouter";
 import ServiceDefinition from "./ServiceDefinition";
 import ExportPolicy from "./ExportPolicy";
 import ImportPolicy from "./ImportPolicy";
-import { serverError } from "../../utils/XAUtils";
-import { BlockUi, Loader } from "../../components/CommonComponents";
-import { getServiceDef } from "../../utils/appState";
+import { BlockUi, Loader } from "Components/CommonComponents";
+import { getServiceDef } from "Utils/appState";
 import noServiceImage from "Images/no-service.svg";
 
 class ServiceDefinitions extends Component {
@@ -136,19 +136,16 @@ class ServiceDefinitions extends Component {
 
     try {
       servicesResp = await fetchApi({
-        url: "plugins/services"
+        url: "public/v2/api/service-headers"
       });
       if (this.state.isTagView) {
-        tagServices = filter(servicesResp.data.services, ["type", "tag"]);
+        tagServices = filter(servicesResp?.data, ["type", "tag"]);
       } else {
         if (this.state.isKMSRole) {
-          resourceServices = filter(
-            servicesResp.data.services,
-            (service) => service.type == "kms"
-          );
+          resourceServices = filter(servicesResp?.data, ["type", "kms"]);
         } else {
           resourceServices = filter(
-            servicesResp.data.services,
+            servicesResp?.data,
             (service) => service.type !== "tag" && service.type !== "kms"
           );
         }
@@ -160,7 +157,7 @@ class ServiceDefinitions extends Component {
     }
 
     this.setState({
-      allServices: servicesResp.data.services,
+      allServices: servicesResp?.data || [],
       services: this.state.isTagView ? tagServices : resourceServices,
       filterServices: this.state.isTagView ? tagServices : resourceServices,
       loader: false

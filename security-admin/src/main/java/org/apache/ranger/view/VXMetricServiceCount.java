@@ -16,57 +16,57 @@
  */
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.HashMap;
 import java.util.Map;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXMetricServiceCount implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	
-	protected Map<String,Long> serviceBasedCountList = new HashMap<String,Long>();
-	protected Long totalCount;
-	
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public VXMetricServiceCount() {	
-	}
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * @return the serviceBasedCountList
-	 */
-	public Map<String, Long> getServiceBasedCountList() {
-		return serviceBasedCountList;
-	}
+    protected Map<String, Long> serviceBasedCountList = new HashMap<>();
+    protected Long              totalCount;
 
-	/**
-	 * @param serviceBasedCountList the serviceBasedCountList to set
-	 */
-	public void setServiceBasedCountList(Map<String, Long> serviceBasedCountList) {
-		this.serviceBasedCountList = serviceBasedCountList;
-	}
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXMetricServiceCount() {
+    }
 
-	/**
-	 * @return the totalCount
-	 */
-	public Long getTotalCount() {
-		return totalCount;
-	}
+    /**
+     * @return the serviceBasedCountList
+     */
+    public Map<String, Long> getServiceBasedCountList() {
+        return serviceBasedCountList;
+    }
 
-	/**
-	 * @param totalCount the totalCount to set
-	 */
-	public void setTotalCount(Long totalCount) {
-		this.totalCount = totalCount;
-	}
+    /**
+     * @param serviceBasedCountList the serviceBasedCountList to set
+     */
+    public void setServiceBasedCountList(Map<String, Long> serviceBasedCountList) {
+        this.serviceBasedCountList = serviceBasedCountList;
+    }
 
-	@Override
-	public String toString() {
-		return "VXMetricServiceCount={total_count=" + totalCount +", services="
-			+ serviceBasedCountList +"}";
-	}
+    /**
+     * @return the totalCount
+     */
+    public Long getTotalCount() {
+        return totalCount;
+    }
+
+    /**
+     * @param totalCount the totalCount to set
+     */
+    public void setTotalCount(Long totalCount) {
+        this.totalCount = totalCount;
+    }
+
+    @Override
+    public String toString() {
+        return "VXMetricServiceCount={total_count=" + totalCount + ", services=" + serviceBasedCountList + "}";
+    }
 }

@@ -70,7 +70,6 @@ export const SideBarBody = (props) => {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const navigate = useNavigate();
   const apiUrl = getBaseUrl() + "apidocs/swagger.html";
-  const backboneUrl = getBaseUrl() + "backbone-index.html";
 
   const serviceSelectThemes = (theme) => {
     return {
@@ -131,7 +130,6 @@ export const SideBarBody = (props) => {
     if (value.length !== 0) {
       let selectedServiceDefs = [];
       let selectedService = [];
-      let filterSelectedService = [];
 
       value.map((serviceDef) => {
         allServicesDefData?.filter((servicedefs) => {
@@ -148,18 +146,6 @@ export const SideBarBody = (props) => {
           }
         });
       });
-
-      if (isKMSRole) {
-        filterSelectedService = filter(
-          selectedService,
-          (service) => service.type == "kms"
-        );
-      } else {
-        filterSelectedService = filter(
-          selectedService,
-          (service) => service.type !== "tag" && service.type !== "kms"
-        );
-      }
 
       sideBarDispatch({
         type: "SERVICEDEF_DATA",
@@ -181,10 +167,7 @@ export const SideBarBody = (props) => {
     if (value.length == 0) {
       let filterSelectedService = [];
       if (isKMSRole) {
-        filterSelectedService = filter(
-          allServicesData,
-          (service) => service.type == "kms"
-        );
+        filterSelectedService = filter(allServicesData, ["type", "kms"]);
       } else {
         filterSelectedService = filter(
           allServicesData,
@@ -676,19 +659,8 @@ export const SideBarBody = (props) => {
               </li>
               <li className="list-group-item">
                 <a
-                  href={backboneUrl}
-                  onClick={() => {
-                    props.closeCollapse();
-                    localStorage.clear();
-                  }}
-                  className="text-decoration-none"
-                >
-                  Backbone Classic UI
-                </a>
-              </li>
-              <li className="list-group-item">
-                <a
                   href={apiUrl}
+                  rel="noreferrer"
                   target="_blank"
                   onClick={() => {
                     props.closeCollapse();

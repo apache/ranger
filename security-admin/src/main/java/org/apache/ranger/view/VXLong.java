@@ -17,69 +17,67 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * Long
- *
  */
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.ViewBaseBean;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VXLong extends ViewBaseBean implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
+    /**
+     * Value
+     */
+    protected long value;
 
-	/**
-	 * Value
-	 */
-	protected long value;
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXLong() {
+    }
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public VXLong ( ) {
-	}
+    /**
+     * Returns the value for the member attribute <b>value</b>
+     * @return long - value of member attribute <b>value</b>.
+     */
+    public long getValue() {
+        return this.value;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>value</b>.
-	 * You cannot set null to the attribute.
-	 * @param value Value to set member attribute <b>value</b>
-	 */
-	public void setValue( long value ) {
-		this.value = value;
-	}
+    /**
+     * This method sets the value to the member attribute <b>value</b>.
+     * You cannot set null to the attribute.
+     * @param value Value to set member attribute <b>value</b>
+     */
+    public void setValue(long value) {
+        this.value = value;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>value</b>
-	 * @return long - value of member attribute <b>value</b>.
-	 */
-	public long getValue( ) {
-		return this.value;
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_LONG;
+    }
 
-	@Override
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_LONG;
-	}
-
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	public String toString( ) {
-		String str = "VXLong={";
-		str += super.toString();
-		str += "value={" + value + "} ";
-		str += "}";
-		return str;
-	}
+    /**
+     * This return the bean content in string format
+     * @return formatedStr
+     */
+    public String toString() {
+        String str = "VXLong={";
+        str += super.toString();
+        str += "value={" + value + "} ";
+        str += "}";
+        return str;
+    }
 }

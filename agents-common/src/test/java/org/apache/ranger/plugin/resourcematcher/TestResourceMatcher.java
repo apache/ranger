@@ -19,136 +19,136 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
-import static org.junit.Assert.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
+import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase;
+import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase.OneTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
-import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase;
-import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase.OneTest;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestResourceMatcher {
-	static Gson gsonBuilder;
+    static Gson gsonBuilder;
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-				   .setPrettyPrinting()
-				   .create();
-	}
+    @BeforeAll
+    public static void setUpBeforeClass() throws Exception {
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
+                .setPrettyPrinting()
+                .create();
+    }
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
+    @AfterAll
+    public static void tearDownAfterClass() throws Exception {
+    }
 
-	@Before
-	public void setUp() throws Exception {
-	}
+    @BeforeEach
+    public void setUp() throws Exception {
+    }
 
-	@After
-	public void tearDown() throws Exception {
-	}
+    @AfterEach
+    public void tearDown() throws Exception {
+    }
 
-	@Test
-	public void testResourceMatcher_default() throws Exception {
-		String[] tests = { "/resourcematcher/test_resourcematcher_default.json" };
-
-		runTestsFromResourceFiles(tests);
-	}
-
-	@Test
-	public void testResourceMatcher_path() throws Exception {
-		String[] tests = { "/resourcematcher/test_resourcematcher_path.json" };
-
-		runTestsFromResourceFiles(tests);
-	}
-
-	@Test
-    public void testResourceMatcher_dynamic() throws Exception {
-        String[] tests = { "/resourcematcher/test_resourcematcher_dynamic.json"};
+    @Test
+    public void testResourceMatcher_default() throws Exception {
+        String[] tests = {"/resourcematcher/test_resourcematcher_default.json"};
 
         runTestsFromResourceFiles(tests);
     }
 
-	@Test
-	public void testResourceMatcher_wildcards_as_delimiters() throws Exception {
-		String[] tests = { "/resourcematcher/test_resourcematcher_wildcards_as_delimiters.json"};
+    @Test
+    public void testResourceMatcher_path() throws Exception {
+        String[] tests = {"/resourcematcher/test_resourcematcher_path.json"};
 
-		runTestsFromResourceFiles(tests);
-	}
+        runTestsFromResourceFiles(tests);
+    }
 
-	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
-		for(String resourceName : resourceNames) {
-			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader   = new InputStreamReader(inStream);
+    @Test
+    public void testResourceMatcher_dynamic() throws Exception {
+        String[] tests = {"/resourcematcher/test_resourcematcher_dynamic.json"};
 
-			runTests(reader, resourceName);
-		}
-	}
+        runTestsFromResourceFiles(tests);
+    }
 
-	private void runTests(InputStreamReader reader, String testName) throws Exception {
-		ResourceMatcherTestCases testCases = gsonBuilder.fromJson(reader, ResourceMatcherTestCases.class);
+    @Test
+    public void testResourceMatcher_wildcards_as_delimiters() throws Exception {
+        String[] tests = {"/resourcematcher/test_resourcematcher_wildcards_as_delimiters.json"};
 
-		assertTrue("invalid input: " + testName, testCases != null && testCases.testCases != null);
+        runTestsFromResourceFiles(tests);
+    }
 
-		for(TestCase testCase : testCases.testCases) {
-			RangerResourceMatcher matcher = createResourceMatcher(testCase.resourceDef, testCase.policyResource);
-			
-			for(OneTest oneTest : testCase.tests) {
-				if(oneTest == null) {
-					continue;
-				}
+    private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
+        for (String resourceName : resourceNames) {
+            InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+            InputStreamReader reader   = new InputStreamReader(inStream);
 
-				boolean expected = oneTest.result;
-				boolean result   = matcher.isMatch(oneTest.input, ResourceElementMatchingScope.SELF, oneTest.evalContext);
+            runTests(reader, resourceName);
+        }
+    }
 
-				assertEquals("isMatch() failed! " + testCase.name + ":" + oneTest.name + ": input=" + oneTest.input, expected, result);
-			}
-		}
-	}
+    private void runTests(InputStreamReader reader, String testName) throws Exception {
+        ResourceMatcherTestCases testCases = gsonBuilder.fromJson(reader, ResourceMatcherTestCases.class);
 
-	private RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource policyResource) throws Exception {
-		RangerResourceMatcher ret = null;
+        assertTrue(testCases != null && testCases.testCases != null, "invalid input: " + testName);
 
-		@SuppressWarnings("unchecked")
-		Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>) Class.forName(resourceDef.getMatcher());
+        for (TestCase testCase : testCases.testCases) {
+            RangerResourceMatcher matcher = createResourceMatcher(testCase.resourceDef, testCase.policyResource);
 
-		ret = matcherClass.newInstance();
-		ret.setResourceDef(resourceDef);
-		ret.setPolicyResource(policyResource);
-		ret.init();
+            for (OneTest oneTest : testCase.tests) {
+                if (oneTest == null) {
+                    continue;
+                }
 
-		return ret;
-	}
+                boolean expected = oneTest.result;
+                boolean result   = matcher.isMatch(oneTest.input, ResourceElementMatchingScope.SELF, oneTest.evalContext);
 
-	static class ResourceMatcherTestCases {
-		public List<TestCase> testCases;
+                assertEquals(expected, result, "isMatch() failed! " + testCase.name + ":" + oneTest.name + ": input=" + oneTest.input);
+            }
+        }
+    }
 
-		class TestCase {
-			public String               name;
-			public RangerResourceDef    resourceDef;
-			public RangerPolicyResource policyResource;
-			public List<OneTest>        tests;
+    private RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource policyResource) throws Exception {
+        RangerResourceMatcher ret = null;
 
-			class OneTest {
-				String  name;
-				String  input;
-				Map<String, Object> evalContext;
-				boolean result;
-			}
-		}
-	}
+        @SuppressWarnings("unchecked")
+        Class<RangerResourceMatcher> matcherClass = (Class<RangerResourceMatcher>) Class.forName(resourceDef.getMatcher());
+
+        ret = matcherClass.newInstance();
+        ret.setResourceDef(resourceDef);
+        ret.setPolicyResource(policyResource);
+        ret.init();
+
+        return ret;
+    }
+
+    static class ResourceMatcherTestCases {
+        public List<TestCase> testCases;
+
+        static class TestCase {
+            public String               name;
+            public RangerResourceDef    resourceDef;
+            public RangerPolicyResource policyResource;
+            public List<OneTest>        tests;
+
+            class OneTest {
+                String              name;
+                String              input;
+                Map<String, Object> evalContext;
+                boolean             result;
+            }
+        }
+    }
 }

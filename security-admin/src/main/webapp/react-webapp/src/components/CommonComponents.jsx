@@ -25,7 +25,7 @@ import { Field } from "react-final-form";
 import { useLocation } from "react-router-dom";
 import blockLoading from "Images/blockLoading.gif";
 
-const Loader = () => {
+export const Loader = () => {
   return (
     <div className="loading-img">
       <div id="center">
@@ -184,11 +184,10 @@ export class AccessMoreLess extends Component {
     );
   }
 }
+
 export const AuditFilterEntries = (props) => {
   const { entries, refreshTable } = props;
-  const refreshTables = () => {
-    refreshTable();
-  };
+
   const showPageDetail = (entriesDetails) => {
     let startIndex = !isEmpty(entriesDetails) && entriesDetails.startIndex + 1;
     let endIndex =
@@ -198,10 +197,11 @@ export const AuditFilterEntries = (props) => {
         entriesDetails.totalCount
       );
     return entriesDetails && entriesDetails.totalCount > 0
-      ? `${startIndex} to ${endIndex} of 
+      ? `${startIndex} to ${endIndex} of
             ${entriesDetails.totalCount}`
       : 0;
   };
+
   return (
     <div className="row text-end mb-2">
       <div className="col-sm-12">
@@ -222,7 +222,7 @@ export const AuditFilterEntries = (props) => {
           className="link-tag m-l-xsm"
           title="Refresh"
           onClick={() => {
-            refreshTables();
+            refreshTable();
           }}
           data-id="refresh"
           data-cy="refresh"
@@ -491,7 +491,29 @@ export const scrollToError = (selector) => {
   );
 };
 
-export const selectCustomStyles = {
+export const selectInputCustomStyles = {
+  option: (base) => ({
+    ...base,
+    textOverflow: "unset",
+    whiteSpace: "break-spaces",
+    wordBreak: "break-all"
+  }),
+  multiValueLabel: (base) => ({
+    ...base,
+    textOverflow: "unset",
+    whiteSpace: "break-spaces",
+    wordBreak: "break-all"
+  }),
+  singleValue: (base) => ({
+    ...base,
+    textOverflow: "unset",
+    whiteSpace: "break-spaces",
+    wordBreak: "break-all"
+  })
+};
+
+export const selectInputCustomErrorStyles = {
+  ...selectInputCustomStyles,
   control: () => {
     return {
       border: "4px solid red",
@@ -513,11 +535,11 @@ export const scrollToNewData = (usrData) => {
       block: "center",
       inline: "start"
     });
-    newRowAdded.bgColor = "#dbe8f7";
+    newRowAdded.classList.add("table-success");
 
     setTimeout(function () {
-      newRowAdded.bgColor = "";
-    }, 8000);
+      newRowAdded.classList.remove("table-success");
+    }, 4000);
   }
 };
 
@@ -546,5 +568,3 @@ export const ModalLoader = () => {
     </h4>
   );
 };
-
-export { Loader };

@@ -40,6 +40,7 @@ import { Loader } from "../components/CommonComponents";
 import { Suspense } from "react";
 import { PathAssociateWithModule } from "../utils/XAEnums";
 import { flatMap, values } from "lodash";
+import dateFormat from "dateformat";
 
 const Layout = () => {
   let location = useLocation();
@@ -93,6 +94,13 @@ const Layout = () => {
     setOpen(false);
     activate();
   };
+
+  const lastLoginInformation = userProfile?.lastLoginTime
+    ? `You last logged in on, ${dateFormat(
+        new Date(userProfile.lastLoginTime),
+        "dddd, mmm dd, yyyy, hh:MM:ss TT"
+      )}`
+    : "";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -170,6 +178,9 @@ const Layout = () => {
                 >
                   Licensed under the Apache License, Version 2.0
                 </a>
+                <span className="float-end mb-2 me-4" style={{ color: "#999" }}>
+                  {lastLoginInformation}
+                </span>
               </p>
             </div>
           </footer>

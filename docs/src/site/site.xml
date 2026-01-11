@@ -59,9 +59,14 @@ under the License.
       <item name="Ranger REST API Documentation" href="apidocs/index.html" target="_blank" />
       <item name="Ranger KMS REST API Documentation" href="kms/apidocs/index.html" target="_blank" />
       <item name="Blogs" href="blogs.html" />
+      <!-- Added to provide additional reference for developers -->
+	  <item name="Ranger CI" href="https://ci-builds.apache.org/job/Ranger" target="_blank" />
+	  <item name="Jira - Issue Tracking" href="https://issues.apache.org/jira/projects/RANGER" target="_blank" />
+	  <item name="GitHub Source Repo" href="https://github.com/apache/ranger" target="_blank" />
       <!-- According to http://jira.codehaus.org/browse/MNGSITE-152 -->
       <item name="License"         href="https://www.apache.org/licenses/" />
     </menu>
+
     <menu name="Project Information">
         <item name="Project Summary" href="project-summary.html"/>
         <item name="Mailing Lists" href="mail-lists.html"/>
@@ -70,6 +75,9 @@ under the License.
 	    <item name="Security Advisories" href="https://cwiki.apache.org/confluence/display/RANGER/Vulnerabilities+found+in+Ranger" target="_blank" />
     </menu>
     <menu name="Releases">
+        <item name="2.7.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.7.0+-+Release+Notes" target="_blank" />
+        <item name="2.6.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.6.0+-+Release+Notes" target="_blank" />
+        <item name="2.5.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.5.0+-+Release+Notes" target="_blank" />
         <item name="2.4.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.4.0+-+Release+Notes" target="_blank" />
         <item name="2.3.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.3.0+-+Release+Notes" target="_blank" />
         <item name="2.2.0" href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.2.0+-+Release+Notes" target="_blank" />

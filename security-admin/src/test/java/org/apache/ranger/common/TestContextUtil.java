@@ -22,84 +22,80 @@ package org.apache.ranger.common;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+@ExtendWith(MockitoExtension.class)
 public class TestContextUtil {
+    ContextUtil contextUtil = new ContextUtil();
 
-        @InjectMocks
-        ContextUtil contextUtil = new ContextUtil();
+    UserSessionBase       currentUserSession = new UserSessionBase();
+    XXPortalUser          gjUser             = new XXPortalUser();
+    RangerSecurityContext context            = new RangerSecurityContext();
 
-        UserSessionBase currentUserSession = new UserSessionBase();
-        XXPortalUser gjUser = new XXPortalUser();
-        RangerSecurityContext context = new RangerSecurityContext();
+    @BeforeEach
+    public void setup() {
+        gjUser.setId(1L);
+        currentUserSession.setXXPortalUser(gjUser);
+        context.setUserSession(currentUserSession);
+        RangerContextHolder.setSecurityContext(context);
+    }
 
-        @Before
-        public void setup(){
-                gjUser.setId(1L);
-                currentUserSession.setXXPortalUser(gjUser);
-                context.setUserSession(currentUserSession);
-                RangerContextHolder.setSecurityContext(context);
-        }
+    @SuppressWarnings("static-access")
+    @Test
+    public void testGetCurrentUserId() {
+        Long expectedId = 1L;
+        Long id         = contextUtil.getCurrentUserId();
 
-        @SuppressWarnings("static-access")
-        @Test
-        public void testGetCurrentUserId(){
-                Long expectedId = 1L;
-                Long id = contextUtil.getCurrentUserId();
+        assertEquals(expectedId, id);
+    }
 
-                Assert.assertEquals(expectedId, id);
-        }
+    @SuppressWarnings("static-access")
+    @Test
+    public void testGetCurrentUserPublicName() {
+        String expectedName = "rangerAdmin";
+        gjUser.setPublicScreenName("rangerAdmin");
 
-        @SuppressWarnings("static-access")
-        @Test
-        public void testGetCurrentUserPublicName(){
-                String expectedName = "rangerAdmin";
-                gjUser.setPublicScreenName("rangerAdmin");
+        String publicName = contextUtil.getCurrentUserPublicName();
+        assertEquals(expectedName, publicName);
+    }
 
-                String publicName = contextUtil.getCurrentUserPublicName();
-                Assert.assertEquals(expectedName, publicName);
+    @SuppressWarnings("static-access")
+    @Test
+    public void testCurrentUserSession() {
+        UserSessionBase expectedUserSession = contextUtil.getCurrentUserSession();
+        assertNotNull(expectedUserSession);
+    }
 
-        }
+    @SuppressWarnings("static-access")
+    @Test
+    public void testCurrentUserSessionAsNull() {
+        context.setUserSession(null);
+        UserSessionBase expectedUserSession = contextUtil.getCurrentUserSession();
+        assertNull(expectedUserSession);
+    }
 
-        @SuppressWarnings("static-access")
-        @Test
-        public void testCurrentUserSession(){
-                UserSessionBase expectedUserSession = contextUtil.getCurrentUserSession();
-                Assert.assertNotNull(expectedUserSession);
-        }
+    @SuppressWarnings("static-access")
+    @Test
+    public void testCurrentRequestContext() {
+        RequestContext requestContext = new RequestContext();
+        context.setRequestContext(requestContext);
+        RequestContext expectedContext = contextUtil.getCurrentRequestContext();
+        assertNotNull(expectedContext);
+    }
 
-        @SuppressWarnings("static-access")
-        @Test
-        public void testCurrentUserSessionAsNull(){
-                context.setUserSession(null);
-                UserSessionBase expectedUserSession = contextUtil.getCurrentUserSession();
-                Assert.assertNull(expectedUserSession);
-        }
-
-        @SuppressWarnings("static-access")
-        @Test
-        public void testCurrentRequestContext(){
-                RequestContext requestContext = new RequestContext();
-                context.setRequestContext(requestContext);
-                RequestContext expectedContext = contextUtil.getCurrentRequestContext();
-                Assert.assertNotNull(expectedContext);
-
-        }
-
-        @SuppressWarnings("static-access")
-        @Test
-        public void testCurrentUserLoginId(){
-                String expectedLoginId = "rangerAdmin";
-                gjUser.setLoginId("rangerAdmin");
-                String loginId = contextUtil.getCurrentUserLoginId();
-                Assert.assertEquals(expectedLoginId, loginId);
-
-        }
-
+    @SuppressWarnings("static-access")
+    @Test
+    public void testCurrentUserLoginId() {
+        String expectedLoginId = "rangerAdmin";
+        gjUser.setLoginId("rangerAdmin");
+        String loginId = contextUtil.getCurrentUserLoginId();
+        assertEquals(expectedLoginId, loginId);
+    }
 }

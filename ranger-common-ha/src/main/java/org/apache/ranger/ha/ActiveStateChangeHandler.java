@@ -22,32 +22,30 @@ package org.apache.ranger.ha;
 /**
  * An interface that should be implemented by objects and services to react to
  * changes in state of an HMSToHdfsMetadataSynchronizer server.
- *
+ * <p>
  * The two state transitions we handle are (1) becoming active and (2) becoming
  * passive.
  */
 public interface ActiveStateChangeHandler {
+    /**
+     * Callback that is invoked on an implementor when this instance of
+     * ranger component server is declared the leader.
+     * <p>
+     * Any initialization that must be carried out by an implementor only when the
+     * server becomes active should happen on this callback.
+     *
+     * @throws {@link Exception} if anything is wrong on initialization
+     */
+    void instanceIsActive() throws Exception;
 
-	/**
-	 * Callback that is invoked on an implementor when this instance of
-	 * ranger component server is declared the leader.
-	 *
-	 * Any initialization that must be carried out by an implementor only when the
-	 * server becomes active should happen on this callback.
-	 *
-	 * @throws {@link Exception} if anything is wrong on initialization
-	 */
-	void instanceIsActive() throws Exception;
-
-	/**
-	 * Callback that is invoked on an implementor when this instance of
-	 * ranger component server is removed as the leader.
-	 *
-	 * Any cleanup that must be carried out by an implementor when the server
-	 * becomes passive should happen on this callback.
-	 *
-	 * @throws {@link Exception} if anything is wrong on shutdown
-	 */
-	void instanceIsPassive() throws Exception;
-
+    /**
+     * Callback that is invoked on an implementor when this instance of
+     * ranger component server is removed as the leader.
+     * <p>
+     * Any cleanup that must be carried out by an implementor when the server
+     * becomes passive should happen on this callback.
+     *
+     * @throws {@link Exception} if anything is wrong on shutdown
+     */
+    void instanceIsPassive() throws Exception;
 }

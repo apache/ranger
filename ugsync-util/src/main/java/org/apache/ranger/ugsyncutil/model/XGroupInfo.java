@@ -17,103 +17,117 @@
  * under the License.
  */
 
- package org.apache.ranger.ugsyncutil.model;
+package org.apache.ranger.ugsyncutil.model;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class XGroupInfo {
-	
-	private String id;
-	private String name;
-	private String description;
-	private String groupType;
-	private String isVisible;
-	private String groupSource;
-	private String otherAttributes;
-	private String syncSource;
-	private Map<String, String> otherAttrsMap = new HashMap<>();
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	
-	public String getGroupType() {
-		return groupType;
-	}
-	public void setGroupType(String groupType) {
-		this.groupType = groupType;
-	}
+    private String              id;
+    private String              name;
+    private String              description;
+    private String              groupType;
+    private String              isVisible;
+    private String              groupSource;
+    private String              otherAttributes;
+    private String              syncSource;
+    private Map<String, String> otherAttrsMap = new HashMap<>();
 
-	public String getIsVisible() {
-		return isVisible;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public void setIsVisible(String isVisible) {
-		this.isVisible = isVisible;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public String getGroupSource() {
-		return groupSource;
-	}
-	public void setGroupSource(String groupSource) {
-		this.groupSource = groupSource;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public Map<String, String> getOtherAttrsMap() {
-		return otherAttrsMap;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setOtherAttrsMap(Map<String, String> otherAttrsMap) {
-		if (otherAttrsMap != null) {
-			this.otherAttrsMap = otherAttrsMap;
-		}
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public String getOtherAttributes() {
-		return otherAttributes;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public void setOtherAttributes(String otherAttributes) {
-		this.otherAttributes = otherAttributes;
-	}
+    public String getGroupType() {
+        return groupType;
+    }
 
-	public String getSyncSource() { return syncSource; }
+    public void setGroupType(String groupType) {
+        this.groupType = groupType;
+    }
 
-	public void setSyncSource(String syncSource) { this.syncSource = syncSource; }
+    public String getIsVisible() {
+        return isVisible;
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		XGroupInfo groupInfo = (XGroupInfo) o;
-		if (name == null) {
-			if (groupInfo.name != null)
-				return false;
-		} else if (!name.equals(groupInfo.name))
-			return false;
-		return true;
-	}
+    public void setIsVisible(String isVisible) {
+        this.isVisible = isVisible;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
+    public String getGroupSource() {
+        return groupSource;
+    }
+
+    public void setGroupSource(String groupSource) {
+        this.groupSource = groupSource;
+    }
+
+    public Map<String, String> getOtherAttrsMap() {
+        return otherAttrsMap;
+    }
+
+    public void setOtherAttrsMap(Map<String, String> otherAttrsMap) {
+        if (otherAttrsMap != null) {
+            this.otherAttrsMap = otherAttrsMap;
+        }
+    }
+
+    public String getOtherAttributes() {
+        return otherAttributes;
+    }
+
+    public void setOtherAttributes(String otherAttributes) {
+        this.otherAttributes = otherAttributes;
+    }
+
+    public String getSyncSource() {
+        return syncSource;
+    }
+
+    public void setSyncSource(String syncSource) {
+        this.syncSource = syncSource;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime  = 31;
+        int       result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        XGroupInfo groupInfo = (XGroupInfo) o;
+        if (name == null) {
+            return groupInfo.name == null;
+        } else {
+            return name.equals(groupInfo.name);
+        }
+    }
 }

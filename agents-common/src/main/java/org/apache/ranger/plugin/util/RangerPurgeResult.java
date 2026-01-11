@@ -19,20 +19,19 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-
-@JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY )
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerPurgeResult {
     private String recordType;
     private Long   totalRecordCount;
     private Long   purgedRecordCount;
 
-    public RangerPurgeResult() { }
+    public RangerPurgeResult() {}
 
     public RangerPurgeResult(String recordType, Long totalRecordCount, Long purgedRecordCount) {
         this.recordType        = recordType;
@@ -65,7 +64,7 @@ public class RangerPurgeResult {
     }
 
     @Override
-    public String toString( ) {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         toString(sb);
@@ -84,5 +83,4 @@ public class RangerPurgeResult {
 
         return sb;
     }
-
 }

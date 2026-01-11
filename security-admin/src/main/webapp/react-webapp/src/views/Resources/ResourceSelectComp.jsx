@@ -23,6 +23,7 @@ import CreatableSelect from "react-select/creatable";
 import { debounce, isArray } from "lodash";
 import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
+import { selectInputCustomStyles } from "Components/CommonComponents";
 
 const noneOptions = {
   label: "None",
@@ -36,8 +37,7 @@ export default function ResourceSelectComp(props) {
     levelKey,
     serviceDetails,
     name,
-    isMultiResources,
-    changePolicyItemPermissions
+    isMultiResources
   } = props;
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -62,8 +62,8 @@ export default function ResourceSelectComp(props) {
         )
           ? selectedFormValues[`value-${m}`]?.map?.(({ value }) => value) || []
           : selectedFormValues[`value-${m}`] != undefined
-          ? [selectedFormValues[`value-${m}`].value]
-          : [];
+            ? [selectedFormValues[`value-${m}`].value]
+            : [];
       });
     }
     let data = {
@@ -187,8 +187,8 @@ export default function ResourceSelectComp(props) {
               meta.error
                 ? "isError"
                 : isMultiResources
-                ? `${name}.value-${levelKey}`
-                : `value-${levelKey}`
+                  ? `${name}.value-${levelKey}`
+                  : `value-${levelKey}`
             }
             isMulti={supportMultipleVal(formValues[`resourceName-${levelKey}`])}
             isClearable
@@ -215,6 +215,7 @@ export default function ResourceSelectComp(props) {
             }}
             filterOption={customFilterOptions}
             isLoading={isLoading}
+            styles={selectInputCustomStyles}
           />
           {formValues &&
             formValues[`resourceName-${levelKey}`]?.mandatory &&

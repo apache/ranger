@@ -18,13 +18,7 @@
  */
 package org.apache.ranger.services.storm;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -36,93 +30,93 @@ import org.apache.ranger.services.storm.client.StormResourceMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class RangerServiceStorm extends RangerBaseService {
+    public static final  String ACCESS_TYPE_GET_TOPOLOGY      = "getTopology";
+    public static final  String ACCESS_TYPE_GET_TOPOLOGY_CONF = "getTopologyConf";
+    public static final  String ACCESS_TYPE_GET_USER_TOPOLOGY = "getUserTopology";
+    public static final  String ACCESS_TYPE_GET_TOPOLOGY_INFO = "getTopologyInfo";
+    private static final Logger LOG                           = LoggerFactory.getLogger(RangerServiceStorm.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceStorm.class);
-	public static final String ACCESS_TYPE_GET_TOPOLOGY  = "getTopology";
-	public static final String ACCESS_TYPE_GET_TOPOLOGY_CONF  = "getTopologyConf";
-	public static final String ACCESS_TYPE_GET_USER_TOPOLOGY  = "getUserTopology";
-	public static final String ACCESS_TYPE_GET_TOPOLOGY_INFO  = "getTopologyInfo";
-	
-	public RangerServiceStorm() {
-		super();
-	}
-	
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    public RangerServiceStorm() {
+        super();
+    }
 
-	@Override
-	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceStorm.getDefaultRangerPolicies()");
-		}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
-		for (RangerPolicy defaultPolicy : ret) {
-			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-				List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicyItemAccess>();
-				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY));
-				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY_CONF));
-				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_USER_TOPOLOGY));
-				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY_INFO));
-				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
-				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-				policyItemForLookupUser.setAccesses(accessListForLookupUser);
-				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.addPolicyItem(policyItemForLookupUser);
-			}
-		}
+    @Override
+    public Map<String, Object> validateConfig() {
+        Map<String, Object> ret         = new HashMap<>();
+        String              serviceName = getServiceName();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceStorm.getDefaultRangerPolicies()");
-		}
-		return ret;
-	}
+        LOG.debug("==> RangerServiceStorm.validateConfig Service: ({} )", serviceName);
 
-	@Override
-	public Map<String,Object> validateConfig() throws Exception {
-		Map<String, Object> ret = new HashMap<String, Object>();
-		String 	serviceName  	    = getServiceName();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceStorm.validateConfig Service: (" + serviceName + " )");
-		}
-		if ( configs != null) {
-			try  {
-				ret = StormResourceMgr.validateConfig(serviceName, configs);
-			} catch (Exception e) {
-				LOG.error("<== RangerServiceStorm.validateConfig Error:" + e);
-				throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceStorm.validateConfig Response : (" + ret + " )");
-		}
-		return ret;
-	}
+        if (configs != null) {
+            try {
+                ret = StormResourceMgr.validateConfig(serviceName, configs);
+            } catch (Exception e) {
+                LOG.error("<== RangerServiceStorm.validateConfig Error:{}", String.valueOf(e));
+                throw e;
+            }
+        }
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-		
-		List<String> ret = new ArrayList<String>();
-		String 	serviceName  	   = getServiceName();
-		Map<String,String> configs = getConfigs();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceStorm.lookupResource Context: (" + context + ")");
-		}
-		if (context != null) {
-			try {
-				ret  = StormResourceMgr.getStormResources(serviceName,configs,context);
-						
-			} catch (Exception e) {
-			  LOG.error( "<==RangerServiceStorm.lookupResource Error : " + e);
-			  throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceStorm.lookupResource Response: (" + ret + ")");
-		}
-		return ret;
-	}
+        LOG.debug("<== RangerServiceStorm.validateConfig Response : ({} )", ret);
+
+        return ret;
+    }
+
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) {
+        List<String>        ret         = new ArrayList<>();
+        String              serviceName = getServiceName();
+        Map<String, String> configs     = getConfigs();
+
+        LOG.debug("==> RangerServiceStorm.lookupResource Context: ({})", context);
+
+        if (context != null) {
+            try {
+                ret = StormResourceMgr.getStormResources(serviceName, configs, context);
+            } catch (Exception e) {
+                LOG.error("<==RangerServiceStorm.lookupResource Error : {}", String.valueOf(e));
+                throw e;
+            }
+        }
+
+        LOG.debug("<== RangerServiceStorm.lookupResource Response: ({})", ret);
+
+        return ret;
+    }
+
+    @Override
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        LOG.debug("==> RangerServiceStorm.getDefaultRangerPolicies()");
+
+        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+        for (RangerPolicy defaultPolicy : ret) {
+            if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+                List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
+                accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY));
+                accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY_CONF));
+                accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_USER_TOPOLOGY));
+                accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY_INFO));
+                RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+                policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+                policyItemForLookupUser.setAccesses(accessListForLookupUser);
+                policyItemForLookupUser.setDelegateAdmin(false);
+                defaultPolicy.addPolicyItem(policyItemForLookupUser);
+            }
+        }
+
+        LOG.debug("<== RangerServiceStorm.getDefaultRangerPolicies()");
+
+        return ret;
+    }
 }

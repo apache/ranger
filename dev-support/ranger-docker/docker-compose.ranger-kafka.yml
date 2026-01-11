@@ -1,15 +1,19 @@
-version: '3'
 services:
   ranger-kafka:
     build:
       context: .
       dockerfile: Dockerfile.ranger-kafka
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - KAFKA_VERSION=${KAFKA_VERSION}
         - KAFKA_PLUGIN_VERSION=${KAFKA_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-kafka
     container_name: ranger-kafka
-    hostname: ranger-kafka.example.com
+    hostname: ranger-kafka.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-kafka:/etc/keytabs
     stdin_open: true
     tty: true
     networks:
@@ -24,6 +28,7 @@ services:
     environment:
       - KAFKA_VERSION
       - KAFKA_PLUGIN_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

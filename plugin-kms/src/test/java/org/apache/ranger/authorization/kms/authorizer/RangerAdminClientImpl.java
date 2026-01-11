@@ -17,43 +17,38 @@
 
 package org.apache.ranger.authorization.kms.authorizer;
 
+import org.apache.ranger.admin.client.AbstractRangerAdminClient;
+import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.ServiceTags;
+
 import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.List;
 
-import org.apache.ranger.admin.client.AbstractRangerAdminClient;
-import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.plugin.util.ServiceTags;
-
-
 /**
  * A test implementation of the RangerAdminClient interface that just reads policies in from a file and returns them
  */
 public class RangerAdminClientImpl extends AbstractRangerAdminClient {
-    private final static String cacheFilename = "kms-policies.json";
+    private static final String cacheFilename = "kms-policies.json";
 
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
-
         String basedir = System.getProperty("basedir");
         if (basedir == null) {
             basedir = new File(".").getCanonicalPath();
         }
 
-        java.nio.file.Path cachePath = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
-        byte[] cacheBytes = Files.readAllBytes(cachePath);
+        java.nio.file.Path cachePath  = FileSystems.getDefault().getPath(basedir, "/src/test/resources/" + cacheFilename);
+        byte[]             cacheBytes = Files.readAllBytes(cachePath);
 
         return gson.fromJson(new String(cacheBytes), ServicePolicies.class);
     }
 
     public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         return null;
-
     }
 
     public List<String> getTagTypes(String tagTypePattern) throws Exception {
         return null;
     }
-
-
 }

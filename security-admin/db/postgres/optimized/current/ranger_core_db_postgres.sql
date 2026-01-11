@@ -1268,40 +1268,26 @@ primary key (id)
 CREATE SEQUENCE x_policy_ref_resource_seq;
 CREATE TABLE x_policy_ref_resource(
 id BIGINT DEFAULT nextval('x_policy_ref_resource_seq'::regclass),
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 resource_def_id BIGINT NOT NULL,
 resource_name varchar(4000) DEFAULT NULL,
 primary key(id),
 CONSTRAINT x_p_ref_res_UK_polId_resDefId UNIQUE (policy_id, resource_def_id),
 CONSTRAINT x_p_ref_res_FK_policy_id FOREIGN KEY(policy_id) REFERENCES x_policy(id),
-CONSTRAINT x_p_ref_res_FK_resource_def_id FOREIGN KEY(resource_def_id) REFERENCES x_resource_def(id),
-CONSTRAINT x_p_ref_res_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_p_ref_res_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
+CONSTRAINT x_p_ref_res_FK_resource_def_id FOREIGN KEY(resource_def_id) REFERENCES x_resource_def(id)
 );
 commit;
 
 CREATE SEQUENCE x_policy_ref_access_type_seq;
 CREATE TABLE x_policy_ref_access_type(
 id BIGINT DEFAULT nextval('x_policy_ref_access_type_seq'::regclass),
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 access_def_id BIGINT NOT NULL,
 access_type_name varchar(4000) DEFAULT NULL,
 primary key(id),
 CONSTRAINT x_p_ref_acc_UK_polId_accDefId UNIQUE(policy_id, access_def_id),
 CONSTRAINT x_p_ref_acc_FK_policy_id FOREIGN KEY(policy_id) REFERENCES x_policy(id),
-CONSTRAINT x_p_ref_acc_FK_acc_def_id FOREIGN KEY(access_def_id) REFERENCES x_access_type_def(id),
-CONSTRAINT x_p_ref_acc_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_p_ref_acc_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
+CONSTRAINT x_p_ref_acc_FK_acc_def_id FOREIGN KEY(access_def_id) REFERENCES x_access_type_def(id)
 );
 commit;
 DROP TABLE IF EXISTS x_policy_ref_condition CASCADE;
@@ -1309,96 +1295,62 @@ DROP SEQUENCE IF EXISTS x_policy_ref_condition_seq;
 CREATE SEQUENCE x_policy_ref_condition_seq;
 CREATE TABLE x_policy_ref_condition(
 id BIGINT DEFAULT nextval('x_policy_ref_condition_seq'::regclass),
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 condition_def_id BIGINT NOT NULL,
 condition_name varchar(4000) DEFAULT NULL,
 primary key(id),
 CONSTRAINT x_p_ref_cond_UK_polId_cDefId UNIQUE(policy_id, condition_def_id),
 CONSTRAINT x_p_ref_cond_FK_policy_id FOREIGN KEY(policy_id) REFERENCES x_policy(id),
-CONSTRAINT x_p_ref_cond_FK_cond_def_id FOREIGN KEY(condition_def_id) REFERENCES x_policy_condition_def(id),
-CONSTRAINT x_p_ref_cond_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_p_ref_cond_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
+CONSTRAINT x_p_ref_cond_FK_cond_def_id FOREIGN KEY(condition_def_id) REFERENCES x_policy_condition_def(id)
 );
 commit;
 
 CREATE SEQUENCE x_policy_ref_datamask_type_seq;
 CREATE TABLE x_policy_ref_datamask_type(
 id BIGINT DEFAULT nextval('x_policy_ref_datamask_type_seq'::regclass),
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 datamask_def_id BIGINT NOT NULL,
 datamask_type_name varchar(4000) DEFAULT NULL,
 primary key(id),
 CONSTRAINT x_p_ref_dmk_UK_polId_dDefId UNIQUE(policy_id, datamask_def_id),
 CONSTRAINT x_p_ref_dmk_FK_policy_id FOREIGN KEY(policy_id) REFERENCES x_policy(id),
-CONSTRAINT x_p_ref_dmk_FK_dmk_def_id FOREIGN KEY(datamask_def_id) REFERENCES x_datamask_type_def(id),
-CONSTRAINT x_p_ref_dmk_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_p_ref_dmk_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
+CONSTRAINT x_p_ref_dmk_FK_dmk_def_id FOREIGN KEY(datamask_def_id) REFERENCES x_datamask_type_def(id)
 );
 commit;
 
 CREATE SEQUENCE x_policy_ref_user_seq;
 CREATE TABLE x_policy_ref_user(
 id BIGINT DEFAULT nextval('x_policy_ref_user_seq'::regclass),
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 user_id BIGINT NOT NULL,
 user_name varchar(4000) DEFAULT NULL,
 primary key(id),
 CONSTRAINT x_p_ref_usr_UK_polId_userId UNIQUE(policy_id, user_id),
 CONSTRAINT x_p_ref_usr_FK_policy_id FOREIGN KEY(policy_id) REFERENCES x_policy(id),
-CONSTRAINT x_p_ref_usr_FK_user_id FOREIGN KEY(user_id) REFERENCES x_user(id),
-CONSTRAINT x_p_ref_usr_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_p_ref_usr_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
+CONSTRAINT x_p_ref_usr_FK_user_id FOREIGN KEY(user_id) REFERENCES x_user(id)
 );
 commit;
 
 CREATE SEQUENCE x_policy_ref_group_seq;
 CREATE TABLE x_policy_ref_group(
 id BIGINT DEFAULT nextval('x_policy_ref_group_seq'::regclass),
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 group_id BIGINT NOT NULL,
 group_name varchar(4000) DEFAULT NULL,
 primary key(id),
 CONSTRAINT x_p_ref_grp_UK_polId_grpId UNIQUE(policy_id, group_id),
 CONSTRAINT x_p_ref_grp_FK_policy_id FOREIGN KEY(policy_id) REFERENCES x_policy(id),
-CONSTRAINT x_p_ref_grp_FK_group_id FOREIGN KEY(group_id) REFERENCES x_group(id),
-CONSTRAINT x_p_ref_grp_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
-CONSTRAINT x_p_ref_grp_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id)
+CONSTRAINT x_p_ref_grp_FK_group_id FOREIGN KEY(group_id) REFERENCES x_group(id)
 );
 commit;
 
 CREATE SEQUENCE x_sec_zone_ref_service_seq;
 CREATE TABLE x_security_zone_ref_service (
 id BIGINT DEFAULT nextval('x_sec_zone_ref_service_seq'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 zone_id BIGINT DEFAULT NULL NULL,
 service_id BIGINT DEFAULT NULL NULL,
 service_name varchar(255) NULL DEFAULT NULL::character varying,
 primary key (id),
-CONSTRAINT x_sz_ref_service_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_service_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_service_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_service_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id),
 CONSTRAINT x_sz_ref_service_FK_service_name FOREIGN KEY (service_name) REFERENCES x_service (name)
@@ -1407,16 +1359,10 @@ CONSTRAINT x_sz_ref_service_FK_service_name FOREIGN KEY (service_name) REFERENCE
 CREATE SEQUENCE x_sec_zone_ref_tag_srvc_seq;
 CREATE TABLE x_security_zone_ref_tag_srvc (
 id BIGINT DEFAULT nextval('x_sec_zone_ref_tag_srvc_SEQ'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 zone_id BIGINT DEFAULT NULL NULL,
 tag_srvc_id BIGINT DEFAULT NULL NULL,
 tag_srvc_name varchar(255) NULL DEFAULT NULL::character varying,
 primary key (id),
-CONSTRAINT x_sz_refTagSrvc_FK_aded_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_refTagSrvc_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_refTagSrvc_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_refTagSrvc_FK_tag_srvc_id FOREIGN KEY (tag_srvc_id) REFERENCES x_service (id),
 CONSTRAINT x_sz_refTagSrvc_FK_tag_srvc_name FOREIGN KEY (tag_srvc_name) REFERENCES x_service (name)
@@ -1425,16 +1371,10 @@ CONSTRAINT x_sz_refTagSrvc_FK_tag_srvc_name FOREIGN KEY (tag_srvc_name) REFERENC
 CREATE SEQUENCE x_sec_zone_ref_resource_seq;
 CREATE TABLE x_security_zone_ref_resource (
 id BIGINT DEFAULT nextval('x_sec_zone_ref_resource_seq'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 zone_id BIGINT DEFAULT NULL NULL,
 resource_def_id BIGINT DEFAULT NULL NULL,
 resource_name varchar(255) NULL DEFAULT NULL::character varying,
 primary key (id),
-CONSTRAINT x_sz_ref_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_service_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_res_FK_resource_def_id FOREIGN KEY (resource_def_id) REFERENCES x_resource_def (id)
 );
@@ -1442,17 +1382,11 @@ CONSTRAINT x_sz_ref_res_FK_resource_def_id FOREIGN KEY (resource_def_id) REFEREN
 CREATE SEQUENCE x_sec_zone_ref_user_seq;
 CREATE TABLE x_security_zone_ref_user (
 id BIGINT DEFAULT nextval('x_sec_zone_ref_user_seq'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 zone_id BIGINT DEFAULT NULL NULL,
 user_id BIGINT DEFAULT NULL NULL,
 user_name varchar(255) NULL DEFAULT NULL::character varying,
 user_type SMALLINT DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_sz_ref_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_user_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_user_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id),
 CONSTRAINT x_sz_ref_user_FK_user_name FOREIGN KEY (user_name) REFERENCES x_user (user_name)
@@ -1461,17 +1395,11 @@ CONSTRAINT x_sz_ref_user_FK_user_name FOREIGN KEY (user_name) REFERENCES x_user 
 CREATE SEQUENCE x_sec_zone_ref_group_seq;
 CREATE TABLE x_security_zone_ref_group (
 id BIGINT DEFAULT nextval('x_sec_zone_ref_group_seq'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 zone_id BIGINT DEFAULT NULL NULL,
 group_id BIGINT DEFAULT NULL NULL,
 group_name varchar(255) NULL DEFAULT NULL::character varying,
 group_type SMALLINT DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_sz_ref_group_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_group_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_group_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_group_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
 );
@@ -1515,17 +1443,11 @@ commit;
 CREATE SEQUENCE x_role_ref_user_SEQ;
 CREATE TABLE x_role_ref_user(
 id BIGINT DEFAULT nextval('x_role_ref_user_SEQ'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 role_id BIGINT NOT NULL,
 user_id BIGINT DEFAULT NULL NULL,
 user_name varchar(767) DEFAULT NULL NULL,
 priv_type INT DEFAULT NULL NULL,
  PRIMARY KEY (id),
- CONSTRAINT x_role_ref_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_role_ref_user_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_role_ref_user_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
  CONSTRAINT x_role_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id)
 );
@@ -1534,17 +1456,11 @@ commit;
 CREATE SEQUENCE x_role_ref_group_SEQ;
 CREATE TABLE x_role_ref_group(
 id BIGINT DEFAULT nextval('x_role_ref_group_SEQ'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 role_id BIGINT NOT NULL,
 group_id BIGINT DEFAULT NULL NULL,
 group_name varchar(767) DEFAULT NULL NULL,
 priv_type INT DEFAULT NULL NULL,
  PRIMARY KEY (id),
- CONSTRAINT x_role_ref_grp_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_role_ref_grp_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_role_ref_grp_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
  CONSTRAINT x_role_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
 );
@@ -1553,17 +1469,11 @@ commit;
 CREATE SEQUENCE x_policy_ref_role_SEQ;
 CREATE TABLE x_policy_ref_role(
 id BIGINT DEFAULT nextval('x_policy_ref_role_SEQ'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 role_id BIGINT NOT NULL,
 role_name varchar(255) DEFAULT NULL,
  PRIMARY KEY (id),
  CONSTRAINT x_pol_ref_role_UK_polId_roleId UNIQUE(policy_id,role_id),
- CONSTRAINT x_pol_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_pol_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_pol_ref_role_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
  CONSTRAINT x_pol_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
 );
@@ -1572,17 +1482,11 @@ commit;
 CREATE SEQUENCE x_role_ref_role_SEQ;
 CREATE TABLE x_role_ref_role(
 id BIGINT DEFAULT nextval('x_role_ref_role_SEQ'::regclass),
-create_time TIMESTAMP DEFAULT NULL NULL,
-update_time TIMESTAMP DEFAULT NULL NULL,
-added_by_id BIGINT DEFAULT NULL NULL,
-upd_by_id BIGINT DEFAULT NULL NULL,
 role_ref_id BIGINT DEFAULT NULL NULL,
 role_id BIGINT NOT NULL,
 role_name varchar(255) DEFAULT NULL NULL,
 priv_type INT DEFAULT NULL NULL,
  PRIMARY KEY (id),
- CONSTRAINT x_role_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_role_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_role_ref_role_FK_role_ref_id FOREIGN KEY (role_ref_id) REFERENCES x_role (id)
 );
 commit;
@@ -1687,20 +1591,23 @@ commit;
 
 CREATE SEQUENCE X_GDS_DATASET_SEQ;
 CREATE TABLE x_gds_dataset (
-    id              BIGINT       NOT NULL DEFAULT nextval('X_GDS_DATASET_SEQ'::regclass)
-  , guid            VARCHAR(64)  NOT NULL
-  , create_time     TIMESTAMP    NULL     DEFAULT NULL
-  , update_time     TIMESTAMP    NULL     DEFAULT NULL
-  , added_by_id     BIGINT       NULL     DEFAULT NULL
-  , upd_by_id       BIGINT       NULL     DEFAULT NULL
-  , version         BIGINT       NOT NULL DEFAULT 1
-  , is_enabled      BOOLEAN      NOT NULL DEFAULT '1'
-  , name            VARCHAR(512) NOT NULL
-  , description     TEXT         NULL     DEFAULT NULL
-  , acl             TEXT         NULL     DEFAULT NULL
-  , terms_of_use    TEXT         NULL     DEFAULT NULL
-  , options         TEXT         NULL     DEFAULT NULL
-  , additional_info TEXT         NULL     DEFAULT NULL
+    id                BIGINT       NOT NULL DEFAULT nextval('X_GDS_DATASET_SEQ'::regclass)
+  , guid              VARCHAR(64)  NOT NULL
+  , create_time       TIMESTAMP    NULL     DEFAULT NULL
+  , update_time       TIMESTAMP    NULL     DEFAULT NULL
+  , added_by_id       BIGINT       NULL     DEFAULT NULL
+  , upd_by_id         BIGINT       NULL     DEFAULT NULL
+  , version           BIGINT       NOT NULL DEFAULT 1
+  , is_enabled        BOOLEAN      NOT NULL DEFAULT '1'
+  , name              VARCHAR(512) NOT NULL
+  , description       TEXT         NULL     DEFAULT NULL
+  , acl               TEXT         NULL     DEFAULT NULL
+  , terms_of_use      TEXT         NULL     DEFAULT NULL
+  , options           TEXT         NULL     DEFAULT NULL
+  , additional_info   TEXT         NULL     DEFAULT NULL
+  , validity_schedule TEXT         NULL     DEFAULT NULL
+  , labels            TEXT         NULL     DEFAULT NULL
+  , keywords          TEXT         NULL     DEFAULT NULL
   , PRIMARY KEY(id)
   , CONSTRAINT x_gds_dataset_UK_name UNIQUE(name)
   , CONSTRAINT x_gds_dataset_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id)
@@ -1779,7 +1686,7 @@ CREATE TABLE x_gds_shared_resource(
   , name                 VARCHAR(512) NOT NULL
   , description          TEXT         NULL     DEFAULT NULL
   , data_share_id        BIGINT       NOT NULL
-  , resource             TEXT         NOT NULL
+  , resource_name        TEXT         NOT NULL
   , resource_signature   VARCHAR(128) NOT NULL
   , sub_resource        TEXT         NULL     DEFAULT NULL
   , sub_resource_type   TEXT         NULL     DEFAULT NULL
@@ -1977,6 +1884,7 @@ CREATE INDEX x_resource_FK_parent_id ON x_resource(parent_id);
 CREATE INDEX x_resource_cr_time ON x_resource(create_time);
 CREATE INDEX x_resource_up_time ON x_resource(update_time);
 CREATE INDEX x_trx_log_v2_FK_added_by_id ON x_trx_log_v2(added_by_id);
+CREATE INDEX x_trx_log_v2_action ON x_trx_log_v2(action);
 CREATE INDEX x_trx_log_v2_cr_time ON x_trx_log_v2(create_time);
 CREATE INDEX x_trx_log_v2_trx_id ON x_trx_log_v2(trx_id);
 CREATE INDEX x_user_FK_added_by_id ON x_user(added_by_id);
@@ -2146,6 +2054,11 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('070',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('071',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('072',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('073',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('074',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('076',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('077',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
@@ -2244,6 +2157,10 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10055',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10056',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10060',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10061',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10062',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10063',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10064',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 DROP VIEW IF EXISTS vx_principal;

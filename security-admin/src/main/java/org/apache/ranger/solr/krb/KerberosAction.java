@@ -23,6 +23,7 @@ import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 
 import javax.security.auth.login.LoginException;
+
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 
@@ -30,17 +31,15 @@ import java.security.PrivilegedExceptionAction;
  * Helper class for processors to perform an action as a KerberosUser.
  */
 public class KerberosAction<T> {
-
-    private final KerberosUser kerberosUser;
+    private final KerberosUser                 kerberosUser;
     private final PrivilegedExceptionAction<T> action;
-    private final Logger logger;
+    private final Logger                       logger;
 
-    public KerberosAction(final KerberosUser kerberosUser,
-                          final PrivilegedExceptionAction<T> action,
-                          final Logger logger) {
+    public KerberosAction(final KerberosUser kerberosUser, final PrivilegedExceptionAction<T> action, final Logger logger) {
         this.kerberosUser = kerberosUser;
-        this.action = action;
-        this.logger = logger;
+        this.action       = action;
+        this.logger       = logger;
+
         Validate.notNull(this.kerberosUser);
         Validate.notNull(this.action);
         Validate.notNull(this.logger);
@@ -48,11 +47,15 @@ public class KerberosAction<T> {
 
     public T execute() throws Exception {
         T result;
+
         // lazily login the first time the processor executes
         if (!kerberosUser.isLoggedIn()) {
             try {
                 kerberosUser.login();
-                if (logger != null) logger.info("Successful login for " + kerberosUser.getPrincipal());
+
+                if (logger != null) {
+                    logger.info("Successful login for {}", kerberosUser.getPrincipal());
+                }
             } catch (LoginException e) {
                 throw new Exception("Login failed due to: " + e.getMessage(), e);
             }
@@ -77,12 +80,14 @@ public class KerberosAction<T> {
             try {
                 kerberosUser.logout();
                 kerberosUser.login();
+
                 result = kerberosUser.doAs(action);
             } catch (Exception e) {
                 throw new Exception("Retrying privileged action failed due to: " + e.getMessage(), e);
             }
         } catch (PrivilegedActionException pae) {
             final Exception cause = pae.getException();
+
             throw new Exception("Privileged action failed due to: " + cause.getMessage(), cause);
         }
 

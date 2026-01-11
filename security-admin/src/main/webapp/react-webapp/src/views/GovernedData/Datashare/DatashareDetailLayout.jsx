@@ -17,29 +17,15 @@
  * under the License.
  */
 
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useReducer
-} from "react";
-import {
-  useParams,
-  useNavigate,
-  Link,
-  useLocation,
-  useSearchParams
-} from "react-router-dom";
-import { fetchApi } from "../../../utils/fetchAPI";
-import { Loader } from "../../../components/CommonComponents";
-import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { fetchApi } from "Utils/fetchAPI";
+import { Loader } from "Components/CommonComponents";
+import StructuredFilter from "Components/structured-filter/react-typeahead/tokenizer";
 import {
   Button,
   Col,
   Modal,
-  Accordion,
-  Card,
   Tab,
   Tabs,
   DropdownButton,
@@ -47,14 +33,13 @@ import {
 } from "react-bootstrap";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
-import { BlockUi } from "../../../components/CommonComponents";
+import { BlockUi } from "Components/CommonComponents";
 import PrinciplePermissionComp from "../Dataset/PrinciplePermissionComp";
 import { Form, Field } from "react-final-form";
 import arrayMutators from "final-form-arrays";
-import ReactPaginate from "react-paginate";
 import AddSharedResourceComp from "./AddSharedResourceComp";
-import CustomBreadcrumb from "../../CustomBreadcrumb";
-import PolicyConditionsComp from "../../PolicyListing/PolicyConditionsComp";
+import CustomBreadcrumb from "Views/CustomBreadcrumb";
+import PolicyConditionsComp from "Views/PolicyListing/PolicyConditionsComp";
 import {
   getTableSortBy,
   getTableSortType,
@@ -63,16 +48,16 @@ import {
   serverError,
   policyConditionUpdatedJSON,
   capitalizeFirstLetter
-} from "../../../utils/XAUtils";
-import XATableLayout from "../../../components/XATableLayout";
+} from "Utils/XAUtils";
+import XATableLayout from "Components/XATableLayout";
 import moment from "moment-timezone";
-import { getServiceDef } from "../../../utils/appState";
+import { getServiceDef } from "Utils/appState";
 import DatashareInDatasetListComp from "../Dataset/DatashareInDatasetListComp";
-import { isEmpty, isObject, isEqual } from "lodash";
+import { isObject, isEqual } from "lodash";
 import Select from "react-select";
-import OperationAdminModal from "../../AuditEvent/OperationAdminModal";
+import OperationAdminModal from "Views/AuditEvent/Admin/OperationAdminModal";
 import historyDetailsIcon from "../../../images/history-details.svg";
-import { ClassTypes } from "../../../utils/XAEnums";
+import { ClassTypes } from "Utils/XAEnums";
 
 const DatashareDetailLayout = () => {
   let { datashareId } = useParams();
@@ -178,7 +163,7 @@ const DatashareDetailLayout = () => {
     setLoader(false);
     let resp = [];
     let params = { ...searchFilterParams };
-    params["dataShareId"] = dataShareId;
+    params["dataShareId"] = datashareId;
     try {
       resp = await fetchApi({
         url: "gds/datashare/summary",

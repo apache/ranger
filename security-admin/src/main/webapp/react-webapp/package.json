@@ -6,7 +6,8 @@
   "scripts": {
     "start": "webpack serve --config ./config/webpack.dev.config.js",
     "build": "webpack --config ./config/webpack.prod.config.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "update-babel-config": "node update-babel-config.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,7 @@
     "@babel/core": "^7.13.16",
     "@babel/preset-env": "^7.14.2",
     "@babel/preset-react": "^7.13.13",
-    "axios": "^0.21.4",
+    "axios": "^1.12.2",
     "babel-loader": "^8.2.2",
     "bootstrap": "^5.3.2",
     "bootstrap-switch-button-react": "^1.2.0",
@@ -56,9 +57,9 @@
     "react-toastify": "^8.1.0",
     "style-loader": "^2.0.0",
     "tether": "^2.0.0",
-    "webpack": "^5.75.0",
+    "webpack": "^5.94.0",
     "webpack-cli": "^5.0.0",
-    "webpack-dev-server": "^4.11.0",
+    "webpack-dev-server": "^5.2.2",
     "webpack-merge": "^5.8.0"
   }
 }

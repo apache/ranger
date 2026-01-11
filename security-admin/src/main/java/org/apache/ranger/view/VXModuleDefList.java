@@ -17,56 +17,57 @@
 
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXModuleDefList extends VList {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    List<VXModuleDef> vXModuleDef = new ArrayList<>();
 
-	List<VXModuleDef> vXModuleDef = new ArrayList<VXModuleDef>();
+    public VXModuleDefList() {
+        super();
+    }
 
-	public VXModuleDefList() {
-		super();
-	}
+    public VXModuleDefList(List<VXModuleDef> objList) {
+        super(objList);
+        this.vXModuleDef = objList;
+    }
 
-	public VXModuleDefList(List<VXModuleDef> objList) {
-		super(objList);
-		this.vXModuleDef = objList;
-	}
+    /**
+     * @return the vXModuleDef
+     */
+    @JsonProperty("vXModuleDef")
+    public List<VXModuleDef> getvXModuleDef() {
+        return vXModuleDef;
+    }
 
-	/**
-	 * @return the vXModuleDef
-	 */
-	public List<VXModuleDef> getvXModuleDef() {
-		return vXModuleDef;
-	}
+    /**
+     * @param vXModuleDef the vXModuleDef to set
+     */
+    @JsonProperty("vXModuleDef")
+    public void setvXModuleDef(List<VXModuleDef> vXModuleDef) {
+        this.vXModuleDef = vXModuleDef;
+    }
 
-	/**
-	 * @param vXModuleDef the vXModuleDef to set
-	 */
-	public void setvXModuleDef(List<VXModuleDef> vXModuleDef) {
-		this.vXModuleDef = vXModuleDef;
-	}
+    @Override
+    public int getListSize() {
+        if (vXModuleDef != null) {
+            return vXModuleDef.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public int getListSize() {
-		if (vXModuleDef != null) {
-			return vXModuleDef.size();
-		}
-		return 0;
-	}
-
-	@Override
-	public List<VXModuleDef> getList() {
-		return vXModuleDef;
-	}
-
+    @Override
+    public List<VXModuleDef> getList() {
+        return vXModuleDef;
+    }
 }

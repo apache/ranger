@@ -19,17 +19,17 @@
 
 package org.apache.ranger.plugin.util;
 
+import jdk.nashorn.api.scripting.ClassFilter;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
-import jdk.nashorn.api.scripting.ClassFilter;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 public class NashornScriptEngineCreator implements ScriptEngineCreator {
     private static final Logger LOG = LoggerFactory.getLogger(NashornScriptEngineCreator.class);
 
-    private static final String[] SCRIPT_ENGINE_ARGS = new String[] { "--no-java", "--no-syntax-extensions" };
+    private static final String[] SCRIPT_ENGINE_ARGS = new String[] {"--no-java", "--no-syntax-extensions"};
     private static final String   ENGINE_NAME        = "NashornScriptEngine";
 
     @Override
@@ -37,7 +37,7 @@ public class NashornScriptEngineCreator implements ScriptEngineCreator {
         ScriptEngine ret = null;
 
         if (clsLoader == null) {
-            clsLoader = Thread.currentThread().getContextClassLoader();
+            clsLoader = getDefaultClassLoader();
         }
 
         try {

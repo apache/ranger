@@ -17,207 +17,220 @@
 
 package org.apache.ranger.services.kms;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.service.RangerBaseService;
+import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.apache.ranger.services.kms.client.KMSResourceMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
-import org.apache.ranger.plugin.service.RangerBaseService;
-import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.services.kms.client.KMSResourceMgr;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RangerServiceKMS extends RangerBaseService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceKMS.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceKMS.class);
+    public static final String ACCESS_TYPE_DECRYPT_EEK  = "decrypteek";
+    public static final String ACCESS_TYPE_GENERATE_EEK = "generateeek";
+    public static final String ACCESS_TYPE_GET_METADATA = "getmetadata";
+    public static final String ACCESS_TYPE_GET          = "get";
 
-	public static final String ACCESS_TYPE_DECRYPT_EEK    = "decrypteek";
-	public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";
-	public static final String ACCESS_TYPE_GET_METADATA   = "getmetadata";
-	public static final String ACCESS_TYPE_GET  = "get";
+    public RangerServiceKMS() {
+        super();
+    }
 
-	public RangerServiceKMS() {
-		super();
-	}
-	
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
-	@Override
-	public Map<String,Object> validateConfig() throws Exception {
-		Map<String, Object> ret = new HashMap<String, Object>();
-		String 	serviceName  	    = getServiceName();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKMS.validateConfig Service: (" + serviceName + " )");
-		}
-		if ( configs != null) {
-			try  {
-				ret = KMSResourceMgr.validateConfig(serviceName, configs);
-			} catch (Exception e) {
-				LOG.error("<== RangerServiceKMS.validateConfig Error:" + e);
-				throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKMS.validateConfig Response : (" + ret + " )");
-		}
-		return ret;
-	}
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        Map<String, Object> ret         = new HashMap<>();
+        String              serviceName = getServiceName();
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
-		
-		List<String> ret 		   = new ArrayList<String>();
-		String 	serviceName  	   = getServiceName();
-		Map<String,String> configs = getConfigs();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKMS.lookupResource Context: (" + context + ")");
-		}
-		if (context != null) {
-			try {
-				ret  = KMSResourceMgr.getKMSResources(serviceName,configs,context);
-			} catch (Exception e) {
-			  LOG.error( "<==RangerServiceKMS.lookupResource Error : " + e);
-			  throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKMS.lookupResource Response: (" + ret + ")");
-		}
-		return ret;
-	}
+        LOG.debug("==> RangerServiceKMS.validateConfig Service: ({})", serviceName);
 
-	@Override
-	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        if (configs != null) {
+            try {
+                ret = KMSResourceMgr.validateConfig(serviceName, configs);
+            } catch (Exception e) {
+                LOG.error("<== RangerServiceKMS.validateConfig Error:{}", String.valueOf(e));
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceKMS.getDefaultRangerPolicies() ");
-		}
+                throw e;
+            }
+        }
 
-		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+        LOG.debug("<== RangerServiceKMS.validateConfig Response : ({})", ret);
 
-		String adminPrincipal = getConfig().get(ADMIN_USER_PRINCIPAL);
-		String adminKeytab = getConfig().get(ADMIN_USER_KEYTAB);
-		String authType = getConfig().get(RANGER_AUTH_TYPE,"simple");
+        return ret;
+    }
 
-		String adminUser = getLookupUser(authType, adminPrincipal, adminKeytab);
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) {
+        List<String>        ret         = new ArrayList<>();
+        String              serviceName = getServiceName();
+        Map<String, String> configs     = getConfigs();
 
-		// Add default policies for HDFS, HIVE, HABSE & OM users.
-		List<RangerServiceDef.RangerAccessTypeDef> hdfsAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
-		List<RangerServiceDef.RangerAccessTypeDef> omAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
-		List<RangerServiceDef.RangerAccessTypeDef> hiveAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
-		List<RangerServiceDef.RangerAccessTypeDef> hbaseAccessTypeDefs = new ArrayList<RangerServiceDef.RangerAccessTypeDef>();
+        LOG.debug("==> RangerServiceKMS.lookupResource Context: ({})", context);
 
-		for(RangerServiceDef.RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
-			if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GET_METADATA)) {
-				hdfsAccessTypeDefs.add(accessTypeDef);
-				omAccessTypeDefs.add(accessTypeDef);
-				hiveAccessTypeDefs.add(accessTypeDef);
-			} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GENERATE_EEK)) {
-				hdfsAccessTypeDefs.add(accessTypeDef);
-				omAccessTypeDefs.add(accessTypeDef);
-			} else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_DECRYPT_EEK)) {
-				hiveAccessTypeDefs.add(accessTypeDef);
-				hbaseAccessTypeDefs.add(accessTypeDef);
-			}
-		}
+        if (context != null) {
+            try {
+                ret = KMSResourceMgr.getKMSResources(serviceName, configs, context);
+            } catch (Exception e) {
+                LOG.error("<==RangerServiceKMS.lookupResource Error : {}", String.valueOf(e));
 
-		for (RangerPolicy defaultPolicy : ret) {
-			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
-				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_GET)));
-				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.addPolicyItem(policyItemForLookupUser);
-			}
+                throw e;
+            }
+        }
 
-			for (RangerPolicy.RangerPolicyItem item : defaultPolicy.getPolicyItems()) {
-                                if(StringUtils.isNotBlank(adminUser)){
-                                        item.addUser(adminUser);
-                                }
-			}
+        LOG.debug("<== RangerServiceKMS.lookupResource Response: ({})", ret);
 
-			String hdfsUser = getConfig().get("ranger.kms.service.user.hdfs", "hdfs");
-			if (hdfsUser != null && !hdfsUser.isEmpty()) {
-				LOG.info("Creating default KMS policy item for " + hdfsUser);
-				List<String> users = new ArrayList<String>();
-				users.add(hdfsUser);
-				RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem(hdfsAccessTypeDefs, users);
-				defaultPolicy.addPolicyItem(policyItem);
-			}
+        return ret;
+    }
 
-			final String omUser = getConfig().get("ranger.kms.service.user.om", "om");
-			if (StringUtils.isNotEmpty(omUser)) {
-				LOG.info("Creating default KMS policy item for " + omUser);
-				List<String> users = new ArrayList<String>();
-				users.add(omUser);
-				RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem(omAccessTypeDefs, users);
-				defaultPolicy.addPolicyItem(policyItem);
-			}
+    @Override
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        LOG.debug("==> RangerServiceKMS.getDefaultRangerPolicies()");
 
-			String hiveUser = getConfig().get("ranger.kms.service.user.hive", "hive");
+        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
-			if (hiveUser != null && !hiveUser.isEmpty()) {
-				LOG.info("Creating default KMS policy item for " + hiveUser);
-				List<String> users = new ArrayList<String>();
-				users.add(hiveUser);
-				RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem(hiveAccessTypeDefs, users);
-				defaultPolicy.addPolicyItem(policyItem);
-			}
+        String adminPrincipal = getConfig().get(ADMIN_USER_PRINCIPAL);
+        String adminKeytab    = getConfig().get(ADMIN_USER_KEYTAB);
+        String authType       = getConfig().get(RANGER_AUTH_TYPE, "simple");
+        String adminUser      = getLookupUser(authType, adminPrincipal, adminKeytab);
 
-			String hbaseUser = getConfig().get("ranger.kms.service.user.hbase", "hbase");
+        // Add default policies for HDFS, HIVE, HABSE & OM users.
+        List<RangerAccessTypeDef> hdfsAccessTypeDefs  = new ArrayList<>();
+        List<RangerAccessTypeDef> omAccessTypeDefs    = new ArrayList<>();
+        List<RangerAccessTypeDef> hiveAccessTypeDefs  = new ArrayList<>();
+        List<RangerAccessTypeDef> hbaseAccessTypeDefs = new ArrayList<>();
 
-			if (hbaseUser != null && !hbaseUser.isEmpty()) {
-				LOG.info("Creating default KMS policy item for " + hbaseUser);
-				List<String> users = new ArrayList<String>();
-				users.add(hbaseUser);
-				RangerPolicy.RangerPolicyItem policyItem = createDefaultPolicyItem(hbaseAccessTypeDefs, users);
-				defaultPolicy.addPolicyItem(policyItem);
-			}
-		}
+        for (RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
+            if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GET_METADATA)) {
+                hdfsAccessTypeDefs.add(accessTypeDef);
+                omAccessTypeDefs.add(accessTypeDef);
+                hiveAccessTypeDefs.add(accessTypeDef);
+            } else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_GENERATE_EEK)) {
+                hdfsAccessTypeDefs.add(accessTypeDef);
+                omAccessTypeDefs.add(accessTypeDef);
+            } else if (accessTypeDef.getName().equalsIgnoreCase(ACCESS_TYPE_DECRYPT_EEK)) {
+                hiveAccessTypeDefs.add(accessTypeDef);
+                hbaseAccessTypeDefs.add(accessTypeDef);
+            }
+        }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceKMS.getDefaultRangerPolicies() : " + ret);
-		}
-		return ret;
-	}
+        for (RangerPolicy defaultPolicy : ret) {
+            if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+                RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
 
-	private RangerPolicy.RangerPolicyItem createDefaultPolicyItem(List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs, List<String> users) throws Exception {
+                policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+                policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_GET)));
+                policyItemForLookupUser.setDelegateAdmin(false);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceTag.createDefaultPolicyItem()");
-		}
+                defaultPolicy.addPolicyItem(policyItemForLookupUser);
+            }
 
-		RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
+            for (RangerPolicy.RangerPolicyItem item : defaultPolicy.getPolicyItems()) {
+                if (StringUtils.isNotBlank(adminUser)) {
+                    item.addUser(adminUser);
+                }
+            }
 
-		policyItem.setUsers(users);
+            String hdfsUser = getConfig().get("ranger.kms.service.user.hdfs", "hdfs");
 
-		List<RangerPolicy.RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+            if (hdfsUser != null && !hdfsUser.isEmpty()) {
+                LOG.info("Creating default KMS policy item for {}", hdfsUser);
 
-		for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
-			RangerPolicy.RangerPolicyItemAccess access = new RangerPolicy.RangerPolicyItemAccess();
-			access.setType(accessTypeDef.getName());
-			access.setIsAllowed(true);
-			accesses.add(access);
-		}
+                List<String> users = new ArrayList<>();
 
-		policyItem.setAccesses(accesses);
-		policyItem.setDelegateAdmin(true);
+                users.add(hdfsUser);
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceTag.createDefaultPolicyItem(): " + policyItem );
-		}
-		return policyItem;
-	}
+                RangerPolicyItem policyItem = createDefaultPolicyItem(hdfsAccessTypeDefs, users);
+
+                defaultPolicy.addPolicyItem(policyItem);
+            }
+
+            final String omUser = getConfig().get("ranger.kms.service.user.om", "om");
+
+            if (StringUtils.isNotEmpty(omUser)) {
+                LOG.info("Creating default KMS policy item for {}", omUser);
+
+                List<String> users = new ArrayList<>();
+
+                users.add(omUser);
+
+                RangerPolicyItem policyItem = createDefaultPolicyItem(omAccessTypeDefs, users);
+
+                defaultPolicy.addPolicyItem(policyItem);
+            }
+
+            String hiveUser = getConfig().get("ranger.kms.service.user.hive", "hive");
+
+            if (hiveUser != null && !hiveUser.isEmpty()) {
+                LOG.info("Creating default KMS policy item for {}", hiveUser);
+
+                List<String> users = new ArrayList<>();
+
+                users.add(hiveUser);
+
+                RangerPolicyItem policyItem = createDefaultPolicyItem(hiveAccessTypeDefs, users);
+
+                defaultPolicy.addPolicyItem(policyItem);
+            }
+
+            String hbaseUser = getConfig().get("ranger.kms.service.user.hbase", "hbase");
+
+            if (hbaseUser != null && !hbaseUser.isEmpty()) {
+                LOG.info("Creating default KMS policy item for {}", hbaseUser);
+
+                List<String> users = new ArrayList<>();
+
+                users.add(hbaseUser);
+
+                RangerPolicyItem policyItem = createDefaultPolicyItem(hbaseAccessTypeDefs, users);
+
+                defaultPolicy.addPolicyItem(policyItem);
+            }
+        }
+
+        LOG.debug("<== RangerServiceKMS.getDefaultRangerPolicies() : {}", ret);
+
+        return ret;
+    }
+
+    private RangerPolicy.RangerPolicyItem createDefaultPolicyItem(List<RangerAccessTypeDef> accessTypeDefs, List<String> users) {
+        LOG.debug("==> RangerServiceTag.createDefaultPolicyItem()");
+
+        RangerPolicyItem policyItem = new RangerPolicyItem();
+
+        policyItem.setUsers(users);
+
+        List<RangerPolicyItemAccess> accesses = new ArrayList<>();
+
+        for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+            RangerPolicyItemAccess access = new RangerPolicyItemAccess();
+
+            access.setType(accessTypeDef.getName());
+            access.setIsAllowed(true);
+
+            accesses.add(access);
+        }
+
+        policyItem.setAccesses(accesses);
+        policyItem.setDelegateAdmin(true);
+
+        LOG.debug("<== RangerServiceTag.createDefaultPolicyItem(): {}", policyItem);
+
+        return policyItem;
+    }
 }
-

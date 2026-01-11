@@ -1,15 +1,19 @@
-version: '3'
 services:
   ranger-hbase:
     build:
       context: .
       dockerfile: Dockerfile.ranger-hbase
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - HBASE_VERSION=${HBASE_VERSION}
         - HBASE_PLUGIN_VERSION=${HBASE_PLUGIN_VERSION}
+        - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-hbase
     container_name: ranger-hbase
-    hostname: ranger-hbase.example.com
+    hostname: ranger-hbase.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-hbase:/etc/keytabs
     stdin_open: true
     tty: true
     networks:
@@ -27,6 +31,7 @@ services:
     environment:
       - HBASE_VERSION
       - HBASE_PLUGIN_VERSION
+      - KERBEROS_ENABLED
 
 networks:
   ranger:

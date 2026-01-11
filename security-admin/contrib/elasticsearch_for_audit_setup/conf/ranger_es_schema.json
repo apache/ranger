@@ -117,6 +117,9 @@
     "projects": {
       "type": "keyword"
     },
+    "datasetIds": {
+      "type": "long"
+    },
     "text": {
       "type": "text"
     },

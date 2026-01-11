@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,7 +22,12 @@ import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.ranger.metrics.RangerMetricsSystemWrapper;
 import org.apache.ranger.server.tomcat.EmbeddedServerMetricsCollector;
-import org.junit.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -30,44 +35,39 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TestRangerMetricsContainerSource {
-
-    private static final String CONTAINER_METRIC_SOURCE_NAME = "RangerContainer";
-    private static RangerMetricsSystemWrapper rangerMetricsSystemWrapper;
-
+    private static final String                     CONTAINER_METRIC_SOURCE_NAME = "RangerContainer";
+    private static       RangerMetricsSystemWrapper rangerMetricsSystemWrapper;
+    private static       MetricsSystem metricsSystem;
     private EmbeddedServerMetricsCollector embeddedServerMetricsCollector;
 
-    private static MetricsSystem metricsSystem;
-
-    public TestRangerMetricsContainerSource(){
+    public TestRangerMetricsContainerSource() {
     }
 
-    @BeforeClass
-    public static void init(){
-
-        metricsSystem = DefaultMetricsSystem.instance();
+    @BeforeAll
+    public static void init() {
+        metricsSystem                                               = DefaultMetricsSystem.instance();
         TestRangerMetricsContainerSource.rangerMetricsSystemWrapper = new RangerMetricsSystemWrapper();
-        TestRangerMetricsContainerSource.rangerMetricsSystemWrapper.init("test", null, (List)null);
+        TestRangerMetricsContainerSource.rangerMetricsSystemWrapper.init("test", null, (List) null);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownAfterClass() {
         metricsSystem.shutdown();
     }
 
-    // Without proper start of EmbeddedServer, embeddedServerMetricsCollector will be returned null.
-    // That's why, mocked instance should be injected here.
-    @Before
-    public void before(){
+    /* Without proper start of EmbeddedServer, embeddedServerMetricsCollector will return null.
+     That's why, mocked instance should be injected here. */
+    @BeforeEach
+    public void before() {
         embeddedServerMetricsCollector = mock(EmbeddedServerMetricsCollector.class);
-        ((RangerMetricsContainerSource)DefaultMetricsSystem.instance().getSource(CONTAINER_METRIC_SOURCE_NAME)).setEmbeddedServerMetricsCollector(embeddedServerMetricsCollector);
+        ((RangerMetricsContainerSource) DefaultMetricsSystem.instance().getSource(CONTAINER_METRIC_SOURCE_NAME)).setEmbeddedServerMetricsCollector(embeddedServerMetricsCollector);
     }
 
     // Resetting it back to original state.
-    @After
-    public void after(){
-        ((RangerMetricsContainerSource)DefaultMetricsSystem.instance().getSource(CONTAINER_METRIC_SOURCE_NAME)).setEmbeddedServerMetricsCollector(null);
+    @AfterEach
+    public void after() {
+        ((RangerMetricsContainerSource) DefaultMetricsSystem.instance().getSource(CONTAINER_METRIC_SOURCE_NAME)).setEmbeddedServerMetricsCollector(null);
     }
-
 
     /*
      * Test Case:
@@ -79,8 +79,7 @@ public class TestRangerMetricsContainerSource {
      */
 
     @Test
-    public void testContainerMetricsCollection(){
-
+    public void testContainerMetricsCollection() {
         when(embeddedServerMetricsCollector.getActiveConnectionCount()).thenReturn(1L);
         when(embeddedServerMetricsCollector.getMaxAllowedConnection()).thenReturn(8192L);
         when(embeddedServerMetricsCollector.getConnectionAcceptCount()).thenReturn(100);
@@ -93,16 +92,14 @@ public class TestRangerMetricsContainerSource {
 
         metricsSystem.publishMetricsNow();
 
-        Assert.assertEquals(1L,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ActiveConnectionsCount"));
-        Assert.assertEquals(60000L,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ConnectionTimeout"));
-        Assert.assertEquals(200,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("MaxWorkerThreadsCount"));
-        Assert.assertEquals(15,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("TotalWorkerThreadsCount"));
-        Assert.assertEquals(60000L,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("KeepAliveTimeout"));
-        Assert.assertEquals(2,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ActiveWorkerThreadsCount"));
-        Assert.assertEquals(100,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ConnectionAcceptCount"));
-        Assert.assertEquals(10,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("MinSpareWorkerThreadsCount"));
-        Assert.assertEquals(8192L,  rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("MaxConnectionsCount"));
-
+        Assertions.assertEquals(1L, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ActiveConnectionsCount"));
+        Assertions.assertEquals(60000L, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ConnectionTimeout"));
+        Assertions.assertEquals(200, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("MaxWorkerThreadsCount"));
+        Assertions.assertEquals(15, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("TotalWorkerThreadsCount"));
+        Assertions.assertEquals(60000L, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("KeepAliveTimeout"));
+        Assertions.assertEquals(2, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ActiveWorkerThreadsCount"));
+        Assertions.assertEquals(100, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("ConnectionAcceptCount"));
+        Assertions.assertEquals(10, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("MinSpareWorkerThreadsCount"));
+        Assertions.assertEquals(8192L, rangerMetricsSystemWrapper.getRangerMetrics().get("RangerWebContainer").get("MaxConnectionsCount"));
     }
-
 }

@@ -17,220 +17,219 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * Key
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.common.AppConstants;
 
 import java.util.Map;
 
-import org.apache.ranger.common.AppConstants;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VXKmsKey extends VXDataObject implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * Name
-	 */
-	protected String name;
-	/**
-	 * Cipher
-	 */
-	protected String cipher;
-	/**
-	 * Length
-	 */
-	protected int length;
-	/**
-	 * Description
-	 */
-	protected String description;
-	/**
-	 * Version
-	 */
-	protected int versions;
-	/**
-	 * Material
-	 */
-	protected String material;
-	/**
-	 * Version Name
-	 */
-	protected String versionName;
-	
-	/**
-	 * Key Created Date
-	 */
-	protected Long created;
-	
-	/**
-	 * Attributes
-	 */
-	protected Map<String, String> attributes;
+    /**
+     * Name
+     */
+    protected String name;
+    /**
+     * Cipher
+     */
+    protected String cipher;
+    /**
+     * Length
+     */
+    protected int    length;
+    /**
+     * Description
+     */
+    protected String description;
+    /**
+     * Version
+     */
+    protected int    versions;
+    /**
+     * Material
+     */
+    protected String material;
+    /**
+     * Version Name
+     */
+    protected String versionName;
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public VXKmsKey ( ) {	
-	}
-	
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
+    /**
+     * Key Created Date
+     */
+    protected Long created;
 
-	/**
-	 * @param name the name to set
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+    /**
+     * Attributes
+     */
+    protected Map<String, String> attributes;
 
-	/**
-	 * @return the cipher
-	 */
-	public String getCipher() {
-		return cipher;
-	}
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXKmsKey() {
+    }
 
-	/**
-	 * @param cipher the cipher to set
-	 */
-	public void setCipher(String cipher) {
-		this.cipher = cipher;
-	}
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
 
-	/**
-	 * @return the length
-	 */
-	public int getLength() {
-		return length;
-	}
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 * @param length the length to set
-	 */
-	public void setLength(int length) {
-		this.length = length;
-	}
+    /**
+     * @return the cipher
+     */
+    public String getCipher() {
+        return cipher;
+    }
 
-	/**
-	 * @return the description
-	 */
-	public String getDescription() {
-		return description;
-	}
+    /**
+     * @param cipher the cipher to set
+     */
+    public void setCipher(String cipher) {
+        this.cipher = cipher;
+    }
 
-	/**
-	 * @param description the description to set
-	 */
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    /**
+     * @return the length
+     */
+    public int getLength() {
+        return length;
+    }
 
-	/**
-	 * @return the version
-	 */
-	public int getVersions() {
-		return versions;
-	}
+    /**
+     * @param length the length to set
+     */
+    public void setLength(int length) {
+        this.length = length;
+    }
 
-	/**
-	 * @param version the version to set
-	 */
-	public void setVersions(int versions) {
-		this.versions = versions;
-	}
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
 
-	/**
-	 * @return the material
-	 */
-	public String getMaterial() {
-		return material;
-	}
+    /**
+     * @param description the description to set
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	/**
-	 * @param material the material to set
-	 */
-	public void setMaterial(String material) {
-		this.material = material;
-	}
+    /**
+     * @return the version
+     */
+    public int getVersions() {
+        return versions;
+    }
 
-	/**
-	 * @return the versionName
-	 */
-	public String getVersionName() {
-		return versionName;
-	}
+    /**
+     * @param version the version to set
+     */
+    public void setVersions(int versions) {
+        this.versions = versions;
+    }
 
-	/**
-	 * @param versionName the versionName to set
-	 */
-	public void setVersionName(String versionName) {
-		this.versionName = versionName;
-	}
+    /**
+     * @return the material
+     */
+    public String getMaterial() {
+        return material;
+    }
 
-	/**
-	 * @return the created
-	 */
-	public Long getCreated() {
-		return created;
-	}
+    /**
+     * @param material the material to set
+     */
+    public void setMaterial(String material) {
+        this.material = material;
+    }
 
-	/**
-	 * @param created the created to set
-	 */
-	public void setCreated(Long created) {
-		this.created = created;
-	}
+    /**
+     * @return the versionName
+     */
+    public String getVersionName() {
+        return versionName;
+    }
 
-	/**
-	 * @return the attributes
-	 */
-	public Map<String, String> getAttributes() {
-		return attributes;
-	}
+    /**
+     * @param versionName the versionName to set
+     */
+    public void setVersionName(String versionName) {
+        this.versionName = versionName;
+    }
 
-	/**
-	 * @param attributes the attributes to set
-	 */
-	public void setAttributes(Map<String, String> attributes) {
-		this.attributes = attributes;
-	}	
+    /**
+     * @return the created
+     */
+    public Long getCreated() {
+        return created;
+    }
 
-	@Override
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_XA_KMS_KEY;
-	}
+    /**
+     * @param created the created to set
+     */
+    public void setCreated(Long created) {
+        this.created = created;
+    }
 
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	public String toString( ) {
-		String str = "VXUser={";
-		str += super.toString();
-		str += "name={" + name + "} ";
-		str += "cipher={" + cipher + "} ";
-		str += "length={" + length + "} ";
-		str += "description={" + description + "} ";
-		str += "atrribute={" + attributes + "} ";
-		str += "created={" + created.toString() + "} ";
-		str += "version={" + versions + "} ";
-		str += "material={" + material + "} ";
-		str += "versionName={" + versionName + "} ";
-		str += "}";
-		return str;
-	}
+    /**
+     * @return the attributes
+     */
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
+
+    /**
+     * @param attributes the attributes to set
+     */
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
+    }
+
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_KMS_KEY;
+    }
+
+    /**
+     * This return the bean content in string format
+     * @return formatedStr
+     */
+    public String toString() {
+        String str = "VXUser={";
+        str += super.toString();
+        str += "name={" + name + "} ";
+        str += "cipher={" + cipher + "} ";
+        str += "length={" + length + "} ";
+        str += "description={" + description + "} ";
+        str += "atrribute={" + attributes + "} ";
+        str += "created={" + created.toString() + "} ";
+        str += "version={" + versions + "} ";
+        str += "material={" + material + "} ";
+        str += "versionName={" + versionName + "} ";
+        str += "}";
+        return str;
+    }
 }

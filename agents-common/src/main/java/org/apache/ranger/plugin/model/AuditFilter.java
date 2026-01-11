@@ -19,22 +19,19 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AuditFilter {
-    public enum AccessResult { DENIED, ALLOWED, NOT_DETERMINED }
-
     private AccessResult                      accessResult;
     private Map<String, RangerPolicyResource> resources;
     private List<String>                      accessTypes;
@@ -44,7 +41,7 @@ public class AuditFilter {
     private List<String>                      roles;
     private Boolean                           isAudited;
 
-    public AuditFilter() { }
+    public AuditFilter() {}
 
     public AccessResult getAccessResult() {
         return accessResult;
@@ -122,4 +119,6 @@ public class AuditFilter {
                 + ", isAudited=" + isAudited
                 + "}";
     }
+
+    public enum AccessResult { DENIED, ALLOWED, NOT_DETERMINED }
 }

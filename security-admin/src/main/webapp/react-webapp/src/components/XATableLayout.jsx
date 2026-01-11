@@ -511,7 +511,7 @@ function XATableLayout({
                       nextPage();
                       setCurrentPageVal(pageIndex + 2);
                     }}
-                    className="pagination-btn-previous me-1 btn btn-outline-dark btn-sm lh-1"
+                    className="pagination-btn-previous me-1 btn btn-outline-dark btn-sm"
                     disabled={!canNextPage}
                   >
                     <i className="fa fa-angle-right" aria-hidden="true"></i>

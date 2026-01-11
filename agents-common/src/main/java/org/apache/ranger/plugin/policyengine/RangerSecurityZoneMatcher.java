@@ -33,7 +33,14 @@ import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class RangerSecurityZoneMatcher {
     private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityZoneMatcher.class);
@@ -63,6 +70,11 @@ public class RangerSecurityZoneMatcher {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(resourceZoneTrie, zonesWithTagService);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -73,18 +85,11 @@ public class RangerSecurityZoneMatcher {
         RangerSecurityZoneMatcher other = (RangerSecurityZoneMatcher) obj;
 
         return Objects.equals(resourceZoneTrie, other.resourceZoneTrie) &&
-               Objects.equals(zonesWithTagService, other.zonesWithTagService);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(resourceZoneTrie, zonesWithTagService);
+                Objects.equals(zonesWithTagService, other.zonesWithTagService);
     }
 
     private Set<String> getZonesForResourceAndChildren(Map<String, ?> resource, RangerAccessResource accessResource) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerSecurityZoneMatcher.getZonesForResourceAndChildren({})", accessResource);
-        }
+        LOG.debug("==> RangerSecurityZoneMatcher.getZonesForResourceAndChildren({})", accessResource);
 
         Set<String> ret = null;
 
@@ -92,17 +97,13 @@ public class RangerSecurityZoneMatcher {
             Collection<RangerZoneResourceMatcher> matchers = RangerResourceEvaluatorsRetriever.getEvaluators(resourceZoneTrie, resource);
 
             if (CollectionUtils.isNotEmpty(matchers)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Resource:[{}], matchers:[{}]", resource, matchers);
-                }
+                LOG.debug("Resource:[{}], matchers:[{}]", resource, matchers);
 
                 ret = new HashSet<>(matchers.size());
 
                 // These are potential matches. Try to really match them
                 for (RangerZoneResourceMatcher matcher : matchers) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Trying to match resource:[{}] using matcher:[{}]", accessResource, matcher);
-                    }
+                    LOG.debug("Trying to match resource:[{}] using matcher:[{}]", accessResource, matcher);
 
                     RangerPolicyResourceMatcher policyResourceMatcher = matcher.getPolicyResourceMatcher();
                     MatchType                   matchType             = policyResourceMatcher.getMatchType(accessResource, null);
@@ -112,36 +113,26 @@ public class RangerSecurityZoneMatcher {
                     }
 
                     if (matchType != MatchType.NONE) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Matched resource:[{}] using matcher:[{}]", accessResource, matcher);
-                        }
+                        LOG.debug("Matched resource:[{}] using matcher:[{}]", accessResource, matcher);
 
                         // Actual match happened
                         ret.add(matcher.getSecurityZoneName());
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Did not match resource:[{}] using matcher:[{}]", accessResource, matcher);
-                        }
+                        LOG.debug("Did not match resource:[{}] using matcher:[{}]", accessResource, matcher);
                     }
                 }
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("zone-names matched resource:[{}]: {}", accessResource, ret);
-                }
+                LOG.debug("zone-names matched resource:[{}]: {}", accessResource, ret);
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerSecurityZoneMatcher.getZonesForResourceAndChildren({}): ret={}", accessResource, ret);
-        }
+        LOG.debug("<== RangerSecurityZoneMatcher.getZonesForResourceAndChildren({}): ret={}", accessResource, ret);
 
         return ret;
     }
 
     private void buildZoneTrie(Map<String, SecurityZoneInfo> securityZones, RangerServiceDef serviceDef, RangerPluginContext pluginContext) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerSecurityZoneMatcher.buildZoneTrie()");
-        }
+        LOG.debug("==> RangerSecurityZoneMatcher.buildZoneTrie()");
 
         Map<String, Boolean> resourceIsRecursive = new HashMap<>();
 
@@ -152,14 +143,10 @@ public class RangerSecurityZoneMatcher {
                 String           zoneName    = securityZone.getKey();
                 SecurityZoneInfo zoneDetails = securityZone.getValue();
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Building matchers for zone:[{}]", zoneName);
-                }
+                LOG.debug("Building matchers for zone:[{}]", zoneName);
 
                 for (Map<String, List<String>> resource : zoneDetails.getResources()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Building matcher for resource:[{}] in zone:[{}]", resource, zoneName);
-                    }
+                    LOG.debug("Building matcher for resource:[{}] in zone:[{}]", resource, zoneName);
 
                     Map<String, RangerPolicyResource> policyResources = new HashMap<>();
 
@@ -171,25 +158,19 @@ public class RangerSecurityZoneMatcher {
                         policyResources.put(resourceDefName, new RangerPolicyResource(resourceValues, false, isRecursive));
                     }
 
-                    matchers.add(new RangerZoneResourceMatcher(zoneName, policyResources, serviceDef));
+                    matchers.add(new RangerZoneResourceMatcher(zoneName, policyResources, serviceDef, pluginContext));
 
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Built matcher for resource:[{}] in zone:[{}]", resource, zoneName);
-                    }
+                    LOG.debug("Built matcher for resource:[{}] in zone:[{}]", resource, zoneName);
                 }
 
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Built all matchers for zone:[{}]", zoneName);
-                }
+                LOG.debug("Built all matchers for zone:[{}]", zoneName);
 
                 if (Boolean.TRUE.equals(zoneDetails.getContainsAssociatedTagService())) {
                     zonesWithTagService.add(zoneName);
                 }
             }
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Built matchers for all Zones");
-            }
+            LOG.debug("Built matchers for all Zones");
 
             RangerPolicyEngineOptions options = pluginContext.getConfig().getPolicyEngineOptions();
 
@@ -198,9 +179,7 @@ public class RangerSecurityZoneMatcher {
             }
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerSecurityZoneMatcher.buildZoneTrie()");
-        }
+        LOG.debug("<== RangerSecurityZoneMatcher.buildZoneTrie()");
     }
 
     private RangerAccessResource convertToAccessResource(Map<String, ?> resource) {

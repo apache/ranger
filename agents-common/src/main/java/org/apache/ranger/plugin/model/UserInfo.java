@@ -19,23 +19,25 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.plugin.util.RangerUserStoreUtil;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserInfo extends RangerBaseModelObject implements java.io.Serializable {
-
     private static final long serialVersionUID = 1L;
-    private String                  name;
-    private String                  description;
-    private Map<String, String>     otherAttributes;
-    private Set<String>             groups;
+
+    private String              name;
+    private String              description;
+    private Map<String, String> otherAttributes;
+    private Set<String>         groups;
 
     public UserInfo() {
         this(null, null, null);
@@ -71,11 +73,11 @@ public class UserInfo extends RangerBaseModelObject implements java.io.Serializa
         this.otherAttributes = otherAttributes == null ? new HashMap<>() : otherAttributes;
     }
 
-    public Set<String> getGroups(){
+    public Set<String> getGroups() {
         return this.groups;
     }
 
-    public void setGroups(Set<String> groups){
+    public void setGroups(Set<String> groups) {
         this.groups = groups;
     }
 

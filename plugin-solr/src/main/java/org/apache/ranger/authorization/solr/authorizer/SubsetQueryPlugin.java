@@ -19,7 +19,7 @@
 
 package org.apache.ranger.authorization.solr.authorizer;
 
-import com.google.common.base.Preconditions;
+import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
@@ -34,7 +34,6 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.search.QParser;
 import org.apache.solr.search.QParserPlugin;
-import org.apache.solr.search.SyntaxError;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,38 +44,34 @@ import java.util.Collection;
  * and the set against which subset queries are to be run ( as a comma separated string values).
  */
 public class SubsetQueryPlugin extends QParserPlugin {
-    public static final String SETVAL_PARAM_NAME = "set_value";
-    public static final String SETVAL_FIELD_NAME = "set_field";
-    public static final String COUNT_FIELD_NAME = "count_field";
+    public static final String SETVAL_PARAM_NAME   = "set_value";
+    public static final String SETVAL_FIELD_NAME   = "set_field";
+    public static final String COUNT_FIELD_NAME    = "count_field";
     public static final String MISSING_VAL_ALLOWED = "allow_missing_val";
-    public static final String WILDCARD_CHAR = "wildcard_token";
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public void init(NamedList arg0) {
-    }
+    public static final String WILDCARD_CHAR       = "wildcard_token";
 
     @Override
     public QParser createParser(String qstr, SolrParams localParams, SolrParams params, SolrQueryRequest req) {
         return new QParser(qstr, localParams, params, req) {
-
             @Override
-            public Query parse() throws SyntaxError {
-                String fieldName = Preconditions.checkNotNull(localParams.get(SETVAL_FIELD_NAME));
-                String countFieldName = Preconditions.checkNotNull(localParams.get(COUNT_FIELD_NAME));
+            public Query parse() {
+                String  fieldName          = Preconditions.checkNotNull(localParams.get(SETVAL_FIELD_NAME));
+                String  countFieldName     = Preconditions.checkNotNull(localParams.get(COUNT_FIELD_NAME));
                 boolean allowMissingValues = Boolean.parseBoolean(Preconditions.checkNotNull(localParams.get(MISSING_VAL_ALLOWED)));
-                String wildcardToken = localParams.get(WILDCARD_CHAR);
+                String  wildcardToken      = localParams.get(WILDCARD_CHAR);
 
-                LongValuesSource minimumNumberMatch = LongValuesSource.fromIntField(countFieldName);
-                Collection<Query> queries = new ArrayList<>();
+                LongValuesSource  minimumNumberMatch = LongValuesSource.fromIntField(countFieldName);
+                Collection<Query> queries            = new ArrayList<>();
+                String            fieldVals          = Preconditions.checkNotNull(localParams.get(SETVAL_PARAM_NAME));
 
-                String fieldVals = Preconditions.checkNotNull(localParams.get(SETVAL_PARAM_NAME));
                 for (String v : fieldVals.split(",")) {
                     queries.add(new TermQuery(new Term(fieldName, v)));
                 }
-                if (wildcardToken != null && !wildcardToken.equals("")) {
+
+                if (wildcardToken != null && !wildcardToken.isEmpty()) {
                     queries.add(new TermQuery(new Term(fieldName, wildcardToken)));
                 }
+
                 if (allowMissingValues) {
                     // To construct this query we need to do a little trick tho construct a test for an empty field as follows:
                     // (*:* AND -fieldName:*) ==> parses as: (+*:* -fieldName:*)
@@ -84,14 +79,19 @@ public class SubsetQueryPlugin extends QParserPlugin {
                     // therefore we need to AND with *:*
                     // We can then pass this BooleanQuery to the CoveringQuery as one of its allowed matches.
                     BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
                     builder.add(new BooleanClause(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD));
                     builder.add(new BooleanClause(new WildcardQuery(new Term(fieldName, "*")), BooleanClause.Occur.MUST_NOT));
 
                     queries.add(builder.build());
                 }
+
                 return new CoveringQuery(queries, minimumNumberMatch);
             }
         };
     }
 
+    @Override
+    public void init(NamedList arg0) {
+    }
 }

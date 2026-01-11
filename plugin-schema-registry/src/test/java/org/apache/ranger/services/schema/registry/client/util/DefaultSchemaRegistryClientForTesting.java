@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DefaultSchemaRegistryClientForTesting implements ISchemaRegistryClient {
-
     @Override
     public List<String> getSchemaGroups() {
         return new ArrayList<>();
@@ -41,6 +40,5 @@ public class DefaultSchemaRegistryClientForTesting implements ISchemaRegistryCli
 
     @Override
     public void checkConnection() throws Exception {
-
     }
 }

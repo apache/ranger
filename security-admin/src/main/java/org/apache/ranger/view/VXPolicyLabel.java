@@ -23,45 +23,43 @@ package org.apache.ranger.view;
  * Policy
  */
 
-
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VXPolicyLabel extends VXDataObject implements java.io.Serializable {
-        private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-        protected String policyLabel;
+    protected String policyLabel;
 
-        /**
-         * Default constructor. This will set all the attributes to default value.
-         */
-        public VXPolicyLabel() {
-        }
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXPolicyLabel() {
+    }
 
-        public String getPolicyLabel() {
-                return policyLabel;
-        }
+    public String getPolicyLabel() {
+        return policyLabel;
+    }
 
-        public void setPolicyLabel(String policyLabel) {
-                this.policyLabel = policyLabel;
-        }
+    public void setPolicyLabel(String policyLabel) {
+        this.policyLabel = policyLabel;
+    }
 
-        /**
-         * This return the bean content in string format
-         *
-         * @return formatedStr
-         */
-        public String toString() {
-                String str = "VXPolicyLabel={";
-                str += super.toString();
-                str += "policyLabel={" + policyLabel + "} ";
-                str += "}";
-                return str;
-        }
-
+    /**
+     * This return the bean content in string format
+     *
+     * @return formatedStr
+     */
+    public String toString() {
+        String str = "VXPolicyLabel={";
+        str += super.toString();
+        str += "policyLabel={" + policyLabel + "} ";
+        str += "}";
+        return str;
+    }
 }

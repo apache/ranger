@@ -19,114 +19,105 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
-import java.util.Date;
-import java.util.Set;
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzContext;
+import org.apache.ranger.authorization.hive.authorizer.RangerHiveAuthorizer.HiveAccessType;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
+import java.util.Date;
+import java.util.Set;
+
 import static org.apache.ranger.authorization.hive.authorizer.RangerHiveAuditHandler.ACTION_TYPE_METADATA_OPERATION;
 
 public class RangerHiveAccessRequest extends RangerAccessRequestImpl {
-	private HiveAccessType accessType = HiveAccessType.NONE;
+    private HiveAccessType accessType = HiveAccessType.NONE;
 
-	public RangerHiveAccessRequest() {
-		super();
-	}
+    public RangerHiveAccessRequest() {
+        super();
+    }
 
-	public RangerHiveAccessRequest(RangerHiveResource      resource,
-								   String                  user,
-								   Set<String>             userGroups,
-								   Set<String>             userRoles,
-								   String                  hiveOpTypeName,
-								   HiveAccessType          accessType,
-								   HiveAuthzContext        context,
-								   HiveAuthzSessionContext sessionContext) {
-		this.setResource(resource);
-		this.setUser(user);
-		this.setUserGroups(userGroups);
-		this.setUserRoles(userRoles);
-		this.setAccessTime(new Date());
-		this.setAction(hiveOpTypeName);
-		this.setHiveAccessType(accessType);
+    public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> userGroups, Set<String> userRoles, String hiveOpTypeName, HiveAccessType accessType, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
+        this.setResource(resource);
+        this.setUser(user);
+        this.setUserGroups(userGroups);
+        this.setUserRoles(userRoles);
+        this.setAccessTime(new Date());
+        this.setAction(hiveOpTypeName);
+        this.setHiveAccessType(accessType);
 
-		if(context != null) {
-			this.setRequestData(context.getCommandString());
-			this.setForwardedAddresses(context.getForwardedAddresses());
-			this.setRemoteIPAddress(context.getIpAddress());
-			String requestData = context.getCommandString();
-			if (StringUtils.isEmpty(requestData) && ACTION_TYPE_METADATA_OPERATION.equals(hiveOpTypeName)) {
-				String resourceType = resource.getObjectType().name();
-				if (resourceType.equalsIgnoreCase("DATABASE")) {
-					this.setRequestData("show databases");
-				} else if (resourceType.equalsIgnoreCase("TABLE")) {
-					this.setRequestData("show tables / views");
-				}
-			}
-		}
+        if (context != null) {
+            this.setRequestData(context.getCommandString());
+            this.setForwardedAddresses(context.getForwardedAddresses());
+            this.setRemoteIPAddress(context.getIpAddress());
 
-		if(sessionContext != null) {
-			this.setClientType(sessionContext.getClientType() == null ? null : sessionContext.getClientType().toString());
-			this.setSessionId(sessionContext.getSessionString());
-		}
-		
-	}
+            String requestData = context.getCommandString();
 
-	public RangerHiveAccessRequest(RangerHiveResource      resource,
-			   String                  user,
-			   Set<String>             userGroups,
-			   Set<String>             userRoles,
-			   HiveOperationType       hiveOpType,
-			   HiveAccessType          accessType,
-			   HiveAuthzContext        context,
-			   HiveAuthzSessionContext sessionContext) {
-		this(resource, user, userGroups, userRoles, hiveOpType.name(), accessType, context, sessionContext);
-	}
+            if (StringUtils.isEmpty(requestData) && ACTION_TYPE_METADATA_OPERATION.equals(hiveOpTypeName)) {
+                String resourceType = resource.getObjectType().name();
 
-	public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, Set<String> roles, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
-		this(resource, user, groups, roles, "METADATA OPERATION", HiveAccessType.USE, context, sessionContext);
-	}
+                if (resourceType.equalsIgnoreCase("DATABASE")) {
+                    this.setRequestData("show databases");
+                } else if (resourceType.equalsIgnoreCase("TABLE")) {
+                    this.setRequestData("show tables / views");
+                }
+            }
+        }
 
-	public HiveAccessType getHiveAccessType() {
-		return accessType;
-	}
+        if (sessionContext != null) {
+            this.setClientType(sessionContext.getClientType() == null ? null : sessionContext.getClientType().toString());
+            this.setSessionId(sessionContext.getSessionString());
+        }
+    }
 
-	public void setHiveAccessType(HiveAccessType accessType) {
-		this.accessType = accessType;
+    public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> userGroups, Set<String> userRoles, HiveOperationType hiveOpType, HiveAccessType accessType, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
+        this(resource, user, userGroups, userRoles, hiveOpType.name(), accessType, context, sessionContext);
+    }
 
-		if(accessType == HiveAccessType.USE) {
-			this.setAccessType(RangerPolicyEngine.ANY_ACCESS);
-		} else {
-			this.setAccessType(accessType.name().toLowerCase());
-		}
-	}
+    public RangerHiveAccessRequest(RangerHiveResource resource, String user, Set<String> groups, Set<String> roles, HiveAuthzContext context, HiveAuthzSessionContext sessionContext) {
+        this(resource, user, groups, roles, "METADATA OPERATION", HiveAccessType.USE, context, sessionContext);
+    }
 
-	public RangerHiveAccessRequest copy() {
-		RangerHiveAccessRequest ret = new RangerHiveAccessRequest();
+    public HiveAccessType getHiveAccessType() {
+        return accessType;
+    }
 
-		ret.setResource(getResource());
-		ret.setAccessType(getAccessType());
-		ret.setUser(getUser());
-		ret.setUserGroups(getUserGroups());
-		ret.setUserRoles(getUserRoles());
-		ret.setAccessTime(getAccessTime());
-		ret.setAction(getAction());
-		ret.setClientIPAddress(getClientIPAddress());
-		ret.setRemoteIPAddress(getRemoteIPAddress());
-		ret.setForwardedAddresses(getForwardedAddresses());
-		ret.setRequestData(getRequestData());
-		ret.setClientType(getClientType());
-		ret.setSessionId(getSessionId());
-		ret.setContext(RangerAccessRequestUtil.copyContext(getContext()));
-		ret.accessType = accessType;
-		ret.setClusterName(getClusterName());
-		ret.setClusterType(getClusterType());
+    public void setHiveAccessType(HiveAccessType accessType) {
+        this.accessType = accessType;
 
-		return ret;
-	}
+        if (accessType == HiveAccessType.USE) {
+            this.setAccessType(RangerPolicyEngine.ANY_ACCESS);
+        } else {
+            this.setAccessType(accessType.name().toLowerCase());
+        }
+    }
+
+    public RangerHiveAccessRequest copy() {
+        RangerHiveAccessRequest ret = new RangerHiveAccessRequest();
+
+        ret.setResource(getResource());
+        ret.setAccessType(getAccessType());
+        ret.setUser(getUser());
+        ret.setUserGroups(getUserGroups());
+        ret.setUserRoles(getUserRoles());
+        ret.setAccessTime(getAccessTime());
+        ret.setAction(getAction());
+        ret.setClientIPAddress(getClientIPAddress());
+        ret.setRemoteIPAddress(getRemoteIPAddress());
+        ret.setForwardedAddresses(getForwardedAddresses());
+        ret.setRequestData(getRequestData());
+        ret.setClientType(getClientType());
+        ret.setSessionId(getSessionId());
+        ret.setContext(RangerAccessRequestUtil.copyContext(getContext()));
+
+        ret.accessType = accessType;
+
+        ret.setClusterName(getClusterName());
+        ret.setClusterType(getClusterType());
+
+        return ret;
+    }
 }

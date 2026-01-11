@@ -20,203 +20,217 @@
 package org.apache.ranger.plugin.geo;
 
 public class BinarySearchTree<T extends Comparable<T> & RangeChecker<V>, V> {
-	private Node<T> root;
-	private int size;
+    private Node<T> root;
+    private int     size;
 
-	public BinarySearchTree() {
-		root = null;
-	}
+    public BinarySearchTree() {
+        root = null;
+    }
 
-	public void insert(final T value) {
-		Node<T> node = new Node<T>(value);
+    public void insert(final T value) {
+        Node<T> node = new Node<>(value);
 
-		if (root == null) {
-			root = node;
-			return;
-		}
+        if (root == null) {
+            root = node;
 
-		Node<T> focusNode = root;
-		Node<T> parent;
+            return;
+        }
 
-		while (true) {
-			parent = focusNode;
+        Node<T> focusNode = root;
+        Node<T> parent;
 
-			int comparison = focusNode.getValue().compareTo(value);
-			if (comparison == 0) {
-				return;
-			}
-			if (comparison < 0) {
-				focusNode = focusNode.getRight();
-				if (focusNode == null) {
-					parent.setRight(node);
-					return;
-				}
-			} else {
-				focusNode = focusNode.getLeft();
-				if (focusNode == null) {
-					parent.setLeft(node);
-					return;
-				}
-			}
-		}
-	}
+        while (true) {
+            parent = focusNode;
 
-	public T find(final V value) {
-		Node<T> focusNode = root;
+            int comparison = focusNode.getValue().compareTo(value);
 
-		int rangeCheck;
+            if (comparison == 0) {
+                return;
+            }
 
-		while (focusNode != null) {
-			rangeCheck = focusNode.getValue().compareToRange(value);
-			if (rangeCheck == 0) {
-				break;
-			} else if (rangeCheck < 0) {
-				focusNode = focusNode.getRight();
-			} else {
-				focusNode = focusNode.getLeft();
-			}
-		}
+            if (comparison < 0) {
+                focusNode = focusNode.getRight();
 
-		return focusNode == null ? null : focusNode.getValue();
-	}
+                if (focusNode == null) {
+                    parent.setRight(node);
 
-	final public void preOrderTraverseTree(final ValueProcessor<T> processor) {
-		preOrderTraverseTree(getRoot(), processor);
-	}
+                    return;
+                }
+            } else {
+                focusNode = focusNode.getLeft();
 
-	final public void inOrderTraverseTree(final ValueProcessor<T> processor) {
-		inOrderTraverseTree(getRoot(), processor);
-	}
+                if (focusNode == null) {
+                    parent.setLeft(node);
 
-	Node<T> getRoot() {
-		return root;
-	}
+                    return;
+                }
+            }
+        }
+    }
 
-	void setRoot(final Node<T> newRoot) {
-		root = newRoot;
-	}
+    public T find(final V value) {
+        Node<T> focusNode = root;
+        int     rangeCheck;
 
-	void rebalance() {
-		Node<T> dummy = new Node<T>(null);
-		dummy.setRight(root);
+        while (focusNode != null) {
+            rangeCheck = focusNode.getValue().compareToRange(value);
 
-		setRoot(dummy);
+            if (rangeCheck == 0) {
+                break;
+            } else if (rangeCheck < 0) {
+                focusNode = focusNode.getRight();
+            } else {
+                focusNode = focusNode.getLeft();
+            }
+        }
 
-		degenerate();
-		reconstruct();
+        return focusNode == null ? null : focusNode.getValue();
+    }
 
-		setRoot(getRoot().getRight());
-	}
+    public final void preOrderTraverseTree(final ValueProcessor<T> processor) {
+        preOrderTraverseTree(getRoot(), processor);
+    }
 
-	final void inOrderTraverseTree(final Node<T> focusNode, final ValueProcessor<T> processor) {
-		if (focusNode != null) {
-			inOrderTraverseTree(focusNode.getLeft(), processor);
-			processor.process(focusNode.getValue());
-			inOrderTraverseTree(focusNode.getRight(), processor);
-		}
-	}
+    public final void inOrderTraverseTree(final ValueProcessor<T> processor) {
+        inOrderTraverseTree(getRoot(), processor);
+    }
 
-	final void preOrderTraverseTree(final Node<T> focusNode, final ValueProcessor<T> processor) {
-		if (focusNode != null) {
-			processor.process(focusNode.getValue());
+    Node<T> getRoot() {
+        return root;
+    }
 
-			preOrderTraverseTree(focusNode.getLeft(), processor);
-			preOrderTraverseTree(focusNode.getRight(), processor);
-		}
-	}
+    void setRoot(final Node<T> newRoot) {
+        root = newRoot;
+    }
 
-	private void degenerate() {
+    void rebalance() {
+        Node<T> dummy = new Node<>(null);
 
-		Node<T> remainder, temp, sentinel;
+        dummy.setRight(root);
 
-		sentinel = getRoot();
-		remainder = sentinel.getRight();
+        setRoot(dummy);
 
-		size = 0;
+        degenerate();
+        reconstruct();
 
-		while (remainder != null) {
-			if (remainder.getLeft() == null) {
-				sentinel = remainder;
-				remainder = remainder.getRight();
-				size++;
-			} else {
-				temp = remainder.getLeft();
-				remainder.setLeft(temp.getRight());
-				temp.setRight(remainder);
-				remainder = temp;
-				sentinel.setRight(temp);
-			}
-		}
-	}
+        setRoot(getRoot().getRight());
+    }
 
-	private void reconstruct() {
+    final void inOrderTraverseTree(final Node<T> focusNode, final ValueProcessor<T> processor) {
+        if (focusNode != null) {
+            inOrderTraverseTree(focusNode.getLeft(), processor);
+            processor.process(focusNode.getValue());
+            inOrderTraverseTree(focusNode.getRight(), processor);
+        }
+    }
 
-		int sz = size;
-		Node<T> node = getRoot();
+    final void preOrderTraverseTree(final Node<T> focusNode, final ValueProcessor<T> processor) {
+        if (focusNode != null) {
+            processor.process(focusNode.getValue());
 
-		int fullCount = fullSize(sz);
-		rotateLeft(node, sz - fullCount);
+            preOrderTraverseTree(focusNode.getLeft(), processor);
+            preOrderTraverseTree(focusNode.getRight(), processor);
+        }
+    }
 
-		for (sz = fullCount; sz > 1; sz /= 2) {
-			rotateLeft(node, sz / 2);
-		}
-	}
+    private void degenerate() {
+        Node<T> sentinel  = getRoot();
+        Node<T> remainder = sentinel.getRight();
 
-	private void rotateLeft(Node<T> root, final int count) {
-		if (root == null) return;
+        size = 0;
 
-		Node<T> scanner = root;
+        while (remainder != null) {
+            if (remainder.getLeft() == null) {
+                sentinel  = remainder;
+                remainder = remainder.getRight();
 
-		for (int i = 0; i < count; i++) {
-			//Leftward rotation
-			Node<T> child = scanner.getRight();
-			scanner.setRight(child.getRight());
-			scanner = child.getRight();
-			child.setRight(scanner.getLeft());
-			scanner.setLeft(child);
-		}
-	}
+                size++;
+            } else {
+                Node<T>  temp = remainder.getLeft();
 
-	private int fullSize(final int size) {
-		// Full portion of a complete tree
-		int ret = 1;
-		while (ret <= size) {
-			ret = 2*ret + 1;
-		}
-		return ret / 2;
-	}
+                remainder.setLeft(temp.getRight());
+                temp.setRight(remainder);
 
-	static class Node<T> {
-		private T value;
-		private Node<T> left;
-		private Node<T> right;
+                remainder = temp;
+                sentinel.setRight(temp);
+            }
+        }
+    }
 
-		public Node(final T value) {
-			this.value = value;
-		}
+    private void reconstruct() {
+        int     sz        = size;
+        Node<T> node      = getRoot();
+        int     fullCount = fullSize(sz);
 
-		public T getValue() {
-			return value;
-		}
+        rotateLeft(node, sz - fullCount);
 
-		public void setValue(final T value) {
-			this.value = value;
-		}
+        for (sz = fullCount; sz > 1; sz /= 2) {
+            rotateLeft(node, sz / 2);
+        }
+    }
 
-		public Node<T> getLeft() {
-			return left;
-		}
+    private void rotateLeft(Node<T> root, final int count) {
+        if (root == null) {
+            return;
+        }
 
-		public void setLeft(final Node<T> left) {
-			this.left = left;
-		}
+        Node<T> scanner = root;
 
-		public Node<T> getRight() {
-			return right;
-		}
+        for (int i = 0; i < count; i++) {
+            //Leftward rotation
+            Node<T> child = scanner.getRight();
 
-		public void setRight(final Node<T> right) {
-			this.right = right;
-		}
-	}
+            scanner.setRight(child.getRight());
+
+            scanner = child.getRight();
+
+            child.setRight(scanner.getLeft());
+            scanner.setLeft(child);
+        }
+    }
+
+    private int fullSize(final int size) {
+        // Full portion of a complete tree
+        int ret = 1;
+
+        while (ret <= size) {
+            ret = 2 * ret + 1;
+        }
+
+        return ret / 2;
+    }
+
+    static class Node<T> {
+        private T       value;
+        private Node<T> left;
+        private Node<T> right;
+
+        public Node(final T value) {
+            this.value = value;
+        }
+
+        public T getValue() {
+            return value;
+        }
+
+        public void setValue(final T value) {
+            this.value = value;
+        }
+
+        public Node<T> getLeft() {
+            return left;
+        }
+
+        public void setLeft(final Node<T> left) {
+            this.left = left;
+        }
+
+        public Node<T> getRight() {
+            return right;
+        }
+
+        public void setRight(final Node<T> right) {
+            this.right = right;
+        }
+    }
 }

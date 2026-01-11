@@ -17,11 +17,9 @@
 # limitations under the License.
 
 #
-# Downloads HDFS/Hive/HBase/Kafka/.. archives to a local cache directory.
-# The downloaded archives will be used while building docker images that
-# run these services
+# Downloads HDFS/Hive/HBase/Kafka/Knox/Ozone archives to a local cache directory.
+# The downloaded archives will be used while building docker images that run these services.
 #
-
 
 #
 # source .env file to get versions to download
@@ -43,14 +41,54 @@ downloadIfNotPresent() {
   fi
 }
 
-downloadIfNotPresent hadoop-${HADOOP_VERSION}.tar.gz        https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}
-downloadIfNotPresent hbase-${HBASE_VERSION}-bin.tar.gz      https://archive.apache.org/dist/hbase/${HBASE_VERSION}
-downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
-downloadIfNotPresent apache-hive-${HIVE_VERSION}-bin.tar.gz https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}
-downloadIfNotPresent hadoop-${HIVE_HADOOP_VERSION}.tar.gz   https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}
-downloadIfNotPresent postgresql-42.2.16.jre7.jar            https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7
-downloadIfNotPresent mysql-connector-java-8.0.28.jar        https://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/8.0.28
+downloadIfNotPresent postgresql-42.2.16.jre7.jar            "https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7"
+downloadIfNotPresent mysql-connector-java-8.0.28.jar        "https://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/8.0.28"
+downloadIfNotPresent ojdbc8.jar                             https://download.oracle.com/otn-pub/otn_software/jdbc/236
+downloadIfNotPresent mssql-jdbc-12.8.1.jre8.jar             https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/12.8.1.jre8
 downloadIfNotPresent log4jdbc-1.2.jar                       https://repo1.maven.org/maven2/com/googlecode/log4jdbc/log4jdbc/1.2
 
-downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
-
+if [[ $# -eq 0 ]]
+then
+    downloadIfNotPresent hadoop-${HADOOP_VERSION}.tar.gz        https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}
+    downloadIfNotPresent hbase-${HBASE_VERSION}-bin.tar.gz      https://archive.apache.org/dist/hbase/${HBASE_VERSION}
+    downloadIfNotPresent apache-hive-${HIVE_VERSION}-bin.tar.gz https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}
+    downloadIfNotPresent hadoop-${HIVE_HADOOP_VERSION}.tar.gz   https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}
+    downloadIfNotPresent apache-tez-${TEZ_VERSION}-bin.tar.gz   https://archive.apache.org/dist/tez/${TEZ_VERSION}
+    downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
+    downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
+    downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz          https://archive.apache.org/dist/ozone/${OZONE_VERSION}
+    if [ ! -d downloads/ozone-${OZONE_VERSION} ]
+    then
+      tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
+    fi
+else
+  for arg in "$@"; do
+    if [[ $arg == 'hadoop' ]]
+    then
+      downloadIfNotPresent hadoop-${HADOOP_VERSION}.tar.gz        https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}
+    elif [[ $arg == 'hbase' ]]
+    then
+      downloadIfNotPresent hbase-${HBASE_VERSION}-bin.tar.gz      https://archive.apache.org/dist/hbase/${HBASE_VERSION}
+    elif [[ $arg == 'hive' ]]
+    then
+      downloadIfNotPresent apache-hive-${HIVE_VERSION}-bin.tar.gz https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}
+      downloadIfNotPresent hadoop-${HIVE_HADOOP_VERSION}.tar.gz   https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}
+      downloadIfNotPresent apache-tez-${TEZ_VERSION}-bin.tar.gz   https://archive.apache.org/dist/tez/${TEZ_VERSION}
+    elif [[ $arg == 'kafka' ]]
+    then
+      downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apache.org/dist/kafka/${KAFKA_VERSION}
+    elif [[ $arg == 'knox' ]]
+    then
+      downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
+    elif [[ $arg == 'ozone' ]]
+    then
+      downloadIfNotPresent ozone-${OZONE_VERSION}.tar.gz          https://archive.apache.org/dist/ozone/${OZONE_VERSION}
+      if [ ! -d downloads/ozone-${OZONE_VERSION} ]
+      then
+        tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
+      fi
+    else
+      echo "Passed argument $arg is invalid!"
+    fi
+  done
+fi

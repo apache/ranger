@@ -17,59 +17,59 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
-
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
+package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class XXPortalUserRoleDao extends BaseDao<XXPortalUserRole> {
+    public XXPortalUserRoleDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXPortalUserRoleDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public List<XXPortalUserRole> findByUserId(Long userId) {
+        if (userId == null) {
+            return new ArrayList<>();
+        }
 
-	@SuppressWarnings("unchecked")
-	public List<XXPortalUserRole> findByUserId(Long userId) {
-		if (userId == null) {
-			return new ArrayList<XXPortalUserRole>();
-		}
-		return getEntityManager().createNamedQuery("XXPortalUserRole.findByUserId")
-				.setParameter("userId", userId).getResultList();
-	}
-	
-	public XXPortalUserRole findByRoleUserId(Long userId, String role) {
-		if(userId == null || role == null || role.isEmpty()){
-			return null;
-		}
-		try{
-			return (XXPortalUserRole)getEntityManager().createNamedQuery("XXPortalUserRole.findByRoleUserId")
-					.setParameter("userId", userId)
-					.setParameter("userRole", role).getSingleResult();
-		} catch(NoResultException e){
-			//doNothing;
-		}
-		return null;
-	}
-	@SuppressWarnings("unchecked")
-	public List<String> findXPortalUserRolebyXPortalUserId(Long userId) {
-		if (userId == null) {
-			return new ArrayList<String>();
-		}
-		try {
-			List<String> returnList = getEntityManager()
-					.createNamedQuery("XXPortalUserRole.findXPortalUserRolebyXPortalUserId")
-					.setParameter("userId", userId).getResultList();
-			return returnList;
-		} catch (NoResultException e) {
-			return new ArrayList<String>();
-		}
-	}
+        return getEntityManager().createNamedQuery("XXPortalUserRole.findByUserId", tClass)
+                .setParameter("userId", userId).getResultList();
+    }
+
+    public XXPortalUserRole findByRoleUserId(Long userId, String role) {
+        if (userId == null || role == null || role.isEmpty()) {
+            return null;
+        }
+
+        try {
+            return getEntityManager().createNamedQuery("XXPortalUserRole.findByRoleUserId", tClass)
+                    .setParameter("userId", userId)
+                    .setParameter("userRole", role).getSingleResult();
+        } catch (NoResultException e) {
+            //doNothing;
+        }
+
+        return null;
+    }
+
+    public List<String> findXPortalUserRolebyXPortalUserId(Long userId) {
+        if (userId == null) {
+            return new ArrayList<>();
+        }
+
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXPortalUserRole.findXPortalUserRolebyXPortalUserId", String.class)
+                    .setParameter("userId", userId).getResultList();
+        } catch (NoResultException e) {
+            return new ArrayList<>();
+        }
+    }
 }

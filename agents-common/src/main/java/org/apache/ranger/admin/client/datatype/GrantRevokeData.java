@@ -17,230 +17,218 @@
  * under the License.
  */
 
- package org.apache.ranger.admin.client.datatype;
+package org.apache.ranger.admin.client.datatype;
 
-
-import java.util.List;
-import java.util.ArrayList;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.util.ArrayList;
+import java.util.List;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GrantRevokeData implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long   serialVersionUID  = 1L;
+    private static final String WILDCARD_ASTERISK = "*";
 
-	private String        grantor;
-	private String        repositoryName;
-	private String        repositoryType;
-	private String        databases;
-	private String        tables;
-	private String        columns;
-	private String        columnFamilies;
-	private List<PermMap> permMapList = new ArrayList<>();
-	
-	private static String WILDCARD_ASTERISK = "*";
+    private String        grantor;
+    private String        repositoryName;
+    private String        repositoryType;
+    private String        databases;
+    private String        tables;
+    private String        columns;
+    private String        columnFamilies;
+    private List<PermMap> permMapList = new ArrayList<>();
 
-	public GrantRevokeData() {
-	}
+    public GrantRevokeData() {
+    }
 
-	public String getGrantor() {
-		return grantor;
-	}
+    public static void main(String[] args) {
+        GrantRevokeData grData = new GrantRevokeData();
 
-	public void setGrantor(String grantor) {
-		this.grantor = grantor;
-	}
+        System.out.println(grData);
+    }
 
-	public String getRepositoryName() {
-		return repositoryName;
-	}
+    public String getGrantor() {
+        return grantor;
+    }
 
-	public void setRepositoryName(String repositoryName) {
-		this.repositoryName = repositoryName;
-	}
+    public void setGrantor(String grantor) {
+        this.grantor = grantor;
+    }
 
-	public String getRepositoryType() {
-		return repositoryType;
-	}
+    public String getRepositoryName() {
+        return repositoryName;
+    }
 
-	public void setRepositoryType(String repositoryType) {
-		this.repositoryType = repositoryType;
-	}
+    public void setRepositoryName(String repositoryName) {
+        this.repositoryName = repositoryName;
+    }
 
-	public String getDatabases() {
-		return databases;
-	}
+    public String getRepositoryType() {
+        return repositoryType;
+    }
 
-	public void setDatabases(String databases) {
-		this.databases = databases;
-	}
+    public void setRepositoryType(String repositoryType) {
+        this.repositoryType = repositoryType;
+    }
 
-	public String getTables() {
-		return tables;
-	}
+    public String getDatabases() {
+        return databases;
+    }
 
-	public void setTables(String tables) {
-		this.tables = tables;
-	}
+    public void setDatabases(String databases) {
+        this.databases = databases;
+    }
 
-	public String getColumns() {
-		return columns;
-	}
+    public String getTables() {
+        return tables;
+    }
 
-	public void setColumns(String columns) {
-		this.columns = columns;
-	}
+    public void setTables(String tables) {
+        this.tables = tables;
+    }
 
-	public String getColumnFamilies() {
-		return columnFamilies;
-	}
+    public String getColumns() {
+        return columns;
+    }
 
-	public void setColumnFamilies(String columnFamilies) {
-		this.columnFamilies = columnFamilies;
-	}
+    public void setColumns(String columns) {
+        this.columns = columns;
+    }
 
-	public List<PermMap> getPermMapList() {
-		return permMapList;
-	}
+    public String getColumnFamilies() {
+        return columnFamilies;
+    }
 
-	public void setPermMapList(List<PermMap> permMapList) {
-		this.permMapList = permMapList;
-	}
+    public void setColumnFamilies(String columnFamilies) {
+        this.columnFamilies = columnFamilies;
+    }
 
+    public List<PermMap> getPermMapList() {
+        return permMapList;
+    }
 
-	public void setHiveData(String  grantor,
-							String  repositoryName,
-							String  databases,
-							String  tables,
-							String  columns,
-							PermMap permMap) {
-		this.grantor         = grantor;
-		this.repositoryName = repositoryName;
-		this.repositoryType = "hive";
-		this.databases      = StringUtil.isEmpty(databases) ? WILDCARD_ASTERISK : databases;
-		this.tables         = StringUtil.isEmpty(tables)    ? WILDCARD_ASTERISK : tables;
-		this.columns        = StringUtil.isEmpty(columns)   ? WILDCARD_ASTERISK : columns;
-		this.permMapList.add(permMap);
-	}
+    public void setPermMapList(List<PermMap> permMapList) {
+        this.permMapList = permMapList;
+    }
 
-	public void setHBaseData(String  grantor,
-							 String  repositoryName,
-							 String  tables,
-							 String  columns,
-							 String  columnFamilies,
-							 PermMap permMap) {
-		this.grantor         = grantor;
-		this.repositoryName = repositoryName;
-		this.repositoryType = "hbase";
-		this.tables         = StringUtil.isEmpty(tables)         ? WILDCARD_ASTERISK : tables;
-		this.columns        = StringUtil.isEmpty(columns)        ? WILDCARD_ASTERISK : columns;
-		this.columnFamilies = StringUtil.isEmpty(columnFamilies) ? WILDCARD_ASTERISK : columnFamilies;
-		this.permMapList.add(permMap);
-	}
-	
-	public String toJson() {
-		try {
-			return JsonUtilsV2.objToJson(this);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return "";
-	}
+    public void setHiveData(String grantor, String repositoryName, String databases, String tables, String columns, PermMap permMap) {
+        this.grantor        = grantor;
+        this.repositoryName = repositoryName;
+        this.repositoryType = "hive";
+        this.databases      = StringUtil.isEmpty(databases) ? WILDCARD_ASTERISK : databases;
+        this.tables         = StringUtil.isEmpty(tables) ? WILDCARD_ASTERISK : tables;
+        this.columns        = StringUtil.isEmpty(columns) ? WILDCARD_ASTERISK : columns;
 
-	@Override
-	public String toString() {
-		return toJson();
-	}
+        this.permMapList.add(permMap);
+    }
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class PermMap implements java.io.Serializable {
-		private List<String> userList  = new ArrayList<>();
-		private List<String> groupList = new ArrayList<>();
-		private List<String> permList  = new ArrayList<>();
+    public void setHBaseData(String grantor, String repositoryName, String tables, String columns, String columnFamilies, PermMap permMap) {
+        this.grantor        = grantor;
+        this.repositoryName = repositoryName;
+        this.repositoryType = "hbase";
+        this.tables         = StringUtil.isEmpty(tables) ? WILDCARD_ASTERISK : tables;
+        this.columns        = StringUtil.isEmpty(columns) ? WILDCARD_ASTERISK : columns;
+        this.columnFamilies = StringUtil.isEmpty(columnFamilies) ? WILDCARD_ASTERISK : columnFamilies;
 
-		public PermMap() {
-		}
+        this.permMapList.add(permMap);
+    }
 
-		public PermMap(String user, String group, String perm) {
-			addUser(user);
-			addGroup(group);
-			addPerm(perm);
-		}
+    public String toJson() {
+        try {
+            return JsonUtilsV2.objToJson(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-		public PermMap(List<String> userList, List<String> groupList, List<String> permList) {
-			copyList(userList, this.userList);
-			copyList(groupList, this.groupList);
-			copyList(permList, this.permList);
-		}
+        return "";
+    }
 
-		public List<String> getUserList() {
-			return userList;
-		}
+    @Override
+    public String toString() {
+        return toJson();
+    }
 
-		public List<String> getGroupList() {
-			return groupList;
-		}
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PermMap implements java.io.Serializable {
+        private List<String> userList  = new ArrayList<>();
+        private List<String> groupList = new ArrayList<>();
+        private List<String> permList  = new ArrayList<>();
 
-		public List<String> getPermList() {
-			return permList;
-		}
+        public PermMap() {
+        }
 
-		public void addUser(String user) {
-			addToList(user, userList);
-		}
+        public PermMap(String user, String group, String perm) {
+            addUser(user);
+            addGroup(group);
+            addPerm(perm);
+        }
 
-		public void addGroup(String group) {
-			addToList(group, groupList);
-		}
+        public PermMap(List<String> userList, List<String> groupList, List<String> permList) {
+            copyList(userList, this.userList);
+            copyList(groupList, this.groupList);
+            copyList(permList, this.permList);
+        }
 
-		public void addPerm(String perm) {
-			addToList(perm, permList);
-		}
+        public List<String> getUserList() {
+            return userList;
+        }
 
-		private void addToList(String str, List<String> list) {
-			if(list != null && !StringUtil.isEmpty(str)) {
-				list.add(str);
-			}
-		}
+        public List<String> getGroupList() {
+            return groupList;
+        }
 
-		private void copyList(List<String> fromList, List<String> toList) {
-			if(fromList != null && toList != null) {
-				for(String str : fromList) {
-					addToList(str, toList);
-				}
-			}
-		}
+        public List<String> getPermList() {
+            return permList;
+        }
 
-		public String toJson() {
-			try {
-				return JsonUtilsV2.objToJson(this);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			return "";
-		}
+        public void addUser(String user) {
+            addToList(user, userList);
+        }
 
-		@Override
-		public String toString() {
-			return toJson();
-		}
-	}
-	
-	public static void main(String[] args) {
-		GrantRevokeData grData = new GrantRevokeData();
-		
-		System.out.println(grData.toString());
-	}
+        public void addGroup(String group) {
+            addToList(group, groupList);
+        }
+
+        public void addPerm(String perm) {
+            addToList(perm, permList);
+        }
+
+        public String toJson() {
+            try {
+                return JsonUtilsV2.objToJson(this);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return "";
+        }
+
+        @Override
+        public String toString() {
+            return toJson();
+        }
+
+        private void addToList(String str, List<String> list) {
+            if (list != null && !StringUtil.isEmpty(str)) {
+                list.add(str);
+            }
+        }
+
+        private void copyList(List<String> fromList, List<String> toList) {
+            if (fromList != null && toList != null) {
+                for (String str : fromList) {
+                    addToList(str, toList);
+                }
+            }
+        }
+    }
 }

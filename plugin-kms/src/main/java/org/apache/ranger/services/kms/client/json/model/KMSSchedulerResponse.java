@@ -17,94 +17,103 @@
 
 package org.apache.ranger.services.kms.client.json.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class KMSSchedulerResponse implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
-    private KMSScheduler scheduler = null;
+    private KMSScheduler scheduler;
 
-    public KMSScheduler getScheduler() { return scheduler; }
-
-    public List<String> getQueueNames() {
-    	List<String> ret = new ArrayList<String>();
-
-    	if(scheduler != null) {
-    		scheduler.collectQueueNames(ret);
-    	}
-
-    	return ret;
+    public KMSScheduler getScheduler() {
+        return scheduler;
     }
 
+    public List<String> getQueueNames() {
+        List<String> ret = new ArrayList<>();
 
-    @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-    @JsonIgnoreProperties(ignoreUnknown=true)
+        if (scheduler != null) {
+            scheduler.collectQueueNames(ret);
+        }
+
+        return ret;
+    }
+
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class KMSScheduler implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private KMSSchedulerInfo schedulerInfo = null;
+        private KMSSchedulerInfo schedulerInfo;
 
-        public KMSSchedulerInfo getSchedulerInfo() { return schedulerInfo; }
+        public KMSSchedulerInfo getSchedulerInfo() {
+            return schedulerInfo;
+        }
 
         public void collectQueueNames(List<String> queueNames) {
-        	if(schedulerInfo != null) {
-        		schedulerInfo.collectQueueNames(queueNames, null);
-        	}
+            if (schedulerInfo != null) {
+                schedulerInfo.collectQueueNames(queueNames, null);
+            }
         }
     }
 
-    @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class KMSSchedulerInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String     queueName = null;
-        private KMSQueues queues    = null;
+        private String    queueName;
+        private KMSQueues queues;
 
-        public String getQueueName() { return queueName; }
+        public String getQueueName() {
+            return queueName;
+        }
 
-        public KMSQueues getQueues() { return queues; }
+        public KMSQueues getQueues() {
+            return queues;
+        }
 
         public void collectQueueNames(List<String> queueNames, String parentQueueName) {
-        	if(queueName != null) {
-        		String queueFqdn = parentQueueName == null ? queueName : parentQueueName + "." + queueName;
+            if (queueName != null) {
+                String queueFqdn = parentQueueName == null ? queueName : parentQueueName + "." + queueName;
 
-        		queueNames.add(queueFqdn);
+                queueNames.add(queueFqdn);
 
-            	if(queues != null) {
-            		queues.collectQueueNames(queueNames, queueFqdn);
-            	}
-        	}
+                if (queues != null) {
+                    queues.collectQueueNames(queueNames, queueFqdn);
+                }
+            }
         }
     }
 
-    @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class KMSQueues implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private List<KMSSchedulerInfo> queue = null;
+        private List<KMSSchedulerInfo> queue;
 
-        public List<KMSSchedulerInfo> getQueue() { return queue; }
+        public List<KMSSchedulerInfo> getQueue() {
+            return queue;
+        }
 
         public void collectQueueNames(List<String> queueNames, String parentQueueName) {
-        	if(queue != null) {
-        		for(KMSSchedulerInfo schedulerInfo : queue) {
-        			schedulerInfo.collectQueueNames(queueNames, parentQueueName);
-        		}
-        	}
+            if (queue != null) {
+                for (KMSSchedulerInfo schedulerInfo : queue) {
+                    schedulerInfo.collectQueueNames(queueNames, parentQueueName);
+                }
+            }
         }
     }
 }

@@ -19,15 +19,15 @@
 
 package org.apache.ranger.plugin.util;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.UserInfo;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -35,22 +35,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-@JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerUserStore implements Serializable {
     private static final long serialVersionUID = 1L;
+
     public static final String CLOUD_IDENTITY_NAME = "cloud_id";
 
     private Long                             userStoreVersion;
     private Date                             userStoreUpdateTime;
     private Map<String, Map<String, String>> userAttrMapping;
-    private Map<String, Map<String, String>> groupAttrMapping ;
+    private Map<String, Map<String, String>> groupAttrMapping;
     private Map<String, Set<String>>         userGroupMapping;
     private Map<String, String>              userCloudIdMapping;
     private Map<String, String>              groupCloudIdMapping;
 
-    public RangerUserStore() {this(-1L, null, null, null);}
+    public RangerUserStore() {
+        this(-1L, null, null, null);
+    }
 
     public RangerUserStore(Long userStoreVersion, Set<UserInfo> users, Set<GroupInfo> groups, Map<String, Set<String>> userGroups) {
         setUserStoreVersion(userStoreVersion);
@@ -58,6 +61,7 @@ public class RangerUserStore implements Serializable {
         setUserGroupMapping(userGroups);
         buildMap(users, groups);
     }
+
     public Long getUserStoreVersion() {
         return userStoreVersion;
     }
@@ -125,7 +129,7 @@ public class RangerUserStore implements Serializable {
     }
 
     @Override
-    public String toString( ) {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
 
         toString(sb);
@@ -139,24 +143,24 @@ public class RangerUserStore implements Serializable {
                 .append("userStoreUpdateTime=").append(userStoreUpdateTime).append(", ");
 
         sb.append("users={");
-        if(MapUtils.isNotEmpty(userAttrMapping)) {
-            for(String user : userAttrMapping.keySet()) {
+        if (MapUtils.isNotEmpty(userAttrMapping)) {
+            for (String user : userAttrMapping.keySet()) {
                 sb.append(user).append(" ");
             }
         }
         sb.append("}, ");
 
         sb.append("groups={");
-        if(MapUtils.isNotEmpty(groupAttrMapping)) {
-            for(String group : groupAttrMapping.keySet()) {
+        if (MapUtils.isNotEmpty(groupAttrMapping)) {
+            for (String group : groupAttrMapping.keySet()) {
                 sb.append(group).append(" ");
             }
         }
         sb.append("}");
 
         sb.append(", userGroupMapping={");
-        if(MapUtils.isNotEmpty(userGroupMapping)) {
-            for(Map.Entry<String, Set<String>> entry : userGroupMapping.entrySet()) {
+        if (MapUtils.isNotEmpty(userGroupMapping)) {
+            for (Map.Entry<String, Set<String>> entry : userGroupMapping.entrySet()) {
                 String      user       = entry.getKey();
                 Set<String> userGroups = entry.getValue();
 
@@ -178,10 +182,10 @@ public class RangerUserStore implements Serializable {
 
     private void buildMap(Set<UserInfo> users, Set<GroupInfo> groups) {
         if (CollectionUtils.isNotEmpty(users)) {
-            userAttrMapping = new HashMap<>();
+            userAttrMapping    = new HashMap<>();
             userCloudIdMapping = new HashMap<>();
             for (UserInfo user : users) {
-                String username = user.getName();
+                String              username  = user.getName();
                 Map<String, String> userAttrs = user.getOtherAttributes();
                 if (MapUtils.isNotEmpty(userAttrs)) {
                     userAttrMapping.put(username, userAttrs);
@@ -193,10 +197,10 @@ public class RangerUserStore implements Serializable {
             }
         }
         if (CollectionUtils.isNotEmpty(groups)) {
-            groupAttrMapping = new HashMap<>();
+            groupAttrMapping    = new HashMap<>();
             groupCloudIdMapping = new HashMap<>();
             for (GroupInfo group : groups) {
-                String groupname = group.getName();
+                String              groupname  = group.getName();
                 Map<String, String> groupAttrs = group.getOtherAttributes();
                 if (MapUtils.isNotEmpty(groupAttrs)) {
                     groupAttrMapping.put(groupname, groupAttrs);

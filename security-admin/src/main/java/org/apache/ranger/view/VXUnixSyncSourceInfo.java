@@ -17,138 +17,136 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * UserGroupInfo
- *
  */
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
-public class VXUnixSyncSourceInfo implements java.io.Serializable  {
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class VXUnixSyncSourceInfo implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    private String unixBackend;
+    private String fileName;
+    private String syncTime;
+    private String lastModified;
+    private String minUserId;
+    private String minGroupId;
+    private long   totalUsersSynced;
+    private long   totalGroupsSynced;
+    private long   totalUsersDeleted;
+    private long   totalGroupsDeleted;
 
-	private String unixBackend;
-	private String fileName;
-	private String syncTime;
-	private String lastModified;
-	private String minUserId;
-	private String minGroupId;
-	private long totalUsersSynced;
-	private long totalGroupsSynced;
-	private long totalUsersDeleted;
-	private long totalGroupsDeleted;
+    public VXUnixSyncSourceInfo() {
+    }
 
-	public VXUnixSyncSourceInfo() {
-	}
+    public String getFileName() {
+        return fileName;
+    }
 
-	public String getFileName() {
-		return fileName;
-	}
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
-	}
+    public String getSyncTime() {
+        return syncTime;
+    }
 
-	public String getSyncTime() {
-		return syncTime;
-	}
+    public void setSyncTime(String syncTime) {
+        this.syncTime = syncTime;
+    }
 
-	public void setSyncTime(String syncTime) {
-		this.syncTime = syncTime;
-	}
+    public String getLastModified() {
+        return lastModified;
+    }
 
-	public String getLastModified() {
-		return lastModified;
-	}
+    public void setLastModified(String lastModified) {
+        this.lastModified = lastModified;
+    }
 
-	public void setLastModified(String lastModified) {
-		this.lastModified = lastModified;
-	}
+    public String getUnixBackend() {
+        return unixBackend;
+    }
 
-	public String getUnixBackend() {
-		return unixBackend;
-	}
+    public void setUnixBackend(String unixBackend) {
+        this.unixBackend = unixBackend;
+    }
 
-	public void setUnixBackend(String unixBackend) {
-		this.unixBackend = unixBackend;
-	}
+    public String getMinUserId() {
+        return minUserId;
+    }
 
-	public String getMinUserId() {
-		return minUserId;
-	}
+    public void setMinUserId(String minUserId) {
+        this.minUserId = minUserId;
+    }
 
-	public void setMinUserId(String minUserId) {
-		this.minUserId = minUserId;
-	}
+    public String getMinGroupId() {
+        return minGroupId;
+    }
 
-	public String getMinGroupId() {
-		return minGroupId;
-	}
+    public void setMinGroupId(String minGroupId) {
+        this.minGroupId = minGroupId;
+    }
 
-	public void setMinGroupId(String minGroupId) {
-		this.minGroupId = minGroupId;
-	}
+    public long getTotalUsersSynced() {
+        return totalUsersSynced;
+    }
 
-	public long getTotalUsersSynced() {
-		return totalUsersSynced;
-	}
+    public void setTotalUsersSynced(long totalUsersSynced) {
+        this.totalUsersSynced = totalUsersSynced;
+    }
 
-	public void setTotalUsersSynced(long totalUsersSynced) {
-		this.totalUsersSynced = totalUsersSynced;
-	}
+    public long getTotalGroupsSynced() {
+        return totalGroupsSynced;
+    }
 
-	public long getTotalGroupsSynced() {
-		return totalGroupsSynced;
-	}
+    public void setTotalGroupsSynced(long totalGroupsSynced) {
+        this.totalGroupsSynced = totalGroupsSynced;
+    }
 
-	public void setTotalGroupsSynced(long totalGroupsSynced) {
-		this.totalGroupsSynced = totalGroupsSynced;
-	}
+    public long getTotalUsersDeleted() {
+        return totalUsersDeleted;
+    }
 
-	public long getTotalUsersDeleted() {
-		return totalUsersDeleted;
-	}
+    public void setTotalUsersDeleted(long totalUsersDeleted) {
+        this.totalUsersDeleted = totalUsersDeleted;
+    }
 
-	public void setTotalUsersDeleted(long totalUsersDeleted) {
-		this.totalUsersDeleted = totalUsersDeleted;
-	}
+    public long getTotalGroupsDeleted() {
+        return totalGroupsDeleted;
+    }
 
-	public long getTotalGroupsDeleted() {
-		return totalGroupsDeleted;
-	}
+    public void setTotalGroupsDeleted(long totalGroupsDeleted) {
+        this.totalGroupsDeleted = totalGroupsDeleted;
+    }
 
-	public void setTotalGroupsDeleted(long totalGroupsDeleted) {
-		this.totalGroupsDeleted = totalGroupsDeleted;
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        toString(sb);
+        return sb.toString();
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		toString(sb);
-		return sb.toString();
-	}
-
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("{\"unixBackend\":\"").append(unixBackend);
-		sb.append("\", \"fileName\":\"").append(fileName);
-		sb.append("\", \"syncTime\":\"").append(syncTime);
-		sb.append("\", \"lastModified\":\"").append(lastModified);
-		sb.append("\", \"minUserId\":\"").append(minUserId);
-		sb.append("\", \"minGroupId\":\"").append(minGroupId);
-		sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
-		sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
-		sb.append("\", \"totalUsersDeleted\":\"").append(totalUsersDeleted);
-		sb.append("\", \"totalGroupsDeleted\":\"").append(totalGroupsDeleted);
-		sb.append("\"}");
-		return sb;
-	}
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("{\"unixBackend\":\"").append(unixBackend);
+        sb.append("\", \"fileName\":\"").append(fileName);
+        sb.append("\", \"syncTime\":\"").append(syncTime);
+        sb.append("\", \"lastModified\":\"").append(lastModified);
+        sb.append("\", \"minUserId\":\"").append(minUserId);
+        sb.append("\", \"minGroupId\":\"").append(minGroupId);
+        sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
+        sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
+        sb.append("\", \"totalUsersDeleted\":\"").append(totalUsersDeleted);
+        sb.append("\", \"totalGroupsDeleted\":\"").append(totalGroupsDeleted);
+        sb.append("\"}");
+        return sb;
+    }
 }

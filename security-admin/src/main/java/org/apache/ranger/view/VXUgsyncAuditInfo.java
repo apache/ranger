@@ -17,141 +17,140 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * UserGroupInfo
- *
  */
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.ranger.json.JsonDateSerializer;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
-public class VXUgsyncAuditInfo extends VXDataObject implements java.io.Serializable  {
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class VXUgsyncAuditInfo extends VXDataObject implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    @JsonSerialize(using = JsonDateSerializer.class)
+    private Date eventTime;
 
-	@JsonSerialize(using=JsonDateSerializer.class)
-	private Date eventTime;
+    private String               userName;
+    private Long                 noOfNewUsers;
+    private Long                 noOfNewGroups;
+    private Long                 noOfModifiedUsers;
+    private Long                 noOfModifiedGroups;
+    private String               syncSource;
+    private String               sessionId;
+    private Map<String, String>  syncSourceInfo;
+    private VXLdapSyncSourceInfo ldapSyncSourceInfo;
+    private VXFileSyncSourceInfo fileSyncSourceInfo;
+    private VXUnixSyncSourceInfo unixSyncSourceInfo;
 
-	private String userName;
-	private Long noOfNewUsers;
-	private Long noOfNewGroups;
-	private Long noOfModifiedUsers;
-	private Long noOfModifiedGroups;
-	private String syncSource;
-	private String sessionId;
-	private Map<String, String> syncSourceInfo;
-	private VXLdapSyncSourceInfo ldapSyncSourceInfo;
-	private VXFileSyncSourceInfo fileSyncSourceInfo;
-	private VXUnixSyncSourceInfo unixSyncSourceInfo;
+    public VXUgsyncAuditInfo() {
+    }
 
-	public VXUgsyncAuditInfo() {
-	}
+    public Date getEventTime() {
+        return eventTime;
+    }
 
-	public Date getEventTime() {
-		return eventTime;
-	}
+    public void setEventTime(Date eventTime) {
+        this.eventTime = eventTime;
+    }
 
-	public void setEventTime(Date eventTime) {
-		this.eventTime = eventTime;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
-	public String getUserName() {
-		return userName;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+    public Long getNoOfNewUsers() {
+        return noOfNewUsers;
+    }
 
-	public Long getNoOfNewUsers() {
-		return noOfNewUsers;
-	}
+    public void setNoOfNewUsers(Long noOfUsers) {
+        this.noOfNewUsers = noOfUsers;
+    }
 
-	public void setNoOfNewUsers(Long noOfUsers) {
-		this.noOfNewUsers = noOfUsers;
-	}
+    public Long getNoOfModifiedUsers() {
+        return noOfModifiedUsers;
+    }
 
-	public Long getNoOfModifiedUsers() {
-		return noOfModifiedUsers;
-	}
+    public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
+        this.noOfModifiedUsers = noOfModifiedUsers;
+    }
 
-	public void setNoOfModifiedUsers(Long noOfModifiedUsers) {
-		this.noOfModifiedUsers = noOfModifiedUsers;
-	}
+    public Long getNoOfNewGroups() {
+        return noOfNewGroups;
+    }
 
-	public Long getNoOfNewGroups() {
-		return noOfNewGroups;
-	}
+    public void setNoOfNewGroups(Long noOfNewGroups) {
+        this.noOfNewGroups = noOfNewGroups;
+    }
 
-	public void setNoOfNewGroups(Long noOfNewGroups) {
-		this.noOfNewGroups = noOfNewGroups;
-	}
+    public Long getNoOfModifiedGroups() {
+        return noOfModifiedGroups;
+    }
 
-	public Long getNoOfModifiedGroups() {
-		return noOfModifiedGroups;
-	}
+    public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
+        this.noOfModifiedGroups = noOfModifiedGroups;
+    }
 
-	public void setNoOfModifiedGroups(Long noOfModifiedGroups) {
-		this.noOfModifiedGroups = noOfModifiedGroups;
-	}
+    public String getSyncSource() {
+        return syncSource;
+    }
 
-	public String getSyncSource() {
-		return syncSource;
-	}
+    public void setSyncSource(String syncSource) {
+        this.syncSource = syncSource;
+    }
 
-	public void setSyncSource(String syncSource) {
-		this.syncSource = syncSource;
-	}
+    public VXLdapSyncSourceInfo getLdapSyncSourceInfo() {
+        return ldapSyncSourceInfo;
+    }
 
-	public VXLdapSyncSourceInfo getLdapSyncSourceInfo() {
-		return ldapSyncSourceInfo;
-	}
+    public void setLdapSyncSourceInfo(VXLdapSyncSourceInfo ldapSyncSourceInfo) {
+        this.ldapSyncSourceInfo = ldapSyncSourceInfo;
+    }
 
-	public void setLdapSyncSourceInfo(VXLdapSyncSourceInfo ldapSyncSourceInfo) {
-		this.ldapSyncSourceInfo = ldapSyncSourceInfo;
-	}
+    public VXFileSyncSourceInfo getFileSyncSourceInfo() {
+        return fileSyncSourceInfo;
+    }
 
-	public VXFileSyncSourceInfo getFileSyncSourceInfo() {
-		return fileSyncSourceInfo;
-	}
+    public void setFileSyncSourceInfo(VXFileSyncSourceInfo fileSyncSourceInfo) {
+        this.fileSyncSourceInfo = fileSyncSourceInfo;
+    }
 
-	public void setFileSyncSourceInfo(VXFileSyncSourceInfo fileSyncSourceInfo) {
-		this.fileSyncSourceInfo = fileSyncSourceInfo;
-	}
+    public VXUnixSyncSourceInfo getUnixSyncSourceInfo() {
+        return unixSyncSourceInfo;
+    }
 
-	public VXUnixSyncSourceInfo getUnixSyncSourceInfo() {
-		return unixSyncSourceInfo;
-	}
+    public void setUnixSyncSourceInfo(VXUnixSyncSourceInfo unixSyncSourceInfo) {
+        this.unixSyncSourceInfo = unixSyncSourceInfo;
+    }
 
-	public void setUnixSyncSourceInfo(VXUnixSyncSourceInfo unixSyncSourceInfo) {
-		this.unixSyncSourceInfo = unixSyncSourceInfo;
-	}
+    public String getSessionId() {
+        return sessionId;
+    }
 
-	public String getSessionId() {
-		return sessionId;
-	}
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
+    public Map<String, String> getSyncSourceInfo() {
+        return syncSourceInfo;
+    }
 
-	public Map<String, String> getSyncSourceInfo() {
-		return syncSourceInfo;
-	}
-
-	public void setSyncSourceInfo(Map<String, String> syncSourceInfo) {
-		this.syncSourceInfo = syncSourceInfo == null ? new HashMap<String, String>() :syncSourceInfo;
-	}
+    public void setSyncSourceInfo(Map<String, String> syncSourceInfo) {
+        this.syncSourceInfo = syncSourceInfo == null ? new HashMap<>() : syncSourceInfo;
+    }
 }

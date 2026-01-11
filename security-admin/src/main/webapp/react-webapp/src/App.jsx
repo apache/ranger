@@ -21,10 +21,15 @@ import React, { Suspense, lazy, Component } from "react";
 import { Route, Routes, HashRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import axios from "axios";
-import { hasAccessToTab, isUser } from "./utils/XAUtils";
+import {
+  hasAccessToTab,
+  isUser,
+  isSystemAdmin,
+  isAuditor
+} from "Utils/XAUtils";
 import ErrorBoundary from "Views/ErrorBoundary";
-import ErrorPage from "./views/ErrorPage";
-import { CommonScrollButton, Loader } from "../src/components/CommonComponents";
+import ErrorPage from "Views/ErrorPage";
+import { CommonScrollButton, Loader } from "Components/CommonComponents";
 import history from "Utils/history";
 import { setUserProfile, setServiceDef } from "Utils/appState";
 import LayoutComp from "Views/Layout";
@@ -67,17 +72,18 @@ const EditPermissionComp = lazy(() =>
   import("Views/PermissionsModule/EditPermission")
 );
 const AuditLayout = lazy(() => import("Views/AuditEvent/AuditLayout"));
-const AccessLogs = lazy(() => import("Views/AuditEvent/AccessLogs"));
-const AdminLogs = lazy(() => import("Views/AuditEvent/AdminLogs"));
+const AccessLogs = lazy(() => import("Views/AuditEvent/Access/AccessLogs"));
+const AdminLogs = lazy(() => import("Views/AuditEvent/Admin/AdminLogs"));
 const LoginSessionsLogs = lazy(() =>
-  import("Views/AuditEvent/LoginSessionsLogs")
+  import("Views/AuditEvent/LoginSessions/LoginSessionsLogs")
 );
-const PluginsLog = lazy(() => import("Views/AuditEvent/PluginsLog"));
+const PluginsLogs = lazy(() => import("Views/AuditEvent/Plugins/PluginsLogs"));
 const PluginStatusLogs = lazy(() =>
-  import("Views/AuditEvent/PluginStatusLogs")
+  import("Views/AuditEvent/PluginStatus/PluginStatusLogs")
 );
-const UserSyncLogs = lazy(() => import("Views/AuditEvent/UserSync"));
-
+const UserSyncLogs = lazy(() =>
+  import("Views/AuditEvent/UserSync/UserSyncLogs")
+);
 const PolicyListingTabView = lazy(() =>
   import("Views/PolicyListing/PolicyListingTabView")
 );
@@ -86,8 +92,8 @@ const AddUpdatePolicyForm = lazy(() =>
 );
 const EncryptionComp = lazy(() => import("Views/Encryption/KeyManager"));
 const KeyCreateComp = lazy(() => import("Views/Encryption/KeyCreate"));
-const AccesLogDetailComp = lazy(() =>
-  import("Views/AuditEvent/AccessLogDetail")
+const AccessLogDetailComp = lazy(() =>
+  import("Views/AuditEvent/Access/AccessLogDetail")
 );
 const UserAccessLayoutComp = lazy(() =>
   import("Views/Reports/UserAccessLayout")
@@ -213,15 +219,17 @@ export default class App extends Component {
       );
     }
 
-    try {
-      let resp = await fetchApi({
-        url: `plugins/definitions/name/gds`
-      });
-      gdsServiceDef = resp.data;
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching GDS Service Definition or CSRF headers! ${error}`
-      );
+    if (isUser() || isSystemAdmin() || isAuditor()) {
+      try {
+        let resp = await fetchApi({
+          url: `plugins/definitions/name/gds`
+        });
+        gdsServiceDef = resp.data;
+      } catch (error) {
+        console.error(
+          `Error occurred while fetching GDS Service Definition or CSRF headers! ${error}`
+        );
+      }
     }
 
     setServiceDef(
@@ -308,14 +316,14 @@ export default class App extends Component {
                       path="loginSession"
                       element={<LoginSessionsLogs />}
                     />
-                    <Route path="agent" element={<PluginsLog />} />
+                    <Route path="agent" element={<PluginsLogs />} />
                     <Route path="pluginStatus" element={<PluginStatusLogs />} />
                     <Route path="userSync" element={<UserSyncLogs />} />
                   </Route>
                   {/* AUDIT LOGS DETAILS VIEW */}
                   <Route
                     path="/reports/audit/eventlog/:eventId"
-                    element={<AccesLogDetailComp />}
+                    element={<AccessLogDetailComp />}
                   ></Route>
                   {/* USER/GROUP/ROLE LISTING*/}
                   <Route path="/users" element={<UserGroupRoleListing />}>

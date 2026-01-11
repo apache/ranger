@@ -61,14 +61,17 @@ export const UserTypes = {
   USER_INTERNAL: {
     value: 0,
     label: "Internal",
-    rbkey: "xa.enum.AccessResult.ACCESS_RESULT_ALLOWED",
-    tt: "lbl.AccessResult_ACCESS_RESULT_ALLOWED"
+    variant: "success"
   },
   USER_EXTERNAL: {
     value: 1,
     label: "External",
-    rbkey: "xa.enum.AccessResult.ACCESS_RESULT_DENIED",
-    tt: "lbl.AccessResult_ACCESS_RESULT_DENIED"
+    variant: "warning"
+  },
+  USER_FEDERATED: {
+    value: 6,
+    label: "Federated",
+    variant: "secondary"
   }
 };
 
@@ -945,3 +948,41 @@ export const statusClassMap = {
   ACTIVE: "badge bg-primary",
   DENIED: "badge bg-danger"
 };
+
+export const additionalServiceConfigs = [
+  {
+    label: "Policy Download Users",
+    name: "policy.download.auth.users",
+    type: "user"
+  },
+  {
+    label: "Tag Download Users",
+    name: "tag.download.auth.users",
+    type: "user"
+  },
+  {
+    label: "Service Admin Users",
+    name: "service.admin.users",
+    type: "user"
+  },
+  {
+    label: "Service Admin Groups",
+    name: "service.admin.groups",
+    type: "group"
+  },
+  {
+    label: "Superusers",
+    name: "ranger.plugin.super.users",
+    type: "user"
+  },
+  {
+    label: "Superuser Groups",
+    name: "ranger.plugin.super.groups",
+    type: "group"
+  },
+  {
+    label: "Userstore Download Users",
+    name: "userstore.download.auth.users",
+    type: "user"
+  }
+];

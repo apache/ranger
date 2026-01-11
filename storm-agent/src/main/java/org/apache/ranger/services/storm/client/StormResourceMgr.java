@@ -19,80 +19,78 @@
 
 package org.apache.ranger.services.storm.client;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StormResourceMgr {
-	private static final 	Logger 	LOG 		= LoggerFactory.getLogger(StormResourceMgr.class);
-	private static final 	String  TOPOLOGY	= "topology";
-	
-	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
-		Map<String, Object> ret = null;
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> StormResourceMgr.validateConfig ServiceName: "+ serviceName + "Configs" + configs );
-		}	
-		
-		try {
-			ret = StormClient.connectionTest(serviceName, configs);
-		} catch (Exception e) {
-			LOG.error("<== StormResourceMgr.validateConfig Error: " + e);
-		  throw e;
-		}
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== StormResourceMgr.validateConfig Result : "+ ret  );
-		}	
-		return ret;
-	}
-	
-    public static List<String> getStormResources(String serviceName, Map<String, String> configs,ResourceLookupContext context) {
-        String 		 userInput 				  = context.getUserInput();
-		Map<String, List<String>> resourceMap = context.getResources();
-	    List<String> 		resultList        = null;
-		List<String> 		StormTopologyList = null;
-		String  			stormTopologyName = null;
-		
-		if ( resourceMap != null && !resourceMap.isEmpty() &&
-			resourceMap.get(TOPOLOGY) != null ) {
-			stormTopologyName = userInput;
-			StormTopologyList = resourceMap.get(TOPOLOGY);
-		} else {
-			stormTopologyName = userInput;
-		}
-		
-		
-        if (configs == null || configs.isEmpty()) {
-                LOG.error("Connection Config is empty");
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+public class StormResourceMgr {
+    private static final Logger LOG      = LoggerFactory.getLogger(StormResourceMgr.class);
+    private static final String TOPOLOGY = "topology";
+
+    private StormResourceMgr(){
+    }
+
+    public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) {
+        Map<String, Object> ret;
+
+        LOG.debug("==> StormResourceMgr.validateConfig ServiceName: {} Configs{}", serviceName, configs);
+
+        try {
+            ret = StormClient.connectionTest(serviceName, configs);
+        } catch (Exception e) {
+            LOG.error("<== StormResourceMgr.validateConfig Error: {}", String.valueOf(e));
+            throw e;
+        }
+
+        LOG.debug("<== StormResourceMgr.validateConfig Result : {}", ret);
+        return ret;
+    }
+
+    public static List<String> getStormResources(String serviceName, Map<String, String> configs, ResourceLookupContext context) {
+        String                    userInput         = context.getUserInput();
+        Map<String, List<String>> resourceMap       = context.getResources();
+        List<String>              resultList        = null;
+        List<String>              stormTopologyList = null;
+        String                    stormTopologyName;
+
+        if (resourceMap != null && !resourceMap.isEmpty() && resourceMap.get(TOPOLOGY) != null) {
+            stormTopologyName = userInput;
+            stormTopologyList = resourceMap.get(TOPOLOGY);
         } else {
-                String url 		= configs.get("nimbus.url");
-                String username = configs.get("username");
-                String password = configs.get("password");
-                String lookupPrincipal = configs.get("lookupprincipal");
-                String lookupKeytab = configs.get("lookupkeytab");
-                String nameRules = configs.get("namerules");
-                resultList = getStormResources(url, username, password,lookupPrincipal, lookupKeytab, nameRules, stormTopologyName,StormTopologyList);
+            stormTopologyName = userInput;
+        }
+
+        if (configs == null || configs.isEmpty()) {
+            LOG.error("Connection Config is empty");
+        } else {
+            String url             = configs.get("nimbus.url");
+            String username        = configs.get("username");
+            String password        = configs.get("password");
+            String lookupPrincipal = configs.get("lookupprincipal");
+            String lookupKeytab    = configs.get("lookupkeytab");
+            String nameRules       = configs.get("namerules");
+            resultList = getStormResources(url, username, password, lookupPrincipal, lookupKeytab, nameRules, stormTopologyName, stormTopologyList);
         }
         return resultList;
     }
 
-    public static List<String> getStormResources(String url, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String topologyName, List<String> StormTopologyList) {
-    	List<String> topologyList	  = null;
-        final StormClient stormClient = StormConnectionMgr.getStormClient(url, username, password, lookupPrincipal, lookupKeytab, nameRules);
-	    if (stormClient == null) {
-		    LOG.error("Storm Client is null");
-		    return new ArrayList<String>();
-	    }
-	    synchronized(stormClient){
-	    	topologyList = stormClient.getTopologyList(topologyName,StormTopologyList);
-	    }
+    public static List<String> getStormResources(String url, String username, String password, String lookupPrincipal, String lookupKeytab, String nameRules, String topologyName, List<String> stormTopologyList) {
+        List<String>      topologyList;
+        final StormClient stormClient  = StormConnectionMgr.getStormClient(url, username, password, lookupPrincipal, lookupKeytab, nameRules);
+
+        if (stormClient == null) {
+            LOG.error("Storm Client is null");
+            return new ArrayList<>();
+        }
+
+        synchronized (stormClient) {
+            topologyList = stormClient.getTopologyList(topologyName, stormTopologyList);
+        }
+
         return topologyList;
     }
-
 }

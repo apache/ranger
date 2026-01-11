@@ -17,90 +17,88 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * Credential Store
-
  */
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.common.AppConstants;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VXCredentialStore extends VXDataObject implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
+    /**
+     * Name
+     */
+    protected String name;
+    /**
+     * Description
+     */
+    protected String description;
 
-	/**
-	 * Name
-	 */
-	protected String name;
-	/**
-	 * Description
-	 */
-	protected String description;
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXCredentialStore() {
+    }
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public VXCredentialStore ( ) {
-	}
+    /**
+     * Returns the value for the member attribute <b>name</b>
+     * @return String - value of member attribute <b>name</b>.
+     */
+    public String getName() {
+        return this.name;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>name</b>.
-	 * You cannot set null to the attribute.
-	 * @param name Value to set member attribute <b>name</b>
-	 */
-	public void setName( String name ) {
-		this.name = name;
-	}
+    /**
+     * This method sets the value to the member attribute <b>name</b>.
+     * You cannot set null to the attribute.
+     * @param name Value to set member attribute <b>name</b>
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>name</b>
-	 * @return String - value of member attribute <b>name</b>.
-	 */
-	public String getName( ) {
-		return this.name;
-	}
+    /**
+     * Returns the value for the member attribute <b>description</b>
+     * @return String - value of member attribute <b>description</b>.
+     */
+    public String getDescription() {
+        return this.description;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>description</b>.
-	 * You cannot set null to the attribute.
-	 * @param description Value to set member attribute <b>description</b>
-	 */
-	public void setDescription( String description ) {
-		this.description = description;
-	}
+    /**
+     * This method sets the value to the member attribute <b>description</b>.
+     * You cannot set null to the attribute.
+     * @param description Value to set member attribute <b>description</b>
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>description</b>
-	 * @return String - value of member attribute <b>description</b>.
-	 */
-	public String getDescription( ) {
-		return this.description;
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_CRED_STORE;
+    }
 
-	@Override
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_XA_CRED_STORE;
-	}
-
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	public String toString( ) {
-		String str = "VXCredentialStore={";
-		str += super.toString();
-		str += "name={" + name + "} ";
-		str += "description={" + description + "} ";
-		str += "}";
-		return str;
-	}
+    /**
+     * This return the bean content in string format
+     * @return formatedStr
+     */
+    public String toString() {
+        String str = "VXCredentialStore={";
+        str += super.toString();
+        str += "name={" + name + "} ";
+        str += "description={" + description + "} ";
+        str += "}";
+        return str;
+    }
 }

@@ -17,126 +17,123 @@
 
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.common.AppConstants;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VXGroupPermission extends VXDataObject implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    protected Long    groupId;
+    protected Long    moduleId;
+    protected Integer isAllowed;
+    protected String  moduleName;
 
+    protected String groupName;
 
-	protected Long groupId;
-	protected Long moduleId;
-	protected Integer isAllowed;
-	protected String moduleName;
+    public VXGroupPermission() {
+        // TODO Auto-generated constructor stub
+    }
 
-	protected String groupName;
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
 
-	public VXGroupPermission() {
-		// TODO Auto-generated constructor stub
-	}
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_RANGER_GROUP_PERMISSION;
+    }
 
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    @Override
+    public String toString() {
+        String str = "VXGroupPermission={";
+        str += super.toString();
+        str += "id={" + id + "} ";
+        str += "groupId={" + groupId + "} ";
+        str += "moduleId={" + moduleId + "} ";
+        str += "isAllowed={" + isAllowed + "} ";
+        str += "moduleName={" + moduleName + "} ";
+        str += "}";
 
-	/**
-	 * @return the groupId
-	 */
-	public Long getGroupId() {
-		return groupId;
-	}
+        return str;
+    }
 
-	/**
-	 * @param groupId the groupId to set
-	 */
-	public void setGroupId(Long groupId) {
-		this.groupId = groupId;
-	}
+    /**
+     * @return the groupId
+     */
+    public Long getGroupId() {
+        return groupId;
+    }
 
-	/**
-	 * @return the groupName
-	 */
-	public String getGroupName() {
-		return groupName;
-	}
+    /**
+     * @param groupId the groupId to set
+     */
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
 
-	/**
-	 * @param groupName the groupName to set
-	 */
-	public void setGroupName(String groupName) {
-		this.groupName = groupName;
-	}
+    /**
+     * @return the groupName
+     */
+    public String getGroupName() {
+        return groupName;
+    }
 
-	/**
-	 * @return the moduleId
-	 */
-	public Long getModuleId() {
-		return moduleId;
-	}
+    /**
+     * @param groupName the groupName to set
+     */
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
 
-	/**
-	 * @param moduleId the moduleId to set
-	 */
-	public void setModuleId(Long moduleId) {
-		this.moduleId = moduleId;
-	}
+    /**
+     * @return the moduleId
+     */
+    public Long getModuleId() {
+        return moduleId;
+    }
 
-	/**
-	 * @return the isAllowed
-	 */
-	public Integer getIsAllowed() {
-		return isAllowed;
-	}
+    /**
+     * @param moduleId the moduleId to set
+     */
+    public void setModuleId(Long moduleId) {
+        this.moduleId = moduleId;
+    }
 
-	/**
-	 * @param isAllowed the isAllowed to set
-	 */
-	public void setIsAllowed(Integer isAllowed) {
-		this.isAllowed = isAllowed;
-	}
+    /**
+     * @return the isAllowed
+     */
+    public Integer getIsAllowed() {
+        return isAllowed;
+    }
 
-	public String getModuleName() {
-		return moduleName;
-	}
+    /**
+     * @param isAllowed the isAllowed to set
+     */
+    public void setIsAllowed(Integer isAllowed) {
+        this.isAllowed = isAllowed;
+    }
 
-	public void setModuleName(String moduleName) {
-		this.moduleName = moduleName;
-	}
+    public String getModuleName() {
+        return moduleName;
+    }
 
-	@Override
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_RANGER_GROUP_PERMISSION;
-	}
-
-	@Override
-	public String toString() {
-
-		String str = "VXGroupPermission={";
-		str += super.toString();
-		str += "id={" + id + "} ";
-		str += "groupId={" + groupId + "} ";
-		str += "moduleId={" + moduleId + "} ";
-		str += "isAllowed={" + isAllowed + "} ";
-		str += "moduleName={" + moduleName + "} ";
-		str += "}";
-
-		return str;
-	}
+    public void setModuleName(String moduleName) {
+        this.moduleName = moduleName;
+    }
 }

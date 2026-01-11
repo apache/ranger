@@ -18,238 +18,234 @@
  */
 package org.apache.ranger.services.hive;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.hive.client.HiveResourceMgr;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class RangerServiceHive extends RangerBaseService {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceHive.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceHive.class);
+    public static final String RESOURCE_DATABASE  = "database";
+    public static final String RESOURCE_TABLE     = "table";
+    public static final String RESOURCE_UDF       = "udf";
+    public static final String RESOURCE_COLUMN    = "column";
+    public static final String ACCESS_TYPE_CREATE = "create";
+    public static final String ACCESS_TYPE_SELECT = "select";
+    public static final String ACCESS_TYPE_READ   = "read";
+    public static final String ACCESS_TYPE_ALL    = "all";
+    public static final String WILDCARD_ASTERISK  = "*";
+    public static final String HIVE_DB_DEFAULT                  = "default";
+    public static final String HIVE_DB_INFOMATION_SCHEMA        = "information_schema";
+    public static final String DEFAULT_DB_POLICYNAME            = "default database tables columns";
+    public static final String INFORMATION_SCHEMA_DB_POLICYNAME = "Information_schema database tables columns";
 
-	public static final String RESOURCE_DATABASE  = "database";
-	public static final String RESOURCE_TABLE     = "table";
-	public static final String RESOURCE_UDF       = "udf";
-	public static final String RESOURCE_COLUMN    = "column";
-	public static final String ACCESS_TYPE_CREATE = "create";
-	public static final String ACCESS_TYPE_SELECT = "select";
-	public static final String ACCESS_TYPE_READ  = "read";
-	public static final String ACCESS_TYPE_ALL    = "all";
-	public static final String WILDCARD_ASTERISK  = "*";
+    public RangerServiceHive() {
+        super();
+    }
 
-	public static final String HIVE_DB_DEFAULT   		        = "default";
-	public static final String HIVE_DB_INFOMATION_SCHEMA        = "information_schema";
-	public static final String DEFAULT_DB_POLICYNAME 		    = "default database tables columns";
-	public static final String INFORMATION_SCHEMA_DB_POLICYNAME = "Information_schema database tables columns";
+    @Override
+    public void init(RangerServiceDef serviceDef, RangerService service) {
+        super.init(serviceDef, service);
+    }
 
+    @Override
+    public Map<String, Object> validateConfig() throws Exception {
+        Map<String, Object> ret         = new HashMap<>();
+        String              serviceName = getServiceName();
 
+        LOG.debug("==> RangerServiceHive.validateConfig Service: ({} )", serviceName);
 
-	public RangerServiceHive() {
-		super();
-	}
+        if (configs != null) {
+            try {
+                ret = HiveResourceMgr.connectionTest(serviceName, configs);
+            } catch (HadoopException e) {
+                LOG.error("<== RangerServiceHive.validateConfig Error:{}", String.valueOf(e));
 
-	@Override
-	public void init(RangerServiceDef serviceDef, RangerService service) {
-		super.init(serviceDef, service);
-	}
+                throw e;
+            }
+        }
 
-	@Override
-	public Map<String,Object> validateConfig() throws Exception {
-		Map<String, Object> ret = new HashMap<String, Object>();
-		String 	serviceName  	    = getServiceName();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceHive.validateConfig Service: (" + serviceName + " )");
-		}
-		if ( configs != null) {
-			try  {
-				ret = HiveResourceMgr.connectionTest(serviceName, configs);
-			} catch (HadoopException e) {
-				LOG.error("<== RangerServiceHive.validateConfig Error:" + e);
-				throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceHive.validateConfig Response : (" + ret + " )");
-		}
-		return ret;
-	}
+        LOG.debug("<== RangerServiceHive.validateConfig Response : ({} )", ret);
 
-	@Override
-	public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        return ret;
+    }
 
-		List<String> ret 		   = new ArrayList<String>();
-		String 	serviceName  	   = getServiceName();
-		String	serviceType		   = getServiceType();
-		Map<String,String> configs = getConfigs();
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceHive.lookupResource Context: (" + context + ")");
-		}
-		if (context != null) {
-			try {
-				ret  = HiveResourceMgr.getHiveResources(serviceName, serviceType, configs,context);
-			} catch (Exception e) {
-				LOG.error( "<==RangerServiceHive.lookupResource Error : " + e);
-				throw e;
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceHive.lookupResource Response: (" + ret + ")");
-		}
-		return ret;
-	}
+    @Override
+    public List<String> lookupResource(ResourceLookupContext context) throws Exception {
+        List<String>        ret         = new ArrayList<>();
+        String              serviceName = getServiceName();
+        String              serviceType = getServiceType();
+        Map<String, String> configs     = getConfigs();
 
-	@Override
-	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerServiceHive.getDefaultRangerPolicies()");
-		}
+        LOG.debug("==> RangerServiceHive.lookupResource Context: ({})", context);
 
-		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+        if (context != null) {
+            try {
+                ret = HiveResourceMgr.getHiveResources(serviceName, serviceType, configs, context);
+            } catch (Exception e) {
+                LOG.error("<==RangerServiceHive.lookupResource Error : {}", String.valueOf(e));
 
-		for (RangerPolicy defaultPolicy : ret) {
-			final Map<String, RangerPolicyResource> policyResources = defaultPolicy.getResources();
+                throw e;
+            }
+        }
 
-			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
-				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
-				List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
-				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
-				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
-				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-				policyItemForLookupUser.setAccesses(accessListForLookupUser);
-				policyItemForLookupUser.setDelegateAdmin(false);
-				defaultPolicy.addPolicyItem(policyItemForLookupUser);
-			}
+        LOG.debug("<== RangerServiceHive.lookupResource Response: ({})", ret);
 
-			if (policyResources.size() == 1 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE)) { // policy for all databases
-				RangerPolicyItem policyItemPublic = new RangerPolicyItem();
+        return ret;
+    }
 
-				policyItemPublic.setGroups(Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC));
-				policyItemPublic.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE)));
+    @Override
+    public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+        LOG.debug("==> RangerServiceHive.getDefaultRangerPolicies()");
 
-				RangerPolicyItem policyItemOwner = new RangerPolicyItem();
+        List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
-				policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
-				policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
-				policyItemOwner.setDelegateAdmin(true);
+        for (RangerPolicy defaultPolicy : ret) {
+            final Map<String, RangerPolicyResource> policyResources = defaultPolicy.getResources();
 
-				defaultPolicy.addPolicyItem(policyItemPublic);
-				defaultPolicy.addPolicyItem(policyItemOwner);
-			} else if ((policyResources.size() == 2 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_TABLE)) ||                  // policy for all tables
-					(policyResources.size() == 2 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_UDF))   ||                  // policy for all UDFs
-					(policyResources.size() == 3 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_TABLE, RESOURCE_COLUMN))) { // policy for all columns
-				RangerPolicyItem policyItemOwner = new RangerPolicyItem();
+            if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+                RangerPolicyItem             policyItemForLookupUser = new RangerPolicyItem();
+                List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
 
-				policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
-				policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
-				policyItemOwner.setDelegateAdmin(true);
+                accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
+                accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
+                policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+                policyItemForLookupUser.setAccesses(accessListForLookupUser);
+                policyItemForLookupUser.setDelegateAdmin(false);
 
-				defaultPolicy.addPolicyItem(policyItemOwner);
-			}
-		}
+                defaultPolicy.addPolicyItem(policyItemForLookupUser);
+            }
 
-		//Policy for default db
-		RangerPolicy defaultDBPolicy = createDefaultDBPolicy();
-		ret.add(defaultDBPolicy);
+            if (policyResources.size() == 1 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE)) { // policy for all databases
+                RangerPolicyItem policyItemPublic = new RangerPolicyItem();
 
-		// Policy for information_schema db
-		RangerPolicy informationSchemaPolicy = createInformationSchemaPolicy();
-		ret.add(informationSchemaPolicy);
+                policyItemPublic.setGroups(Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC));
+                policyItemPublic.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE)));
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServiceHive.getDefaultRangerPolicies()");
-		}
+                RangerPolicyItem policyItemOwner = new RangerPolicyItem();
 
-		return ret;
-	}
+                policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
+                policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
+                policyItemOwner.setDelegateAdmin(true);
 
-	private boolean hasWildcardAsteriskResource(Map<String, RangerPolicyResource> policyResources, String... resourceNames) {
-		for (String resourceName : resourceNames) {
-			RangerPolicyResource resource = policyResources.get(resourceName);
-			List<String>         values   = resource != null ? resource.getValues() : null;
+                defaultPolicy.addPolicyItem(policyItemPublic);
+                defaultPolicy.addPolicyItem(policyItemOwner);
+            } else if ((policyResources.size() == 2 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_TABLE)) ||                  // policy for all tables
+                    (policyResources.size() == 2 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_UDF)) ||                  // policy for all UDFs
+                    (policyResources.size() == 3 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE, RESOURCE_TABLE, RESOURCE_COLUMN))) { // policy for all columns
+                RangerPolicyItem policyItemOwner = new RangerPolicyItem();
 
-			if (values == null || !values.contains(WILDCARD_ASTERISK)) {
-				return false;
-			}
-		}
-		return true;
-	}
+                policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
+                policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
+                policyItemOwner.setDelegateAdmin(true);
 
-	private RangerPolicy createDefaultDBPolicy() {
-		RangerPolicy defaultDBPolicy = new RangerPolicy();
+                defaultPolicy.addPolicyItem(policyItemOwner);
+            }
+        }
 
-		defaultDBPolicy.setName(DEFAULT_DB_POLICYNAME);
-		defaultDBPolicy.setService(serviceName);
-		defaultDBPolicy.setResources(createDefaultDBPolicyResource());
-		defaultDBPolicy.setPolicyItems(createDefaultDBPolicyItem());
+        //Policy for default db
+        RangerPolicy defaultDBPolicy = createDefaultDBPolicy();
 
-		return defaultDBPolicy;
-	}
+        ret.add(defaultDBPolicy);
 
-	private Map<String, RangerPolicyResource> createDefaultDBPolicyResource() {
-		Map<String, RangerPolicyResource> resources = new HashMap<>();
+        // Policy for information_schema db
+        RangerPolicy informationSchemaPolicy = createInformationSchemaPolicy();
 
-		resources.put(RESOURCE_DATABASE, new RangerPolicyResource(Arrays.asList(HIVE_DB_DEFAULT), false, false));
-		resources.put(RESOURCE_TABLE, new RangerPolicyResource(WILDCARD_ASTERISK));
-		resources.put(RESOURCE_COLUMN, new RangerPolicyResource(WILDCARD_ASTERISK));
+        ret.add(informationSchemaPolicy);
 
-		return resources;
-	}
+        LOG.debug("<== RangerServiceHive.getDefaultRangerPolicies()");
 
-	private List<RangerPolicyItem> createDefaultDBPolicyItem() {
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+        return ret;
+    }
 
-		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
+    private boolean hasWildcardAsteriskResource(Map<String, RangerPolicyResource> policyResources, String... resourceNames) {
+        for (String resourceName : resourceNames) {
+            RangerPolicyResource resource = policyResources.get(resourceName);
+            List<String>         values   = resource != null ? resource.getValues() : null;
 
-		RangerPolicyItem item = new RangerPolicyItem(accesses, null, Arrays.asList(RangerPolicyEngine.GROUP_PUBLIC), null, null, false);
+            if (values == null || !values.contains(WILDCARD_ASTERISK)) {
+                return false;
+            }
+        }
 
-		return Collections.singletonList(item);
-	}
+        return true;
+    }
 
-	private RangerPolicy createInformationSchemaPolicy() {
-		RangerPolicy informationSchemaPolicy = new RangerPolicy();
+    private RangerPolicy createDefaultDBPolicy() {
+        RangerPolicy defaultDBPolicy = new RangerPolicy();
 
-		informationSchemaPolicy.setName(INFORMATION_SCHEMA_DB_POLICYNAME);
-		informationSchemaPolicy.setService(serviceName);
-		informationSchemaPolicy.setResources(createInformationSchemaPolicyResource());
-		informationSchemaPolicy.setPolicyItems(createInformationSchemaPolicyItem());
+        defaultDBPolicy.setName(DEFAULT_DB_POLICYNAME);
+        defaultDBPolicy.setService(serviceName);
+        defaultDBPolicy.setResources(createDefaultDBPolicyResource());
+        defaultDBPolicy.setPolicyItems(createDefaultDBPolicyItem());
 
-		return informationSchemaPolicy;
-	}
+        return defaultDBPolicy;
+    }
 
-	private Map<String, RangerPolicyResource> createInformationSchemaPolicyResource() {
-		Map<String, RangerPolicyResource> resources = new HashMap<>();
+    private Map<String, RangerPolicyResource> createDefaultDBPolicyResource() {
+        Map<String, RangerPolicyResource> resources = new HashMap<>();
 
-		resources.put(RESOURCE_DATABASE, new RangerPolicyResource(Arrays.asList(HIVE_DB_INFOMATION_SCHEMA), false, false));
-		resources.put(RESOURCE_TABLE, new RangerPolicyResource(WILDCARD_ASTERISK));
-		resources.put(RESOURCE_COLUMN, new RangerPolicyResource(WILDCARD_ASTERISK));
+        resources.put(RESOURCE_DATABASE, new RangerPolicyResource(Collections.singletonList(HIVE_DB_DEFAULT), false, false));
+        resources.put(RESOURCE_TABLE, new RangerPolicyResource(WILDCARD_ASTERISK));
+        resources.put(RESOURCE_COLUMN, new RangerPolicyResource(WILDCARD_ASTERISK));
 
-		return resources;
-	}
+        return resources;
+    }
 
-	private List<RangerPolicyItem> createInformationSchemaPolicyItem() {
-		List<RangerPolicyItemAccess> accesses = new ArrayList<RangerPolicyItemAccess>();
+    private List<RangerPolicyItem> createDefaultDBPolicyItem() {
+        List<RangerPolicyItemAccess> accesses = new ArrayList<>();
 
-		accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
-		RangerPolicyItem item = new RangerPolicyItem(accesses, null, Arrays.asList(RangerPolicyEngine.GROUP_PUBLIC), null, null, false);
+        accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
 
-		return Collections.singletonList(item);
-	}
+        RangerPolicyItem item = new RangerPolicyItem(accesses, null, Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC), null, null, false);
+
+        return Collections.singletonList(item);
+    }
+
+    private RangerPolicy createInformationSchemaPolicy() {
+        RangerPolicy informationSchemaPolicy = new RangerPolicy();
+
+        informationSchemaPolicy.setName(INFORMATION_SCHEMA_DB_POLICYNAME);
+        informationSchemaPolicy.setService(serviceName);
+        informationSchemaPolicy.setResources(createInformationSchemaPolicyResource());
+        informationSchemaPolicy.setPolicyItems(createInformationSchemaPolicyItem());
+
+        return informationSchemaPolicy;
+    }
+
+    private Map<String, RangerPolicyResource> createInformationSchemaPolicyResource() {
+        Map<String, RangerPolicyResource> resources = new HashMap<>();
+
+        resources.put(RESOURCE_DATABASE, new RangerPolicyResource(Collections.singletonList(HIVE_DB_INFOMATION_SCHEMA), false, false));
+        resources.put(RESOURCE_TABLE, new RangerPolicyResource(WILDCARD_ASTERISK));
+        resources.put(RESOURCE_COLUMN, new RangerPolicyResource(WILDCARD_ASTERISK));
+
+        return resources;
+    }
+
+    private List<RangerPolicyItem> createInformationSchemaPolicyItem() {
+        List<RangerPolicyItemAccess> accesses = new ArrayList<>();
+
+        accesses.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
+        RangerPolicyItem item = new RangerPolicyItem(accesses, null, Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC), null, null, false);
+
+        return Collections.singletonList(item);
+    }
 }
-

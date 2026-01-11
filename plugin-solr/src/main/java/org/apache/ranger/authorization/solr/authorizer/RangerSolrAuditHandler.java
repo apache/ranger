@@ -33,35 +33,34 @@ public class RangerSolrAuditHandler extends RangerMultiResourceAuditHandler {
     private static final String PROP_SOLR_PLUGIN_AUDIT_EXCLUDED_USERS = "ranger.solr.plugin.audit.excluded.users";
     private static final String RANGER_AUDIT_COLLECTION               = "ranger_audits";
 
-    private String          solrUser     = "solr";
-    private List<String>    excludeUsers = null;
-    private AuthzAuditEvent auditEvent   = null;
+    private final List<String>    excludeUsers;
+    private       AuthzAuditEvent auditEvent;
 
-
-    public RangerSolrAuditHandler(Configuration config){
+    public RangerSolrAuditHandler(Configuration config) {
+        String solrUser        = "solr";
         String excludeUserList = config.get(PROP_SOLR_PLUGIN_AUDIT_EXCLUDED_USERS, solrUser);
-        excludeUsers           = Arrays.asList(excludeUserList.split(","));
+        excludeUsers = Arrays.asList(excludeUserList.split(","));
     }
 
     @Override
     public void processResult(RangerAccessResult result) {
-        // We don't audit operation for user "solr" on collection "ranger_audits" to avoid recursive
-        // logging due to updated of ranger_audits collection by solr plugin's audit creation.
+        // We don't audit operation for user "solr" on collection "ranger_audits" to avoid recursive logging due to updated of ranger_audits collection by solr plugin's audit creation.
         if (!isAuditingNeeded(result)) {
             return;
         }
-         auditEvent = super.getAuthzEvents(result);
-         super.logAuthzAudit(auditEvent);
+
+        auditEvent = super.getAuthzEvents(result);
+        super.logAuthzAudit(auditEvent);
     }
 
     private boolean isAuditingNeeded(final RangerAccessResult result) {
-        boolean                  ret       = true;
-        RangerAccessRequest      request   = result.getAccessRequest();
-        RangerAccessResourceImpl resource  = (RangerAccessResourceImpl) request.getResource();
-        String resourceName                = (String) resource.getValue(RangerSolrConstants.COLLECTION_KEY);
-        String requestUser                 = request.getUser();
+        boolean                  ret          = true;
+        RangerAccessRequest      request      = result.getAccessRequest();
+        RangerAccessResourceImpl resource     = (RangerAccessResourceImpl) request.getResource();
+        String                   resourceName = (String) resource.getValue(RangerSolrConstants.COLLECTION_KEY);
+        String                   requestUser  = request.getUser();
         if (resourceName != null && resourceName.equals(RANGER_AUDIT_COLLECTION) && excludeUsers.contains(requestUser)) {
-           ret = false;
+            ret = false;
         }
         return ret;
     }

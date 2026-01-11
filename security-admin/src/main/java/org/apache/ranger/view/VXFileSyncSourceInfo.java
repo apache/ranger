@@ -17,108 +17,106 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * UserGroupInfo
- *
  */
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
-public class VXFileSyncSourceInfo implements java.io.Serializable  {
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class VXFileSyncSourceInfo implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    private String fileName;
+    private String syncTime;
+    private String lastModified;
+    private long   totalUsersSynced;
+    private long   totalGroupsSynced;
+    private long   totalUsersDeleted;
+    private long   totalGroupsDeleted;
 
-	private String fileName;
-	private String syncTime;
-	private String lastModified;
-	private long totalUsersSynced;
-	private long totalGroupsSynced;
-	private long totalUsersDeleted;
-	private long totalGroupsDeleted;
+    public VXFileSyncSourceInfo() {
+    }
 
-	public VXFileSyncSourceInfo() {
-	}
+    public String getFileName() {
+        return fileName;
+    }
 
-	public String getFileName() {
-		return fileName;
-	}
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
-	}
+    public String getSyncTime() {
+        return syncTime;
+    }
 
-	public String getSyncTime() {
-		return syncTime;
-	}
+    public void setSyncTime(String syncTime) {
+        this.syncTime = syncTime;
+    }
 
-	public void setSyncTime(String syncTime) {
-		this.syncTime = syncTime;
-	}
+    public String getLastModified() {
+        return lastModified;
+    }
 
-	public String getLastModified() {
-		return lastModified;
-	}
+    public void setLastModified(String lastModified) {
+        this.lastModified = lastModified;
+    }
 
-	public void setLastModified(String lastModified) {
-		this.lastModified = lastModified;
-	}
+    public long getTotalUsersSynced() {
+        return totalUsersSynced;
+    }
 
-	public long getTotalUsersSynced() {
-		return totalUsersSynced;
-	}
+    public void setTotalUsersSynced(long totalUsersSynced) {
+        this.totalUsersSynced = totalUsersSynced;
+    }
 
-	public void setTotalUsersSynced(long totalUsersSynced) {
-		this.totalUsersSynced = totalUsersSynced;
-	}
+    public long getTotalGroupsSynced() {
+        return totalGroupsSynced;
+    }
 
-	public long getTotalGroupsSynced() {
-		return totalGroupsSynced;
-	}
+    public void setTotalGroupsSynced(long totalGroupsSynced) {
+        this.totalGroupsSynced = totalGroupsSynced;
+    }
 
-	public void setTotalGroupsSynced(long totalGroupsSynced) {
-		this.totalGroupsSynced = totalGroupsSynced;
-	}
+    public long getTotalUsersDeleted() {
+        return totalUsersDeleted;
+    }
 
-	public long getTotalUsersDeleted() {
-		return totalUsersDeleted;
-	}
+    public void setTotalUsersDeleted(long totalUsersDeleted) {
+        this.totalUsersDeleted = totalUsersDeleted;
+    }
 
-	public void setTotalUsersDeleted(long totalUsersDeleted) {
-		this.totalUsersDeleted = totalUsersDeleted;
-	}
+    public long getTotalGroupsDeleted() {
+        return totalGroupsDeleted;
+    }
 
-	public long getTotalGroupsDeleted() {
-		return totalGroupsDeleted;
-	}
+    public void setTotalGroupsDeleted(long totalGroupsDeleted) {
+        this.totalGroupsDeleted = totalGroupsDeleted;
+    }
 
-	public void setTotalGroupsDeleted(long totalGroupsDeleted) {
-		this.totalGroupsDeleted = totalGroupsDeleted;
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        toString(sb);
+        return sb.toString();
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		toString(sb);
-		return sb.toString();
-	}
-
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("{\"fileName\":\"").append(fileName);
-		sb.append("\", \"syncTime\":\"").append(syncTime);
-		sb.append("\", \"lastModified\":\"").append(lastModified);
-		sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
-		sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
-		sb.append("\", \"totalUsersDeleted\":\"").append(totalUsersDeleted);
-		sb.append("\", \"totalGroupsDeleted\":\"").append(totalGroupsDeleted);
-		sb.append("\"}");
-		return sb;
-	}
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("{\"fileName\":\"").append(fileName);
+        sb.append("\", \"syncTime\":\"").append(syncTime);
+        sb.append("\", \"lastModified\":\"").append(lastModified);
+        sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
+        sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
+        sb.append("\", \"totalUsersDeleted\":\"").append(totalUsersDeleted);
+        sb.append("\", \"totalGroupsDeleted\":\"").append(totalGroupsDeleted);
+        sb.append("\"}");
+        return sb;
+    }
 }

@@ -20,13 +20,10 @@ package org.apache.ranger.authorization.hadoop.exceptions;
 
 import org.apache.hadoop.security.AccessControlException;
 
-
 public class RangerAccessControlException extends AccessControlException {
+    private static final long serialVersionUID = -4673975720243484927L;
 
-	private static final long serialVersionUID = -4673975720243484927L;
-
-	public RangerAccessControlException(String aMsg) {
-		super(aMsg);
-	}
-
+    public RangerAccessControlException(String aMsg) {
+        super(aMsg);
+    }
 }

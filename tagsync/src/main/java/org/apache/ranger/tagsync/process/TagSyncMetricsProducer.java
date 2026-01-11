@@ -18,80 +18,76 @@ package org.apache.ranger.tagsync.process;
  * specific language governing permissions and limitations
  * under the License.
  */
-import java.io.File;
 
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+
 public class TagSyncMetricsProducer implements Runnable {
+    private static final Logger LOG = LoggerFactory.getLogger(TagSyncMetricsProducer.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(TagSyncMetricsProducer.class);
-	private boolean shutdownFlag = false;
+    private boolean shutdownFlag;
 
-	public static void main(String[] args) {
-		TagSyncMetricsProducer tagSyncMetrics = new TagSyncMetricsProducer();
-		tagSyncMetrics.run();
-		// try { tagSyncMetrics.writeJVMMetrics(); } catch (Throwable e) { }
-	}
+    public static void main(String[] args) {
+        TagSyncMetricsProducer tagSyncMetrics = new TagSyncMetricsProducer();
+        tagSyncMetrics.run();
+        // try { tagSyncMetrics.writeJVMMetrics(); } catch (Throwable e) { }
+    }
 
-	@Override
-	public void run() {
-		try {
-			TagSyncConfig config = TagSyncConfig.getInstance();
-			long sleepTimeBetweenCycleInMillis = config.getTagSyncMetricsFrequency();
-			String logFileNameWithPath = config.getTagSyncMetricsFileName();
-			LOG.info("Tagsync metrics frequency :  " + sleepTimeBetweenCycleInMillis +" and metrics file : "+logFileNameWithPath );
-			if (null != logFileNameWithPath) {
-				while (!shutdownFlag) {
-					try {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Sleeping Tagsync metrics for [" + sleepTimeBetweenCycleInMillis
-									+ "] milliSeconds");
-						}
-						Thread.sleep(sleepTimeBetweenCycleInMillis);
-					} catch (InterruptedException e) {
-						LOG.error("Failed to wait for [" + sleepTimeBetweenCycleInMillis
-								+ "] milliseconds before attempting to tagsync metrics information", e);
-					}
-					try {
-						writeJVMMetrics(logFileNameWithPath, config);
-					} catch (Throwable t) {
-						LOG.error("Failed to write tagsync metrics into file. Error details: ", t);
-					}
-				}
-			} else {
-				LOG.info("No file directory found for tagsync metrics log ");
-			}
-		} catch (Throwable t) {
-			LOG.error("Failed to start Tagsync metrics. Error details: ", t);
-		} finally {
-			LOG.info("Shutting down the TagSync metrics thread");
-		}
+    @Override
+    public void run() {
+        try {
+            TagSyncConfig config                        = TagSyncConfig.getInstance();
+            long          sleepTimeBetweenCycleInMillis = config.getTagSyncMetricsFrequency();
+            String        logFileNameWithPath           = config.getTagSyncMetricsFileName();
 
-	}
+            LOG.info("Tagsync metrics frequency :  {} and metrics file : {}", sleepTimeBetweenCycleInMillis, logFileNameWithPath);
 
-	private void writeJVMMetrics(String logFileNameWithPath, TagSyncConfig config) throws Throwable {
-		try {
-			File userMetricFile = null;
-			userMetricFile = new File(logFileNameWithPath);
-			if (!userMetricFile.exists()) {
-				userMetricFile.createNewFile();
-			}
-			RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
-			if (config.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
-				if(config.isTagSyncServiceActive()){
-					rangerMetricsUtil.setIsRoleActive(1);
-				}else{
-					rangerMetricsUtil.setIsRoleActive(0);
-				}
-			}
-			rangerMetricsUtil.writeMetricsToFile(userMetricFile);
+            if (null != logFileNameWithPath) {
+                while (!shutdownFlag) {
+                    try {
+                        LOG.debug("Sleeping Tagsync metrics for [{}] milliSeconds", sleepTimeBetweenCycleInMillis);
+                        Thread.sleep(sleepTimeBetweenCycleInMillis);
+                    } catch (InterruptedException e) {
+                        LOG.error("Failed to wait for [{}] milliseconds before attempting to tagsync metrics information", sleepTimeBetweenCycleInMillis, e);
+                    }
+                    try {
+                        writeJVMMetrics(logFileNameWithPath, config);
+                    } catch (Throwable t) {
+                        LOG.error("Failed to write tagsync metrics into file. Error details: ", t);
+                    }
+                }
+            } else {
+                LOG.info("No file directory found for tagsync metrics log ");
+            }
+        } catch (Throwable t) {
+            LOG.error("Failed to start Tagsync metrics. Error details: ", t);
+        } finally {
+            LOG.info("Shutting down the TagSync metrics thread");
+        }
+    }
 
-		} catch (Throwable t) {
-			LOG.error("TagSyncMetricsProducer.writeJVMMetrics() failed to write metrics into file. Error details: ", t);
-			throw t;
-		}
-	}
-
+    private void writeJVMMetrics(String logFileNameWithPath, TagSyncConfig config) throws Throwable {
+        try {
+            File userMetricFile;
+            userMetricFile = new File(logFileNameWithPath);
+            if (!userMetricFile.exists()) {
+                userMetricFile.createNewFile();
+            }
+            RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
+            if (config.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
+                if (TagSyncConfig.isTagSyncServiceActive()) {
+                    RangerMetricsUtil.setIsRoleActive(1);
+                } else {
+                    RangerMetricsUtil.setIsRoleActive(0);
+                }
+            }
+            rangerMetricsUtil.writeMetricsToFile(userMetricFile);
+        } catch (Throwable t) {
+            LOG.error("TagSyncMetricsProducer.writeJVMMetrics() failed to write metrics into file. Error details: ", t);
+            throw t;
+        }
+    }
 }

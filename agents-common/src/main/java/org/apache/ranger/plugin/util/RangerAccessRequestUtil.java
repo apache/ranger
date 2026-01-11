@@ -19,8 +19,6 @@
 
 package org.apache.ranger.plugin.util;
 
-import java.util.*;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
@@ -31,145 +29,159 @@ import org.apache.ranger.plugin.policyengine.gds.GdsAccessResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 public class RangerAccessRequestUtil {
-	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestUtil.class);
 
-	public static final String KEY_CONTEXT_TAGS					= "TAGS";
-	public static final String KEY_CONTEXT_TAG_OBJECT			= "TAG_OBJECT";
-	public static final String KEY_CONTEXT_RESOURCE 			= "RESOURCE";
-	public static final String KEY_CONTEXT_REQUESTED_RESOURCES 	= "REQUESTED_RESOURCES";
-	public static final String KEY_CONTEXT_USERSTORE 			= "USERSTORE";
-	public static final String KEY_TOKEN_NAMESPACE 				= "token:";
-	public static final String KEY_USER 						= "USER";
-	public static final String KEY_OWNER 						= "OWNER";
-	public static final String KEY_ROLES 						= "ROLES";
-	public static final String KEY_CONTEXT_IS_ANY_ACCESS 		= "ISANYACCESS";
-	public static final String KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS = "ALLACCESSTYPEGROUPS";
-	public static final String KEY_CONTEXT_ALL_ACCESSTYPES 		= "ALLACCESSTYPES";
-	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS 	= "ALL_ACCESS_TYPE_RESULTS";
-	public static final String KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS 	= "ALL_ACCESS_TYPE_ACL_RESULTS";
+    public static final  String KEY_CONTEXT_TAGS                             = "TAGS";
+    public static final  String KEY_CONTEXT_TAG_OBJECT                       = "TAG_OBJECT";
+    public static final  String KEY_CONTEXT_RESOURCE                         = "RESOURCE";
+    public static final  String KEY_CONTEXT_REQUESTED_RESOURCES              = "REQUESTED_RESOURCES";
+    public static final  String KEY_CONTEXT_USERSTORE                        = "USERSTORE";
+    public static final  String KEY_TOKEN_NAMESPACE                          = "token:";
+    public static final  String KEY_USER                                     = "USER";
+    public static final  String KEY_OWNER                                    = "OWNER";
+    public static final  String KEY_ROLES                                    = "ROLES";
+    public static final  String KEY_CONTEXT_IS_ANY_ACCESS                    = "ISANYACCESS";
+    public static final  String KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS            = "ALLACCESSTYPEGROUPS";
+    public static final  String KEY_CONTEXT_ALL_ACCESSTYPES                  = "ALLACCESSTYPES";
+    public static final  String KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES = "IGNOREIFNOTDENIEDACCESSTYPES";
+    public static final  String KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS          = "ALL_ACCESS_TYPE_RESULTS";
+    public static final  String KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS      = "ALL_ACCESS_TYPE_ACL_RESULTS";
+    public static final  String KEY_CONTEXT_REQUEST                          = "_REQUEST";
+    public static final  String KEY_CONTEXT_GDS_RESULT                       = "_GDS_RESULT";
+    public static final  String KEY_CONTEXT_IS_REQUEST_PREPROCESSED          = "ISREQUESTPREPROCESSED";
+    public static final  String KEY_CONTEXT_RESOURCE_ZONE_NAMES              = "RESOURCE_ZONE_NAMES";
+    public static final  String KEY_CONTEXT_ACL_ENFORCER                     = "_ACL_ENFORCER";
 
-	public static final String KEY_CONTEXT_REQUEST 				= "_REQUEST";
-	public static final String KEY_CONTEXT_GDS_RESULT    = "_GDS_RESULT";
-	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED 	= "ISREQUESTPREPROCESSED";
-	public static final String KEY_CONTEXT_RESOURCE_ZONE_NAMES 		= "RESOURCE_ZONE_NAMES";
-	public static final String KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS 	= "_IS_SKIP_CHAINED_PLUGINS";
+    private RangerAccessRequestUtil() {
+        // to avoid instantiation
+    }
 
-	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
-		if(CollectionUtils.isEmpty(tags)) {
-			context.remove(KEY_CONTEXT_TAGS);
-		} else {
-			context.put(KEY_CONTEXT_TAGS, tags);
-		}
-	}
+    public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
+        if (CollectionUtils.isEmpty(tags)) {
+            context.remove(KEY_CONTEXT_TAGS);
+        } else {
+            context.put(KEY_CONTEXT_TAGS, tags);
+        }
+    }
 
-	public static Set<RangerTagForEval> getRequestTagsFromContext(Map<String, Object> context) {
-		Set<RangerTagForEval> ret = null;
-		Object          val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
+    public static Set<RangerTagForEval> getRequestTagsFromContext(Map<String, Object> context) {
+        Set<RangerTagForEval> ret = null;
+        Object                val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_TAGS);
 
-		if (val instanceof Set<?>) {
-			try {
-				@SuppressWarnings("unchecked")
-				Set<RangerTagForEval> tags = (Set<RangerTagForEval>) val;
+        if (val instanceof Set<?>) {
+            try {
+                @SuppressWarnings("unchecked") Set<RangerTagForEval> tags = (Set<RangerTagForEval>) val;
 
-				ret = tags;
-			} catch (Throwable t) {
-				LOG.error("getRequestTags(): failed to get tags from context", t);
-			}
-		}
+                ret = tags;
+            } catch (Throwable t) {
+                LOG.error("getRequestTags(): failed to get tags from context", t);
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static void setCurrentTagInContext(Map<String, Object> context, RangerTagForEval tag) {
-		context.put(KEY_CONTEXT_TAG_OBJECT, tag);
-	}
+    public static void setCurrentTagInContext(Map<String, Object> context, RangerTagForEval tag) {
+        context.put(KEY_CONTEXT_TAG_OBJECT, tag);
+    }
 
-	public static RangerTagForEval getCurrentTagFromContext(Map<String, Object> context) {
-		RangerTagForEval ret = null;
-		Object    val = context.get(KEY_CONTEXT_TAG_OBJECT);
+    public static RangerTagForEval getCurrentTagFromContext(Map<String, Object> context) {
+        RangerTagForEval ret = null;
+        Object           val = context.get(KEY_CONTEXT_TAG_OBJECT);
 
-		if(val instanceof RangerTagForEval) {
-			ret = (RangerTagForEval)val;
-		}
+        if (val instanceof RangerTagForEval) {
+            ret = (RangerTagForEval) val;
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static void setRequestedResourcesInContext(Map<String, Object> context, RangerRequestedResources resources) {
-		context.put(KEY_CONTEXT_REQUESTED_RESOURCES, resources);
-	}
+    public static void setRequestedResourcesInContext(Map<String, Object> context, RangerRequestedResources resources) {
+        context.put(KEY_CONTEXT_REQUESTED_RESOURCES, resources);
+    }
 
-	public static RangerRequestedResources getRequestedResourcesFromContext(Map<String, Object> context) {
-		RangerRequestedResources ret = null;
-		Object                   val = context.get(KEY_CONTEXT_REQUESTED_RESOURCES);
+    public static RangerRequestedResources getRequestedResourcesFromContext(Map<String, Object> context) {
+        RangerRequestedResources ret = null;
+        Object                   val = context.get(KEY_CONTEXT_REQUESTED_RESOURCES);
 
-		if(val instanceof RangerRequestedResources) {
-			ret = (RangerRequestedResources)val;
-		}
+        if (val instanceof RangerRequestedResources) {
+            ret = (RangerRequestedResources) val;
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static void setCurrentResourceInContext(Map<String, Object> context, RangerAccessResource resource) {
-		context.put(KEY_CONTEXT_RESOURCE, resource);
-	}
+    public static void setCurrentResourceInContext(Map<String, Object> context, RangerAccessResource resource) {
+        context.put(KEY_CONTEXT_RESOURCE, resource);
+    }
 
-	public static RangerAccessResource getCurrentResourceFromContext(Map<String, Object> context) {
-		RangerAccessResource ret = null;
-		Object               val = MapUtils.isNotEmpty(context) ? context.get(KEY_CONTEXT_RESOURCE) : null;
+    public static RangerAccessResource getCurrentResourceFromContext(Map<String, Object> context) {
+        RangerAccessResource ret = null;
+        Object               val = MapUtils.isNotEmpty(context) ? context.get(KEY_CONTEXT_RESOURCE) : null;
 
-		if(val instanceof RangerAccessResource) {
-			ret = (RangerAccessResource)val;
-		}
+        if (val instanceof RangerAccessResource) {
+            ret = (RangerAccessResource) val;
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static Map<String, Object> copyContext(Map<String, Object> context) {
-		final Map<String, Object> ret;
+    public static Map<String, Object> copyContext(Map<String, Object> context) {
+        final Map<String, Object> ret;
 
-		if(MapUtils.isEmpty(context)) {
-			ret = new HashMap<>();
-		} else {
-			ret = new HashMap<>(context);
+        if (MapUtils.isEmpty(context)) {
+            ret = new HashMap<>();
+        } else {
+            ret = new HashMap<>(context);
 
-			ret.remove(KEY_CONTEXT_TAGS);
-			ret.remove(KEY_CONTEXT_TAG_OBJECT);
-			ret.remove(KEY_CONTEXT_RESOURCE);
-			ret.remove(KEY_CONTEXT_REQUEST);
-			ret.remove(KEY_CONTEXT_GDS_RESULT);
-			ret.remove(KEY_CONTEXT_IS_ANY_ACCESS);
-			ret.remove(KEY_CONTEXT_ALL_ACCESSTYPES);
-			ret.remove(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
-			ret.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
-			ret.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
-			ret.remove(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
-			// don't remove REQUESTED_RESOURCES
-		}
+            ret.remove(KEY_CONTEXT_TAGS);
+            ret.remove(KEY_CONTEXT_TAG_OBJECT);
+            ret.remove(KEY_CONTEXT_RESOURCE);
+            ret.remove(KEY_CONTEXT_REQUEST);
+            ret.remove(KEY_CONTEXT_GDS_RESULT);
+            ret.remove(KEY_CONTEXT_IS_ANY_ACCESS);
+            ret.remove(KEY_CONTEXT_ALL_ACCESSTYPES);
+            ret.remove(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
+            ret.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
+            ret.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
+            ret.remove(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
+            ret.remove(KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES);
+            // don't remove REQUESTED_RESOURCES
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static void setCurrentUserInContext(Map<String, Object> context, String user) {
-		setTokenInContext(context, KEY_USER, user);
-	}
-	public static void setOwnerInContext(Map<String, Object> context, String owner) {
-		setTokenInContext(context, KEY_OWNER, owner);
-	}
-	public static String getCurrentUserFromContext(Map<String, Object> context) {
-		Object ret = getTokenFromContext(context, KEY_USER);
-		return ret != null ? ret.toString() : "";
-	}
+    public static void setCurrentUserInContext(Map<String, Object> context, String user) {
+        setTokenInContext(context, KEY_USER, user);
+    }
 
-	public static void setTokenInContext(Map<String, Object> context, String tokenName, Object tokenValue) {
-		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
-		context.put(tokenNameWithNamespace, tokenValue);
-	}
-	public static Object getTokenFromContext(Map<String, Object> context, String tokenName) {
-		String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
-		return MapUtils.isNotEmpty(context) ? context.get(tokenNameWithNamespace) : null;
-	}
+    public static void setOwnerInContext(Map<String, Object> context, String owner) {
+        setTokenInContext(context, KEY_OWNER, owner);
+    }
+
+    public static String getCurrentUserFromContext(Map<String, Object> context) {
+        Object ret = getTokenFromContext(context, KEY_USER);
+        return ret != null ? ret.toString() : "";
+    }
+
+    public static void setTokenInContext(Map<String, Object> context, String tokenName, Object tokenValue) {
+        String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
+        context.put(tokenNameWithNamespace, tokenValue);
+    }
+
+    public static Object getTokenFromContext(Map<String, Object> context, String tokenName) {
+        String tokenNameWithNamespace = KEY_TOKEN_NAMESPACE + tokenName;
+        return MapUtils.isNotEmpty(context) ? context.get(tokenNameWithNamespace) : null;
+    }
 
     public static void setCurrentUserRolesInContext(Map<String, Object> context, Set<String> roles) {
         setTokenInContext(context, KEY_ROLES, roles);
@@ -181,252 +193,280 @@ public class RangerAccessRequestUtil {
     }
 
     public static Set<String> getUserRoles(RangerAccessRequest request) {
-		Set<String> ret = Collections.EMPTY_SET;
+        Set<String> ret = Collections.EMPTY_SET;
 
-		if (request != null) {
-			ret = request.getUserRoles();
+        if (request != null) {
+            ret = request.getUserRoles();
 
-			if (CollectionUtils.isEmpty(ret)) {
-				ret = RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext());
-			}
-		}
+            if (CollectionUtils.isEmpty(ret)) {
+                ret = RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext());
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static void setRequestUserStoreInContext(Map<String, Object> context, RangerUserStore rangerUserStore) {
-		context.put(KEY_CONTEXT_USERSTORE, rangerUserStore);
-	}
+    public static void setRequestUserStoreInContext(Map<String, Object> context, RangerUserStore rangerUserStore) {
+        context.put(KEY_CONTEXT_USERSTORE, rangerUserStore);
+    }
 
-	public static RangerUserStore getRequestUserStoreFromContext(Map<String, Object> context) {
-		RangerUserStore ret = null;
-		Object    val = context.get(KEY_CONTEXT_USERSTORE);
+    public static RangerUserStore getRequestUserStoreFromContext(Map<String, Object> context) {
+        RangerUserStore ret = null;
+        Object          val = context.get(KEY_CONTEXT_USERSTORE);
 
-		if(val instanceof RangerUserStore) {
-			ret = (RangerUserStore) val;
-		}
+        if (val instanceof RangerUserStore) {
+            ret = (RangerUserStore) val;
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static void setIsAnyAccessInContext(Map<String, Object> context, Boolean value) {
-		context.put(KEY_CONTEXT_IS_ANY_ACCESS, value);
-	}
+    public static void setIsAnyAccessInContext(Map<String, Object> context, Boolean value) {
+        context.put(KEY_CONTEXT_IS_ANY_ACCESS, value);
+    }
 
-	public static boolean getIsAnyAccessInContext(Map<String, Object> context) {
-		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
-		return value != null && value;
-	}
+    public static boolean getIsAnyAccessInContext(Map<String, Object> context) {
+        Boolean value = (Boolean) context.get(KEY_CONTEXT_IS_ANY_ACCESS);
+        return value != null && value;
+    }
 
-	public static void setIsRequestPreprocessed(Map<String, Object> context, Boolean value) {
-		context.put(KEY_CONTEXT_IS_REQUEST_PREPROCESSED, value);
-	}
+    public static void setIsRequestPreprocessed(Map<String, Object> context, Boolean value) {
+        context.put(KEY_CONTEXT_IS_REQUEST_PREPROCESSED, value);
+    }
 
-	public static boolean getIsRequestPreprocessed(Map<String, Object> context) {
-		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
-		return value != null && value;
-	}
+    public static boolean getIsRequestPreprocessed(Map<String, Object> context) {
+        Boolean value = (Boolean) context.get(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
+        return value != null && value;
+    }
 
-	public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
-		context.put(KEY_CONTEXT_ALL_ACCESSTYPES, accessTypes);
-	}
+    public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
+        context.put(KEY_CONTEXT_ALL_ACCESSTYPES, accessTypes);
+    }
 
-	@SuppressWarnings("unchecked")
-	public static Set<String> getAllRequestedAccessTypes(RangerAccessRequest request) {
-		Set<String> ret = null;
+    public static void setIgnoreIfNotDeniedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
+        context.put(KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES, accessTypes);
+    }
 
-		Object val = request.getContext().get(KEY_CONTEXT_ALL_ACCESSTYPES);
+    public static Set<String> getIgnoreIfNotDeniedAccessTypes(RangerAccessRequest request) {
+        Set<String> ret = Collections.emptySet();
 
-		if (val != null) {
-			if (val instanceof Set<?>) {
-				ret = (Set<String>) val;
-			} else if (val instanceof List<?>) {
-				ret = new TreeSet<>((List<String>) val);
-			} else {
-				LOG.error("getAllRequestedAccessTypes(): failed to get ALLACCESSTYPES from context");
-			}
-		}
+        Object val = request.getContext().get(KEY_CONTEXT_IGNORE_IF_NOT_DENIED_ACCESSTYPES);
 
-		return ret != null ? ret : Collections.singleton(request.getAccessType());
-	}
+        if (val != null) {
+            if (val instanceof Set<?>) {
+                ret = (Set<String>) val;
+            } else if (val instanceof List<?>) {
+                ret = new TreeSet<>((List<String>) val);
+            } else {
+                LOG.error("getNotDeniedRequestedAccessTypes(): failed to get NOTDENIEDACCESSTYPES from context");
+            }
+        }
+        return ret;
+    }
 
-	public static Set<Set<String>> getAllRequestedAccessTypeGroups(RangerAccessRequest request) {
-		Object      val = request.getContext().get(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
-		return (Set<Set<String>>) val;
-	}
+    @SuppressWarnings("unchecked")
+    public static Set<String> getAllRequestedAccessTypes(RangerAccessRequest request) {
+        Set<String> ret = null;
 
-	public static void setAllRequestedAccessTypeGroups(RangerAccessRequest request, Set<Set<String>> accessTypeGroups) {
-		if (accessTypeGroups == null || accessTypeGroups.isEmpty()) {
-			request.getContext().put(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS, new TreeSet<>());
-		} else {
-			request.getContext().put(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS, accessTypeGroups);
-		}
-	}
+        Object val = request.getContext().get(KEY_CONTEXT_ALL_ACCESSTYPES);
 
-	public static Map<String, RangerAccessResult> getAccessTypeResults(RangerAccessRequest request) {
-		Map<String, RangerAccessResult> ret;
-		Object      val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
-		if (val == null) {
-			ret = new HashMap<>();
-			request.getContext().put(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS, ret);
-		} else {
-			ret = (Map<String, RangerAccessResult>) val;
-		}
-		return ret;
-	}
+        if (val != null) {
+            if (val instanceof Set<?>) {
+                ret = (Set<String>) val;
+            } else if (val instanceof List<?>) {
+                ret = new TreeSet<>((List<String>) val);
+            } else {
+                LOG.error("getAllRequestedAccessTypes(): failed to get ALLACCESSTYPES from context");
+            }
+        }
 
-	public static Map<String, Integer> getAccessTypeACLResults(RangerAccessRequest request) {
-		Map<String, Integer> ret;
-		Object      val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
-		if (val == null) {
-			ret = new HashMap<>();
-			request.getContext().put(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS, ret);
-		} else {
-			ret = (Map<String, Integer>) val;
-		}
-		return ret;
-	}
+        return ret != null ? ret : Collections.singleton(request.getAccessType());
+    }
 
-	public static void setRequestInContext(RangerAccessRequest request) {
-		Map<String, Object> context = request.getContext();
+    public static Set<Set<String>> getAllRequestedAccessTypeGroups(RangerAccessRequest request) {
+        Object val = request.getContext().get(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS);
+        return (Set<Set<String>>) val;
+    }
 
-		if (context != null) {
-			context.put(KEY_CONTEXT_REQUEST, request);
-		}
-	}
+    public static void setAllRequestedAccessTypeGroups(RangerAccessRequest request, Set<Set<String>> accessTypeGroups) {
+        if (accessTypeGroups == null || accessTypeGroups.isEmpty()) {
+            request.getContext().put(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS, new TreeSet<>());
+        } else {
+            request.getContext().put(KEY_CONTEXT_ALL_ACCESSTYPE_GROUPS, accessTypeGroups);
+        }
+    }
 
-	public static RangerAccessRequest getRequestFromContext(Map<String, Object> context) {
-		RangerAccessRequest ret = null;
+    public static Map<String, RangerAccessResult> getAccessTypeResults(RangerAccessRequest request) {
+        Map<String, RangerAccessResult> ret;
+        Object                          val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
+        if (val == null) {
+            ret = new HashMap<>();
+            request.getContext().put(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS, ret);
+        } else {
+            ret = (Map<String, RangerAccessResult>) val;
+        }
+        return ret;
+    }
 
-		if (context != null) {
-			Object val = context.get(KEY_CONTEXT_REQUEST);
+    public static Map<String, Integer> getAccessTypeACLResults(RangerAccessRequest request) {
+        Map<String, Integer> ret;
+        Object               val = request.getContext().get(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
+        if (val == null) {
+            ret = new HashMap<>();
+            request.getContext().put(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS, ret);
+        } else {
+            ret = (Map<String, Integer>) val;
+        }
+        return ret;
+    }
 
-			if (val != null) {
-				if (val instanceof RangerAccessRequest) {
-					ret = (RangerAccessRequest) val;
-				} else {
-					LOG.error("getRequestFromContext(): expected RangerAccessRequest, but found " + val.getClass().getCanonicalName());
-				}
-			}
-		}
+    public static void setRequestInContext(RangerAccessRequest request) {
+        Map<String, Object> context = request.getContext();
 
-		return ret;
-	}
+        if (context != null) {
+            context.put(KEY_CONTEXT_REQUEST, request);
+        }
+    }
 
-	public static void setGdsResultInContext(RangerAccessRequest request, GdsAccessResult result) {
-		Map<String, Object> context = request.getContext();
+    public static RangerAccessRequest getRequestFromContext(Map<String, Object> context) {
+        RangerAccessRequest ret = null;
 
-		if (context != null) {
-			context.put(KEY_CONTEXT_GDS_RESULT, result);
-		}
-	}
+        if (context != null) {
+            Object val = context.get(KEY_CONTEXT_REQUEST);
 
-	public static GdsAccessResult getGdsResultFromContext(Map<String, Object> context) {
-		GdsAccessResult ret = null;
+            if (val != null) {
+                if (val instanceof RangerAccessRequest) {
+                    ret = (RangerAccessRequest) val;
+                } else {
+                    LOG.error("getRequestFromContext(): expected RangerAccessRequest, but found {}", val.getClass().getCanonicalName());
+                }
+            }
+        }
 
-		if (context != null) {
-			Object val = context.get(KEY_CONTEXT_GDS_RESULT);
+        return ret;
+    }
 
-			if (val != null) {
-				if (val instanceof GdsAccessResult) {
-					ret = (GdsAccessResult) val;
-				} else {
-					LOG.error("getGdsResultFromContext(): expected RangerGdsAccessResult, but found " + val.getClass().getCanonicalName());
-				}
-			}
-		}
+    public static void setGdsResultInContext(RangerAccessRequest request, GdsAccessResult result) {
+        Map<String, Object> context = request.getContext();
 
-		return ret;
-	}
+        if (context != null) {
+            context.put(KEY_CONTEXT_GDS_RESULT, result);
+        }
+    }
 
-	public static void setResourceZoneNamesInContext(RangerAccessRequest request, Set<String> zoneNames) {
-		Map<String, Object> context = request.getContext();
+    public static GdsAccessResult getGdsResultFromContext(Map<String, Object> context) {
+        GdsAccessResult ret = null;
 
-		if (context != null) {
-			context.put(KEY_CONTEXT_RESOURCE_ZONE_NAMES, zoneNames);
-		} else {
-			LOG.error("setResourceZoneNamesInContext({}): context is null", request);
-		}
-	}
+        if (context != null) {
+            Object val = context.get(KEY_CONTEXT_GDS_RESULT);
 
-	@SuppressWarnings("unchecked")
-	public static Set<String> getResourceZoneNamesFromContext(Map<String, Object> context) {
-		Set<String> ret = null;
+            if (val != null) {
+                if (val instanceof GdsAccessResult) {
+                    ret = (GdsAccessResult) val;
+                } else {
+                    LOG.error("getGdsResultFromContext(): expected RangerGdsAccessResult, but found {}", val.getClass().getCanonicalName());
+                }
+            }
+        }
 
-		if (context != null) {
-			Object val = context.get(KEY_CONTEXT_RESOURCE_ZONE_NAMES);
+        return ret;
+    }
 
-			if (val instanceof Set) {
-				ret = (Set<String>) val;
-			} else {
-				if (val != null) {
-					LOG.error("getResourceZoneNamesFromContext(): expected Set<String>, but found {}", val.getClass().getCanonicalName());
-				}
-			}
-		}
+    public static void setResourceZoneNamesInContext(RangerAccessRequest request, Set<String> zoneNames) {
+        Map<String, Object> context = request.getContext();
 
-		return ret;
-	}
+        if (context != null) {
+            context.put(KEY_CONTEXT_RESOURCE_ZONE_NAMES, zoneNames);
+        } else {
+            LOG.error("setResourceZoneNamesInContext({}): context is null", request);
+        }
+    }
 
-	public static String getResourceZoneNameFromContext(Map<String, Object> context) {
-		Set<String> ret = getResourceZoneNamesFromContext(context);
+    @SuppressWarnings("unchecked")
+    public static Set<String> getResourceZoneNamesFromContext(Map<String, Object> context) {
+        Set<String> ret = null;
 
-		return ret != null && ret.size() == 1 ? ret.iterator().next() : null;
-	}
+        if (context != null) {
+            Object val = context.get(KEY_CONTEXT_RESOURCE_ZONE_NAMES);
 
-	public static void setAccessTypeResults(Map<String, Object> context, Map<String, RangerAccessResult> accessTypeResults) {
-		if (context != null) {
-			if (accessTypeResults != null) {
-				context.put(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS, accessTypeResults);
-			} else {
-				context.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
-			}
-		}
-	}
+            if (val instanceof Set) {
+                ret = (Set<String>) val;
+            } else {
+                if (val != null) {
+                    LOG.error("getResourceZoneNamesFromContext(): expected Set<String>, but found {}", val.getClass().getCanonicalName());
+                }
+            }
+        }
 
-	public static void setAccessTypeACLResults(Map<String, Object> context, Map<String, Integer> accessTypeResults) {
-		if (context != null) {
-			if (accessTypeResults != null) {
-				context.put(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS, accessTypeResults);
-			} else {
-				context.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
-			}
-		}
-	}
+        return ret;
+    }
 
-	public static Map<String, RangerAccessResult> getAccessTypeResults(Map<String, Object> context) {
-		Map<String, RangerAccessResult> ret = null;
+    public static String getResourceZoneNameFromContext(Map<String, Object> context) {
+        Set<String> ret = getResourceZoneNamesFromContext(context);
 
-		if (context != null) {
-			Object o = context.get(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
-			if (o != null) {
-				ret = (Map<String, RangerAccessResult>)o;
-			}
-		}
+        return ret != null && ret.size() == 1 ? ret.iterator().next() : null;
+    }
 
-		return ret;
-	}
+    public static void setAccessTypeResults(Map<String, Object> context, Map<String, RangerAccessResult> accessTypeResults) {
+        if (context != null) {
+            if (accessTypeResults != null) {
+                context.put(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS, accessTypeResults);
+            } else {
+                context.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
+            }
+        }
+    }
 
-	public static void setAccessTypeResult(Map<String, Object> context, String accessType, RangerAccessResult result) {
-		if (context != null) {
-			Map<String, RangerAccessResult> results = getAccessTypeResults(context);
+    public static void setAccessTypeACLResults(Map<String, Object> context, Map<String, Integer> accessTypeResults) {
+        if (context != null) {
+            if (accessTypeResults != null) {
+                context.put(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS, accessTypeResults);
+            } else {
+                context.remove(KEY_CONTEXT_ALL_ACCESS_TYPE_ACL_RESULTS);
+            }
+        }
+    }
 
-			if (results == null) {
-				results = new HashMap<>();
+    public static Map<String, RangerAccessResult> getAccessTypeResults(Map<String, Object> context) {
+        Map<String, RangerAccessResult> ret = null;
 
-				context.put(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS, results);
-			}
+        if (context != null) {
+            Object o = context.get(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS);
+            if (o != null) {
+                ret = (Map<String, RangerAccessResult>) o;
+            }
+        }
 
-			results.putIfAbsent(accessType, result);
-		}
-	}
+        return ret;
+    }
 
-	public static void setIsSkipChainedPlugins(Map<String, Object> context, Boolean value) {
-		context.put(KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS, value);
-	}
+    public static void setAccessTypeResult(Map<String, Object> context, String accessType, RangerAccessResult result) {
+        if (context != null) {
+            Map<String, RangerAccessResult> results = getAccessTypeResults(context);
 
-	public static boolean getIsSkipChainedPlugins(Map<String, Object> context) {
-		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_SKIP_CHAINED_PLUGINS);
-		return value != null && value;
-	}
+            if (results == null) {
+                results = new HashMap<>();
+
+                context.put(KEY_CONTEXT_ALL_ACCESS_TYPE_RESULTS, results);
+            }
+
+            results.putIfAbsent(accessType, result);
+        }
+    }
+
+    public static String getAclEnforcerOrDefault(Map<String, Object> context, String defaultValue) {
+        Object ret = context != null ? context.get(KEY_CONTEXT_ACL_ENFORCER) : null;
+
+        return ret instanceof String ? (String) ret : defaultValue;
+    }
+
+    public static void setAclEnforcer(Map<String, Object> context, String aclEnforcer) {
+        if (context != null) {
+            if (aclEnforcer != null) {
+                context.put(KEY_CONTEXT_ACL_ENFORCER, aclEnforcer);
+            } else {
+                context.remove(KEY_CONTEXT_ACL_ENFORCER);
+            }
+        }
+    }
 }

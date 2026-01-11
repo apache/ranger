@@ -17,6 +17,9 @@
 
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.common.view.VList;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
@@ -24,171 +27,192 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class RangerGdsVList {
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerDatasetList extends VList {
+        private static final long serialVersionUID = 1L;
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerDatasetList extends VList {
-		private static final long serialVersionUID = 1L;
+        List<RangerDataset> list = new ArrayList<>();
 
-		List<RangerDataset> list = new ArrayList<>();
+        public RangerDatasetList() {
+            super();
+        }
 
-		public RangerDatasetList() {
-			super();
-		}
+        public RangerDatasetList(List<RangerDataset> objList) {
+            super(objList);
 
-		public RangerDatasetList(List<RangerDataset> objList) {
-			super(objList);
+            this.list = objList;
+        }
 
-			this.list = objList;
-		}
+        @Override
+        public int getListSize() {
+            return list != null ? list.size() : 0;
+        }
 
-		@Override
-		public int getListSize() { return list != null ? list.size() : 0; }
+        @Override
+        public List<RangerDataset> getList() {
+            return list;
+        }
+    }
 
-		@Override
-		public List<RangerDataset> getList() { return list; }
-	}
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerProjectList extends VList {
+        private static final long serialVersionUID = 1L;
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerProjectList extends VList {
-		private static final long serialVersionUID = 1L;
+        List<RangerProject> list = new ArrayList<>();
 
-		List<RangerProject> list = new ArrayList<>();
+        public RangerProjectList() {
+            super();
+        }
 
-		public RangerProjectList() {
-			super();
-		}
+        public RangerProjectList(List<RangerProject> objList) {
+            super(objList);
 
-		public RangerProjectList(List<RangerProject> objList) {
-			super(objList);
+            this.list = objList;
+        }
 
-			this.list = objList;
-		}
+        @Override
+        public int getListSize() {
+            return list != null ? list.size() : 0;
+        }
 
-		@Override
-		public int getListSize() { return list != null ? list.size() : 0; }
+        @Override
+        public List<RangerProject> getList() {
+            return list;
+        }
+    }
 
-		@Override
-		public List<RangerProject> getList() { return list; }
-	}
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerDataShareList extends VList {
+        private static final long serialVersionUID = 1L;
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerDataShareList extends VList {
-		private static final long serialVersionUID = 1L;
+        List<RangerDataShare> list = new ArrayList<>();
 
-		List<RangerDataShare> list = new ArrayList<>();
+        public RangerDataShareList() {
+            super();
+        }
 
-		public RangerDataShareList() {
-			super();
-		}
+        public RangerDataShareList(List<RangerDataShare> objList) {
+            super(objList);
 
-		public RangerDataShareList(List<RangerDataShare> objList) {
-			super(objList);
+            this.list = objList;
+        }
 
-			this.list = objList;
-		}
+        @Override
+        public int getListSize() {
+            return list != null ? list.size() : 0;
+        }
 
-		@Override
-		public int getListSize() { return list != null ? list.size() : 0; }
+        @Override
+        public List<RangerDataShare> getList() {
+            return list;
+        }
+    }
 
-		@Override
-		public List<RangerDataShare> getList() { return list; }
-	}
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerSharedResourceList extends VList {
+        private static final long serialVersionUID = 1L;
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerSharedResourceList extends VList {
-		private static final long serialVersionUID = 1L;
+        List<RangerSharedResource> list = new ArrayList<>();
 
-		List<RangerSharedResource> list = new ArrayList<>();
+        public RangerSharedResourceList() {
+            super();
+        }
 
-		public RangerSharedResourceList() {
-			super();
-		}
+        public RangerSharedResourceList(List<RangerSharedResource> objList) {
+            super(objList);
 
-		public RangerSharedResourceList(List<RangerSharedResource> objList) {
-			super(objList);
+            this.list = objList;
+        }
 
-			this.list = objList;
-		}
+        @Override
+        public int getListSize() {
+            return list != null ? list.size() : 0;
+        }
 
-		@Override
-		public int getListSize() { return list != null ? list.size() : 0; }
+        @Override
+        public List<RangerSharedResource> getList() {
+            return list;
+        }
+    }
 
-		@Override
-		public List<RangerSharedResource> getList() { return list; }
-	}
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerDataShareInDatasetList extends VList {
+        private static final long serialVersionUID = 1L;
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerDataShareInDatasetList extends VList {
-		private static final long serialVersionUID = 1L;
+        List<RangerDataShareInDataset> list = new ArrayList<>();
 
-		List<RangerDataShareInDataset> list = new ArrayList<>();
+        public RangerDataShareInDatasetList() {
+            super();
+        }
 
-		public RangerDataShareInDatasetList() {
-			super();
-		}
+        public RangerDataShareInDatasetList(List<RangerDataShareInDataset> objList) {
+            super(objList);
 
-		public RangerDataShareInDatasetList(List<RangerDataShareInDataset> objList) {
-			super(objList);
+            this.list = objList;
+        }
 
-			this.list = objList;
-		}
+        @Override
+        public int getListSize() {
+            return list != null ? list.size() : 0;
+        }
 
-		@Override
-		public int getListSize() { return list != null ? list.size() : 0; }
+        @Override
+        public List<RangerDataShareInDataset> getList() {
+            return list;
+        }
+    }
 
-		@Override
-		public List<RangerDataShareInDataset> getList() { return list; }
-	}
+    @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RangerDatasetInProjectList extends VList {
+        private static final long serialVersionUID = 1L;
 
-	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RangerDatasetInProjectList extends VList {
-		private static final long serialVersionUID = 1L;
+        List<RangerDatasetInProject> list = new ArrayList<>();
 
-		List<RangerDatasetInProject> list = new ArrayList<>();
+        public RangerDatasetInProjectList() {
+            super();
+        }
 
-		public RangerDatasetInProjectList() {
-			super();
-		}
+        public RangerDatasetInProjectList(List<RangerDatasetInProject> objList) {
+            super(objList);
 
-		public RangerDatasetInProjectList(List<RangerDatasetInProject> objList) {
-			super(objList);
+            this.list = objList;
+        }
 
-			this.list = objList;
-		}
+        @Override
+        public int getListSize() {
+            return list != null ? list.size() : 0;
+        }
 
-		@Override
-		public int getListSize() { return list != null ? list.size() : 0; }
-
-		@Override
-		public List<RangerDatasetInProject> getList() { return list; }
-	}
+        @Override
+        public List<RangerDatasetInProject> getList() {
+            return list;
+        }
+    }
 }

@@ -17,62 +17,64 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXAsset
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXAssetList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXAsset> vXAssets = new ArrayList<VXAsset>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXAsset> vXAssets = new ArrayList<>();
 
     public VXAssetList() {
-	super();
+        super();
     }
 
     public VXAssetList(List<VXAsset> objList) {
-	super(objList);
-	this.vXAssets = objList;
+        super(objList);
+        this.vXAssets = objList;
     }
 
     /**
      * @return the vXAssets
      */
+    @JsonProperty("vXAssets")
     public List<VXAsset> getVXAssets() {
-	return vXAssets;
+        return vXAssets;
     }
 
     /**
      * @param vXAssets
      *            the vXAssets to set
      */
+    @JsonProperty("vXAssets")
     public void setVXAssets(List<VXAsset> vXAssets) {
-	this.vXAssets = vXAssets;
+        this.vXAssets = vXAssets;
     }
 
     @Override
     public int getListSize() {
-	if (vXAssets != null) {
-	    return vXAssets.size();
-	}
-	return 0;
+        if (vXAssets != null) {
+            return vXAssets.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXAsset> getList() {
-	return vXAssets;
+        return vXAssets;
     }
-
 }

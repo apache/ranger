@@ -19,30 +19,31 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import java.util.Map;
 
 public class RangerDatasetHeader {
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown = true)
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    public  static class RangerDatasetHeaderInfo extends RangerBaseModelObject  implements java.io.Serializable {
+    public static class RangerDatasetHeaderInfo extends RangerBaseModelObject implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
-        private String name;
-        private Map<RangerGds.GdsShareStatus, Long> dataSharesCountByStatus;
+        private String                                   name;
+        private Map<RangerGds.GdsShareStatus, Long>      dataSharesCountByStatus;
         private Map<RangerPrincipal.PrincipalType, Long> principalsCountByType;
-        private Long projectsCount;
-        private String permissionForCaller;
-        private Long resourceCount;
+        private Long                                     projectsCount;
+        private String                                   permissionForCaller;
+        private Long                                     resourceCount;
 
         public RangerDatasetHeaderInfo() {
             super();

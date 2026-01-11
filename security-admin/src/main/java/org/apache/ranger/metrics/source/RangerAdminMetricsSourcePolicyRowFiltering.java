@@ -19,16 +19,15 @@
 
 package org.apache.ranger.metrics.source;
 
-import java.util.Map;
-
 import org.apache.ranger.metrics.RangerMetricsFetcher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 public class RangerAdminMetricsSourcePolicyRowFiltering extends RangerAdminMetricsSourceBase {
-
     @Autowired
     private RangerMetricsFetcher rangerMetricsFetcher;
 
@@ -39,6 +38,7 @@ public class RangerAdminMetricsSourcePolicyRowFiltering extends RangerAdminMetri
     @Override
     protected void refresh() {
         Map<String, Long> rowFilteringPolicyMetrics = rangerMetricsFetcher.getPolicyMetrics(RangerPolicy.POLICY_TYPE_ROWFILTER);
+
         addMetricEntries("RowFilteringCount", rowFilteringPolicyMetrics);
     }
 }

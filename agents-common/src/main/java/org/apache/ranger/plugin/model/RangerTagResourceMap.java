@@ -19,59 +19,58 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerTagResourceMap extends RangerBaseModelObject {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private Long tagId;
-	private Long resourceId;
+    private Long tagId;
+    private Long resourceId;
 
-	public RangerTagResourceMap() {
-	}
+    public RangerTagResourceMap() {
+    }
 
-	public Long getTagId() {
-		return tagId;
-	}
+    public Long getTagId() {
+        return tagId;
+    }
 
-	public Long getResourceId() {
-		return resourceId;
-	}
+    public void setTagId(Long tagId) {
+        this.tagId = tagId;
+    }
 
-	public void setTagId(Long tagId) {
-		this.tagId = tagId;
-	}
+    public Long getResourceId() {
+        return resourceId;
+    }
 
-	public void setResourceId(Long resourceId) {
-		this.resourceId = resourceId;
-	}
+    public void setResourceId(Long resourceId) {
+        this.resourceId = resourceId;
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-		toString(sb);
+        toString(sb);
 
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 
-	public StringBuilder toString(StringBuilder sb) {
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerTagResourceMap={ ");
 
-		sb.append("RangerTagResourceMap={ ");
+        super.toString(sb);
 
-		super.toString(sb);
+        sb.append("resourceId=").append(resourceId).append(", ");
 
-		sb.append("resourceId=").append(resourceId).append(", ");
+        sb.append("tagId=").append(tagId);
 
-		sb.append("tagId=").append(tagId);
+        sb.append(" }");
 
-		sb.append(" }");
-
-		return sb;
-	}}
-
+        return sb;
+    }
+}

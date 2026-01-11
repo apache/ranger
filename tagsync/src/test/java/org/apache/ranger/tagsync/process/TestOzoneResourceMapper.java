@@ -22,35 +22,63 @@ package org.apache.ranger.tagsync.process;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.Properties;
 
-import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.*;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.ENTITY_TYPE_OZONE_BUCKET;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.ENTITY_TYPE_OZONE_KEY;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.ENTITY_TYPE_OZONE_VOLUME;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.PROP_LEGACY_PARSING;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.PROP_OFS_BUCKET_DELIMITER;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.RANGER_TYPE_OZONE_BUCKET;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.RANGER_TYPE_OZONE_KEY;
+import static org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper.RANGER_TYPE_OZONE_VOLUME;
 import static org.apache.ranger.tagsync.source.atlas.AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 
-
 public class TestOzoneResourceMapper {
-    private static final String VOLUME_QUALIFIED_NAME       = "o3fs://myvolume@cl1";
-    private static final String BUCKET_QUALIFIED_NAME       = "o3fs://myvolume.mybucket@cl1";
-    private static final String KEY_QUALIFIED_NAME          = "o3fs://mybucket.myvolume.ozone1/mykey.txt@cl1" ;
-    private static final String KEY_PATH_QUALIFIED_NAME     = "o3fs://mybucket.myvolume.ozone1/mykey/key1/@cl1";
+    private static final String VOLUME_QUALIFIED_NAME   = "o3fs://myvolume@cl1";
+    private static final String BUCKET_QUALIFIED_NAME   = "o3fs://myvolume.mybucket@cl1";
+    private static final String KEY_QUALIFIED_NAME      = "o3fs://mybucket.myvolume.ozone1/mykey.txt@cl1";
+    private static final String KEY_PATH_QUALIFIED_NAME = "o3fs://mybucket.myvolume.ozone1/mykey/key1/@cl1";
 
-    private static final String SERVICE_NAME                = "cl1_ozone";
-    private static final String VOLUME_NAME                 = "myvolume";
-    private static final String BUCKET_NAME                 = "mybucket";
-    private static final String KEY_NAME                    = "mykey.txt";
-    private static final String KEY_PATH                    = "mykey/key1/";
+    private static final String VOLUME_QUALIFIED_NAME_OFS   = "ofs://myvolume@cl1";
+    private static final String BUCKET_QUALIFIED_NAME_OFS   = "ofs://myvolume.mybucket@cl1";
+    private static final String KEY_QUALIFIED_NAME_OFS      = "ofs://ozone1/myvolume/mybucket/mykey.txt@cl1";
+    private static final String KEY_PATH_QUALIFIED_NAME_OFS = "ofs://ozone1/myvolume/mybucket/mykey/key1/@cl1";
 
-    AtlasOzoneResourceMapper resourceMapper = new AtlasOzoneResourceMapper();
+    private static final String SERVICE_NAME = "cl1_ozone";
+    private static final String VOLUME_NAME  = "myvolume";
+    private static final String BUCKET_NAME  = "mybucket";
+    private static final String KEY_NAME     = "mykey.txt";
+    private static final String KEY_PATH     = "mykey/key1/";
+
+    static AtlasOzoneResourceMapper resourceMapper = new AtlasOzoneResourceMapper();
+
+    @BeforeAll
+    public static void init() {
+        resourceMapper.initialize(new Properties());
+    }
 
     @Test
     public void testVolumeEntity() throws Exception {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_VOLUME, VOLUME_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 1);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
+    }
+
+    @Test
+    public void testVolumeEntityOFS() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_VOLUME, VOLUME_QUALIFIED_NAME_OFS);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 1);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
     }
@@ -60,7 +88,18 @@ public class TestOzoneResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_BUCKET, BUCKET_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 2);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, BUCKET_NAME);
+    }
+
+    @Test
+    public void testBucketEntityOFS() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_BUCKET, BUCKET_QUALIFIED_NAME_OFS);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 2);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, BUCKET_NAME);
@@ -71,7 +110,19 @@ public class TestOzoneResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_KEY, KEY_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 3);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, BUCKET_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_KEY, KEY_NAME);
+    }
+
+    @Test
+    public void testKeyEntityOFS() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_KEY, KEY_QUALIFIED_NAME_OFS);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 3);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, BUCKET_NAME);
@@ -83,11 +134,113 @@ public class TestOzoneResourceMapper {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_KEY, KEY_PATH_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         assertResourceElementCount(resource, 3);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, BUCKET_NAME);
         assertResourceElementValue(resource, RANGER_TYPE_OZONE_KEY, KEY_PATH);
+    }
+
+    @Test
+    public void testKey2EntityOFS() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_OZONE_KEY, KEY_PATH_QUALIFIED_NAME_OFS);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 3);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, BUCKET_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_KEY, KEY_PATH);
+    }
+
+    @Test
+    public void testKeyEntityOFSLegacyDotDelimiter() throws Exception {
+        AtlasOzoneResourceMapper legacyResourceMapper = new AtlasOzoneResourceMapper();
+        Properties               legacyProperties     = new Properties();
+        legacyProperties.setProperty(PROP_LEGACY_PARSING, "true");
+        legacyResourceMapper.initialize(legacyProperties);
+        String                qualifiedName = "ofs://mybucket.myvolume.ozone1/mykey.txt@cl1";
+        RangerAtlasEntity     entity        = getEntity(ENTITY_TYPE_OZONE_KEY, qualifiedName);
+        RangerServiceResource resource      = legacyResourceMapper.buildResource(entity);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 3);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, VOLUME_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, BUCKET_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_KEY, KEY_NAME);
+    }
+
+    @Test
+    public void testInvalidKeyEntityOFSLegacyDotDelimiter() throws Exception {
+        AtlasOzoneResourceMapper legacyResourceMapper = new AtlasOzoneResourceMapper();
+        Properties               legacyProperties     = new Properties();
+        legacyProperties.setProperty(PROP_LEGACY_PARSING, "true");
+        legacyResourceMapper.initialize(legacyProperties);
+        RangerAtlasEntity entity = getEntity(ENTITY_TYPE_OZONE_KEY, KEY_PATH_QUALIFIED_NAME_OFS);
+        try {
+            RangerServiceResource resource = legacyResourceMapper.buildResource(entity);
+            Assertions.assertFalse(true, "Expected buildResource() to fail. But it returned " + resource + ". "
+                    + "'/' not supported as delimiter when legacy flag is enabled");
+        } catch (Exception excp) {
+            System.out.println("Exception was as expected: " + KEY_PATH_QUALIFIED_NAME_OFS +
+                    " cannot be parsed when property" + PROP_LEGACY_PARSING + " is true");
+        }
+    }
+
+    @Test
+    public void testVolumeEntityWithDotOFS() throws Exception {
+        String                qualifiedName      = "ofs://myvolume.volpostfix@cl1";
+        String                expectedVolumeName = "myvolume.volpostfix";
+        RangerAtlasEntity     entity             = getEntity(ENTITY_TYPE_OZONE_VOLUME, qualifiedName);
+        RangerServiceResource resource           = resourceMapper.buildResource(entity);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 1);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, expectedVolumeName);
+    }
+
+    @Test
+    public void testBucketEntityWithDotOFS() throws Exception {
+        String                qualifiedName      = "ofs://myvolume.bucketprefix.mybucket.bucketpostfix@cl1";
+        String                expectedVolumeName = "myvolume";
+        String                expectedBucketName = "bucketprefix.mybucket.bucketpostfix";
+        RangerAtlasEntity     entity             = getEntity(ENTITY_TYPE_OZONE_BUCKET, qualifiedName);
+        RangerServiceResource resource           = resourceMapper.buildResource(entity);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 2);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, expectedVolumeName);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, expectedBucketName);
+    }
+
+    @Test
+    public void testKeyEntityWithDotOFS() throws Exception {
+        String                qualifiedName      = "ofs://ozone1/myvolume.volumepostfix/mybucket.bucketpostfix/keypath/keyprefix.mykey.txt@cl1";
+        String                expectedVolumeName = "myvolume.volumepostfix";
+        String                expectedBucketName = "mybucket.bucketpostfix";
+        String                expectedKeyName    = "keypath/keyprefix.mykey.txt";
+        RangerAtlasEntity     entity             = getEntity(ENTITY_TYPE_OZONE_KEY, qualifiedName);
+        RangerServiceResource resource           = resourceMapper.buildResource(entity);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 3);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, expectedVolumeName);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, expectedBucketName);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_KEY, expectedKeyName);
+    }
+
+    @Test
+    public void testBucketEntityWithSlashOFS() throws Exception {
+        //future work : scenario when atlas fixes the bucket delimiter from "." to "/";
+        AtlasOzoneResourceMapper afterDelimiterFixResourceMapper = new AtlasOzoneResourceMapper();
+        Properties               properties                      = new Properties();
+        properties.setProperty(PROP_OFS_BUCKET_DELIMITER, "/");
+        afterDelimiterFixResourceMapper.initialize(properties);
+        //both volume and bucket name could have a "." in it after this fix
+        String                qualifiedName      = "ofs://myvolume.volumepostfix/mybucket.bucketpostfix@cl1";
+        String                expectedVolumeName = "myvolume.volumepostfix";
+        String                expectedBucketName = "mybucket.bucketpostfix";
+        RangerAtlasEntity     entity             = getEntity(ENTITY_TYPE_OZONE_BUCKET, qualifiedName);
+        RangerServiceResource resource           = afterDelimiterFixResourceMapper.buildResource(entity);
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 2);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_VOLUME, expectedVolumeName);
+        assertResourceElementValue(resource, RANGER_TYPE_OZONE_BUCKET, expectedBucketName);
     }
 
     @Test
@@ -129,26 +282,25 @@ public class TestOzoneResourceMapper {
     }
 
     private void assertResourceElementCount(RangerServiceResource resource, int count) {
-        Assert.assertNotNull(resource);
-        Assert.assertNotNull(resource.getResourceElements());
-        Assert.assertEquals(count, resource.getResourceElements().size());
+        Assertions.assertNotNull(resource);
+        Assertions.assertNotNull(resource.getResourceElements());
+        Assertions.assertEquals(count, resource.getResourceElements().size());
     }
 
     private void assertResourceElementValue(RangerServiceResource resource, String resourceName, String value) {
-        Assert.assertTrue(resource.getResourceElements().containsKey(resourceName));
-        Assert.assertNotNull(resource.getResourceElements().get(resourceName).getValues());
-        Assert.assertEquals(1, resource.getResourceElements().get(resourceName).getValues().size());
-        Assert.assertEquals(value, resource.getResourceElements().get(resourceName).getValues().get(0));
+        Assertions.assertTrue(resource.getResourceElements().containsKey(resourceName));
+        Assertions.assertNotNull(resource.getResourceElements().get(resourceName).getValues());
+        Assertions.assertEquals(1, resource.getResourceElements().get(resourceName).getValues().size());
+        Assertions.assertEquals(value, resource.getResourceElements().get(resourceName).getValues().get(0));
     }
 
     private void assertException(RangerAtlasEntity entity, String exceptionMessage) {
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assert.assertFalse("Expected buildResource() to fail. But it returned " + resource, true);
+            Assertions.assertFalse(true, "Expected buildResource() to fail. But it returned " + resource);
         } catch (Exception excp) {
-            Assert.assertTrue("Unexpected exception message: expected=" + exceptionMessage + "; found " + excp.getMessage(),
-                    excp.getMessage().startsWith(exceptionMessage));
+            Assertions.assertTrue(excp.getMessage().startsWith(exceptionMessage), "Unexpected exception message: expected=" + exceptionMessage + "; found " + excp.getMessage());
         }
     }
 }

@@ -17,36 +17,35 @@
  * under the License.
  */
 
- package org.apache.ranger.common.view;
+package org.apache.ranger.common.view;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.entity.XXDBBase;
-import org.codehaus.jackson.annotate.JsonIgnore;
 
 public class ViewBaseBean implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     @JsonIgnore
-    private XXDBBase mObj = null;
+    private XXDBBase mObj;
 
     /**
      * @return the gjObj
      */
     @JsonIgnore
     public XXDBBase getMObj() {
-	return mObj;
+        return mObj;
     }
 
     /**
-     * @param gjObj
-     *            the gjObj to set
+     * @param gjObj the gjObj to set
      */
     public void setMObj(XXDBBase gjObj) {
-	this.mObj = gjObj;
+        this.mObj = gjObj;
     }
 
     @JsonIgnore
     public int getMyClassType() {
-	return RangerCommonEnums.CLASS_TYPE_NONE;
+        return RangerCommonEnums.CLASS_TYPE_NONE;
     }
 }

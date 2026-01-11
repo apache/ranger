@@ -14,18 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-try:
-	from StringIO import StringIO
-except ImportError:
-	from io import StringIO
-try:
-	from ConfigParser import ConfigParser
-except ImportError:
-	from configparser import ConfigParser
-try:
-	from urlparse import urlparse
-except ImportError:
-	from urllib.parse import urlparse
+from io import StringIO
+from configparser import ConfigParser
+from urllib.parse import urlparse
 import re
 import xml.etree.ElementTree as ET
 import os,errno,sys,getopt
@@ -78,6 +69,7 @@ initPrefixList = ['S99', 'K00']
 
 TAGSYNC_ATLAS_KAFKA_ENDPOINTS_KEY = 'TAG_SOURCE_ATLAS_KAFKA_BOOTSTRAP_SERVERS'
 TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT_KEY = 'TAG_SOURCE_ATLAS_KAFKA_ZOOKEEPER_CONNECT'
+TAGSYNC_ATLAS_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR_KEY = 'TAG_SOURCE_ATLAS_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR'
 TAGSYNC_ATLAS_CONSUMER_GROUP_KEY = 'TAG_SOURCE_ATLAS_KAFKA_ENTITIES_GROUP_ID'
 
 TAG_SOURCE_ATLAS_KAKFA_SERVICE_NAME_KEY = 'TAG_SOURCE_ATLAS_KAFKA_SERVICE_NAME'
@@ -161,7 +153,7 @@ def getPropertiesConfigMap(configFileName):
     config.seek(0,os.SEEK_SET)
     fcp = ConfigParser()
     fcp.optionxform = str
-    fcp.readfp(config)
+    fcp.read_file(config)
     for k,v in fcp.items('dummysection'):
         ret[k] = v
     return ret
@@ -174,7 +166,7 @@ def getPropertiesKeyList(configFileName):
     config.seek(0,os.SEEK_SET)
     fcp = ConfigParser()
     fcp.optionxform = str
-    fcp.readfp(config)
+    fcp.read_file(config)
     for k,v in fcp.items('dummysection'):
         ret.append(k)
     return ret
@@ -240,6 +232,8 @@ def convertInstallPropsToXML(props):
 			if (k == TAGSYNC_ATLAS_KAFKA_ENDPOINTS_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")
 			elif (k == TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT_KEY):
+				atlasOutFile.write(newKey + "=" + v + "\n")
+			elif (k == TAGSYNC_ATLAS_KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")
 			elif (k == TAGSYNC_ATLAS_CONSUMER_GROUP_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")

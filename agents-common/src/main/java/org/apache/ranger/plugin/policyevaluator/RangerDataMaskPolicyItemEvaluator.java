@@ -20,9 +20,8 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 
-
 public interface RangerDataMaskPolicyItemEvaluator extends RangerPolicyItemEvaluator {
-	void init();
+    void init();
 
-	RangerPolicyItemDataMaskInfo getDataMaskInfo();
+    RangerPolicyItemDataMaskInfo getDataMaskInfo();
 }

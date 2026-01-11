@@ -19,8 +19,14 @@
 
 package org.apache.ranger.plugin.model;
 
-import java.util.Collections;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.authorization.utils.StringUtil;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,273 +34,283 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.ranger.authorization.utils.StringUtil;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY )
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerBaseModelObject implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public static final String NULL_SAFE_SUPPLIER_V2 = "v2";
+    public static final String NULL_SAFE_SUPPLIER_V2 = "v2";
 
-	private static NullSafeSupplier NULL_SAFE_SUPPLIER = NullSafeSupplierV1.INSTANCE;
+    private static NullSafeSupplier nullSafeSupplier = NullSafeSupplierV1.INSTANCE;
 
-	private Long    id;
-	private String  guid;
-	private Boolean isEnabled;
-	private String  createdBy;
-	private String  updatedBy;
-	private Date    createTime;
-	private Date    updateTime;
-	private Long    version;
+    private Long    id;
+    private String  guid;
+    private Boolean isEnabled;
+    private String  createdBy;
+    private String  updatedBy;
+    private Date    createTime;
+    private Date    updateTime;
+    private Long    version;
 
-	public RangerBaseModelObject() {
-		setIsEnabled(null);
-	}
+    public RangerBaseModelObject() {
+        setIsEnabled(null);
+    }
 
-	public void updateFrom(RangerBaseModelObject other) {
-		setIsEnabled(other.getIsEnabled());
-	}
+    public static <T> List<T> nullSafeList(List<T> coll) {
+        return nullSafeSupplier.toList(coll);
+    }
 
-	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
-	/**
-	 * @return the guid
-	 */
-	public String getGuid() {
-		return guid;
-	}
-	/**
-	 * @param guid the guid to set
-	 */
-	public void setGuid(String guid) {
-		this.guid = guid;
-	}
-	/**
-	 * @return the isEnabled
-	 */
-	public Boolean getIsEnabled() {
-		return isEnabled;
-	}
-	/**
-	 * @param isEnabled the isEnabled to set
-	 */
-	public void setIsEnabled(Boolean isEnabled) {
-		this.isEnabled = isEnabled == null ? Boolean.TRUE : isEnabled;
-	}
-	/**
-	 * @return the createdBy
-	 */
-	public String getCreatedBy() {
-		return createdBy;
-	}
-	/**
-	 * @param createdBy the createdBy to set
-	 */
-	public void setCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-	}
-	/**
-	 * @return the updatedBy
-	 */
-	public String getUpdatedBy() {
-		return updatedBy;
-	}
-	/**
-	 * @param updatedBy the updatedBy to set
-	 */
-	public void setUpdatedBy(String updatedBy) {
-		this.updatedBy = updatedBy;
-	}
-	/**
-	 * @return the createTime
-	 */
-	public Date getCreateTime() {
-		return createTime;
-	}
-	/**
-	 * @param createTime the createTime to set
-	 */
-	public void setCreateTime(Date createTime) {
-		this.createTime = createTime;
-	}
-	/**
-	 * @return the updateTime
-	 */
-	public Date getUpdateTime() {
-		return updateTime;
-	}
-	/**
-	 * @param updateTime the updateTime to set
-	 */
-	public void setUpdateTime(Date updateTime) {
-		this.updateTime = updateTime;
-	}
-	/**
-	 * @return the version
-	 */
-	public Long getVersion() {
-		return version;
-	}
-	/**
-	 * @param version the version to set
-	 */
-	public void setVersion(Long version) {
-		this.version = version;
-	}
+    public static <T> Set<T> nullSafeSet(Set<T> coll) {
+        return nullSafeSupplier.toSet(coll);
+    }
 
-	public void dedupStrings(Map<String, String> strTbl) {
-		createdBy = StringUtil.dedupString(createdBy, strTbl);
-		updatedBy = StringUtil.dedupString(updatedBy, strTbl);
-	}
+    public static <K, V> Map<K, V> nullSafeMap(Map<K, V> coll) {
+        return nullSafeSupplier.toMap(coll);
+    }
 
-	public static <T> List<T> nullSafeList(List<T> coll) {
-		return NULL_SAFE_SUPPLIER.toList(coll);
-	}
+    public static <T> List<T> getUpdatableList(List<T> curr) {
+        final List<T> ret;
 
-	public static <T> Set<T> nullSafeSet(Set<T> coll) {
-		return NULL_SAFE_SUPPLIER.toSet(coll);
-	}
+        if (curr instanceof ArrayList) {
+            ret = curr;
+        } else {
+            ret = curr != null ? new ArrayList<>(curr) : new ArrayList<>();
+        }
 
-	public static <K, V> Map<K, V> nullSafeMap(Map<K, V> coll) {
-		return NULL_SAFE_SUPPLIER.toMap(coll);
-	}
+        return ret;
+    }
 
-	public static <T> List<T> getUpdatableList(List<T> curr) {
-		final List<T> ret;
+    public static <T> Set<T> getUpdatableSet(Set<T> curr) {
+        final Set<T> ret;
 
-		if (curr instanceof ArrayList) {
-			ret = curr;
-		} else {
-			ret = curr != null ? new ArrayList<>(curr) : new ArrayList<>();
-		}
+        if (curr instanceof HashSet) {
+            ret = curr;
+        } else {
+            ret = curr != null ? new HashSet<>(curr) : new HashSet<>();
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static <T> Set<T> getUpdatableSet(Set<T> curr) {
-		final Set<T> ret;
+    public static <K, V> Map<K, V> getUpdatableMap(Map<K, V> curr) {
+        final Map<K, V> ret;
 
-		if (curr instanceof HashSet) {
-			ret = curr;
-		} else {
-			ret = curr != null ? new HashSet<>(curr) : new HashSet<>();
-		}
+        if (curr instanceof HashMap) {
+            ret = curr;
+        } else {
+            ret = curr != null ? new HashMap<>(curr) : new HashMap<>();
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public static <K, V> Map<K, V> getUpdatableMap(Map<K, V> curr) {
-		final Map<K, V> ret;
+    public void updateFrom(RangerBaseModelObject other) {
+        setIsEnabled(other.getIsEnabled());
+    }
 
-		if (curr instanceof HashMap) {
-			ret = curr;
-		} else {
-			ret = curr != null ? new HashMap<>(curr) : new HashMap<>();
-		}
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
 
-		return ret;
-	}
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	@Override
-	public String toString( ) {
-		StringBuilder sb = new StringBuilder();
+    /**
+     * @return the guid
+     */
+    public String getGuid() {
+        return guid;
+    }
 
-		toString(sb);
+    /**
+     * @param guid the guid to set
+     */
+    public void setGuid(String guid) {
+        this.guid = guid;
+    }
 
-		return sb.toString();
-	}
+    /**
+     * @return the isEnabled
+     */
+    public Boolean getIsEnabled() {
+        return isEnabled;
+    }
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("id={").append(id).append("} ");
-		sb.append("guid={").append(guid).append("} ");
-		sb.append("isEnabled={").append(isEnabled).append("} ");
-		sb.append("createdBy={").append(createdBy).append("} ");
-		sb.append("updatedBy={").append(updatedBy).append("} ");
-		sb.append("createTime={").append(createTime).append("} ");
-		sb.append("updateTime={").append(updateTime).append("} ");
-		sb.append("version={").append(version).append("} ");
+    /**
+     * @param isEnabled the isEnabled to set
+     */
+    public void setIsEnabled(Boolean isEnabled) {
+        this.isEnabled = isEnabled == null ? Boolean.TRUE : isEnabled;
+    }
 
-		return sb;
-	}
+    /**
+     * @return the createdBy
+     */
+    public String getCreatedBy() {
+        return createdBy;
+    }
 
-	protected NullSafeSupplier getNullSafeSupplier() { return NULL_SAFE_SUPPLIER; }
+    /**
+     * @param createdBy the createdBy to set
+     */
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
 
-	public static void setNullSafeSupplier(NullSafeSupplier supplier) {
-		NULL_SAFE_SUPPLIER = supplier == null ? NullSafeSupplierV1.INSTANCE : supplier;
-	}
+    /**
+     * @return the updatedBy
+     */
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
 
-	public static void setNullSafeSupplier(String supplier) {
-		if (NULL_SAFE_SUPPLIER_V2.equalsIgnoreCase(supplier)) {
-			NULL_SAFE_SUPPLIER = NullSafeSupplierV2.INSTANCE;
-		} else {
-			NULL_SAFE_SUPPLIER = NullSafeSupplierV1.INSTANCE;
-		}
-	}
+    /**
+     * @param updatedBy the updatedBy to set
+     */
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
 
-	public static abstract class NullSafeSupplier {
-		public abstract <T> List<T> toList(List<T> coll);
+    /**
+     * @return the createTime
+     */
+    public Date getCreateTime() {
+        return createTime;
+    }
 
-		public abstract <T> Set<T> toSet(Set<T> coll);
+    /**
+     * @param createTime the createTime to set
+     */
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
 
-		public abstract <K, V> Map<K, V> toMap(Map<K, V> coll);
-	}
+    /**
+     * @return the updateTime
+     */
+    public Date getUpdateTime() {
+        return updateTime;
+    }
 
+    /**
+     * @param updateTime the updateTime to set
+     */
+    public void setUpdateTime(Date updateTime) {
+        this.updateTime = updateTime;
+    }
 
-	// each call creates a new collection object
-	// 1. for a null/empty collection, return a new collection object
-	// 2. for a non-null collection, return a copy of the collection
-	public static class NullSafeSupplierV1 extends NullSafeSupplier {
-		public static final NullSafeSupplierV1 INSTANCE = new NullSafeSupplierV1();
+    /**
+     * @return the version
+     */
+    public Long getVersion() {
+        return version;
+    }
 
-		private NullSafeSupplierV1() { }
+    /**
+     * @param version the version to set
+     */
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
-		public <T> List<T> toList(List<T> coll) {
-			return (coll == null || coll.isEmpty()) ? new ArrayList<>() : new ArrayList<>(coll);
-		}
+    public void dedupStrings(Map<String, String> strTbl) {
+        createdBy = StringUtil.dedupString(createdBy, strTbl);
+        updatedBy = StringUtil.dedupString(updatedBy, strTbl);
+    }
 
-		public <T> Set<T> toSet(Set<T> coll) {
-			return (coll == null || coll.isEmpty()) ? new HashSet<>() : new HashSet<>(coll);
-		}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-		public <K, V> Map<K, V> toMap(Map<K, V> coll) {
-			return (coll == null || coll.isEmpty()) ? new HashMap<>() : new HashMap<>(coll);
-		}
-	}
+        toString(sb);
 
-	// calls do not create collection objects
-	// 1. for a null/empty collection, return Collections.empty*()
-	// 2. for a non-null collection, return that collection itself
-	public static class NullSafeSupplierV2 extends NullSafeSupplier {
-		public static final NullSafeSupplierV2 INSTANCE = new NullSafeSupplierV2();
+        return sb.toString();
+    }
 
-		private NullSafeSupplierV2() { }
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("id={").append(id).append("} ");
+        sb.append("guid={").append(guid).append("} ");
+        sb.append("isEnabled={").append(isEnabled).append("} ");
+        sb.append("createdBy={").append(createdBy).append("} ");
+        sb.append("updatedBy={").append(updatedBy).append("} ");
+        sb.append("createTime={").append(createTime).append("} ");
+        sb.append("updateTime={").append(updateTime).append("} ");
+        sb.append("version={").append(version).append("} ");
 
-		public <T> List<T> toList(List<T> coll) {
-			return (coll == null || coll.isEmpty()) ? Collections.emptyList() : coll;
-		}
+        return sb;
+    }
 
-		public <T> Set<T> toSet(Set<T> coll) {
-			return (coll == null || coll.isEmpty()) ? Collections.emptySet() : coll;
-		}
+    protected NullSafeSupplier getNullSafeSupplier() {
+        return nullSafeSupplier;
+    }
 
-		public <K, V> Map<K, V> toMap(Map<K, V> coll) {
-			return (coll == null || coll.isEmpty()) ? Collections.emptyMap() : coll;
-		}
-	}
+    public static void setNullSafeSupplier(NullSafeSupplier supplier) {
+        nullSafeSupplier = supplier == null ? NullSafeSupplierV1.INSTANCE : supplier;
+    }
+
+    public static void setNullSafeSupplier(String supplier) {
+        if (NULL_SAFE_SUPPLIER_V2.equalsIgnoreCase(supplier)) {
+            nullSafeSupplier = NullSafeSupplierV2.INSTANCE;
+        } else {
+            nullSafeSupplier = NullSafeSupplierV1.INSTANCE;
+        }
+    }
+
+    public abstract static class NullSafeSupplier {
+        public abstract <T> List<T> toList(List<T> coll);
+
+        public abstract <T> Set<T> toSet(Set<T> coll);
+
+        public abstract <K, V> Map<K, V> toMap(Map<K, V> coll);
+    }
+
+    // each call creates a new collection object
+    // 1. for a null/empty collection, return a new collection object
+    // 2. for a non-null collection, return a copy of the collection
+    public static class NullSafeSupplierV1 extends NullSafeSupplier {
+        public static final NullSafeSupplierV1 INSTANCE = new NullSafeSupplierV1();
+
+        private NullSafeSupplierV1() {}
+
+        public <T> List<T> toList(List<T> coll) {
+            return (coll == null || coll.isEmpty()) ? new ArrayList<>() : new ArrayList<>(coll);
+        }
+
+        public <T> Set<T> toSet(Set<T> coll) {
+            return (coll == null || coll.isEmpty()) ? new HashSet<>() : new HashSet<>(coll);
+        }
+
+        public <K, V> Map<K, V> toMap(Map<K, V> coll) {
+            return (coll == null || coll.isEmpty()) ? new HashMap<>() : new HashMap<>(coll);
+        }
+    }
+
+    // calls do not create collection objects
+    // 1. for a null/empty collection, return Collections.empty*()
+    // 2. for a non-null collection, return that collection itself
+    public static class NullSafeSupplierV2 extends NullSafeSupplier {
+        public static final NullSafeSupplierV2 INSTANCE = new NullSafeSupplierV2();
+
+        private NullSafeSupplierV2() {}
+
+        public <T> List<T> toList(List<T> coll) {
+            return (coll == null || coll.isEmpty()) ? Collections.emptyList() : coll;
+        }
+
+        public <T> Set<T> toSet(Set<T> coll) {
+            return (coll == null || coll.isEmpty()) ? Collections.emptySet() : coll;
+        }
+
+        public <K, V> Map<K, V> toMap(Map<K, V> coll) {
+            return (coll == null || coll.isEmpty()) ? Collections.emptyMap() : coll;
+        }
+    }
 }

@@ -27,7 +27,12 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
-import org.apache.ranger.service.*;
+import org.apache.ranger.service.RangerGdsDataShareInDatasetService;
+import org.apache.ranger.service.RangerGdsDataShareService;
+import org.apache.ranger.service.RangerGdsDatasetInProjectService;
+import org.apache.ranger.service.RangerGdsDatasetService;
+import org.apache.ranger.service.RangerGdsProjectService;
+import org.apache.ranger.service.RangerGdsSharedResourceService;
 import org.apache.ranger.util.RangerAdminCache;
 import org.apache.ranger.view.RangerGdsVList;
 import org.slf4j.Logger;
@@ -38,6 +43,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.annotation.PostConstruct;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -84,7 +90,6 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
     public void init() {
         setLoader(new ServiceGdsInfoLoader(txManager));
     }
-
 
     private class ServiceGdsInfoLoader extends RangerDBValueLoader<String, ServiceGdsInfo> {
         public ServiceGdsInfoLoader(PlatformTransactionManager txManager) {
@@ -144,10 +149,15 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateDatasets(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerDataset dataset : datasetService.searchDatasets(filter).getList()) {
+                if (Boolean.FALSE.equals(dataset.getIsEnabled())) {
+                    continue;
+                }
+
                 ServiceGdsInfo.DatasetInfo dsInfo = new ServiceGdsInfo.DatasetInfo();
 
                 dsInfo.setId(dataset.getId());
                 dsInfo.setName(dataset.getName());
+                dsInfo.setValiditySchedule(dataset.getValiditySchedule());
                 dsInfo.setPolicies(getPolicies(daoMgr.getXXGdsDatasetPolicyMap().getDatasetPolicyIds(dataset.getId())));
 
                 gdsInfo.addDataset(dsInfo);
@@ -156,10 +166,14 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateProjects(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerProject project : projectService.searchProjects(filter).getList()) {
+                if (Boolean.FALSE.equals(project.getIsEnabled())) {
+                    continue;
+                }
                 ServiceGdsInfo.ProjectInfo projInfo = new ServiceGdsInfo.ProjectInfo();
 
                 projInfo.setId(project.getId());
                 projInfo.setName(project.getName());
+                projInfo.setValiditySchedule(project.getValiditySchedule());
                 projInfo.setPolicies(getPolicies(daoMgr.getXXGdsProjectPolicyMap().getProjectPolicyIds(project.getId())));
 
                 gdsInfo.addProject(projInfo);
@@ -170,6 +184,10 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
             RangerGdsVList.RangerDataShareList dataShares = dataShareService.searchDataShares(filter);
 
             for (RangerGds.RangerDataShare dataShare : dataShares.getList()) {
+                if (Boolean.FALSE.equals(dataShare.getIsEnabled())) {
+                    continue;
+                }
+
                 ServiceGdsInfo.DataShareInfo dshInfo = new ServiceGdsInfo.DataShareInfo();
 
                 dshInfo.setId(dataShare.getId());
@@ -185,6 +203,9 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateSharedResources(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerSharedResource resource : sharedResourceService.searchSharedResources(filter).getList()) {
+                if (Boolean.FALSE.equals(resource.getIsEnabled())) {
+                    continue;
+                }
                 ServiceGdsInfo.SharedResourceInfo resourceInfo = new ServiceGdsInfo.SharedResourceInfo();
 
                 resourceInfo.setId(resource.getId());
@@ -205,7 +226,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateDataSharesInDataset(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerDataShareInDataset dshInDs : dataShareInDatasetService.searchDataShareInDatasets(filter).getList()) {
-                if (dshInDs.getStatus() != RangerGds.GdsShareStatus.ACTIVE) {
+                if (dshInDs.getStatus() != RangerGds.GdsShareStatus.ACTIVE || Boolean.FALSE.equals(dshInDs.getIsEnabled())) {
                     continue;
                 }
 
@@ -223,7 +244,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
 
         private void populateDatasetsInProject(ServiceGdsInfo gdsInfo, SearchFilter filter) {
             for (RangerGds.RangerDatasetInProject dip : datasetInProjectService.searchDatasetInProjects(filter).getList()) {
-                if (dip.getStatus() != RangerGds.GdsShareStatus.ACTIVE) {
+                if (dip.getStatus() != RangerGds.GdsShareStatus.ACTIVE || Boolean.FALSE.equals(dip.getIsEnabled())) {
                     continue;
                 }
 
@@ -251,7 +272,7 @@ public class ServiceGdsInfoCache extends RangerAdminCache<String, ServiceGdsInfo
                             ret.add(policy);
                         }
                     } catch (Exception excp) {
-                        LOG.error("getPolicies(): failed to get policy with id=" + policyId, excp);
+                        LOG.error("getPolicies(): failed to get policy with id={}", policyId, excp);
                     }
                 }
             }

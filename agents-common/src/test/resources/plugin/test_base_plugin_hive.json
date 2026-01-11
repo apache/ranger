@@ -3,7 +3,7 @@
   "tagsFilename":      "/plugin/hive_tags.json",
   "rolesFilename":     "/plugin/hive_roles.json",
   "userStoreFilename": "/plugin/hive_user_store.json",
-  "gdsInfoFilename":   "/plugin/hive_gds_info.json",
+  "gdsInfoFilename":   "/policyengine/gds/gds_info_hive_access.json",
   "tests": [
     {
       "name": "table: sales.prospects, user: res-user, access: select",
@@ -233,7 +233,105 @@
       },
       "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
     },
-    
+
+
+    {
+      "name": "table: customers.shipping_address, user: res-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address" } },
+        "accessType": "select", "user": "res-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: customers.shipping_address, user: tag-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address" } },
+        "accessType": "select", "user": "tag-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: customers.shipping_address, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1, "additionalInfo": { "filterExpr": "country = 'US'" } }
+    },
+    {
+      "name": "mask: column: customers.shipping_address.phone, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address", "column": "phone" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 2006, "additionalInfo": { "maskType": "MASK_SHOW_LAST_4" } }
+    },
+    {
+      "name": "mask: column: customers.shipping_address.city, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address", "column": "city" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 2006, "additionalInfo": { "maskType": "MASK_SHOW_FIRST_4" } }
+    },
+    {
+      "name": "mask: column: customers.shipping_address.zip, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address", "column": "zip" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 2006, "additionalInfo": null }
+    },
+    {
+      "name": "mask: column: customers.shipping_address.non-existing, user: ds-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address", "column": "non-existing" } },
+        "accessType": "select", "user": "ds-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": false, "isAuditedDetermined": false, "policyId": -1, "additionalInfo": null }
+    },
+    {
+      "name": "mask: column: customers.shipping_address.phone, user: ds6-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address", "column": "phone" } },
+        "accessType": "select", "user": "ds6-user", "userGroups": []
+      },
+      "result": { "isAllowed": true, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": 2006, "additionalInfo": { "maskType": "MASK_SHOW_LAST_4" } }
+    },
+    {
+      "name": "table: customers.shipping_address, user: ds3-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address" } },
+        "accessType": "select", "user": "ds3-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: customers.shipping_address, user: proj-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address" } },
+        "accessType": "select", "user": "proj-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1, "additionalInfo": { "filterExpr": "country = 'US'" } }
+    },
+    {
+      "name": "table: customers.shipping_address, user: proj2-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address" } },
+        "accessType": "select", "user": "proj2-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+    {
+      "name": "table: customers.shipping_address, user: no-user, access: select",
+      "request": {
+        "resource":   { "elements": { "database": "customers", "table": "shipping_address" } },
+        "accessType": "select", "user": "no-user", "userGroups": []
+      },
+      "result": { "isAllowed": false, "isAccessDetermined": "true", "isAudited": true, "isAuditedDetermined": true, "policyId": -1 }
+    },
+
     {
       "name": "table: operations.facilities, user: res-user, access: select",
       "request": {
@@ -292,10 +390,10 @@
         "userACLs": {
           "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
           "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
-          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
-          "ds1-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
-          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } },
-          "proj1-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id": 2001 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2001 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } }
         },
         "datasets": [ "dataset-1" ],
         "projects": [ "project-1" ]
@@ -308,13 +406,13 @@
       },
       "acls": {
         "userACLs": {
-          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
-          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
-          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
-          "ds1-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2001 } } },
-          "ds2-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2002 } } },
-          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } },
-          "proj1-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } }
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 110 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 201 } } },
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
+          "ds1-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2001 } } },
+          "ds2-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } }
         },
         "datasets": [ "dataset-1", "dataset-2" ],
         "projects": [ "project-1" ]
@@ -327,12 +425,12 @@
       },
       "acls": {
         "userACLs": {
-          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 100 } } },
-          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 200 } } },
-          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2002 } } },
-          "ds2-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2002 } } },
-          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } },
-          "proj1-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3001 } } }
+          "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 121 } } },
+          "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 202 } } },
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
+          "ds2-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2002 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } },
+          "proj1-user": { "select": { "result": 1, "isFinal": true, "policy": { "id": 3001 } } }
         },
         "datasets": [ "dataset-2" ],
         "projects": [ "project-1" ]
@@ -347,13 +445,15 @@
         "userACLs": {
           "res-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 131 } } },
           "tag-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 203 } } },
-          "ds-user":    { "select": { "result": 1, "isFinal": false, "policy": { "id": 2003 } } },
-          "ds3-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2003 } } },
-          "proj-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 3002 } } },
-          "proj2-user": { "select": { "result": 1, "isFinal": false, "policy": { "id": 3002 } } }
+          "ds-user":    { "select": { "result": 1, "isFinal": true, "policy": { "id": 2003 } } },
+          "ds3-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2003 } } },
+          "ds6-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2006 } } },
+          "proj-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 3002 } } },
+          "proj2-user": { "select": { "result": 1, "isFinal": true, "policy": { "id": 3002 } } },
+          "proj4-user": { "select": { "result": 1, "isFinal": true, "policy": { "id": 3004 } } }
         },
-        "datasets": [ "dataset-3" ],
-        "projects": [ "project-2" ]
+        "datasets": [ "dataset-3", "dataset-6" ],
+        "projects": [ "project-2", "project-4" ]
       }
     },
     {
@@ -365,8 +465,8 @@
         "userACLs": {
           "res-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 141 } } },
           "tag-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 204 } } },
-          "ds-user":   { "select": { "result": 1, "isFinal": false, "policy": { "id": 2004 } } },
-          "ds4-user":  { "select": { "result": 1, "isFinal": false, "policy": { "id": 2004 } } }
+          "ds-user":   { "select": { "result": 1, "isFinal": true, "policy": { "id": 2004 } } },
+          "ds4-user":  { "select": { "result": 1, "isFinal": true, "policy": { "id": 2004 } } }
         },
         "datasets": [ "dataset-4" ]
       }

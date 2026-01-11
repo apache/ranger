@@ -17,50 +17,49 @@
 
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.apache.ranger.common.view.VList;
+import org.apache.ranger.plugin.model.RangerService;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.apache.ranger.plugin.model.RangerService;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RangerServiceList extends VList {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	List<RangerService> services = new ArrayList<RangerService>();
+    List<RangerService> services = new ArrayList<>();
 
-	public RangerServiceList() {
-		super();
-	}
+    public RangerServiceList() {
+        super();
+    }
 
-	public RangerServiceList(List<RangerService> objList) {
-		super(objList);
-		this.services = objList;
-	}
+    public RangerServiceList(List<RangerService> objList) {
+        super(objList);
+        this.services = objList;
+    }
 
-	public List<RangerService> getServices() {
-		return services;
-	}
+    public List<RangerService> getServices() {
+        return services;
+    }
 
-	public void setServices(List<RangerService> services) {
-		this.services = services;
-	}
+    public void setServices(List<RangerService> services) {
+        this.services = services;
+    }
 
-	@Override
-	public int getListSize() {
-		if (services != null) {
-			return services.size();
-		}
-		return 0;
-	}
+    @Override
+    public int getListSize() {
+        if (services != null) {
+            return services.size();
+        }
+        return 0;
+    }
 
-	@Override
-	public List<?> getList() {
-		return services;
-	}
-
+    @Override
+    public List<?> getList() {
+        return services;
+    }
 }

@@ -19,196 +19,213 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.List;
 import java.util.Map;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerTag extends RangerBaseModelObject {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public static final short OWNER_SERVICERESOURCE = 0;
-	public static final short OWNER_GLOBAL          = 1;
+    public static final short  OWNER_SERVICERESOURCE       = 0;
+    public static final short  OWNER_GLOBAL                = 1;
+    public static final String OPTION_TAG_VALIDITY_PERIODS = "TAG_VALIDITY_PERIODS";
 
-	public static final String OPTION_TAG_VALIDITY_PERIODS = "TAG_VALIDITY_PERIODS";
+    private String                       type;
+    private Short                        owner;
+    private Map<String, String>          attributes;
+    private Map<String, Object>          options;
+    private List<RangerValiditySchedule> validityPeriods;
 
-	private String                       type;
-	private Short                        owner;
-	private Map<String, String>          attributes;
-	private Map<String, Object>          options;
-	private List<RangerValiditySchedule> validityPeriods;
+    public RangerTag(String guid, String type, Map<String, String> attributes, Short owner, Map<String, Object> options, List<RangerValiditySchedule> validityPeriods) {
+        super();
 
-	public RangerTag(String guid, String type, Map<String, String> attributes, Short owner, Map<String, Object> options, List<RangerValiditySchedule> validityPeriods) {
-		super();
+        setGuid(guid);
+        setType(type);
+        setOwner(owner);
+        setAttributes(attributes);
+        setOwner(owner);
+        setOptions(options);
+        setValidityPeriods(validityPeriods);
+    }
 
-		setGuid(guid);
-		setType(type);
-		setOwner(owner);
-		setAttributes(attributes);
-		setOwner(owner);
-		setOptions(options);
-		setValidityPeriods(validityPeriods);
-	}
+    public RangerTag(String guid, String type, Map<String, String> attributes, Short owner) {
+        this(guid, type, attributes, owner, null, null);
+    }
 
-	public RangerTag(String guid, String type, Map<String, String> attributes, Short owner) {
-		this(guid, type, attributes, owner, null, null);
-	}
+    public RangerTag(String type, Map<String, String> attributes) {
+        this(null, type, attributes, OWNER_SERVICERESOURCE, null, null);
+    }
 
-	public RangerTag(String type, Map<String, String> attributes) {
-		this(null, type, attributes, OWNER_SERVICERESOURCE, null, null);
-	}
+    public RangerTag() {
+        this(null, null, null, OWNER_SERVICERESOURCE, null, null);
+    }
 
-	public RangerTag() {
-		this(null, null, null, OWNER_SERVICERESOURCE, null, null);
-	}
+    public String getType() {
+        return type;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
 
-	public Map<String, String> getAttributes() {
-		return attributes;
-	}
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
+    }
 
-	public void setAttributes(Map<String, String> attributes) {
-		this.attributes = attributes;
-	}
+    public Short getOwner() {
+        return this.owner;
+    }
 
-	public Short getOwner() {
-		return this.owner;
-	}
+    public void setOwner(Short owner) {
+        this.owner = owner;
+    }
 
-	public void setOwner(Short owner) {
-		this.owner = owner;
-	}
+    public Map<String, Object> getOptions() {
+        return options;
+    }
 
-	public Map<String, Object> getOptions() { return options; }
+    public void setOptions(Map<String, Object> options) {
+        this.options = options;
+    }
 
-	public void setOptions(Map<String, Object> options) {
-		this.options = options;
-	}
+    public List<RangerValiditySchedule> getValidityPeriods() {
+        return validityPeriods;
+    }
 
-	public List<RangerValiditySchedule> getValidityPeriods() { return validityPeriods; }
+    public void setValidityPeriods(List<RangerValiditySchedule> validityPeriods) {
+        this.validityPeriods = validityPeriods;
+    }
 
-	public void setValidityPeriods(List<RangerValiditySchedule> validityPeriods) {
-		this.validityPeriods = validityPeriods;
-	}
+    public void dedupStrings(Map<String, String> strTbl) {
+        type       = StringUtil.dedupString(type, strTbl);
+        attributes = StringUtil.dedupStringsMap(attributes, strTbl);
+        options    = StringUtil.dedupStringsMapOfObject(options, strTbl);
+    }
 
-	public void dedupStrings(Map<String, String> strTbl) {
-		type       = StringUtil.dedupString(type, strTbl);
-		attributes = StringUtil.dedupStringsMap(attributes, strTbl);
-		options    = StringUtil.dedupStringsMapOfObject(options, strTbl);
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
+        toString(sb);
 
-		toString(sb);
+        return sb.toString();
+    }
 
-		return sb.toString();
-	}
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerTag={");
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("RangerTag={");
+        super.toString(sb);
 
-		super.toString(sb);
+        sb.append("type={").append(type).append("} ");
+        sb.append("owner={").append(owner).append("} ");
 
-		sb.append("type={").append(type).append("} ");
-		sb.append("owner={").append(owner).append("} ");
+        sb.append("attributes={");
+        if (attributes != null) {
+            for (Map.Entry<String, String> e : attributes.entrySet()) {
+                sb.append(e.getKey()).append("={");
+                sb.append(e.getValue());
+                sb.append("} ");
+            }
+        }
+        sb.append("} ");
 
-		sb.append("attributes={");
-		if (attributes != null) {
-			for (Map.Entry<String, String> e : attributes.entrySet()) {
-				sb.append(e.getKey()).append("={");
-				sb.append(e.getValue());
-				sb.append("} ");
-			}
-		}
-		sb.append("} ");
+        sb.append("options={");
+        if (options != null) {
+            for (Map.Entry<String, Object> e : options.entrySet()) {
+                sb.append(e.getKey()).append("={");
+                sb.append(e.getValue());
+                sb.append("} ");
+            }
+        }
+        sb.append("} ");
 
-		sb.append("options={");
-		if (options != null) {
-			for (Map.Entry<String, Object> e : options.entrySet()) {
-				sb.append(e.getKey()).append("={");
-				sb.append(e.getValue());
-				sb.append("} ");
-			}
-		}
-		sb.append("} ");
-
-		if (validityPeriods != null) {
+        if (validityPeriods != null) {
             sb.append("validityPeriods={").append(validityPeriods).append("} ");
         }
-		sb.append("options={").append(options).append("} ");
+        sb.append("options={").append(options).append("} ");
 
         sb.append(" }");
 
-		return sb;
-	}
+        return sb;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((type == null) ? 0 : type.hashCode());
-		result = prime * result
-				+ ((owner == null) ? 0 : owner.hashCode());
-		result = prime * result
-				+ ((attributes == null) ? 0 : attributes.hashCode());
-		result = prime * result
-				+ ((options == null) ? 0 : options.hashCode());
-		result = prime * result
-				+ ((validityPeriods == null) ? 0 : validityPeriods.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime  = 31;
+        int       result = 1;
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RangerTag other = (RangerTag) obj;
-		if (type == null) {
-			if (other.type != null)
-				return false;
-		} else if (!type.equals(other.type))
-			return false;
-		if (owner == null) {
-			if (other.owner != null)
-				return false;
-		} else if (!owner.equals(other.owner))
-			return false;
-		if (attributes == null) {
-			if (other.attributes != null)
-				return false;
-		} else if (!attributes.equals(other.attributes))
-			return false;
-		if (options == null) {
-			if (other.options != null)
-				return false;
-		} else if (!options.equals(other.options))
-			return false;
-		if (validityPeriods == null) {
-			if (other.validityPeriods != null)
-				return false;
-		} else if (!validityPeriods.equals(other.validityPeriods))
-			return false;
-		return true;
-	}
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        result = prime * result + ((owner == null) ? 0 : owner.hashCode());
+        result = prime * result + ((attributes == null) ? 0 : attributes.hashCode());
+        result = prime * result + ((options == null) ? 0 : options.hashCode());
+        result = prime * result + ((validityPeriods == null) ? 0 : validityPeriods.hashCode());
+
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        RangerTag other = (RangerTag) obj;
+
+        if (type == null) {
+            if (other.type != null) {
+                return false;
+            }
+        } else if (!type.equals(other.type)) {
+            return false;
+        }
+
+        if (owner == null) {
+            if (other.owner != null) {
+                return false;
+            }
+        } else if (!owner.equals(other.owner)) {
+            return false;
+        }
+
+        if (attributes == null) {
+            if (other.attributes != null) {
+                return false;
+            }
+        } else if (!attributes.equals(other.attributes)) {
+            return false;
+        }
+
+        if (options == null) {
+            if (other.options != null) {
+                return false;
+            }
+        } else if (!options.equals(other.options)) {
+            return false;
+        }
+
+        if (validityPeriods == null) {
+            return other.validityPeriods == null;
+        } else {
+            return validityPeriods.equals(other.validityPeriods);
+        }
+    }
 }
-

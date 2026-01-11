@@ -19,10 +19,10 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.collections.MapUtils;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,21 +30,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerRole extends RangerBaseModelObject implements java.io.Serializable {
-    public static final String KEY_USER = "user";
+    private static final long serialVersionUID = 1L;
+
+    public static final String KEY_USER  = "user";
     public static final String KEY_GROUP = "group";
 
-    private static final long serialVersionUID = 1L;
-    private String                  name;
-    private String                  description;
-    private Map<String, Object>     options;
-    private List<RoleMember>        users;
-    private List<RoleMember>        groups;
-    private List<RoleMember>        roles;
-    private String createdByUser;
+    private String              name;
+    private String              description;
+    private Map<String, Object> options;
+    private List<RoleMember>    users;
+    private List<RoleMember>    groups;
+    private List<RoleMember>    roles;
+    private String              createdByUser;
 
     public RangerRole() {
         this(null, null, null, null, null, null);
@@ -131,9 +132,103 @@ public class RangerRole extends RangerBaseModelObject implements java.io.Seriali
                 + "}";
     }
 
-    @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @Override
+    public int hashCode() {
+        final int prime  = 31;
+        int       result = 1;
+
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((description == null) ? 0 : description.hashCode());
+        result = prime * result + ((options == null) ? 0 : options.hashCode());
+        result = prime * result + ((users == null) ? 0 : users.hashCode());
+        result = prime * result + ((groups == null) ? 0 : groups.hashCode());
+        result = prime * result + ((roles == null) ? 0 : roles.hashCode());
+
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        RangerRole other = (RangerRole) obj;
+
+        if (name == null) {
+            if (other.name != null) {
+                return false;
+            }
+        } else if (other.name == null || !name.equals(other.name)) {
+            return false;
+        }
+
+        if (description == null) {
+            if (other.description != null) {
+                return false;
+            }
+        } else if (!description.equals(other.description)) {
+            return false;
+        }
+
+        if (options == null) {
+            if (other.options != null) {
+                return false;
+            }
+        } else if (!options.equals(other.options)) {
+            return false;
+        }
+
+        if (users == null) {
+            if (other.users != null) {
+                return false;
+            }
+        } else if (!users.equals(other.users)) {
+            return false;
+        }
+
+        if (groups == null) {
+            if (other.groups != null) {
+                return false;
+            }
+        } else if (!groups.equals(other.groups)) {
+            return false;
+        }
+
+        if (roles == null) {
+            return other.roles == null;
+        } else {
+            return roles.equals(other.roles);
+        }
+    }
+
+    private String getPrintableOptions(Map<String, Object> options) {
+        if (MapUtils.isEmpty(options)) {
+            return "{}";
+        }
+
+        StringBuilder ret = new StringBuilder("{");
+
+        for (Map.Entry<String, Object> entry : options.entrySet()) {
+            ret.append(entry.getKey()).append(", ").append("[").append(entry.getValue()).append("]").append(",");
+        }
+
+        ret.append("}");
+
+        return ret.toString();
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RoleMember implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -143,105 +238,55 @@ public class RangerRole extends RangerBaseModelObject implements java.io.Seriali
         public RoleMember() {
             this(null, false);
         }
+
         public RoleMember(String name, boolean isAdmin) {
             setName(name);
             setIsAdmin(isAdmin);
         }
+
+        public String getName() {
+            return name;
+        }
+
         public void setName(String name) {
             this.name = name;
         }
+
+        public boolean getIsAdmin() {
+            return isAdmin;
+        }
+
         public void setIsAdmin(boolean isAdmin) {
             this.isAdmin = isAdmin;
         }
-        public String getName() { return name; }
-        public boolean getIsAdmin() { return isAdmin; }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, isAdmin);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+
+            if (obj == null) {
+                return false;
+            }
+
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+
+            RoleMember other = (RoleMember) obj;
+
+            return Objects.equals(name, other.name) && isAdmin == other.isAdmin;
+        }
 
         @Override
         public String toString() {
             return "{" + name + ", " + isAdmin + "}";
         }
-        @Override
-        public int hashCode() {
-            return Objects.hash(name, isAdmin);
-        }
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            RoleMember other = (RoleMember) obj;
-            return Objects.equals(name, other.name) && isAdmin == other.isAdmin;
-        }
     }
-
-    private String getPrintableOptions(Map<String, Object> options) {
-        if (MapUtils.isEmpty(options)) return "{}";
-        StringBuilder ret = new StringBuilder();
-        ret.append("{");
-        for (Map.Entry<String, Object> entry : options.entrySet()) {
-            ret.append(entry.getKey()).append(", ").append("[").append(entry.getValue()).append("]").append(",");
-        }
-        ret.append("}");
-        return ret.toString();
-    }
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((description == null) ? 0 : description.hashCode());
-		result = prime * result + ((options == null) ? 0 : options.hashCode());
-		result = prime * result + ((users == null) ? 0 : users.hashCode());
-		result = prime * result + ((groups == null) ? 0 : groups.hashCode());
-		result = prime * result + ((roles == null) ? 0 : roles.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RangerRole other = (RangerRole) obj;
-		if (name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		} else if (other.name == null || !name.equals(other.name)) {
-			return false;
-		}
-		if (description == null) {
-			if (other.description != null)
-				return false;
-		} else if (!description.equals(other.description))
-			return false;
-		if (options == null) {
-			if (other.options != null)
-				return false;
-		} else if (!options.equals(other.options))
-			return false;
-		if (users == null) {
-			if (other.users != null)
-				return false;
-		} else if (!users.equals(other.users))
-			return false;
-		if (groups == null) {
-			if (other.groups != null)
-				return false;
-		} else if (!groups.equals(other.groups))
-			return false;
-		if (roles == null) {
-			if (other.roles != null)
-				return false;
-		} else if (!roles.equals(other.roles))
-			return false;
-		return true;
-	}
 }

@@ -19,190 +19,215 @@
 
 package org.apache.ranger.plugin.store;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PList<T> implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	private static final long serialVersionUID = 1L;
+    /**
+     * Start index for the result
+     */
+    protected int    startIndex;
+    /**
+     * Page size used for the result
+     */
+    protected int    pageSize;
+    /**
+     * Total records in the database for the given search conditions
+     */
+    protected long   totalCount;
+    /**
+     * Number of rows returned for the search condition
+     */
+    protected int    resultSize;
+    /**
+     * Sort type. Either desc or asc
+     */
+    protected String sortType;
+    /**
+     * Comma seperated list of the fields for sorting
+     */
+    protected String sortBy;
 
-	/**
-	 * Start index for the result
-	 */
-	protected int startIndex;
-	/**
-	 * Page size used for the result
-	 */
-	protected int pageSize;
-	/**
-	 * Total records in the database for the given search conditions
-	 */
-	protected long totalCount;
-	/**
-	 * Number of rows returned for the search condition
-	 */
-	protected int resultSize;
-	/**
-	 * Sort type. Either desc or asc
-	 */
-	protected String sortType;
-	/**
-	 * Comma seperated list of the fields for sorting
-	 */
-	protected String sortBy;
+    protected long queryTimeMS = System.currentTimeMillis();
 
-	protected long queryTimeMS = System.currentTimeMillis();
+    protected List<T> list;
 
-	protected List<T> list;
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public PList() {
-		startIndex = 0;
-		pageSize = 0;
-		totalCount = 0;
-		resultSize = 0;
-		sortType = null;
-		sortBy = null;
-	}
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public PList() {
+        startIndex = 0;
+        pageSize   = 0;
+        totalCount = 0;
+        resultSize = 0;
+        sortType   = null;
+        sortBy     = null;
+    }
 
-	public PList(List<T> list, int startIndex, int pageSize, long totalCount, int resultSize, String sortType, String sortBy) {
-		this.list = list;
-		this.startIndex = startIndex;
-		this.pageSize = pageSize;
-		this.totalCount = totalCount;
-		this.resultSize = resultSize;
-		this.sortType = sortType;
-		this.sortBy = sortBy;
+    public PList(List<T> list, int startIndex, int pageSize, long totalCount, int resultSize, String sortType, String sortBy) {
+        this.list       = list;
+        this.startIndex = startIndex;
+        this.pageSize   = pageSize;
+        this.totalCount = totalCount;
+        this.resultSize = resultSize;
+        this.sortType   = sortType;
+        this.sortBy     = sortBy;
+    }
 
-	}
+    public PList(PList<T> other) {
+        if (other != null) {
+            this.list       = other.getList() != null ? new ArrayList<>(other.getList()) : Collections.emptyList();
+            this.startIndex = other.getStartIndex();
+            this.pageSize   = other.getPageSize();
+            this.totalCount = other.getTotalCount();
+            this.resultSize = other.getResultSize();
+            this.sortType   = other.getSortType();
+            this.sortBy     = other.getSortBy();
+        } else {
+            this.list       = Collections.emptyList();
+            this.startIndex = 0;
+            this.pageSize   = 0;
+            this.totalCount = 0;
+            this.resultSize = 0;
+            this.sortType   = null;
+            this.sortBy     = null;
+        }
+    }
 
-	public int getListSize() {
-		return list == null ? 0 : list.size();
-	}
+    public int getListSize() {
+        return list == null ? 0 : list.size();
+    }
 
-	public void setList(List<T> list) {this.list = list;}
+    public List<T> getList() {
+        return list;
+    }
 
-	public List<T> getList() {
-		return list;
-	}
+    public void setList(List<T> list) {
+        this.list = list;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>startIndex</b>. You
-	 * cannot set null to the attribute.
-	 *
-	 * @param startIndex
-	 *            Value to set member attribute <b>startIndex</b>
-	 */
-	public void setStartIndex(int startIndex) {
-		this.startIndex = startIndex;
-	}
-	public int getStartIndex() { return startIndex; }
+    public int getStartIndex() {
+        return startIndex;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b>startIndex</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param startIndex Value to set member attribute <b>startIndex</b>
+     */
+    public void setStartIndex(int startIndex) {
+        this.startIndex = startIndex;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>pageSize</b>. You
-	 * cannot set null to the attribute.
-	 *
-	 * @param pageSize
-	 *            Value to set member attribute <b>pageSize</b>
-	 */
-	public void setPageSize(int pageSize) {
-		this.pageSize = pageSize;
-	}
-	public int getPageSize() { return pageSize; }
+    public int getPageSize() {
+        return pageSize;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b>pageSize</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param pageSize Value to set member attribute <b>pageSize</b>
+     */
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>totalCount</b>. You
-	 * cannot set null to the attribute.
-	 *
-	 * @param totalCount
-	 *            Value to set member attribute <b>totalCount</b>
-	 */
-	public void setTotalCount(long totalCount) {
-		this.totalCount = totalCount;
-	}
-	public long getTotalCount() { return totalCount; }
+    public long getTotalCount() {
+        return totalCount;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b>totalCount</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param totalCount Value to set member attribute <b>totalCount</b>
+     */
+    public void setTotalCount(long totalCount) {
+        this.totalCount = totalCount;
+    }
 
+    /**
+     * Returns the value for the member attribute <b>resultSize</b>
+     *
+     * @return int - value of member attribute <b>resultSize</b>.
+     */
+    public int getResultSize() {
+        return getListSize();
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>resultSize</b>. You
-	 * cannot set null to the attribute.
-	 *
-	 * @param resultSize
-	 *            Value to set member attribute <b>resultSize</b>
-	 */
-	public void setResultSize(int resultSize) {
-		this.resultSize = resultSize;
-	}
+    /**
+     * This method sets the value to the member attribute <b>resultSize</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param resultSize Value to set member attribute <b>resultSize</b>
+     */
+    public void setResultSize(int resultSize) {
+        this.resultSize = resultSize;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>resultSize</b>
-	 *
-	 * @return int - value of member attribute <b>resultSize</b>.
-	 */
-	public int getResultSize() {
-		return getListSize();
-	}
+    public String getSortType() {
+        return sortType;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>sortType</b>. You
-	 * cannot set null to the attribute.
-	 *
-	 * @param sortType
-	 *            Value to set member attribute <b>sortType</b>
-	 */
-	public void setSortType(String sortType) {
-		this.sortType = sortType;
-	}
-	public String getSortType() { return sortType; }
+    /**
+     * This method sets the value to the member attribute <b>sortType</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param sortType Value to set member attribute <b>sortType</b>
+     */
+    public void setSortType(String sortType) {
+        this.sortType = sortType;
+    }
 
+    public String getSortBy() {
+        return sortBy;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b>sortBy</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param sortBy Value to set member attribute <b>sortBy</b>
+     */
+    public void setSortBy(String sortBy) {
+        this.sortBy = sortBy;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>sortBy</b>. You
-	 * cannot set null to the attribute.
-	 *
-	 * @param sortBy
-	 *            Value to set member attribute <b>sortBy</b>
-	 */
-	public void setSortBy(String sortBy) {
-		this.sortBy = sortBy;
-	}
-	public String getSortBy() { return sortBy; }
+    /**
+     * Returns the value for the member attribute <b>queryTimeMS</b>
+     *
+     * @return long - value of member attribute <b>queryTimeMS</b>.
+     */
+    public long getQueryTimeMS() {
+        return queryTimeMS;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>queryTimeMS</b>. You
-	 * cannot set null to the attribute.
-	 *
-	 * @param queryTimeMS
-	 *            Value to set member attribute <b>queryTimeMS</b>
-	 */
-	public void setQueryTimeMS(long queryTimeMS) {
-		this.queryTimeMS = queryTimeMS;
-	}
+    /**
+     * This method sets the value to the member attribute <b>queryTimeMS</b>. You
+     * cannot set null to the attribute.
+     *
+     * @param queryTimeMS Value to set member attribute <b>queryTimeMS</b>
+     */
+    public void setQueryTimeMS(long queryTimeMS) {
+        this.queryTimeMS = queryTimeMS;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>queryTimeMS</b>
-	 *
-	 * @return long - value of member attribute <b>queryTimeMS</b>.
-	 */
-	public long getQueryTimeMS() {
-		return queryTimeMS;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "PList [startIndex=" + startIndex + ", pageSize="
-				+ pageSize + ", totalCount=" + totalCount
-				+ ", resultSize=" + resultSize + ", sortType="
-				+ sortType + ", sortBy=" + sortBy + ", queryTimeMS="
-				+ queryTimeMS + "]";
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return "PList [startIndex=" + startIndex + ", pageSize="
+                + pageSize + ", totalCount=" + totalCount
+                + ", resultSize=" + resultSize + ", sortType="
+                + sortType + ", sortBy=" + sortBy + ", queryTimeMS="
+                + queryTimeMS + "]";
+    }
 }

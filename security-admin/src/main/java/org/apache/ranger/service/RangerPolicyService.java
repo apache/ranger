@@ -17,7 +17,6 @@
 
 package org.apache.ranger.service;
 
-
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -27,39 +26,38 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, RangerPolicy> {
+    public RangerPolicyService() {
+        super();
+    }
 
-	public RangerPolicyService() {
-		super();
-	}
+    public RangerPolicy getPopulatedViewObject(XXPolicy xPolicy) {
+        return this.populateViewBean(xPolicy);
+    }
 
-	@Override
-	protected XXPolicy mapViewToEntityBean(RangerPolicy vObj, XXPolicy xObj, int OPERATION_CONTEXT) {
-		return super.mapViewToEntityBean(vObj, xObj, OPERATION_CONTEXT);
-	}
+    @Override
+    protected XXPolicy mapViewToEntityBean(RangerPolicy vObj, XXPolicy xObj, int operationContext) {
+        return super.mapViewToEntityBean(vObj, xObj, operationContext);
+    }
 
-	@Override
-	protected RangerPolicy mapEntityToViewBean(RangerPolicy vObj, XXPolicy xObj) {
-		return super.mapEntityToViewBean(vObj, xObj);
-	}
-	
-	@Override
-	protected void validateForCreate(RangerPolicy vObj) {
-		// TODO Auto-generated method stub
-	}
+    @Override
+    protected RangerPolicy mapEntityToViewBean(RangerPolicy vObj, XXPolicy xObj) {
+        return super.mapEntityToViewBean(vObj, xObj);
+    }
 
-	@Override
-	protected void validateForUpdate(RangerPolicy vObj, XXPolicy entityObj) {
-		// TODO Auto-generated method stub
-	}
-	
-	@Override
-	protected RangerPolicy populateViewBean(XXPolicy xPolicy) {
-		RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
+    @Override
+    protected RangerPolicy populateViewBean(XXPolicy xPolicy) {
+        RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
 
-		return retriever.getPolicy(xPolicy);
-	}
-	
-	public RangerPolicy getPopulatedViewObject(XXPolicy xPolicy) {
-		return this.populateViewBean(xPolicy);
-	}
+        return retriever.getPolicy(xPolicy);
+    }
+
+    @Override
+    protected void validateForCreate(RangerPolicy vObj) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    protected void validateForUpdate(RangerPolicy vObj, XXPolicy entityObj) {
+        // TODO Auto-generated method stub
+    }
 }

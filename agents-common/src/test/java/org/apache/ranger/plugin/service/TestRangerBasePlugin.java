@@ -19,33 +19,61 @@
 
 package org.apache.ranger.plugin.service;
 
-import com.google.gson.*;
-import org.apache.commons.lang.StringUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
-import org.apache.ranger.plugin.policyengine.*;
-import org.apache.ranger.plugin.util.*;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.apache.ranger.plugin.util.ServiceGdsInfo;
+import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.ServiceTags;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestRangerBasePlugin {
     static Gson                      gsonBuilder;
     static RangerPolicyEngineOptions peOptions;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpBeforeClass() throws Exception {
         gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
-                                       .setPrettyPrinting()
-                                       .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
-                                       .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
-                                       .create();
+                .setPrettyPrinting()
+                .registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
+                .registerTypeAdapter(RangerAccessResource.class, new RangerResourceDeserializer())
+                .create();
 
         peOptions = new RangerPolicyEngineOptions();
 
@@ -53,32 +81,30 @@ public class TestRangerBasePlugin {
         peOptions.disableTagRetriever       = true;
         peOptions.disableUserStoreRetriever = true;
         peOptions.disableGdsInfoRetriever   = true;
-
     }
 
-
     @Test
-    public void testBasePluginHive() {
+    public void testBasePluginHive() throws Exception {
         runTestsFromResourceFile("/plugin/test_base_plugin_hive.json");
     }
 
-    private void runTestsFromResourceFile(String resourceFile) {
+    private void runTestsFromResourceFile(String resourceFile) throws Exception {
         InputStream       inStream = this.getClass().getResourceAsStream(resourceFile);
         InputStreamReader reader   = new InputStreamReader(inStream);
 
         runTests(reader, resourceFile);
     }
 
-    private void runTests(Reader reader, String testName) {
+    private void runTests(Reader reader, String testName) throws Exception {
         RangerBasePluginTestCase testCase = readTestCase(reader);
 
-        assertNotNull("invalid input: " + testName, testCase);
-        assertNotNull("invalid input: " + testName, testCase.policies);
-        assertNotNull("invalid input: " + testName, testCase.tags);
-        assertNotNull("invalid input: " + testName, testCase.roles);
-        assertNotNull("invalid input: " + testName, testCase.userStore);
-        assertNotNull("invalid input: " + testName, testCase.gdsInfo);
-        assertNotNull("invalid input: " + testName, testCase.tests);
+        assertNotNull(testCase, "invalid input: " + testName);
+        assertNotNull(testCase.policies, "invalid input: " + testName);
+        assertNotNull(testCase.tags, "invalid input: " + testName);
+        assertNotNull(testCase.roles, "invalid input: " + testName);
+        assertNotNull(testCase.userStore, "invalid input: " + testName);
+        assertNotNull(testCase.gdsInfo, "invalid input: " + testName);
+        assertNotNull(testCase.tests, "invalid input: " + testName);
 
         RangerPluginConfig pluginConfig = new RangerPluginConfig(testCase.policies.getServiceDef().getName(), testCase.policies.getServiceName(), "hive", "cl1", "on-prem", peOptions);
         RangerBasePlugin   plugin       = new RangerBasePlugin(pluginConfig, testCase.policies, testCase.tags, testCase.roles, testCase.userStore, testCase.gdsInfo);
@@ -89,24 +115,44 @@ public class TestRangerBasePlugin {
             if (test.result != null) {
                 RangerAccessResult result = plugin.isAccessAllowed(request);
 
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("isAllowed mismatched! - " + test.name, test.result.getIsAllowed(), result.getIsAllowed());
-                assertEquals("isAccessDetermined mismatched! - " + test.name, test.result.getIsAccessDetermined(), result.getIsAccessDetermined());
-                assertEquals("isAllowed mismatched! - " + test.name, test.result.getPolicyId(), result.getPolicyId());
-                assertEquals("isAudited mismatched! - " + test.name, test.result.getIsAudited(), result.getIsAudited());
-                assertEquals("isAuditedDetermined mismatched! - " + test.name, test.result.getIsAuditedDetermined(), result.getIsAuditedDetermined());
+                assertNotNull(result, "result was null! - " + test.name);
+                assertEquals(test.result.getIsAllowed(), result.getIsAllowed(), "isAllowed mismatched! - " + test.name);
+                assertEquals(test.result.getIsAccessDetermined(), result.getIsAccessDetermined(), "isAccessDetermined mismatched! - " + test.name);
+                assertEquals(test.result.getPolicyId(), result.getPolicyId(), "isAllowed mismatched! - " + test.name);
+                assertEquals(test.result.getIsAudited(), result.getIsAudited(), "isAudited mismatched! - " + test.name);
+                assertEquals(test.result.getIsAuditedDetermined(), result.getIsAuditedDetermined(), "isAuditedDetermined mismatched! - " + test.name);
+
+                result = plugin.evalDataMaskPolicies(request, new RangerDefaultAuditHandler());
+
+                if (test.result.getMaskType() != null) {
+                    assertNotNull(result, "result was null! - " + test.name);
+                    assertEquals(test.result.getMaskType(), result.getMaskType(), "maskType mismatched! - " + test.name);
+                    assertEquals(test.result.getMaskedValue(), result.getMaskedValue(), "maskedValue mismatched! - " + test.name);
+                    assertEquals(test.result.getMaskCondition(), result.getMaskCondition(), "maskCondition mismatched! - " + test.name);
+                } else {
+                    assertEquals(test.result.getMaskType(), result != null ? result.getMaskType() : null, "maskType mismatched! - " + test.name);
+                }
+
+                result = plugin.evalRowFilterPolicies(request, new RangerDefaultAuditHandler());
+
+                if (test.result.getFilterExpr() != null) {
+                    assertNotNull(result, "result was null! - " + test.name);
+                    assertEquals(test.result.getFilterExpr(), result.getFilterExpr(), "filterExpr mismatched! - " + test.name);
+                } else {
+                    assertEquals(test.result.getFilterExpr(), result != null ? result.getFilterExpr() : null, "filterExpr mismatched! - " + test.name);
+                }
             }
 
             if (test.acls != null) {
                 RangerAccessRequest req  = new RangerAccessRequestImpl(request.getResource(), RangerPolicyEngine.ANY_ACCESS, null, null, null);
                 RangerResourceACLs  acls = plugin.getResourceACLs(req);
 
-                assertEquals(test.name, test.acls, acls);
+                assertEquals(test.acls, acls, test.name);
             }
         }
     }
 
-    private RangerBasePluginTestCase readTestCase(Reader reader) {
+    private RangerBasePluginTestCase readTestCase(Reader reader) throws Exception {
         RangerBasePluginTestCase testCase = gsonBuilder.fromJson(reader, RangerBasePluginTestCase.class);
 
         if (StringUtils.isNotBlank(testCase.policiesFilename)) {
@@ -137,6 +183,12 @@ public class TestRangerBasePlugin {
             InputStream inStream = this.getClass().getResourceAsStream(testCase.gdsInfoFilename);
 
             testCase.gdsInfo = gsonBuilder.fromJson(new InputStreamReader(inStream), ServiceGdsInfo.class);
+
+            if (testCase.gdsInfo != null && testCase.gdsInfo.getGdsServiceDef() == null) {
+                RangerServiceDef gdsServiceDef = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
+
+                testCase.gdsInfo.setGdsServiceDef(gdsServiceDef);
+            }
         }
 
         if (testCase.policies != null && testCase.policies.getServiceDef() != null) {
@@ -170,7 +222,7 @@ public class TestRangerBasePlugin {
     static class RangerAccessRequestDeserializer implements JsonDeserializer<RangerAccessRequest> {
         @Override
         public RangerAccessRequest deserialize(JsonElement jsonObj, Type type,
-                                               JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             RangerAccessRequestImpl ret = gsonBuilder.fromJson(jsonObj, RangerAccessRequestImpl.class);
 
             ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
@@ -178,10 +230,10 @@ public class TestRangerBasePlugin {
                 ret.setAccessTime(new Date());
             }
             Map<String, Object> reqContext  = ret.getContext();
-            Object accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
+            Object              accessTypes = reqContext.get(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES);
             if (accessTypes != null) {
                 Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
-                Set<String> requestedAccesses = new TreeSet<>(accessTypesCollection);
+                Set<String>        requestedAccesses     = new TreeSet<>(accessTypesCollection);
                 ret.getContext().put(RangerAccessRequestUtil.KEY_CONTEXT_ALL_ACCESSTYPES, requestedAccesses);
             }
 
@@ -191,8 +243,8 @@ public class TestRangerBasePlugin {
 
                 List<Object> listOfAccessTypeGroups = (List<Object>) accessTypeGroups;
                 for (Object accessTypeGroup : listOfAccessTypeGroups) {
-                    List<String> accesses = (List<String>) accessTypeGroup;
-                    Set<String> setOfAccesses = new TreeSet<>(accesses);
+                    List<String> accesses      = (List<String>) accessTypeGroup;
+                    Set<String>  setOfAccesses = new TreeSet<>(accesses);
                     setOfAccessTypeGroups.add(setOfAccesses);
                 }
 
@@ -206,7 +258,7 @@ public class TestRangerBasePlugin {
     static class RangerResourceDeserializer implements JsonDeserializer<RangerAccessResource> {
         @Override
         public RangerAccessResource deserialize(JsonElement jsonObj, Type type,
-                                                JsonDeserializationContext context) throws JsonParseException {
+                JsonDeserializationContext context) throws JsonParseException {
             return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
         }
     }

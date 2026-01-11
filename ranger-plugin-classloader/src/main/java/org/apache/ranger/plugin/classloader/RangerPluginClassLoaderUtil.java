@@ -19,6 +19,8 @@
 
 package org.apache.ranger.plugin.classloader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URI;
@@ -28,124 +30,102 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class RangerPluginClassLoaderUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoaderUtil.class);
 
-	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoaderUtil.class);
+    private static final String RANGER_PLUGIN_LIB_DIR = "ranger-%-plugin-impl";
 
-	private static volatile RangerPluginClassLoaderUtil config   = null;
-	private static String rangerPluginLibDir			= "ranger-%-plugin-impl";
-	
-	public static RangerPluginClassLoaderUtil getInstance() {
-		RangerPluginClassLoaderUtil result = config;
-		if (result == null) {
-			synchronized (RangerPluginClassLoaderUtil.class) {
-				result = config;
-				if (result == null) {
-					config = result = new RangerPluginClassLoaderUtil();
-				}
-			}
-		}
-		return result;
-	}
+    private static volatile RangerPluginClassLoaderUtil config;
 
-	
-	public URL[]  getPluginFilesForServiceTypeAndPluginclass( String serviceType, Class<?> pluginClass) throws Exception {
-		
-		URL[] ret = null;
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginClassLoaderUtil.getPluginFilesForServiceTypeAndPluginclass(" + serviceType + ")" + " Pluging Class :" +  pluginClass.getName());
-		}
+    public static RangerPluginClassLoaderUtil getInstance() {
+        RangerPluginClassLoaderUtil result = config;
 
-		String[] libDirs = new String[] { getPluginImplLibPath(serviceType, pluginClass) };
-		
-		ret = getPluginFiles(libDirs);
-		
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginClassLoaderUtil.getPluginFilesForServiceTypeAndPluginclass(" + serviceType + ")" + " Pluging Class :" +  pluginClass.getName());
-		}
+        if (result == null) {
+            synchronized (RangerPluginClassLoaderUtil.class) {
+                result = config;
 
-		return ret;
-		
-	}
+                if (result == null) {
+                    result = new RangerPluginClassLoaderUtil();
+                    config = result;
+                }
+            }
+        }
 
-	private  URL[] getPluginFiles(String[] libDirs) throws Exception {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginClassLoaderUtil.getPluginFiles()");
-		}
+        return result;
+    }
 
-		List<URL> ret = new ArrayList<URL>();
-		for ( String libDir : libDirs) {
-			getFilesInDirectory(libDir,ret);
-		}
+    public URL[] getPluginFilesForServiceTypeAndPluginclass(String serviceType, Class<?> pluginClass) throws Exception {
+        LOG.debug("==> RangerPluginClassLoaderUtil.getPluginFilesForServiceTypeAndPluginclass({}) Pluging Class :{}", serviceType, pluginClass.getName());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginClassLoaderUtil.getPluginFilesForServiceType(): " + ret.size() + " files");
-		}
+        String[] libDirs = new String[] {getPluginImplLibPath(serviceType, pluginClass)};
+        URL[]    ret     = getPluginFiles(libDirs);
 
-		return ret.toArray(new URL[] { });
-	}
+        LOG.debug("<== RangerPluginClassLoaderUtil.getPluginFilesForServiceTypeAndPluginclass({}) Pluging Class :{}", serviceType, pluginClass.getName());
 
-	private  void getFilesInDirectory(String dirPath, List<URL> files) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginClassLoaderUtil.getPluginFiles()");
-		}
-		
-		if ( dirPath != null) {
-			try {
-				
-				File[] dirFiles = new File(dirPath).listFiles();
+        return ret;
+    }
 
-				if(dirFiles != null) {
-					for(File dirFile : dirFiles) {
-						try {
-							if (!dirFile.canRead()) {
-								LOG.error("getFilesInDirectory('" + dirPath + "'): " + dirFile.getAbsolutePath() + " is not readable!");
-							}
+    private URL[] getPluginFiles(String[] libDirs) {
+        LOG.debug("==> RangerPluginClassLoaderUtil.getPluginFiles()");
 
-							URL jarPath = dirFile.toURI().toURL();
+        List<URL> ret = new ArrayList<>();
 
-							LOG.info("getFilesInDirectory('" + dirPath + "'): adding " + dirFile.getAbsolutePath());
+        for (String libDir : libDirs) {
+            getFilesInDirectory(libDir, ret);
+        }
 
-							files.add(jarPath);
-						} catch(Exception excp) {
-							LOG.warn("getFilesInDirectory('" + dirPath + "'): failed to get URI for file " + dirFile.getAbsolutePath(), excp);
-						}
-					}
-				}
-			} catch(Exception excp) {
-				LOG.warn("getFilesInDirectory('" + dirPath + "'): error", excp);
-			}
-		} else {
-				LOG.warn("getFilesInDirectory('" + dirPath + "'): could not find directory in path " + dirPath);
-		}
+        LOG.debug("<== RangerPluginClassLoaderUtil.getPluginFilesForServiceType(): {} files", ret.size());
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginClassLoaderUtil.getFilesInDirectory(" + dirPath + ")");
-		}
-	}
-	
+        return ret.toArray(new URL[] {});
+    }
+
+    private void getFilesInDirectory(String dirPath, List<URL> files) {
+        LOG.debug("==> RangerPluginClassLoaderUtil.getFilesInDirectory({})", dirPath);
+
+        if (dirPath != null) {
+            try {
+                File[] dirFiles = new File(dirPath).listFiles();
+
+                if (dirFiles != null) {
+                    for (File dirFile : dirFiles) {
+                        try {
+                            if (!dirFile.canRead()) {
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("getFilesInDirectory('{}'): {} is not readable!", dirPath, dirFile.getAbsolutePath());
+                                }
+                            }
+
+                            URL jarPath = dirFile.toURI().toURL();
+
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("getFilesInDirectory('{}'): adding {}", dirPath, dirFile.getAbsolutePath());
+                            }
+
+                            files.add(jarPath);
+                        } catch (Exception excp) {
+                            LOG.warn("getFilesInDirectory('{}'): failed to get URI for file {}", dirPath, dirFile.getAbsolutePath(), excp);
+                        }
+                    }
+                }
+            } catch (Exception excp) {
+                LOG.warn("getFilesInDirectory('{}'): error", dirPath, excp);
+            }
+        } else {
+            LOG.debug("getFilesInDirectory(dirPath=null, files={}): invalid dirPath - null", files);
+        }
+
+        LOG.debug("<== RangerPluginClassLoaderUtil.getFilesInDirectory({})", dirPath);
+    }
+
     private String getPluginImplLibPath(String serviceType, Class<?> pluginClass) throws Exception {
+        LOG.debug("==> RangerPluginClassLoaderUtil.getPluginImplLibPath for Class ({})", pluginClass.getName());
 
-       String ret = null;
+        URI    uri  = pluginClass.getProtectionDomain().getCodeSource().getLocation().toURI();
+        Path   path = Paths.get(URI.create(uri.toString()));
+        String ret  = path.getParent().toString() + File.separatorChar + RANGER_PLUGIN_LIB_DIR.replaceAll("%", serviceType);
 
-       if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginClassLoaderUtil.getPluginImplLibPath for Class (" + pluginClass.getName() + ")");
-		}
+        LOG.debug("<== RangerPluginClassLoaderUtil.getPluginImplLibPath for Class ({} PATH :{})", pluginClass.getName(), ret);
 
-	   URI uri = pluginClass.getProtectionDomain().getCodeSource().getLocation().toURI();
-	
-	   Path  path = Paths.get(URI.create(uri.toString()));
-
-	   ret = path.getParent().toString() + File.separatorChar + rangerPluginLibDir.replaceAll("%", serviceType);
-	
-	   if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginClassLoaderUtil.getPluginImplLibPath for Class (" + pluginClass.getName() + " PATH :" + ret + ")");
-		}
-	
-	   return ret;
+        return ret;
     }
 }

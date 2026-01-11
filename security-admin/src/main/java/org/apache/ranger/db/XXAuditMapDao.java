@@ -17,12 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.NoResultException;
+package org.apache.ranger.db;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuditMap;
@@ -30,30 +25,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class XXAuditMapDao extends BaseDao<XXAuditMap> {
-	private static final Logger logger = LoggerFactory.getLogger(XXAssetDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(XXAuditMapDao.class);
 
-    public XXAuditMapDao( RangerDaoManagerBase daoManager ) {
-		super(daoManager);
+    public XXAuditMapDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
     }
 
-	public List<XXAuditMap> findByResourceId(Long resourceId) {
-		if (resourceId != null) {
-			try {
-				return getEntityManager()
-						.createNamedQuery("XXAuditMap.findByResourceId", XXAuditMap.class)
-						.setParameter("resourceId", resourceId)
-						.getResultList();
-			} catch (NoResultException e) {
-				logger.debug(e.getMessage());
-			}
-		} else {
-			logger.debug("ResourceId not provided.");
-			return new ArrayList<XXAuditMap>();
-		}
-		return new ArrayList<XXAuditMap>();
-	}
+    public List<XXAuditMap> findByResourceId(Long resourceId) {
+        if (resourceId != null) {
+            try {
+                return getEntityManager()
+                        .createNamedQuery("XXAuditMap.findByResourceId", XXAuditMap.class)
+                        .setParameter("resourceId", resourceId)
+                        .getResultList();
+            } catch (NoResultException e) {
+                logger.debug(e.getMessage());
+            }
+        } else {
+            logger.debug("ResourceId not provided.");
 
+            return new ArrayList<>();
+        }
+
+        return new ArrayList<>();
+    }
 }
-

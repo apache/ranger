@@ -17,62 +17,64 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXPortalUser
- *
  */
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPortalUserList extends VList {
-	private static final long serialVersionUID = 1L;
-    List<VXPortalUser> vXPortalUsers = new ArrayList<VXPortalUser>();
+    private static final long serialVersionUID = 1L;
+
+    List<VXPortalUser> vXPortalUsers = new ArrayList<>();
 
     public VXPortalUserList() {
-	super();
+        super();
     }
 
     public VXPortalUserList(List<VXPortalUser> objList) {
-	super(objList);
-	this.vXPortalUsers = objList;
+        super(objList);
+        this.vXPortalUsers = objList;
     }
 
     /**
      * @return the vXPortalUsers
      */
+    @JsonProperty("vXPortalUsers")
     public List<VXPortalUser> getVXPortalUsers() {
-	return vXPortalUsers;
+        return vXPortalUsers;
     }
 
     /**
      * @param vXPortalUsers
      *            the vXPortalUsers to set
      */
+    @JsonProperty("vXPortalUsers")
     public void setVXPortalUsers(List<VXPortalUser> vXPortalUsers) {
-	this.vXPortalUsers = vXPortalUsers;
+        this.vXPortalUsers = vXPortalUsers;
     }
 
     @Override
     public int getListSize() {
-	if (vXPortalUsers != null) {
-	    return vXPortalUsers.size();
-	}
-	return 0;
+        if (vXPortalUsers != null) {
+            return vXPortalUsers.size();
+        }
+        return 0;
     }
 
     @Override
     public List<VXPortalUser> getList() {
-	return vXPortalUsers;
+        return vXPortalUsers;
     }
-
 }

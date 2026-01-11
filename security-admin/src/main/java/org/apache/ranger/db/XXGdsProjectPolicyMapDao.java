@@ -24,62 +24,78 @@ import org.apache.ranger.entity.XXGdsProjectPolicyMap;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
+
 import java.util.Collections;
 import java.util.List;
 
-
 @Service
 public class XXGdsProjectPolicyMapDao extends BaseDao<XXGdsProjectPolicyMap> {
-	public XXGdsProjectPolicyMapDao(RangerDaoManagerBase daoManager) {
-		super(daoManager);
-	}
+    public XXGdsProjectPolicyMapDao(RangerDaoManagerBase daoManager) {
+        super(daoManager);
+    }
 
-	public XXGdsProjectPolicyMap getProjectPolicyMap(Long projectId, Long policyId) {
-		XXGdsProjectPolicyMap ret = null;
+    public XXGdsProjectPolicyMap getProjectPolicyMap(Long projectId, Long policyId) {
+        XXGdsProjectPolicyMap ret = null;
 
-		if (projectId != null && policyId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectPolicyMap", tClass)
-				                        .setParameter("projectId", projectId)
-				                        .setParameter("policyId", policyId)
-						.getSingleResult();
-			} catch (NoResultException e) {
-				// ignore
-			}
-		}
+        if (projectId != null && policyId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectPolicyMap", tClass)
+                        .setParameter("projectId", projectId)
+                        .setParameter("policyId", policyId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<XXGdsProjectPolicyMap> getProjectPolicyMaps(Long projectId) {
-		List<XXGdsProjectPolicyMap> ret = Collections.emptyList();
+    public List<XXGdsProjectPolicyMap> getProjectPolicyMaps(Long projectId) {
+        List<XXGdsProjectPolicyMap> ret = Collections.emptyList();
 
-		if (projectId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectPolicyMaps", tClass)
-				                        .setParameter("projectId", projectId)
-				                        .getResultList();
-			} catch (NoResultException e) {
-				// ignore
-			}
-		}
+        if (projectId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectPolicyMaps", tClass)
+                        .setParameter("projectId", projectId)
+                        .getResultList();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
 
-	public List<Long> getProjectPolicyIds(Long projectId) {
-		List<Long> ret = Collections.emptyList();
+    public List<Long> getProjectPolicyIds(Long projectId) {
+        List<Long> ret = Collections.emptyList();
 
-		if (projectId != null) {
-			try {
-				ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectPolicyIds", Long.class)
-				                        .setParameter("projectId", projectId)
-				                        .getResultList();
-			} catch (NoResultException e) {
-				// ignore
-			}
-		}
+        if (projectId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectPolicyIds", Long.class)
+                        .setParameter("projectId", projectId)
+                        .getResultList();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
 
-		return ret;
-	}
+        return ret;
+    }
+
+    public Long getProjectIdForPolicy(Long policyId) {
+        Long ret = null;
+
+        if (policyId != null) {
+            try {
+                ret = getEntityManager().createNamedQuery("XXGdsProjectPolicyMap.getProjectIdForPolicy", Long.class)
+                        .setParameter("policyId", policyId)
+                        .getSingleResult();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+
+        return ret;
+    }
 }

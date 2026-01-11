@@ -21,18 +21,17 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
-import com.amazonaws.services.kms.model.KeyMetadata;
-import com.amazonaws.services.kms.model.DescribeKeyRequest;
-import com.amazonaws.services.kms.model.DescribeKeyResult;
-import com.amazonaws.services.kms.model.ListAliasesRequest;
-import com.amazonaws.services.kms.model.ListAliasesResult;
 import com.amazonaws.services.kms.model.AliasListEntry;
-import com.amazonaws.services.kms.model.EncryptRequest;
-import com.amazonaws.services.kms.model.EncryptResult;
 import com.amazonaws.services.kms.model.DecryptRequest;
 import com.amazonaws.services.kms.model.DecryptResult;
-
-import org.apache.commons.lang.StringUtils;
+import com.amazonaws.services.kms.model.DescribeKeyRequest;
+import com.amazonaws.services.kms.model.DescribeKeyResult;
+import com.amazonaws.services.kms.model.EncryptRequest;
+import com.amazonaws.services.kms.model.EncryptResult;
+import com.amazonaws.services.kms.model.KeyMetadata;
+import com.amazonaws.services.kms.model.ListAliasesRequest;
+import com.amazonaws.services.kms.model.ListAliasesResult;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,9 +47,8 @@ public class RangerAWSKMSProvider implements RangerKMSMKI {
     static final String AWS_CLIENT_SECRETKEY = "ranger.kms.aws.client.secretkey";
     static final String AWS_CLIENT_REGION    = "ranger.kms.aws.client.region";
 
-    private String      masterKeyId;
-    private KeyMetadata masterKeyMetadata;
-    private AWSKMS      keyVaultClient;
+    private final String masterKeyId;
+    private final AWSKMS keyVaultClient;
 
     protected RangerAWSKMSProvider(Configuration conf, AWSKMS client) {
         this.masterKeyId    = conf.get(AWSKMS_MASTER_KEY_ID);
@@ -85,29 +83,29 @@ public class RangerAWSKMSProvider implements RangerKMSMKI {
             throw new Exception("Key Vault Client is null. Please check the aws related configuration.");
         }
 
-        DescribeKeyRequest desckey_req = new DescribeKeyRequest();
+        DescribeKeyRequest desckeyReq = new DescribeKeyRequest();
 
-        desckey_req.setKeyId(masterKeyId);
+        desckeyReq.setKeyId(masterKeyId);
 
-        DescribeKeyResult desckey_resp = keyVaultClient.describeKey(desckey_req);
+        DescribeKeyResult desckeyResp = keyVaultClient.describeKey(desckeyReq);
 
-        if (desckey_resp == null) {
+        if (desckeyResp == null) {
             throw new Exception("Fetch KeyMetadata by describeKey failed");
         }
 
         { // verify whether alias or id match
             ListAliasesRequest listAliasesRequest = new ListAliasesRequest();
 
-            listAliasesRequest.setKeyId(desckey_resp.getKeyMetadata().getKeyId());
+            listAliasesRequest.setKeyId(desckeyResp.getKeyMetadata().getKeyId());
 
             ListAliasesResult listAliasesResult = keyVaultClient.listAliases(listAliasesRequest);
             boolean           aliasMatched      = false;
 
             if (listAliasesResult != null) {
                 for (AliasListEntry e : listAliasesResult.getAliases()) {
-                    logger.info("keyalias: " + e);
+                    logger.info("keyalias: {}", e);
 
-                    if (e.getAliasName().equals(masterKeyId) && e.getTargetKeyId().equals(desckey_resp.getKeyMetadata().getKeyId())) {
+                    if (e.getAliasName().equals(masterKeyId) && e.getTargetKeyId().equals(desckeyResp.getKeyMetadata().getKeyId())) {
                         aliasMatched = true;
 
                         break;
@@ -115,38 +113,29 @@ public class RangerAWSKMSProvider implements RangerKMSMKI {
                 }
             }
 
-            if (!aliasMatched && !desckey_resp.getKeyMetadata().getKeyId().equals(masterKeyId)) {
+            if (!aliasMatched && !desckeyResp.getKeyMetadata().getKeyId().equals(masterKeyId)) {
                 throw new Exception("KeyMetadata do not match masterKeyId");
             }
         }
 
-        masterKeyMetadata = desckey_resp.getKeyMetadata();
+        KeyMetadata masterKeyMetadata = desckeyResp.getKeyMetadata();
 
         if (masterKeyMetadata == null) {
             throw new NoSuchMethodException("generateMasterKey is not implemented for AWS KMS");
         } else {
-            logger.info("AWS Master key exist with KeyId: " + masterKeyId
-                    + " with Arn: " + masterKeyMetadata.getArn()
-                    + " with Description : " + masterKeyMetadata.getDescription());
+            logger.info("AWS Master key exist with KeyId: {} with Arn: {} with Description : {}", masterKeyId, masterKeyMetadata.getArn(), masterKeyMetadata.getDescription());
 
             return true;
         }
     }
 
     @Override
-    public byte[] encryptZoneKey(Key zoneKey) throws Exception {
-        EncryptRequest req = new EncryptRequest();
-
-        req.setKeyId(this.masterKeyId);
-        req.setPlaintext(ByteBuffer.wrap(zoneKey.getEncoded()));
-
-        EncryptResult resp = keyVaultClient.encrypt(req);
-        ByteBuffer    buf  = resp.getCiphertextBlob();
-        byte[]        arr  = new byte[buf.remaining()];
-
-        buf.get(arr);
-
-        return arr;
+    public String getMasterKey(String masterKeySecretName) {
+        /*
+         * This method is not require for AWS KMS because we can't get
+         * key outside of KMS
+         */
+        return null;
     }
 
     @Override
@@ -165,11 +154,18 @@ public class RangerAWSKMSProvider implements RangerKMSMKI {
     }
 
     @Override
-    public String getMasterKey(String masterKeySecretName) {
-        /*
-         * This method is not require for AWS KMS because we can't get
-         * key outside of KMS
-         */
-        return null;
+    public byte[] encryptZoneKey(Key zoneKey) throws Exception {
+        EncryptRequest req = new EncryptRequest();
+
+        req.setKeyId(this.masterKeyId);
+        req.setPlaintext(ByteBuffer.wrap(zoneKey.getEncoded()));
+
+        EncryptResult resp = keyVaultClient.encrypt(req);
+        ByteBuffer    buf  = resp.getCiphertextBlob();
+        byte[]        arr  = new byte[buf.remaining()];
+
+        buf.get(arr);
+
+        return arr;
     }
 }

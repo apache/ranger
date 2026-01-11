@@ -19,48 +19,91 @@
 
 package org.apache.ranger.plugin.model;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
 
-@JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerValidityRecurrence implements Serializable {
+    private RecurrenceSchedule schedule;
+    private ValidityInterval   interval;
 
-    @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    public RangerValidityRecurrence() {
+    }
+
+    public RangerValidityRecurrence(RecurrenceSchedule schedule, ValidityInterval interval) {
+        setSchedule(schedule);
+        setInterval(interval);
+    }
+
+    public RecurrenceSchedule getSchedule() {
+        return schedule;
+    }
+
+    public void setSchedule(RecurrenceSchedule schedule) {
+        this.schedule = schedule;
+    }
+
+    public ValidityInterval getInterval() {
+        return interval;
+    }
+
+    public void setInterval(ValidityInterval interval) {
+        this.interval = interval;
+    }
+
+    public String toString() {
+        StringBuilder sb = new StringBuilder("{RangerValidityRecurrence= {");
+
+        sb.append(schedule).append(interval);
+        sb.append(" }");
+
+        return sb.toString();
+    }
+
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ValidityInterval {
         private final int days;
         private final int hours;
         private final int minutes;
 
-        public static int getValidityIntervalInMinutes(ValidityInterval interval) {
-            return interval != null ?
-                    (interval.getDays()*24 + interval.getHours())*60 + interval.getMinutes() : 0;
-        }
-
         public ValidityInterval() {
-            this.days = 0;
-            this.hours = 0;
+            this.days    = 0;
+            this.hours   = 0;
             this.minutes = 0;
         }
+
         public ValidityInterval(int days, int hours, int minutes) {
-            this.days = days;
-            this.hours = hours;
+            this.days    = days;
+            this.hours   = hours;
             this.minutes = minutes;
         }
-        public int getDays() { return days; }
-        public int getHours() { return hours; }
-        public int getMinutes() { return minutes; }
+
+        public static int getValidityIntervalInMinutes(ValidityInterval interval) {
+            return interval != null ? (interval.getDays() * 24 + interval.getHours()) * 60 + interval.getMinutes() : 0;
+        }
+
+        public int getDays() {
+            return days;
+        }
+
+        public int getHours() {
+            return hours;
+        }
+
+        public int getMinutes() {
+            return minutes;
+        }
 
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("ValidityInterval={");
+            StringBuilder sb = new StringBuilder("ValidityInterval={");
 
             sb.append(" Interval={");
             sb.append("days=").append(days);
@@ -72,34 +115,14 @@ public class RangerValidityRecurrence implements Serializable {
         }
     }
 
-    @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-    @JsonIgnoreProperties(ignoreUnknown=true)
+    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RecurrenceSchedule {
-        static final String PERMITTED_SPECIAL_CHARACTERS = "*,-";
-        static final String PERMITTED_SPECIAL_CHARACTERS_FOR_MINUTES = ",";
         public static final String WILDCARD = "*";
 
-        public enum ScheduleFieldSpec {
-            minute(0, 59, PERMITTED_SPECIAL_CHARACTERS_FOR_MINUTES),
-            hour(0, 23, PERMITTED_SPECIAL_CHARACTERS),
-            dayOfMonth(1, 31, PERMITTED_SPECIAL_CHARACTERS),
-            dayOfWeek(1, 7, PERMITTED_SPECIAL_CHARACTERS),
-            month(0, 11, PERMITTED_SPECIAL_CHARACTERS),
-            year(2017, 2100, PERMITTED_SPECIAL_CHARACTERS),
-            ;
-
-            public final int minimum;
-            public final int maximum;
-            public final String specialChars;
-
-            ScheduleFieldSpec(int minimum, int maximum, String specialChars) {
-                this.minimum = minimum;
-                this.maximum = maximum;
-                this.specialChars = specialChars;
-            }
-        }
-
+        static final String PERMITTED_SPECIAL_CHARACTERS             = "*,-";
+        static final String PERMITTED_SPECIAL_CHARACTERS_FOR_MINUTES = ",";
 
         private String minute;
         private String hour;
@@ -118,19 +141,54 @@ public class RangerValidityRecurrence implements Serializable {
             setMonth(month);
             setYear(year);
         }
-        public String getMinute() { return minute;}
-        public String getHour() { return hour;}
-        public String getDayOfMonth() { return dayOfMonth;}
-        public String getDayOfWeek() { return dayOfWeek;}
-        public String getMonth() { return month;}
-        public String getYear() { return year;}
 
-        public void setMinute(String minute) { this.minute = minute;}
-        public void setHour(String hour) { this.hour = hour;}
-        public void setDayOfMonth(String dayOfMonth) { this.dayOfMonth = dayOfMonth;}
-        public void setDayOfWeek(String dayOfWeek) { this.dayOfWeek = dayOfWeek;}
-        public void setMonth(String month) { this.month = month;}
-        public void setYear(String year) { this.year = year;}
+        public String getMinute() {
+            return minute;
+        }
+
+        public void setMinute(String minute) {
+            this.minute = minute;
+        }
+
+        public String getHour() {
+            return hour;
+        }
+
+        public void setHour(String hour) {
+            this.hour = hour;
+        }
+
+        public String getDayOfMonth() {
+            return dayOfMonth;
+        }
+
+        public void setDayOfMonth(String dayOfMonth) {
+            this.dayOfMonth = dayOfMonth;
+        }
+
+        public String getDayOfWeek() {
+            return dayOfWeek;
+        }
+
+        public void setDayOfWeek(String dayOfWeek) {
+            this.dayOfWeek = dayOfWeek;
+        }
+
+        public String getMonth() {
+            return month;
+        }
+
+        public void setMonth(String month) {
+            this.month = month;
+        }
+
+        public String getYear() {
+            return year;
+        }
+
+        public void setYear(String year) {
+            this.year = year;
+        }
 
         public void setFieldValue(ScheduleFieldSpec field, String value) {
             switch (field) {
@@ -175,10 +233,11 @@ public class RangerValidityRecurrence implements Serializable {
                     return null;
             }
         }
+
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append(" Schedule={");
+            StringBuilder sb = new StringBuilder(" Schedule={");
+
             sb.append(" minute=").append(minute);
             sb.append(", hour=").append(hour);
             sb.append(", dayOfMonth=").append(dayOfMonth);
@@ -189,34 +248,24 @@ public class RangerValidityRecurrence implements Serializable {
 
             return sb.toString();
         }
-    }
 
-    private RecurrenceSchedule schedule;
-    private ValidityInterval interval;
+        public enum ScheduleFieldSpec {
+            minute(0, 59, PERMITTED_SPECIAL_CHARACTERS_FOR_MINUTES),
+            hour(0, 23, PERMITTED_SPECIAL_CHARACTERS),
+            dayOfMonth(1, 31, PERMITTED_SPECIAL_CHARACTERS),
+            dayOfWeek(1, 7, PERMITTED_SPECIAL_CHARACTERS),
+            month(0, 11, PERMITTED_SPECIAL_CHARACTERS),
+            year(2017, 2100, PERMITTED_SPECIAL_CHARACTERS);
 
-    public RangerValidityRecurrence() {
-    }
+            public final int    minimum;
+            public final int    maximum;
+            public final String specialChars;
 
-    public RangerValidityRecurrence(RecurrenceSchedule schedule, ValidityInterval interval) {
-        setSchedule(schedule);
-        setInterval(interval);
-    }
-
-    public void setSchedule(RecurrenceSchedule schedule) { this.schedule = schedule;}
-
-    public void setInterval(ValidityInterval interval) { this.interval = interval; }
-
-    public RecurrenceSchedule getSchedule() { return schedule;}
-
-    public ValidityInterval getInterval() {
-        return interval;
-    }
-
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{RangerValidityRecurrence= {");
-        sb.append(schedule).append(interval);
-        sb.append(" }");
-        return sb.toString();
+            ScheduleFieldSpec(int minimum, int maximum, String specialChars) {
+                this.minimum      = minimum;
+                this.maximum      = maximum;
+                this.specialChars = specialChars;
+            }
+        }
     }
 }

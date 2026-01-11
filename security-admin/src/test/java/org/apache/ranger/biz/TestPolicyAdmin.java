@@ -30,126 +30,127 @@ import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestPolicyAdmin {
-	static Gson gsonBuilder;
+    static Gson gsonBuilder;
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-									   .setPrettyPrinting()
-									   .create();
-	}
+    @BeforeAll
+    public static void setUpBeforeClass() {
+        gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+    }
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
+    @AfterAll
+    public static void tearDownAfterClass() {
+    }
 
-	@Test
-	public void testPolicyAdmin_additionalResources() {
-		String[] testFile = { "/biz/test_policyadmin_additional_resources.json" };
+    @Test
+    public void testPolicyAdmin_additionalResources() {
+        String[] testFile = {"/biz/test_policyadmin_additional_resources.json"};
 
-		runTestsFromResourceFiles(testFile);
-	}
+        runTestsFromResourceFiles(testFile);
+    }
 
-	private void runTestsFromResourceFiles(String[] resourceNames) {
-		for(String resourceName : resourceNames) {
-			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
-			InputStreamReader reader   = new InputStreamReader(inStream);
+    private void runTestsFromResourceFiles(String[] resourceNames) {
+        for (String resourceName : resourceNames) {
+            InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
+            InputStreamReader reader   = new InputStreamReader(inStream);
 
-			runTests(reader, resourceName);
-		}
-	}
+            runTests(reader, resourceName);
+        }
+    }
 
-	private void runTests(InputStreamReader reader, String testName) {
-		PolicyAdminTestCase testCase = gsonBuilder.fromJson(reader, PolicyAdminTestCase.class);
+    private void runTests(InputStreamReader reader, String testName) {
+        PolicyAdminTestCase testCase = gsonBuilder.fromJson(reader, PolicyAdminTestCase.class);
 
-		assertTrue("invalid input: " + testName, testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null);
+        assertTrue(testCase != null && testCase.servicePolicies != null && testCase.tests != null && testCase.servicePolicies.getPolicies() != null, "invalid input: " + testName);
 
-		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+        RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
 
-		policyEngineOptions.evaluatorType             = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
-		policyEngineOptions.cacheAuditResults         = false;
-		policyEngineOptions.disableContextEnrichers   = true;
-		policyEngineOptions.disableCustomConditions   = true;
-		policyEngineOptions.evaluateDelegateAdminOnly = true;
+        policyEngineOptions.evaluatorType             = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
+        policyEngineOptions.cacheAuditResults         = false;
+        policyEngineOptions.disableContextEnrichers   = true;
+        policyEngineOptions.disableCustomConditions   = true;
+        policyEngineOptions.evaluateDelegateAdminOnly = true;
 
-		RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policydb", "cl1", "on-prem", policyEngineOptions));
-		RangerPolicyAdmin   policyAdmin   = new RangerPolicyAdminImpl(testCase.servicePolicies, pluginContext, null);
+        RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policydb", "cl1", "on-prem", policyEngineOptions));
+        RangerPolicyAdmin   policyAdmin   = new RangerPolicyAdminImpl(testCase.servicePolicies, pluginContext, null);
 
-		for(TestData test : testCase.tests) {
-			if (test.userGroups == null) {
-				test.userGroups = Collections.emptySet();
-			}
+        for (TestData test : testCase.tests) {
+            if (test.userGroups == null) {
+                test.userGroups = Collections.emptySet();
+            }
 
-			if (test.allowedPolicies != null) {
-				Set<Long> allowedPolicies = new HashSet<>();
+            if (test.allowedPolicies != null) {
+                Set<Long> allowedPolicies = new HashSet<>();
 
-				for (RangerPolicy policy : testCase.servicePolicies.getPolicies()) {
-					boolean isAllowed = test.isModifyAccess ? policyAdmin.isDelegatedAdminAccessAllowedForModify(policy, test.user, test.userGroups, null, null)
-							                                : policyAdmin.isDelegatedAdminAccessAllowedForRead(policy, test.user, test.userGroups, null, null);
+                for (RangerPolicy policy : testCase.servicePolicies.getPolicies()) {
+                    boolean isAllowed = test.isModifyAccess ? policyAdmin.isDelegatedAdminAccessAllowedForModify(policy, test.user, test.userGroups, null, null)
+                            : policyAdmin.isDelegatedAdminAccessAllowedForRead(policy, test.user, test.userGroups, null, null);
 
-					if (isAllowed) {
-						allowedPolicies.add(policy.getId());
-					}
-				}
+                    if (isAllowed) {
+                        allowedPolicies.add(policy.getId());
+                    }
+                }
 
-				assertEquals("allowed-policy count mismatch! - " + test.name, test.allowedPolicies.size(), allowedPolicies.size());
+                assertEquals(test.allowedPolicies.size(), allowedPolicies.size(), "allowed-policy count mismatch! - " + test.name);
+                assertEquals(test.allowedPolicies, allowedPolicies, "allowed-policy list mismatch! - " + test.name);
+            } else {
+                RangerPolicy     policy     = new RangerPolicy();
+                RangerPolicyItem policyItem = new RangerPolicyItem();
 
-				assertEquals("allowed-policy list mismatch! - " + test.name, test.allowedPolicies, allowedPolicies);
-			} else {
-				RangerPolicy     policy     = new RangerPolicy();
-				RangerPolicyItem policyItem = new RangerPolicyItem();
+                policyItem.addUser(test.user);
+                policyItem.addGroups(test.userGroups);
 
-				policyItem.addUser(test.user);
-				policyItem.addGroups(test.userGroups);
+                for (String accessType : test.accessTypes) {
+                    policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess(accessType));
+                }
 
-				for (String accessType : test.accessTypes) {
-					policyItem.addAccess(new RangerPolicy.RangerPolicyItemAccess(accessType));
-				}
+                policy.setResources(test.resources);
+                policy.setAdditionalResources(test.additionalResources);
+                policy.addPolicyItem(policyItem);
 
-				policy.setResources(test.resources);
-				policy.setAdditionalResources(test.additionalResources);
-				policy.addPolicyItem(policyItem);
+                final boolean expected = test.result;
+                final boolean result;
 
-				final boolean expected = test.result;
-				final boolean result;
+                if (test.isModifyAccess) {
+                    result = policyAdmin.isDelegatedAdminAccessAllowedForModify(policy, test.user, test.userGroups, null, null);
+                } else {
+                    result = policyAdmin.isDelegatedAdminAccessAllowedForRead(policy, test.user, test.userGroups, null, null);
+                }
 
-				if (test.isModifyAccess) {
-					result = policyAdmin.isDelegatedAdminAccessAllowedForModify(policy, test.user, test.userGroups, null, null);
-				} else {
-					result = policyAdmin.isDelegatedAdminAccessAllowedForRead(policy, test.user, test.userGroups, null, null);
-				}
+                assertEquals(expected, result, "isAccessAllowed mismatched! - " + test.name);
+            }
+        }
+    }
 
-				assertEquals("isAccessAllowed mismatched! - " + test.name, expected, result);
-			}
-		}
-	}
+    static class PolicyAdminTestCase {
+        public ServicePolicies servicePolicies;
+        public List<TestData>  tests;
 
-	static class PolicyAdminTestCase {
-		public ServicePolicies servicePolicies;
-		public List<TestData>  tests;
-
-		class TestData {
-			public String                                  name;
-			public Map<String, RangerPolicyResource>       resources;
-			public List<Map<String, RangerPolicyResource>> additionalResources;
-			public String                                  user;
-			public Set<String>                             userGroups;
-			public Set<String>                             accessTypes;
-			public boolean                                 isModifyAccess;
-			public boolean                                 result;
-			public Set<Long>                               allowedPolicies;
-		}
-	}
+        class TestData {
+            public String                                  name;
+            public Map<String, RangerPolicyResource>       resources;
+            public List<Map<String, RangerPolicyResource>> additionalResources;
+            public String                                  user;
+            public Set<String>                             userGroups;
+            public Set<String>                             accessTypes;
+            public boolean                                 isModifyAccess;
+            public boolean                                 result;
+            public Set<Long>                               allowedPolicies;
+        }
+    }
 }

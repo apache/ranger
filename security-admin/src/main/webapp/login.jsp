@@ -31,7 +31,7 @@
         <link href="styles/bootstrap.min.css" media="all" rel="stylesheet" type="text/css" id="bootstrap-css">
         <link rel="stylesheet" href="styles/font-awesome.min.css">
         <link href="styles/xa.css" media="all" rel="stylesheet" type="text/css" >
-        <script src="libs/bower/jquery/js/jquery-3.5.1.js" ></script>
+        <script src="libs/bower/jquery/js/core-lib.js" ></script>
         <script src="scripts/prelogin/XAPrelogin.js" ></script>
         <script type="text/javascript">
             $(document).ready(function() {
@@ -82,7 +82,7 @@
                     <span id="errorBox" class="help-inline" style="color:white;display:none;"><span class="errorMsg"></span>
                         <i class="fa fa-exclamation-triangle" style="color:#ae2817;"></i>
                     </span>
-                    <span id="errorBoxUnsynced" class="help-inline" style="color:white;display:none;">User is not available in HDP Admin Tool. Please contact your Administrator.
+                    <span id="errorBoxUnsynced" class="help-inline" style="color:white;display:none;">User is not available in Ranger Admin Tool. Please contact your Administrator.
                         <i class="fa fa-exclamation-triangle" style="color:#ae2817;"></i>
                     </span>
                     <button type="submit" class="btn btn-primary btn-block" id="signIn" tabindex="4" >

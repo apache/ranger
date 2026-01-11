@@ -20,7 +20,7 @@
   <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
     <Target>System.out</Target>
     <encoder>
-      <pattern>%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p - %m%n</pattern>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p - %m%n</pattern>
     </encoder>
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
       <level>INFO</level>

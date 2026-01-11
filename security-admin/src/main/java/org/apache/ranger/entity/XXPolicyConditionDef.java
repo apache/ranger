@@ -18,558 +18,468 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
+import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_condition_def")
-public class XXPolicyConditionDef extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_condition_def_SEQ", sequenceName = "x_policy_condition_def_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_condition_def_SEQ")
-	@Column(name = "id")
-	protected Long id;
+public class XXPolicyConditionDef extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * defId of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "def_id")
-	protected Long defId;
+    /**
+     * id of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_condition_def_SEQ", sequenceName = "x_policy_condition_def_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_condition_def_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * itemId of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "item_id")
-	protected Long itemId;
+    /**
+     * defId of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "def_id")
+    protected Long defId;
 
-	/**
-	 * name of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "name")
-	protected String name;
+    /**
+     * itemId of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "item_id")
+    protected Long itemId;
 
-	/**
-	 * evaluator of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "evaluator")
-	protected String evaluator;
+    /**
+     * name of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "name")
+    protected String name;
 
-	/**
-	 * evaluatorOptions of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "evaluator_options")
-	protected String evaluatorOptions;
+    /**
+     * evaluator of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "evaluator")
+    protected String evaluator;
 
-	/**
-	 * validationRegEx of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "validation_reg_ex")
-	protected String validationRegEx;
+    /**
+     * evaluatorOptions of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "evaluator_options")
+    protected String evaluatorOptions;
 
-	/**
-	 * validationMessage of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "validation_message")
-	protected String validationMessage;
+    /**
+     * validationRegEx of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "validation_reg_ex")
+    protected String validationRegEx;
 
-	/**
-	 * uiHint of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "ui_hint")
-	protected String uiHint;
+    /**
+     * validationMessage of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "validation_message")
+    protected String validationMessage;
 
-	/**
-	 * label of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "label")
-	protected String label;
+    /**
+     * uiHint of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "ui_hint")
+    protected String uiHint;
 
-	/**
-	 * description of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "description")
-	protected String description;
+    /**
+     * label of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "label")
+    protected String label;
 
-	/**
-	 * rbKeyLabel of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "rb_key_label")
-	protected String rbKeyLabel;
+    /**
+     * description of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "description")
+    protected String description;
 
-	/**
-	 * rbKeyDescription of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "rb_key_description")
-	protected String rbKeyDescription;
+    /**
+     * rbKeyLabel of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "rb_key_label")
+    protected String rbKeyLabel;
 
-	/**
-	 * rbKeyValidationMessage of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "rb_key_validation_message")
-	protected String rbKeyValidationMessage;
+    /**
+     * rbKeyDescription of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "rb_key_description")
+    protected String rbKeyDescription;
 
-	/**
-	 * order of the XXPolicyConditionDef
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "sort_order")
-	protected Integer order;
+    /**
+     * rbKeyValidationMessage of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "rb_key_validation_message")
+    protected String rbKeyValidationMessage;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * order of the XXPolicyConditionDef
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "sort_order")
+    protected Integer order;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> defId</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param defId
-	 *            Value to set member attribute <b> defId</b>
-	 */
-	public void setDefid(Long defId) {
-		this.defId = defId;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>itemId</b>
-	 *
-	 * @return Long - value of member attribute <b>itemId</b> .
-	 */
-	public Long getItemId() {
-		return this.itemId;
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> itemId</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param itemId
-	 *            Value to set member attribute <b> itemId</b>
-	 */
-	public void setItemId(Long itemId) {
-		this.itemId = itemId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>defId</b>
-	 *
-	 * @return Date - value of member attribute <b>defId</b> .
-	 */
-	public Long getDefid() {
-		return this.defId;
-	}
+        XXPolicyConditionDef other = (XXPolicyConditionDef) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> name</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param name
-	 *            Value to set member attribute <b> name</b>
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+        return Objects.equals(defId, other.defId) &&
+                Objects.equals(itemId, other.itemId) &&
+                Objects.equals(description, other.description) &&
+                Objects.equals(evaluator, other.evaluator) &&
+                Objects.equals(evaluatorOptions, other.evaluatorOptions) &&
+                Objects.equals(id, other.id) &&
+                Objects.equals(label, other.label) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(rbKeyDescription, other.rbKeyDescription) &&
+                Objects.equals(rbKeyLabel, other.rbKeyLabel) &&
+                Objects.equals(validationRegEx, other.validationRegEx) &&
+                Objects.equals(validationMessage, other.validationMessage) &&
+                Objects.equals(uiHint, other.uiHint) &&
+                Objects.equals(rbKeyValidationMessage, other.rbKeyValidationMessage);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>name</b>
-	 *
-	 * @return Date - value of member attribute <b>name</b> .
-	 */
-	public String getName() {
-		return this.name;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        String str = "XXPolicyConditionDef={";
+        str += super.toString();
+        str += " [id=" + id + ", defId=" + defId + ", itemId=" + itemId
+                + ", name=" + name + ", evaluator=" + evaluator
+                + ", evaluatorOptions=" + evaluatorOptions + ", label=" + label
+                + ", validationRegEx=" + validationRegEx
+                + ", validationMessage=" + validationMessage
+                + ", uiHint=" + uiHint
+                + ", description=" + description + ", rbKeyLabel=" + rbKeyLabel
+                + ", rbKeyValidationMessage=" + rbKeyValidationMessage
+                + ", rbKeyDescription=" + rbKeyDescription + ", order=" + order
+                + "]";
+        str += "}";
+        return str;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> evaluator</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param evaluator
-	 *            Value to set member attribute <b> evaluator</b>
-	 */
-	public void setEvaluator(String evaluator) {
-		this.evaluator = evaluator;
-	}
+    /**
+     * Returns the value for the member attribute <b>itemId</b>
+     *
+     * @return Long - value of member attribute <b>itemId</b> .
+     */
+    public Long getItemId() {
+        return this.itemId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>evaluator</b>
-	 *
-	 * @return Date - value of member attribute <b>evaluator</b> .
-	 */
-	public String getEvaluator() {
-		return this.evaluator;
-	}
+    /**
+     * This method sets the value to the member attribute <b> itemId</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param itemId Value to set member attribute <b> itemId</b>
+     */
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>
-	 * evaluatorOptions</b> . You cannot set null to the attribute.
-	 *
-	 * @param evaluatorOptions
-	 *            Value to set member attribute <b> evaluatorOptions</b>
-	 */
-	public void setEvaluatoroptions(String evaluatorOptions) {
-		this.evaluatorOptions = evaluatorOptions;
-	}
+    /**
+     * Returns the value for the member attribute <b>defId</b>
+     *
+     * @return Date - value of member attribute <b>defId</b> .
+     */
+    public Long getDefid() {
+        return this.defId;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>evaluatorOptions</b>
-	 *
-	 * @return Date - value of member attribute <b>evaluatorOptions</b> .
-	 */
-	public String getEvaluatoroptions() {
-		return this.evaluatorOptions;
-	}
+    /**
+     * This method sets the value to the member attribute <b> defId</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param defId Value to set member attribute <b> defId</b>
+     */
+    public void setDefid(Long defId) {
+        this.defId = defId;
+    }
 
-	/**
-	 * @return the validationRegEx
-	 */
-	public String getValidationRegEx() {
-		return validationRegEx;
-	}
+    /**
+     * Returns the value for the member attribute <b>name</b>
+     *
+     * @return Date - value of member attribute <b>name</b> .
+     */
+    public String getName() {
+        return this.name;
+    }
 
-	/**
-	 * @param validationRegEx the validationRegEx to set
-	 */
-	public void setValidationRegEx(String validationRegEx) {
-		this.validationRegEx = validationRegEx;
-	}
+    /**
+     * This method sets the value to the member attribute <b> name</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param name Value to set member attribute <b> name</b>
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 * @return the validationMessage
-	 */
-	public String getValidationMessage() {
-		return validationMessage;
-	}
+    /**
+     * Returns the value for the member attribute <b>evaluator</b>
+     *
+     * @return Date - value of member attribute <b>evaluator</b> .
+     */
+    public String getEvaluator() {
+        return this.evaluator;
+    }
 
-	/**
-	 * @param validationMessage the validationMessage to set
-	 */
-	public void setValidationMessage(String validationMessage) {
-		this.validationMessage = validationMessage;
-	}
+    /**
+     * This method sets the value to the member attribute <b> evaluator</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param evaluator Value to set member attribute <b> evaluator</b>
+     */
+    public void setEvaluator(String evaluator) {
+        this.evaluator = evaluator;
+    }
 
-	/**
-	 * @return the uiHint
-	 */
-	public String getUiHint() {
-		return uiHint;
-	}
+    /**
+     * Returns the value for the member attribute <b>evaluatorOptions</b>
+     *
+     * @return Date - value of member attribute <b>evaluatorOptions</b> .
+     */
+    public String getEvaluatoroptions() {
+        return this.evaluatorOptions;
+    }
 
-	/**
-	 * @param uiHint the uiHint to set
-	 */
-	public void setUiHint(String uiHint) {
-		this.uiHint = uiHint;
-	}
+    /**
+     * This method sets the value to the member attribute <b>
+     * evaluatorOptions</b> . You cannot set null to the attribute.
+     *
+     * @param evaluatorOptions Value to set member attribute <b> evaluatorOptions</b>
+     */
+    public void setEvaluatoroptions(String evaluatorOptions) {
+        this.evaluatorOptions = evaluatorOptions;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> label</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param label
-	 *            Value to set member attribute <b> label</b>
-	 */
-	public void setLabel(String label) {
-		this.label = label;
-	}
+    /**
+     * @return the validationRegEx
+     */
+    public String getValidationRegEx() {
+        return validationRegEx;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>label</b>
-	 *
-	 * @return Date - value of member attribute <b>label</b> .
-	 */
-	public String getLabel() {
-		return this.label;
-	}
+    /**
+     * @param validationRegEx the validationRegEx to set
+     */
+    public void setValidationRegEx(String validationRegEx) {
+        this.validationRegEx = validationRegEx;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> description</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param description
-	 *            Value to set member attribute <b> description</b>
-	 */
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    /**
+     * @return the validationMessage
+     */
+    public String getValidationMessage() {
+        return validationMessage;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>description</b>
-	 *
-	 * @return Date - value of member attribute <b>description</b> .
-	 */
-	public String getDescription() {
-		return this.description;
-	}
+    /**
+     * @param validationMessage the validationMessage to set
+     */
+    public void setValidationMessage(String validationMessage) {
+        this.validationMessage = validationMessage;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> rbKeyLabel</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param rbKeyLabel
-	 *            Value to set member attribute <b> rbKeyLabel</b>
-	 */
-	public void setRbkeylabel(String rbKeyLabel) {
-		this.rbKeyLabel = rbKeyLabel;
-	}
+    /**
+     * @return the uiHint
+     */
+    public String getUiHint() {
+        return uiHint;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>rbKeyLabel</b>
-	 *
-	 * @return Date - value of member attribute <b>rbKeyLabel</b> .
-	 */
-	public String getRbkeylabel() {
-		return this.rbKeyLabel;
-	}
+    /**
+     * @param uiHint the uiHint to set
+     */
+    public void setUiHint(String uiHint) {
+        this.uiHint = uiHint;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>
-	 * rbKeyDescription</b> . You cannot set null to the attribute.
-	 *
-	 * @param rbKeyDescription
-	 *            Value to set member attribute <b> rbKeyDescription</b>
-	 */
-	public void setRbkeydescription(String rbKeyDescription) {
-		this.rbKeyDescription = rbKeyDescription;
-	}
+    /**
+     * Returns the value for the member attribute <b>label</b>
+     *
+     * @return Date - value of member attribute <b>label</b> .
+     */
+    public String getLabel() {
+        return this.label;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>rbKeyDescription</b>
-	 *
-	 * @return Date - value of member attribute <b>rbKeyDescription</b> .
-	 */
-	public String getRbkeydescription() {
-		return this.rbKeyDescription;
-	}
+    /**
+     * This method sets the value to the member attribute <b> label</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param label Value to set member attribute <b> label</b>
+     */
+    public void setLabel(String label) {
+        this.label = label;
+    }
 
-	/**
-	 * @return the rbKeyValidationMessage
-	 */
-	public String getRbKeyValidationMessage() {
-		return rbKeyValidationMessage;
-	}
+    /**
+     * Returns the value for the member attribute <b>description</b>
+     *
+     * @return Date - value of member attribute <b>description</b> .
+     */
+    public String getDescription() {
+        return this.description;
+    }
 
-	/**
-	 * @param rbKeyValidationMessage the rbKeyValidationMessage to set
-	 */
-	public void setRbKeyValidationMessage(String rbKeyValidationMessage) {
-		this.rbKeyValidationMessage = rbKeyValidationMessage;
-	}
+    /**
+     * This method sets the value to the member attribute <b> description</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param description Value to set member attribute <b> description</b>
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> order</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param order
-	 *            Value to set member attribute <b> order</b>
-	 */
-	public void setOrder(Integer order) {
-		this.order = order;
-	}
+    /**
+     * Returns the value for the member attribute <b>rbKeyLabel</b>
+     *
+     * @return Date - value of member attribute <b>rbKeyLabel</b> .
+     */
+    public String getRbkeylabel() {
+        return this.rbKeyLabel;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>order</b>
-	 *
-	 * @return Date - value of member attribute <b>order</b> .
-	 */
-	public Integer getOrder() {
-		return this.order;
-	}
+    /**
+     * This method sets the value to the member attribute <b> rbKeyLabel</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param rbKeyLabel Value to set member attribute <b> rbKeyLabel</b>
+     */
+    public void setRbkeylabel(String rbKeyLabel) {
+        this.rbKeyLabel = rbKeyLabel;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		XXPolicyConditionDef other = (XXPolicyConditionDef) obj;
-		if (defId == null) {
-			if (other.defId != null) {
-				return false;
-			}
-		} else if (!defId.equals(other.defId)) {
-			return false;
-		}
-		if (itemId == null) {
-			if (other.itemId != null) {
-				return false;
-			}
-		} else if (!itemId.equals(other.itemId)) {
-			return false;
-		}
-		if (description == null) {
-			if (other.description != null) {
-				return false;
-			}
-		} else if (!description.equals(other.description)) {
-			return false;
-		}
-		if (evaluator == null) {
-			if (other.evaluator != null) {
-				return false;
-			}
-		} else if (!evaluator.equals(other.evaluator)) {
-			return false;
-		}
-		if (evaluatorOptions == null) {
-			if (other.evaluatorOptions != null) {
-				return false;
-			}
-		} else if (!evaluatorOptions.equals(other.evaluatorOptions)) {
-			return false;
-		}
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
+    /**
+     * Returns the value for the member attribute <b>rbKeyDescription</b>
+     *
+     * @return Date - value of member attribute <b>rbKeyDescription</b> .
+     */
+    public String getRbkeydescription() {
+        return this.rbKeyDescription;
+    }
 
-		if(!equals(validationRegEx, other.validationRegEx) ||
-		   !equals(validationMessage, other.validationMessage) ||
-		   !equals(uiHint, other.uiHint) ||
-		   !equals(rbKeyValidationMessage, other.rbKeyValidationMessage)) {
-			return false;
-		}
+    /**
+     * This method sets the value to the member attribute <b>
+     * rbKeyDescription</b> . You cannot set null to the attribute.
+     *
+     * @param rbKeyDescription Value to set member attribute <b> rbKeyDescription</b>
+     */
+    public void setRbkeydescription(String rbKeyDescription) {
+        this.rbKeyDescription = rbKeyDescription;
+    }
 
-		if (label == null) {
-			if (other.label != null) {
-				return false;
-			}
-		} else if (!label.equals(other.label)) {
-			return false;
-		}
-		if (name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		} else if (!name.equals(other.name)) {
-			return false;
-		}
-		if (order == null) {
-			if (other.order != null) {
-				return false;
-			}
-		} else if (!order.equals(other.order)) {
-			return false;
-		}
-		if (rbKeyDescription == null) {
-			if (other.rbKeyDescription != null) {
-				return false;
-			}
-		} else if (!rbKeyDescription.equals(other.rbKeyDescription)) {
-			return false;
-		}
-		if (rbKeyLabel == null) {
-			if (other.rbKeyLabel != null) {
-				return false;
-			}
-		} else if (!rbKeyLabel.equals(other.rbKeyLabel)) {
-			return false;
-		}
-		return true;
-	}
+    /**
+     * @return the rbKeyValidationMessage
+     */
+    public String getRbKeyValidationMessage() {
+        return rbKeyValidationMessage;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		String str = "XXPolicyConditionDef={";
-		str += super.toString();
-		str += " [id=" + id + ", defId=" + defId + ", itemId=" + itemId
-				+ ", name=" + name + ", evaluator=" + evaluator
-				+ ", evaluatorOptions=" + evaluatorOptions + ", label=" + label
-				+ ", validationRegEx=" + validationRegEx
-				+ ", validationMessage=" + validationMessage
-				+ ", uiHint=" + uiHint
-				+ ", description=" + description + ", rbKeyLabel=" + rbKeyLabel
-				+ ", rbKeyValidationMessage=" + rbKeyValidationMessage
-				+ ", rbKeyDescription=" + rbKeyDescription + ", order=" + order
-				+ "]";
-		str += "}";
-		return str;
-	}
+    /**
+     * @param rbKeyValidationMessage the rbKeyValidationMessage to set
+     */
+    public void setRbKeyValidationMessage(String rbKeyValidationMessage) {
+        this.rbKeyValidationMessage = rbKeyValidationMessage;
+    }
 
+    /**
+     * Returns the value for the member attribute <b>order</b>
+     *
+     * @return Date - value of member attribute <b>order</b> .
+     */
+    public Integer getOrder() {
+        return this.order;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> order</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param order Value to set member attribute <b> order</b>
+     */
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
 }

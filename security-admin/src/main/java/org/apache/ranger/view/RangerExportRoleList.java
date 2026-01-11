@@ -17,26 +17,25 @@
 
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RangerExportRoleList extends RangerRoleList implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
+    Map<String, Object> metaDataInfo = new LinkedHashMap<>();
 
-	public Map<String, Object> getMetaDataInfo() {
-		return metaDataInfo;
-	}
+    public Map<String, Object> getMetaDataInfo() {
+        return metaDataInfo;
+    }
 
-	public void setMetaDataInfo(Map<String, Object> metaDataInfo) {
-		this.metaDataInfo = metaDataInfo;
-	}
-
+    public void setMetaDataInfo(Map<String, Object> metaDataInfo) {
+        this.metaDataInfo = metaDataInfo;
+    }
 }

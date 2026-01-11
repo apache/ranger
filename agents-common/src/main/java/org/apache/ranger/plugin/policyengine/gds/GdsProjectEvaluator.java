@@ -19,13 +19,20 @@
 
 package org.apache.ranger.plugin.policyengine.gds;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.*;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.ServiceGdsInfo.ProjectInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +44,15 @@ import java.util.List;
 import java.util.Set;
 
 public class GdsProjectEvaluator {
-    private static final Logger LOG = LoggerFactory.getLogger(GdsDatasetEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(GdsProjectEvaluator.class);
 
     public static final GdsProjectEvalOrderComparator EVAL_ORDER_COMPARATOR = new GdsProjectEvalOrderComparator();
 
-    private final ProjectInfo                 project;
-    private final RangerServiceDef            gdsServiceDef;
-    private final String                      name;
-    private final List<RangerPolicyEvaluator> policyEvaluators;
+    private final ProjectInfo                     project;
+    private final RangerServiceDef                gdsServiceDef;
+    private final String                          name;
+    private final RangerValidityScheduleEvaluator scheduleEvaluator;
+    private final List<RangerPolicyEvaluator>     policyEvaluators;
 
     public GdsProjectEvaluator(ProjectInfo project, RangerServiceDef gdsServiceDef, RangerPolicyEngineOptions options) {
         LOG.debug("==> GdsProjectEvaluator({})", project);
@@ -52,6 +60,12 @@ public class GdsProjectEvaluator {
         this.project       = project;
         this.gdsServiceDef = gdsServiceDef;
         this.name          = StringUtils.isBlank(project.getName()) ? StringUtils.EMPTY : project.getName();
+
+        if (project.getValiditySchedule() != null) {
+            scheduleEvaluator = new RangerValidityScheduleEvaluator(project.getValiditySchedule());
+        } else {
+            scheduleEvaluator = null;
+        }
 
         if (project.getPolicies() != null) {
             policyEvaluators = new ArrayList<>(project.getPolicies().size());
@@ -78,29 +92,45 @@ public class GdsProjectEvaluator {
         return name;
     }
 
+    public boolean isActive() {
+        return scheduleEvaluator == null || scheduleEvaluator.isApplicable(System.currentTimeMillis());
+    }
+
     public void evaluate(RangerAccessRequest request, GdsAccessResult result) {
         LOG.debug("==> GdsDatasetEvaluator.evaluate({}, {})", request, result);
 
-        result.addProject(getName());
+        if (isActive()) {
+            result.addProject(getName());
 
-        if (!policyEvaluators.isEmpty()) {
-            GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);
-            RangerAccessResult      projectResult  = projectRequest.createAccessResult();
+            if (!policyEvaluators.isEmpty()) {
+                GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);
+                RangerAccessResult      projectResult  = projectRequest.createAccessResult();
 
-            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                policyEvaluator.evaluate(projectRequest, projectResult);
-            }
+                try {
+                    RangerAccessRequestUtil.setAllRequestedAccessTypes(projectRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(projectRequest.getContext(), null);
 
-            if (!result.getIsAllowed()) {
-                if (projectResult.getIsAllowed()) {
-                    result.setIsAllowed(true);
-                    result.setPolicyId(projectResult.getPolicyId());
-                    result.setPolicyVersion(projectResult.getPolicyVersion());
+                    policyEvaluators.forEach(e -> e.evaluate(projectRequest, projectResult));
+                } finally {
+                    RangerAccessRequestUtil.setAccessTypeResults(projectRequest.getContext(), null);
+                    RangerAccessRequestUtil.setAccessTypeACLResults(projectRequest.getContext(), null);
                 }
-            }
 
-            if (!result.getIsAudited()) {
-                result.setIsAudited(projectResult.getIsAudited());
+                if (projectResult.getIsAllowed()) {
+                    result.addAllowedByProject(getName());
+                }
+
+                if (!result.getIsAllowed()) {
+                    if (projectResult.getIsAllowed()) {
+                        result.setIsAllowed(true);
+                        result.setPolicyId(projectResult.getPolicyId());
+                        result.setPolicyVersion(projectResult.getPolicyVersion());
+                    }
+                }
+
+                if (!result.getIsAudited()) {
+                    result.setIsAudited(projectResult.getIsAudited());
+                }
             }
         }
 
@@ -108,13 +138,15 @@ public class GdsProjectEvaluator {
     }
 
     public void getResourceACLs(RangerAccessRequest request, RangerResourceACLs acls, boolean isConditional, Set<String> allowedAccessTypes) {
-        acls.getProjects().add(getName());
+        if (isActive()) {
+            acls.getProjects().add(getName());
 
-        if (!policyEvaluators.isEmpty()) {
-            GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);
+            if (!policyEvaluators.isEmpty()) {
+                GdsProjectAccessRequest projectRequest = new GdsProjectAccessRequest(getId(), gdsServiceDef, request);
 
-            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                policyEvaluator.getResourceACLs(projectRequest, acls, isConditional, allowedAccessTypes, RangerPolicyResourceMatcher.MatchType.SELF, null);
+                for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                    policyEvaluator.getResourceACLs(projectRequest, acls, isConditional, allowedAccessTypes, RangerPolicyResourceMatcher.MatchType.SELF, null);
+                }
             }
         }
     }
@@ -132,7 +164,6 @@ public class GdsProjectEvaluator {
 
         return ret;
     }
-
 
     private static class GdsProjectAccessRequest extends RangerAccessRequestImpl {
         public GdsProjectAccessRequest(Long projectId, RangerServiceDef gdsServiceDef, RangerAccessRequest request) {

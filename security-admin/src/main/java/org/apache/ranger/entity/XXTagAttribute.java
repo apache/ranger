@@ -19,7 +19,7 @@
 
 package org.apache.ranger.entity;
 
-import java.io.Serializable;
+import org.apache.ranger.common.AppConstants;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
@@ -30,164 +30,139 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.apache.ranger.common.AppConstants;
+import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Cacheable
-@Table(name="x_tag_attr")
+@Table(name = "x_tag_attr")
 public class XXTagAttribute extends XXDBBase implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Id
-	@SequenceGenerator(name = "X_TAG_ATTR_SEQ", sequenceName = "X_TAG_ATTR_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_TAG_ATTR_SEQ")
-	@Column(name = "id")
-	protected Long id;
+    @Id
+    @SequenceGenerator(name = "X_TAG_ATTR_SEQ", sequenceName = "X_TAG_ATTR_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "X_TAG_ATTR_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	@Column(name = "tag_id")
-	protected Long tagId;
+    @Column(name = "tag_id")
+    protected Long tagId;
 
-	@Column(name = "name")
-	protected String name;
+    @Column(name = "name")
+    protected String name;
 
-	@Column(name = "value")
-	protected String value;
+    @Column(name = "value")
+    protected String value;
 
-	@Override
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * @return the tagId
+     */
+    public Long getTagId() {
+        return tagId;
+    }
 
-	@Override
-	public Long getId() {
-		return id;
-	}
+    /**
+     * @param tagId the tagId to set
+     */
+    public void setTagId(Long tagId) {
+        this.tagId = tagId;
+    }
 
-	/**
-	 * @return the tagId
-	 */
-	public Long getTagId() {
-		return tagId;
-	}
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
 
-	/**
-	 * @param tagId
-	 *            the tagId to set
-	 */
-	public void setTagId(Long tagId) {
-		this.tagId = tagId;
-	}
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
+    /**
+     * @return the value
+     */
+    public String getValue() {
+        return value;
+    }
 
-	/**
-	 * @param name
-	 *            the name to set
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
+    /**
+     * @param value the value to set
+     */
+    public void setValue(String value) {
+        this.value = value;
+    }
 
-	/**
-	 * @return the value
-	 */
-	public String getValue() {
-		return value;
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_TAG_ATTR;
+    }
 
-	/**
-	 * @param value
-	 *            the value to set
-	 */
-	public void setValue(String value) {
-		this.value = value;
-	}
+    @Override
+    public Long getId() {
+        return id;
+    }
 
-	@Override
-	public int getMyClassType() {
-		return AppConstants.CLASS_TYPE_XA_TAG_ATTR;
-	}
+    @Override
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((tagId == null) ? 0 : tagId.hashCode());
-		result = prime * result + ((value == null) ? 0 : value.hashCode());
-		return result;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), id, name, tagId, value);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!super.equals(obj))
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		XXTagAttribute other = (XXTagAttribute) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		if (tagId == null) {
-			if (other.tagId != null)
-				return false;
-		} else if (!tagId.equals(other.tagId))
-			return false;
-		if (value == null) {
-			if (other.value != null)
-				return false;
-		} else if (!value.equals(other.value))
-			return false;
-		return true;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		toString(sb);
-		return sb.toString();
-	}
+        XXTagAttribute other = (XXTagAttribute) obj;
 
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("{ ");
-		sb.append(super.toString() + "} ");
-		sb.append("id={").append(id).append("} ");
-		sb.append("tagId={").append(tagId).append("} ");
-		sb.append("name={").append(name).append("} ");
-		sb.append("value={").append(value).append("} ");
-		sb.append(" }");
+        return Objects.equals(id, other.id) &&
+                Objects.equals(name, other.name) &&
+                Objects.equals(tagId, other.tagId) &&
+                Objects.equals(value, other.value);
+    }
 
-		return sb;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        toString(sb);
+        return sb.toString();
+    }
 
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("{ ");
+        sb.append(super.toString()).append("} ");
+        sb.append("id={").append(id).append("} ");
+        sb.append("tagId={").append(tagId).append("} ");
+        sb.append("name={").append(name).append("} ");
+        sb.append("value={").append(value).append("} ");
+        sb.append(" }");
+
+        return sb;
+    }
 }

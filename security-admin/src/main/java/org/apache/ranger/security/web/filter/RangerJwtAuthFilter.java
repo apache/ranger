@@ -18,20 +18,6 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.log4j.Logger;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.apache.ranger.authz.handler.jwt.RangerDefaultJwtAuthHandler;
@@ -49,17 +35,30 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+
 @Lazy(true)
 @Component
 public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements Filter {
-    private static final Logger LOG                 = Logger.getLogger(RangerJwtAuthFilter.class);
+    private static final Logger LOG = Logger.getLogger(RangerJwtAuthFilter.class);
+
     private static final String DEFAULT_RANGER_ROLE = "ROLE_USER";
 
     @PostConstruct
     public void initialize() {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("===>>> RangerJwtAuthFilter.initialize()");
-        }
+        LOG.debug("===>>> RangerJwtAuthFilter.initialize()");
 
         /**
          * If this filter is configured in spring security. The
@@ -67,12 +66,11 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
          * DelegatingFilterProxy} does not invoke init method (like Servlet container).
          */
         try {
-            Properties config       = new Properties();
+            Properties config = new Properties();
 
             config.setProperty(RangerJwtAuthHandler.KEY_PROVIDER_URL, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUTH_PROVIDER_URL));
             config.setProperty(RangerJwtAuthHandler.KEY_JWT_PUBLIC_KEY, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_PUBLIC_KEY, ""));
-            config.setProperty(RangerJwtAuthHandler.KEY_JWT_COOKIE_NAME,
-                               PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_COOKIE_NAME, RangerSSOAuthenticationFilter.JWT_COOKIE_NAME_DEFAULT));
+            config.setProperty(RangerJwtAuthHandler.KEY_JWT_COOKIE_NAME, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_COOKIE_NAME, RangerSSOAuthenticationFilter.JWT_COOKIE_NAME_DEFAULT));
             config.setProperty(RangerJwtAuthHandler.KEY_JWT_AUDIENCES, PropertiesUtil.getProperty(RangerSSOAuthenticationFilter.JWT_AUDIENCES, ""));
 
             super.initialize(config);
@@ -80,9 +78,7 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
             LOG.error("Failed to initialize Ranger Admin JWT Auth Filter.", e);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<<<=== RangerJwtAuthFilter.initialize()");
-        }
+        LOG.debug("<<<=== RangerJwtAuthFilter.initialize()");
     }
 
     @Override
@@ -92,25 +88,25 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("===>>> RangerJwtAuthFilter.doFilter()");
-        }
+        LOG.debug("===>>> RangerJwtAuthFilter.doFilter()");
 
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-
-        RangerAuth rangerAuth = authenticate(httpServletRequest);
+        RangerAuth         rangerAuth         = authenticate(httpServletRequest);
 
         if (rangerAuth != null) {
-            final List<GrantedAuthority>   grantedAuths        = Arrays.asList(new SimpleGrantedAuthority(DEFAULT_RANGER_ROLE));
-            final UserDetails              principal           = new User(rangerAuth.getUserName(), "", grantedAuths);
-            final Authentication           finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
-            final WebAuthenticationDetails webDetails          = new WebAuthenticationDetails(httpServletRequest);
-            ((AbstractAuthenticationToken) finalAuthentication).setDetails(webDetails);
+            final List<GrantedAuthority>      grantedAuths        = Collections.singletonList(new SimpleGrantedAuthority(DEFAULT_RANGER_ROLE));
+            final UserDetails                 principal           = new User(rangerAuth.getUserName(), "", grantedAuths);
+            final AbstractAuthenticationToken finalAuthentication = new UsernamePasswordAuthenticationToken(principal, "", grantedAuths);
+            final WebAuthenticationDetails    webDetails          = new WebAuthenticationDetails(httpServletRequest);
+
+            finalAuthentication.setDetails(webDetails);
+
             SecurityContextHolder.getContext().setAuthentication(finalAuthentication);
         }
 
         // Log final status of request.
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
         if (auth != null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("<<<=== RangerJwtAuthFilter.doFilter() - user=[" + auth.getPrincipal() + "], isUserAuthenticated? [" + auth.isAuthenticated() + "]");

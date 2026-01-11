@@ -19,28 +19,25 @@
 
 package org.apache.ranger.plugin.model;
 
-
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerValiditySchedule implements Serializable {
-
     public static final String VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION = "yyyy/MM/dd HH:mm:ss";
 
-    private String startTime;
-    private String endTime;
-    private String timeZone;
-
+    private String                         startTime;
+    private String                         endTime;
+    private String                         timeZone;
     private List<RangerValidityRecurrence> recurrences;
 
     public RangerValiditySchedule(String startTime, String endTime, String timeZone, List<RangerValidityRecurrence> recurrences) {
@@ -54,19 +51,40 @@ public class RangerValiditySchedule implements Serializable {
         this(null, null, null, null);
     }
 
-    public String getTimeZone() { return timeZone; }
-    public String getStartTime() { return startTime;}
-    public String getEndTime() { return endTime;}
-    public List<RangerValidityRecurrence> getRecurrences() { return recurrences;}
+    public String getTimeZone() {
+        return timeZone;
+    }
 
-    public void setTimeZone(String timeZone) { this.timeZone = timeZone; }
-    public void setStartTime(String startTime) { this.startTime = startTime;}
-    public void setEndTime(String endTime) { this.endTime = endTime;}
-    public void setRecurrences(List<RangerValidityRecurrence> recurrences) { this.recurrences = recurrences == null ? new ArrayList<>() : recurrences;}
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public List<RangerValidityRecurrence> getRecurrences() {
+        return recurrences;
+    }
+
+    public void setRecurrences(List<RangerValidityRecurrence> recurrences) {
+        this.recurrences = recurrences == null ? new ArrayList<>() : recurrences;
+    }
 
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("RangerValiditySchedule={");
+        StringBuilder sb = new StringBuilder("RangerValiditySchedule={");
 
         sb.append(", startTime=").append(startTime);
         sb.append(", endTime=").append(endTime);

@@ -17,162 +17,161 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
+package org.apache.ranger.view;
 
 /**
  * Base object class
- *
  */
 
-import java.util.Date;
-
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.ViewBaseBean;
 import org.apache.ranger.json.JsonDateSerializer;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@JsonIgnoreProperties(ignoreUnknown=true)
+import java.util.Date;
+
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VXDataObject extends ViewBaseBean implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
+    /**
+     * Id of the data
+     */
+    protected Long   id;
+    /**
+     * Date when this data was created
+     */
+    @JsonSerialize(using = JsonDateSerializer.class)
+    protected Date   createDate;
+    /**
+     * Date when this data was updated
+     */
+    @JsonSerialize(using = JsonDateSerializer.class)
+    protected Date   updateDate;
+    /**
+     * Owner
+     */
+    protected String owner;
+    /**
+     * Updated By
+     */
+    protected String updatedBy;
 
-	/**
-	 * Id of the data
-	 */
-	protected Long id;
-	/**
-	 * Date when this data was created
-	 */
-	@JsonSerialize(using=JsonDateSerializer.class)
-	protected Date createDate;
-	/**
-	 * Date when this data was updated
-	 */
-	@JsonSerialize(using=JsonDateSerializer.class)
-	protected Date updateDate;
-	/**
-	 * Owner
-	 */
-	protected String owner;
-	/**
-	 * Updated By
-	 */
-	protected String updatedBy;
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXDataObject() {
+    }
 
-	/**
-	 * Default constructor. This will set all the attributes to default value.
-	 */
-	public VXDataObject ( ) {
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     * @return Long - value of member attribute <b>id</b>.
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>id</b>.
-	 * You cannot set null to the attribute.
-	 * @param id Value to set member attribute <b>id</b>
-	 */
-	public void setId( Long id ) {
-		this.id = id;
-	}
+    /**
+     * This method sets the value to the member attribute <b>id</b>.
+     * You cannot set null to the attribute.
+     * @param id Value to set member attribute <b>id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 * @return Long - value of member attribute <b>id</b>.
-	 */
-	public Long getId( ) {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>createDate</b>
+     * @return Date - value of member attribute <b>createDate</b>.
+     */
+    public Date getCreateDate() {
+        return this.createDate;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>createDate</b>.
-	 * You cannot set null to the attribute.
-	 * @param createDate Value to set member attribute <b>createDate</b>
-	 */
-	public void setCreateDate( Date createDate ) {
-		this.createDate = createDate;
-	}
+    /**
+     * This method sets the value to the member attribute <b>createDate</b>.
+     * You cannot set null to the attribute.
+     * @param createDate Value to set member attribute <b>createDate</b>
+     */
+    public void setCreateDate(Date createDate) {
+        this.createDate = createDate;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>createDate</b>
-	 * @return Date - value of member attribute <b>createDate</b>.
-	 */
-	public Date getCreateDate( ) {
-		return this.createDate;
-	}
+    /**
+     * Returns the value for the member attribute <b>updateDate</b>
+     * @return Date - value of member attribute <b>updateDate</b>.
+     */
+    public Date getUpdateDate() {
+        return this.updateDate;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>updateDate</b>.
-	 * You cannot set null to the attribute.
-	 * @param updateDate Value to set member attribute <b>updateDate</b>
-	 */
-	public void setUpdateDate( Date updateDate ) {
-		this.updateDate = updateDate;
-	}
+    /**
+     * This method sets the value to the member attribute <b>updateDate</b>.
+     * You cannot set null to the attribute.
+     * @param updateDate Value to set member attribute <b>updateDate</b>
+     */
+    public void setUpdateDate(Date updateDate) {
+        this.updateDate = updateDate;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>updateDate</b>
-	 * @return Date - value of member attribute <b>updateDate</b>.
-	 */
-	public Date getUpdateDate( ) {
-		return this.updateDate;
-	}
+    /**
+     * Returns the value for the member attribute <b>owner</b>
+     * @return String - value of member attribute <b>owner</b>.
+     */
+    public String getOwner() {
+        return this.owner;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>owner</b>.
-	 * You cannot set null to the attribute.
-	 * @param owner Value to set member attribute <b>owner</b>
-	 */
-	public void setOwner( String owner ) {
-		this.owner = owner;
-	}
+    /**
+     * This method sets the value to the member attribute <b>owner</b>.
+     * You cannot set null to the attribute.
+     * @param owner Value to set member attribute <b>owner</b>
+     */
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>owner</b>
-	 * @return String - value of member attribute <b>owner</b>.
-	 */
-	public String getOwner( ) {
-		return this.owner;
-	}
+    /**
+     * Returns the value for the member attribute <b>updatedBy</b>
+     * @return String - value of member attribute <b>updatedBy</b>.
+     */
+    public String getUpdatedBy() {
+        return this.updatedBy;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b>updatedBy</b>.
-	 * You cannot set null to the attribute.
-	 * @param updatedBy Value to set member attribute <b>updatedBy</b>
-	 */
-	public void setUpdatedBy( String updatedBy ) {
-		this.updatedBy = updatedBy;
-	}
+    /**
+     * This method sets the value to the member attribute <b>updatedBy</b>.
+     * You cannot set null to the attribute.
+     * @param updatedBy Value to set member attribute <b>updatedBy</b>
+     */
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>updatedBy</b>
-	 * @return String - value of member attribute <b>updatedBy</b>.
-	 */
-	public String getUpdatedBy( ) {
-		return this.updatedBy;
-	}
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_DATA_OBJECT;
+    }
 
-	@Override
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_DATA_OBJECT;
-	}
-
-	/**
-	 * This return the bean content in string format
-	 * @return formatedStr
-	*/
-	public String toString( ) {
-		String str = "VXDataObject={";
-		str += super.toString();
-		str += "id={" + id + "} ";
-		str += "createDate={" + createDate + "} ";
-		str += "updateDate={" + updateDate + "} ";
-		str += "owner={" + owner + "} ";
-		str += "updatedBy={" + updatedBy + "} ";
-		str += "}";
-		return str;
-	}
+    /**
+     * This return the bean content in string format
+     * @return formatedStr
+     */
+    public String toString() {
+        String str = "VXDataObject={";
+        str += super.toString();
+        str += "id={" + id + "} ";
+        str += "createDate={" + createDate + "} ";
+        str += "updateDate={" + updateDate + "} ";
+        str += "owner={" + owner + "} ";
+        str += "updatedBy={" + updatedBy + "} ";
+        str += "}";
+        return str;
+    }
 }

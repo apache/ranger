@@ -19,50 +19,50 @@
 
 package org.apache.ranger.plugin.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RangerServiceResourceWithTags extends RangerServiceResource implements java.io.Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private List<RangerTag>	associatedTags;
+    private List<RangerTag> associatedTags;
 
-	public List<RangerTag> getAssociatedTags() {
-		return associatedTags;
-	}
+    public List<RangerTag> getAssociatedTags() {
+        return associatedTags;
+    }
 
-	public void setAssociatedTags(List<RangerTag> associatedTags) {
-		this.associatedTags = associatedTags;
-	}
+    public void setAssociatedTags(List<RangerTag> associatedTags) {
+        this.associatedTags = associatedTags;
+    }
 
-	@Override
-	public StringBuilder toString(StringBuilder sb) {
-		sb.append("RangerServiceResourceWithTags={ ");
+    @Override
+    public StringBuilder toString(StringBuilder sb) {
+        sb.append("RangerServiceResourceWithTags={ ");
 
-		super.toString(sb);
+        super.toString(sb);
 
-		sb.append("associatedTags=[");
-		if (associatedTags != null) {
-			String prefix = "";
+        sb.append("associatedTags=[");
+        if (associatedTags != null) {
+            String prefix = "";
 
-			for (RangerTag associatedTag : associatedTags) {
-	            sb.append(prefix);
+            for (RangerTag associatedTag : associatedTags) {
+                sb.append(prefix);
 
-				associatedTag.toString(sb);
+                associatedTag.toString(sb);
 
-				prefix = ", ";
-	        }
-		}
-		sb.append("] ");
+                prefix = ", ";
+            }
+        }
+        sb.append("] ");
 
-		sb.append(" }");
+        sb.append(" }");
 
-		return sb;
-	}
+        return sb;
+    }
 }

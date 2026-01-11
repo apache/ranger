@@ -17,169 +17,168 @@
  * under the License.
  */
 
- package org.apache.ranger.common.view;
-
-import java.io.Serializable;
-import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.Objects;
+package org.apache.ranger.common.view;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.util.RangerEnumUtil;
 
-public class VTrxLogAttr extends ViewBaseBean implements Serializable{
-	private static final long serialVersionUID = 1L;
-	
-	private final String  attribName;
-	private final String  attribUserFriendlyName;
-	private final boolean isEnum;
-	private final boolean isObjName;
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Objects;
 
-	public VTrxLogAttr(String attribName, String attribUserFriendlyName) {
-		this(attribName, attribUserFriendlyName, false, false);
-	}
+public class VTrxLogAttr extends ViewBaseBean implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-	public VTrxLogAttr(String attribName, String attribUserFriendlyName, boolean isEnum) {
-		this(attribName, attribUserFriendlyName, isEnum, false);
-	}
+    private final String  attribName;
+    private final String  attribUserFriendlyName;
+    private final boolean isEnum;
+    private final boolean isObjName;
 
-	public VTrxLogAttr(String attribName, String attribUserFriendlyName, boolean isEnum, boolean isObjName) {
-		super();
+    public VTrxLogAttr(String attribName, String attribUserFriendlyName) {
+        this(attribName, attribUserFriendlyName, false, false);
+    }
 
-		this.attribName             = attribName;
-		this.attribUserFriendlyName = attribUserFriendlyName;
-		this.isEnum                 = isEnum;
-		this.isObjName              = isObjName;
-	}
+    public VTrxLogAttr(String attribName, String attribUserFriendlyName, boolean isEnum) {
+        this(attribName, attribUserFriendlyName, isEnum, false);
+    }
 
-	/**
-	 * @return the attribName
-	 */
-	public String getAttribName() {
-		return attribName;
-	}
+    public VTrxLogAttr(String attribName, String attribUserFriendlyName, boolean isEnum, boolean isObjName) {
+        super();
 
-	/**
-	 * @return the attribUserFriendlyName
-	 */
-	public String getAttribUserFriendlyName() {
-		return attribUserFriendlyName;
-	}
+        this.attribName             = attribName;
+        this.attribUserFriendlyName = attribUserFriendlyName;
+        this.isEnum                 = isEnum;
+        this.isObjName              = isObjName;
+    }
 
-	/**
-	 * @return the isEnum
-	 */
-	public boolean isEnum() {
-		return isEnum;
-	}
+    /**
+     * @return the attribName
+     */
+    public String getAttribName() {
+        return attribName;
+    }
 
-	/**
-	 * @return the isObjName
-	 */
-	public boolean isObjName() {
-		return isObjName;
-	}
+    /**
+     * @return the attribUserFriendlyName
+     */
+    public String getAttribUserFriendlyName() {
+        return attribUserFriendlyName;
+    }
 
-	@Override
-	public int getMyClassType( ) {
-	    return AppConstants.CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE;
-	}
+    /**
+     * @return the isEnum
+     */
+    public boolean isEnum() {
+        return isEnum;
+    }
 
-	public String getAttrValue(Object obj, RangerEnumUtil xaEnumUtil) {
-		String ret = null;
+    /**
+     * @return the isObjName
+     */
+    public boolean isObjName() {
+        return isObjName;
+    }
 
-		if (obj != null) {
-			Field field = getField(obj);
+    @Override
+    public int getMyClassType() {
+        return AppConstants.CLASS_TYPE_XA_TRANSACTION_LOG_ATTRIBUTE;
+    }
 
-			if (field != null) {
-				ret = getFieldValue(obj, field, xaEnumUtil);
-			}
-		}
+    public String getAttrValue(Object obj, RangerEnumUtil xaEnumUtil) {
+        String ret = null;
 
-		return ret;
-	}
+        if (obj != null) {
+            Field field = getField(obj);
 
-	@Override
-	public String toString(){
-		String str = "VTrxLogAttr={";
-		str += super.toString();
-		str += "attribName={" + attribName + "} ";
-		str += "attribUserFriendlyName={" + attribUserFriendlyName + "} ";
-		str += "isEnum={" + isEnum + "} ";
-		str += "isObjName={" + isObjName + "} ";
-		str += "}";
-		return str;
-	}
+            if (field != null) {
+                ret = getFieldValue(obj, field, xaEnumUtil);
+            }
+        }
 
-	private Field getField(Object obj) {
-		Field field = null;
+        return ret;
+    }
 
-		try {
-			field = obj.getClass().getDeclaredField(attribName);
-		} catch (NoSuchFieldException excp) {
-			try {
-				field = obj.getClass().getSuperclass().getDeclaredField(attribName);
-			} catch (NoSuchFieldException excp1) {
-				// ignore
-			}
-		}
+    @Override
+    public String toString() {
+        String str = "VTrxLogAttr={";
+        str += super.toString();
+        str += "attribName={" + attribName + "} ";
+        str += "attribUserFriendlyName={" + attribUserFriendlyName + "} ";
+        str += "isEnum={" + isEnum + "} ";
+        str += "isObjName={" + isObjName + "} ";
+        str += "}";
+        return str;
+    }
 
-		if (field != null && !field.isAccessible()) {
-			field.setAccessible(true);
-		}
+    private Field getField(Object obj) {
+        Field field    = null;
+        Class objClass = obj.getClass();
 
-		return field;
-	}
+        while (field == null && objClass != null) {
+            try {
+                field = objClass.getDeclaredField(attribName);
+            } catch (NoSuchFieldException excp) {
+                objClass = objClass.getSuperclass();
+            }
+        }
 
-	private String getFieldValue(Object obj, Field field, RangerEnumUtil xaEnumUtil) {
-		String ret = null;
-		Object val = null;
+        if (field != null && !field.isAccessible()) {
+            field.setAccessible(true);
+        }
 
-		try {
-			val = field.get(obj);
-		} catch (IllegalArgumentException | IllegalAccessException excp) {
-			// ignore
-		}
+        return field;
+    }
 
-		if (isEnum) {
-			String enumName  = XXAsset.getEnumName(field.getName());
-			int    enumValue = -1;
+    private String getFieldValue(Object obj, Field field, RangerEnumUtil xaEnumUtil) {
+        String ret = null;
+        Object val = null;
 
-			if (val == null) {
-				enumValue = 0;
-			} else if (val instanceof Number) {
-				enumValue = ((Number) val).intValue();
-			} else {
-				try {
-					enumValue = Integer.parseInt(val.toString());
-				} catch (Exception excp) {
-					// ignore
-				}
-			}
+        try {
+            val = field.get(obj);
+        } catch (IllegalArgumentException | IllegalAccessException excp) {
+            // ignore
+        }
 
-			if (enumValue == -1) { // val is not a number
-				ret = val.toString();
-			} else {
-				ret = xaEnumUtil.getLabel(enumName, enumValue);
-			}
-		} else if (val != null) {
-			if (val instanceof String) {
-				ret = (String) val;
-			} else if (val instanceof Collection && ((Collection) val).isEmpty()) {
-				ret = null;
-			} else if (val instanceof Serializable) {
-				try {
-					ret = JsonUtilsV2.objToJson((Serializable) val);
-				} catch (Exception excp) {
-					// ignore
-				}
-			} else {
-				ret = Objects.toString(val);
-			}
-		}
+        if (isEnum) {
+            String enumName  = XXAsset.getEnumName(field.getName());
+            int    enumValue = -1;
 
-		return ret;
-	}
+            if (val == null) {
+                enumValue = 0;
+            } else if (val instanceof Number) {
+                enumValue = ((Number) val).intValue();
+            } else {
+                try {
+                    enumValue = Integer.parseInt(val.toString());
+                } catch (Exception excp) {
+                    // ignore
+                }
+            }
+
+            if (enumValue == -1) { // val is not a number
+                ret = val.toString();
+            } else {
+                ret = xaEnumUtil.getLabel(enumName, enumValue);
+            }
+        } else if (val != null) {
+            if (val instanceof String) {
+                ret = (String) val;
+            } else if (val instanceof Collection && ((Collection) val).isEmpty()) {
+                ret = null;
+            } else if (val instanceof Serializable) {
+                try {
+                    ret = JsonUtilsV2.objToJson((Serializable) val);
+                } catch (Exception excp) {
+                    // ignore
+                }
+            } else {
+                ret = Objects.toString(val);
+            }
+        }
+
+        return ret;
+    }
 }

@@ -16,59 +16,57 @@
  */
 package org.apache.ranger.view;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.HashMap;
 import java.util.Map;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXMetricPolicyWithServiceNameCount implements java.io.Serializable {
-        private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-        protected Map<String,VXMetricServiceNameCount> policyCountList = new HashMap<String,VXMetricServiceNameCount>();
-        protected long totalCount;
+    protected Map<String, VXMetricServiceNameCount> policyCountList = new HashMap<>();
+    protected long                                  totalCount;
 
-        /**
-         * Default constructor. This will set all the attributes to default value.
-         */
-        public VXMetricPolicyWithServiceNameCount() {
-        }
+    /**
+     * Default constructor. This will set all the attributes to default value.
+     */
+    public VXMetricPolicyWithServiceNameCount() {
+    }
 
-        /**
-         * @return the policyCountList
-         */
-        public Map<String, VXMetricServiceNameCount> getPolicyCountList() {
-                return policyCountList;
-        }
+    /**
+     * @return the policyCountList
+     */
+    public Map<String, VXMetricServiceNameCount> getPolicyCountList() {
+        return policyCountList;
+    }
 
-        /**
-         * @param policyCountList the policyCountList to set
-         */
-        public void setPolicyCountList(Map<String, VXMetricServiceNameCount> policyCountList) {
-                this.policyCountList = policyCountList;
-        }
+    /**
+     * @param policyCountList the policyCountList to set
+     */
+    public void setPolicyCountList(Map<String, VXMetricServiceNameCount> policyCountList) {
+        this.policyCountList = policyCountList;
+    }
 
-        /**
-         * @return the totalCount
-         */
-        public long getTotalCount() {
-                return totalCount;
-        }
+    /**
+     * @return the totalCount
+     */
+    public long getTotalCount() {
+        return totalCount;
+    }
 
-        /**
-         * @param totalCount the totalCount to set
-         */
-        public void setTotalCount(long totalCount) {
-                this.totalCount = totalCount;
-        }
+    /**
+     * @param totalCount the totalCount to set
+     */
+    public void setTotalCount(long totalCount) {
+        this.totalCount = totalCount;
+    }
 
-        @Override
-        public String toString() {
-                return "VXMetricPolicyWithServiceNameCount={totalCount="
-                                + totalCount +", VXMetricPolicyWithServiceNameCount=["
-                                + policyCountList.toString()
-                                 + "]}";
-        }
+    @Override
+    public String toString() {
+        return "VXMetricPolicyWithServiceNameCount={totalCount=" + totalCount + ", VXMetricPolicyWithServiceNameCount=[" + policyCountList.toString() + "]}";
+    }
 }

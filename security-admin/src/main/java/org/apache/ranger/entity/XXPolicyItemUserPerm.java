@@ -18,198 +18,171 @@
  */
 package org.apache.ranger.entity;
 
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+
+import java.util.Objects;
 
 @Entity
 @Cacheable
 @Table(name = "x_policy_item_user_perm")
-public class XXPolicyItemUserPerm extends XXDBBase implements
-		java.io.Serializable {
-	private static final long serialVersionUID = 1L;
-	/**
-	 * id of the XXPolicyItemUserPerm
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Id
-	@SequenceGenerator(name = "x_policy_item_user_perm_SEQ", sequenceName = "x_policy_item_user_perm_SEQ", allocationSize = 1)
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_user_perm_SEQ")
-	@Column(name = "id")
-	protected Long id;
+public class XXPolicyItemUserPerm extends XXDBBase implements java.io.Serializable {
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * policyItemId of the XXPolicyItemUserPerm
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "policy_item_id")
-	protected Long policyItemId;
+    /**
+     * id of the XXPolicyItemUserPerm
+     * <ul>
+     * </ul>
+     */
+    @Id
+    @SequenceGenerator(name = "x_policy_item_user_perm_SEQ", sequenceName = "x_policy_item_user_perm_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "x_policy_item_user_perm_SEQ")
+    @Column(name = "id")
+    protected Long id;
 
-	/**
-	 * userId of the XXPolicyItemUserPerm
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "user_id")
-	protected Long userId;
+    /**
+     * policyItemId of the XXPolicyItemUserPerm
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "policy_item_id")
+    protected Long policyItemId;
 
-	/**
-	 * order of the XXPolicyItemUserPerm
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name = "sort_order")
-	protected Integer order;
+    /**
+     * userId of the XXPolicyItemUserPerm
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "user_id")
+    protected Long userId;
 
-	/**
-	 * This method sets the value to the member attribute <b> id</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param id
-	 *            Value to set member attribute <b> id</b>
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+    /**
+     * order of the XXPolicyItemUserPerm
+     * <ul>
+     * </ul>
+     */
+    @Column(name = "sort_order")
+    protected Integer order;
 
-	/**
-	 * Returns the value for the member attribute <b>id</b>
-	 *
-	 * @return Date - value of member attribute <b>id</b> .
-	 */
-	public Long getId() {
-		return this.id;
-	}
+    /**
+     * Returns the value for the member attribute <b>id</b>
+     *
+     * @return Date - value of member attribute <b>id</b> .
+     */
+    public Long getId() {
+        return this.id;
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> policyItemId</b> .
-	 * You cannot set null to the attribute.
-	 *
-	 * @param policyItemId
-	 *            Value to set member attribute <b> policyItemId</b>
-	 */
-	public void setPolicyItemId(Long policyItemId) {
-		this.policyItemId = policyItemId;
-	}
+    /**
+     * This method sets the value to the member attribute <b> id</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param id Value to set member attribute <b> id</b>
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>policyItemId</b>
-	 *
-	 * @return Date - value of member attribute <b>policyItemId</b> .
-	 */
-	public Long getPolicyitemid() {
-		return this.policyItemId;
-	}
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
 
-	/**
-	 * This method sets the value to the member attribute <b> userId</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param userId
-	 *            Value to set member attribute <b> userId</b>
-	 */
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (!super.equals(obj)) {
+            return false;
+        }
 
-	/**
-	 * Returns the value for the member attribute <b>userId</b>
-	 *
-	 * @return Date - value of member attribute <b>userId</b> .
-	 */
-	public Long getUserid() {
-		return this.userId;
-	}
+        XXPolicyItemUserPerm other = (XXPolicyItemUserPerm) obj;
 
-	/**
-	 * This method sets the value to the member attribute <b> order</b> . You
-	 * cannot set null to the attribute.
-	 *
-	 * @param order
-	 *            Value to set member attribute <b> order</b>
-	 */
-	public void setOrder(Integer order) {
-		this.order = order;
-	}
+        return Objects.equals(id, other.id) &&
+                Objects.equals(order, other.order) &&
+                Objects.equals(policyItemId, other.policyItemId) &&
+                Objects.equals(userId, other.userId);
+    }
 
-	/**
-	 * Returns the value for the member attribute <b>order</b>
-	 *
-	 * @return Date - value of member attribute <b>order</b> .
-	 */
-	public Integer getOrder() {
-		return this.order;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        String str = "XXPolicyItemUserPerm={";
+        str += super.toString();
+        str += " [id=" + id + ", policyItemId=" + policyItemId + ", userId=" + userId + ", order=" + order + "]";
+        str += "}";
+        return str;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (this == obj) {
-			return true;
-		}
-		if (!super.equals(obj)) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		XXPolicyItemUserPerm other = (XXPolicyItemUserPerm) obj;
-		if (id == null) {
-			if (other.id != null) {
-				return false;
-			}
-		} else if (!id.equals(other.id)) {
-			return false;
-		}
-		if (order == null) {
-			if (other.order != null) {
-				return false;
-			}
-		} else if (!order.equals(other.order)) {
-			return false;
-		}
-		if (policyItemId == null) {
-			if (other.policyItemId != null) {
-				return false;
-			}
-		} else if (!policyItemId.equals(other.policyItemId)) {
-			return false;
-		}
-		if (userId == null) {
-			if (other.userId != null) {
-				return false;
-			}
-		} else if (!userId.equals(other.userId)) {
-			return false;
-		}
-		return true;
-	}
+    /**
+     * This method sets the value to the member attribute <b> policyItemId</b> .
+     * You cannot set null to the attribute.
+     *
+     * @param policyItemId Value to set member attribute <b> policyItemId</b>
+     */
+    public void setPolicyItemId(Long policyItemId) {
+        this.policyItemId = policyItemId;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		String str = "XXPolicyItemUserPerm={";
-		str += super.toString();
-		str +=  " [id=" + id + ", policyItemId="
-				+ policyItemId + ", userId=" + userId + ", order=" + order
-				+ "]";
-		str += "}";
-		return str;
-	}
+    /**
+     * Returns the value for the member attribute <b>policyItemId</b>
+     *
+     * @return Date - value of member attribute <b>policyItemId</b> .
+     */
+    public Long getPolicyitemid() {
+        return this.policyItemId;
+    }
 
+    /**
+     * This method sets the value to the member attribute <b> userId</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param userId Value to set member attribute <b> userId</b>
+     */
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>userId</b>
+     *
+     * @return Date - value of member attribute <b>userId</b> .
+     */
+    public Long getUserid() {
+        return this.userId;
+    }
+
+    /**
+     * Returns the value for the member attribute <b>order</b>
+     *
+     * @return Date - value of member attribute <b>order</b> .
+     */
+    public Integer getOrder() {
+        return this.order;
+    }
+
+    /**
+     * This method sets the value to the member attribute <b> order</b> . You
+     * cannot set null to the attribute.
+     *
+     * @param order Value to set member attribute <b> order</b>
+     */
+    public void setOrder(Integer order) {
+        this.order = order;
+    }
 }

@@ -17,58 +17,60 @@
  * under the License.
  */
 
- package org.apache.ranger.view;
-
+package org.apache.ranger.view;
 
 /**
  * List wrapper class for VXPolicy
  */
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.ranger.common.view.VList;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ranger.common.view.VList;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VXPolicyLabelList extends VList {
-        private static final long serialVersionUID = 1L;
-        List<VXPolicyLabel> vxPolicyLabels = new ArrayList<VXPolicyLabel>();
+    private static final long serialVersionUID = 1L;
 
-                public VXPolicyLabelList() {
-                super();
+    List<VXPolicyLabel> vxPolicyLabels = new ArrayList<>();
+
+    public VXPolicyLabelList() {
+        super();
+    }
+
+    public VXPolicyLabelList(List<VXPolicyLabel> objList) {
+        super(objList);
+        this.vxPolicyLabels = objList;
+    }
+
+    /**
+     * @return the VXPolicyLabels
+     */
+    @JsonProperty("vxPolicyLabels")
+    public List<VXPolicyLabel> getVXPolicyLabels() {
+        return vxPolicyLabels;
+    }
+
+    @JsonProperty("vxPolicyLabels")
+    public void setVXPolicyLabels(List<VXPolicyLabel> vxPolicyLabels) {
+        this.vxPolicyLabels = vxPolicyLabels;
+    }
+
+    @Override
+    public int getListSize() {
+        if (vxPolicyLabels != null) {
+            return vxPolicyLabels.size();
         }
+        return 0;
+    }
 
-        public VXPolicyLabelList(List<VXPolicyLabel> objList) {
-                super(objList);
-                this.vxPolicyLabels = objList;
-        }
-
-        /**
-         * @return the VXPolicyLabels
-         */
-        public List<VXPolicyLabel> getVXPolicyLabels() {
-                        return vxPolicyLabels;
-                }
-
-                public void setVXPolicyLabels(List<VXPolicyLabel> vxPolicyLabels) {
-                        this.vxPolicyLabels = vxPolicyLabels;
-                }
-
-        @Override
-        public int getListSize() {
-                if (vxPolicyLabels != null) {
-                        return vxPolicyLabels.size();
-                }
-                return 0;
-        }
-
-        @Override
-        public List<VXPolicyLabel> getList() {
-                return vxPolicyLabels;
-        }
-
+    @Override
+    public List<VXPolicyLabel> getList() {
+        return vxPolicyLabels;
+    }
 }
