@@ -1767,7 +1767,7 @@ def main(argv):
 
 	if AUDIT_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
-		audit_sqlObj = MysqlConf(audit_db_host,MYSQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_allow_public_key_retrieval))
+		audit_sqlObj = MysqlConf(audit_db_host,MYSQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_allow_public_key_retrieval)
 		audit_db_file = os.path.join(RANGER_ADMIN_HOME,mysql_audit_file)
 
 	elif AUDIT_DB_FLAVOR == "ORACLE":
