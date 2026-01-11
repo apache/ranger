@@ -139,7 +139,7 @@ class MysqlConf(BaseDB):
 			if "useSSL" not in db_name:
 				db_ssl_param="?useSSL=false"
 		if self.db_allow_public_key_retrieval == 'true':
-                	db_ssl_param += "&allowPublicKeyRetrieval=true" 
+            db_ssl_param += "&allowPublicKeyRetrieval=true" 
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
 			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
