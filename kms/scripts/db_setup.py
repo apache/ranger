@@ -715,8 +715,8 @@ def main(argv):
 		is_override_db_connection_string=globalDict['is_override_db_connection_string'].lower()
 	if 'db_override_jdbc_connection_string' in globalDict:
 		db_override_jdbc_connection_string=globalDict['db_override_jdbc_connection_string'].strip()
-        if 'db_allow_public_key_retrieval' in globalDict:
-                db_allow_public_key_retrieval=globalDict['db_allow_public_key_retrieval'].lower()
+    if 'db_allow_public_key_retrieval' in globalDict:
+        db_allow_public_key_retrieval=globalDict['db_allow_public_key_retrieval'].lower()
 
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
