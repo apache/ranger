@@ -167,7 +167,7 @@ class MysqlConf(BaseDB):
 			if "useSSL" not in db_name:
 				db_ssl_param="?useSSL=false"
 		if self.db_allow_public_key_retrieval == 'true':
-      db_ssl_param += "&allowPublicKeyRetrieval=true" 
+      		db_ssl_param += "&allowPublicKeyRetrieval=true" 
 		if is_unix:
 			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u %s -p '%s' -noheader -trim -c \\;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
 		elif os_name == "WINDOWS":
@@ -1450,7 +1450,7 @@ def main(argv):
 						log("[E] Invalid ssl keystore password!","error")
 						sys.exit(1)
 	if 'db_allow_public_key_retrieval' in globalDict:
-                db_allow_public_key_retrieval=globalDict['db_allow_public_key_retrieval'].lower()
+        db_allow_public_key_retrieval=globalDict['db_allow_public_key_retrieval'].lower()
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_allow_public_key_retrieval)
