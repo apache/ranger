@@ -89,7 +89,7 @@ public class RangerRoleCache {
                     } else {
                         ret = roleCacheWrapper.getRoles();
 
-                        LOG.error("Could not get lock in [{}] seconds, returning cached RangerRoles and wait Queue Length:[{}], roles version:[{}]", waitTimeInSeconds, lock.getQueueLength(), ret.getRoleVersion());
+                        LOG.error("Could not get lock in [{}] seconds, returning cached RangerRoles and wait Queue Length:[{}], roles version:[{}]", waitTimeInSeconds, lock.getQueueLength(), (ret != null ? ret.getRoleVersion() : -1L));
                     }
 
                 } catch (InterruptedException exception) {
