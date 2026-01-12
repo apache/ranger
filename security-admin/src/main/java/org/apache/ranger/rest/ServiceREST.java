@@ -152,6 +152,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -3729,6 +3730,8 @@ public class ServiceREST {
         List<String> serviceTypeList              = null;
         List<String> serviceNameInServiceTypeList = new ArrayList<>();
         boolean      isServiceExists;
+        int          begin                        = 0;
+        int          offset                       = -1;
 
         if (request.getParameter(PARAM_SERVICE_NAME) != null) {
             serviceNames = request.getParameter(PARAM_SERVICE_NAME);
@@ -3750,6 +3753,9 @@ public class ServiceREST {
         List<RangerPolicy> policyListByServiceName = new ArrayList<>();
 
         if (filter != null) {
+            begin = filter.getBeginIndex();
+            offset = filter.getOffset();
+            LOG.info("==> beginIndex: {}, offset: {}", begin, offset);
             filter.setStartIndex(0);
             filter.setMaxRows(Integer.MAX_VALUE);
 
@@ -3830,7 +3836,12 @@ public class ServiceREST {
                 policyLists.addAll(orderedPolicies.values());
             }
         }
+        LOG.info("<==policyLists size:{}", policyLists.size());
 
+        if(begin>=0 && offset >0) {
+            policyLists = getRangerPoliciesInRange(policyLists, filter);
+            LOG.info("<==policyLists size after cut:{}" , policyLists.size());
+        }
         return policyLists;
     }
 
@@ -4296,6 +4307,39 @@ public class ServiceREST {
         }
 
         return ret;
+    }
+
+    private List<RangerPolicy> getRangerPoliciesInRange(List<RangerPolicy> policyList, SearchFilter filter) {
+        if (CollectionUtils.isEmpty(policyList)) {
+            return Collections.emptyList();
+        }
+
+        int totalCount = policyList.size();
+        int startIndex = filter.getBeginIndex();
+        int offset = filter.getOffset();
+        int toIndex = Math.min(startIndex + offset, totalCount);
+        LOG.info("==>totalCount: {}, startIndex:{}, offsetSize: {}, toIndex: {}" , totalCount, startIndex, offset, toIndex);
+        String sortType = filter.getSortType();
+        String sortBy = filter.getSortBy();
+
+        if (StringUtils.isNotEmpty(sortBy) && StringUtils.isNotEmpty(sortType)) {
+            // By default policyList is sorted by policyId in asc order, So handling only desc case.
+            if (SearchFilter.POLICY_ID.equalsIgnoreCase(sortBy)) {
+                if (SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+                    policyList.sort(this.getPolicyComparator(sortBy, sortType));
+                }
+            } else if (SearchFilter.POLICY_NAME.equalsIgnoreCase(sortBy)) {
+                if (SORT_ORDER.ASC.name().equalsIgnoreCase(sortType) || SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+                    policyList.sort(this.getPolicyComparator(sortBy, sortType));
+                } else {
+                    LOG.info("Invalid or Unsupported sortType : {}", sortType);
+                }
+            } else {
+                LOG.info("Invalid or Unsupported sortBy property : {}" , sortBy);
+            }
+        }
+
+        return new ArrayList<>(policyList.subList(startIndex, toIndex));
     }
 
     private Comparator<RangerPolicy> getPolicyComparator(String sortBy, String sortType) {
