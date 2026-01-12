@@ -91,8 +91,7 @@ public class RangerRoleCache {
 
                         LOG.error("Could not get lock in [{}] seconds, returning cached RangerRoles and wait Queue Length:[{}], roles version:[{}]", waitTimeInSeconds, lock.getQueueLength(), (ret != null ? ret.getRoleVersion() : -1L));
                     }
-
-                } catch (InterruptedException exception) {
+               } catch (InterruptedException exception) {
                     Thread.currentThread().interrupt();
                     LOG.error("RangerRoleCache.getLatestRangerRoles:lock got interrupted..", exception);
                 } finally {
