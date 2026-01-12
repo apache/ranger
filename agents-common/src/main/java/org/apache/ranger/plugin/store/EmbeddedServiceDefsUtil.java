@@ -142,10 +142,10 @@ public class EmbeddedServiceDefsUtil {
 			createEmbeddedServiceDefs = config.getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
 
 			supportedServiceDefs =getSupportedServiceDef();
-			/*
-			 * Maintaining the following service-def create-order is critical for the
-			 * the legacy service-defs (HDFS/HBase/Hive/Knox/Storm) to be assigned IDs
-			 * that were used in earlier version (0.4) */
+
+			/* TAG service-def must be created before any other service-def */
+			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
+
 			hdfsServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HDFS_NAME);
 			hBaseServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HBASE_NAME);
 			hiveServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HIVE_NAME);
@@ -160,7 +160,6 @@ public class EmbeddedServiceDefsUtil {
 			nifiRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME);
 			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME);
 
-			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 			wasbServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_WASB_NAME);
 			sqoopServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SQOOP_NAME);
 			kylinServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KYLIN_NAME);
@@ -171,9 +170,6 @@ public class EmbeddedServiceDefsUtil {
 			ozoneServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_OZONE_NAME);
 			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
 			nestedStructureServiveDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME);
-
-			// Ensure that tag service def is updated with access types of all service defs
-			store.updateTagServiceDefForAccessTypes();
 		} catch(Throwable excp) {
 			LOG.error("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
