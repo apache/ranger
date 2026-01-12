@@ -176,7 +176,8 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         Map<String, String> appDataVersionJson = JsonUtils.jsonToMapStringString(globalState.getAppData());
 
         if (MapUtils.isNotEmpty(appDataVersionJson)) {
-            long appDataVersion = Long.parseLong(appDataVersionJson.get(APP_DATA_ENTRY_VERSION)) + 1L;
+            String versionStr     = appDataVersionJson.get(APP_DATA_ENTRY_VERSION);
+            long   appDataVersion = StringUtils.isNotBlank(versionStr) ? (Long.parseLong(versionStr) + 1L) : 1L;
 
             appDataVersionJson.put(APP_DATA_ENTRY_VERSION, Long.toString(appDataVersion));
 
