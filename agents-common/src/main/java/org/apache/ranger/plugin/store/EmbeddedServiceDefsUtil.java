@@ -159,10 +159,10 @@ public class EmbeddedServiceDefsUtil {
             createEmbeddedServiceDefs = config.getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
 
             supportedServiceDefs = getSupportedServiceDef();
-            /*
-             * Maintaining the following service-def create-order is critical for the
-             * the legacy service-defs (HDFS/HBase/Hive/Knox/Storm) to be assigned IDs
-             * that were used in earlier version (0.4) */
+
+            /* TAG service-def must be created before any other service-def */
+            tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
+
             hdfsServiceDef            = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HDFS_NAME);
             hBaseServiceDef           = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HBASE_NAME);
             hiveServiceDef            = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_HIVE_NAME);
@@ -187,11 +187,7 @@ public class EmbeddedServiceDefsUtil {
             kuduServiceDef            = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
             nestedStructureServiveDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME);
 
-            tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
             gdsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_GDS_NAME);
-
-            // Ensure that tag service def is updated with access types of all service defs
-            store.updateTagServiceDefForAccessTypes();
 
             getOrCreateService(store, EMBEDDED_SERVICEDEF_GDS_NAME, GdsPolicyEngine.GDS_SERVICE_NAME);
         } catch (Throwable excp) {
