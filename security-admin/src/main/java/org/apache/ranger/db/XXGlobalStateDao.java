@@ -17,9 +17,9 @@
 
 package org.apache.ranger.db;
 
-import com.google.gson.Gson;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGlobalState;
@@ -113,7 +113,7 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
             XXGlobalState globalState = findByStateName(stateName);
 
             if (globalState != null) {
-                Map<String, String> appDataVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
+                Map<String, String> appDataVersionJson = JsonUtils.jsonToMapStringString(globalState.getAppData());
 
                 if (MapUtils.isNotEmpty(appDataVersionJson)) {
                     ret = Long.valueOf(appDataVersionJson.get(APP_DATA_ENTRY_VERSION));
@@ -167,20 +167,20 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
 
         appDataVersion.put(APP_DATA_ENTRY_VERSION, Long.toString(1L));
 
-        globalState.setAppData(new Gson().toJson(appDataVersion));
+        globalState.setAppData(JsonUtils.mapToJson(appDataVersion));
 
         create(globalState);
     }
 
     private void updateGlobalStateForAppDataVersion(XXGlobalState globalState, String stateName) {
-        Map<String, String> appDataVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
+        Map<String, String> appDataVersionJson = JsonUtils.jsonToMapStringString(globalState.getAppData());
 
         if (MapUtils.isNotEmpty(appDataVersionJson)) {
-            Long appDataVersion = Long.valueOf(appDataVersionJson.get(APP_DATA_ENTRY_VERSION)) + 1L;
+            long appDataVersion = Long.parseLong(appDataVersionJson.get(APP_DATA_ENTRY_VERSION)) + 1L;
 
             appDataVersionJson.put(APP_DATA_ENTRY_VERSION, Long.toString(appDataVersion));
 
-            globalState.setAppData(new Gson().toJson(appDataVersionJson));
+            globalState.setAppData(JsonUtils.mapToJson(appDataVersionJson));
 
             update(globalState);
         } else {
