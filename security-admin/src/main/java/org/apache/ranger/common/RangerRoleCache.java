@@ -43,10 +43,9 @@ public class RangerRoleCache {
     private final int           waitTimeInSeconds;
     private final ReentrantLock lock = new ReentrantLock();
 
-    private final RangerRoleCacheWrapper roleCacheWrapper;
+    private final RangerRoleCacheWrapper roleCacheWrapper = new RangerRoleCacheWrapper();
 
     private RangerRoleCache() {
-        roleCacheWrapper         = new RangerRoleCacheWrapper();
         RangerAdminConfig config = RangerAdminConfig.getInstance();
 
         waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
@@ -77,16 +76,20 @@ public class RangerRoleCache {
 
             if (roleCacheWrapper.getRolesVersion() < rangerRoleVersionInDB) {
                 boolean lockResult = false;
+
                 try {
                     lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
 
                     if (lockResult) {
                         if (roleCacheWrapper.getRolesVersion() < rangerRoleVersionInDB) {
-                            ret = roleCacheWrapper.getLatestRangerRoles(
-                                    serviceName, roleDBStore, lastKnownRoleVersion, rangerRoleVersionInDB);
+                            ret = roleCacheWrapper.getLatestRangerRoles(serviceName, roleDBStore, lastKnownRoleVersion, rangerRoleVersionInDB);
+                        } else {
+                            ret = roleCacheWrapper.getRoles();
                         }
                     } else {
-                        LOG.error("Could not get lock in [{}] seconds, returning cached RangerRoles and wait Queue Length:[{}], roles version:[{}]", waitTimeInSeconds, lock.getQueueLength(), roleCacheWrapper.getRolesVersion());
+                        ret = roleCacheWrapper.getRoles();
+
+                        LOG.error("Could not get lock in [{}] seconds, returning cached RangerRoles and wait Queue Length:[{}], roles version:[{}]", waitTimeInSeconds, lock.getQueueLength(), ret.getRoleVersion());
                     }
 
                 } catch (InterruptedException exception) {
