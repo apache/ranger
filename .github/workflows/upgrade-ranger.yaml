@@ -63,6 +63,9 @@ jobs:
         run: |
           cd dev-support/ranger-docker
           ./download-archives.sh none
+          
+          curl -LO https://downloads.apache.org/ranger/KEYS
+          gpg --import KEYS
       
       - name: Bringing up Ranger ${{ matrix.earlier-release }} in Docker
         run: |
