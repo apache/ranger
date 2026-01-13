@@ -1,0 +1,135 @@
+<!---
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+{% extends "base.html" %}
+
+{% block tabs %}
+    {{ super() }}
+<!-- Additional styles for landing page -->
+<style>
+    .mdx-container {
+        background: url("data:image/svg+xml;utf8,<svg width='100%' height='100%' viewBox='0 0 1123 258' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' xml:space='preserve' xmlns:serif='http://www.serif.com/' style='fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;'><g transform='matrix(-1.01432,0,0,0.388868,1134.41,161.501)'><path d='M1124,2L1124,258L-1,258L-1,210C-1,210 15,215 54,215C170,215 251,123 379,123C500,123 493,169 633,169C773,169 847,2 1205,3L1124,2Z' style='fill:rgb(250, 250, 250);fill-rule:nonzero;'/></g></svg>")
+                no-repeat bottom,
+            linear-gradient(to bottom, rgb(255 255 255/.8), #00C2CE 99%, var(--md-default-bg-color) 99%);
+        background-size: contain;
+        padding-top: 1rem;
+    }
+    [data-md-color-scheme="slate"] .mdx-container {
+        background: url("data:image/svg+xml;utf8,<svg width='100%' height='100%' viewBox='0 0 1123 258' version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' xml:space='preserve' xmlns:serif='http://www.serif.com/' style='fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;'><g transform='matrix(-1.01432,0,0,0.388868,1134.41,161.501)'><path d='M1124,2L1124,258L-1,258L-1,210C-1,210 15,215 54,215C170,215 251,123 379,123C500,123 493,169 633,169C773,169 847,2 1205,3L1124,2Z' style='fill:rgb(26, 26, 27);fill-rule:nonzero;'/></g></svg>")
+                no-repeat bottom, rgba(9, 9, 9, 0.95);
+            background-size: contain;
+    }
+
+    .mdx-hero {
+        margin: 0 0.8rem;
+    }
+
+    .mdx-hero h1 {
+        color: currentcolor;
+        margin-bottom: 1rem;
+        font-size: 2.6rem;
+    }
+    @media screen and (max-width: 29.9375em) {
+        .mdx-hero h1 {
+            font-size: 1.4rem;
+        }
+    }
+    .mdx-hero__content {
+        padding-bottom: 6rem;
+    }
+
+    @media screen and (min-width: 60em) {
+        .mdx-hero {
+            align-items: stretch;
+            display: flex;
+        }
+        .mdx-hero__content {
+            margin-top: 3.5rem;
+            max-width: 38rem;
+            padding-bottom: 14vw;
+        }
+        .mdx-hero__image {
+            order: 1;
+            transform: translateX(4rem);
+            width: 38rem;
+        }
+    }
+    @media screen and (min-width: 76.25em) {
+        .mdx-hero__image {
+            transform: translateX(8rem);
+        }
+    }
+    .mdx-hero .md-button {
+        color: #000000;
+        border-color: #000000;
+    }
+    [data-md-color-scheme="slate"] .mdx-hero .md-button--primary {
+        color: var(--md-primary-fg-color);
+    }
+
+    .mdx-hero .md-button--primary {
+        color: #ffffff;
+        background-color: #000000;
+        border-color: transparent;
+        margin-right: 0.5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .md-main .md-button--primary {
+        color: #ffffff;
+        background-color: #000000;
+        border-color: transparent;
+    }
+
+    nav[class="md-tabs"] {
+        border-bottom: none;
+    }
+
+    /* extras */
+    [data-md-color-scheme="slate"] .mdx-hero h1 {
+        color: aquamarine;
+    }
+
+    [data-md-color-scheme="slate"] .md-typeset h3 {
+        color: aquamarine;
+    }
+
+    [data-md-color-scheme="slate"] .mdx-hero .md-button {
+        color: aquamarine;
+        border-color: aquamarine;
+    }
+
+</style>
+
+<section class="mdx-container">
+    <div class="md-grid md-typeset">
+        <div class="mdx-hero">
+            <div class="mdx-hero__content">
+                <h1>The open source, community owned authorization framework for<div id="typewriter">data processing platforms</div></h1>
+                <h3>Apache Ranger is an open source framework that helps you enable, monitor and manage comprehensive data security for your applications</h3>
+                <a href="./getting-started/install/" class="md-button md-button--primary">
+                    Install Ranger
+                </a>
+                <a href="https://github.com/apache/ranger" class="md-button" target="_blank">
+                    View on GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
