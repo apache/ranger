@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        earlier-release: [2.6.0]
+        earlier-release: [2.6.0, 2.7.0]
         db: [postgres, mysql, oracle]
     runs-on: ubuntu-22.04
     timeout-minutes: 60
