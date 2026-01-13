@@ -36,8 +36,9 @@ import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_RESOUR
 public class RangerResourceNameParser {
     private static final Logger LOG = LoggerFactory.getLogger(RangerResourceNameParser.class);
 
-    public static final String[] EMPTY_ARRAY           = new String[0];
-    public static final char     RRN_RESOURCE_TYPE_SEP = ':';
+    public static final String[] EMPTY_ARRAY              = new String[0];
+    public static final char     RRN_RESOURCE_TYPE_SEP    = ':';
+    public static final char     DEFAULT_RRN_RESOURCE_SEP = '/';
 
     private static final char   ESCAPE_CHAR   = '\\';
     private static final String ESCAPE_STRING = "\\\\";
@@ -49,8 +50,25 @@ public class RangerResourceNameParser {
     private final String   template;   // examples: database/table/column, bucket/volume/path
     private final String[] resources;  // examples: [database, table, column],   [bucket, volume, path]
 
+    public RangerResourceNameParser(String[] resourcePath) throws RangerAuthzException {
+        this(resourcePath, DEFAULT_RRN_RESOURCE_SEP);
+    }
+
     public RangerResourceNameParser(String[] resourcePath, char separatorChar) throws RangerAuthzException {
-        this(StringUtils.join(resourcePath, separatorChar), separatorChar);
+        if (resourcePath == null || resourcePath.length == 0) {
+            throw new RangerAuthzException(INVALID_RESOURCE_TEMPLATE_EMPTY_VALUE);
+        }
+
+        this.separatorChar    = separatorChar;
+        this.separatorString  = String.valueOf(separatorChar);
+        this.escapedSeparator = ESCAPE_STRING + separatorString;
+        this.separatorPattern = Pattern.compile(separatorString);
+        this.template         = StringUtils.join(resourcePath, separatorChar);
+        this.resources        = resourcePath;
+    }
+
+    public RangerResourceNameParser(String template) throws RangerAuthzException {
+        this(template, DEFAULT_RRN_RESOURCE_SEP);
     }
 
     public RangerResourceNameParser(String template, char separatorChar) throws RangerAuthzException {
