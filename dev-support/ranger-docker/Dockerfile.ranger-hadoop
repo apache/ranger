@@ -39,6 +39,7 @@ COPY ./scripts/hadoop/core-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/hdfs-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/hadoop/yarn-site.xml                         ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                           ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_testusers_keytab.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf                                /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
@@ -56,6 +57,7 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     useradd -g hadoop -ms /bin/bash healthcheck && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
     chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chown healthcheck:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-healthcheck.sh && \
     chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
 

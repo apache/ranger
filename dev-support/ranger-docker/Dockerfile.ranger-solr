@@ -31,10 +31,11 @@ COPY ./scripts/solr/solr-jaas.conf       /opt/solr/server/etc/jaas.conf
 COPY ./scripts/solr/solr-security.json   /var/solr/data/security.json
 COPY ./scripts/solr/ranger-solr.sh       /home/ranger/scripts/
 COPY ./scripts/wait_for_keytab.sh        /home/ranger/scripts/
+COPY ./scripts/wait_for_testusers_keytab.sh   /home/ranger/scripts/
 COPY ./scripts/kdc/krb5.conf             /etc/krb5.conf
 
 RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
-RUN chmod +x /home/ranger/scripts/ranger-solr.sh /home/ranger/scripts/wait_for_keytab.sh
+RUN chmod +x /home/ranger/scripts/ranger-solr.sh /home/ranger/scripts/wait_for_keytab.sh /home/ranger/scripts/wait_for_testusers_keytab.sh
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-solr.sh" ]
 CMD ["solr-foreground"]

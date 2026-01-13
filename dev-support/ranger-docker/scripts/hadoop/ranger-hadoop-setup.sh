@@ -34,6 +34,7 @@ then
   ${RANGER_SCRIPTS}/wait_for_keytab.sh rm.keytab
   ${RANGER_SCRIPTS}/wait_for_keytab.sh yarn.keytab
   ${RANGER_SCRIPTS}/wait_for_keytab.sh healthcheck.keytab
+  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
 fi
 
 cp ${RANGER_SCRIPTS}/core-site.xml ${HADOOP_HOME}/etc/hadoop/core-site.xml

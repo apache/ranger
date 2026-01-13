@@ -24,6 +24,7 @@ ARG RANGER_DB_TYPE
 COPY ./dist/ranger-${KMS_VERSION}-kms.tar.gz                       /home/ranger/dist/
 COPY ./scripts/kms/ranger-kms.sh                                   ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                                  ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_testusers_keytab.sh                        ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${KMS_VERSION}-kms ${RANGER_HOME}/kms && \
@@ -38,6 +39,7 @@ RUN tar xvfz /home/ranger/dist/ranger-${KMS_VERSION}-kms.tar.gz --directory=${RA
     ln -s ${RANGER_HOME}/kms/ranger-kms-services.sh /usr/bin/ranger-kms-services.sh && \
     chown -R rangerkms:ranger ${RANGER_HOME}/kms/ ${RANGER_SCRIPTS}/ /var/run/ranger_kms/ /var/log/ranger/ /etc/ranger && \
     chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-kms.sh
 
 FROM ranger-kms AS ranger_postgres

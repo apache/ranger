@@ -100,6 +100,14 @@ function create_keytabs() {
   create_principal_and_keytab HTTP ranger-solr
 }
 
+function create_testusers() {
+  for container in "$@"; do
+    create_principal_and_keytab testuser1 "$container"
+    create_principal_and_keytab testuser2 "$container"
+    create_principal_and_keytab testuser3 "$container"
+  done
+}
+
 # ensure directories
 mkdir -p $DB_DIR
 chown -R root.root /etc/krb5kdc || true
@@ -116,6 +124,7 @@ if [ ! -f $DB_DIR/principal ]; then
   echo "Database initialized"
 
   create_keytabs
+  create_testusers ranger ranger-usersync ranger-tagsync ranger-audit ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino
 else
   echo "KDC DB already exists; skipping create"
 fi

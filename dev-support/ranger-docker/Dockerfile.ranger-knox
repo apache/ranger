@@ -33,6 +33,7 @@ COPY ./scripts/knox/ranger-knox-plugin-install.properties ${RANGER_SCRIPTS}/
 COPY ./scripts/knox/ranger-knox-expect.py                 ${RANGER_SCRIPTS}/
 COPY ./scripts/knox/ranger-knox-sandbox.xml               ${RANGER_SCRIPTS}/
 COPY ./scripts/wait_for_keytab.sh                         ${RANGER_SCRIPTS}/
+COPY ./scripts/wait_for_testusers_keytab.sh               ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf                              /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && \
@@ -44,6 +45,7 @@ RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && 
     cp -f ${RANGER_SCRIPTS}/ranger-knox-plugin-install.properties /opt/ranger/ranger-knox-plugin/install.properties && \
     cp -f ${RANGER_SCRIPTS}/ranger-knox-sandbox.xml /opt/knox/conf/topologies/sandbox.xml && \
     chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
+    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-knox-setup.sh ${RANGER_SCRIPTS}/ranger-knox.sh ${RANGER_SCRIPTS}/ranger-knox-expect.py
 
 ENV KNOX_HOME=/opt/knox
