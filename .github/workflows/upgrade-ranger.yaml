@@ -68,9 +68,9 @@ jobs:
       - name: Bringing up Ranger ${{ matrix.earlier-release }} in Docker
         run: |
           cd dev-support/ranger-docker
-          chmod +x download-ranger.sh && ./download-ranger.sh
           export RANGER_DB_TYPE=${{ matrix.db }}
           export RANGER_VERSION=${{ matrix.earlier-release }}
+          chmod +x download-ranger.sh && ./download-ranger.sh
           docker compose -f docker-compose.ranger.yml build
           docker compose -f docker-compose.ranger.yml up -d
           sleep 30
