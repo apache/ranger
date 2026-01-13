@@ -16,23 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "export JAVA_HOME=${JAVA_HOME}" >> ${HBASE_HOME}/conf/hbase-env.sh
-
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
-
-if [ "${KERBEROS_ENABLED}" == "true" ]
-then
-  ${RANGER_SCRIPTS}/wait_for_keytab.sh hbase.keytab
-  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
-fi
-
-cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml
-cp ${RANGER_SCRIPTS}/core-site.xml  /opt/hbase/conf/core-site.xml
-chown -R hbase:hadoop /opt/hbase/
-
-cd ${RANGER_HOME}/ranger-hbase-plugin
-./enable-hbase-plugin.sh
+${RANGER_SCRIPTS}/wait_for_keytab.sh testuser1.keytab
+${RANGER_SCRIPTS}/wait_for_keytab.sh testuser2.keytab
+${RANGER_SCRIPTS}/wait_for_keytab.sh testuser3.keytab
