@@ -54,7 +54,7 @@ public class SampleApp {
     public void run() {
         LOG.debug("==> SampleApp.run()");
 
-        do {
+        while (true) {
             String input = getInput();
 
             if (input == null) {
@@ -89,8 +89,6 @@ public class SampleApp {
                 LOG.info("Not authorized!");
             }
         }
-        while (true);
-
         LOG.debug("<== SampleApp.run()");
     }
 
