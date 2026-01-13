@@ -136,7 +136,7 @@ public class JsonUtils {
             try {
                 getMapper().writeValue(writer, object);
             } catch(Exception excp) {
-                LOG.warn("objectToWriter() failed to write oject to writer: class {} writer ", object, excp);
+                LOG.warn("objectToWriter() failed to write object to writer: class {} writer ", object, excp);
             }
         }
     }
