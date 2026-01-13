@@ -62,6 +62,7 @@ jobs:
       - name: Run download-archives.sh
         run: |
           cd dev-support/ranger-docker
+          chmod +x download-archives.sh
           ./download-archives.sh none
       
       - name: Bringing up Ranger ${{ matrix.earlier-release }} in Docker
