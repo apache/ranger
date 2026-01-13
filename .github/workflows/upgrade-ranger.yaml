@@ -21,41 +21,17 @@ on:
       build-branch:
         description: 'branch to checkout and build'
         required: true
+      source-run-id:
+        description: "GitHub Actions run ID to fetch build artifacts from"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.build-branch }}
-
-      - name: Clean up Docker space
-        run: docker system prune --all --force --volumes
-
-      - name: Build Ranger from branch ${{ inputs.build-branch }} in Docker
-        run: |
-          cd dev-support/ranger-docker
-          docker compose -f docker-compose.ranger-build.yml build
-          docker compose -f docker-compose.ranger-build.yml up -d
-
-          # Get container ID of ranger-build
-          CONTAINER_ID=$(docker ps -aqf "name=ranger-build")
-
-          docker logs -f $CONTAINER_ID &
-
-          # Wait for the container to exit
-          docker wait $CONTAINER_ID
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.build-branch }}-build-artifacts
-          path: dev-support/ranger-docker/dist/*
-
   upgrade:
-    needs: build
     strategy:
       fail-fast: false
       matrix:
@@ -68,10 +44,11 @@ jobs:
         with:
           ref: ${{ inputs.build-branch }}
 
-      - name: Download previous build artifacts
+      - name: Download artifacts from another workflow run
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.build-branch }}-build-artifacts
+          run-id: ${{ inputs.source-run-id }}
+          name: target-8
 
       - name: Copy artifacts for docker build
         run: |
