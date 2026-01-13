@@ -45,15 +45,18 @@ jobs:
           ref: ${{ inputs.build-branch }}
 
       - name: Download artifacts from another workflow run
-        uses: actions/download-artifact@v4
-        with:
-          run-id: ${{ inputs.source-run-id }}
-          name: target-8
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download ${{ inputs.source-run-id }} \
+            --repo apache/ranger \
+            --name target-8 \
+            --dir external-artifacts
 
       - name: Copy artifacts for docker build
         run: |
-          cp ranger-*.tar.gz dev-support/ranger-docker/dist
-          cp version dev-support/ranger-docker/dist
+          cp external-artifacts/ranger-*.tar.gz dev-support/ranger-docker/dist
+          cp external-artifacts/version dev-support/ranger-docker/dist
           ls -lrt dev-support/ranger-docker/dist/
       
       - name: Run download-archives.sh
