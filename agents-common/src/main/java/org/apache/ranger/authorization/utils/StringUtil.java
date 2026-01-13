@@ -44,11 +44,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 public class StringUtil {
-    private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
+	private static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT+0");
 
-
-    public static boolean equals(String str1, String str2) {
-		boolean ret = false;
+	public static boolean equals(String str1, String str2) {
+		final boolean ret;
 
 		if(str1 == null) {
 			ret = str2 == null;
@@ -62,7 +61,7 @@ public class StringUtil {
 	}
 
 	public static boolean equalsIgnoreCase(String str1, String str2) {
-		boolean ret = false;
+		final boolean ret;
 
 		if(str1 == null) {
 			ret = str2 == null;
@@ -76,7 +75,7 @@ public class StringUtil {
 	}
 
 	public static boolean equals(Collection<String> set1, Collection<String> set2) {
-		boolean ret = false;
+		final boolean ret;
 
 		if(set1 == null) {
 			ret = set2 == null;
@@ -84,13 +83,15 @@ public class StringUtil {
 			ret = false;
 		} else if(set1.size() == set2.size()) {
 			ret = set1.containsAll(set2);
+		} else {
+			ret = false;
 		}
 
 		return ret;
 	}
 
 	public static boolean equalsIgnoreCase(Collection<String> set1, Collection<String> set2) {
-		boolean ret = false;
+		final boolean ret;
 
 		if(set1 == null) {
 			ret = set2 == null;
@@ -118,13 +119,15 @@ public class StringUtil {
 			}
 
 			ret = numFound == set1.size();
+		} else {
+			ret = false;
 		}
 
 		return ret;
 	}
 
 	public static boolean matches(String pattern, String str) {
-		boolean ret = false;
+		boolean ret;
 
 		if(pattern == null || str == null || pattern.isEmpty() || str.isEmpty()) {
 			ret = true;
@@ -134,39 +137,6 @@ public class StringUtil {
 
 		return ret;
 	}
-
-	/*
-	public static boolean matches(Collection<String> patternSet, Collection<String> strSet) {
-		boolean ret = false;
-
-		if(patternSet == null || strSet == null || patternSet.isEmpty() || strSet.isEmpty()) {
-			ret = true;
-		} else {
-			boolean foundUnmatched = false;
-
-			for(String str : strSet) {
-				boolean isMatched = false;
-				for(String pattern : patternSet) {
-					isMatched = str.matches(pattern);
-					
-					if(isMatched) {
-						break;
-					}
-				}
-				
-				foundUnmatched = ! isMatched;
-				
-				if(foundUnmatched) {
-					break;
-				}
-			}
-			
-			ret = !foundUnmatched;
-		}
-
-		return ret;
-	}
-	*/
 
 	public static boolean contains(String str, String strToFind) {
 		return str != null && strToFind != null && str.contains(strToFind);
@@ -213,11 +183,14 @@ public class StringUtil {
 
 		if(iterable != null) {
 			int count = 0;
+
 			for(String str : iterable) {
-				if(count == 0)
+				if(count == 0) {
 					ret = str;
-				else
+				} else {
 					ret += (", " + str);
+				}
+
 				count++;
 			}
 		}
@@ -230,6 +203,7 @@ public class StringUtil {
 
 		if(arr != null && arr.length > 0) {
 			ret = arr[0];
+
 			for(int i = 1; i < arr.length; i++) {
 				ret += (", " + arr[i]);
 			}
@@ -243,6 +217,7 @@ public class StringUtil {
 
 		if(arr != null && !arr.isEmpty()) {
 			ret = arr.get(0);
+
 			for(int i = 1; i < arr.size(); i++) {
 				ret += (", " + arr.get(i));
 			}
@@ -268,15 +243,15 @@ public class StringUtil {
 	}
 
 	public static Date getUTCDate() {
-	    Calendar local  = Calendar.getInstance();
-	    int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
+		Calendar local  = Calendar.getInstance();
+		int      offset = local.getTimeZone().getOffset(local.getTimeInMillis());
 
-	    GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
+		GregorianCalendar utc = new GregorianCalendar(gmtTimeZone);
 
-	    utc.setTimeInMillis(local.getTimeInMillis());
-	    utc.add(Calendar.MILLISECOND, -offset);
+		utc.setTimeInMillis(local.getTimeInMillis());
+		utc.add(Calendar.MILLISECOND, -offset);
 
-	    return utc.getTime();
+		return utc.getTime();
 	}
 
 	public static Date getUTCDateForLocalDate(Date date) {
@@ -297,16 +272,15 @@ public class StringUtil {
 		if (map != null) {
 			ret = new HashMap<>(map.size());
 
-			for (Map.Entry<String, String> e : map.entrySet()) {
-				ret.put(e.getKey(), e.getValue());
-			}
+			ret.putAll(map);
 		}
 
 		return ret;
 	}
 
 	public static Set<String> toSet(String str) {
-		Set<String> values = new HashSet<String>();
+		Set<String> values = new HashSet<>();
+
 		if (StringUtils.isNotBlank(str)) {
 			for (String item : str.split(",")) {
 				if (StringUtils.isNotBlank(item)) {
@@ -314,6 +288,7 @@ public class StringUtil {
 				}
 			}
 		}
+
 		return values;
 	}
 
