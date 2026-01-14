@@ -110,7 +110,7 @@
         <hbase-shaded-protobuf>4.1.7</hbase-shaded-protobuf>
         <hbase.version>2.6.0</hbase.version>
         <hive.storage-api.version>2.7.2</hive.storage-api.version>
-        <hive.version>4.0.1</hive.version>
+        <hive.version>4.2.0</hive.version>
         <hppc.version>0.8.0</hppc.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
         <httpcomponents.httpasyncclient.version>4.1.4</httpcomponents.httpasyncclient.version>
