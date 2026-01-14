@@ -54,9 +54,12 @@ jobs:
             --dir external-artifacts
 
       - name: Copy artifacts for docker build
+        id: version
         run: |
           cp external-artifacts/ranger-*.tar.gz dev-support/ranger-docker/dist
           cp external-artifacts/version dev-support/ranger-docker/dist
+          VERSION=$(cat external-artifacts/version)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           ls -lrt dev-support/ranger-docker/dist/
       
       - name: Run download-archives.sh
@@ -78,12 +81,13 @@ jobs:
           sleep 30
           docker logs ranger
 
-      - name: Upgrading to ${{ inputs.build-branch }} in Docker
+      - name: Upgrading to ${{ steps.version.outputs.version }} in Docker
         run: |
           cd dev-support/ranger-docker
           export RANGER_DB_TYPE=${{ matrix.db }}
-          docker compose -f docker-compose.ranger.yml  build
-          docker compose -f docker-compose.ranger.yml  up -d
+          export RANGER_VERSION=${{ steps.version.outputs.version }}
+          docker compose -f docker-compose.ranger.yml build
+          docker compose -f docker-compose.ranger.yml up -d
           sleep 180
           docker logs ranger
 
