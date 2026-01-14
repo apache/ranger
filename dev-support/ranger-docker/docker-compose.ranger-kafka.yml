@@ -25,10 +25,19 @@ services:
         condition: service_started
       ranger-zk:
         condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "echo 'ping' | kafka-console-producer.sh --broker-list localhost:9092 --topic health-check-topic && kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic health-check-topic --from-beginning --max-messages 1 | grep 'ping'" ]
+      interval: 60s
+      timeout: 20s
+      retries: 5
+      start_period: 60s
     environment:
-      - KAFKA_VERSION
-      - KAFKA_PLUGIN_VERSION
-      - KERBEROS_ENABLED
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://ranger-kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_VERSION: ${KAFKA_VERSION}
+      KAFKA_PLUGIN_VERSION: ${KAFKA_PLUGIN_VERSION}
+      KERBEROS_ENABLED: ${KERBEROS_ENABLED}
 
 networks:
   ranger:

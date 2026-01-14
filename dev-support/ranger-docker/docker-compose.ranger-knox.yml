@@ -25,6 +25,12 @@ services:
         condition: service_started
       ranger-zk:
         condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -k -i -u admin:admin-password 'https://localhost:8443/gateway/sandbox/webhdfs/v1/?op=LISTSTATUS'" ]
+      interval: 60s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
     environment:
       - KNOX_VERSION
       - KNOX_PLUGIN_VERSION
