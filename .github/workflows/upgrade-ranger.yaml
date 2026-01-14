@@ -1,0 +1,93 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Upgrade Ranger
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-branch:
+        description: 'branch to checkout for docker-build'
+        required: true
+      source-run-id:
+        description: "GitHub Actions run ID to fetch build artifacts from"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  upgrade:
+    strategy:
+      fail-fast: false
+      matrix:
+        earlier-release: [2.6.0, 2.7.0]
+        db: [postgres, mysql, oracle]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.build-branch }}
+
+      - name: Download artifacts from another workflow run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download ${{ inputs.source-run-id }} --repo apache/ranger --name target-8 --dir external-artifacts
+
+      - name: Copy artifacts for docker build
+        id: version
+        run: |
+          cp external-artifacts/ranger-*.tar.gz dev-support/ranger-docker/dist
+          cp external-artifacts/version dev-support/ranger-docker/dist
+          VERSION=$(cat external-artifacts/version)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          ls -lrt dev-support/ranger-docker/dist/
+      
+      - name: Run download-archives.sh
+        run: |
+          cd dev-support/ranger-docker
+          ./download-archives.sh none
+          
+          curl -LO https://downloads.apache.org/ranger/KEYS
+          gpg --import KEYS
+      
+      - name: Bringing up Ranger ${{ matrix.earlier-release }} in Docker
+        run: |
+          cd dev-support/ranger-docker
+          export RANGER_DB_TYPE=${{ matrix.db }}
+          export RANGER_VERSION=${{ matrix.earlier-release }}
+          chmod +x download-ranger.sh && ./download-ranger.sh
+          docker compose -f docker-compose.ranger.yml build
+          docker compose -f docker-compose.ranger.yml up -d
+          sleep 30
+          docker logs ranger
+
+      - name: Upgrading to ${{ steps.version.outputs.version }} in Docker
+        run: |
+          cd dev-support/ranger-docker
+          export RANGER_DB_TYPE=${{ matrix.db }}
+          export RANGER_VERSION=${{ steps.version.outputs.version }}
+          docker compose -f docker-compose.ranger.yml build
+          docker compose -f docker-compose.ranger.yml up -d
+          sleep 180
+          docker logs ranger
+
+      - name: Remove running containers
+        run: |
+          docker stop $(docker ps -q) && docker rm $(docker ps -aq)
