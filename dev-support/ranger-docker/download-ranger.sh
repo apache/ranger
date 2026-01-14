@@ -15,17 +15,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 set -u -o pipefail
 
 : ${BASE_URL:="https://www.apache.org/dyn/closer.lua?action=download&filename="}
 : ${CHECKSUM_BASE_URL:="https://downloads.apache.org/"}
 : ${RANGER_VERSION:=2.6.0}
 
-source lib.sh
+download_if_not_exists() {
+  local url="$1"
+  local file="$2"
+
+  if [[ -e "${file}" ]]; then
+    echo "${file} already downloaded"
+  else
+    echo "Downloading ${file} from ${url}"
+    curl --fail --location --output "${file}" --show-error --silent "${url}" || rm -fv "${file}"
+  fi
+}
+
+download_and_verify() {
+  local remote_path="$1"
+  local file="$(basename "${remote_path}")"
+
+  pushd dist
+  download_if_not_exists "${BASE_URL}${remote_path}" "${file}"
+  download_if_not_exists "${CHECKSUM_BASE_URL}${remote_path}.asc" "${file}.asc"
+  gpg --verify "${file}.asc" "${file}" || exit 1
+  popd
+}
 
 mkdir -p dist
-
 # source
 download_and_verify "ranger/${RANGER_VERSION}/apache-ranger-${RANGER_VERSION}.tar.gz"
 # binary

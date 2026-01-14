@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       build-branch:
-        description: 'branch to checkout and build'
+        description: 'branch to checkout for docker-build'
         required: true
       source-run-id:
         description: "GitHub Actions run ID to fetch build artifacts from"
@@ -48,10 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh run download ${{ inputs.source-run-id }} \
-            --repo apache/ranger \
-            --name target-8 \
-            --dir external-artifacts
+          gh run download ${{ inputs.source-run-id }} --repo apache/ranger --name target-8 --dir external-artifacts
 
       - name: Copy artifacts for docker build
         id: version
