@@ -25,7 +25,7 @@
     
     
       
-        <title>Release Process - Apache Ranger</title>
+        <title>Ranger Release Guidelines - Apache Ranger</title>
       
     
     
@@ -63,14 +63,14 @@
     
   
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Release Process - Apache Ranger" />
+<meta property="og:title" content="Ranger Release Guidelines - Apache Ranger" />
 <meta property="og:image" content="https://apache.github.io/ranger/assets/images/social/project/release-process.png" />
 <meta property="og:image:type" content="image/png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:url" content="https://apache.github.io/ranger/project/release-process/" />
 <meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:title" content="Release Process - Apache Ranger" />
+<meta property="twitter:title" content="Ranger Release Guidelines - Apache Ranger" />
 <meta property="twitter:image" content="https://apache.github.io/ranger/assets/images/social/project/release-process.png" />
 </head>
   
@@ -91,7 +91,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#release-process" class="md-skip">
+        <a href="#introduction" class="md-skip">
           Skip to content
         </a>
       
@@ -124,7 +124,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Release Process
+              Ranger Release Guidelines
             
           </span>
         </div>
@@ -922,8 +922,24 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
-        
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Process
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -941,6 +957,378 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisite
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prerequisite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup-for-first-time-release-managers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup for first time release managers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-your-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish your key
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pre-vote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-Vote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pre-Vote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-parent-jira-for-the-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a parent Jira for the release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notify-the-community-in-advance-of-the-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notify the community in advance of the release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#branching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-the-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update the versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-the-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit the changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-and-publish-source-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build and Publish Source Artifacts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build and Publish Source Artifacts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-up-local-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set up local environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset-the-git-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reset the git repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-the-release-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create the release artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculate-the-checksum-and-sign-the-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calculate the checksum and sign the artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-source-artifacts-to-dev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish source artifacts to dev
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#send-the-voting-email-as-described-below" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Send the voting email as described below
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-vote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-Vote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Post-Vote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#publish-the-source-artifacts-to-distapacheorg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the source artifacts to dist.apache.org
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-the-source-artifacts-to-maven-central" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the source artifacts to Maven Central
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-build-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish build artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-the-final-git-tag-and-push-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add the final git tag and push it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-sub-page-in-confluence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a sub-page in Confluence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-the-ranger-website" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update the Ranger website
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-docker-images-for-the-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish docker images for the release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#send-an-announcement-mail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Send an announcement mail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#branching_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other Tasks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1207,8 +1595,369 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#introduction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Introduction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Introduction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prerequisite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prerequisite
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Prerequisite">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setup-for-first-time-release-managers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Setup for first time release managers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-your-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish your key
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pre-vote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pre-Vote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pre-Vote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-parent-jira-for-the-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a parent Jira for the release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notify-the-community-in-advance-of-the-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notify the community in advance of the release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#branching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-the-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update the versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#commit-the-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Commit the changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build-and-publish-source-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build and Publish Source Artifacts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Build and Publish Source Artifacts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#set-up-local-environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set up local environment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reset-the-git-repository" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reset the git repository
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-the-release-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create the release artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calculate-the-checksum-and-sign-the-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calculate the checksum and sign the artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-source-artifacts-to-dev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish source artifacts to dev
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#send-the-voting-email-as-described-below" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Send the voting email as described below
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-vote" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-Vote
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Post-Vote">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#publish-the-source-artifacts-to-distapacheorg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the source artifacts to dist.apache.org
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-the-source-artifacts-to-maven-central" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish the source artifacts to Maven Central
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-build-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish build artifacts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-the-final-git-tag-and-push-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add the final git tag and push it
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-sub-page-in-confluence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a sub-page in Confluence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-the-ranger-website" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update the Ranger website
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish-docker-images-for-the-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publish docker images for the release
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#send-an-announcement-mail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Send an announcement mail
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#branching_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branching
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other Tasks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1276,24 +2025,384 @@
   
 
 
-<!---
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
+  <h1>Release Process</h1>
 
-      http://www.apache.org/licenses/LICENSE-2.0
+<!--
+ - Licensed to the Apache Software Foundation (ASF) under one or more
+ - contributor license agreements.  See the NOTICE file distributed with
+ - this work for additional information regarding copyright ownership.
+ - The ASF licenses this file to You under the Apache License, Version 2.0
+ - (the "License"); you may not use this file except in compliance with
+ - the License.  You may obtain a copy of the License at
+ -
+ -   http://www.apache.org/licenses/LICENSE-2.0
+ -
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the License is distributed on an "AS IS" BASIS,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the License for the specific language governing permissions and
+ - limitations under the License.
+ -->
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
--->
+<h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
+<p>This page walks you through the release process of the Ranger project. <a href="https://www.apache.org/legal/release-policy.html">Here</a> you can read about the release process in general for an Apache project.</p>
+<p>Decisions about releases are made by three groups:</p>
+<ul>
+<li>Release Manager: Does the work of creating the release, signing it, counting votes, announcing the release and so on.</li>
+<li>The Community: Performs the discussion of whether it is the right time to create a release and what that release should contain. The community can also cast non-binding votes on the release.</li>
+<li>PMC: Gives binding votes on the release.</li>
+</ul>
+<p>This page describes the procedures that the release manager and voting PMC members take during the release process.</p>
+<h3 id="prerequisite">Prerequisite<a class="headerlink" href="#prerequisite" title="Permanent link">&para;</a></h3>
+<p>The release manager should have a gpg key setup to sign the artifacts. For more details, please <a href="https://www.apache.org/dev/new-committers-guide.html#set-up-security-and-pgp-keys">see</a></p>
+<h4 id="setup-for-first-time-release-managers">Setup for first time release managers<a class="headerlink" href="#setup-for-first-time-release-managers" title="Permanent link">&para;</a></h4>
+<div class="highlight"><span class="filename">Generate OpenPPG Key</span><pre><span></span><code><span class="c1"># create a key</span>
+gpg<span class="w"> </span>--gen-key
 
-<h1 id="release-process">Release Process<a class="headerlink" href="#release-process" title="Permanent link">&para;</a></h1>
+<span class="c1"># If you have multiple keys present, select the key id you want to use, let&#39;s say it is - your_gpg_key_id then do:</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CODESIGNINGKEY</span><span class="o">=</span>your_gpg_key_id
+
+gpg<span class="w"> </span>--list-keys<span class="w"> </span><span class="si">${</span><span class="nv">CODESIGNINGKEY</span><span class="si">}</span>
+
+<span class="c1"># to upload the key to a key server</span>
+gpg<span class="w"> </span>--keyserver<span class="w"> </span>hkp://keyserver.ubuntu.com<span class="w"> </span>--send-key<span class="w"> </span><span class="si">${</span><span class="nv">CODESIGNINGKEY</span><span class="si">}</span>
+</code></pre></div>
+<h4 id="publish-your-key">Publish your key<a class="headerlink" href="#publish-your-key" title="Permanent link">&para;</a></h4>
+<p>The key is supposed to be published together with the release. If it doesn't exist already, append it to the end of <a href="https://dist.apache.org/repos/dist/release/ranger/KEYS">keys</a> file.</p>
+<div class="highlight"><span class="filename">Publish Key (PMC)</span><pre><span></span><code>svn<span class="w"> </span>co<span class="w"> </span>https://dist.apache.org/repos/dist/release/ranger
+<span class="nb">cd</span><span class="w"> </span>ranger
+gpg<span class="w"> </span>--list-sigs<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
+gpg<span class="w"> </span>--armor<span class="w"> </span>--export<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
+
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Adding key of XXXX to the KEYS&quot;</span><span class="w"> </span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In case you are a Committer and not a PMC member, you can add your key to the dev <code>KEYS</code> file and a PMC member can move it to the final destination.</p>
+</div>
+<div class="highlight"><span class="filename">Publish Key (Committer)</span><pre><span></span><code>svn<span class="w"> </span>co<span class="w"> </span>https://dist.apache.org/repos/dist/dev/ranger
+<span class="nb">cd</span><span class="w"> </span>ranger
+gpg<span class="w"> </span>--list-sigs<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
+gpg<span class="w"> </span>--armor<span class="w"> </span>--export<span class="w"> </span><span class="nv">$CODESIGNINGKEY</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>KEYS
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Adding key of XXXX to the KEYS&quot;</span>
+</code></pre></div>
+<h2 id="pre-vote">Pre-Vote<a class="headerlink" href="#pre-vote" title="Permanent link">&para;</a></h2>
+<h4 id="create-a-parent-jira-for-the-release">Create a parent Jira for the release<a class="headerlink" href="#create-a-parent-jira-for-the-release" title="Permanent link">&para;</a></h4>
+<p>This provides visibility into the progress of the release for the community. Tasks mentioned in this guide like changing snapshot versions, updating the Ranger website, publishing the artifacts, publishing the docker image, etc can be added as subtasks. Here is an example: <a href="https://issues.apache.org/jira/browse/RANGER-5098">RANGER-5098</a></p>
+<h4 id="notify-the-community-in-advance-of-the-release">Notify the community in advance of the release<a class="headerlink" href="#notify-the-community-in-advance-of-the-release" title="Permanent link">&para;</a></h4>
+<p>The below details should be included when sending out an email to: <code>dev@ranger.apache.org</code></p>
+<ul>
+<li>The release branch to be used for the release.</li>
+<li>The release branch lockdown date, the branch will be closed for commits after this date. Commits after this date will require approval from PMC Members.</li>
+<li>Tentative date for the availability of release-candidate #0, after which voting begins. A minimum of 72 hours needs to pass before the voting can close.</li>
+<li>Tentative release date.</li>
+</ul>
+<h4 id="branching">Branching<a class="headerlink" href="#branching" title="Permanent link">&para;</a></h4>
+<p>A release branch should already be available as a post-release activity from the previous release. All release related changes will go to this branch until the release is complete.</p>
+<ul>
+<li>Ensure that there is no <code>OPEN</code> Jira associated with the release.</li>
+</ul>
+<h4 id="update-the-versions">Update the versions<a class="headerlink" href="#update-the-versions" title="Permanent link">&para;</a></h4>
+<div class="highlight"><span class="filename">Update Versions</span><pre><span></span><code><span class="c1"># Use below command or use IDE to replace &quot;${RANGER_VERSION}-SNAPSHOT&quot; with &quot;${RANGER_VERSION}&quot;.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">RANGER_VERSION</span><span class="o">=</span><span class="s2">&quot;2.7.0&quot;</span>
+
+mvn<span class="w"> </span>versions:set<span class="w"> </span>-DnewVersion<span class="o">=</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="w"> </span>-DgenerateBackupPoms<span class="o">=</span><span class="nb">false</span>
+
+<span class="c1"># Also, manually update versions in:</span>
+<span class="c1"># - dev-support/ranger-docker/.env</span>
+<span class="c1"># - docs/pom.xml</span>
+<span class="c1"># - unixauthnative/pom.xml</span>
+<span class="c1"># - ranger-trino-plugin-shim/pom.xml</span>
+</code></pre></div>
+<h4 id="commit-the-changes">Commit the changes<a class="headerlink" href="#commit-the-changes" title="Permanent link">&para;</a></h4>
+<p><div class="highlight"><span class="filename">Commit version changes to release branch</span><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">RANGER_VERSION</span><span class="o">=</span><span class="s2">&quot;2.7.0&quot;</span><span class="w"> </span><span class="c1"># Set to the version of Ranger being released.</span>
+
+git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-SNAPSHOT to </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+
+git<span class="w"> </span>push<span class="w"> </span>origin
+
+<span class="c1"># for ex: https://github.com/apache/ranger/commit/81f3d2f</span>
+</code></pre></div>
+<div class="highlight"><span class="filename">Tag the RC and Push</span><pre><span></span><code>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>release-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Ranger </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2"> release&quot;</span>
+
+<span class="c1"># example: git tag -a release-2.6.0-rc0 -m &quot;Ranger 2.6.0-rc0 release&quot;</span>
+
+<span class="c1"># and then push to the release branch like this</span>
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>release-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>
+</code></pre></div></p>
+<h3 id="build-and-publish-source-artifacts">Build and Publish Source Artifacts<a class="headerlink" href="#build-and-publish-source-artifacts" title="Permanent link">&para;</a></h3>
+<h4 id="set-up-local-environment">Set up local environment<a class="headerlink" href="#set-up-local-environment" title="Permanent link">&para;</a></h4>
+<p>It is probably best to clone a fresh Ranger repository locally to work on the release, and leave your existing repository intact for dev tasks you may be working on simultaneously.<br />
+After cloning, make sure the <code>apache/ranger</code> upstream repo is named origin.<br />
+This is required for release build metadata to be correctly populated.<br />
+Assume all following commands are executed from within this repo with your release branch checked out.</p>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">RANGER_RC</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># Set to the number of the current release candidate, starting at 0.</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">CODESIGNINGKEY</span><span class="o">=</span>your_gpg_key_id
+</code></pre></div>
+<h4 id="reset-the-git-repository">Reset the git repository<a class="headerlink" href="#reset-the-git-repository" title="Permanent link">&para;</a></h4>
+<div class="highlight"><span class="filename">Reset the git repo</span><pre><span></span><code>git<span class="w"> </span>reset<span class="w"> </span>--hard
+git<span class="w"> </span>clean<span class="w"> </span>-dfx
+</code></pre></div>
+<h4 id="create-the-release-artifacts">Create the release artifacts<a class="headerlink" href="#create-the-release-artifacts" title="Permanent link">&para;</a></h4>
+<div class="highlight"><span class="filename">Build Ranger</span><pre><span></span><code><span class="c1"># run with unit tests</span>
+mvn<span class="w"> </span>clean<span class="w"> </span>install<span class="w"> </span>-Dmaven.javadoc.skip<span class="o">=</span><span class="nb">true</span>
+</code></pre></div>
+<ul>
+<li>Verify <code>LICENSE</code> and <code>NOTICE</code> files for the release are updated based on changes in the release.</li>
+<li>Go through all commits in this particular release and create Release Notes. for example: <a href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.6.0+-+Release+Notes">Apache Ranger 2.6.0 - Release Notes</a></li>
+<li>Also, ensure the fix versions are appropriately added for all the jiras related to the commits.</li>
+</ul>
+<h4 id="calculate-the-checksum-and-sign-the-artifacts">Calculate the checksum and sign the artifacts<a class="headerlink" href="#calculate-the-checksum-and-sign-the-artifacts" title="Permanent link">&para;</a></h4>
+<div class="highlight"><span class="filename">Sign and checksum the artifacts</span><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">GPG_TTY</span><span class="o">=</span><span class="k">$(</span>tty<span class="k">)</span>
+ant<span class="w"> </span>-f<span class="w"> </span>release-build.xml<span class="w"> </span>-Dranger-release-version<span class="o">=</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="w"> </span>-Dsigning-key<span class="o">=</span><span class="si">${</span><span class="nv">CODESIGNINGKEY</span><span class="si">}</span>
+
+<span class="c1"># on successful run, the above command generates 4 files in target:</span>
+<span class="c1"># - apache-ranger-${RANGER_VERSION}.tar.gz</span>
+<span class="c1"># - apache-ranger-${RANGER_VERSION}.tar.gz.asc</span>
+<span class="c1"># - apache-ranger-${RANGER_VERSION}.tar.gz.sha512</span>
+<span class="c1"># - apache-ranger-${RANGER_VERSION}.tar.gz.sha256</span>
+
+<span class="c1"># verify the signed tarball and checksum file using below command</span>
+<span class="nb">cd</span><span class="w"> </span>target
+gpg<span class="w"> </span>--verify<span class="w"> </span>apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz.asc<span class="w"> </span>apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz
+sha512sum<span class="w"> </span>-c<span class="w"> </span>apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz.sha512
+sha256sum<span class="w"> </span>-c<span class="w"> </span>apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz.sha256
+</code></pre></div>
+<h4 id="publish-source-artifacts-to-dev">Publish source artifacts to dev<a class="headerlink" href="#publish-source-artifacts-to-dev" title="Permanent link">&para;</a></h4>
+<div class="highlight"><span class="filename">publish dev artifacts</span><pre><span></span><code>svn<span class="w"> </span>co<span class="w"> </span>https://dist.apache.org/repos/dist/dev/ranger<span class="w"> </span>ranger-dev
+
+mkdir<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>
+
+cp<span class="w"> </span>target/apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>/
+cp<span class="w"> </span>target/apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz.asc<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>/
+cp<span class="w"> </span>target/apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz.sha256<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>/
+cp<span class="w"> </span>target/apache-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>.tar.gz.sha512<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>/
+
+svn<span class="w"> </span>add<span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Upload </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="c1"># requires ASF authentication</span>
+</code></pre></div>
+<h2 id="vote">Vote<a class="headerlink" href="#vote" title="Permanent link">&para;</a></h2>
+<h4 id="send-the-voting-email-as-described-below">Send the voting email as described below<a class="headerlink" href="#send-the-voting-email-as-described-below" title="Permanent link">&para;</a></h4>
+<ul>
+<li>
+<p>Send release voting request to <code>dev@ranger.apache.org</code> and <code>private@ranger.apache.org</code> with the subject
+<div class="highlight"><pre><span></span><code>[VOTE] Release Apache Ranger ${RANGER_VERSION} ${RANGER_RC}
+</code></pre></div></p>
+</li>
+<li>
+<p>Include the following in the email:</p>
+<ul>
+<li>Link to a Jira query showing all resolved issues for this release. Something like this.</li>
+<li>Link to the release candidate tag on GitHub.</li>
+<li>Location of the source and binary tarballs. This link will look something like https://dist.apache.org/repos/dist/dev/ranger/2.6.0-rc0/</li>
+<li>Link to the public key used to sign the artifacts. This should always be in the <a href="https://dist.apache.org/repos/dist/release/ranger/KEYS">keys</a> file.</li>
+</ul>
+</li>
+<li>The vote will be open for at least 72 hours or until necessary votes are reached.
+<div class="highlight"><pre><span></span><code>    [] +1 approve
+    [] +0 no opinion
+    [] -1 disapprove (and reason why)
+</code></pre></div></li>
+<li>Review <a href="https://www.apache.org/legal/release-policy.html#release-approval">release-policy</a> for the ASF wide release voting policy.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note what is required of binding voters, and that binding votes can only come from PMC members. Check <a href="https://people.apache.org/committer-index.html">https://people.apache.org/committer-index.html</a>, users whose group membership includes <code>ranger-pmc</code> can cast binding votes.</p>
+</div>
+<ul>
+<li>If VOTE did not go through:<ul>
+<li>Apply fixes to the release branch and repeat the steps starting from tagging the commit for the release candidate with the <code>$RANGER_RC</code> variable incremented by 1 for all steps.</li>
+</ul>
+</li>
+<li>Once voting is finished, email <code>dev@ranger.apache.org</code> and <code>private@ranger.apache.org</code>summarizing the results with subject:
+<div class="highlight"><pre><span></span><code>[RESULT] [VOTE] Apache Ranger ${RANGER_VERSION} ${RANGER_RC}
+</code></pre></div>
+Include names of all PMC members, followed by committers/contributors who cast their votes. Here is a reference <a href="https://lists.apache.org/thread/sonr9mmjv8ot9kzwh66royv0pblnn41c">link</a>.</li>
+</ul>
+<h2 id="post-vote">Post-Vote<a class="headerlink" href="#post-vote" title="Permanent link">&para;</a></h2>
+<h3 id="publish-the-source-artifacts-to-distapacheorg">Publish the source artifacts to dist.apache.org<a class="headerlink" href="#publish-the-source-artifacts-to-distapacheorg" title="Permanent link">&para;</a></h3>
+<p>You should commit the artifacts to the SVN repository. If you are not a PMC member you can commit it to the dev ranger first and ask a PMC member for the final move. PMC members can move it to the final location:</p>
+<p><div class="highlight"><span class="filename">Move</span><pre><span></span><code>svn<span class="w"> </span>co<span class="w"> </span>https://dist.apache.org/repos/dist/dev/ranger<span class="w"> </span>ranger-dev<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ranger-dev
+
+svn<span class="w"> </span>co<span class="w"> </span>https://dist.apache.org/repos/dist/release/ranger<span class="w"> </span>ranger-release<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ranger-release
+
+mkdir<span class="w"> </span>ranger-release/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+
+cp<span class="w"> </span>ranger-dev/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>/*<span class="w"> </span>ranger-release/<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="w"> </span><span class="c1"># copy release artifacts from dev to release</span>
+
+<span class="nb">cd</span><span class="w"> </span>ranger-release
+
+svn<span class="w"> </span>add<span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Uploading Apache Ranger </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> release src artifacts&quot;</span><span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+</code></pre></div>
+Now the <code>.tar.gz</code> artifact should have an associated <code>.asc</code> file, <code>.sha512</code> and <code>.sha256</code> file at the destination, so a total of 4 files.</p>
+<h3 id="publish-the-source-artifacts-to-maven-central">Publish the source artifacts to Maven Central<a class="headerlink" href="#publish-the-source-artifacts-to-maven-central" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Setup <code>~/.m2/settings-security.xml</code> as per the <a href="https://maven.apache.org/guides/mini/guide-encryption.html">guidelines</a>.</li>
+<li>Encrypt your Apache account password using above guidelines, and enter it in <code>~/.m2/settings.xml</code> in the following entry
+    <div class="highlight"><span class="filename">Update settings.xml</span><pre><span></span><code><span class="nt">&lt;server&gt;</span>
+<span class="w">    </span><span class="nt">&lt;id&gt;</span>apache.staging.https<span class="nt">&lt;/id&gt;</span>
+<span class="w">    </span><span class="nt">&lt;username&gt;</span>username<span class="nt">&lt;/username&gt;</span>
+<span class="w">    </span><span class="nt">&lt;password&gt;</span>encrypted_password<span class="nt">&lt;/password&gt;</span>
+<span class="nt">&lt;/server&gt;</span>
+</code></pre></div></li>
+<li>Run the following:
+    <div class="highlight"><span class="filename">checkout and deploy</span><pre><span></span><code><span class="c1"># checkout the relevant git tag</span>
+
+git<span class="w"> </span>checkout<span class="w"> </span>release-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+<span class="c1"># eg: git checkout release-ranger-2.6.0</span>
+
+<span class="c1"># deploy the release</span>
+mvn<span class="w"> </span>clean<span class="w"> </span>deploy<span class="w"> </span>-Papache-release<span class="w"> </span>-DskipTests<span class="w"> </span>-DskipDocs
+</code></pre></div></li>
+<li>Go to <a href="https://repository.apache.org/">https://repository.apache.org/</a> and log in using your Apache account.</li>
+<li>Click on <code>Staging Repositories</code> on the left-hand side.</li>
+<li>Select the entry that starts with orgapacheranger and click on <code>close</code>.</li>
+<li>Verify via the URL that should appear after refresh that the artifacts look as expected.</li>
+<li>After approval, click on <code>release</code>.</li>
+</ol>
+<h3 id="publish-build-artifacts">Publish build artifacts<a class="headerlink" href="#publish-build-artifacts" title="Permanent link">&para;</a></h3>
+<div class="highlight"><span class="filename">build ranger release and push artifacts to svn</span><pre><span></span><code><span class="c1"># build ranger from the release branch</span>
+
+<span class="c1"># create parent directory before build</span>
+<span class="nv">RELEASE_DIR</span><span class="o">=</span>/tmp/release-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="si">${</span><span class="nv">RELEASE_DIR</span><span class="si">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">RELEASE_DIR</span><span class="si">}</span>
+
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/apache/ranger.git<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ranger
+
+git<span class="w"> </span>checkout<span class="w"> </span>release-ranger-<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+
+<span class="c1"># after successful build, artifacts should be present in target</span>
+mvn<span class="w"> </span>clean<span class="w"> </span>package<span class="w"> </span>-DskipTests
+
+<span class="c1"># checkout svn repo</span>
+<span class="nb">cd</span><span class="w"> </span>~
+svn<span class="w"> </span>co<span class="w"> </span>https://dist.apache.org/repos/dist/dev/ranger<span class="w"> </span>ranger-dev<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>ranger-dev
+<span class="nb">cd</span><span class="w"> </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>-rc<span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span>
+cp<span class="w"> </span><span class="si">${</span><span class="nv">RELEASE_DIR</span><span class="si">}</span>/ranger/target/ranger-*<span class="w"> </span>.
+
+<span class="c1"># generate signature and checksums for all</span>
+<span class="k">for</span><span class="w"> </span>file<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="sb">`</span>find<span class="w"> </span>.<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;ranger-*&quot;</span><span class="sb">`</span>
+<span class="k">do</span>
+<span class="w">  </span>gpg<span class="w"> </span>--armor<span class="w"> </span>--output<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span>.asc<span class="w"> </span>--detach-sig<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sha512sum<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span><span class="w"> </span>&gt;<span class="w"> </span><span class="si">${</span><span class="nv">file</span><span class="si">}</span>.sha512
+<span class="k">done</span>
+
+svn<span class="w"> </span>add<span class="w"> </span>ranger-*
+svn<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;upload build artifacts for </span><span class="si">${</span><span class="nv">RANGER_RELEASE</span><span class="si">}</span><span class="s2"> release&quot;</span>
+
+<span class="c1"># PMC Members may selectively move these artifacts to https://dist.apache.org/repos/dist/release/ranger/${RANGER_RELEASE} under respective directories</span>
+</code></pre></div>
+<h3 id="add-the-final-git-tag-and-push-it">Add the final git tag and push it<a class="headerlink" href="#add-the-final-git-tag-and-push-it" title="Permanent link">&para;</a></h3>
+<div class="highlight"><span class="filename">Add final release tag</span><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span><span class="s2">&quot;release-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">-rc</span><span class="si">${</span><span class="nv">RANGER_RC</span><span class="si">}</span><span class="s2">&quot;</span>
+
+git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span><span class="s2">&quot;release-ranger-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Apache Ranger </span><span class="nv">$RANGER_VERSION</span><span class="s2">&quot;</span>
+
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span><span class="s2">&quot;release-ranger-</span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h3 id="create-a-sub-page-in-confluence">Create a sub-page in Confluence<a class="headerlink" href="#create-a-sub-page-in-confluence" title="Permanent link">&para;</a></h3>
+<p>Add a sub-page under Release Folders for this release and add links for the following:</p>
+<ul>
+<li>Link to the release notes</li>
+<li>Link to the release artifacts</li>
+<li>Link to the release tag</li>
+</ul>
+<p>Something like <a href="https://cwiki.apache.org/confluence/display/RANGER/2.6.0+release+-+Apache+Ranger">this</a>.</p>
+<h3 id="update-the-ranger-website">Update the Ranger website<a class="headerlink" href="#update-the-ranger-website" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Create a <a href="https://github.com/apache/ranger/pull/532">PR</a> targeted for master branch to update the docs with the new release.</li>
+<li>Update the ranger website with the release artifacts (use master branch to do this!) and push the changes in the master branch.</li>
+</ul>
+<h3 id="publish-docker-images-for-the-release">Publish docker images for the release<a class="headerlink" href="#publish-docker-images-for-the-release" title="Permanent link">&para;</a></h3>
+<p>Build the following docker images:</p>
+<ul>
+<li>ranger</li>
+<li>ranger-db</li>
+<li>ranger-solr</li>
+<li>ranger-zk</li>
+</ul>
+<p>with the release checked out and upload them to <a href="https://hub.docker.com/r/apache/ranger">DockerHub</a>.<br />
+Instructions to build the images can be found <a href="https://github.com/apache/ranger/blob/master/dev-support/ranger-docker/README.md">here</a>.
+<div class="highlight"><span class="filename">tag and push docker images</span><pre><span></span><code><span class="c1"># tag the images</span>
+docker<span class="w"> </span>tag<span class="w"> </span>ranger:latest<span class="w"> </span>apache/ranger:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+docker<span class="w"> </span>tag<span class="w"> </span>ranger-db:latest<span class="w"> </span>apache/ranger-db:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+docker<span class="w"> </span>tag<span class="w"> </span>ranger-solr:latest<span class="w"> </span>apache/ranger-solr:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+docker<span class="w"> </span>tag<span class="w"> </span>ranger-zk:latest<span class="w"> </span>apache/ranger-zk:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+
+<span class="c1"># do docker login</span>
+docker<span class="w"> </span>login
+
+<span class="c1"># push the images</span>
+docker<span class="w"> </span>push<span class="w"> </span>apache/ranger:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+docker<span class="w"> </span>push<span class="w"> </span>apache/ranger-db:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+docker<span class="w"> </span>push<span class="w"> </span>apache/ranger-solr:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+docker<span class="w"> </span>push<span class="w"> </span>apache/ranger-zk:<span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span>
+</code></pre></div></p>
+<h3 id="send-an-announcement-mail">Send an announcement mail<a class="headerlink" href="#send-an-announcement-mail" title="Permanent link">&para;</a></h3>
+<p>to <code>dev@ranger.apache.org</code>, <code>user@ranger.apache.org</code>, <code>announce@apache.org</code>. Something like <a href="https://lists.apache.org/thread/4ssdwwpdcd8381k09otjfsydb47z1ygm">this</a>.</p>
+<div class="highlight"><pre><span></span><code>Subject: [ANNOUNCE] Apache Ranger ${RANGER_VERSION}
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only PMC members can send the email to <code>announce@apache.org</code></p>
+</div>
+<ul>
+<li>Include the following in the email:<ul>
+<li>Download <a href="https://ranger.apache.org/download.html">link</a></li>
+<li>Release notes: example - <a href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.6.0+-+Release+Notes">Apache Ranger 2.6.0 - Release Notes</a></li>
+<li>When downloading binaries from the site, please remember to verify the downloads using signatures at: <a href="https://www.apache.org/dist/ranger/KEYS">KEYS</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="branching_1">Branching<a class="headerlink" href="#branching_1" title="Permanent link">&para;</a></h3>
+<p>Create a new release branch, for ex: ranger-2.7 from ranger-2.6. In this release branch, do the following and commit it.
+<div class="highlight"><span class="filename">Update to SNAPSHOT version and Push</span><pre><span></span><code><span class="nv">NEXT_RANGER_VERSION</span><span class="o">=</span><span class="m">2</span>.7.0-SNAPSHOT
+mvn<span class="w"> </span>versions:set<span class="w"> </span>-DnewVersion<span class="o">=</span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span>
+
+git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> to </span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="c1"># Also, manually update versions in:</span>
+<span class="c1"># - dev-support/ranger-docker/.env</span>
+<span class="c1"># - docs/pom.xml</span>
+
+git<span class="w"> </span>push<span class="w"> </span>origin
+</code></pre></div>
+Now, update the previous release branch with newer SNAPSHOT version and commit it, something like this:</p>
+<div class="highlight"><span class="filename">Update to SNAPSHOT version and Push</span><pre><span></span><code><span class="nv">NEXT_RANGER_VERSION</span><span class="o">=</span><span class="s2">&quot;2.6.1-SNAPSHOT&quot;</span>
+mvn<span class="w"> </span>versions:set<span class="w"> </span>-DnewVersion<span class="o">=</span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span>
+
+git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s2">&quot;RANGER-XXXX: Updated version from </span><span class="si">${</span><span class="nv">RANGER_VERSION</span><span class="si">}</span><span class="s2"> to </span><span class="si">${</span><span class="nv">NEXT_RANGER_VERSION</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="c1"># Also, manually update versions in:</span>
+<span class="c1"># - dev-support/ranger-docker/.env</span>
+<span class="c1"># - docs/pom.xml</span>
+
+git<span class="w"> </span>push<span class="w"> </span>origin
+</code></pre></div>
+<h3 id="other-tasks">Other Tasks<a class="headerlink" href="#other-tasks" title="Permanent link">&para;</a></h3>
+<ul>
+<li>In Apache JIRA admin, mark the release as complete and create a next version for tracking the changes to the next (major|minor) version</li>
+<li>Update release data in <a href="https://reporter.apache.org/?ranger">https://reporter.apache.org/?ranger</a></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only PMC members can do this step.</p>
+</div>
+<ul>
+<li>If the release resolved any CVE<ul>
+<li>update <a href="../cve-list/">Vulnerabilities Found</a></li>
+<li>send notification to<ul>
+<li><code>security@apache.org</code></li>
+<li><code>oss-security@lists.openwall.com</code></li>
+<li><code>dev@ranger.apache.org</code></li>
+<li><code>user@ranger.apache.org</code></li>
+<li><code>private@ranger.apache.org</code></li>
+</ul>
+</li>
+<li>Follow <a href="https://www.apache.org/security/committers.html">https://www.apache.org/security/committers.html</a> for publishing the CVE</li>
+</ul>
+</li>
+</ul>
 
 
 
@@ -1314,7 +2423,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 13, 2026 13:08:42 PST">January 13, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 14, 2026 17:17:15 PST">January 14, 2026</span>
   </span>
 
     

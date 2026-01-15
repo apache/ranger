@@ -869,6 +869,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -885,6 +903,47 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pull-request-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull Request recommended
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-board-legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Board legacy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1210,6 +1269,36 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pull-request-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pull Request recommended
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#review-board-legacy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Review Board legacy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1292,8 +1381,35 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
  -->
-
 <h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">&para;</a></h1>
+<p>In this page, you will find some guidelines on contributing to Apache Ranger.</p>
+<p>If you are thinking of contributing but first would like to discuss the change you wish to make, we welcome you to
+raise a <a href="https://issues.apache.org/jira/browse/RANGER">Jira Issue</a>. You can also subscribe to the <a href="mailto:dev-subscribe@ranger.apache.org">Dev List</a> and join us on <a href="https://the-asf.slack.com/archives/C4SC5NXAA">Slack</a>
+to connect with the community.</p>
+<p>The Ranger Project is hosted on GitHub at <a href="https://github.com/apache/ranger">https://github.com/apache/ranger</a>.</p>
+<h2 id="pull-request-recommended">Pull Request <small>recommended</small><a class="headerlink" href="#pull-request-recommended" title="Permanent link">&para;</a></h2>
+<p>The Ranger community prefers to receive contributions as <a href="https://help.github.com/articles/about-pull-requests/">Github pull requests</a>.</p>
+<p><a href="https://github.com/apache/ranger/pulls">View open pull requests</a></p>
+<p>When you are ready to submit your pull request, please keep the following in mind:</p>
+<ul>
+<li>PRs should be associated with a <a href="https://issues.apache.org/jira/browse/RANGER">Jira Issue</a></li>
+<li>PRs should include a clear and descriptive title and summary of the change</li>
+<li>Please ensure that your code adheres to the existing coding style</li>
+<li>Please ensure that your code is well tested</li>
+<li>Please ensure that your code is well documented</li>
+</ul>
+<h2 id="review-board-legacy">Review Board <small>legacy</small><a class="headerlink" href="#review-board-legacy" title="Permanent link">&para;</a></h2>
+<p>The <a href="https://reviews.apache.org/">Review Board</a> may be used for Ranger code reviews as well.</p>
+<p>To submit a patch for review, please follow these steps:</p>
+<ul>
+<li>Create a <a href="https://issues.apache.org/jira/browse/RANGER">Jira Issue</a> for the change you wish to make.</li>
+<li>Create a patch file using <code>git format-patch</code> or <code>git diff &gt; my_patch.patch</code>.</li>
+<li>Upload the patch to <a href="https://reviews.apache.org/">Review Board</a> and associate it with the Jira issue you created earlier.</li>
+<li>Request a review from the Ranger committers.</li>
+<li>Address any feedback you receive and update the patch as necessary.</li>
+<li>Once your patch has been approved, a committer will merge it into the main codebase.</li>
+<li>Close the associated Jira issue.</li>
+</ul>
 
 
 
@@ -1314,7 +1430,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 13, 2026 13:08:42 PST">January 13, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 14, 2026 17:17:15 PST">January 14, 2026</span>
   </span>
 
     

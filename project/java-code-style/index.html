@@ -897,6 +897,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Style Guide
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -913,6 +931,325 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#source-file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source File Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#import-statements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import Statements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Import Statements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-wildcard-imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No wildcard imports
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-line-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No line-wrapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering-and-spacing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering and Spacing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class Declaration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Class Declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exactly-one-top-level-class-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exactly one top-level class declaration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering-of-class-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering of class contents
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Formatting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Formatting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-of-braces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use of Braces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nonempty-blocks-k-r-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nonempty blocks: K &amp; R style
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#column-limit-set-to-512" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Column Limit: Set to 512
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whitespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Whitespace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Whitespace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vertical-whitespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vertical Whitespace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#horizontal-alignment-recommended-not-enforced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Horizontal Alignment: Recommended (not enforced)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Naming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#package-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constant-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constant Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programming-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programming Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Programming Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#string-concatenation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String Concatenation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loggerisdebugenabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        logger.isDebugEnabled()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-intellij-suggestions-highly-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use IntelliJ suggestions - highly recommended
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1210,6 +1547,314 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#source-file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source File Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#import-statements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import Statements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Import Statements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-wildcard-imports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No wildcard imports
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-line-wrapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No line-wrapping
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering-and-spacing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering and Spacing
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class Declaration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Class Declaration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#exactly-one-top-level-class-declaration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exactly one top-level class declaration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering-of-class-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering of class contents
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Formatting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Formatting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-of-braces" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use of Braces
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nonempty-blocks-k-r-style" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nonempty blocks: K &amp; R style
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#column-limit-set-to-512" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Column Limit: Set to 512
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whitespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Whitespace
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Whitespace">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#vertical-whitespace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vertical Whitespace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#horizontal-alignment-recommended-not-enforced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Horizontal Alignment: Recommended (not enforced)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Naming">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#package-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Package Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constant-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constant Names
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programming-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programming Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Programming Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#string-concatenation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String Concatenation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loggerisdebugenabled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        logger.isDebugEnabled()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-intellij-suggestions-highly-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use IntelliJ suggestions - highly recommended
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1294,6 +1939,96 @@
  -->
 
 <h1 id="java-code-style-guide">Java Code Style Guide<a class="headerlink" href="#java-code-style-guide" title="Permanent link">&para;</a></h1>
+<p>Every major open-source project has its own style guide: a set of conventions (sometimes arbitrary) about how to write code for that project. It is much easier to understand a large codebase when all the code in it is in a consistent style.</p>
+<p>"Style" covers a lot of ground, from "use camelCase for variable names" to "never use global variables" to "never use exceptions".</p>
+<p>Ranger also contains checkstyle rules in <a href="https://github.com/apache/ranger/blob/master/dev-support/checkstyle.xml">dev-support/checkstyle.xml</a>, and a maven plugin associated with it - <code>maven-checkstyle-plugin</code> to assist with style guide compliance. There are other code style guidelines which the rules do not capture but are recommended to follow. Below is a list of rules which were followed as part of implementing <a href="https://issues.apache.org/jira/browse/RANGER-5017">RANGER-5017</a>.</p>
+<h2 id="source-file-structure">Source File Structure<a class="headerlink" href="#source-file-structure" title="Permanent link">&para;</a></h2>
+<p>A source file consists of, <strong>in order</strong>:</p>
+<ul>
+<li>Apache License</li>
+<li>Package statement</li>
+<li>Import statements</li>
+<li>Exactly one top-level class</li>
+</ul>
+<p><strong>Exactly one blank line</strong> separates each section that is present.</p>
+<h2 id="import-statements">Import Statements<a class="headerlink" href="#import-statements" title="Permanent link">&para;</a></h2>
+<h3 id="no-wildcard-imports">No wildcard imports<a class="headerlink" href="#no-wildcard-imports" title="Permanent link">&para;</a></h3>
+<p><strong>Wildcard imports</strong>, static or otherwise, <strong>are not used</strong>.</p>
+<h3 id="no-line-wrapping">No line-wrapping<a class="headerlink" href="#no-line-wrapping" title="Permanent link">&para;</a></h3>
+<p>Import statements are <strong>not line-wrapped</strong>.</p>
+<h3 id="ordering-and-spacing">Ordering and Spacing<a class="headerlink" href="#ordering-and-spacing" title="Permanent link">&para;</a></h3>
+<p>Imports are ordered as follows:</p>
+<ul>
+<li>All non-static imports in a single block.</li>
+<li>All static imports in a single block.</li>
+</ul>
+<p>If there are both static and non-static imports, a single blank line separates the two blocks. There are no other blank lines between import statements.</p>
+<p>Within each block the imported names appear in ASCII sort order.</p>
+<h2 id="class-declaration">Class Declaration<a class="headerlink" href="#class-declaration" title="Permanent link">&para;</a></h2>
+<h3 id="exactly-one-top-level-class-declaration">Exactly one top-level class declaration<a class="headerlink" href="#exactly-one-top-level-class-declaration" title="Permanent link">&para;</a></h3>
+<p>Each top-level class resides in a source file of its own.</p>
+<h3 id="ordering-of-class-contents">Ordering of class contents<a class="headerlink" href="#ordering-of-class-contents" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Loggers if present are always at the top.</li>
+<li>Static members are in a single block followed by non-static members.</li>
+<li>Final members come before non-final members.</li>
+<li>The order of access modifiers is: <code>public protected private default</code></li>
+</ul>
+<h2 id="formatting">Formatting<a class="headerlink" href="#formatting" title="Permanent link">&para;</a></h2>
+<h3 id="use-of-braces">Use of Braces<a class="headerlink" href="#use-of-braces" title="Permanent link">&para;</a></h3>
+<p>Braces are used with <code>if, else, for, do</code> and <code>while</code> statements, even when the body is empty or contains only a single statement.</p>
+<h3 id="nonempty-blocks-k-r-style">Nonempty blocks: K &amp; R style<a class="headerlink" href="#nonempty-blocks-k-r-style" title="Permanent link">&para;</a></h3>
+<p>Braces follow the <code>Kernighan and Ritchie</code> style (<a href="https://blog.codinghorror.com/new-programming-jargon/#3">Egyptian brackets</a>) for nonempty blocks and block-like constructs:</p>
+<ul>
+<li>No line break before the opening brace, except as detailed below.</li>
+<li>Line break after the opening brace.</li>
+<li>No empty line after the opening brace.</li>
+<li>Line break before the closing brace.</li>
+<li>Line break after the closing brace, <em>only</em> if that brace terminates a statement or terminates the body of a method, constructor, or named class. For example, there is <em>no</em> line break after the brace if it is followed by <code>else</code> or a comma.</li>
+</ul>
+<h3 id="column-limit-set-to-512">Column Limit: Set to 512<a class="headerlink" href="#column-limit-set-to-512" title="Permanent link">&para;</a></h3>
+<h3 id="whitespace">Whitespace<a class="headerlink" href="#whitespace" title="Permanent link">&para;</a></h3>
+<h4 id="vertical-whitespace">Vertical Whitespace<a class="headerlink" href="#vertical-whitespace" title="Permanent link">&para;</a></h4>
+<p>A single blank line may also appear anywhere it improves readability, for example between statements to organize the code into logical subsections.</p>
+<p><em>Multiple</em> consecutive blank lines are <strong>NOT</strong> permitted.</p>
+<h4 id="horizontal-alignment-recommended-not-enforced">Horizontal Alignment: Recommended (not enforced)<a class="headerlink" href="#horizontal-alignment-recommended-not-enforced" title="Permanent link">&para;</a></h4>
+<div class="highlight"><span class="filename">Horizontal Alignment</span><pre><span></span><code><span class="kd">private</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"> </span><span class="c1">// this is fine</span>
+<span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">blue</span><span class="p">;</span><span class="w"> </span><span class="c1">// this too</span>
+
+<span class="kd">private</span><span class="w"> </span><span class="kt">int</span><span class="w">        </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w">       </span><span class="c1">// permitted, but future edits</span>
+<span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;blue&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// may leave it unaligned</span>
+</code></pre></div>
+<h2 id="naming">Naming<a class="headerlink" href="#naming" title="Permanent link">&para;</a></h2>
+<h3 id="package-names">Package Names<a class="headerlink" href="#package-names" title="Permanent link">&para;</a></h3>
+<p>Package names use only lowercase letters and digits (no underscores). Consecutive words are simply concatenated together. For example: org.apache.ranger.rangerdb, <strong>not</strong> org.apache.ranger.rangerDb <strong>or</strong> org.apache.ranger.ranger_db</p>
+<h3 id="class-names">Class Names<a class="headerlink" href="#class-names" title="Permanent link">&para;</a></h3>
+<p>Class names are written in <a href="https://google.github.io/styleguide/javaguide.html#s5.3-camel-case">UpperCamelCase</a>.</p>
+<h3 id="method-names">Method Names<a class="headerlink" href="#method-names" title="Permanent link">&para;</a></h3>
+<p>Method names are written in <a href="https://google.github.io/styleguide/javaguide.html#s5.3-camel-case">lowerCamelCase</a>.</p>
+<h3 id="constant-names">Constant Names<a class="headerlink" href="#constant-names" title="Permanent link">&para;</a></h3>
+<p>Constant names use UPPER_SNAKE_CASE : all uppercase letters, with each word separated from the next by a single underscore.</p>
+<h2 id="programming-practices">Programming Practices<a class="headerlink" href="#programming-practices" title="Permanent link">&para;</a></h2>
+<h3 id="string-concatenation">String Concatenation<a class="headerlink" href="#string-concatenation" title="Permanent link">&para;</a></h3>
+<p><strong>NOT</strong> allowed in log statements.</p>
+<p><em>Exceptions</em>: allowed in <code>Exception/System.out.println</code> statements. for ex:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// allowed</span>
+<span class="n">LOG</span><span class="p">.</span><span class="na">debug</span><span class="p">(</span><span class="s">&quot;revokeAccess as user {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">);</span>
+<span class="n">LOG</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="s">&quot;Failed to get response, Error is : {}&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="na">getMessage</span><span class="p">());</span>
+<span class="c1">// not allowed</span>
+<span class="n">LOG</span><span class="p">.</span><span class="na">debug</span><span class="p">(</span><span class="s">&quot;revokeAccess as user &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">user</span><span class="p">);</span>
+<span class="n">LOG</span><span class="p">.</span><span class="na">error</span><span class="p">(</span><span class="s">&quot;Failed to get response, Error is : &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="na">getMessage</span><span class="p">());</span>
+<span class="c1">// allowed</span>
+<span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Exception</span><span class="p">(</span><span class="s">&quot;HTTP &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="na">getStatus</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot; Error: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">resp</span><span class="p">.</span><span class="na">getMessage</span><span class="p">());</span>
+<span class="c1">// allowed</span>
+<span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&quot;Unknown callback [&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cb</span><span class="p">.</span><span class="na">getClass</span><span class="p">().</span><span class="na">getName</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">);</span>
+</code></pre></div>
+<h3 id="loggerisdebugenabled">logger.isDebugEnabled()<a class="headerlink" href="#loggerisdebugenabled" title="Permanent link">&para;</a></h3>
+<p>logger.debug statements may be preceded by isDebugEnabled() only if debug statements involve heavy operations, for ex:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">LOG</span><span class="p">.</span><span class="na">isDebugEnabled</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">LOG</span><span class="p">.</span><span class="na">debug</span><span class="p">(</span><span class="s">&quot;User found from principal [{}] =&gt; user:[{}], groups:[{}]&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">.</span><span class="na">getName</span><span class="p">(),</span><span class="w"> </span><span class="n">userName</span><span class="p">,</span><span class="w"> </span><span class="n">StringUtil</span><span class="p">.</span><span class="na">toString</span><span class="p">(</span><span class="n">groups</span><span class="p">));</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="use-intellij-suggestions-highly-recommended">Use IntelliJ suggestions - highly recommended<a class="headerlink" href="#use-intellij-suggestions-highly-recommended" title="Permanent link">&para;</a></h3>
 
 
 
@@ -1314,7 +2049,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 13, 2026 13:08:42 PST">January 13, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 14, 2026 17:17:15 PST">January 14, 2026</span>
   </span>
 
     

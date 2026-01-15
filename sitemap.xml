@@ -2,78 +2,78 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://apache.github.io/ranger/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/arch/architecture/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/blog/blog/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/features/client-interface/intro/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/features/gds/gds_intro/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/features/sec-zone/intro/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/getting-started/install/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/getting-started/trino-with-ranger/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/plugins/trino/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/project/asf-index/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/project/contributing/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/project/cve-list/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/project/java-code-style/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/project/release-process/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/release-notes/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/services/admin/service/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/services/kms/service/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/services/tagsync/service/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
     <url>
          <loc>https://apache.github.io/ranger/services/usersync/service/</loc>
-         <lastmod>2026-01-14</lastmod>
+         <lastmod>2026-01-15</lastmod>
     </url>
 </urlset>
