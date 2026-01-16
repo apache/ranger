@@ -1,0 +1,9 @@
+{
+  "serviceName": "dev_hive",
+  "gdsVersion":  1,
+  "gdsServiceDef": { },
+  "datasets": [ ],
+  "dataShares": [ ],
+  "dshids": [ ],
+  "resources": [ ]
+}

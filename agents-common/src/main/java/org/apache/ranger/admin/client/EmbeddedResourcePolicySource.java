@@ -19,6 +19,7 @@
 
 package org.apache.ranger.admin.client;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -33,13 +34,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 // this implementation loads policies, roles, tags, userstore and gds info from embedded resources at following paths:
-//   {resource-path}/{appId}_{serviceName}.json           -> policies
-//   {resource-path}/{appId}_{serviceName}_roles.json     -> roles
-//   {resource-path}/{appId}_{serviceName}_tag.json       -> tags
-//   {resource-path}/{appId}_{serviceName}_userstore.json -> userstore
-//   {resource-path}/{appId}_{serviceName}_gds.json       -> gds info
-public class EmbeddedResourcePolicySource extends AbstractRangerAdminClient {
+//   policies:  {resource-path}/{serviceName}.json           or {resource-path}/{appId}_{serviceName}.json
+//   roles:     {resource-path}/{serviceName}_roles.json     or {resource-path}/{appId}_{serviceName}_roles.json
+//   tags:      {resource-path}/{serviceName}_tag.json       or {resource-path}/{appId}_{serviceName}_tag.json
+//   userstore: {resource-path}/{serviceName}_userstore.json or {resource-path}/{appId}_{serviceName}_userstore.json
+//   gds:       {resource-path}/{serviceName}_gds.json       or {resource-path}/{appId}_{serviceName}_gds.json
+public class EmbeddedResourcePolicySource extends RangerPolicySource {
     private static final Logger LOG = LoggerFactory.getLogger(EmbeddedResourcePolicySource.class);
+
+    private String prefix;
+    private String prefixWithAppId;
 
     private ServicePolicies policies;
     private RangerRoles     roles;
@@ -47,131 +51,119 @@ public class EmbeddedResourcePolicySource extends AbstractRangerAdminClient {
     private RangerUserStore userStore;
     private ServiceGdsInfo  gdsInfo;
 
-    private String policiesPath;
-    private String rolesPath;
-    private String tagsPath;
-    private String userStorePath;
-    private String gdsInfoPath;
-
     @Override
     public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
         super.init(serviceName, appId, configPropertyPrefix, config);
 
-        String directory  = config.get(configPropertyPrefix + ".policy.source.embedded_resource.path");
-        String pathPrefix = (directory == null ? "" : directory) + "/" + appId + "_" + serviceName;
+        String directory = config.get(configPropertyPrefix + ".policy.source.embedded_resource.path");
 
-        if (!pathPrefix.startsWith("/")) {
-            pathPrefix = "/" + pathPrefix;
+        if (StringUtils.isBlank(directory)) {
+            directory = "/";
+        } else if (!directory.endsWith("/")) {
+            directory += "/";
         }
 
-        this.policiesPath  = pathPrefix + ".json";
-        this.rolesPath     = pathPrefix + "_roles.json";
-        this.tagsPath      = pathPrefix + "_tag.json";
-        this.userStorePath = pathPrefix + "_userstore.json";
-        this.gdsInfoPath   = pathPrefix + "_gds.json";
+        prefix          = directory + serviceName;
+        prefixWithAppId = StringUtils.isBlank(appId) ? null : (directory + appId + "_" + serviceName);
     }
 
     @Override
-    public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) {
+    public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         loadPolicies();
 
         return (lastKnownVersion == -1 || policies == null || policies.getPolicyVersion() == null || !policies.getPolicyVersion().equals(lastKnownVersion)) ? policies : null;
     }
 
     @Override
-    public RangerRoles getRolesIfUpdated(long lastKnownVersion, long lastActivationTimeInMills) {
+    public RangerRoles getRolesIfUpdated(long lastKnownVersion, long lastActivationTimeInMills) throws Exception {
         loadRoles();
 
         return (lastKnownVersion == -1 || roles == null || roles.getRoleVersion() == null || !roles.getRoleVersion().equals(lastKnownVersion)) ? roles : null;    }
 
     @Override
-    public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) {
+    public ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         loadTags();
 
         return (lastKnownVersion == -1 || tags == null || tags.getTagVersion() == null || !tags.getTagVersion().equals(lastKnownVersion)) ? tags : null;
     }
 
     @Override
-    public RangerUserStore getUserStoreIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) {
+    public RangerUserStore getUserStoreIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         loadUserStore();
 
         return (lastKnownVersion == -1 || userStore == null || userStore.getUserStoreVersion() == null || !userStore.getUserStoreVersion().equals(lastKnownVersion)) ? userStore : null;
     }
 
     @Override
-    public ServiceGdsInfo getGdsInfoIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) {
+    public ServiceGdsInfo getGdsInfoIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
         loadGdsInfo();
 
         return (lastKnownVersion == -1 || gdsInfo == null || gdsInfo.getGdsVersion() == null || !gdsInfo.getGdsVersion().equals(lastKnownVersion)) ? gdsInfo : null;
     }
 
-    private void loadPolicies() {
+    private void loadPolicies() throws Exception {
         if (policies == null) {
-            try {
-                InputStream input = getClass().getResourceAsStream(policiesPath);
+            InputStream input = getResourceStream(SUFFIX_POLICIES_FILE);
 
-                if (input != null) {
-                    policies = gson.fromJson(new InputStreamReader(input), ServicePolicies.class);
-                }
-            } catch (Throwable t) {
-                LOG.error("loadPolicies(): failed to load policies from {}", policiesPath, t);
-            }
+            policies = gson.fromJson(new InputStreamReader(input), ServicePolicies.class);
         }
     }
 
-    private void loadRoles() {
+    private void loadRoles() throws Exception {
         if (roles == null) {
-            try {
-                InputStream input = getClass().getResourceAsStream(rolesPath);
+            InputStream input = getResourceStream(SUFFIX_ROLES_FILE);
 
-                if (input != null) {
-                    roles = gson.fromJson(new InputStreamReader(input), RangerRoles.class);
-                }
-            } catch (Throwable t) {
-                LOG.error("loadRoles(): failed to load roles from {}", rolesPath, t);
-            }
+            roles = gson.fromJson(new InputStreamReader(input), RangerRoles.class);
         }
     }
 
-    private void loadUserStore() {
+    private void loadUserStore() throws Exception {
         if (userStore == null) {
-            try {
-                InputStream input = getClass().getResourceAsStream(userStorePath);
+            InputStream input = getResourceStream(SUFFIX_USERSTORE_FILE);
 
-                if (input != null) {
-                    userStore = gson.fromJson(new InputStreamReader(input), RangerUserStore.class);
-                }
-            } catch (Throwable t) {
-                LOG.error("loadUserStore(): failed to load userstore from {}", userStorePath, t);
-            }
+            userStore = gson.fromJson(new InputStreamReader(input), RangerUserStore.class);
         }
     }
 
-    private void loadTags() {
+    private void loadTags() throws Exception {
         if (tags == null) {
-            try {
-                InputStream input = getClass().getResourceAsStream(tagsPath);
+            InputStream input = getResourceStream(SUFFIX_TAG_FILE);
 
-                if (input != null) {
-                    tags = gson.fromJson(new InputStreamReader(input), ServiceTags.class);
-                }
-            } catch (Throwable t) {
-                LOG.error("loadTags(): failed to load tags from {}", tagsPath, t);
-            }
+            tags = gson.fromJson(new InputStreamReader(input), ServiceTags.class);
         }
     }
 
-    private void loadGdsInfo() {
+    private void loadGdsInfo() throws Exception {
         if (gdsInfo == null) {
-            try {
-                InputStream input = getClass().getResourceAsStream(gdsInfoPath);
+            InputStream input = getResourceStream(SUFFIX_GDS_FILE);
 
-                if (input != null) {
-                    gdsInfo = JsonUtilsV2.readValue(new InputStreamReader(input), ServiceGdsInfo.class);
-                }
-            } catch (Throwable t) {
-                LOG.error("loadGdsInfo(): failed to load gdsInfo from {}", gdsInfoPath, t);
+            gdsInfo = JsonUtilsV2.readValue(new InputStreamReader(input), ServiceGdsInfo.class);
+        }
+    }
+
+    private InputStream getResourceStream(String suffix) throws Exception {
+        if (StringUtils.isBlank(prefix)) {
+            throw new Exception(EmbeddedResourcePolicySource.class.getName() + ": not initialized");
+        }
+
+        try {
+            InputStream src = getClass().getResourceAsStream(prefix + suffix);
+
+            if (src == null && StringUtils.isNotBlank(prefixWithAppId)) {
+                src = getClass().getResourceAsStream(prefixWithAppId + suffix);
             }
+
+            if (src == null) {
+                LOG.error("{}{}: resource not found", prefix, suffix);
+
+                throw new Exception(prefix + suffix + ": resource not found");
+            }
+
+            return src;
+        } catch (Exception excp) {
+            LOG.error("{}{}: resource not found", prefix, suffix, excp);
+
+            throw new Exception(prefix + suffix + ": resource not found", excp);
         }
     }
 }

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.admin.client;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -26,46 +27,50 @@ import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.ServiceGdsInfo;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
 
 // this implementation loads policies, roles, tags, userstore and gds info from the given local filesystem paths:
-//   {path}/{appId}_{serviceName}.json           -> policies
-//   {path}/{appId}_{serviceName}_roles.json     -> roles
-//   {path}/{appId}_{serviceName}_tag.json       -> tags
-//   {path}/{appId}_{serviceName}_userstore.json -> userstore
-//   {path}/{appId}_{serviceName}_gds.json       -> gds info
-public class LocalFolderPolicySource extends AbstractRangerAdminClient {
+//   policies:  {path}/{serviceName}.json           or {path}/{appId}_{serviceName}.json
+//   roles:     {path}/{serviceName}_roles.json     or {path}/{appId}_{serviceName}_roles.json
+//   tags:      {path}/{serviceName}_tag.json       or {path}/{appId}_{serviceName}_tag.json
+//   userstore: {path}/{serviceName}_userstore.json or {path}/{appId}_{serviceName}_userstore.json
+//   gds:       {path}/{serviceName}_gds.json       or {path}/{appId}_{serviceName}_gds.json
+public class LocalFolderPolicySource extends RangerPolicySource {
+    private static final Logger LOG = LoggerFactory.getLogger(LocalFolderPolicySource.class);
+
+    private String prefix;
+    private String prefixWithAppId;
+
     private ServicePolicies policies;
     private RangerRoles     roles;
     private RangerUserStore userStore;
     private ServiceTags     tags;
     private ServiceGdsInfo  gdsInfo;
 
-    private String policiesPath;
-    private String rolesPath;
-    private String userStorePath;
-    private String tagsPath;
-    private String gdsInfoPath;
-    private long   lastPoliciesFileModifiedTime  = -1;
-    private long   lastRolesFileModifiedTime     = -1;
-    private long   lastUserStoreFileModifiedTime = -1;
-    private long   lastTagsFileModifiedTime      = -1;
-    private long   lastGdsInfoFileModifiedTime   = -1;
+    private long lastPoliciesFileModifiedTime  = -1;
+    private long lastRolesFileModifiedTime     = -1;
+    private long lastUserStoreFileModifiedTime = -1;
+    private long lastTagsFileModifiedTime      = -1;
+    private long lastGdsInfoFileModifiedTime   = -1;
 
     @Override
     public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
         super.init(serviceName, appId, configPropertyPrefix, config);
 
-        String directory  = config.get(configPropertyPrefix + ".policy.source.local_folder.path");
-        String pathPrefix = (directory == null ? "" : directory) + File.separator + appId + "_" + serviceName;
+        String directory = config.get(configPropertyPrefix + ".policy.source.local_folder.path");
 
-        this.policiesPath  = pathPrefix + ".json";
-        this.rolesPath     = pathPrefix + "_roles.json";
-        this.userStorePath = pathPrefix + "_userstore.json";
-        this.tagsPath      = pathPrefix + "_tag.json";
-        this.gdsInfoPath   = pathPrefix + "_gds.json";
+        if (StringUtils.isBlank(directory)) {
+            directory = "";
+        } else if (!directory.endsWith(File.separator)) {
+            directory += File.separator;
+        }
+
+        prefix          = directory + serviceName;
+        prefixWithAppId = StringUtils.isBlank(appId) ? null : (directory + appId + "_" + serviceName);
     }
 
     @Override
@@ -104,11 +109,7 @@ public class LocalFolderPolicySource extends AbstractRangerAdminClient {
     }
 
     private void loadPolicies() throws Exception {
-        File srcFile = new File(policiesPath);
-
-        if (!srcFile.exists() || !srcFile.canRead()) {
-            throw new Exception(policiesPath + ": policies file not found or not readable");
-        }
+        File srcFile = getSourceFile(SUFFIX_POLICIES_FILE);
 
         if (policies == null || srcFile.lastModified() != lastPoliciesFileModifiedTime) {
             try (FileReader reader = new FileReader(srcFile)) {
@@ -120,11 +121,7 @@ public class LocalFolderPolicySource extends AbstractRangerAdminClient {
     }
 
     private void loadRoles() throws Exception {
-        File srcFile = new File(rolesPath);
-
-        if (!srcFile.exists() || !srcFile.canRead()) {
-            throw new Exception(rolesPath + ": roles file not found or not readable");
-        }
+        File srcFile = getSourceFile(SUFFIX_ROLES_FILE);
 
         if (roles == null || srcFile.lastModified() != lastRolesFileModifiedTime) {
             try (FileReader reader = new FileReader(srcFile)) {
@@ -136,11 +133,7 @@ public class LocalFolderPolicySource extends AbstractRangerAdminClient {
     }
 
     private void loadTags() throws Exception {
-        File srcFile = new File(tagsPath);
-
-        if (!srcFile.exists() || !srcFile.canRead()) {
-            throw new Exception(tagsPath + ": tags file not found or not readable");
-        }
+        File srcFile = getSourceFile(SUFFIX_TAG_FILE);
 
         if (tags == null || srcFile.lastModified() != lastTagsFileModifiedTime) {
             try (FileReader reader = new FileReader(srcFile)) {
@@ -152,11 +145,7 @@ public class LocalFolderPolicySource extends AbstractRangerAdminClient {
     }
 
     private void loadUserStore() throws Exception {
-        File srcFile = new File(userStorePath);
-
-        if (!srcFile.exists() || !srcFile.canRead()) {
-            throw new Exception(userStorePath + ": userStore file not found or not readable");
-        }
+        File srcFile = getSourceFile(SUFFIX_USERSTORE_FILE);
 
         if (userStore == null || srcFile.lastModified() != lastUserStoreFileModifiedTime) {
             try (FileReader reader = new FileReader(srcFile)) {
@@ -168,11 +157,7 @@ public class LocalFolderPolicySource extends AbstractRangerAdminClient {
     }
 
     private void loadGdsInfo() throws Exception {
-        File srcFile = new File(gdsInfoPath);
-
-        if (!srcFile.exists() || !srcFile.canRead()) {
-            throw new Exception(gdsInfoPath + ": gdsInfo file not found or not readable");
-        }
+        File srcFile = getSourceFile(SUFFIX_GDS_FILE);
 
         if (gdsInfo == null || srcFile.lastModified() != lastGdsInfoFileModifiedTime) {
             try (FileReader reader = new FileReader(srcFile)) {
@@ -181,5 +166,29 @@ public class LocalFolderPolicySource extends AbstractRangerAdminClient {
                 lastGdsInfoFileModifiedTime = srcFile.lastModified();
             }
         }
+    }
+
+    private File getSourceFile(String suffix) throws Exception {
+        if (StringUtils.isBlank(prefix)) {
+            throw new Exception(LocalFolderPolicySource.class.getName() + ": not initialized");
+        }
+
+        File    src        = new File(prefix + suffix);
+        boolean isReadable = src.exists() && src.canRead();
+
+        if (!isReadable) {
+            if (StringUtils.isNotBlank(prefixWithAppId)) {
+                src        = new File(prefixWithAppId + suffix);
+                isReadable = src.exists() && src.canRead();
+            }
+        }
+
+        if (!isReadable) {
+            LOG.error("{}{}: file not found or not readable", prefix, suffix);
+
+            throw new Exception(prefix + suffix + ": file not found or not readable");
+        }
+
+        return src;
     }
 }

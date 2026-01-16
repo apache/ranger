@@ -1,0 +1,9 @@
+{
+  "serviceName": "dev_s3",
+  "tagVersion": 2,
+  "op":         "add_or_update",
+  "tagDefinitions": { },
+  "tags": { },
+  "serviceResources": [ ],
+  "resourceToTagIds": { }
+}
