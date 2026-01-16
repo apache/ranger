@@ -659,45 +659,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Introduction">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#run-trino-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run Trino Container
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#configure-ranger-plugin-in-trino-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configure Ranger Plugin in Trino Container
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#restart-trino-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restart Trino Container
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -1154,45 +1115,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Introduction">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#run-trino-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Run Trino Container
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#configure-ranger-plugin-in-trino-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configure Ranger Plugin in Trino Container
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#restart-trino-container" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restart Trino Container
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -1284,21 +1206,6 @@
 
 <h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
 <p>This guide will walk you through the steps to run Trino with Apache Ranger as the Access Control Enforcer.</p>
-<h3 id="run-trino-container">Run Trino Container<a class="headerlink" href="#run-trino-container" title="Permanent link">&para;</a></h3>
-<div class="highlight"><span class="filename">Run Trino in Ranger's Network</span><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>trinodb/trino
-docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>--name<span class="w"> </span>trino<span class="w"> </span>--network<span class="w"> </span>rangernw<span class="w"> </span>trinodb/trino
-
-<span class="c1"># for more details: https://hub.docker.com/r/trinodb/trino</span>
-</code></pre></div>
-<h3 id="configure-ranger-plugin-in-trino-container">Configure Ranger Plugin in Trino Container<a class="headerlink" href="#configure-ranger-plugin-in-trino-container" title="Permanent link">&para;</a></h3>
-<div class="highlight"><span class="filename">Update access-control.properties in /etc/trino/ in Trino container</span><pre><span></span><code><span class="na">access-control.name</span><span class="o">=</span><span class="s">ranger</span>
-<span class="na">ranger.service.name</span><span class="o">=</span><span class="s">dev_trino</span>
-<span class="na">ranger.plugin.config.resource</span><span class="o">=</span><span class="s">/etc/trino/ranger-trino-security.xml,/etc/trino/ranger-trino-audit.xml,/etc/trino/ranger-policymgr-ssl.xml</span>
-<span class="na">ranger.hadoop.config.resource</span><span class="o">=</span>
-
-<span class="c1"># For details to configure Apache Ranger: https://trino.io/docs/current/security/ranger-access-control.html</span>
-</code></pre></div>
-<h3 id="restart-trino-container">Restart Trino Container<a class="headerlink" href="#restart-trino-container" title="Permanent link">&para;</a></h3>
 
 
 
@@ -1319,7 +1226,7 @@ docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </sp
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 14, 2026 18:32:04 PST">January 14, 2026</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="January 13, 2026 13:08:42 PST">January 13, 2026</span>
   </span>
 
     
