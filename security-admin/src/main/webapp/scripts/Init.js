@@ -46,9 +46,6 @@ require.config({
         'jquery-toggles': {
             deps: ['jquery']
         },
-        'jquery.cookie': {
-            deps: ['jquery']
-        },
         'tag-it': {
             deps: ['jquery', 'jquery-ui']
         },
@@ -130,7 +127,6 @@ require.config({
         'momentTz': '../libs/bower/moment/js/moment-timezone-with-data.min',
         'daterangepicker': '../libs/other/daterangepicker/js/daterangepicker',
         'bootstrap-notify': '../libs/bower/bootstrap-notify/js/bootstrap-notify',
-        'jquery.cookie': '../libs/other/jquery-cookie/js/jquery.cookie',
         'jquery-toggles': '../libs/bower/jquery-toggles/js/toggles.min',
         'tag-it': '../libs/bower/tag-it/js/tag-it',
         'select2': '../libs/bower/select2/select2',
