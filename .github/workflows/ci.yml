@@ -235,11 +235,15 @@ jobs:
           -f docker-compose.ranger-kafka.yml \
           -f docker-compose.ranger-hive.yml \
           -f docker-compose.ranger-knox.yml \
-          -f docker-compose.ranger-ozone.yml up -d
+          -f docker-compose.ranger-ozone.yml up -d --wait
+
+      - name: Debug Logs in OM Container
+        if: ${{ always() }}
+        run: |
+          docker logs -f ozone-om || true
 
       - name: Check status of containers and remove them
         run: |
-          sleep 60
           containers=(ranger ranger-zk ranger-solr ranger-postgres ranger-hadoop ranger-hbase ranger-kafka ranger-hive ranger-knox ozone-om ozone-scm ozone-datanode);
           flag=true;
           for container in "${containers[@]}"; do
