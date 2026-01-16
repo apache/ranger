@@ -39,7 +39,7 @@
     "mini-css-extract-plugin": "^1.5.1",
     "moment-timezone": "^0.5.34",
     "prop-types": "^15.8.1",
-    "qs": "^6.9.6",
+    "qs": "^6.14.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.0",
     "react-datetime": "^3.2.0",
