@@ -22,7 +22,8 @@ then
   then
     touch "${OPENSEARCH_HOME}"/.setupDone
   else
-    echo "OpenSearch Setup Script didn't complete proper execution."
+    echo "OpenSearch Setup Script didn't complete proper execution." >&2
+    exit 1
   fi
 fi
 

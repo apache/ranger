@@ -19,7 +19,7 @@ cluster.name: ranger-opensearch-cluster
 node.name: ranger-opensearch.rangernw
 
 # Network settings
-network.host: 0.0.0.0
+network.host: ranger-opensearch.rangernw
 http.port: 9200
 transport.port: 9300
 
@@ -34,12 +34,13 @@ path.logs: /opt/opensearch/logs
 bootstrap.memory_lock: false
 
 # Disable OpenSearch Security Plugin.
-# This can be enabled with Ranger Plugin.
+# Ranger OpenSearch plugin integration is not configured in this image.
+# This can be enabled when Ranger Plugin is configured.
 plugins.security.disabled: true
 
 # Allow HTTP methods
 http.cors.enabled: true
-http.cors.allow-origin: "*"
+http.cors.allow-origin: "http://localhost"
 http.cors.allow-methods: OPTIONS, HEAD, GET, POST, PUT, DELETE
 http.cors.allow-headers: "X-Requested-With, Content-Type, Content-Length, Authorization"
 

@@ -25,9 +25,11 @@ services:
     depends_on:
       ranger-kdc:
         condition: service_started
+      ranger:
+        condition: service_started
     environment:
-      - OPENSEARCH_VERSION
-      - KERBEROS_ENABLED=true
+      - OPENSEARCH_VERSION=${OPENSEARCH_VERSION}
+      - KERBEROS_ENABLED=${KERBEROS_ENABLED}
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
 
 volumes:

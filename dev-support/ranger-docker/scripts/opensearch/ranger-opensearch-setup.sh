@@ -21,6 +21,7 @@ if [ "${KERBEROS_ENABLED}" != "false" ]
 then
   echo "Kerberos is enabled, waiting for keytabs..."
   ${RANGER_SCRIPTS}/wait_for_keytab.sh opensearch.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
   ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
 else
   echo "Kerberos is disabled"
