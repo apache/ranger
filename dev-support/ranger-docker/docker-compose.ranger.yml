@@ -78,6 +78,13 @@ services:
     image: ranger-zk
     container_name: ranger-zk
     hostname: ranger-zk.rangernw
+    volumes:
+      - ./dist/keytabs/ranger-zk:/etc/keytabs
+      - ./scripts/wait_for_keytab.sh:/etc/wait_for_keytab.sh
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./scripts/zk/jaas.conf:/etc/zookeeper/jaas.conf
+      - ./scripts/zk/zookeeper-with-kerberos.sh:/zookeeper-with-kerberos.sh:ro
+    entrypoint: [ "/bin/bash", "/zookeeper-with-kerberos.sh" ]
     networks:
       - ranger
     ports:
