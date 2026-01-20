@@ -20,8 +20,9 @@ SOLR_INSTALL_DIR=/opt/solr
 
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
-  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
+  /home/ranger/scripts/wait_for_keytab.sh HTTP.keytab
+  /home/ranger/scripts/wait_for_keytab.sh solr.keytab
+  /home/ranger/scripts/wait_for_testusers_keytab.sh
 
   JAAS_CONFIG="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf"
   JAAS_APPNAME="-Dsolr.kerberos.jaas.appname=Client"
