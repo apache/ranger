@@ -1,0 +1,5 @@
+{
+  "serviceName": "dev_s3",
+  "roleVersion": 6,
+  "rangerRoles": []
+}
