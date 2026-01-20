@@ -1,0 +1,9 @@
+{
+  "serviceName": "dev_hive",
+  "tagVersion": 2,
+  "op":         "add_or_update",
+  "tagDefinitions": { },
+  "tags": { },
+  "serviceResources": [ ],
+  "resourceToTagIds": { }
+}
