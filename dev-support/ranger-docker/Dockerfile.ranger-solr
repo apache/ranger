@@ -17,13 +17,15 @@
 ARG SOLR_VERSION
 FROM solr:${SOLR_VERSION}
 
+ARG SOLR_PLUGIN_VERSION
+
 VOLUME /etc/keytabs
 
-# Copy audit config set
 USER 0
 
 RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user
 
+# Copy audit config set
 RUN mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf /home/ranger/scripts
 
 COPY ./scripts/solr/solr-ranger_audits/* /opt/solr/server/solr/configsets/ranger_audits/conf/
@@ -36,6 +38,19 @@ COPY ./scripts/kdc/krb5.conf             /etc/krb5.conf
 
 RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
 RUN chmod +x /home/ranger/scripts/ranger-solr.sh /home/ranger/scripts/wait_for_keytab.sh /home/ranger/scripts/wait_for_testusers_keytab.sh
+
+# Copy Ranger plugin
+RUN mkdir -p /opt/ranger /home/ranger/dist /home/ranger/scripts
+
+COPY ./dist/ranger-${SOLR_PLUGIN_VERSION}-solr-plugin.tar.gz /home/ranger/dist/
+COPY ./scripts/solr/core-site.xml                            /home/ranger/scripts/
+COPY ./scripts/solr/ranger-solr-plugin-install.properties    /home/ranger/scripts/
+
+RUN tar xvfz /home/ranger/dist/ranger-${SOLR_PLUGIN_VERSION}-solr-plugin.tar.gz --directory=/opt/ranger && \
+    ln -s /opt/ranger/ranger-${SOLR_PLUGIN_VERSION}-solr-plugin /opt/ranger/ranger-solr-plugin && \
+    rm -f /home/ranger/dist/ranger-${SOLR_PLUGIN_VERSION}-solr-plugin.tar.gz && \
+    cp -f /home/ranger/scripts/ranger-solr-plugin-install.properties /opt/ranger/ranger-solr-plugin/install.properties && \
+    chown -R solr:solr /opt/ranger
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-solr.sh" ]
 CMD ["solr-foreground"]

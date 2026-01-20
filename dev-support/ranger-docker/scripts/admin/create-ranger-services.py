@@ -117,7 +117,16 @@ ozone = RangerService({'name': 'dev_ozone',
                                    'userstore.download.auth.users': 'ozone',
                                    'ranger.plugin.ozone.policy.refresh.synchronous':'true'}})
 
-services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone]
+solr = RangerService({'name': 'dev_solr', 'type': 'solr',
+                     'configs': {'username': 'solr', 'password': 'rangerR0cks!',
+                                 'solr.url': 'http://ranger-solr.rangernw:8983',
+                                 'policy.download.auth.users': 'solr',
+                                 'tag.download.auth.users': 'solr',
+                                 'userstore.download.auth.users': 'solr',
+                                 'ranger.plugin.super.users': 'solr',
+                                 'ranger.plugin.solr.policy.refresh.synchronous':'true'}})
+
+services = [hdfs, yarn, hive, hbase, kafka, knox, kms, trino, ozone, solr]
 for service in services:
     try:
         if service_not_exists(service):
