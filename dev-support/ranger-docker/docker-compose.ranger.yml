@@ -98,6 +98,7 @@ services:
       dockerfile: Dockerfile.ranger-solr
       args:
         - SOLR_VERSION=${SOLR_VERSION}
+        - SOLR_PLUGIN_VERSION=${SOLR_PLUGIN_VERSION}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-solr
     container_name: ranger-solr

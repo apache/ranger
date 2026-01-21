@@ -13,5 +13,6 @@
 !dist/ranger-*-knox-plugin.tar.gz
 !dist/ranger-*-trino-plugin.tar.gz
 !dist/ranger-*-ozone-plugin.tar.gz
+!dist/ranger-*-solr-plugin.tar.gz
 !downloads/*
 !scripts/*
