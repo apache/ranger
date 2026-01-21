@@ -50,8 +50,12 @@ public class RangerSolrAuditHandler extends RangerMultiResourceAuditHandler {
         if (!isAuditingNeeded(result)) {
             return;
         }
-         auditEvent = super.getAuthzEvents(result);
-         super.logAuthzAudit(auditEvent);
+
+        auditEvent = super.getAuthzEvents(result);
+
+        if (auditEvent != null) {
+            super.logAuthzAudit(auditEvent);
+        }
     }
 
     private boolean isAuditingNeeded(final RangerAccessResult result) {

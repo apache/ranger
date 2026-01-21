@@ -7,5 +7,8 @@
     "kerberos.cookie.domain": "ranger-solr",
     "cookie.domain":          "ranger-solr",
     "token.valid":            3600
+  },
+  "authorization": {
+    "class": "org.apache.ranger.authorization.solr.authorizer.RangerSolrAuthorizer"
   }
 }

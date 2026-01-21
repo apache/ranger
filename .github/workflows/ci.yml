@@ -119,6 +119,7 @@ jobs:
           mv ranger-*-usersync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-tagsync.tar.gz dev-support/ranger-docker/dist
           mv ranger-*-kms.tar.gz dev-support/ranger-docker/dist
+          mv ranger-*-solr-plugin.tar.gz dev-support/ranger-docker/dist
           mv version dev-support/ranger-docker/dist
           rm -f ranger-*.tar.gz # clean up workspace
 

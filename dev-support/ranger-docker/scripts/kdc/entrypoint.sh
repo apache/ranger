@@ -97,6 +97,7 @@ function create_keytabs() {
 
   create_principal_and_keytab knox ranger-knox
 
+  create_principal_and_keytab solr ranger-solr
   create_principal_and_keytab HTTP ranger-solr
 
   create_principal_and_keytab zookeeper ranger-zk
