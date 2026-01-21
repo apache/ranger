@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG ORACLE_VERSION
+ARG ORACLE_VERSION=21.3.0-xe
 FROM gvenzl/oracle-free:${ORACLE_VERSION}-slim
 
 # Copy DB init script

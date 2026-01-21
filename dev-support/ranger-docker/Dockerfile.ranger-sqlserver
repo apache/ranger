@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG SQLSERVER_VERSION
+ARG SQLSERVER_VERSION=2022-latest
 
 FROM mcr.microsoft.com/mssql/server:${SQLSERVER_VERSION}
 

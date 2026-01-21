@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG TRINO_VERSION
+ARG TRINO_VERSION=latest
 FROM trinodb/trino:${TRINO_VERSION}
 
 USER trino

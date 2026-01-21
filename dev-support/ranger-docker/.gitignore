@@ -7,3 +7,6 @@
 /target/
 .DS_Store
 .idea
+scripts/hive-site-metastore-mysql.xml
+scripts/tez-site.xml
+scripts/knox/ranger-knox-sandbox.xml
