@@ -1,0 +1,7 @@
+{
+  "serviceName":   "dev_hive",
+  "policyVersion": 1,
+  "serviceDef": { },
+  "policies": [ ],
+  "tagPolicies": { }
+}

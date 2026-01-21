@@ -18,19 +18,12 @@
 
 SOLR_INSTALL_DIR=/opt/solr
 
-if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
-then
-  if [ "${KERBEROS_ENABLED}" == "true" ]
-  then
-    ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
-    ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
-  fi
-
-  touch "${SOLR_INSTALL_DIR}"/.setupDone
-fi
-
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
+  /home/ranger/scripts/wait_for_keytab.sh HTTP.keytab
+  /home/ranger/scripts/wait_for_keytab.sh solr.keytab
+  /home/ranger/scripts/wait_for_testusers_keytab.sh
+
   JAAS_CONFIG="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf"
   JAAS_APPNAME="-Dsolr.kerberos.jaas.appname=Client"
   KRB5_CONF="-Djava.security.krb5.conf=/etc/krb5.conf"
@@ -43,6 +36,16 @@ RULE:[2:\$1/\$2@\$0](jhs/.*@EXAMPLE\.COM)s/.*/mapred/\
 DEFAULT"
 
   export SOLR_AUTHENTICATION_OPTS="${JAAS_CONFIG} ${JAAS_APPNAME} ${KRB5_CONF} ${KERBEROS_KEYTAB} ${KERBEROS_PRINCIPAL} ${COOKIE_DOMAIN} ${KERBEROS_NAME_RULES}"
+fi
+
+if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
+then
+  cd /opt/ranger/ranger-solr-plugin
+  ./enable-solr-plugin.sh
+
+  cp /home/ranger/scripts/core-site.xml /opt/solr/server/resources/
+
+  touch "${SOLR_INSTALL_DIR}"/.setupDone
 fi
 
 su -p -c "export PATH=${PATH} && /opt/docker-solr/scripts/docker-entrypoint.sh $*" solr

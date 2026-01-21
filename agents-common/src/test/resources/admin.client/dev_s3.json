@@ -1,0 +1,7 @@
+{
+  "serviceName": "dev_s3",
+  "policyVersion": 1,
+  "serviceDef": { },
+  "policies": [ ],
+  "tagPolicies": { }
+}
