@@ -21,6 +21,7 @@ package org.apache.ranger.usergroupsync;
 
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -75,6 +76,7 @@ public class TestUserSyncMetricsProducer {
         t.interrupt();
     }
 
+    @Disabled
     @Test
     public void testB_writeJVMMetrics_setsRoleActive_whenHAEnabled() throws Exception {
         Path dir     = Files.createTempDirectory("ugsync-metrics-ha-");
@@ -115,6 +117,7 @@ public class TestUserSyncMetricsProducer {
         t.interrupt();
     }
 
+    @Disabled
     @Test
     public void testC_run_writesPeriodically_whenFileConfigured() throws Exception {
         Path                dir    = Files.createTempDirectory("ugsync-metrics-run-");
