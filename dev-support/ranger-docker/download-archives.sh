@@ -61,6 +61,7 @@ then
     then
       tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
     fi
+    downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
 else
   for arg in "$@"; do
     if [[ $arg == 'hadoop' ]]
@@ -87,6 +88,9 @@ else
       then
         tar xvfz downloads/ozone-${OZONE_VERSION}.tar.gz --directory=downloads/
       fi
+    elif [[ $arg == 'opensearch' ]]
+    then
+      downloadIfNotPresent opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz https://artifacts.opensearch.org/releases/bundle/opensearch/${OPENSEARCH_VERSION}
     else
       echo "Passed argument $arg is invalid!"
     fi

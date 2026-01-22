@@ -30,11 +30,11 @@ Use Dockerfiles in this directory to create docker images and run them to build 
 
 - Set ```dev-support/ranger-docker``` as your working directory.
 
-- Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox/Ozone services:
+- Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox/Ozone/OpenSearch services:
    ~~~
    chmod +x download-archives.sh
    # use a subset of the below to download specific services
-   ./download-archives.sh hadoop hive hbase kafka knox ozone
+   ./download-archives.sh hadoop hive hbase kafka knox ozone opensearch
    ~~~
 
 - Execute following commands to set environment variables to build Apache Ranger docker containers:
@@ -101,6 +101,10 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-ozone.yml u
 #### Bring up trino container (requires docker build with jdk 11):
 ~~~
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-trino.yml up -d
+~~~
+#### Bring up opensearch container:
+~~~
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-opensearch.yml up -d
 ~~~
 Similarly, check the `depends` section of the `docker-compose.ranger-service.yaml` file and add docker-compose files for these services when trying to bring up the `service` container.
 

@@ -102,6 +102,9 @@ function create_keytabs() {
   create_principal_and_keytab solr ranger-solr
   create_principal_and_keytab HTTP ranger-solr
 
+  create_principal_and_keytab opensearch ranger-opensearch
+  create_principal_and_keytab HTTP       ranger-opensearch
+  
   create_principal_and_keytab zookeeper ranger-zk
 }
 
@@ -129,7 +132,7 @@ if [ ! -f $DB_DIR/principal ]; then
   echo "Database initialized"
 
   create_keytabs
-  create_testusers ranger ranger-usersync ranger-tagsync ranger-audit ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino
+  create_testusers ranger ranger-usersync ranger-tagsync ranger-audit ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino ranger-opensearch
 else
   echo "KDC DB already exists; skipping create"
 fi
