@@ -290,6 +290,10 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXUser.findIdByUserName">
+		<query>SELECT obj.id FROM XXUser obj WHERE obj.name = :name</query>
+	</named-query>
+
 	<named-query name="XXGroup.findByGroupName">
 		<query>SELECT Obj FROM XXGroup obj
 			   WHERE obj.name=:name
@@ -1874,17 +1878,114 @@
         </query>
     </named-query>
 
+    <named-query name="XXSecurityZone.findAllZoneForAdmin">
+        <query>
+            SELECT obj.id, obj.name FROM XXSecurityZone obj WHERE obj.id != :unzoneId
+        </query>
+    </named-query>
+
 	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByServiceId">
 		<query>
-			select obj.id, obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefService ref where ref.serviceId = :serviceId)
+			SELECT DISTINCT obj.id, obj.name FROM XXSecurityZone obj INNER JOIN XXSecurityZoneRefService ref ON obj.id = ref.zoneId WHERE ref.serviceId = :serviceId
 		</query>
 	</named-query>
 
 	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByTagServiceId">
 		<query>
-			select obj.id, obj.name from XXSecurityZone obj where obj.id in (select ref.zoneId from XXSecurityZoneRefTagService ref where ref.tagServiceId = :tagServiceId)
+			SELECT DISTINCT obj.id, obj.name FROM XXSecurityZone obj INNER JOIN XXSecurityZoneRefTagService ref ON obj.id = ref.zoneId WHERE ref.tagServiceId = :tagServiceId
 		</query>
 	</named-query>
+
+	<named-query name="XXSecurityZone.findAllZoneHeaderInfosWithNamePrefix">
+		<query>
+			SELECT obj.id, obj.name FROM XXSecurityZone obj WHERE obj.id != :unzoneId AND LOWER(obj.name) LIKE :namePrefix
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByServiceIdWithNamePrefix">
+		<query>
+			SELECT DISTINCT obj.id, obj.name FROM XXSecurityZone obj INNER JOIN XXSecurityZoneRefService ref ON obj.id = ref.zoneId WHERE obj.id != :unzoneId AND LOWER(obj.name) LIKE :namePrefix AND ref.serviceId = :serviceId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findAllZoneHeaderInfosByTagServiceIdWithNamePrefix">
+		<query>
+			SELECT DISTINCT obj.id, obj.name FROM XXSecurityZone obj
+            INNER JOIN XXSecurityZoneRefTagService ref
+            ON obj.id = ref.zoneId WHERE obj.id != :unzoneId AND
+            LOWER(obj.name) LIKE :namePrefix AND ref.tagServiceId = :tagServiceId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findZoneHeaderInfosByServiceIdForUser">
+		<query>
+            SELECT DISTINCT obj.id, obj.name
+            FROM XXSecurityZone obj
+            INNER JOIN XXSecurityZoneRefService ref ON obj.id = ref.zoneId AND ref.serviceId = :serviceId
+            INNER JOIN VXSecurityZoneUser vxzu ON obj.id = vxzu.zoneId AND vxzu.userId = :userId
+            WHERE obj.id != :unzoneId
+        </query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findZoneHeaderInfosByTagServiceIdForUser">
+		<query>
+            SELECT DISTINCT obj.id, obj.name
+            FROM XXSecurityZone obj
+            INNER JOIN XXSecurityZoneRefTagService ref ON obj.id = ref.zoneId AND ref.tagServiceId = :tagServiceId
+            INNER JOIN VXSecurityZoneUser vxzu ON obj.id = vxzu.zoneId AND vxzu.userId = :userId
+            WHERE obj.id != :unzoneId
+        </query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findZoneHeaderInfosByServiceIdForUserWithNamePrefix">
+		<query>
+            SELECT DISTINCT obj.id, obj.name
+            FROM XXSecurityZone obj
+            INNER JOIN XXSecurityZoneRefService ref ON obj.id = ref.zoneId AND ref.serviceId = :serviceId
+            INNER JOIN VXSecurityZoneUser vxzu ON obj.id = vxzu.zoneId AND vxzu.userId = :userId
+            WHERE obj.id != :unzoneId
+            AND LOWER(obj.name) LIKE :namePrefix
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findZoneHeaderInfosByTagServiceIdForUserWithNamePrefix">
+		<query>
+            SELECT DISTINCT obj.id, obj.name
+            FROM XXSecurityZone obj
+            INNER JOIN XXSecurityZoneRefTagService ref ON obj.id = ref.zoneId AND ref.tagServiceId = :tagServiceId
+            INNER JOIN VXSecurityZoneUser vxzu ON obj.id = vxzu.zoneId AND vxzu.userId = :userId
+            WHERE obj.id != :unzoneId
+            AND LOWER(obj.name) LIKE :namePrefix
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findZoneHeaderInfosForUserO">
+		<query>
+            SELECT DISTINCT obj.id, obj.name
+            FROM XXSecurityZone obj
+            INNER JOIN VXSecurityZoneUser vxzu ON obj.id = vxzu.zoneId AND vxzu.userId = :userId
+            WHERE obj.id != :unzoneId
+        </query>
+	</named-query>
+
+	<named-query name="XXSecurityZone.findZoneHeaderInfosForUserWithNamePrefixO">
+		<query>
+            SELECT DISTINCT obj.id, obj.name
+            FROM XXSecurityZone obj
+            INNER JOIN VXSecurityZoneUser vxzu ON obj.id = vxzu.zoneId AND vxzu.userId = :userId
+            WHERE obj.id != :unzoneId
+            AND LOWER(obj.name) LIKE :namePrefix
+		</query>
+	</named-query>
+
+    <named-query name="XXSecurityZone.findAllZoneForUser">
+        <query>
+            SELECT DISTINCT obj.id, obj.name
+            FROM XXSecurityZone obj
+            INNER JOIN VXSecurityZoneUser vxzu ON obj.id = vxzu.zoneId AND vxzu.userId = :userId
+            WHERE obj.id != :unzoneId
+        </query>
+    </named-query>
 
     <named-query name="XXGlobalState.findByStateId">
         <query>
