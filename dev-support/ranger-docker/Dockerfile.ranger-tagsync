@@ -22,8 +22,6 @@ ARG TAGSYNC_VERSION
 
 COPY ./dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz     /home/ranger/dist/
 COPY ./scripts/tagsync/ranger-tagsync.sh                 ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_keytab.sh                        ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_testusers_keytab.sh              ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${TAGSYNC_VERSION}-tagsync ${RANGER_HOME}/tagsync && \
@@ -42,8 +40,6 @@ RUN tar xvfz /home/ranger/dist/ranger-${TAGSYNC_VERSION}-tagsync.tar.gz --direct
     ln -s /etc/init.d/ranger-tagsync /etc/rc3.d/K00ranger-tagsync && \
     ln -s ${RANGER_HOME}/tagsync/ranger-tagsync-services.sh /usr/bin/ranger-tagsync-services.sh && \
     chown -R ranger:ranger ${RANGER_HOME}/tagsync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-tagsync && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-tagsync.sh
 
 USER ranger

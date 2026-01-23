@@ -73,6 +73,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-zk
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - ZK_VERSION=${ZK_VERSION}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
     image: ranger-zk
@@ -80,7 +82,6 @@ services:
     hostname: ranger-zk.rangernw
     volumes:
       - ./dist/keytabs/ranger-zk:/etc/keytabs
-      - ./scripts/wait_for_keytab.sh:/etc/wait_for_keytab.sh
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
       - ./scripts/zk/jaas.conf:/etc/zookeeper/jaas.conf
       - ./scripts/zk/zookeeper-with-kerberos.sh:/zookeeper-with-kerberos.sh:ro
@@ -97,6 +98,8 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-solr
       args:
+        - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
+        - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - SOLR_VERSION=${SOLR_VERSION}
         - SOLR_PLUGIN_VERSION=${SOLR_PLUGIN_VERSION}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
@@ -105,6 +108,13 @@ services:
     hostname: ranger-solr.rangernw
     volumes:
       - ./dist/keytabs/ranger-solr:/etc/keytabs
+      - ./scripts/solr/solr-ranger_audits:/opt/solr/server/solr/configsets/ranger_audits/conf
+      - ./scripts/solr/ranger-solr-plugin-install.properties:/opt/ranger/ranger-solr-plugin/install.properties
+      - ./scripts/solr/core-site.xml:/opt/solr/server/resources/core-site.xml
+      - ./scripts/solr/solr-jaas.conf:/opt/solr/server/etc/jaas.conf
+      - ./scripts/solr/solr-security.json:/var/solr/data/security.json
+      - ./scripts/solr/ranger-solr.sh:/opt/ranger/ranger-solr.sh
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
     networks:
       - ranger
     ports:
