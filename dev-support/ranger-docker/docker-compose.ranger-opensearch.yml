@@ -13,6 +13,11 @@ services:
     hostname: ranger-opensearch.rangernw
     volumes:
       - ./dist/keytabs/ranger-opensearch:/etc/keytabs
+      - ./scripts/opensearch/ranger-opensearch-setup.sh:/opt/ranger/ranger-opensearch-setup.sh
+      - ./scripts/opensearch/ranger-opensearch.sh:/opt/ranger/ranger-opensearch.sh
+      - ./scripts/opensearch/opensearch.yml:/opt/opensearch/config/opensearch.yml
+      - ./scripts/opensearch/opensearch-jaas.conf:/opt/opensearch/config/opensearch-jaas.conf
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf
       - opensearch-data:/opt/opensearch/data
       - opensearch-logs:/opt/opensearch/logs
     stdin_open: true

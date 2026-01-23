@@ -43,8 +43,6 @@ then
   cd /opt/ranger/ranger-solr-plugin
   ./enable-solr-plugin.sh
 
-  cp /home/ranger/scripts/core-site.xml /opt/solr/server/resources/
-
   touch "${SOLR_INSTALL_DIR}"/.setupDone
 fi
 

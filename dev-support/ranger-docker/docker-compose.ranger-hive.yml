@@ -17,6 +17,13 @@ services:
     hostname: ranger-hive.rangernw
     volumes:
       - ./dist/keytabs/ranger-hive:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/hive/ranger-hive-plugin-install.properties:/opt/ranger/ranger-hive-plugin/install.properties
+      - ./scripts/hive/hive-site-${RANGER_DB_TYPE}.xml:/home/ranger/scripts/hive-site.xml:ro
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./scripts/hive/hive-log4j2.properties:/opt/hive/conf/hive-log4j2.properties
+      - ./scripts/hive/hive-metastore-log4j2.properties:/opt/hive/conf/hive-metastore-log4j2.properties
     stdin_open: true
     tty: true
     networks:

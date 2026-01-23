@@ -20,36 +20,16 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 
 ARG OPENSEARCH_VERSION
 
-VOLUME /etc/keytabs
-
-COPY ./dist/version                                                   /home/ranger/dist/
 COPY ./downloads/opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz   /home/ranger/dist/
-
-COPY ./scripts/opensearch/ranger-opensearch-setup.sh      ${RANGER_SCRIPTS}/
-COPY ./scripts/opensearch/ranger-opensearch.sh            ${RANGER_SCRIPTS}/
-COPY ./scripts/opensearch/opensearch.yml                  ${RANGER_SCRIPTS}/
-COPY ./scripts/opensearch/opensearch-jaas.conf            ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_keytab.sh                         ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_testusers_keytab.sh               ${RANGER_SCRIPTS}/
-COPY ./scripts/kdc/krb5.conf                              /etc/krb5.conf
-
-# Create opensearch user and group
-RUN groupadd -g 3002 opensearch && \
-    useradd -u 3002 -g opensearch -G hadoop -s /bin/bash opensearch
 
 # Extract and setup OpenSearch
 RUN tar xvfz /home/ranger/dist/opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz --directory=/opt/ && \
     ln -s /opt/opensearch-${OPENSEARCH_VERSION} /opt/opensearch && \
     rm -f /home/ranger/dist/opensearch-${OPENSEARCH_VERSION}-linux-x64.tar.gz && \
     mkdir -p /opt/opensearch/data /opt/opensearch/logs && \
-    chown -R opensearch:hadoop /opt/opensearch* && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/ranger-opensearch-setup.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/ranger-opensearch.sh
+    chown -R opensearch:hadoop /opt/opensearch*
 
 ENV OPENSEARCH_HOME=/opt/opensearch
 ENV PATH=/usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/opensearch/bin
 
-ENTRYPOINT [ "/home/ranger/scripts/ranger-opensearch.sh" ]
-
+ENTRYPOINT [ "/opt/ranger/ranger-opensearch.sh" ]

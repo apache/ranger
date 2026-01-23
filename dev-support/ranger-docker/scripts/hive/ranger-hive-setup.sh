@@ -34,8 +34,6 @@ fi
 
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
-cp ${RANGER_SCRIPTS}/hive-log4j2.properties ${HIVE_HOME}/conf/hive-log4j2.properties
-cp ${RANGER_SCRIPTS}/hive-metastore-log4j2.properties ${HIVE_HOME}/conf/hive-metastore-log4j2.properties
 
 # Configure Tez
 mkdir -p ${TEZ_HOME}/conf
