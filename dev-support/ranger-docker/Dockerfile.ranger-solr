@@ -26,7 +26,7 @@ USER root
 
 RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user
 
-RUN mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf /opt/ranger/krb /home/ranger/dist /home/ranger/scripts
+RUN mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf /home/ranger/dist /opt/ranger /home/ranger/scripts
 RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
 
 COPY --from=ranger-base /home/ranger/scripts/wait_for_keytab.sh             /home/ranger/scripts/wait_for_keytab.sh
