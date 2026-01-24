@@ -51,6 +51,7 @@ jobs:
       - name: Download build-8 artifacts
         uses: dawidd6/action-download-artifact@v11
         with:
+          branch: ${{ github.ref_name }}
           name: target-8
           workflow: ci.yml
 
