@@ -28,7 +28,6 @@
     <name>Knox Security Plugin</name>
     <description>Knox Security Plugins</description>
     <properties>
-        <knox.jetty.version>9.4.56.v20240826</knox.jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
@@ -116,10 +115,6 @@
                     <artifactId>zookeeper</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.eclipse.jetty</groupId>
-                    <artifactId>jetty-util</artifactId>
-                </exclusion>
-                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -148,12 +143,6 @@
             <!-- TO DEBUG JERSEY2 code: uncomment this exclusion
        <exclusions><exclusion><artifactId>*</artifactId><groupId>*</groupId></exclusion></exclusions>
  -->
-        </dependency>
-        <!-- The Jetty dependency is required as Knox is not using Jetty 9.3, which gets imported via Hadoop 3.0.0 -->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-            <version>${knox.jetty.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
@@ -290,12 +279,6 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-knox-plugin-shim</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>${knox.jetty.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
