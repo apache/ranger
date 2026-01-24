@@ -21,20 +21,9 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 ARG HBASE_VERSION
 ARG HBASE_PLUGIN_VERSION
 
-VOLUME /etc/keytabs
-
-COPY ./dist/version                                             /home/ranger/dist/
 COPY ./dist/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin.tar.gz  /home/ranger/dist/
 COPY ./downloads/hbase-${HBASE_VERSION}-bin.tar.gz              /home/ranger/dist/
-
-COPY ./scripts/hbase/ranger-hbase-setup.sh                  ${RANGER_SCRIPTS}/
-COPY ./scripts/hbase/ranger-hbase.sh                        ${RANGER_SCRIPTS}/
-COPY ./scripts/hbase/ranger-hbase-plugin-install.properties ${RANGER_SCRIPTS}/
-COPY ./scripts/hbase/hbase-site.xml                         ${RANGER_SCRIPTS}/
-COPY ./scripts/hadoop/core-site.xml                         ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_keytab.sh                           ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_testusers_keytab.sh                 ${RANGER_SCRIPTS}/
-COPY ./scripts/kdc/krb5.conf                                /etc/krb5.conf
+COPY ./scripts/hbase/*.sh                                       ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/hbase-${HBASE_VERSION} /opt/hbase && \
@@ -42,9 +31,7 @@ RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/op
     tar xvfz /home/ranger/dist/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin /opt/ranger/ranger-hbase-plugin && \
     rm -f /home/ranger/dist/ranger-${HBASE_PLUGIN_VERSION}-hbase-plugin.tar.gz && \
-    cp -f ${RANGER_SCRIPTS}/ranger-hbase-plugin-install.properties /opt/ranger/ranger-hbase-plugin/install.properties && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
+    rm -f /opt/ranger/ranger-hbase-plugin/install.properties && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-hbase-setup.sh ${RANGER_SCRIPTS}/ranger-hbase.sh
 
 RUN apt-get update && \

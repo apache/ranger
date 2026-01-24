@@ -21,20 +21,11 @@ FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION}
 ARG KNOX_VERSION
 ARG KNOX_PLUGIN_VERSION
 
-VOLUME /etc/keytabs
-
-COPY ./dist/version                                           /home/ranger/dist/
 COPY ./dist/ranger-${KNOX_PLUGIN_VERSION}-knox-plugin.tar.gz  /home/ranger/dist/
 COPY ./downloads/knox-${KNOX_VERSION}.tar.gz                  /home/ranger/dist/
 
-COPY ./scripts/knox/ranger-knox-setup.sh                  ${RANGER_SCRIPTS}/
-COPY ./scripts/knox/ranger-knox.sh                        ${RANGER_SCRIPTS}/
-COPY ./scripts/knox/ranger-knox-plugin-install.properties ${RANGER_SCRIPTS}/
+COPY ./scripts/knox/*.sh                                  ${RANGER_SCRIPTS}/
 COPY ./scripts/knox/ranger-knox-expect.py                 ${RANGER_SCRIPTS}/
-COPY ./scripts/knox/ranger-knox-sandbox.xml               ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_keytab.sh                         ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_testusers_keytab.sh               ${RANGER_SCRIPTS}/
-COPY ./scripts/kdc/krb5.conf                              /etc/krb5.conf
 
 RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/knox-${KNOX_VERSION} /opt/knox && \
@@ -42,10 +33,8 @@ RUN tar xvfz /home/ranger/dist/knox-${KNOX_VERSION}.tar.gz --directory=/opt/ && 
     tar xvfz /home/ranger/dist/ranger-${KNOX_PLUGIN_VERSION}-knox-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${KNOX_PLUGIN_VERSION}-knox-plugin /opt/ranger/ranger-knox-plugin && \
     rm -f /home/ranger/dist/ranger-${KNOX_PLUGIN_VERSION}-knox-plugin.tar.gz && \
-    cp -f ${RANGER_SCRIPTS}/ranger-knox-plugin-install.properties /opt/ranger/ranger-knox-plugin/install.properties && \
-    cp -f ${RANGER_SCRIPTS}/ranger-knox-sandbox.xml /opt/knox/conf/topologies/sandbox.xml && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh && \
-    chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh && \
+    rm -f /opt/ranger/ranger-knox-plugin/install.properties && \
+    rm -f /opt/knox/conf/topologies/sandbox.xml && \
     chmod 744 ${RANGER_SCRIPTS}/ranger-knox-setup.sh ${RANGER_SCRIPTS}/ranger-knox.sh ${RANGER_SCRIPTS}/ranger-knox-expect.py
 
 ENV KNOX_HOME=/opt/knox

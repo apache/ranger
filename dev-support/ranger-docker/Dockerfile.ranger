@@ -26,8 +26,6 @@ ARG TARGETARCH
 COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz     /home/ranger/dist/
 COPY ./scripts/admin/ranger.sh                        ${RANGER_SCRIPTS}/
 COPY ./scripts/admin/create-ranger-services.py        ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_keytab.sh                     ${RANGER_SCRIPTS}/
-COPY ./scripts/wait_for_testusers_keytab.sh           ${RANGER_SCRIPTS}/
 
 RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} \
     && ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin \
@@ -35,8 +33,7 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && rm -f /opt/ranger/admin/install.properties \
     && mkdir -p /var/run/ranger /var/log/ranger /usr/share/java/ \
     && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
-    && chmod 755 ${RANGER_SCRIPTS}/ranger.sh ${RANGER_SCRIPTS}/wait_for_keytab.sh \
-    && chmod 755 ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
+    && chmod 755 ${RANGER_SCRIPTS}/ranger.sh
 
 FROM ranger AS ranger_postgres
 COPY ./downloads/postgresql-42.2.16.jre7.jar         /home/ranger/dist/

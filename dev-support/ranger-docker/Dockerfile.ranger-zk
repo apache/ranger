@@ -13,6 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+ARG RANGER_BASE_IMAGE
+ARG RANGER_BASE_VERSION
 ARG ZK_VERSION
+FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger-base
 FROM zookeeper:${ZK_VERSION}
+
+COPY --from=ranger-base /home/ranger/scripts/wait_for_keytab.sh             /etc/wait_for_keytab.sh

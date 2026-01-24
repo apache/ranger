@@ -15,6 +15,13 @@ services:
     hostname: ranger-hadoop.rangernw
     volumes:
       - ./dist/keytabs/ranger-hadoop:/etc/keytabs
+      - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
+      - ./dist/version:/home/ranger/dist/version:ro
+      - ./scripts/hadoop/ranger-hdfs-plugin-install.properties:/opt/ranger/ranger-hdfs-plugin/install.properties
+      - ./scripts/hadoop/ranger-yarn-plugin-install.properties:/opt/ranger/ranger-yarn-plugin/install.properties
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./scripts/hadoop/hdfs-site.xml:/home/ranger/scripts/hdfs-site.xml:ro
+      - ./scripts/hadoop/yarn-site.xml:/home/ranger/scripts/yarn-site.xml:ro
     stdin_open: true
     tty: true
     networks:
