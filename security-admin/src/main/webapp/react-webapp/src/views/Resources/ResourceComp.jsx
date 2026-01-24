@@ -208,6 +208,7 @@ export default function ResourceComp(props) {
                         }
                         isSearchable={false}
                         styles={selectInputCustomStyles}
+                        tabSelectsValue={false}
                       />
                     </span>
                     <RenderValidateField name={`resourceName-${levelKey}`} />

@@ -872,6 +872,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Users"
+                              tabSelectsValue={false}
                             />
                           </Col>
                         </Row>
@@ -916,6 +917,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Groups"
+                              tabSelectsValue={false}
                             />
                           </Col>
                         </Row>
@@ -960,6 +962,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Roles"
+                              tabSelectsValue={false}
                             />
                             {meta.touched && meta.error && (
                               <span className="invalid-field">
@@ -1009,6 +1012,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Users"
+                              tabSelectsValue={false}
                             />
                           </Col>
                         </Row>
@@ -1053,6 +1057,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Groups"
+                              tabSelectsValue={false}
                             />
                           </Col>
                         </Row>
@@ -1097,6 +1102,7 @@ const SecurityZoneForm = () => {
                               }}
                               isClearable={true}
                               placeholder="Select Roles"
+                              tabSelectsValue={false}
                             />
                             {meta.error && meta.touched && (
                               <span className="invalid-field">
@@ -1138,6 +1144,7 @@ const SecurityZoneForm = () => {
                               isClearable={true}
                               placeholder="Select Tag Services"
                               styles={selectInputCustomStyles}
+                              tabSelectsValue={false}
                             />
                           </Col>
                         </Row>
@@ -1175,6 +1182,7 @@ const SecurityZoneForm = () => {
                               isSearchable={true}
                               placeholder="Select Resource Services"
                               styles={selectInputCustomStyles}
+                              tabSelectsValue={false}
                             />
                           </Col>
                         </Row>
