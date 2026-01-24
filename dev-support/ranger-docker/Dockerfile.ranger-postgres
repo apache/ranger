@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG POSTGRES_VERSION
+ARG POSTGRES_VERSION=13.16
 FROM postgres:${POSTGRES_VERSION}
 
 # Copy DB init script

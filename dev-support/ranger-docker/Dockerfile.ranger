@@ -13,9 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-ARG RANGER_DB_TYPE
-ARG RANGER_BASE_IMAGE
-ARG RANGER_BASE_VERSION
+ARG RANGER_DB_TYPE=postgres
+ARG RANGER_BASE_IMAGE=apache/ranger-base
+ARG RANGER_BASE_VERSION=20260123-2-8
 
 FROM ${RANGER_BASE_IMAGE}:${RANGER_BASE_VERSION} AS ranger
 
