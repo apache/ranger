@@ -25,6 +25,12 @@ services:
     depends_on:
       ranger:
         condition: service_started
+    healthcheck:
+      test: [ "CMD-SHELL", "grep 'uploaded to ranger admin' /var/log/ranger/usersync/usersync*.log*" ]
+      interval: 30s
+      timeout: 3s
+      retries: 10
+      start_period: 40s
     environment:
       - USERSYNC_VERSION
       - ENABLE_FILE_SYNC_SOURCE
