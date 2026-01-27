@@ -2964,6 +2964,9 @@ public class XUserMgr extends XUserMgrBase {
 
                 updatedGroups = groupUserInfoList.size();
             }
+			if (updatedGroups > 0) {
+				updateUserStoreVersion("createOrDeleteXGroupUserList(updatedGroups=" + updatedGroups + ")");
+			}
         }
 
         if (logger.isDebugEnabled()) {
