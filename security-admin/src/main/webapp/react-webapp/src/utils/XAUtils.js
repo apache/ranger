@@ -1082,7 +1082,7 @@ export const InfoIcon = (props) => {
 };
 
 /* Edit Permission Module Infinite Scroll */
-export const CustomInfinteScroll = (props) => {
+export const CustomInfiniteScroll = (props) => {
   const { data, removeUsrGrp, scrollableDiv } = props;
   const [count, setCount] = useState({
     startIndex: 0,
