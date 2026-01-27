@@ -24,7 +24,12 @@ import { toast } from "react-toastify";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
 import { fetchApi } from "Utils/fetchAPI";
-import { BlockUi, Loader, scrollToError } from "Components/CommonComponents";
+import {
+  BlockUi,
+  Loader,
+  scrollToError,
+  trimInputValue
+} from "Components/CommonComponents";
 import { commonBreadcrumb, serverError } from "Utils/XAUtils";
 import { cloneDeep, find, isEmpty, values } from "lodash";
 import withRouter from "Hooks/withRouter";
@@ -69,7 +74,7 @@ const reducer = (state, action) => {
   }
 };
 
-const PromtDialog = (props) => {
+const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
   return null;
@@ -120,7 +125,7 @@ function KeyCreate(props) {
     serviceJson.name = values.name;
     serviceJson.cipher = values.cipher;
     serviceJson.length = values.length;
-    serviceJson.description = values.description;
+    serviceJson.description = values?.description?.trim();
     serviceJson.attributes = {};
 
     for (let key of Object.keys(values.attributes)) {
@@ -128,8 +133,8 @@ function KeyCreate(props) {
         !isEmpty(values?.attributes[key]?.name) &&
         !isEmpty(values?.attributes[key]?.value)
       ) {
-        serviceJson.attributes[values.attributes[key].name] =
-          values.attributes[key].value;
+        serviceJson.attributes[values.attributes[key].name.trim()] =
+          values.attributes[key].value.trim();
       }
     }
 
@@ -251,7 +256,7 @@ function KeyCreate(props) {
           }
         }) => (
           <div className="wrap">
-            <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
+            <PromptDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
             <form
               onSubmit={(event) => {
                 handleSubmit(event);
@@ -268,6 +273,7 @@ function KeyCreate(props) {
                         {...input}
                         name="name"
                         type="text"
+                        onBlur={(e) => trimInputValue(e, input)}
                         id={meta.error && meta.touched ? "isError" : "name"}
                         className={
                           meta.error && meta.touched
@@ -335,6 +341,7 @@ function KeyCreate(props) {
                         {...input}
                         className="form-control"
                         data-cy="description"
+                        onBlur={(e) => trimInputValue(e, input)}
                       />
                     </Col>
                   </Row>
@@ -361,18 +368,26 @@ function KeyCreate(props) {
                           fields.map((name, index) => (
                             <tr key={name}>
                               <td className="text-center">
-                                <Field
-                                  name={`${name}.name`}
-                                  component="input"
-                                  className="form-control"
-                                />
+                                <Field name={`${name}.name`}>
+                                  {({ input }) => (
+                                    <input
+                                      {...input}
+                                      className="form-control"
+                                      onBlur={(e) => trimInputValue(e, input)}
+                                    />
+                                  )}
+                                </Field>
                               </td>
                               <td className="text-center">
-                                <Field
-                                  name={`${name}.value`}
-                                  component="input"
-                                  className="form-control"
-                                />
+                                <Field name={`${name}.value`}>
+                                  {({ input }) => (
+                                    <input
+                                      {...input}
+                                      className="form-control"
+                                      onBlur={(e) => trimInputValue(e, input)}
+                                    />
+                                  )}
+                                </Field>
                               </td>
                               <td className="text-center">
                                 <Button
