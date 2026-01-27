@@ -63,7 +63,7 @@
 
         <!-- Tencent KMS depencies -->
         <com.tencentcloudapi.sdk.version>3.1.322</com.tencentcloudapi.sdk.version>
-        <commons.beanutils.version>1.9.4</commons.beanutils.version>
+        <commons.beanutils.version>1.11.0</commons.beanutils.version>
         <commons.cli.version>1.2</commons.cli.version>
         <commons.codec.version>1.15</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
