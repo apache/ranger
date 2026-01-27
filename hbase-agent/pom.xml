@@ -28,7 +28,7 @@
     <name>HBase Security Plugin</name>
     <description>HBase Security Plugins</description>
     <properties>
-        <hbase.jetty.version>9.4.56.v20240826</hbase.jetty.version>
+        <hbase.jetty.version>9.4.57.v20241219</hbase.jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencyManagement>
