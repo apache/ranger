@@ -173,6 +173,9 @@ public class RangerMetricsFetcher {
         //policies
         ret.put("TotalPolicies", summaryPolicy.values().stream().mapToLong(Long::longValue).sum());
 
+        //securityzones
+        ret.put("TotalSecurityZones", daoMgr.getXXSecurityZoneDao().getAllCount());
+
         //x_trx_log_v2
         ret.put("TotalAdminAudits", daoMgr.getXXTrxLogV2().getAllCount());
 
@@ -184,6 +187,24 @@ public class RangerMetricsFetcher {
 
         //x_policy_export_audit
         ret.put("TotalPluginDownloads", daoMgr.getXXPolicyExportAudit().getAllCount());
+
+        return ret;
+    }
+
+    public Map<String, Long> getGdsMetrics() {
+        Map<String, Long> ret   = new HashMap<>();
+
+        //x_gds_dataset
+        ret.put("Dataset", daoMgr.getXXGdsDataset().getAllCount());
+
+        //x_gds_data_share
+        ret.put("DataShare", daoMgr.getXXGdsDataShare().getAllCount());
+
+        //x_gds_shared_resource
+        ret.put("SharedResource", daoMgr.getXXGdsSharedResource().getAllCount());
+
+        //x_gds_project
+        ret.put("Project", daoMgr.getXXGdsProject().getAllCount());
 
         return ret;
     }
