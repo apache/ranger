@@ -1740,7 +1740,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
             if (StringUtils.isNotEmpty(groupDN) && !sourceGroups.containsKey(groupDN)
                     && StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource) &&
                     StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
-                if (ISHIDDEN.equals(groupInfo.getIsVisible())) {
+                if (!ISHIDDEN.equals(groupInfo.getIsVisible())) {
                     groupInfo.setIsVisible(ISHIDDEN);
                     deletedGroups.put(groupInfo.getName(), groupInfo);
                 } else {
