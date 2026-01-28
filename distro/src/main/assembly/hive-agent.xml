@@ -57,6 +57,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
+          <include>commons-collections:commons-collections</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
@@ -99,6 +100,7 @@
           <include>commons-collections:commons-collections</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+          <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
