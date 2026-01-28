@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -104,10 +106,42 @@ public class TestXGroupUserServiceGroupUserMappingUpdator {
             Map<String, Long> users = new HashMap<>();
             users.put("u1", 11L);
             users.put("u2", 22L);
-            svc.createOrDeleteXGroupUsers(info, users);
+            boolean result = svc.createOrDeleteXGroupUsers(info, users);
+            assertTrue(result);
             verify(entityDao).create(any(XXGroupUser.class));
         } finally {
             svc.entityDao = previousDao;
         }
+    }
+
+    @Test
+    public void testCreateOrDeleteXGroupUsers_EmptyUsers() {
+        GroupUserInfo info = new GroupUserInfo();
+        info.setGroupName("group1");
+        info.setAddUsers(new HashSet<>());
+        info.setDelUsers(new HashSet<>());
+
+        Map<String, Long> users = new HashMap<>();
+        users.put("u1", 11L);
+
+        boolean result = svc.createOrDeleteXGroupUsers(info, users);
+        assertFalse(result);
+    }
+
+    @Test
+    public void testCreateOrDeleteXGroupUsers_GroupNotFound() {
+        GroupUserInfo info = new GroupUserInfo();
+        info.setGroupName("nonExistentGroup");
+        info.setAddUsers(new HashSet<>(Collections.singletonList("u1")));
+
+        XXGroupDao xGroupDao = mock(XXGroupDao.class);
+        when(daoMgr.getXXGroup()).thenReturn(xGroupDao);
+        when(xGroupDao.findByGroupName("nonExistentGroup")).thenReturn(null);
+
+        Map<String, Long> users = new HashMap<>();
+        users.put("u1", 11L);
+
+        boolean result = svc.createOrDeleteXGroupUsers(info, users);
+        assertFalse(result);
     }
 }

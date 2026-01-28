@@ -84,7 +84,7 @@ public class XGroupUserService extends XGroupUserServiceBase<XXGroupUser, VXGrou
         return vxGroupUser;
     }
 
-    public void createOrDeleteXGroupUsers(GroupUserInfo groupUserInfo, Map<String, Long> usersFromDB) {
+    public boolean createOrDeleteXGroupUsers(GroupUserInfo groupUserInfo, Map<String, Long> usersFromDB) {
         if (logger.isDebugEnabled()) {
             logger.debug("==>> createOrDeleteXGroupUsers for {}", groupUserInfo.getGroupName());
 
@@ -98,7 +98,7 @@ public class XGroupUserService extends XGroupUserServiceBase<XXGroupUser, VXGrou
         if (CollectionUtils.isEmpty(groupUserInfo.getAddUsers()) && CollectionUtils.isEmpty(groupUserInfo.getDelUsers())) {
             logger.info("Group memberships for source are empty for {}", groupName);
 
-            return;
+            return false;
         }
 
         XXGroup xxGroup = daoManager.getXXGroup().findByGroupName(groupName);
@@ -106,7 +106,7 @@ public class XGroupUserService extends XGroupUserServiceBase<XXGroupUser, VXGrou
         if (xxGroup == null) {
             logger.debug("createOrDeleteXGroupUsers(): groupName =  {} doesn't exist in database. Hence ignoring group membership updates", groupName);
 
-            return;
+            return false;
         }
 
         /* findUsersByGroupName returns all the entries from x_group_users table for a given group name and corresponding usernames from x_user table.
@@ -148,6 +148,7 @@ public class XGroupUserService extends XGroupUserServiceBase<XXGroupUser, VXGrou
 
             logger.debug("<<== createOrDeleteXGroupUsers: Max memory = {} Free memory = {} Total memory = {}", Runtime.getRuntime().maxMemory() / mb, Runtime.getRuntime().freeMemory() / mb, Runtime.getRuntime().totalMemory() / mb);
         }
+        return true;
     }
 
     public VXGroupUser readResourceWithOutLogin(Long id) {
