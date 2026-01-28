@@ -470,7 +470,7 @@ public class TestPolicyMgrUserGroupBuilder {
         attrs.put(UgsyncCommonConstants.LDAP_URL, "ldap://example");
         g.setOtherAttrsMap(attrs);
         g.setOtherAttributes(JsonUtils.objectToJson(attrs));
-        g.setIsVisible("0");
+        g.setIsVisible("1");
         gcache.put("Gdel", g);
         setPrivate(builder, "groupCache", gcache);
 
@@ -640,7 +640,7 @@ public class TestPolicyMgrUserGroupBuilder {
         attrsG.put(UgsyncCommonConstants.LDAP_URL, "ldap://example");
         g.setOtherAttrsMap(attrsG);
         g.setOtherAttributes(JsonUtils.objectToJson(attrsG));
-        g.setIsVisible("0");
+        g.setIsVisible("1");
         gcache.put("Gdel2", g);
         setPrivate(builder, "groupCache", gcache);
 
