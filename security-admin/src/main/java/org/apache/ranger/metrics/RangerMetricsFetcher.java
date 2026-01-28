@@ -22,6 +22,7 @@ package org.apache.ranger.metrics;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.service.XGroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +50,16 @@ public class RangerMetricsFetcher {
     @Autowired
     private XGroupService groupService;
 
+    @Autowired
+    RangerDaoManager daoMgr;
+
+    private final HashMap<String, Long> summaryReusable = new HashMap<>();
+    private final HashMap<Integer, Long> summaryPolicy  = new HashMap<>();
+
     public Long getGroupCount() {
-        return groupService.getAllGroupCount();
+        Long totalGroupCount = groupService.getAllGroupCount();
+        summaryReusable.put("TotalGroups", totalGroupCount);
+        return totalGroupCount;
     }
 
     public Map<String, Long> getUserMetrics() {
@@ -84,6 +93,8 @@ public class RangerMetricsFetcher {
         }
 
         ret.put("Total", total);
+        summaryReusable.put("TotalUsers", total);
+        summaryReusable.put("TotalRoles", (ret.size() - 1L));
 
         return ret;
     }
@@ -99,6 +110,7 @@ public class RangerMetricsFetcher {
         }
 
         ret.put("Total", total);
+        summaryReusable.put("TotalServices", total);
 
         return ret;
     }
@@ -113,9 +125,14 @@ public class RangerMetricsFetcher {
             ret.put(entry.getKey(), entry.getValue());
 
             total += entry.getValue();
+
+            if ("tag".equalsIgnoreCase(entry.getKey())) {
+                summaryReusable.put("TotalTags", entry.getValue());
+            }
         }
 
         ret.put("Total", total);
+        summaryPolicy.put(policyType, total);
 
         return ret;
     }
@@ -146,6 +163,27 @@ public class RangerMetricsFetcher {
         }
 
         ret.put("Total", total);
+
+        return ret;
+    }
+
+    public Map<String, Long> getSummary() {
+        Map<String, Long> ret   = new HashMap<>(summaryReusable);
+
+        //policies
+        ret.put("TotalPolicies", summaryPolicy.values().stream().mapToLong(Long::longValue).sum());
+
+        //x_trx_log_v2
+        ret.put("TotalAdminAudits", daoMgr.getXXTrxLogV2().getAllCount());
+
+        //x_auth_sess
+        ret.put("TotalLogins", daoMgr.getXXAuthSession().getAllCount());
+
+        //x_plugin_info
+        ret.put("TotalPlugins", daoMgr.getXXPluginInfo().getAllCount());
+
+        //x_policy_export_audit
+        ret.put("TotalPluginDownloads", daoMgr.getXXPolicyExportAudit().getAllCount());
 
         return ret;
     }
