@@ -538,6 +538,7 @@ function UserAccessLayout() {
                                   ]}
                                   menuPlacement="auto"
                                   placeholder="Select Policy Type"
+                                  tabSelectsValue={false}
                                 />
                               )}
                             </Field>
@@ -558,6 +559,7 @@ function UserAccessLayout() {
                                   menuPlacement="auto"
                                   placeholder="Select Component Type"
                                   styles={selectInputCustomStyles}
+                                  tabSelectsValue={false}
                                 />
                               )}
                             </Field>
@@ -596,6 +598,7 @@ function UserAccessLayout() {
                                   loadOptions={fetchPolicyLabels}
                                   placeholder="Select Policy Label"
                                   styles={selectInputCustomStyles}
+                                  tabSelectsValue={false}
                                 />
                               )}
                             </Field>
@@ -617,6 +620,7 @@ function UserAccessLayout() {
                                       menuPlacement="auto"
                                       placeholder="Select Zone Name"
                                       styles={selectInputCustomStyles}
+                                      tabSelectsValue={false}
                                     />
                                   )}
                                 </Field>
@@ -654,6 +658,7 @@ function UserAccessLayout() {
                                     onChange={(e) =>
                                       onChangeSearchBy(e, input, values)
                                     }
+                                    tabSelectsValue={false}
                                   />
                                 )}
                               </Field>
@@ -814,6 +819,7 @@ function SearchByAsyncSelect(props) {
             DropdownIndicator: () => null,
             IndicatorSeparator: () => null
           }}
+          tabSelectsValue={false}
         />
       )}
     </Field>

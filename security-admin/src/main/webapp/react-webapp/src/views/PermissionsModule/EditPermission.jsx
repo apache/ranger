@@ -39,7 +39,7 @@ import { toast } from "react-toastify";
 import { cloneDeep, find, findIndex, isEmpty, map, reverse } from "lodash";
 import { AccessResult } from "Utils/XAEnums";
 import {
-  CustomInfinteScroll,
+  CustomInfiniteScroll,
   commonBreadcrumb,
   serverError
 } from "Utils/XAUtils";
@@ -414,6 +414,7 @@ const EditPermission = () => {
                                         placeholder="Select Groups"
                                         isMulti
                                         styles={selectInputCustomStyles}
+                                        tabSelectsValue={false}
                                       />
                                       <Button
                                         size="sm"
@@ -461,6 +462,7 @@ const EditPermission = () => {
                                         placeholder="Select Users"
                                         isMulti
                                         styles={selectInputCustomStyles}
+                                        tabSelectsValue={false}
                                       />
 
                                       <Button
@@ -502,7 +504,7 @@ const EditPermission = () => {
                                       ></Spinner>
                                     </div>
                                   ) : (
-                                    <CustomInfinteScroll
+                                    <CustomInfiniteScroll
                                       data={selectedGrp}
                                       removeUsrGrp={handleRemoveGrp}
                                       scrollableDiv="scrollableGrpDiv"
@@ -528,7 +530,7 @@ const EditPermission = () => {
                                       ></Spinner>
                                     </div>
                                   ) : (
-                                    <CustomInfinteScroll
+                                    <CustomInfiniteScroll
                                       data={selectedUsr}
                                       removeUsrGrp={handleRemoveUsr}
                                       scrollableDiv="scrollableUsrDiv"
