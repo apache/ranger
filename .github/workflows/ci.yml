@@ -230,7 +230,9 @@ jobs:
       - name: Remove downloaded tarballs
         run: |
           cd dev-support/ranger-docker
-          rm -rf downloads/*
+          rm -f downloads/hadoop-*
+          rm -f downloads/apache-hive-*
+          rm -f downloads/apache-atlas-*
       
       - name: Bring up ranger-plugin containers
         run: |
