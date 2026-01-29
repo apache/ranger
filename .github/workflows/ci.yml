@@ -194,6 +194,9 @@ jobs:
           mv version dev-support/ranger-docker/dist
           rm -f ranger-*.tar.gz # clean up workspace
 
+      - name: Check disk space
+        run: df -h
+        
       - name: Free up disk space
         run: docker system prune --all --force --volumes
 
@@ -224,6 +227,11 @@ jobs:
           -f docker-compose.ranger-knox.yml \
           -f docker-compose.ranger-ozone.yml build
 
+      - name: Remove downloaded tarballs
+        run: |
+          cd dev-support/ranger-docker
+          rm -rf downloads/*
+      
       - name: Bring up ranger-plugin containers
         run: |
           cd dev-support/ranger-docker
