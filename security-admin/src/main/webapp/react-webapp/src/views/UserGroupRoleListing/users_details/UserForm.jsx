@@ -23,7 +23,8 @@ import { Form, Field } from "react-final-form";
 import {
   BlockUi,
   scrollToError,
-  selectInputCustomStyles
+  selectInputCustomStyles,
+  trimInputValue
 } from "Components/CommonComponents";
 import AsyncSelect from "react-select/async";
 import Select from "react-select";
@@ -48,7 +49,7 @@ const INITIAL_STATE = {
   preventUnBlock: false
 };
 
-const PromtDialog = (props) => {
+const PromptDialog = (props) => {
   const { isDirtyField, isUnblock } = props;
   usePrompt("Are you sure you want to leave", isDirtyField && !isUnblock);
   return null;
@@ -249,13 +250,13 @@ function UserForm(props) {
 
   const disabledUserRoleField = () => {
     const userProps = getUserProfile();
-    let disabledUserRolefield;
+    let disabledUserRoleField;
     if (isEditView && userInfo) {
       if (userInfo.userSource == UserTypes.USER_EXTERNAL.value) {
-        disabledUserRolefield = true;
+        disabledUserRoleField = true;
       }
       if (userInfo.userSource == UserTypes.USER_FEDERATED.value) {
-        return (disabledUserRolefield = true);
+        return (disabledUserRoleField = true);
       }
       if (userProps.loginId != "admin") {
         if (userInfo.name != "admin") {
@@ -263,21 +264,21 @@ function UserForm(props) {
             userProps.userRoleList[0] == "ROLE_SYS_ADMIN" ||
             userProps.userRoleList[0] == "ROLE_KEY_ADMIN"
           ) {
-            disabledUserRolefield = false;
+            disabledUserRoleField = false;
           } else {
-            disabledUserRolefield = true;
+            disabledUserRoleField = true;
           }
         } else {
-          disabledUserRolefield = true;
+          disabledUserRoleField = true;
         }
       } else {
-        disabledUserRolefield = false;
+        disabledUserRoleField = false;
       }
       if (userInfo.name == userProps.loginId) {
-        disabledUserRolefield = true;
+        disabledUserRoleField = true;
       }
     }
-    return disabledUserRolefield;
+    return disabledUserRoleField;
   };
 
   const userRoleListData = () => {
@@ -296,10 +297,9 @@ function UserForm(props) {
     let formValueObj = {};
     if (isEditView && userInfo) {
       formValueObj.name = userInfo.name;
-      formValueObj.firstName = userInfo.firstName;
-      formValueObj.lastName = userInfo.lastName;
+      formValueObj.firstName = userInfo?.firstName?.trim();
+      formValueObj.lastName = userInfo?.lastName?.trim();
       formValueObj.emailAddress = userInfo.emailAddress;
-      formValueObj.firstName = userInfo.firstName;
     }
     if (userInfo && userInfo.userRoleList) {
       formValueObj.userRoleList = {
@@ -429,7 +429,7 @@ function UserForm(props) {
           dirty
         }) => (
           <div className="wrap user-role-grp-form">
-            <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
+            <PromptDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
             <form
               onSubmit={(event) => {
                 handleSubmit(event);
@@ -457,6 +457,7 @@ function UserForm(props) {
                         }
                         disabled={isEditView ? true : false}
                         data-cy="name"
+                        onBlur={(e) => trimInputValue(e, input)}
                       />
                       <InfoIcon
                         css="input-box-info-icon"
@@ -507,7 +508,7 @@ function UserForm(props) {
                             >
                               {
                                 RegexMessage.MESSAGE
-                                  .passwordvalidationinfomessage
+                                  .passwordValidationInfoMessage
                               }
                             </p>
                           }
@@ -559,7 +560,7 @@ function UserForm(props) {
                             >
                               {
                                 RegexMessage.MESSAGE
-                                  .passwordvalidationinfomessage
+                                  .passwordValidationInfoMessage
                               }
                             </p>
                           }
@@ -600,6 +601,7 @@ function UserForm(props) {
                             : false
                         }
                         data-cy="firstName"
+                        onBlur={(e) => trimInputValue(e, input)}
                       />
                       <InfoIcon
                         css="input-box-info-icon"
@@ -637,6 +639,7 @@ function UserForm(props) {
                             : false
                         }
                         data-cy="lastName"
+                        onBlur={(e) => trimInputValue(e, input)}
                       />
                       <InfoIcon
                         css="input-box-info-icon"
@@ -685,7 +688,7 @@ function UserForm(props) {
                         css="input-box-info-icon"
                         position="right"
                         message={
-                          RegexMessage.MESSAGE.emailvalidationinfomessage
+                          RegexMessage.MESSAGE.emailValidationInfoMessage
                         }
                       />
 

@@ -25,7 +25,10 @@ import CreatableSelect from "react-select/creatable";
 import { find, isEmpty } from "lodash";
 import { InfoIcon } from "Utils/XAUtils";
 import { RegexMessage } from "Utils/XAMessages";
-import { selectInputCustomStyles } from "Components/CommonComponents";
+import {
+  selectInputCustomStyles,
+  trimInputValue
+} from "Components/CommonComponents";
 const esprima = require("esprima");
 
 export default function PolicyConditionsComp(props) {
@@ -90,7 +93,11 @@ export default function PolicyConditionsComp(props) {
   const ipRangeVal = (val) => {
     let value = [];
     if (!isEmpty(val)) {
-      value = val.map((m) => ({ label: m, value: m }));
+      // Trim existing values when displaying
+      value = val.map((m) => ({
+        label: m.trim(),
+        value: m.trim()
+      }));
     }
     return value;
   };
@@ -193,6 +200,9 @@ export default function PolicyConditionsComp(props) {
                                           }
                                           as="textarea"
                                           rows={3}
+                                          onBlur={(e) =>
+                                            trimInputValue(e, input)
+                                          }
                                         />
                                         {meta.error && (
                                           <span className="invalid-field">
@@ -227,6 +237,24 @@ export default function PolicyConditionsComp(props) {
                                     value={ipRangeVal(input.value)}
                                     onChange={(e) => handleChange(e, input)}
                                     styles={selectInputCustomStyles}
+                                    formatCreateLabel={(inputValue) =>
+                                      `Create "${inputValue.trim()}"`
+                                    }
+                                    onCreateOption={(inputValue) => {
+                                      const trimmedValue = inputValue.trim();
+                                      if (trimmedValue) {
+                                        const newOption = {
+                                          label: trimmedValue,
+                                          value: trimmedValue
+                                        };
+                                        const currentValues = input.value || [];
+                                        const newValues = [
+                                          ...currentValues,
+                                          trimmedValue
+                                        ];
+                                        input.onChange(newValues);
+                                      }
+                                    }}
                                   />
                                 )}
                               />

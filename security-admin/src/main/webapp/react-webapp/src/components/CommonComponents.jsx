@@ -568,3 +568,12 @@ export const ModalLoader = () => {
     </h4>
   );
 };
+
+export const trimInputValue = (e, input) => {
+  const value = e.target.value;
+  const trimmed = value.trim();
+  if (value !== trimmed) {
+    input.onChange(trimmed);
+  }
+  input.onBlur(e); // Always call onBlur to trigger validation
+};

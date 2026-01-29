@@ -231,7 +231,7 @@ const CustomCondition = (props) => {
               const expressionVal = (val) => {
                 let value = null;
                 if (val != "" && typeof val != "object") {
-                  valRef.current[m.name] = val;
+                  valRef.current[m.name] = val.trim();
                   return (value = val);
                 }
                 return value !== null ? value : "";
@@ -264,6 +264,12 @@ const CustomCondition = (props) => {
                           key={m.name}
                           value={expressionVal(selectedJSCondVal)}
                           onChange={(e) => textAreaHandleChange(e, m.name)}
+                          onBlur={(e) => {
+                            textAreaHandleChange(
+                              { target: { value: e.target.value.trim() } },
+                              m.name
+                            );
+                          }}
                           isInvalid={validExpression.state}
                         />
                         {validExpression.state && (
@@ -295,14 +301,33 @@ const CustomCondition = (props) => {
                     <b>{m.label}:</b>
                     <CreatableSelect
                       {...selectProps}
-                      defaultValue={
-                        selectedInputVal == "" ? null : selectedInputVal
-                      }
-                      onChange={(e) => handleChange(e, m.name)}
+                      value={selectedInputVal || null}
+                      onChange={(e) => {
+                        setSelectVal(e);
+                        handleChange(e, m.name);
+                      }}
                       placeholder=""
                       width="500px"
                       isClearable={false}
                       styles={selectInputCustomStyles}
+                      formatCreateLabel={(inputValue) =>
+                        `Create "${inputValue.trim()}"`
+                      }
+                      onCreateOption={(inputValue) => {
+                        const trimmedValue = inputValue.trim();
+                        if (trimmedValue) {
+                          const newOption = {
+                            label: trimmedValue,
+                            value: trimmedValue
+                          };
+                          const currentValues = selectedInputVal || [];
+                          const newValues = Array.isArray(currentValues)
+                            ? [...currentValues, newOption]
+                            : [newOption];
+                          setSelectVal(newValues);
+                          tagAccessData(newValues, m.name);
+                        }
+                      }}
                     />
                   </Form.Group>
                 </div>

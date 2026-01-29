@@ -53,7 +53,8 @@ import {
   BlockUi,
   Loader,
   scrollToError,
-  selectInputCustomStyles
+  selectInputCustomStyles,
+  trimInputValue
 } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType, getEnumElementByValue } from "Utils/XAEnums";
@@ -291,7 +292,7 @@ export default function AddUpdatePolicyForm() {
   const fetchPolicyLabel = async (inputValue) => {
     let params = {};
     if (inputValue) {
-      params["policyLabel"] = inputValue || "";
+      params["policyLabel"] = inputValue.trim() || "";
     }
     const policyLabelResp = await fetchApi({
       url: "plugins/policyLabels",
@@ -299,8 +300,8 @@ export default function AddUpdatePolicyForm() {
     });
 
     return policyLabelResp.data.map((name) => ({
-      label: name,
-      value: name
+      label: name.trim(),
+      value: name.trim()
     }));
   };
 
@@ -391,12 +392,12 @@ export default function AddUpdatePolicyForm() {
       data.policyName = policyData?.name;
       data.isEnabled = policyData?.isEnabled;
       data.policyPriority = policyData?.policyPriority == 0 ? false : true;
-      data.description = policyData?.description;
+      data.description = policyData?.description?.trim();
       data.isAuditEnabled = policyData?.isAuditEnabled;
       data.policyLabel =
         policyData &&
         policyData?.policyLabels?.map((val) => {
-          return { label: val, value: val };
+          return { label: val?.trim(), value: val?.trim() };
         });
       if (policyData?.resources) {
         if (!isMultiResources) {
@@ -405,7 +406,7 @@ export default function AddUpdatePolicyForm() {
             let setResources = find(serviceCompResourcesDetails, ["name", key]);
             data[`resourceName-${setResources?.level}`] = setResources;
             data[`value-${setResources?.level}`] = value.values.map((m) => {
-              return { label: m, value: m };
+              return { label: m?.trim(), value: m?.trim() };
             });
             if (setResources?.excludesSupported) {
               data[`isExcludesSupport-${setResources?.level}`] =
@@ -450,7 +451,7 @@ export default function AddUpdatePolicyForm() {
                   setResources;
                 additionalResourcesObj[`value-${setResources?.level}`] =
                   value.values.map((m) => {
-                    return { label: m, value: m };
+                    return { label: m?.trim(), value: m?.trim() };
                   });
                 if (setResources?.excludesSupported) {
                   additionalResourcesObj[
@@ -521,7 +522,7 @@ export default function AddUpdatePolicyForm() {
             data.conditions[val?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
               ? val?.values
-              : val?.values.toString();
+              : val?.values.toString().trim();
           }
         }
       }
@@ -711,9 +712,9 @@ export default function AddUpdatePolicyForm() {
             obj.conditions[data?.type] = JSON.parse(conditionObj.uiHint)
               .isMultiValue
               ? data?.values.map((m) => {
-                  return { value: m, label: m };
+                  return { value: m.trim(), label: m.trim() };
                 })
-              : data?.values.toString();
+              : data?.values.toString().trim();
           }
         }
       }
@@ -889,7 +890,7 @@ export default function AddUpdatePolicyForm() {
       data["conditions"] = [];
     }
 
-    /* For create zoen policy*/
+    /* For create zone policy*/
     if (localStorage.getItem("zoneDetails") != null) {
       data["zoneName"] = JSON.parse(localStorage.getItem("zoneDetails")).label;
     }
@@ -1303,6 +1304,7 @@ export default function AddUpdatePolicyForm() {
                                           : "form-control"
                                       }
                                       data-cy="policyName"
+                                      onBlur={(e) => trimInputValue(e, input)}
                                     />
                                     <InfoIcon
                                       css="input-box-info-icon"
@@ -1444,6 +1446,7 @@ export default function AddUpdatePolicyForm() {
                                   as="textarea"
                                   rows={3}
                                   data-cy="description"
+                                  onBlur={(e) => trimInputValue(e, input)}
                                 />
                               </Col>
                             </FormB.Group>
