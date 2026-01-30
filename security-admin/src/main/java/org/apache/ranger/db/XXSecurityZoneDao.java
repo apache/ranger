@@ -133,6 +133,20 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         return securityZoneList;
     }
 
+    public List<Long> findAllZoneForAdmin() {
+        List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneForAdmin", Object[].class)
+                .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                .getResultList();
+
+        List<Long> zoneList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            zoneList.add((Long) result[0]);
+        }
+
+        return zoneList;
+    }
+
     public List<RangerSecurityZoneHeaderInfo> findAllZoneHeaderInfosByServiceId(Long serviceId, Boolean isTagService) {
         if (serviceId == null) {
             return Collections.emptyList();
@@ -172,5 +186,186 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
         }
 
         return securityZoneList;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> findZoneHeaderInfosForUser(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        List<Object[]> results = getEntityManager()
+                .createNamedQuery("XXSecurityZone.findZoneHeaderInfosForUserO", Object[].class)
+                .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                .setParameter("userId", userId)
+                .getResultList();
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> findZoneHeaderInfosForUserWithNamePrefix(Long userId, String namePrefix) {
+        if (userId == null || StringUtils.isBlank(namePrefix)) {
+            return Collections.emptyList();
+        }
+
+        String namePrefixLower = namePrefix.toLowerCase() + "%";
+
+        List<Object[]> results = getEntityManager()
+                .createNamedQuery("XXSecurityZone.findZoneHeaderInfosForUserWithNamePrefixO", Object[].class)
+                .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                .setParameter("namePrefix", namePrefixLower)
+                .setParameter("userId", userId)
+                .getResultList();
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> findAllZoneHeaderInfosWithNamePrefix(String namePrefix) {
+        if (StringUtils.isBlank(namePrefix)) {
+            return findAllZoneHeaderInfos();
+        }
+        String namePrefixLower = namePrefix.toLowerCase() + "%";
+
+        List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosWithNamePrefix", Object[].class)
+                .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                .setParameter("namePrefix", namePrefixLower)
+                .getResultList();
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> findZoneHeaderInfosByServiceIdWithNamePrefix(Long serviceId, Boolean isTagService, String namePrefix) {
+        if (serviceId == null || StringUtils.isBlank(namePrefix)) {
+            return Collections.emptyList();
+        }
+
+        String         namePrefixLower = namePrefix.toLowerCase() + "%";
+        List<Object[]> results;
+
+        if (isTagService) {
+            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByTagServiceIdWithNamePrefix", Object[].class)
+                    .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                    .setParameter("namePrefix", namePrefixLower)
+                    .setParameter("tagServiceId", serviceId)
+                    .getResultList();
+        } else {
+            results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfosByServiceIdWithNamePrefix", Object[].class)
+                    .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                    .setParameter("namePrefix", namePrefixLower)
+                    .setParameter("serviceId", serviceId)
+                    .getResultList();
+        }
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> findZoneHeaderInfosByServiceIdForUser(Long serviceId, Boolean isTagService, Long userId) {
+        if (serviceId == null || userId == null) {
+            return Collections.emptyList();
+        }
+
+        List<Object[]> results;
+
+        if (isTagService) {
+            results = getEntityManager()
+                    .createNamedQuery("XXSecurityZone.findZoneHeaderInfosByTagServiceIdForUser", Object[].class)
+                    .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                    .setParameter("tagServiceId", serviceId)
+                    .setParameter("userId", userId)
+                    .getResultList();
+        } else {
+            results = getEntityManager()
+                    .createNamedQuery("XXSecurityZone.findZoneHeaderInfosByServiceIdForUser", Object[].class)
+                    .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                    .setParameter("serviceId", serviceId)
+                    .setParameter("userId", userId)
+                    .getResultList();
+        }
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> findZoneHeaderInfosByServiceIdForUserWithNamePrefix(Long serviceId, Boolean isTagService, Long userId, String namePrefix) {
+        if (serviceId == null || userId == null || StringUtils.isBlank(namePrefix)) {
+            return Collections.emptyList();
+        }
+
+        String         namePrefixLower = namePrefix.toLowerCase() + "%";
+        List<Object[]> results;
+
+        if (isTagService) {
+            results = getEntityManager()
+                    .createNamedQuery("XXSecurityZone.findZoneHeaderInfosByTagServiceIdForUserWithNamePrefix", Object[].class)
+                    .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                    .setParameter("namePrefix", namePrefixLower)
+                    .setParameter("tagServiceId", serviceId)
+                    .setParameter("userId", userId)
+                    .getResultList();
+        } else {
+            results = getEntityManager()
+                    .createNamedQuery("XXSecurityZone.findZoneHeaderInfosByServiceIdForUserWithNamePrefix", Object[].class)
+                    .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                    .setParameter("namePrefix", namePrefixLower)
+                    .setParameter("serviceId", serviceId)
+                    .setParameter("userId", userId)
+                    .getResultList();
+        }
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
+
+    public List<Long> findAllZoneForUser(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+
+        List<Object[]> results = getEntityManager()
+                .createNamedQuery("XXSecurityZone.findAllZoneForUser", Object[].class)
+                .setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+                .setParameter("userId", userId)
+                .getResultList();
+
+        List<Long> zoneIdList = new ArrayList<>(results.size());
+
+        for (Object[] result : results) {
+            zoneIdList.add((Long) result[0]);
+        }
+
+        return zoneIdList;
     }
 }
