@@ -41,7 +41,7 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 
         String authKerberos = "kerberos";
 
-        if (!(authKerberos.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
+        if (!((authKerberos.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) || isJWTPresent())) {
             setBasicAuthInfo(polMgrUsername, polMgrPassword);
         }
 

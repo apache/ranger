@@ -110,7 +110,7 @@ public class RangerRESTClient {
     private          int          lastKnownActiveUrlIndex;
     private volatile Client       client;
     private volatile Client       cookieAuthClient;
-    private          ClientFilter basicAuthFilter;
+    private          ClientFilter authFilter;
 
     public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
         this(url, sslConfigFileName, config, getPropertyPrefix(config));
@@ -129,10 +129,6 @@ public class RangerRESTClient {
         init(config);
     }
 
-    private static String getPropertyPrefix(Configuration config) {
-        return (config instanceof RangerPluginConfig) ? ((RangerPluginConfig) config).getPropertyPrefix() : "ranger.plugin";
-    }
-
     protected static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
         WebResource ret = webResource;
 
@@ -143,6 +139,10 @@ public class RangerRESTClient {
         }
 
         return ret;
+    }
+
+    private static String getPropertyPrefix(Configuration config) {
+        return (config instanceof RangerPluginConfig) ? ((RangerPluginConfig) config).getPropertyPrefix() : "ranger.plugin";
     }
 
     public String getUrl() {
@@ -198,6 +198,10 @@ public class RangerRESTClient {
         mPassword = password;
 
         setBasicAuthFilter(username, password);
+    }
+
+    public boolean isJWTPresent() {
+        return StringUtils.isNotEmpty(jwt);
     }
 
     public WebResource getResource(String relativeUrl) {
@@ -709,8 +713,8 @@ public class RangerRESTClient {
                 if (ret == null) {
                     cookieAuthClient = buildClient();
 
-                    if (basicAuthFilter != null) {
-                        cookieAuthClient.removeFilter(basicAuthFilter);
+                    if (authFilter != null) {
+                        cookieAuthClient.removeFilter(authFilter);
                     }
 
                     ret = cookieAuthClient;
@@ -747,18 +751,19 @@ public class RangerRESTClient {
             client = Client.create(config);
         }
 
-        if (StringUtils.isNotEmpty(jwt)) { // use JWT if present
-            client.addFilter(new ClientFilter() {
+        if (isJWTPresent()) {
+            authFilter = new ClientFilter() { // use JWT if present
                 @Override
-                public ClientResponse handle(ClientRequest cr) throws ClientHandlerException {
-                    cr.getHeaders().add("Authorization", JWT_HEADER_PREFIX + jwt);
-                    return getNext().handle(cr);
+                public ClientResponse handle(ClientRequest clientRequest) throws ClientHandlerException {
+                    clientRequest.getHeaders().add("Authorization", JWT_HEADER_PREFIX + jwt);
+                    return getNext().handle(clientRequest);
                 }
-            });
+            };
             LOG.info("Registering JWT auth header in REST client");
-        } else if (basicAuthFilter != null && !client.isFilterPresent(basicAuthFilter)) {
-            client.addFilter(basicAuthFilter);
-            LOG.info("Registering Basic auth header in REST client");
+        }
+
+        if (authFilter != null && !client.isFilterPresent(authFilter)) {
+            client.addFilter(authFilter);
         }
 
         // Set Connection Timeout and ReadTime for the PolicyRefresh
@@ -770,9 +775,9 @@ public class RangerRESTClient {
 
     private void setBasicAuthFilter(String username, String password) {
         if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
-            basicAuthFilter = new HTTPBasicAuthFilter(username, password);
+            authFilter = new HTTPBasicAuthFilter(username, password);
         } else {
-            basicAuthFilter = null;
+            authFilter = null;
         }
     }
 
