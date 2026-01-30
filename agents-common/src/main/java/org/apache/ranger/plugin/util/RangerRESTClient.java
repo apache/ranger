@@ -751,16 +751,7 @@ public class RangerRESTClient {
             client = Client.create(config);
         }
 
-        if (isJWTPresent()) {
-            authFilter = new ClientFilter() { // use JWT if present
-                @Override
-                public ClientResponse handle(ClientRequest clientRequest) throws ClientHandlerException {
-                    clientRequest.getHeaders().add("Authorization", JWT_HEADER_PREFIX + jwt);
-                    return getNext().handle(clientRequest);
-                }
-            };
-            LOG.info("Registering JWT auth header in REST client");
-        }
+        setJWTFilter(); // use JWT if present
 
         if (authFilter != null && !client.isFilterPresent(authFilter)) {
             client.addFilter(authFilter);
@@ -771,6 +762,21 @@ public class RangerRESTClient {
         client.setReadTimeout(mRestClientReadTimeOutMs);
 
         return client;
+    }
+
+    private void setJWTFilter() {
+        if (isJWTPresent()) {
+            authFilter = new ClientFilter() {
+                @Override
+                public ClientResponse handle(ClientRequest clientRequest) throws ClientHandlerException {
+                    clientRequest.getHeaders().add("Authorization", JWT_HEADER_PREFIX + jwt);
+                    return getNext().handle(clientRequest);
+                }
+            };
+            LOG.info("Registering JWT auth header in REST client");
+        } else {
+            authFilter = null;
+        }
     }
 
     private void setBasicAuthFilter(String username, String password) {
