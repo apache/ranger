@@ -168,13 +168,13 @@
     { "itemId": 73, "name": "table-policy-attach",          "label": "Table Policy Attach",          "category": "MANAGE" },
     { "itemId": 74, "name": "table-policy-detach",          "label": "Table Policy Detach",          "category": "MANAGE" },
     { "itemId": 75, "name": "table-properties-read",        "label": "Table Properties Read",        "category": "READ" },
-    { "itemId": 76, "name": "table-properties-write",       "label": "Table Properties Write",       "category": "MANAGE" },
+    { "itemId": 76, "name": "table-properties-write",       "label": "Table Properties Write",       "category": "UPDATE" },
     { "itemId": 77, "name": "table-properties-set",         "label": "Table Properties Set",         "category": "MANAGE" },
     { "itemId": 78, "name": "table-properties-remove",      "label": "Table Properties Remove",      "category": "MANAGE" },
     { "itemId": 79, "name": "table-uuid-assign",            "label": "Table UUID Assign",            "category": "MANAGE" },
     { "itemId": 80, "name": "table-format-version-upgrade", "label": "Table Format Version Upgrade", "category": "MANAGE" },
     { "itemId": 81, "name": "table-schema-add",             "label": "Table Schema Add",             "category": "MANAGE" },
-    { "itemId": 82, "name": "table-schema-set-current",     "label": "Table Schema Set Current",     "category": "READ" },
+    { "itemId": 82, "name": "table-schema-set-current",     "label": "Table Schema Set Current",     "category": "MANAGE" },
     { "itemId": 83, "name": "table-partition-spec-add",     "label": "Table Partition Spec Add",     "category": "MANAGE" },
     { "itemId": 84, "name": "table-partition-specs-remove", "label": "Table Partition Specs Remove", "category": "MANAGE" },
     { "itemId": 85, "name": "table-sort-order-add",         "label": "Table Sort Order Add",         "category": "MANAGE" },
@@ -195,6 +195,6 @@
     { "itemId": 99,  "name": "view-grants-manage",    "label": "View Grants Manage",    "category": "MANAGE" },
     { "itemId": 100, "name": "view-metadata-full",    "label": "View Metadata Full",    "category": "MANAGE" },
     { "itemId": 101, "name": "view-properties-read",  "label": "View Properties Read",  "category": "READ" },
-    { "itemId": 102, "name": "view-properties-write", "label": "View Properties Write", "category": "MANAGE" }
+    { "itemId": 102, "name": "view-properties-write", "label": "View Properties Write", "category": "UPDATE" }
   ]
 }
