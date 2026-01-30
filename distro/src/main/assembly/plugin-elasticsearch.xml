@@ -62,6 +62,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
+          <include>commons-collections:commons-collections</include>
           <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
@@ -126,6 +127,7 @@
           <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+          <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
