@@ -806,7 +806,7 @@ public class RangerRESTClient {
         }
 
         String jwtAsString = fetchJWT(propertyPrefix, config);
-        if (jwtAsString != null){
+        if (jwtAsString != null) {
             this.jwt = jwtAsString;
         }
 
