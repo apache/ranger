@@ -87,7 +87,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         if (StringUtils.isNotBlank(restUrl)) {
             tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile, TagSyncConfig.getInstance(), "ranger.tagsync");
 
-            if (!isKerberized && !tagRESTClient.isJWTPresent()) {
+            if (!isKerberized) {
                 tagRESTClient.setBasicAuthInfo(userName, password);
             }
 
