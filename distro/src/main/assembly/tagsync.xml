@@ -87,6 +87,7 @@
 							<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
 							<include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
 							<include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
+							<include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
 							<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
 							<include>org.cloudera.logredactor:logredactor</include>
 							<include>org.apache.commons:commons-lang3</include>
