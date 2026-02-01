@@ -44,10 +44,11 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 	public RangerUgSyncRESTClient(String policyMgrBaseUrls, String ugKeyStoreFile, String ugKeyStoreFilepwd,
 			String ugKeyStoreType, String ugTrustStoreFile, String ugTrustStoreFilepwd, String ugTrustStoreType,
 			String authenticationType, String principal, String keytab, String polMgrUsername, String polMgrPassword) {
+		super(policyMgrBaseUrls, "", UserGroupSyncConfig.getInstance().getConfig(), "ranger.usersync");
 
-		super(policyMgrBaseUrls, "", UserGroupSyncConfig.getInstance().getConfig());
-		if (!(authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
-				&& SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
+		boolean isKerberized = AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab);
+
+		if (!isKerberized) {
 			setBasicAuthInfo(polMgrUsername, polMgrPassword);
 		}
 
