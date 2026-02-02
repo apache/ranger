@@ -69,11 +69,6 @@
             <artifactId>ranger-plugins-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
 
         <!-- Test -->
         <dependency>

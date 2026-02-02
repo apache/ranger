@@ -59,7 +59,8 @@
 					<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-					<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+					<include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+					<include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
 					<include>com.google.code.gson:gson</include>
 					<include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
 					<include>commons-collections:commons-collections</include>

@@ -19,11 +19,11 @@
 
 package org.apache.ranger.metrics.sink;
 
-import org.apache.commons.configuration2.SubsetConfiguration;
 import org.apache.hadoop.metrics2.AbstractMetric;
 import org.apache.hadoop.metrics2.MetricType;
 import org.apache.hadoop.metrics2.MetricsRecord;
 import org.apache.hadoop.metrics2.MetricsSink;
+import org.apache.hadoop.shaded.org.apache.commons.configuration2.SubsetConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class RangerMetricsJsonSink implements MetricsSink {
     }
 
     @Override
-    public void init(SubsetConfiguration conf) {
+    public void init(SubsetConfiguration subsetConfiguration) {
         // Implementation not needed
     }
 

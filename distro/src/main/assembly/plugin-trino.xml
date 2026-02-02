@@ -82,7 +82,8 @@
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>org.apache.ranger:ranger-plugins-cred</include>
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
