@@ -1886,6 +1886,12 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXSecurityZone.findZoneNameByZoneId">
+		<query>
+			SELECT obj.name FROM XXSecurityZone obj WHERE obj.id = :zoneId
+		</query>
+	</named-query>
+
     <named-query name="XXGlobalState.findByStateId">
         <query>
             select obj from XXGlobalState obj where obj.id = :stateId
