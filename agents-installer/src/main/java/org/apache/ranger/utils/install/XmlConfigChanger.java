@@ -283,6 +283,9 @@ public class XmlConfigChanger {
 
             TransformerFactory tfactory = TransformerFactory.newInstance();
 
+            tfactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            tfactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            tfactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
             tfactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
 
             Transformer transformer = tfactory.newTransformer();
