@@ -667,6 +667,8 @@ public class RangerRESTClient {
                 Thread.sleep(retryIntervalMs);
             } catch (InterruptedException excp) {
                 LOG.error("Failed while waiting to retry", excp);
+                Thread.currentThread().interrupt();
+                return false;
             }
         } else if (isLastUrl) {
             LOG.error("Failed to communicate with all Ranger Admin's URL's : [ {} ]", configuredURLs);
