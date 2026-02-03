@@ -87,6 +87,7 @@
         <fileMode>644</fileMode>
         <includes>
           <include>commons-collections:commons-collections</include>
+          <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
