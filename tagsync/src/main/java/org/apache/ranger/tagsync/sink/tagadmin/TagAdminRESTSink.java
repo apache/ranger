@@ -85,7 +85,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
         LOG.debug("isKerberized={}", isKerberized);
 
         if (StringUtils.isNotBlank(restUrl)) {
-            tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile, TagSyncConfig.getInstance(), "ranger.tagsync");
+            tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile, TagSyncConfig.getInstance());
 
             if (!isKerberized) {
                 tagRESTClient.setBasicAuthInfo(userName, password);
