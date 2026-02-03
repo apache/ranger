@@ -22,7 +22,6 @@ package org.apache.ranger.plugin.util;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -84,10 +83,8 @@ public class RangerRESTClient {
     public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
     public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
     public static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLSv1.2";
-    public static final String JWT_HEADER_PREFIX                                 = "Bearer ";
 
     private final    List<String> configuredURLs;
-    private final    String       propertyPrefix;
     private          String       mUrl;
     private final    String       mSslConfigFileName;
     private          String       mUsername;
@@ -108,27 +105,30 @@ public class RangerRESTClient {
     private          int          lastKnownActiveUrlIndex;
     private volatile Client       client;
     private volatile Client       cookieAuthClient;
-    private          JwtProvider  jwtProvider;
-    private          ClientFilter jwtAuthFilter;
     private          ClientFilter basicAuthFilter;
 
     public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
-        this(url, sslConfigFileName, config, getPropertyPrefix(config));
-    }
-
-    public RangerRESTClient(String url, String sslConfigFileName, Configuration config, String propertyPrefix) {
-        mUrl                = url;
-        mSslConfigFileName  = sslConfigFileName;
-        configuredURLs      = StringUtil.getURLs(mUrl);
-        this.propertyPrefix = propertyPrefix;
-
+        mUrl               = url;
+        mSslConfigFileName = sslConfigFileName;
+        configuredURLs     = StringUtil.getURLs(mUrl);
         if (StringUtil.isEmpty(url)) {
             throw new IllegalArgumentException("Ranger URL is null or empty. Likely caused by incorrect configuration");
         } else {
             setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
         }
-
         init(config);
+    }
+
+    protected static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
+        WebResource ret = webResource;
+
+        if (webResource != null && params != null) {
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                ret = ret.queryParam(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return ret;
     }
 
     public String getUrl() {
@@ -695,22 +695,6 @@ public class RangerRESTClient {
         this.mTrustStoreType = mTrustStoreType;
     }
 
-    protected static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
-        WebResource ret = webResource;
-
-        if (webResource != null && params != null) {
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                ret = ret.queryParam(entry.getKey(), entry.getValue());
-            }
-        }
-
-        return ret;
-    }
-
-    private static String getPropertyPrefix(Configuration config) {
-        return (config instanceof RangerPluginConfig) ? ((RangerPluginConfig) config).getPropertyPrefix() : "ranger.plugin";
-    }
-
     private Client getCookieAuthClient() {
         Client ret = cookieAuthClient;
 
@@ -720,10 +704,6 @@ public class RangerRESTClient {
 
                 if (ret == null) {
                     cookieAuthClient = buildClient();
-
-                    if (jwtAuthFilter != null) {
-                        cookieAuthClient.removeFilter(jwtAuthFilter);
-                    }
 
                     if (basicAuthFilter != null) {
                         cookieAuthClient.removeFilter(basicAuthFilter);
@@ -763,11 +743,8 @@ public class RangerRESTClient {
             client = Client.create(config);
         }
 
-        // use JWT if present
-        ClientFilter authFilter = jwtAuthFilter != null ? jwtAuthFilter : basicAuthFilter;
-
-        if (authFilter != null && !client.isFilterPresent(authFilter)) {
-            client.addFilter(authFilter);
+        if (basicAuthFilter != null && !client.isFilterPresent(basicAuthFilter)) {
+            client.addFilter(basicAuthFilter);
         }
 
         // Set Connection Timeout and ReadTime for the PolicyRefresh
@@ -775,25 +752,6 @@ public class RangerRESTClient {
         client.setReadTimeout(mRestClientReadTimeOutMs);
 
         return client;
-    }
-
-    private void setJWTFilter() {
-        JwtProvider jwtProvider = this.jwtProvider;
-        if (jwtProvider != null) {
-            LOG.info("Registering JWT auth header in REST client");
-            jwtAuthFilter = new ClientFilter() {
-                @Override
-                public ClientResponse handle(ClientRequest clientRequest) throws ClientHandlerException {
-                    String jwt = jwtProvider.getJwt();
-
-                    clientRequest.getHeaders().putSingle("Authorization", JWT_HEADER_PREFIX + jwt);
-
-                    return getNext().handle(clientRequest);
-                }
-            };
-        } else {
-            jwtAuthFilter = null;
-        }
     }
 
     private void setBasicAuthFilter(String username, String password) {
@@ -833,10 +791,16 @@ public class RangerRESTClient {
             }
         }
 
-        String username    = config.get(propertyPrefix + ".policy.rest.client.username");
-        String password    = config.get(propertyPrefix + ".policy.rest.client.password");
+        final String pluginPropertyPrefix;
 
-        setJWTFilter();
+        if (config instanceof RangerPluginConfig) {
+            pluginPropertyPrefix = ((RangerPluginConfig) config).getPropertyPrefix();
+        } else {
+            pluginPropertyPrefix = "ranger.plugin";
+        }
+
+        String username = config.get(pluginPropertyPrefix + ".policy.rest.client.username");
+        String password = config.get(pluginPropertyPrefix + ".policy.rest.client.password");
 
         if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
             setBasicAuthFilter(username, password);
