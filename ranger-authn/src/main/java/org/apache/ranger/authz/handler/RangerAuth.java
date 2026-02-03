@@ -18,15 +18,13 @@
  */
 package org.apache.ranger.authz.handler;
 
-import org.apache.hadoop.security.authentication.server.AuthenticationToken;
-
 public class RangerAuth {
     private String    userName;
     private AuthType  type;
     private boolean   isAuthenticated;
 
-    public RangerAuth(final AuthenticationToken authenticationToken, AuthType type) {
-        this.userName        = authenticationToken.getName();
+    public RangerAuth(String username, AuthType type) {
+        this.userName        = username;
         this.isAuthenticated = true;
         this.type            = type;
     }

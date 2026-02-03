@@ -89,8 +89,7 @@ public class TestRangerJwtAuthFilter {
         ServletResponse res = Mockito.mock(ServletResponse.class);
         FilterChain chain = Mockito.mock(FilterChain.class);
 
-        AuthenticationToken token = new AuthenticationToken("alice", "alice", "ranger-jwt");
-        RangerAuth rangerAuth = new RangerAuth(token, RangerAuth.AuthType.JWT_JWKS);
+        RangerAuth rangerAuth = new RangerAuth("alice", RangerAuth.AuthType.JWT_JWKS);
 
         doReturn(rangerAuth).when(filter).authenticate(any(HttpServletRequest.class));
 
