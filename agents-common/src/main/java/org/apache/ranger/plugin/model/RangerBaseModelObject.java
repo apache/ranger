@@ -264,6 +264,10 @@ public class RangerBaseModelObject implements java.io.Serializable {
         }
     }
 
+    public static <T> List<T> copyOrEmpty(List<T> src) {
+        return src == null ? new ArrayList<>() : new ArrayList<>(src);
+    }
+
     public abstract static class NullSafeSupplier {
         public abstract <T> List<T> toList(List<T> coll);
 

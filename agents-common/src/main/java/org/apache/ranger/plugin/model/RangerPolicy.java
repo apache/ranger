@@ -921,11 +921,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
         }
 
         public RangerPolicyItem(RangerPolicyItem other) {
-            this.accesses   = other.accesses == null ? new ArrayList<>() : new ArrayList<>(other.accesses);
-            this.users      = other.users == null ? new ArrayList<>() : new ArrayList<>(other.users);
-            this.groups     = other.groups == null ? new ArrayList<>() : new ArrayList<>(other.groups);
-            this.roles      = other.roles == null ? new ArrayList<>() : new ArrayList<>(other.roles);
-            this.conditions = other.accesses == null ? new ArrayList<>() : new ArrayList<>(other.conditions);
+            this.accesses   = copyOrEmpty(other.accesses);
+            this.users      = copyOrEmpty(other.users);
+            this.groups     = copyOrEmpty(other.groups);
+            this.roles      = copyOrEmpty(other.roles);
+            this.conditions = copyOrEmpty(other.conditions);
 
             setDelegateAdmin(other.delegateAdmin);
         }
