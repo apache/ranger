@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
