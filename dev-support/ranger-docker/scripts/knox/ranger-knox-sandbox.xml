@@ -64,7 +64,7 @@
 
         <provider>
             <role>authorization</role>
-            <name>AclsAuthz</name>
+            <name>XASecurePDPKnox</name>
             <enabled>true</enabled>
         </provider>
 

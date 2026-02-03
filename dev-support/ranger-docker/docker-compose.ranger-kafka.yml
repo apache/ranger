@@ -15,7 +15,8 @@ services:
     volumes:
       - ./dist/keytabs/ranger-kafka:/etc/keytabs
       - ./scripts/kdc/krb5.conf:/etc/krb5.conf:ro
-      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml
+      - ./scripts/hadoop/core-site.xml:/home/ranger/scripts/core-site.xml:ro
+      - ./scripts/hadoop/hdfs-client-site.xml:/home/ranger/scripts/hdfs-site.xml:ro
       - ./scripts/kafka/kafka-server-jaas.conf:/home/ranger/scripts/kafka-server-jaas.conf
       - ./dist/version:/home/ranger/dist/version:ro
       - ./scripts/kafka/ranger-kafka-plugin-install.properties:/opt/ranger/ranger-kafka-plugin/install.properties

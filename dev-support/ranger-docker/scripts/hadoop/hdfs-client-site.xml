@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration>
+  <property>
+    <name>dfs.namenode.kerberos.principal</name>
+    <value>nn/ranger-hadoop.rangernw@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>dfs.datanode.kerberos.principal</name>
+    <value>dn/ranger-hadoop.rangernw@EXAMPLE.COM</value>
+  </property>
+</configuration>
