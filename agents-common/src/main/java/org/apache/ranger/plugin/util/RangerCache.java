@@ -17,10 +17,11 @@
 
 package org.apache.ranger.plugin.util;
 
-import com.sun.istack.NotNull;
 import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableTryLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nonnull;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -363,7 +364,7 @@ public class RangerCache<K, V> {
             private final AtomicInteger number     = new AtomicInteger(1);
 
             @Override
-            public Thread newThread(@NotNull Runnable r) {
+            public Thread newThread(@Nonnull Runnable r) {
                 Thread t = new Thread(r, namePrefix + number.getAndIncrement());
 
                 if (!t.isDaemon()) {

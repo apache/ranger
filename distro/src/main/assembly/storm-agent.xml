@@ -62,8 +62,9 @@
             <unpack>false</unpack>
             <includes>
               <include>commons-configuration:commons-configuration</include>
-              <include>org.apache.hadoop:hadoop-common</include>
-              <include>org.apache.hadoop:hadoop-common-plus</include>
+              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
               <include>com.google.code.gson:gson</include>
               <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
               <include>commons-collections:commons-collections</include>
@@ -73,7 +74,8 @@
               <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
               <include>org.noggit:noggit:jar:${noggit.version}</include>
               <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
-              <include>org.apache.hadoop:hadoop-hdfs</include>
+              <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
               <include>org.apache.htrace:htrace-core:jar:${htrace-core.version}</include>
               <include>commons-cli:commons-cli:jar:${commons.cli.version}</include>
               <include>commons-io:commons-io:jar:${commons.io.version}</include>
@@ -125,8 +127,9 @@
               <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
               <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
               <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-              <include>org.apache.hadoop:hadoop-auth:jar</include>
-              <include>org.apache.hadoop:hadoop-common:jar</include>
+              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
               <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
               <include>org.apache.ranger:credentialbuilder</include>
               <include>org.apache.ranger:ranger-plugins-cred</include>

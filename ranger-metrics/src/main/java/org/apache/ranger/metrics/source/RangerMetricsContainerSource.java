@@ -19,11 +19,11 @@
 
 package org.apache.ranger.metrics.source;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.hadoop.classification.VisibleForTesting;
+import org.apache.hadoop.metrics2.MetricsCollector;
 import org.apache.ranger.metrics.RangerMetricsInfo;
 import org.apache.ranger.server.tomcat.EmbeddedServer;
 import org.apache.ranger.server.tomcat.EmbeddedServerMetricsCollector;
-import org.apache.hadoop.metrics2.MetricsCollector;
 
 import java.util.Objects;
 

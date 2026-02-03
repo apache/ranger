@@ -56,10 +56,9 @@
 					<include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
 					<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
 					<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-					<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-					<include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-					<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+					<include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+					<include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
 					<include>com.google.code.gson:gson</include>
 					<include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
 					<include>commons-collections:commons-collections</include>
@@ -127,9 +126,10 @@
 					<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
 					<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
 					<include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-					<include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+					<include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+					<include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
+					<include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
 					<include>org.apache.ranger:ranger-plugins-cred</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>

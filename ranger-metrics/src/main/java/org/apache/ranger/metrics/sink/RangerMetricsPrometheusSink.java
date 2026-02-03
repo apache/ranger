@@ -19,6 +19,14 @@
 
 package org.apache.ranger.metrics.sink;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.metrics2.AbstractMetric;
+import org.apache.hadoop.metrics2.MetricType;
+import org.apache.hadoop.metrics2.MetricsRecord;
+import org.apache.hadoop.metrics2.MetricsSink;
+import org.apache.hadoop.metrics2.MetricsTag;
+import org.apache.hadoop.shaded.org.apache.commons.configuration2.SubsetConfiguration;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
@@ -27,14 +35,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-
-import org.apache.commons.configuration2.SubsetConfiguration;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.metrics2.AbstractMetric;
-import org.apache.hadoop.metrics2.MetricType;
-import org.apache.hadoop.metrics2.MetricsRecord;
-import org.apache.hadoop.metrics2.MetricsSink;
-import org.apache.hadoop.metrics2.MetricsTag;
 
 public class RangerMetricsPrometheusSink implements MetricsSink {
     private static final Pattern SPLIT_PATTERN = Pattern.compile("(?<!(^|[A-Z_]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
