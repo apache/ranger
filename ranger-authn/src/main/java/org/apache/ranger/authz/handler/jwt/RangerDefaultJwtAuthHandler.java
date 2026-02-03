@@ -25,7 +25,6 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.ranger.authz.handler.RangerAuth;
 
 import javax.servlet.ServletRequest;
@@ -82,11 +81,10 @@ public class RangerDefaultJwtAuthHandler extends RangerJwtAuthHandler {
         String     jwtAuthHeaderStr = getJwtAuthHeader(httpServletRequest);
         String     jwtCookieStr     = StringUtils.isBlank(jwtAuthHeaderStr) ? getJwtCookie(httpServletRequest) : null;
         String     doAsUser         = httpServletRequest.getParameter(DO_AS_PARAMETER);
+        String     username         = authenticate(jwtAuthHeaderStr, jwtCookieStr, doAsUser);
 
-        AuthenticationToken authenticationToken = authenticate(jwtAuthHeaderStr, jwtCookieStr, doAsUser);
-
-        if (authenticationToken != null) {
-            rangerAuth = new RangerAuth(authenticationToken, RangerAuth.AuthType.JWT_JWKS);
+        if (username != null) {
+            rangerAuth = new RangerAuth(username, RangerAuth.AuthType.JWT_JWKS);
         }
 
         return rangerAuth;

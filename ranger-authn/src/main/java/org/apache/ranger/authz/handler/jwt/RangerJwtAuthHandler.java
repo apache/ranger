@@ -22,17 +22,17 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jose.util.X509CertUtils;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hadoop.security.authentication.server.AuthenticationToken;
-import org.apache.hadoop.security.authentication.util.CertificateUtil;
 import org.apache.ranger.authz.handler.RangerAuthHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +82,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
 
         // setup JWT provider public key if configured
         if (StringUtils.isNotBlank(pemPublicKey)) {
-            verifier = new RSASSAVerifier(CertificateUtil.parseRSAPublicKey(pemPublicKey));
+            verifier = new RSASSAVerifier(RSAKey.parse(X509CertUtils.parse(pemPublicKey)));
         } else if (StringUtils.isBlank(jwksProviderUrl)) {
             throw new Exception("RangerJwtAuthHandler: Mandatory configs ('jwks.provider-url' & 'jwt.public-key') are missing, must provide atleast one.");
         }
@@ -106,12 +106,11 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
 
     public abstract ConfigurableJWTProcessor<SecurityContext> getJwtProcessor(JWSKeySelector<SecurityContext> keySelector);
 
-    protected AuthenticationToken authenticate(final String jwtAuthHeader, final String jwtCookie, final String doAsUser) {
+    protected String authenticate(final String jwtAuthHeader, final String jwtCookie, final String doAsUser) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("===>>> RangerJwtAuthHandler.authenticate()");
         }
 
-        AuthenticationToken token = null;
         if (shouldProceedAuth(jwtAuthHeader, jwtCookie)) {
             String serializedJWT = getJWT(jwtAuthHeader, jwtCookie);
 
@@ -132,7 +131,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                             LOG.debug("RangerJwtAuthHandler.authenticate(): Issuing AuthenticationToken for user: [{}]", userName);
                             LOG.debug("RangerJwtAuthHandler.authenticate(): Authentication successful for user [{}] and doAs user is [{}]", jwtToken.getJWTClaimsSet().getSubject(), doAsUser);
                         }
-                        token = new AuthenticationToken(userName, userName, TYPE);
+                        return userName;
                     } else {
                         LOG.warn("RangerJwtAuthHandler.authenticate(): Validation failed for JWT token: [{}] ", jwtToken.serialize());
                     }
@@ -148,7 +147,7 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
             LOG.debug("<<<=== RangerJwtAuthHandler.authenticate()");
         }
 
-        return token;
+        return null;
     }
 
     protected String getJWT(final String jwtAuthHeader, final String jwtCookie) {
@@ -267,13 +266,11 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         boolean valid = false;
         try {
             List<String> tokenAudienceList = jwtToken.getJWTClaimsSet().getAudience();
-            // if there were no expected audiences configured then just
-            // consider any audience acceptable
+            // if there were no expected audiences configured then just consider any audience acceptable
             if (audiences == null) {
                 valid = true;
             } else {
-                // if any of the configured audiences is found then consider it
-                // acceptable
+                // if any of the configured audiences is found then consider it acceptable
                 for (String aud : tokenAudienceList) {
                     if (audiences.contains(aud)) {
                         if (LOG.isDebugEnabled()) {
@@ -294,8 +291,8 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
     }
 
     /**
-     * Validate that the expiration time of the JWT token has not been violated. If
-     * it has then throw an AuthenticationException. Override this method in
+     * Validate that the expiration time of the JWT has not been violated. If
+     * it has, then throw an AuthenticationException. Override this method in
      * subclasses in order to customize the expiration validation behavior.
      *
      * @param jwtToken the token that contains the expiration date to validate

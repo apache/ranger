@@ -18,7 +18,6 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import org.apache.hadoop.security.authentication.server.AuthenticationToken;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -89,8 +88,7 @@ public class TestRangerJwtAuthFilter {
         ServletResponse res = Mockito.mock(ServletResponse.class);
         FilterChain chain = Mockito.mock(FilterChain.class);
 
-        AuthenticationToken token = new AuthenticationToken("alice", "alice", "ranger-jwt");
-        RangerAuth rangerAuth = new RangerAuth(token, RangerAuth.AuthType.JWT_JWKS);
+        RangerAuth rangerAuth = new RangerAuth("alice", RangerAuth.AuthType.JWT_JWKS);
 
         doReturn(rangerAuth).when(filter).authenticate(any(HttpServletRequest.class));
 
