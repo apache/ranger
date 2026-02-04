@@ -218,7 +218,7 @@ public class TestPatchPreSql_057_ForUpdateToUniqueGUID_J10052 {
         XXSecurityZone z = new XXSecurityZone();
         z.setId(1L);
         z.setName("zoneName");
-        Mockito.when(xxSecurityZoneDao.findByZoneId(Mockito.anyLong())).thenReturn(z);
+        Mockito.when(xxSecurityZoneDao.findZoneNameByZoneId(Mockito.anyLong())).thenReturn("zoneName");
 
         RangerPolicy out = (RangerPolicy) m.invoke(patch, p);
         Assertions.assertEquals("zoneName", out.getZoneName());

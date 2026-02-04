@@ -18,6 +18,7 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerFactory;
@@ -25,7 +26,6 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXPolicyLabelMapDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyLabelMap;
-import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.util.CLIUtil;
@@ -223,10 +223,10 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
                 ret.setVersion(xPolicy.getVersion());
                 ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
 
-                XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(xPolicy.getZoneId());
+                String securityZoneName = daoMgr.getXXSecurityZoneDao().findZoneNameByZoneId(xPolicy.getZoneId());
 
-                if (xSecurityZone != null) {
-                    ret.setZoneName(xSecurityZone.getName());
+                if (StringUtils.isNotEmpty(securityZoneName)) {
+                    ret.setZoneName(securityZoneName);
                 }
             }
         } else {

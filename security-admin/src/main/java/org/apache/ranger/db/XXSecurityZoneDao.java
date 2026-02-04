@@ -173,4 +173,19 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
 
         return securityZoneList;
     }
+
+    public String findZoneNameByZoneId(Long zoneId) {
+        if (zoneId == null) {
+            return null;
+        }
+
+        try {
+            return getEntityManager()
+                    .createNamedQuery("XXSecurityZone.findZoneNameByZoneId", String.class)
+                    .setParameter("zoneId", zoneId)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
 }

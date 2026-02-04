@@ -18,6 +18,7 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
@@ -179,10 +180,10 @@ public class PatchPreSql_057_ForUpdateToUniqueGUID_J10052 extends BaseLoader {
                 ret.setVersion(xPolicy.getVersion());
                 ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
 
-                XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(xPolicy.getZoneId());
+                String securityZoneName = daoMgr.getXXSecurityZoneDao().findZoneNameByZoneId(xPolicy.getZoneId());
 
-                if (xSecurityZone != null) {
-                    ret.setZoneName(xSecurityZone.getName());
+                if (StringUtils.isNotEmpty(securityZoneName)) {
+                    ret.setZoneName(securityZoneName);
                 }
             }
         } else {
