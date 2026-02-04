@@ -29,6 +29,7 @@ then
 fi
 
 cp ${RANGER_SCRIPTS}/core-site.xml          ${KAFKA_HOME}/config/
+cp ${RANGER_SCRIPTS}/hdfs-site.xml          ${KAFKA_HOME}/config/
 cp ${RANGER_SCRIPTS}/kafka-server-jaas.conf ${KAFKA_HOME}/config/
 
 chown -R kafka:hadoop /opt/kafka/
