@@ -1055,7 +1055,7 @@ public class XUserMgr extends XUserMgrBase {
 
         String firstName = vXUser.getFirstName();
 
-        if (firstName == null || "null".equalsIgnoreCase(firstName) || firstName.trim().isEmpty()) {
+        if (RangerCommonEnums.USER_EXTERNAL != vXUser.getUserSource() && (firstName == null || "null".equalsIgnoreCase(firstName) || firstName.trim().isEmpty())) {
             throw restErrorUtil.createRESTException("Please provide a valid first name.", MessageEnums.INVALID_INPUT_DATA);
         }
 
