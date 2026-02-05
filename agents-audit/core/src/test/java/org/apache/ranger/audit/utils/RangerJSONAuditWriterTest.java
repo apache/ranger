@@ -73,7 +73,9 @@ public class RangerJSONAuditWriterTest {
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("Last log file will be opened in append mode and this event will be written")));
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("This event will also be written in append mode")));
 
-        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        if (jsonAuditWriter.auditPath != null) {
+            jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        }
     }
 
     @Test
@@ -120,8 +122,12 @@ public class RangerJSONAuditWriterTest {
         assertNotEquals(auditPath1, jsonAuditWriter.auditPath);
 
         // cleanup
-        jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
-        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        if (auditPath1 != null) {
+            jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
+        }
+        if (jsonAuditWriter.auditPath != null) {
+            jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        }
         jsonAuditWriter.closeWriter();
     }
 
@@ -150,8 +156,12 @@ public class RangerJSONAuditWriterTest {
         assertFalse(jsonAuditWriter.reUseLastLogFile);
 
         // cleanup
-        jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
-        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        if (auditPath1 != null) {
+            jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
+        }
+        if (jsonAuditWriter.auditPath != null) {
+            jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        }
     }
 
     @Test
@@ -175,8 +185,12 @@ public class RangerJSONAuditWriterTest {
         assertTrue(jsonAuditWriter.logJSON(Collections.singleton("Second file created since rollover happened!")));
 
         // cleanup
-        jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
-        jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        if (auditPath1 != null) {
+            jsonAuditWriter.fileSystem.deleteOnExit(auditPath1);
+        }
+        if (jsonAuditWriter.auditPath != null) {
+            jsonAuditWriter.fileSystem.deleteOnExit(jsonAuditWriter.auditPath);
+        }
         jsonAuditWriter.closeWriter();
     }
 }
