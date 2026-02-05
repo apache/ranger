@@ -48,9 +48,11 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyManagementException;
@@ -62,6 +64,7 @@ import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -83,16 +86,18 @@ public class RangerRESTClient {
     public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.truststore.credential.file";
     public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS = "sslTrustStore";
     public static final String RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT     = "jks";
-
     public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE                   = KeyManagerFactory.getDefaultAlgorithm();
     public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE                 = TrustManagerFactory.getDefaultAlgorithm();
     public static final String RANGER_SSL_CONTEXT_ALGO_TYPE                      = "TLSv1.2";
+
+    public static final String JWT_HEADER_PREFIX                                 = "Bearer ";
 
     private          String       mUrl;
     private final    String       mSslConfigFileName;
     private          String       mUsername;
     private          String       mPassword;
     private          boolean      mIsSSL;
+    private          String       jwt;
     private          String       mKeyStoreURL;
     private          String       mKeyStoreAlias;
     private          String       mKeyStoreFile;
@@ -108,11 +113,16 @@ public class RangerRESTClient {
     private          int          lastKnownActiveUrlIndex;
 
     private final List<String> configuredURLs;
+    private final String       propertyPrefix;
 
     private volatile Client  client;
     private volatile Client  cookieAuthClient;
 
     public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
+        this(url, sslConfigFileName, config, getPropertyPrefix(config));
+    }
+
+    public RangerRESTClient(String url, String sslConfigFileName, Configuration config, String propertyPrefix) {
         mUrl               = url;
         mSslConfigFileName = sslConfigFileName;
         configuredURLs     = StringUtil.getURLs(mUrl);
@@ -121,6 +131,7 @@ public class RangerRESTClient {
         } else {
             setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
         }
+        this.propertyPrefix = propertyPrefix;
         init(config);
     }
 
@@ -202,7 +213,7 @@ public class RangerRESTClient {
                 result = client;
 
                 if (result == null) {
-                    result = buildClient(true);
+                    result = buildClient();
                     client = result;
                 }
             }
@@ -219,7 +230,7 @@ public class RangerRESTClient {
                 ret = cookieAuthClient;
 
                 if (ret == null) {
-                    cookieAuthClient        = buildClient(true);
+                    cookieAuthClient        = buildClient();
                     //Pending : need to remove basic auth filter from client.
                     ret = cookieAuthClient;
                 }
@@ -229,7 +240,11 @@ public class RangerRESTClient {
         return ret;
     }
 
-    private Client buildClient(boolean isBasicAuth) {
+    private static String getPropertyPrefix(Configuration config) {
+        return (config instanceof RangerPluginConfig) ? ((RangerPluginConfig) config).getPropertyPrefix() : "ranger.plugin";
+    }
+
+    private Client buildClient() {
         RangerJersey2ClientBuilder.SafeClientBuilder clientBuilder;
         ClientConfig config = new ClientConfig();
 
@@ -267,11 +282,21 @@ public class RangerRESTClient {
         // Validate that MOXy prevention is properly configured
         RangerJersey2ClientBuilder.validateAntiMoxyConfiguration(config);
 
-        if (isBasicAuth && StringUtils.isNotEmpty(mUsername) && StringUtils.isNotEmpty(mPassword)) {
+        final String authHeader;
+        if (StringUtils.isNotEmpty(jwt)) { // use JWT if present
+            authHeader = JWT_HEADER_PREFIX + jwt;
+            LOG.info("Registering JWT auth header in REST client");
+        } else if (StringUtils.isNotEmpty(mUsername) && StringUtils.isNotEmpty(mPassword)) {
+            authHeader = "Basic " + java.util.Base64.getEncoder().encodeToString((mUsername + ":" + mPassword).getBytes());
+            LOG.info("Registering Basic auth header in REST client");
+        } else {
+            authHeader = null;
+        }
+
+        if (StringUtils.isNotEmpty(authHeader)) {
             config.register(new javax.ws.rs.client.ClientRequestFilter() {
                 @Override
                 public void filter(javax.ws.rs.client.ClientRequestContext requestContext) {
-                    String authHeader = "Basic " + java.util.Base64.getEncoder().encodeToString((mUsername + ":" + mPassword).getBytes());
                     requestContext.getHeaders().add("Authorization", authHeader);
                 }
             });
@@ -318,16 +343,11 @@ public class RangerRESTClient {
             }
         }
 
-        final String pluginPropertyPrefix;
+        Optional<String> jwtAsString = fetchJWT(propertyPrefix, config);
+        jwtAsString.ifPresent(s -> this.jwt = s);
 
-        if (config instanceof RangerPluginConfig) {
-            pluginPropertyPrefix = ((RangerPluginConfig) config).getPropertyPrefix();
-        } else {
-            pluginPropertyPrefix = "ranger.plugin";
-        }
-
-        String username = config.get(pluginPropertyPrefix + ".policy.rest.client.username");
-        String password = config.get(pluginPropertyPrefix + ".policy.rest.client.password");
+        String username = config.get(propertyPrefix + ".policy.rest.client.username");
+        String password = config.get(propertyPrefix + ".policy.rest.client.password");
 
         if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
             setBasicAuthInfo(username, password);
@@ -336,6 +356,60 @@ public class RangerRESTClient {
 
     private boolean isSsl(String url) {
         return !StringUtils.isEmpty(url) && url.toLowerCase().startsWith("https");
+    }
+
+    private Optional<String> fetchJWT(String propertyPrefix, Configuration config) {
+        Optional<String> ret = Optional.empty();
+        String jwtSrc        = config.get(propertyPrefix + ".policy.rest.client.jwt.source");
+
+        if (StringUtils.isNotEmpty(jwtSrc)) {
+            switch(jwtSrc) {
+                case "env": {
+                    String jwtEnvVar = config.get(propertyPrefix + ".policy.rest.client.jwt.env");
+                    if (StringUtils.isNotEmpty(jwtEnvVar)){
+                        String jwt = System.getenv(jwtEnvVar);
+                        if (StringUtils.isNotBlank(jwt)) {
+                            ret = Optional.of(jwt);
+                        }
+                    }
+                    break;
+                }
+                case "file": {
+                    String jwtFilePath = config.get(propertyPrefix + ".policy.rest.client.jwt.file");
+                    if (StringUtils.isNotEmpty(jwtFilePath)){
+                        File jwtFile = new File(jwtFilePath);
+                        if (jwtFile.exists()) {
+                            try (BufferedReader reader = new BufferedReader(new FileReader(jwtFile))) {
+                                String line = null;
+                                while ((line = reader.readLine()) != null) {
+                                    if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
+                                        ret = Optional.of(line);
+                                        break;
+                                    }
+                                }
+                            } catch (IOException e) {
+                                LOG.error("Failed to read JWT from file: {}", jwtFilePath, e);
+                            }
+                        }
+                    }
+                    break;
+                }
+                case "cred": {
+                    String credFilePath = config.get(propertyPrefix + ".policy.rest.client.jwt.cred.file");
+                    String credAlias    = config.get(propertyPrefix + ".policy.rest.client.jwt.cred.alias");
+                    if (StringUtils.isNotEmpty(credFilePath) && StringUtils.isNotEmpty(credAlias)){
+                        String jwt = RangerCredentialProvider.getInstance().getCredentialString(credFilePath, credAlias);
+                        if (StringUtils.isNotBlank(jwt)) {
+                            ret = Optional.of(jwt);
+                        }
+                    }
+                    break;
+                }
+            }
+        } else {
+            LOG.info("JWT source not configured, proceeding without JWT");
+        }
+        return ret;
     }
 
     private KeyManager[] getKeyManagers() {
