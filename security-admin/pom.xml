@@ -529,6 +529,12 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-metrics</artifactId>
             <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
@@ -896,7 +902,8 @@
                             <packagingExcludes>WEB-INF/lib/spring-*.SEC03.jar,
                                 WEB-INF/lib/spring-*.RC3.jar,
                                 WEB-INF/lib/spring-2.*.jar,
-                                WEB-INF/lib/jetty-*.jar</packagingExcludes>
+                                WEB-INF/lib/jetty-*.jar,
+                                WEB-INF/lib/hadoop-client-api-*.jar</packagingExcludes>
                             <warSourceDirectory>${project.build.directory}/${project.build.finalName}</warSourceDirectory>
                         </configuration>
                     </execution>
