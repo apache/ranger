@@ -39,60 +39,27 @@
             <outputDirectory>lib</outputDirectory>
             <unpack>false</unpack>
             <includes>
-              <include>commons-cli:commons-cli</include>
-              <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-              <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-              <include>log4j:log4j</include>
-              <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-              <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-              <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
-              <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
-              <include>org.eclipse.persistence:eclipselink</include>
-              <include>org.eclipse.persistence:javax.persistence</include>
-              <include>commons-collections:commons-collections</include>
-              <include>commons-io:commons-io</include>
-              <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-              <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-              <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-              <include>org.noggit:noggit:jar:${noggit.version}</include>
+              <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+              <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
               <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
               <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-              <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
-              <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
+              <include>com.google.code.gson:gson:jar:${gson.version}</include>
+              <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
+              <include>commons-cli:commons-cli</include>
+              <include>commons-collections:commons-collections</include>
+              <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+              <include>net.java.dev.jna:jna:jar:${jna.version}</include>
+              <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+              <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+              <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+              <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
               <include>org.apache.ranger:ranger-audit-core</include>
-              <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
-              <include>org.apache.ranger:ranger-audit-dest-solr</include>
               <include>org.apache.ranger:ranger-authz-api</include>
               <include>org.apache.ranger:ranger-plugins-common</include>
-              <include>org.apache.ranger:ugsync-util</include>
-              <include>org.apache.ranger:ranger-plugins-audit</include>
-              <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-              <include>net.java.dev.jna:jna:jar:${jna.version}</include>
-              <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
               <include>org.slf4j:slf4j-api</include>
-              <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-              <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
-              <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
-              <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-              <include>com.google.code.gson:gson:jar:${gson.version}</include>
-              <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
-              <include>org.glassfish.jersey.core:jersey-client</include>
-              <include>org.glassfish.jersey.core:jersey-common</include>
-              <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
-              <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
-              <include>org.glassfish.jersey.inject:jersey-hk2</include>
-              <include>org.glassfish.hk2.external:jakarta.inject</include>
-              <include>org.glassfish.hk2:hk2</include>
-              <include>org.glassfish.hk2:hk2-utils</include>
-              <include>org.glassfish.hk2:hk2-api</include>
-              <include>org.glassfish.hk2:hk2-core</include>
-              <include>org.glassfish.hk2:hk2-locator</include>
-              <include>org.glassfish.hk2:hk2-runlevel</include>
-              <include>org.glassfish.hk2:class-model</include>
-              <include>javax.inject:javax.inject</include>
             </includes>
           </dependencySet>
         </dependencySets>
