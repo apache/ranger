@@ -78,7 +78,6 @@
           <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
           <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
           <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
-          <include>org.apache.thrift:libfb303:jar:${libfb303.version}</include>
           <include>org.apache.thrift:libthrift:jar:${libthrift.version}</include>
         </includes>
       </binaries>
@@ -144,7 +143,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.storm:storm-core:jar:0.9.2-incubating</include>
+          <include>org.apache.storm:storm-core</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -186,17 +185,8 @@
           <include>org.apache.ozone:hdds-config:jar:${ozone.version}</include>
           <include>org.apache.ozone:hdds-interface-client:jar:${ozone.version}</include>
           <include>org.apache.ozone:ozone-interface-client:jar:${ozone.version}</include>
-          <include>org.apache.ratis:ratis-common:jar:${ratis.version}</include>
-          <include>org.apache.ratis:ratis-proto:jar:${ratis.version}</include>
-          <include>org.apache.ratis:ratis-thirdparty-misc:jar:${ratis-thirdparty.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.bouncycastle:bcpkix-jdk18on:jar:${org.bouncycastle.bcpkix-jdk18on}</include>
-          <include>commons-net:commons-net:jar:${commons.net.version}</include>
-          <include>io.jaegertracing:jaeger-core:jar:1.6.0</include>
-          <include>io.opentracing:opentracing-api:jar:0.33.0</include>
-          <include>io.opentracing:opentracing-noop:jar:0.33.0</include>
-          <include>io.opentracing:opentracing-util:jar:0.33.0</include>
-          <include>io.opentracing.contrib:opentracing-tracerresolver:jar:0.1.8</include>
           <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
         </includes>
       </binaries>
@@ -234,22 +224,17 @@
           <include>org.apache.tomcat.embed:tomcat-embed*</include>
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
           <include>org.apache.tomcat:tomcat-jasper-el</include>
-          <include>org.eclipse.jdt.core.compiler:ecj:jar:${ecj.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-authz-api</include>
           <include>org.apache.ranger:ranger-plugins-common</include>
-          <include>org.apache.ranger:ugsync-util</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
-          <include>org.apache.hadoop:hadoop-common</include>
           <include>commons-logging:commons-logging</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-io:commons-io</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -271,8 +256,6 @@
           <include>org.apache.lucene:lucene-core</include>
           <include>com.carrotsearch:hppc</include>
           <include>joda-time:joda-time</include>
-          <include>org.apache.ranger:ranger-plugins-cred</include>
-          <include>org.apache.ranger:ugsyn-util</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
@@ -296,12 +279,10 @@
         <includes>
           <include>commons-cli:commons-cli</include>
           <include>commons-collections:commons-collections</include>
-          <include>commons-configuration:commons-configuration</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-logging:commons-logging</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>org.apache.commons:commons-lang3</include>
-          <include>org.apache.hadoop:hadoop-common</include>
           <include>org.apache.hadoop:hadoop-auth</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>

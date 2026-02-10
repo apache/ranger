@@ -30,9 +30,7 @@
             <scope>runtime</scope>
             <unpack>true</unpack>
             <excludes>
-                <exclude>
-                    org.slf4j:*
-                </exclude>
+                <exclude>org.slf4j:*</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>

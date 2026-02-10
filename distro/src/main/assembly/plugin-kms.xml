@@ -57,41 +57,41 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>com.google.code.gson:gson</include>
-          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
+          <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+          <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
+          <include>javax.inject:javax.inject</include>
+          <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+          <include>net.java.dev.jna:jna:jar:${jna.version}</include>
+          <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
+          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-          <include>org.noggit:noggit:jar:${noggit.version}</include>
-          <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-          <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-          <include>net.java.dev.jna:jna:jar:${jna.version}</include>
-          <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
-          <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
           <include>org.apache.orc:orc-core:jar:${orc.version}</include>
           <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
-          <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
-          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-          <include>jakarta.ws.rs:jakarta.ws.rs-api</include>
-          <include>org.glassfish.jersey.core:jersey-client</include>
-          <include>org.glassfish.jersey.core:jersey-common</include>
-          <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
-          <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
-          <include>org.glassfish.jersey.inject:jersey-hk2</include>
+          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+          <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.glassfish.hk2.external:jakarta.inject</include>
-          <include>org.glassfish.hk2:hk2</include>
-          <include>org.glassfish.hk2:hk2-utils</include>
+          <include>org.glassfish.hk2:class-model</include>
           <include>org.glassfish.hk2:hk2-api</include>
           <include>org.glassfish.hk2:hk2-core</include>
           <include>org.glassfish.hk2:hk2-locator</include>
           <include>org.glassfish.hk2:hk2-runlevel</include>
-          <include>org.glassfish.hk2:class-model</include>
-          <include>javax.inject:javax.inject</include>
+          <include>org.glassfish.hk2:hk2-utils</include>
+          <include>org.glassfish.hk2:hk2</include>
+          <include>org.glassfish.jersey.core:jersey-client</include>
+          <include>org.glassfish.jersey.core:jersey-common</include>
+          <include>org.glassfish.jersey.ext:jersey-entity-filtering</include>
+          <include>org.glassfish.jersey.inject:jersey-hk2</include>
+          <include>org.glassfish.jersey.media:jersey-media-json-jackson</include>
+          <include>org.noggit:noggit:jar:${noggit.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -119,9 +119,9 @@
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
-          <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
           <include>org.apache.ranger:ranger-plugins-cred</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>

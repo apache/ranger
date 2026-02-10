@@ -38,14 +38,13 @@
                 <includes>
                     <include>com.google.inject:guice:jar:${presto.guice.version}</include>
                     <include>io.airlift:bootstrap:jar:${presto.airlift.version}</include>
-                    <include>io.airlift:log:jar:${presto.airlift.version}</include>
-                    <include>io.airlift:log-manager:jar:${presto.airlift.version}</include>
                     <include>io.airlift:configuration:jar:${presto.airlift.version}</include>
+                    <include>io.airlift:log-manager:jar:${presto.airlift.version}</include>
+                    <include>io.airlift:log:jar:${presto.airlift.version}</include>
+                    <include>javax.annotation:javax.annotation-api:jar:${javax.annotation-api.version}</include>
                     <include>javax.validation:validation-api:jar:${presto.validation-api.version}</include>
-                    <include>javax.inject:javax.inject:jar:${javax-inject.version}</include>
                     <include>org.apache.bval:bval-jsr:jar:${presto.bval-jsr.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
-                    <include>javax.annotation:javax.annotation-api:jar:${javax.annotation-api.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -69,55 +68,37 @@
                 <directoryMode>755</directoryMode>
                 <fileMode>644</fileMode>
                 <includes>
-                    <include>com.google.code.gson:gson*</include>
-                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
-                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-                    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
-                    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-                    <include>org.noggit:noggit:jar:${noggit.version}</include>
-                    <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-                    <include>commons-cli:commons-cli</include>
-                    <include>commons-collections:commons-collections</include>
-                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-                    <include>commons-codec:commons-codec</include>
-                    <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                    <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
-                    <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
-                    <include>com.google.re2j:re2j:jar:${presto.re2j.version}</include>
-                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
-                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
-                    <include>org.apache.ranger:ranger-plugins-cred</include>
-                    <include>org.apache.ranger:credentialbuilder</include>
-                    <include>org.codehaus.woodstox:stax2-api</include>
-                    <include>com.fasterxml.woodstox:woodstox-core</include>
+                    <include>com.carrotsearch:hppc</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
-                    <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
-                    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-                    <include>net.java.dev.jna:jna</include>
-                    <include>net.java.dev.jna:jna-platform</include>
+                    <include>com.fasterxml.woodstox:woodstox-core</include>
+                    <include>com.google.code.gson:gson*</include>
+                    <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
                     <include>com.kstruct:gethostname4j</include>
-                    <include>org.elasticsearch:elasticsearch</include>
-                    <include>org.elasticsearch:elasticsearch-core</include>
-                    <include>org.elasticsearch:elasticsearch-x-content</include>
-                    <include>org.elasticsearch.client:elasticsearch-rest-client</include>
-                    <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
-                    <include>org.elasticsearch.plugin:rank-eval-client</include>
-                    <include>org.elasticsearch.plugin:lang-mustache-client</include>
-                    <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
-                    <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
-                    <include>org.apache.lucene:lucene-core</include>
-                    <include>joda-time:joda-time</include>
-                    <include>com.carrotsearch:hppc</include>
-                    <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
-                    <include>org.apache.orc:orc-core:jar:${orc.version}</include>
-                    <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
+                    <include>commons-codec:commons-codec</include>
+                    <include>commons-collections:commons-collections</include>
+                    <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
+                    <include>joda-time:joda-time</include>
+                    <include>net.java.dev.jna:jna-platform</include>
+                    <include>net.java.dev.jna:jna</include>
+                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
+                    <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
+                    <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+                    <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
+                    <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
+                    <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+                    <include>org.apache.ranger:ranger-plugins-cred</include>
+                    <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+                    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -137,7 +118,6 @@
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                    <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
