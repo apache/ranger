@@ -46,25 +46,16 @@
                             <include>com.googlecode.log4jdbc:log4jdbc</include>
                             <include>com.codahale.metrics:metrics-core</include>
                             <include>org.slf4j:jul-to-slf4j</include>
-                            <include>javax.servlet:servlet-api</include>
-                            <include>org.mortbay.jetty:jetty</include>
-                            <include>org.mortbay.jetty:jetty-util</include>
                             <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                             <include>org.apache.curator:curator-framework</include>
                             <include>org.apache.curator:curator-client</include>
-                            <include>org.apache.curator:curator-test</include>
                             <include>asm:asm-all</include>
                             <include>org.apache.httpcomponents:httpclient</include>
                             <include>javax.activation:activation</include>
-                            <include>org.apache.directory.server:apacheds-i18n</include>
-                            <include>org.apache.directory.server:apacheds-kerberos-codec</include>
-                            <include>org.apache.directory.api:api-asn1-api</include>
                             <include>org.apache.directory.api:api-i18n</include>
-                            <include>org.apache.directory.api:api-util</include>
                             <include>commons-beanutils:commons-beanutils</include>
                             <include>commons-cli:commons-cli</include>
                             <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
-                            <include>commons-digester:commons-digester</include>
                             <include>commons-io:commons-io</include>
                             <include>org.apache.commons:commons-math3</include>
                             <include>commons-net:commons-net:jar:${commons.net.version}</include>
@@ -78,13 +69,8 @@
                             <include>com.jcraft:jsch</include>
                             <include>com.google.code.findbugs:jsr305</include>
                             <include>io.netty:netty-all</include>
-                            <include>com.thoughtworks.paranamer:paranamer</include>
                             <include>org.xerial.snappy:snappy-java</include>
-                            <include>xmlenc:xmlenc</include>
-                            <include>org.tukaani:xz</include>
                             <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-                            <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
-                            <include>org.noggit:noggit:jar:${noggit.version}</include>
                             <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                             <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
                             <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
@@ -105,12 +91,10 @@
                             <include>com.squareup.retrofit2:adapter-rxjava</include>
                             <include>com.squareup.okhttp3:okhttp-urlconnection</include>
                             <include>com.fasterxml.jackson.datatype:jackson-datatype-joda:jar:${fasterxml.jackson.version}</include>
-                            <include>joda-time:okhttp-urlconnection</include>
                             <include>joda-time:joda-time</include>
                             <include>com.nimbusds:oauth2-oidc-sdk</include>
                             <include>net.minidev:json-smart</include>
                             <include>net.minidev:asm:jar:${net.minidev.asm.version}</include>
-                            <include>javax.mail:javax.mail-api</include>
                             <include>com.sun.mail:javax.mail</include>
                             <include>com.nimbusds:nimbus-jose-jwt</include>
                             <include>com.microsoft.azure:azure-keyvault-webkey</include>
@@ -235,14 +219,12 @@
                     <include>org.apache.tomcat:tomcat-annotations-api*</include>
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
-                    <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>org.apache.ranger:ranger-authz-api</include>
                     <include>org.apache.ranger:ranger-plugins-common</include>
-                    <include>org.apache.ranger:ugsync-util</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -256,7 +238,6 @@
                     <include>org.slf4j:slf4j-api</include>
                     <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
                     <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-                    <include>com.google.code.gson:gson</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
@@ -264,8 +245,6 @@
                     <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
-                    <include>org.javassist:javassist</include>
-                    <include>org.glassfish.hk2.external:aopalliance-repackaged:jar:${glassfish.hk2.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -331,31 +310,18 @@
                             <include>org.eclipse.persistence:eclipselink</include>
                             <include>org.eclipse.persistence:javax.persistence</include>
                             <include>commons-collections:commons-collections</include>
-                            <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                             <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
                             <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
                             <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
-                            <include>org.noggit:noggit:jar:${noggit.version}</include>
                             <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                             <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                             <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                             <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                             <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
-                            <include>org.elasticsearch:elasticsearch</include>
-                            <include>org.elasticsearch:elasticsearch-core</include>
-                            <include>org.elasticsearch:elasticsearch-x-content</include>
-                            <include>org.elasticsearch.client:elasticsearch-rest-client</include>
-                            <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
-                            <include>org.elasticsearch.plugin:rank-eval-client</include>
-                            <include>org.elasticsearch.plugin:lang-mustache-client</include>
                             <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
                             <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
-                            <include>org.apache.lucene:lucene-core</include>
                             <include>joda-time:joda-time</include>
                             <include>com.carrotsearch:hppc</include>
-                            <include>org.apache.hive:hive-storage-api:jar:${hive.storage-api.version}</include>
-                            <include>org.apache.orc:orc-core:jar:${orc.version}</include>
-                            <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
                             <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
                         </includes>
                     </dependencySet>
@@ -369,7 +335,6 @@
                             <include>commons-cli:commons-cli</include>
                             <include>commons-collections:commons-collections</include>
                             <include>commons-io:commons-io:jar:${commons.io.version}</include>
-                            <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                             <include>org.apache.commons:commons-collections4:jar:${commons.collections4.version}</include>
                             <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
