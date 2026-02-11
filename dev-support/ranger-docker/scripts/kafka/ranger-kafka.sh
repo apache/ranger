@@ -42,4 +42,13 @@ then
   fi
 fi
 
-su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config KAFKA_OPTS='-Djava.security.krb5.conf=/etc/krb5.conf -Djava.security.auth.login.config=/opt/kafka/config/kafka-server-jaas.conf' ./bin/kafka-server-start.sh config/server.properties" kafka
+# Configure KAFKA_OPTS based on KERBEROS_ENABLED
+if [ "${KERBEROS_ENABLED}" == "true" ]; then
+  echo "Starting Kafka with Kerberos authentication (SASL_PLAINTEXT)"
+  KAFKA_OPTS='-Djava.security.krb5.conf=/etc/krb5.conf -Djava.security.auth.login.config=/opt/kafka/config/kafka-server-jaas.conf'
+else
+  echo "Starting Kafka with PLAINTEXT (no Kerberos authentication)"
+  KAFKA_OPTS=''
+fi
+
+su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config KAFKA_OPTS='${KAFKA_OPTS}' ./bin/kafka-server-start.sh config/server.properties" kafka
