@@ -22,7 +22,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
-import org.apache.ranger.authorization.utils.*;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
