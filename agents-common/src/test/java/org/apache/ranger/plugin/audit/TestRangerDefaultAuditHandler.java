@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
+import org.apache.ranger.authorization.utils.*;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -289,7 +290,7 @@ public class TestRangerDefaultAuditHandler {
         RangerAccessResult      res  = new RangerAccessResult(0, "svc", null, req);
         req.setRemoteIPAddress(null);
         req.setForwardedAddresses(new ArrayList<>());
-        Assertions.assertNull(handler.getAdditionalInfo(req, res));
+        Assertions.assertTrue(handler.getAdditionalInfo(req, res).isEmpty());
 
         RangerAccessRequestImpl req2 = new RangerAccessRequestImpl();
         RangerAccessResult      res2 = new RangerAccessResult(0, "svc", null, req);
