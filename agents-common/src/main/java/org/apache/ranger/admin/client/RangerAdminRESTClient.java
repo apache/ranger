@@ -1022,6 +1022,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
         return ret;
     }
 
+    @Override
+    public boolean isAuthenticationEnabled() {
+        return restClient.isAuthFilterPresent() || super.isAuthenticationEnabled();
+    }
+
     private void init(String url, String sslConfigFileName, int restClientConnTimeOutMs, int restClientReadTimeOutMs, int restClientMaxRetryAttempts, int restClientRetryIntervalMs, Configuration config) {
         LOG.debug("==> RangerAdminRESTClient.init({}, {})", url, sslConfigFileName);
 
