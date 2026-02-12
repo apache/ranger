@@ -47,7 +47,6 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.util.*;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -288,8 +287,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		}
 
 		final RangerUserStore      ret;
-		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
-		final boolean              isSecureMode = isKerberosEnabled(user);
+		final boolean              isSecureMode = isAuthenticationEnabled();
 		final Response             response;
 
 		Map<String, String> queryParams = new HashMap<String, String>();
@@ -302,7 +300,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking UserStore updated as user: {}", user);
+				LOG.debug("Checking UserStore updated");
 			}
 
 			response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> {
@@ -318,7 +316,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 			});
 		} else {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking UserStore updated as user: {}", user);
+				LOG.debug("Checking UserStore updated");
 			}
 
 			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USERSTORE + _serviceNameUrlParam;
@@ -328,13 +326,13 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 		if (response == null || response.getStatus() == 304) { // NOT_MODIFIED
 			if (response == null) {
-				LOG.error("Error getting UserStore; Received NULL response!!. secureMode={}, user={}, serviceName={}", isSecureMode, user, _serviceName);
+				LOG.error("Error getting UserStore; Received NULL response!!. secureMode={}, serviceName={}", isSecureMode, _serviceName);
 			} else {
 				String resp = response.hasEntity() ? response.readEntity(String.class) : null;
 
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("No change in UserStore. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
-							  isSecureMode, user, resp, _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
+					LOG.debug("No change in UserStore. secureMode={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
+							  isSecureMode, resp, _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
 				}
 			}
 
@@ -346,8 +344,8 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		} else if (response.getStatus() == 404) { // NOT_FOUND
 			ret = null;
 
-			LOG.error("Error getting UserStore; service not found. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
-					  isSecureMode, user, response.getStatus(), _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
+			LOG.error("Error getting UserStore; service not found. secureMode={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
+					  isSecureMode, response.getStatus(), _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
 
 			String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
 
@@ -357,8 +355,8 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		} else {
 			String resp = response.hasEntity() ? response.readEntity(String.class) : null;
 
-			LOG.warn("Error getting UserStore. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
-					 isSecureMode, user, resp, _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
+			LOG.warn("Error getting UserStore. secureMode={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
+					 isSecureMode, resp, _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
 
 			ret = null;
 		}
@@ -582,7 +580,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				ret = null;
 				policyDownloadSessionId = null;
 				body = response.readEntity(String.class);
-				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURL(isSecureMode())));
+				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURL(isAuthenticationEnabled())));
 				break;
 		}
 
@@ -649,7 +647,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				policyDownloadSessionId = null;
 				isValidPolicyDownloadSessionCookie = false;
 				body = response.readEntity(String.class);
-				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURL(isSecureMode())));
+				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURL(isAuthenticationEnabled())));
 				break;
 		}
 
@@ -675,9 +673,9 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, Boolean.toString(_supportsPolicyDeltas));
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
-		if (isSecureMode()) {
+		if (isAuthenticationEnabled()) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Service policy if updated as user : " + MiscUtil.getUGILoginUser());
+				LOG.debug("Checking Service policy if updated");
 			}
 			ret = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> get(queryParams, getRelativeURL(true), policyDownloadSessionId));
 		} else {
@@ -787,7 +785,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				ret = null;
 				tagDownloadSessionId = null;
 				body = response.readEntity(String.class);
-				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForTagDownload(isSecureMode())));
+				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForTagDownload(isAuthenticationEnabled())));
 				break;
 		}
 
@@ -879,9 +877,9 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, Boolean.toString(_supportsTagDeltas));
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
-		if (isSecureMode()) {
+		if (isAuthenticationEnabled()) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Service tags if updated as user : " + MiscUtil.getUGILoginUser());
+				LOG.debug("Checking Service tags if updated");
 			}
 			ret = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> get(queryParams, getRelativeURLForTagDownload(true), tagDownloadSessionId));
 		} else {
@@ -990,7 +988,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				ret = null;
 				roleDownloadSessionId = null;
 				body = response.readEntity(String.class);
-				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForRoleDownload(isSecureMode())));
+				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForRoleDownload(isAuthenticationEnabled())));
 				break;
 		}
 
@@ -1056,7 +1054,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				roleDownloadSessionId = null;
 				isValidRoleDownloadSessionCookie = false;
 				body = response.readEntity(String.class);
-				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForRoleDownload(isSecureMode())));
+				LOG.warn(String.format("Unexpected: Received status[%d] with body[%s] form url[%s]", httpResponseCode, body, getRelativeURLForRoleDownload(isAuthenticationEnabled())));
 				break;
 		}
 
@@ -1080,9 +1078,9 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName);
 
-		if (isSecureMode()) {
+		if (isAuthenticationEnabled()) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Roles if updated as user : " + MiscUtil.getUGILoginUser());
+				LOG.debug("Checking Roles if updated");
 			}
 			ret = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Response>) () -> get(queryParams, getRelativeURLForRoleDownload(true), roleDownloadSessionId));
 		} else {
@@ -1161,9 +1159,5 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		}
 
 		return ret;
-	}
-
-	private boolean isSecureMode() {
-		return isKerberosEnabled(MiscUtil.getUGILoginUser());
 	}
 }
