@@ -147,6 +147,10 @@ public class RangerRESTClient {
         return mPassword;
     }
 
+    public boolean isAuthFilterPresent() {
+        return jwtAuthFilter != null || basicAuthFilter != null;
+    }
+
     public int getRestClientConnTimeOutMs() {
         return mRestClientConnTimeOutMs;
     }
