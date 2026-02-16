@@ -263,6 +263,8 @@ public class XmlConfigChanger {
 			}
 			
 			TransformerFactory tfactory = TransformerFactory.newInstance();
+			tfactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			tfactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
 			tfactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
 			Transformer transformer = tfactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
