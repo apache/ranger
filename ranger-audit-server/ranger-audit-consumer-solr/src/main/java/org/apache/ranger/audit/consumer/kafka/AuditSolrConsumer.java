@@ -395,8 +395,15 @@ public class AuditSolrConsumer extends AuditConsumerBase implements AuditConsume
 
     @Override
     public void processMessage(String audit) throws Exception {
+        boolean processed = false;
+
         if (solrAuditDestination != null) {
-            solrAuditDestination.logJSON(audit);
+            processed = solrAuditDestination.logJSON(audit);
+        }
+
+        if (!processed) {
+            String errorMessage = "Failure in committing audits into Solr";
+            throw new Exception(errorMessage);
         }
     }
 
@@ -409,8 +416,15 @@ public class AuditSolrConsumer extends AuditConsumerBase implements AuditConsume
      * @throws Exception if batch processing fails
      */
     public void processMessageBatch(Collection<String> audits) throws Exception {
+        boolean processed = false;
+
         if (solrAuditDestination != null && audits != null && !audits.isEmpty()) {
-            solrAuditDestination.logJSON(audits);
+            processed = solrAuditDestination.logJSON(audits);
+        }
+
+        if (!processed) {
+            String errorMessage = "Failure in sending audits into Solr";
+            throw new Exception(errorMessage);
         }
     }
 

@@ -31,13 +31,13 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * Router class that routes audit messages to different HDFSAuditDestination threads
+ * Router class that routes audit messages to different HDFSAuditDestination instances
  * based on the app_id.
- * Each app_id gets its own HDFSAuditDestination instance running in a separate thread.
+ * Each app_id gets its own HDFSAuditDestination instance for separate path configuration.
+ * Writes are synchronous to ensure Kafka offset commits only happen after successful HDFS writes,
+ * enabling automatic recovery via Kafka redelivery on failures.
  *
  * This router writes audits to HDFS as the rangerauditserver user. The audit folder in HDFS
  * should be configured with appropriate permissions to allow rangerauditserver to write audits
@@ -47,7 +47,6 @@ public class AuditRouterHDFS {
     private static final Logger LOG = LoggerFactory.getLogger(AuditRouterHDFS.class);
 
     private final Map<String, HDFSAuditDestination> destinationMap = new ConcurrentHashMap<>();
-    private final Map<String, ExecutorService>      executorMap    = new ConcurrentHashMap<>();
     private final ObjectMapper                      jsonMapper     = new ObjectMapper();
     private       Properties                        props;
     private       String                            hdfsPropPrefix;
@@ -70,7 +69,7 @@ public class AuditRouterHDFS {
      * @param message JSON audit message
      * @param partitionKey The partition key from Kafka (used as app_id)
      */
-    public void routeAuditMessage(String message, String partitionKey) {
+    public void routeAuditMessage(String message, String partitionKey) throws Exception {
         LOG.debug("==> AuditRouterHDFS:routeAuditMessage(): Message => {}, partitionKey => {}", message, partitionKey);
 
         try {
@@ -84,25 +83,20 @@ public class AuditRouterHDFS {
             if (appId != null) {
                 HDFSAuditDestination hdfsAuditDestination = getHdfsAuditDestination(appId, serviceType, agentHostname);
 
-                // Submit message to destination's thread for processing
-                final String finalAppId = appId;
-                ExecutorService executor = executorMap.get(appId);
+                boolean success = hdfsAuditDestination.logJSON(Collections.singletonList(message));
 
-                if (executor != null && !executor.isShutdown()) {
-                    executor.submit(() -> {
-                        try {
-                            hdfsAuditDestination.logJSON(Collections.singletonList(message));
-                            LOG.debug("Successfully wrote audit for app_id: {}", finalAppId);
-                        } catch (Exception e) {
-                            LOG.error("Error processing audit message for app_id: {}", finalAppId, e);
-                        }
-                    });
-                } else {
-                    LOG.warn("Executor is null or shutdown for app_id: {}", appId);
+                if (!success) {
+                    throw new Exception("Failed to write audit to HDFS for app_id: " + appId);
                 }
+
+                LOG.debug("Successfully wrote audit for app_id: {}", appId);
+            } else {
+                LOG.warn("Unable to extract app_id from message, skipping audit write");
             }
         } catch (Exception e) {
+            String errorMessage = "Error routing audit message to HDFS";
             LOG.error("AuditRouterHDFS:routeAuditMessage(): Error routing audit message: {}", message, e);
+            throw new Exception(errorMessage, e);
         }
 
         LOG.debug("<== AuditRouterHDFS:routeAuditMessage()");
@@ -173,14 +167,6 @@ public class AuditRouterHDFS {
             try {
                 destination = createHDFSDestination(appId, serviceType, agentHostname);
                 destinationMap.put(appId, destination);
-
-                // Create dedicated executor for this destination
-                ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
-                    Thread t = new Thread(r, "HDFSAuditDestination-" + appId);
-                    t.setDaemon(true);
-                    return t;
-                });
-                executorMap.put(appId, executor);
             } catch (Exception e) {
                 LOG.error("Failed to create HDFSAuditDestination for app_id: {}", appId, e);
                 throw new RuntimeException("AuditRouterHDFS:getOrCreateDestination() : Failed to create destination for app_id: " + appId, e);
@@ -313,26 +299,6 @@ public class AuditRouterHDFS {
     public void shutdown() {
         LOG.info("==> AuditRouterHDFS.shutdown()");
 
-        // Shutdown all executors
-        for (Map.Entry<String, ExecutorService> entry : executorMap.entrySet()) {
-            String appId = entry.getKey();
-            ExecutorService executor = entry.getValue();
-
-            LOG.info("Shutting down executor for app_id: {}", appId);
-            executor.shutdown();
-
-            try {
-                if (!executor.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
-                    LOG.warn("Executor for app_id {} did not terminate gracefully, forcing shutdown", appId);
-                    executor.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                LOG.warn("Interrupted while waiting for executor shutdown for app_id: {}", appId);
-                executor.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
-
         // Stop all destinations
         for (Map.Entry<String, HDFSAuditDestination> entry : destinationMap.entrySet()) {
             String appId = entry.getKey();
@@ -347,7 +313,6 @@ public class AuditRouterHDFS {
         }
 
         destinationMap.clear();
-        executorMap.clear();
 
         LOG.info("<== AuditRouterHDFS.shutdown()");
     }
