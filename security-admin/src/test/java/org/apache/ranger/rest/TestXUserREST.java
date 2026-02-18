@@ -1537,43 +1537,45 @@ public class TestXUserREST {
     @Test
     public void test113ErrorWhenRoleUserIsTryingToFetchAnotherUserDetails() {
         destroySession();
-        Assertions.assertThrows(Throwable.class, () -> {
-            String userLoginID = "testuser";
-            Long   userId      = 8L;
+        String userLoginID = "testuser";
+        Long userId = 8L;
 
-            RangerSecurityContext context = new RangerSecurityContext();
-            context.setUserSession(new UserSessionBase());
-            RangerContextHolder.setSecurityContext(context);
-            UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-            currentUserSession.setUserAdmin(false);
-            XXPortalUser xXPortalUser = new XXPortalUser();
-            xXPortalUser.setLoginId(userLoginID);
-            xXPortalUser.setId(userId);
-            currentUserSession.setXXPortalUser(xXPortalUser);
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(false);
+        XXPortalUser xXPortalUser = new XXPortalUser();
+        xXPortalUser.setLoginId(userLoginID);
+        xXPortalUser.setId(userId);
+        currentUserSession.setXXPortalUser(xXPortalUser);
 
-            VXUser       loggedInUser     = createVXUser();
-            List<String> loggedInUserRole = new ArrayList<String>();
-            loggedInUserRole.add(RangerConstants.ROLE_USER);
-            loggedInUser.setId(8L);
-            loggedInUser.setName("testuser");
-            loggedInUser.setUserRoleList(loggedInUserRole);
+        VXUser loggedInUser = createVXUser();
+        List<String> loggedInUserRole = new ArrayList<String>();
+        loggedInUserRole.add(RangerConstants.ROLE_USER);
+        loggedInUser.setId(8L);
+        loggedInUser.setName("testuser");
+        loggedInUser.setUserRoleList(loggedInUserRole);
 
-            HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
-            SearchCriteria     testSearchCriteria = createsearchCriteria();
-            testSearchCriteria.addParam("name", "admin");
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        SearchCriteria testSearchCriteria = createsearchCriteria();
+        testSearchCriteria.addParam("name", "admin");
 
-            Mockito.when(searchUtil.extractCommonCriterias(Mockito.any(), Mockito.any())).thenReturn(testSearchCriteria);
+        Mockito.when(searchUtil.extractCommonCriterias(Mockito.any(), Mockito.any())).thenReturn(testSearchCriteria);
 
-            Mockito.when(searchUtil.extractCommonCriterias(request, xUserService.sortFields)).thenReturn(testSearchCriteria);
-            Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address", null)).thenReturn("");
-            Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "userSource", "User Source")).thenReturn(1);
-            Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "User Visibility")).thenReturn(1);
-            Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
-            Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null, null)).thenReturn(new ArrayList<String>());
-            Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
-            Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
-            Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.")).thenThrow(new WebApplicationException());
-            //thrown.expect(WebApplicationException.class);
+        Mockito.when(searchUtil.extractCommonCriterias(request, xUserService.sortFields)).thenReturn(testSearchCriteria);
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "User name", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address", null)).thenReturn("");
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "userSource", "User Source")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "User Visibility")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
+        Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null, null)).thenReturn(new ArrayList<String>());
+        Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "syncSource", "Sync Source", null)).thenReturn("");
+        Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+        Mockito.when(restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.")).thenThrow(new WebApplicationException());
+
+        Assertions.assertThrows(WebApplicationException.class, () -> {
             xUserRest.searchXUsers(request, null, null);
         });
     }
@@ -1582,56 +1584,56 @@ public class TestXUserREST {
     @Test
     public void test114RoleUserWillGetOnlyHisOwnUserDetails() {
         destroySession();
-        Assertions.assertThrows(Throwable.class, () -> {
-            String userLoginID = "testuser";
-            Long   userId      = 8L;
+        String userLoginID = "testuser";
+        Long userId = 8L;
 
-            RangerSecurityContext context = new RangerSecurityContext();
-            context.setUserSession(new UserSessionBase());
-            RangerContextHolder.setSecurityContext(context);
-            UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-            currentUserSession.setUserAdmin(false);
-            XXPortalUser xXPortalUser = new XXPortalUser();
-            xXPortalUser.setLoginId(userLoginID);
-            xXPortalUser.setId(userId);
-            currentUserSession.setXXPortalUser(xXPortalUser);
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(false);
+        XXPortalUser xXPortalUser = new XXPortalUser();
+        xXPortalUser.setLoginId(userLoginID);
+        xXPortalUser.setId(userId);
+        currentUserSession.setXXPortalUser(xXPortalUser);
 
-            VXUser       loggedInUser     = createVXUser();
-            List<String> loggedInUserRole = new ArrayList<String>();
-            loggedInUserRole.add(RangerConstants.ROLE_USER);
-            loggedInUser.setId(8L);
-            loggedInUser.setName("testuser");
-            loggedInUser.setUserRoleList(loggedInUserRole);
+        VXUser loggedInUser = createVXUser();
+        List<String> loggedInUserRole = new ArrayList<String>();
+        loggedInUserRole.add(RangerConstants.ROLE_USER);
+        loggedInUser.setId(8L);
+        loggedInUser.setName("testuser");
+        loggedInUser.setUserRoleList(loggedInUserRole);
 
-            VXUserList expecteUserList = new VXUserList();
-            VXUser     expectedUser    = new VXUser();
-            expectedUser.setId(8L);
-            expectedUser.setName("testuser");
-            List<VXUser> userList = new ArrayList<VXUser>();
-            userList.add(expectedUser);
-            expecteUserList.setVXUsers(userList);
+        VXUserList expecteUserList = new VXUserList();
+        VXUser expectedUser = new VXUser();
+        expectedUser.setId(8L);
+        expectedUser.setName("testuser");
+        List<VXUser> userList = new ArrayList<VXUser>();
+        userList.add(expectedUser);
+        expecteUserList.setVXUsers(userList);
 
-            HttpServletRequest request            = Mockito.mock(HttpServletRequest.class);
-            SearchCriteria     testSearchCriteria = createsearchCriteria();
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        SearchCriteria testSearchCriteria = createsearchCriteria();
 
-            Mockito.when(searchUtil.extractCommonCriterias(Mockito.any(), Mockito.any())).thenReturn(testSearchCriteria);
+        Mockito.when(searchUtil.extractCommonCriterias(Mockito.any(), Mockito.any())).thenReturn(testSearchCriteria);
 
-            Mockito.when(searchUtil.extractCommonCriterias(request, xUserService.sortFields)).thenReturn(testSearchCriteria);
-            Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address", null)).thenReturn("");
-            Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "userSource", "User Source")).thenReturn(1);
-            Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "User Visibility")).thenReturn(1);
-            Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
-            Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null, null)).thenReturn(new ArrayList<String>());
-            Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
-            Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
-            Mockito.when(xUserMgr.searchXUsers(testSearchCriteria)).thenReturn(expecteUserList);
+        Mockito.when(searchUtil.extractCommonCriterias(request, xUserService.sortFields)).thenReturn(testSearchCriteria);
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "User name", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address", null)).thenReturn("");
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "userSource", "User Source")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "User Visibility")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
+        Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null, null)).thenReturn(new ArrayList<String>());
+        Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "syncSource", "Sync Source", null)).thenReturn("");
+        Mockito.when(xUserService.getXUserByUserName("testuser")).thenReturn(loggedInUser);
+        Mockito.when(xUserMgr.hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)).thenReturn(true);
 
-            VXUserList gotVXUserList = xUserRest.searchXUsers(request, null, null);
+        VXUserList gotVXUserList = xUserRest.searchXUsers(request, null, null);
 
-            Assertions.assertEquals(gotVXUserList.getList().size(), 1);
-            Assertions.assertEquals(gotVXUserList.getList().get(0).getId(), expectedUser.getId());
-            Assertions.assertEquals(gotVXUserList.getList().get(0).getName(), expectedUser.getName());
-        });
+        Assertions.assertEquals(gotVXUserList.getList().size(), 1);
+        Assertions.assertEquals(gotVXUserList.getList().get(0).getId(), expectedUser.getId());
+        Assertions.assertEquals(gotVXUserList.getList().get(0).getName(), expectedUser.getName());
     }
 
     @Test
@@ -2349,6 +2351,102 @@ public class TestXUserREST {
         xUserRest.modifyUserVisibility(visibilityMap);
 
         Mockito.verify(xUserMgr).modifyUserVisibility(visibilityMap);
+    }
+
+    @SuppressWarnings({ "unchecked", "static-access" })
+    @Test
+    public void test165AdminUserWillHaveAdminAuditorAndUserRoles() {
+        // reset session
+        destroySession();
+        String adminLoginId = "adminuser";
+        Long adminUserId = 10L;
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(false);
+        XXPortalUser xXPortalUser = new XXPortalUser();
+        xXPortalUser.setLoginId(adminLoginId);
+        xXPortalUser.setId(adminUserId);
+        currentUserSession.setXXPortalUser(xXPortalUser);
+
+        VXUser loggedInUser = new VXUser();
+        List<String> roles = new ArrayList<String>();
+        roles.add(RangerConstants.ROLE_SYS_ADMIN);
+        loggedInUser.setId(adminUserId);
+        loggedInUser.setName(adminLoginId);
+        loggedInUser.setUserRoleList(roles);
+
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        SearchCriteria     testSearchCriteria = createsearchCriteria();
+        Mockito.when(searchUtil.extractCommonCriterias(Mockito.any(), Mockito.any())).thenReturn(testSearchCriteria);
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "User name", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address", null)).thenReturn("");
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "userSource", "User Source")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "User Visibility")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
+        List<String> userRoleListParam = new ArrayList<String>();
+        Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null, null)).thenReturn(userRoleListParam);
+        Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "syncSource", "Sync Source", null)).thenReturn(null);
+
+        Mockito.when(xUserService.getXUserByUserName(adminLoginId)).thenReturn(loggedInUser);
+        Mockito.when(xUserMgr.searchXUsers(testSearchCriteria)).thenReturn(new VXUserList());
+
+        VXUserList result = xUserRest.searchXUsers(request, null, null);
+        Assertions.assertNotNull(result);
+        // verify roles augmented for admin
+        Assertions.assertTrue(userRoleListParam.contains(RangerConstants.ROLE_SYS_ADMIN));
+        Assertions.assertTrue(userRoleListParam.contains(RangerConstants.ROLE_ADMIN_AUDITOR));
+        Assertions.assertTrue(userRoleListParam.contains(RangerConstants.ROLE_USER));
+    }
+
+    @SuppressWarnings({ "unchecked", "static-access" })
+    @Test
+    public void test166KeyAdminUserWillHaveKeyAdminAuditorAndUserRoles() {
+        // reset session
+        destroySession();
+        String keyAdminLoginId = "keyadminuser";
+        Long keyAdminUserId = 11L;
+        RangerSecurityContext context = new RangerSecurityContext();
+        context.setUserSession(new UserSessionBase());
+        RangerContextHolder.setSecurityContext(context);
+        UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+        currentUserSession.setUserAdmin(false);
+        XXPortalUser xXPortalUser = new XXPortalUser();
+        xXPortalUser.setLoginId(keyAdminLoginId);
+        xXPortalUser.setId(keyAdminUserId);
+        currentUserSession.setXXPortalUser(xXPortalUser);
+
+        VXUser loggedInUser = new VXUser();
+        List<String> roles = new ArrayList<String>();
+        roles.add(RangerConstants.ROLE_KEY_ADMIN);
+        loggedInUser.setId(keyAdminUserId);
+        loggedInUser.setName(keyAdminLoginId);
+        loggedInUser.setUserRoleList(roles);
+
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        SearchCriteria     testSearchCriteria = createsearchCriteria();
+        Mockito.when(searchUtil.extractCommonCriterias(Mockito.any(), Mockito.any())).thenReturn(testSearchCriteria);
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "name", "User name", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "emailAddress", "Email Address", null)).thenReturn("");
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "userSource", "User Source")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "isVisible", "User Visibility")).thenReturn(1);
+        Mockito.when(searchUtil.extractInt(request, testSearchCriteria, "status", "User Status")).thenReturn(1);
+        List<String> userRoleListParam = new ArrayList<String>();
+        Mockito.when(searchUtil.extractStringList(request, testSearchCriteria, "userRoleList", "User Role List", "userRoleList", null, null)).thenReturn(userRoleListParam);
+        Mockito.when(searchUtil.extractRoleString(request, testSearchCriteria, "userRole", "Role", null)).thenReturn("");
+        Mockito.when(searchUtil.extractString(request, testSearchCriteria, "syncSource", "Sync Source", null)).thenReturn(null);
+
+        Mockito.when(xUserService.getXUserByUserName(keyAdminLoginId)).thenReturn(loggedInUser);
+        Mockito.when(xUserMgr.searchXUsers(testSearchCriteria)).thenReturn(new VXUserList());
+
+        VXUserList result = xUserRest.searchXUsers(request, null, null);
+        Assertions.assertNotNull(result);
+        // verify roles augmented for keyadmin
+        Assertions.assertTrue(userRoleListParam.contains(RangerConstants.ROLE_KEY_ADMIN));
+        Assertions.assertTrue(userRoleListParam.contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR));
+        Assertions.assertTrue(userRoleListParam.contains(RangerConstants.ROLE_USER));
     }
 
     @AfterEach
