@@ -19,11 +19,12 @@
 package org.apache.ranger.security.web.filter;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
@@ -44,7 +45,7 @@ import java.io.IOException;
 @Lazy(true)
 @Component
 public class RangerJwtAuthWrapper extends GenericFilterBean {
-    private static final Logger LOG = Logger.getLogger(RangerJwtAuthWrapper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerJwtAuthWrapper.class);
 
     @Lazy(true)
     @Autowired
@@ -69,9 +70,7 @@ public class RangerJwtAuthWrapper extends GenericFilterBean {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("===>>> RangerJwtAuthWrapper.doFilter(" + request + ", " + response + ", " + filterChain + ")");
-        }
+        LOG.debug("===>>> RangerJwtAuthWrapper.doFilter({}, {}, {})", request, response, filterChain);
 
         RangerSecurityContext context             = RangerContextHolder.getSecurityContext();
         UserSessionBase       session             = context != null ? context.getUserSession() : null;

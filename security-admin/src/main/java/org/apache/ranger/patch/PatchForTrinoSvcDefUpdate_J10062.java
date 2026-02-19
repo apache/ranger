@@ -19,7 +19,6 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
@@ -32,6 +31,8 @@ import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -46,7 +47,7 @@ import java.util.Map;
 
 @Component
 public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
-    private static final Logger logger = Logger.getLogger(PatchForTrinoSvcDefUpdate_J10062.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForTrinoSvcDefUpdate_J10062.class);
 
     public static final String LOGIN_ID_ADMIN                              = "admin";
     public static final String WILDCARD_ASTERISK                           = "*";
@@ -229,7 +230,7 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
     }
 
     private void addDefaultPolicies(String serviceName, String zoneName) throws Exception {
-        logger.info("===> addDefaultPolicies ServiceName : " + serviceName + " ZoneName : " + zoneName);
+        logger.info("===> addDefaultPolicies ServiceName : {} ZoneName : {}", serviceName, zoneName);
 
         List<String> resources = new ArrayList<>();
 
@@ -323,8 +324,8 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
         policy.setPolicyItems(policyItems);
         policy.setResourceSignature(new RangerPolicyResourceSignature(policy).getSignature());
 
-        logger.debug("===> getPolicy policy ResourceSignature  " + policy.getResourceSignature());
-        logger.debug("===> getPolicy policy : " + policy);
+        logger.debug("===> getPolicy policy ResourceSignature  {}", policy.getResourceSignature());
+        logger.debug("===> getPolicy policy : {}", policy);
         logger.info("<=== getPolicy ");
 
         return policy;
