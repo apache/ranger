@@ -29,11 +29,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
@@ -44,7 +45,7 @@ import org.springframework.web.filter.GenericFilterBean;
 @Lazy(true)
 @Component
 public class RangerJwtAuthWrapper extends GenericFilterBean {
-    private static final Logger LOG = Logger.getLogger(RangerJwtAuthWrapper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerJwtAuthWrapper.class);
 
     private String[] browserUserAgents = new String[] {""}; //Initialize with empty
 

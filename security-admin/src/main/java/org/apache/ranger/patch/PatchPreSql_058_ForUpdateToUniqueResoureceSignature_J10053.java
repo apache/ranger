@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerFactory;
@@ -34,6 +33,8 @@ import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -45,7 +46,7 @@ import org.springframework.transaction.PlatformTransactionManager;
  */
 @Component
 public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

@@ -19,7 +19,6 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
@@ -32,6 +31,8 @@ import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -48,6 +49,8 @@ import java.util.Map;
 
 @Component
 public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
+    private static final Logger logger = LoggerFactory.getLogger(PatchForTrinoSvcDefUpdate_J10062.class);
+
     public static final String LOGIN_ID_ADMIN = "admin";
     public static final String WILDCARD_ASTERISK = "*";
     public static final String POlICY_NAME_FOR_ALL_SYSINFO = "all - sysinfo";
@@ -69,8 +72,9 @@ public class PatchForTrinoSvcDefUpdate_J10062 extends BaseLoader {
     public static final String ACCESS_TYPE_REVOKE = "revoke";
     public static final String ACCESS_TYPE_EXECUTE = "execute";
     public static final String ACCESS_TYPE_SELECT = "select";
-    private static final Logger logger = Logger.getLogger(PatchForTrinoSvcDefUpdate_J10062.class);
+
     private static final String TRINO_SVC_DEF_NAME = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TRINO_NAME;
+
     @Autowired
     GUIDUtil guidUtil;
     @Autowired

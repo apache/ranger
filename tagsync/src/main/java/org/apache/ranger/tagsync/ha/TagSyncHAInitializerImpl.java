@@ -32,11 +32,12 @@ import org.apache.ranger.ha.ServiceState;
 import org.apache.ranger.ha.service.HARangerService;
 import org.apache.ranger.ha.service.ServiceManager;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class TagSyncHAInitializerImpl extends RangerHAInitializer {
-	private static final Logger LOG = Logger.getLogger(TagSyncHAInitializerImpl.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TagSyncHAInitializerImpl.class);
 	ActiveInstanceElectorService activeInstanceElectorService 	= null;
 	ActiveStateChangeHandler activeStateChangeHandler 			= null;
 	List<HARangerService> haRangerService 						= null;
