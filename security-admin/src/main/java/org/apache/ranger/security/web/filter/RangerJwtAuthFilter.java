@@ -32,11 +32,12 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.apache.ranger.authz.handler.jwt.RangerDefaultJwtAuthHandler;
 import org.apache.ranger.authz.handler.jwt.RangerJwtAuthHandler;
 import org.apache.ranger.common.PropertiesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -52,7 +53,7 @@ import org.springframework.stereotype.Component;
 @Lazy(true)
 @Component
 public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements Filter {
-    private static final Logger LOG                 = Logger.getLogger(RangerJwtAuthFilter.class);
+    private static final Logger LOG                 = LoggerFactory.getLogger(RangerJwtAuthFilter.class);
     private static final String DEFAULT_RANGER_ROLE = "ROLE_USER";
 
     @PostConstruct
