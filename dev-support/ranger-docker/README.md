@@ -53,7 +53,7 @@ Execute following command to build Apache Ranger:
 # optional step: a fresh build ensures that the correct jdk version is used
 docker compose -f docker-compose.ranger-build.yml build
 
-docker compose -f docker-compose.ranger-build.yml up -d
+docker compose -f docker-compose.ranger-build.yml up
 ~~~
 Time taken to complete the build might vary (upto an hour), depending on status of ```${HOME}/.m2``` directory cache.  
 
