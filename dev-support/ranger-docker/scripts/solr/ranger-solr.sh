@@ -18,11 +18,13 @@
 
 SOLR_INSTALL_DIR=/opt/solr
 
+export RANGER_SCRIPTS=/home/ranger/scripts
+
 if [ "${KERBEROS_ENABLED}" == "true" ]
 then
-  /home/ranger/scripts/wait_for_keytab.sh HTTP.keytab
-  /home/ranger/scripts/wait_for_keytab.sh solr.keytab
-  /home/ranger/scripts/wait_for_testusers_keytab.sh
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh HTTP.keytab
+  ${RANGER_SCRIPTS}/wait_for_keytab.sh solr.keytab
+  ${RANGER_SCRIPTS}/wait_for_testusers_keytab.sh
 
   JAAS_CONFIG="-Djava.security.auth.login.config=/opt/solr/server/etc/jaas.conf"
   JAAS_APPNAME="-Dsolr.kerberos.jaas.appname=Client"
@@ -36,6 +38,7 @@ RULE:[2:\$1/\$2@\$0](jhs/.*@EXAMPLE\.COM)s/.*/mapred/\
 DEFAULT"
 
   export SOLR_AUTHENTICATION_OPTS="${JAAS_CONFIG} ${JAAS_APPNAME} ${KRB5_CONF} ${KERBEROS_KEYTAB} ${KERBEROS_PRINCIPAL} ${COOKIE_DOMAIN} ${KERBEROS_NAME_RULES}"
+  export SOLR_AUTH_TYPE=kerberos
 fi
 
 if [ ! -e ${SOLR_INSTALL_DIR}/.setupDone ]
