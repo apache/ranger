@@ -35,6 +35,9 @@ fi
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
 cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
 
+# fix to address error during HiveServer2 startup due to java.lang.NoClassDefFoundError: org/apache/commons/collections/CollectionUtils
+cp ${RANGER_HOME}/ranger-hive-plugin/lib/ranger-hive-plugin-impl/commons-collections-3.2.2.jar ${HIVE_HOME}/lib/
+
 mkdir -p ${HADOOP_HOME}/etc/hadoop
 
 cp ${RANGER_SCRIPTS}/core-site.xml ${HADOOP_HOME}/etc/hadoop/core-site.xml
