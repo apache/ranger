@@ -236,14 +236,83 @@
     </property>
 
     <property>
+        <name>xasecure.audit.destination.kafka.partitioner.class</name>
+        <value>org.apache.ranger.audit.producer.kafka.AuditPartitioner</value>
+        <description>
+            Kafka partitioner class for distributing audit messages across partitions.
+            Default: org.apache.ranger.audit.producer.kafka.AuditPartitioner (plugin-based partitioning)
+            Note: If configured.plugins is not set, uses Kafka's default hash-based partitioner instead.
+            Can be overridden with custom implementation of org.apache.kafka.clients.producer.Partitioner
+        </description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.configured.plugins</name>
+        <value>hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi</value>
+        <description>
+            Comma-separated list of configured plugin IDs.
+            If set: Uses AuditPartitioner with auto-calculated partitions (sum of plugin allocations + buffer).
+            If empty/not set: Uses Kafka default hash-based partitioner with topic.partitions value.
+            Each plugin receives dedicated partitions based on topic.partitions.per.configured.plugin (default: 3).
+        </description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.topic.partitions.per.configured.plugin</name>
+        <value>3</value>
+        <description>
+            Default number of partitions per configured plugin.
+            Can be overridden per plugin using plugin.partition.overrides.{pluginName} properties.
+            Used ONLY when configured.plugins is set (for plugin-based partitioning).
+            Ignored when configured.plugins is empty.
+        </description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.topic.partitions.buffer</name>
+        <value>9</value>
+        <description>
+            Number of buffer partitions reserved for unconfigured plugins.
+            Used ONLY when configured.plugins is set (for plugin-based partitioning).
+            Total = (sum of plugin partitions) + (buffer partitions).
+            Example: 7 plugins × 3 + 9 buffer = 30 total.
+            Ignored when configured.plugins is empty.
+        </description>
+    </property>
+
+    <!-- partition allocation overrides for plugins -->
+    <!-- Uncomment and set values to override the default partition count for high/low volume plugins -->
+    <!-- Plugins without overrides use the default (topic.partitions.per.configured.plugin) -->
+    <!--
+    <property>
+        <name>xasecure.audit.destination.kafka.plugin.partition.overrides.hdfs</name>
+        <value>3</value>
+        <description>HDFS plugin partition count override</description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.plugin.partition.overrides.hiveServer2</name>
+        <value>2</value>
+        <description>HiveServer plugin partition count override</description>
+    </property>
+    <property>
+        <name>xasecure.audit.destination.kafka.plugin.partition.overrides.kafka</name>
+        <value>5</value>
+        <description>Kafka plugin partition count override</description>
+    </property>
+     -->
+
+    <property>
         <name>xasecure.audit.destination.kafka.topic.partitions</name>
-        <value>30</value>
+        <value>10</value>
         <description>
             Number of partitions for the Kafka audit topic.
-            Recommendations:
-            - Small deployments: 30 partitions (default)
-            - Medium deployments: 50 partitions
-            - Large deployments: 100+ partitions
+            Used ONLY when configured.plugins is NOT set (empty) for hash-based partitioning.
+            When configured.plugins is set, partitions are auto-calculated from plugin configuration.
+            Default: 10 partitions (sufficient for small-medium deployments)
+            Recommendations for hash-based mode:
+            - Small deployments (1-3 consumers): 10 partitions
+            - Medium deployments (4-10 consumers): 20-30 partitions
+            - Large deployments (10+ consumers): 50+ partitions
         </description>
     </property>
 

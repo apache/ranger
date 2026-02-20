@@ -323,26 +323,47 @@ public class AuditMessageQueueUtils {
     }
 
     /**
-     * Get the number of partitions for the Kafka topic
+     * Get the number of partitions for the Kafka topic.
      *
-     * Configurable via xasecure.audit.destination.kafka.topic.partitions property.
-     * Default: 30 partitions for balanced distribution with Kafka's default partitioner.
-     *
-     * With default partitioner (murmur2 hash), messages with same key (appId) always
-     * go to the same partition, providing ordering per appId while distributing load
-     * evenly across all partitions.
+     * If configured.plugins is NOT set, uses topic.partitions property (default: 10).
+     * If configured.plugins is set, auto-calculates: (plugin partitions + overrides) + buffer partitions.
      *
      * @return Number of partitions for the topic
      */
     private int getPartitions(Properties prop, String propPrefix) {
-        int defaultPartitions = 30;
-        int partitions = MiscUtil.getIntProperty(prop,
-                propPrefix + "." + AuditServerConstants.PROP_TOPIC_PARTITIONS,
-                defaultPartitions);
+        // Check if configured.plugins is set (use empty string as default to detect when not configured)
+        String configuredPlugins = MiscUtil.getStringProperty(prop, propPrefix + "." + AuditServerConstants.PROP_CONFIGURED_PLUGINS, AuditServerConstants.DEFAULT_CONFIGURED_PLUGINS);
 
-        LOG.info("Kafka topic partition count: {} (configured: {})",
-                partitions, prop.getProperty(propPrefix + "." + AuditServerConstants.PROP_TOPIC_PARTITIONS, "default"));
+        // If no configured plugins, use simple hash-based partitioning with topic.partitions
+        if (configuredPlugins == null || configuredPlugins.trim().isEmpty()) {
+            int partitions = MiscUtil.getIntProperty(prop, propPrefix + "." + AuditServerConstants.PROP_TOPIC_PARTITIONS, AuditServerConstants.DEFAULT_TOPIC_PARTITIONS);
+            LOG.info("No configured plugins - using hash-based partitioning with {} partitions", partitions);
+            return partitions;
+        }
 
-        return partitions;
+        // Auto-calculate based on plugin configuration
+        String[] plugins = configuredPlugins.split(",");
+        int defaultPartitionsPerPlugin = MiscUtil.getIntProperty(prop, propPrefix + "." + AuditServerConstants.PROP_TOPIC_PARTITIONS_PER_CONFIGURED_PLUGIN, AuditServerConstants.DEFAULT_PARTITIONS_PER_CONFIGURED_PLUGIN);
+
+        // Calculate total partitions needed
+        AuditServerLogFormatter.LogBuilder logBuilder = AuditServerLogFormatter.builder("Kafka Topic Partition Allocation (Plugin-based)");
+        int totalPartitions = 0;
+        for (String plugin : plugins) {
+            String pluginTrimmed = plugin.trim();
+            String overrideKey = propPrefix + "." + AuditServerConstants.PROP_PLUGIN_PARTITION_OVERRIDE_PREFIX + pluginTrimmed;
+            int partitionCount = MiscUtil.getIntProperty(prop, overrideKey, defaultPartitionsPerPlugin);
+            totalPartitions += partitionCount;
+            logBuilder.add("Plugin '" + pluginTrimmed + "'", partitionCount + " partitions");
+        }
+
+        // Add buffer partitions for unconfigured plugins
+        int bufferPartitions = MiscUtil.getIntProperty(prop, propPrefix + "." + AuditServerConstants.PROP_BUFFER_PARTITIONS, AuditServerConstants.DEFAULT_BUFFER_PARTITIONS);
+        totalPartitions += bufferPartitions;
+
+        logBuilder.add("Buffer partitions", bufferPartitions + " partitions");
+        logBuilder.add("Total topic partitions (calculated)", totalPartitions);
+        logBuilder.logInfo(LOG);
+
+        return totalPartitions;
     }
 }

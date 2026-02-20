@@ -64,6 +64,27 @@ public class AuditProducer implements Runnable {
         producerProps.put(ProducerConfig.LINGER_MS_CONFIG, 5);
         producerProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 32 * 1024);
 
+        // Check if configured.plugins is set to determine partitioning strategy
+        // 1) configured.plugins is set then Custom AuditPartitioner is used, it allocates predefined set of partitions to each appId.
+        // 2) if configured.plugins is not set then default kafka hash based partitioner is used with initial quota of 10 partition.
+        String configuredPlugins = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONFIGURED_PLUGINS, "");
+        if (configuredPlugins != null && !configuredPlugins.trim().isEmpty()) {
+            // Plugin-based partitioning: use AuditPartitioner
+            String partitionerClass = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_PARTITIONER_CLASS, AuditServerConstants.DEFAULT_PARTITIONER_CLASS);
+            producerProps.put(ProducerConfig.PARTITIONER_CLASS_CONFIG, partitionerClass);
+            LOG.info("Configured plugins detected - using plugin-based partitioner: {}", partitionerClass);
+
+            // Pass all xasecure.audit.destination.kafka.* properties to partitioner (no namespace translation)
+            for (String propName : props.stringPropertyNames()) {
+                if (propName.startsWith(propPrefix + ".")) {
+                    producerProps.put(propName, props.getProperty(propName));
+                }
+            }
+        } else {
+            // No configured plugins: use Kafka default hash-based partitioner
+            LOG.info("No configured plugins - using Kafka default hash-based partitioner");
+        }
+
         try {
             kafkaProducer = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<KafkaProducer<String, String>>) () -> new KafkaProducer<>(producerProps));
             LOG.info("AuditProducer(): KafkaProducer created successfully!");

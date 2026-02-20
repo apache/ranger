@@ -56,9 +56,21 @@ public class AuditServerConstants {
     public static final String PROP_KAFKA_STARTUP_RETRY_DELAY_MS           = "kafka.startup.retry.delay.ms";
 
     // ranger_audits topic configuration
-    public static final String PROP_TOPIC_PARTITIONS                    = "topic.partitions";
-    public static final String PROP_REPLICATION_FACTOR                  = "replication.factor";
-    public static final short  DEFAULT_REPLICATION_FACTOR               = 3;
+    public static final String PROP_TOPIC_PARTITIONS                       = "topic.partitions";
+    public static final String PROP_PARTITIONER_CLASS                      = "partitioner.class";
+    public static final String PROP_CONFIGURED_PLUGINS                     = "configured.plugins";
+    public static final String PROP_TOPIC_PARTITIONS_PER_CONFIGURED_PLUGIN = "topic.partitions.per.configured.plugin";
+    public static final String PROP_PLUGIN_PARTITION_OVERRIDE_PREFIX       = "plugin.partition.overrides.";
+    public static final String PROP_BUFFER_PARTITIONS                      = "topic.partitions.buffer";
+    public static final String PROP_REPLICATION_FACTOR                     = "replication.factor";
+
+    // Default configured plugins: each gets allocated partitions from the topic
+    public static final String DEFAULT_PARTITIONER_CLASS                   = "org.apache.ranger.audit.producer.kafka.AuditPartitioner";
+    public static final String DEFAULT_CONFIGURED_PLUGINS                  = "hdfs,yarn,knox,hiveServer2,hiveMetastore,kafka,hbaseRegional,hbaseMaster,solr,trino,ozone,kudu,nifi";
+    public static final short  DEFAULT_REPLICATION_FACTOR                  = 2;
+    public static final int    DEFAULT_TOPIC_PARTITIONS                    = 10;  // For hash-based partitioning
+    public static final int    DEFAULT_PARTITIONS_PER_CONFIGURED_PLUGIN    = 3;   // For plugin-based partitioning
+    public static final int    DEFAULT_BUFFER_PARTITIONS                   = 9;   // For plugin-based partitioning
 
     // Hadoop security configuration for UGI
     public static final String PROP_HADOOP_AUTHENTICATION_TYPE          = "hadoop.security.authentication";
@@ -95,5 +107,4 @@ public class AuditServerConstants {
 
     // Consumer Registry Configuration
     public static final String PROP_CONSUMER_CLASSES                    = "consumer.classes";
-    public static final String DEFAULT_CONSUMER_CLASSES                 = "org.apache.ranger.audit.consumer.kafka.AuditSolrConsumer, org.apache.ranger.audit.consumer.kafka.AuditHDFSConsumer";
 }

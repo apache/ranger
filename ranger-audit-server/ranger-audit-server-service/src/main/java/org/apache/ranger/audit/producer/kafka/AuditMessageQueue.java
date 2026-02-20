@@ -145,10 +145,11 @@ public class AuditMessageQueue extends AuditDestination {
                 authzEvent.setEventId(MiscUtil.generateUniqueId());
             }
 
-            // Partition key is agentId (aka plugin ID) used by Kafka's default partitioner
-            // for load balancing across partitions. Messages with the same key go to the same partition,
-            // providing ordering guarantees per appId while enabling full horizontal scaling
-
+            /**
+             Partition key is agentId (aka plugin ID). AuditPartitioner allocates configured plugins
+             (hdfs, hiveServer2, etc.) to fixed partition sets of partitions.
+             If unconfigured plugins are there in the audit message it uses buffer partitions.
+            **/
             final String key     = authzEvent.getAgentId();
             final String message = MiscUtil.stringify(event);
 
