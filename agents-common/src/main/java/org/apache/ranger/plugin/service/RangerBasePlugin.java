@@ -32,6 +32,7 @@ import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.authn.JwtProvider;
 import org.apache.ranger.plugin.contextenricher.RangerAdminGdsInfoRetriever;
 import org.apache.ranger.plugin.contextenricher.RangerAdminUserStoreRetriever;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
@@ -300,6 +301,10 @@ public class RangerBasePlugin {
         LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[{}]", baseACLs);
 
         return baseACLs;
+    }
+
+    public void registerJwtProvider(JwtProvider jwtProvider) {
+        pluginContext.registerJWTProvider(jwtProvider);
     }
 
     public String getServiceType() {
