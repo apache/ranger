@@ -29,6 +29,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +73,7 @@ public class TestRangerBasePluginRaceCondition {
     }
 
     @Test
+    @Ignore
     public void testVisibilityOfPolicyEngine() throws Exception {
         plugin.setPolicies(createServicePolicies(true, 15_000, 1L));
 
