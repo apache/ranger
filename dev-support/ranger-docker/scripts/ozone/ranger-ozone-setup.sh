@@ -18,6 +18,7 @@
 
 cd "${OZONE_HOME}"/ranger-ozone-plugin || exit
 
+rm -f "${OZONE_HOME}"/.setupDone
 if [[ ! -f "${OZONE_HOME}"/.setupDone ]];
 then
   if [ ! -d conf ]; then
