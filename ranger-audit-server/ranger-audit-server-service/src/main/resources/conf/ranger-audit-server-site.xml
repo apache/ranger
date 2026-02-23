@@ -192,6 +192,40 @@
         <description>Expected audiences for JWT validation (comma-separated)</description>
     </property>
 
+    <property>
+        <name>ranger.audit.service.allowed.users</name>
+        <value>hdfs,hive,hbase,kafka,yarn,solr,knox,storm,atlas,nifi,ozone,kudu,presto,trino</value>
+        <description>
+            Comma-separated list of allowed service users that can send audits to Ranger Audit Server.
+        </description>
+    </property>
+
+    <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
+    <property>
+        <name>ranger.audit.service.auth.to.local</name>
+        <value>
+               RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
+               RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
+               RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/
+               RULE:[1:$1@$0](.*@.*)s/@.*//
+               DEFAULT
+        </value>
+        <description>
+            Kerberos auth_to_local rules for mapping authenticated principals to service names.
+            Uses Hadoop KerberosName syntax to convert full Kerberos principals to short usernames.
+
+            IMPORTANT: These rules only apply to Kerberos/SPNEGO authentication. JWT and basic auth
+            usernames are already in short form and pass through unchanged.
+
+            Default rules provided:
+            - RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/     # nn,dn,jn,hdfs/* -> hdfs
+            - RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/      # rm,nm,yarn/* -> yarn
+            - RULE:[2:$1/$2@$0](jhs/.*@.*)s/.*/mapred/                 # jhs/* -> mapred
+            - RULE:[1:$1@$0](.*@.*)s/@.*//                             # user@REALM -> user
+            - DEFAULT
+        </description>
+    </property>
+
     <!-- KERBEROS FOR KAFKA PRODUCER -->
     <property>
         <name>ranger.audit.service.authentication.method</name>

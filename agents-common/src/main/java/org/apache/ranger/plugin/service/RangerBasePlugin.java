@@ -85,6 +85,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 
 public class RangerBasePlugin {
@@ -400,7 +401,13 @@ public class RangerBasePlugin {
 
         if (!providerFactory.isInitDone()) {
             if (pluginConfig.getProperties() != null) {
-                providerFactory.init(pluginConfig.getProperties(), getAppId());
+                Properties auditProps  = pluginConfig.getProperties();
+                String     serviceType = getServiceType();
+                if (StringUtils.isNotEmpty(serviceType)) {
+                    auditProps.setProperty("ranger.plugin.audit.service.type", serviceType);
+                    LOG.info("Added serviceType={} to audit properties for audit destination", serviceType);
+                }
+                providerFactory.init(auditProps, getAppId());
             } else {
                 LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
                 LOG.error("No authorization audits will be generated. ");

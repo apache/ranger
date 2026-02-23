@@ -70,16 +70,6 @@
         <exclude>**/*</exclude>
       </excludes>
     </fileSet>
-
-    <!-- NOTICE file -->
-    <fileSet>
-      <outputDirectory></outputDirectory>
-      <directory>${project.parent.basedir}/ranger-audit-server/ranger-audit-consumer-solr/</directory>
-      <includes>
-        <include>NOTICE.txt</include>
-      </includes>
-      <fileMode>644</fileMode>
-    </fileSet>
   </fileSets>
 
   <files>

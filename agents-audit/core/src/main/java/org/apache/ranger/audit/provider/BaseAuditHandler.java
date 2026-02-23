@@ -72,18 +72,19 @@ public abstract class BaseAuditHandler implements AuditHandler {
     protected Map<String, String> configProps      = new HashMap<>();
     protected Properties          props;
 
-    int     errorLogIntervalMS = 30 * 1000; // Every 30 seconds
-    long    lastErrorLogMS;
+    int        errorLogIntervalMS      = 30 * 1000; // Every 30 seconds
+    long       lastErrorLogMS;
+    long       lastIntervalCount;
+    long       lastIntervalSuccessCount;
+    long       lastIntervalFailedCount;
+    long       lastStashedCount;
+    long       lastDeferredCount;
     AtomicLong totalCount              = new AtomicLong(0);
     AtomicLong totalSuccessCount       = new AtomicLong(0);
     AtomicLong totalFailedCount        = new AtomicLong(0);
     AtomicLong totalStashedCount       = new AtomicLong(0);
     AtomicLong totalDeferredCount      = new AtomicLong(0);
-    AtomicLong lastIntervalCount       = new AtomicLong(0);
-    AtomicLong lastIntervalSuccessCount = new AtomicLong(0);
-    AtomicLong lastIntervalFailedCount = new AtomicLong(0);
-    AtomicLong lastStashedCount        = new AtomicLong(0);
-    AtomicLong lastDeferredCount       = new AtomicLong(0);
+
     boolean statusLogEnabled    = DEFAULT_AUDIT_LOG_STATUS_LOG_ENABLED;
     long    statusLogIntervalMS = DEFAULT_AUDIT_LOG_STATUS_LOG_INTERVAL_SEC * 1000;
     long    lastStatusLogTime   = System.currentTimeMillis();
@@ -273,7 +274,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
     }
 
     public long getLastStashedCount() {
-        return lastStashedCount.get();
+        return lastStashedCount;
     }
 
     public long getTotalDeferredCount() {
@@ -281,7 +282,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
     }
 
     public long getLastDeferredCount() {
-        return lastDeferredCount.get();
+        return lastDeferredCount;
     }
 
     public boolean isStatusLogEnabled() {
@@ -308,21 +309,21 @@ public abstract class BaseAuditHandler implements AuditHandler {
             long currentStashedCount = totalStashedCount.get();
             long currentDeferredCount = totalDeferredCount.get();
 
-            long diffCount    = currentTotalCount - lastIntervalCount.get();
-            long diffSuccess  = currentSuccessCount - lastIntervalSuccessCount.get();
-            long diffFailed   = currentFailedCount - lastIntervalFailedCount.get();
-            long diffStashed  = currentStashedCount - lastStashedCount.get();
-            long diffDeferred = currentDeferredCount - lastDeferredCount.get();
+            long diffCount    = currentTotalCount - lastIntervalCount;
+            long diffSuccess  = currentSuccessCount - lastIntervalSuccessCount;
+            long diffFailed   = currentFailedCount - lastIntervalFailedCount;
+            long diffStashed  = currentStashedCount - lastStashedCount;
+            long diffDeferred = currentDeferredCount - lastDeferredCount;
 
             if (diffCount == 0 && diffSuccess == 0 && diffFailed == 0 && diffStashed == 0 && diffDeferred == 0) {
                 return;
             }
 
-            lastIntervalCount.set(currentTotalCount);
-            lastIntervalSuccessCount.set(currentSuccessCount);
-            lastIntervalFailedCount.set(currentFailedCount);
-            lastStashedCount.set(currentStashedCount);
-            lastDeferredCount.set(currentDeferredCount);
+            lastIntervalCount        = currentTotalCount;
+            lastIntervalSuccessCount = currentSuccessCount;
+            lastIntervalFailedCount  = currentFailedCount;
+            lastStashedCount         = currentStashedCount;
+            lastDeferredCount        = currentDeferredCount;
 
             if (statusLogEnabled) {
                 String finalPath  = "";

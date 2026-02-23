@@ -19,69 +19,24 @@
 
 package org.apache.ranger.audit.destination;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.auth.AuthSchemeProvider;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.KerberosCredentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.config.AuthSchemes;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.config.Lookup;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.SPNegoSchemeFactory;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.protocol.HttpContext;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
+import javax.servlet.http.HttpServletResponse;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedExceptionAction;
-import java.security.SecureRandom;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,50 +51,49 @@ public class RangerAuditServerDestination extends AuditDestination {
     public static final String PROP_AUDITSERVER_JWT_TOKEN_FILE               = "xasecure.audit.destination.auditserver.jwt.token.file";
     public static final String PROP_AUDITSERVER_CLIENT_CONN_TIMEOUT_MS       = "xasecure.audit.destination.auditserver.connection.timeout.ms";
     public static final String PROP_AUDITSERVER_CLIENT_READ_TIMEOUT_MS       = "xasecure.audit.destination.auditserver.read.timeout.ms";
-    public static final String PROP_AUDITSERVER_MAX_CONNECTION               = "xasecure.audit.destination.auditserver.max.connections";
-    public static final String PROP_AUDITSERVER_MAX_CONNECTION_PER_HOST      = "xasecure.audit.destination.auditserver.max.connections.per.host";
-    public static final String PROP_AUDITSERVER_VALIDATE_INACTIVE_MS         = "xasecure.audit.destination.auditserver.validate.inactivity.ms";
-    public static final String PROP_AUDITSERVER_POOL_RETRY_COUNT             = "xasecure.audit.destination.auditserver.pool.retry.count";
-    public static final String GSON_DATE_FORMAT                              = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-    public static final String REST_ACCEPTED_MIME_TYPE_JSON                  = "application/json";
-    public static final String REST_CONTENT_TYPE_MIME_TYPE_JSON              = "application/json";
-    public static final String REST_HEADER_ACCEPT                            = "Accept";
-    public static final String REST_HEADER_CONTENT_TYPE                      = "Content-type";
-    public static final String REST_HEADER_AUTHORIZATION                     = "Authorization";
-    public static final String REST_RELATIVE_PATH_POST                       = "/api/audit/post";
+    public static final String PROP_AUDITSERVER_SSL_CONFIG_FILE              = "xasecure.audit.destination.auditserver.ssl.config.file";
+    public static final String PROP_AUDITSERVER_MAX_RETRY_ATTEMPTS           = "xasecure.audit.destination.auditserver.max.retry.attempts";
+    public static final String PROP_AUDITSERVER_RETRY_INTERVAL_MS            = "xasecure.audit.destination.auditserver.retry.interval.ms";
+    public static final String PROP_SERVICE_TYPE                             = "ranger.plugin.audit.service.type";
+    public static final String REST_RELATIVE_PATH_POST                       = "/api/audit/access";
+    public static final String QUERY_PARAM_SERVICE_NAME                      = "serviceName";
 
     // Authentication types
     public static final String AUTH_TYPE_KERBEROS                            = "kerberos";
     public static final String AUTH_TYPE_BASIC                               = "basic";
     public static final String AUTH_TYPE_JWT                                 = "jwt";
 
-    private static final Logger              LOG            = LoggerFactory.getLogger(RangerAuditServerDestination.class);
-    private static final String              PROTOCOL_HTTPS = "https";
-    private volatile     CloseableHttpClient httpClient;
-    private volatile     Gson                gsonBuilder;
-    private              String              httpURL;
-    private              String              authType;
-    private              String              jwtToken;
+    private static final Logger           LOG        = LoggerFactory.getLogger(RangerAuditServerDestination.class);
+    private              RangerRESTClient restClient;
+    private              String           authType;
+    private              String           serviceType;
 
     @Override
     public void init(Properties props, String propPrefix) {
         LOG.info("==> RangerAuditServerDestination:init()");
         super.init(props, propPrefix);
 
-        this.authType = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_AUTH_TYPE);
-        if (AUTH_TYPE_JWT.equalsIgnoreCase(authType)) {
-            LOG.info("JWT authentication configured....");
-            initJwtToken();
-        } else if (StringUtils.isEmpty(authType)) {
+        String url               = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_URL);
+        String sslConfigFileName = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_SSL_CONFIG_FILE);
+        String userName          = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_USER_NAME);
+        String password          = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_USER_PASSWORD);
+        int    connTimeoutMs     = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_CLIENT_CONN_TIMEOUT_MS, 120000);
+        int    readTimeoutMs     = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_CLIENT_READ_TIMEOUT_MS, 30000);
+        int    maxRetryAttempts  = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_MAX_RETRY_ATTEMPTS, 3);
+        int    retryIntervalMs   = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_RETRY_INTERVAL_MS, 1000);
+
+        this.authType    = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_AUTH_TYPE);
+        this.serviceType = MiscUtil.getStringProperty(props, PROP_SERVICE_TYPE);
+
+        if (StringUtils.isEmpty(authType)) {
             // Authentication priority: JWT → Kerberos → Basic
             try {
                 if (StringUtils.isNotEmpty(MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN)) ||
                         StringUtils.isNotEmpty(MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN_FILE))) {
                     this.authType = AUTH_TYPE_JWT;
-                    initJwtToken();
                 } else if (isKerberosAuthenticated()) {
                     this.authType = AUTH_TYPE_KERBEROS;
-                } else if (StringUtils.isNotEmpty(MiscUtil.getStringProperty(props, PROP_AUDITSERVER_USER_NAME))) {
+                } else if (StringUtils.isNotEmpty(userName)) {
                     this.authType = AUTH_TYPE_BASIC;
                 }
             } catch (Exception e) {
@@ -149,24 +103,36 @@ public class RangerAuditServerDestination extends AuditDestination {
 
         LOG.info("Audit destination authentication type: {}", authType);
 
+        if (StringUtils.isEmpty(this.serviceType)) {
+            LOG.error("Service type not available in audit properties. This is a configuration error. Audit destination will not function correctly.");
+            LOG.error("Ensure that RangerBasePlugin is properly initialized with a valid serviceType (hdfs, hive, kafka, etc.)");
+        } else {
+            LOG.info("Audit destination configured for service type: {}", this.serviceType);
+        }
+
         if (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType)) {
             preAuthenticateKerberos();
         }
 
-        this.httpClient  = buildHTTPClient();
-        this.gsonBuilder = new GsonBuilder().setDateFormat(GSON_DATE_FORMAT).create();
+        Configuration config = createConfigurationFromProperties(props, authType, userName, password);
+        this.restClient = new RangerRESTClient(url, sslConfigFileName, config);
+        this.restClient.setRestClientConnTimeOutMs(connTimeoutMs);
+        this.restClient.setRestClientReadTimeOutMs(readTimeoutMs);
+        this.restClient.setMaxRetryAttempts(maxRetryAttempts);
+        this.restClient.setRetryIntervalMs(retryIntervalMs);
+
         LOG.info("<== RangerAuditServerDestination:init()");
     }
 
-    private void initJwtToken() {
+    private String initJwtToken() {
         LOG.info("==> RangerAuditServerDestination:initJwtToken()");
 
-        this.jwtToken = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN);
+        String jwtToken = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN);
         if (StringUtils.isEmpty(jwtToken)) {
             String jwtTokenFile = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN_FILE);
             if (StringUtils.isNotEmpty(jwtTokenFile)) {
                 try {
-                    this.jwtToken = readJwtTokenFromFile(jwtTokenFile);
+                    jwtToken = readJwtTokenFromFile(jwtTokenFile);
                     LOG.info("JWT token loaded from file: {}", jwtTokenFile);
                 } catch (Exception e) {
                     LOG.error("Failed to read JWT token from file: {}", jwtTokenFile, e);
@@ -181,27 +147,20 @@ public class RangerAuditServerDestination extends AuditDestination {
         }
 
         LOG.info("<== RangerAuditServerDestination:initJwtToken()");
+
+        return jwtToken;
     }
 
     private String readJwtTokenFromFile(String tokenFile) throws IOException {
-        InputStream in = null;
-        try {
-            in = getFileInputStream(tokenFile);
+        try (InputStream in = getFileInputStream(tokenFile)) {
             if (in != null) {
-                String token = IOUtils.toString(in, Charset.defaultCharset()).trim();
-                return token;
+                return IOUtils.toString(in, Charset.defaultCharset()).trim();
             } else {
                 throw new IOException("Unable to read JWT token file: " + tokenFile);
             }
-        } finally {
-            close(in, tokenFile);
         }
     }
 
-    /**
-     * This method proactively obtains the TGT and service ticket for the audit server
-     * during initialization, so they are cached and ready when the first audit event arrives.
-     */
     private void preAuthenticateKerberos() {
         LOG.info("==> RangerAuditServerDestination:preAuthenticateKerberos()");
 
@@ -223,30 +182,7 @@ public class RangerAuditServerDestination extends AuditDestination {
             ugi.checkTGTAndReloginFromKeytab();
             LOG.debug("TGT verified and refreshed if needed for user: {}", ugi.getUserName());
 
-            // Get the audit server URL to determine the target hostname for service ticket
-            String auditServerUrl = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_URL);
-
-            if (StringUtils.isNotEmpty(auditServerUrl)) {
-                try {
-                    URI uri = new URI(auditServerUrl);
-                    String hostname = uri.getHost();
-
-                    LOG.info("Pre-fetching Kerberos service ticket for HTTP/{}", hostname);
-
-                    ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
-                        LOG.debug("Kerberos security context initialized for audit server: {}", hostname);
-                        return null;
-                    });
-
-                    LOG.info("Kerberos pre-authentication completed successfully. Service ticket cached for HTTP/{}", hostname);
-                } catch (URISyntaxException e) {
-                    LOG.warn("Invalid audit server URL format: {}. Skipping service ticket pre-fetch", auditServerUrl, e);
-                } catch (Exception e) {
-                    LOG.warn("Failed to pre-fetch service ticket for audit server: {}. First request may need to obtain ticket", auditServerUrl, e);
-                }
-            } else {
-                LOG.warn("Audit server URL not configured. Cannot pre-fetch service ticket");
-            }
+            LOG.info("Kerberos pre-authentication completed successfully");
         } catch (Exception e) {
             LOG.warn("Kerberos pre-authentication failed. First request will retry authentication", e);
         }
@@ -258,14 +194,9 @@ public class RangerAuditServerDestination extends AuditDestination {
     public void stop() {
         LOG.info("==> RangerAuditServerDestination.stop() called..");
         logStatus();
-        if (httpClient != null) {
-            try {
-                httpClient.close();
-            } catch (IOException ioe) {
-                LOG.error("Error while closing httpclient in RangerAuditServerDestination!", ioe);
-            } finally {
-                httpClient = null;
-            }
+        if (restClient != null) {
+            restClient.resetClient();
+            restClient = null;
         }
     }
 
@@ -285,18 +216,16 @@ public class RangerAuditServerDestination extends AuditDestination {
             logStatusIfRequired();
             addTotalCount(events.size());
 
-            if (httpClient == null) {
-                httpClient = buildHTTPClient();
-                if (httpClient == null) {
-                    // HTTP Server is still not initialized. So need return error
-                    addDeferredCount(events.size());
-                    return ret;
-                }
+            if (restClient == null) {
+                LOG.error("REST client is not initialized. Cannot send audit events");
+                addDeferredCount(events.size());
+                return ret;
             }
+
             ret = logAsBatch(events);
         } catch (Throwable t) {
             addDeferredCount(events.size());
-            logError("Error sending audit to HTTP Server", t);
+            logError("Error sending audit to Audit Server", t);
         }
         return ret;
     }
@@ -327,423 +256,164 @@ public class RangerAuditServerDestination extends AuditDestination {
     private boolean sendBatch(Collection<AuditEventBase> events) {
         boolean ret = false;
         Map<String, String> queryParams = new HashMap<>();
-        try {
-            UserGroupInformation ugi = UserGroupInformation.getCurrentUser();
-            LOG.debug("Sending audit batch of {} events as user: {}", events.size(), ugi.getUserName());
 
-            PrivilegedExceptionAction<Map<?, ?>> action =
-                    () -> executeHttpBatchRequest(REST_RELATIVE_PATH_POST, queryParams, events, Map.class);
-            Map<?, ?> response = executeAction(action, ugi);
+        // Add serviceName to query parameters
+        if (StringUtils.isNotEmpty(serviceType)) {
+            queryParams.put(QUERY_PARAM_SERVICE_NAME, serviceType);
+            LOG.debug("Adding serviceName={} to audit request", serviceType);
+        } else {
+            LOG.error("Cannot send audit batch: serviceType is not set. This indicates a configuration error.");
+            LOG.error("Audit server requires serviceName parameter. Please ensure RangerBasePlugin is properly initialized.");
+            return false;
+        }
+
+        try {
+            final UserGroupInformation user         = MiscUtil.getUGILoginUser();
+            final boolean              isSecureMode = isKerberosAuthenticated();
+
+            if (isSecureMode && user != null) {
+                LOG.debug("Sending audit batch of {} events using Kerberos. Principal: {}, AuthMethod: {}", events.size(), user.getUserName(), user.getAuthenticationMethod());
+            } else {
+                LOG.debug("Sending audit batch of {} events. SecureMode: {}, User: {}", events.size(), isSecureMode, user != null ? user.getUserName() : "null");
+            }
+
+            final ClientResponse response;
+
+            if (isSecureMode) {
+                response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
+                    try {
+                        return postAuditEvents(REST_RELATIVE_PATH_POST, queryParams, events);
+                    } catch (Exception e) {
+                        LOG.error("Failed to post audit events in privileged action: {}", e.getMessage());
+                        throw e;
+                    }
+                });
+            } else {
+                response = postAuditEvents(REST_RELATIVE_PATH_POST, queryParams, events);
+            }
 
             if (response != null) {
-                LOG.info("Audit batch sent successfully. {} events delivered. Response: {}", events.size(), response);
-                ret = true;
+                int status = response.getStatus();
+
+                if (status == HttpServletResponse.SC_OK) {
+                    String responseStr = response.getEntity(String.class);
+                    LOG.debug("Audit batch sent successfully. {} events delivered. Response: {}", events.size(), responseStr);
+                    ret = true;
+                } else {
+                    String errorBody = "";
+                    try {
+                        if (response.hasEntity()) {
+                            errorBody = response.getEntity(String.class);
+                        }
+                    } catch (Exception e) {
+                        LOG.debug("Failed to read error response body", e);
+                    }
+
+                    LOG.error("Failed to send audit batch. HTTP status: {}, Response: {}", status, errorBody);
+
+                    if (status == HttpServletResponse.SC_UNAUTHORIZED) {
+                        LOG.error("Authentication failure (401). Verify credentials are valid and audit server is properly configured.");
+                    }
+
+                    ret = false;
+                }
             } else {
                 LOG.error("Received null response from audit server for batch of {} events", events.size());
                 ret = false;
             }
         } catch (Exception e) {
-            LOG.error("Failed to send audit batch of {} events to {}. Error: {}", events.size(), httpURL, e.getMessage(), e);
-
-            // Log additional context for authentication errors
-            if (e.getMessage() != null && e.getMessage().contains("401")) {
-                LOG.error("Authentication failure detected. Verify Kerberos credentials are valid and audit server is reachable.");
-            }
+            LOG.error("Failed to send audit batch of {} events. Error: {}", events.size(), e.getMessage(), e);
             ret = false;
         }
-
         return ret;
     }
 
-    public <T> T executeHttpBatchRequest(String relativeUrl, Map<String, String> params,
-                                         Collection<AuditEventBase> events, Class<T> clazz) throws Exception {
-        T finalResponse = postAndParse(httpURL + relativeUrl, params, events, clazz);
-        return finalResponse;
-    }
+    private ClientResponse postAuditEvents(String relativeUrl, Map<String, String> params, Collection<AuditEventBase> events) throws Exception {
+        LOG.debug("Posting {} audit events to {}", events.size(), relativeUrl);
 
-    public <T> T executeHttpRequestPOST(String relativeUrl, Map<String, String> params, Object obj, Class<T> clazz) throws Exception {
-        LOG.debug("==>  RangerAuditServerDestination().executeHttpRequestPOST()");
+        String jsonPayload = MiscUtil.stringify(events);
 
-        T finalResponse = postAndParse(httpURL + relativeUrl, params, obj, clazz);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Serialized {} events to JSON payload (length: {} bytes)", events.size(), jsonPayload.length());
+        }
 
-        LOG.debug("<== RangerAuditServerDestination().executeHttpRequestPOST()");
-        return finalResponse;
-    }
-
-    public <T> T postAndParse(String url, Map<String, String> queryParams, Object obj, Class<T> clazz) throws Exception {
-        HttpPost     httpPost = new HttpPost(buildURI(url, queryParams));
-        StringEntity entity   = new StringEntity(gsonBuilder.toJson(obj));
-        httpPost.setEntity(entity);
-        return executeAndParseResponse(httpPost, clazz, queryParams);
-    }
-
-    synchronized CloseableHttpClient buildHTTPClient() {
-        Lookup<AuthSchemeProvider> authRegistry              = RegistryBuilder.<AuthSchemeProvider>create().register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory(true, true)).build();
-        HttpClientBuilder          clientBuilder             = HttpClients.custom().setDefaultAuthSchemeRegistry(authRegistry);
-        String                     userName                  = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_USER_NAME);
-        String                     passWord                  = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_USER_PASSWORD);
-        int                        clientConnTimeOutMs       = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_CLIENT_CONN_TIMEOUT_MS, 1000);
-        int                        clientReadTimeOutMs       = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_CLIENT_READ_TIMEOUT_MS, 1000);
-        int                        maxConnections            = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_MAX_CONNECTION, 10);
-        int                        maxConnectionsPerHost     = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_MAX_CONNECTION_PER_HOST, 10);
-        int                        validateAfterInactivityMs = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_VALIDATE_INACTIVE_MS, 1000);
-        int                        poolRetryCount            = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_POOL_RETRY_COUNT, 5);
-        httpURL = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_URL);
-
-        LOG.info("Building HTTP client for audit destination: url={}, connTimeout={}ms, readTimeout={}ms, maxConn={}", httpURL, clientConnTimeOutMs, clientReadTimeOutMs, maxConnections);
-
-        try {
-            if (AUTH_TYPE_JWT.equalsIgnoreCase(authType)) {
-                // JWT authentication - token will be added to request headers directly
-                LOG.info("HTTP client configured for JWT Bearer token authentication");
-            } else {
-                // Kerberos or Basic authentication - use credentials provider
-                BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-
-                if (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType) || isKerberosAuthenticated()) {
-                    credentialsProvider.setCredentials(AuthScope.ANY, new KerberosCredentials(null));
-                    LOG.info("HTTP client configured for Kerberos authentication (SPNEGO)....");
-                    try {
-                        UserGroupInformation ugi = UserGroupInformation.getLoginUser();
-                        LOG.info("Current Kerberos principal: {}, authMethod: {}, hasKerberosCredentials: {}", ugi.getUserName(), ugi.getAuthenticationMethod(), ugi.hasKerberosCredentials());
-                    } catch (Exception e) {
-                        LOG.warn("Failed to get current UGI details", e);
-                    }
-                } else if (AUTH_TYPE_BASIC.equalsIgnoreCase(authType) || (StringUtils.isNotEmpty(userName) && StringUtils.isNotEmpty(passWord))) {
-                    credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(userName, passWord));
-                    LOG.info("HTTP client configured for basic authentication with username: {}", userName);
-                } else {
-                    LOG.warn("No authentication credentials configured for HTTP audit destination");
-                }
-
-                clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+        WebResource webResource = restClient.getResource(relativeUrl);
+        if (params != null && !params.isEmpty()) {
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                webResource = webResource.queryParam(entry.getKey(), entry.getValue());
             }
-        } catch (Exception excp) {
-            LOG.error("Exception while configuring authentication credentials. Audits may fail to send!", excp);
         }
 
-        PoolingHttpClientConnectionManager connectionManager;
+        return webResource
+                .accept("application/json")
+                .type("application/json")
+                .entity(jsonPayload)
+                .post(ClientResponse.class);
+    }
 
-        KeyManager[]   kmList     = getKeyManagers();
-        TrustManager[] tmList     = getTrustManagers();
-        SSLContext     sslContext = getSSLContext(kmList, tmList);
+    private Configuration createConfigurationFromProperties(Properties props, String authType, String userName, String password) {
+        Configuration config = new Configuration();
 
-        if (sslContext != null) {
-            SSLContext.setDefault(sslContext);
+        for (String key : props.stringPropertyNames()) {
+            config.set(key, props.getProperty(key));
         }
 
-        boolean isSSL = (httpURL != null && httpURL.contains("https://"));
-        if (isSSL) {
-            SSLConnectionSocketFactory        sslsf                 = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-            Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create().register(PROTOCOL_HTTPS, sslsf).build();
-
-            connectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
-
-            clientBuilder.setSSLSocketFactory(sslsf);
-        } else {
-            connectionManager = new PoolingHttpClientConnectionManager();
-        }
-
-        connectionManager.setMaxTotal(maxConnections);
-        connectionManager.setDefaultMaxPerRoute(maxConnectionsPerHost);
-        connectionManager.setValidateAfterInactivity(validateAfterInactivityMs);
-
-        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom()
-                .setCookieSpec(CookieSpecs.DEFAULT)
-                .setConnectTimeout(clientConnTimeOutMs)
-                .setSocketTimeout(clientReadTimeOutMs);
-
-        // Configure authentication based on auth type
+        final String restClientPrefix = "ranger.plugin";
         if (AUTH_TYPE_JWT.equalsIgnoreCase(authType)) {
-            // JWT doesn't use HttpClient's authentication mechanism - token is added to headers
-            LOG.info("RequestConfig configured for JWT authentication....");
-        } else {
-            // For Kerberos and Basic auth, enable HttpClient's authentication mechanism
-            requestConfigBuilder.setAuthenticationEnabled(true);
-
-            try {
-                // For Kerberos authentication, specify SPNEGO as target auth scheme
-                if (isKerberosAuthenticated() || (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType))) {
-                    requestConfigBuilder.setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.SPNEGO));
-                    LOG.info("Configured SPNEGO as target authentication scheme for audit HTTP client");
-                }
-            } catch (Exception e) {
-                LOG.warn("Failed to check Kerberos authentication status for request config", e);
-            }
-        }
-
-        RequestConfig customizedRequestConfig = requestConfigBuilder.build();
-
-        CloseableHttpClient httpClient = clientBuilder.setConnectionManager(connectionManager).setRetryHandler(new AuditHTTPRetryHandler(poolRetryCount, true)).setDefaultRequestConfig(customizedRequestConfig).build();
-
-        return httpClient;
-    }
-
-    boolean isKerberosAuthenticated() throws Exception {
-        boolean status = false;
-        try {
-            UserGroupInformation                      loggedInUser           = UserGroupInformation.getLoginUser();
-            boolean                                   isSecurityEnabled      = UserGroupInformation.isSecurityEnabled();
-            boolean                                   hasKerberosCredentials = loggedInUser.hasKerberosCredentials();
-            UserGroupInformation.AuthenticationMethod loggedInUserAuthMethod = loggedInUser.getAuthenticationMethod();
-
-            status = isSecurityEnabled && hasKerberosCredentials && loggedInUserAuthMethod.equals(UserGroupInformation.AuthenticationMethod.KERBEROS);
-        } catch (IOException e) {
-            throw new Exception("Failed to get authentication details.", e);
-        }
-        return status;
-    }
-
-    private void close(InputStream str, String filename) {
-        if (str != null) {
-            try {
-                str.close();
-            } catch (IOException excp) {
-                LOG.error("Error while closing file: [{}]", filename, excp);
-            }
-        }
-    }
-
-    private <T> PrivilegedExceptionAction<T> getPrivilegedAction(String relativeUrl, Map<String, String> queryParams, Object postParam, Class<T> clazz) {
-        return () -> executeHttpRequestPOST(relativeUrl, queryParams, postParam, clazz);
-    }
-
-    private <T extends HttpRequestBase, R> R executeAndParseResponse(T request, Class<R> responseClazz, Map<String, String> queryParams) throws Exception {
-        R                   ret    = null;
-        CloseableHttpClient client = getCloseableHttpClient();
-
-        if (client != null) {
-            addCommonHeaders(request, queryParams);
-            // Create an HttpClientContext to maintain authentication state across potential retries
-            HttpClientContext context = HttpClientContext.create();
-            try (CloseableHttpResponse response = client.execute(request, context)) {
-                ret = parseResponse(response, responseClazz);
-            }
-        } else {
-            LOG.error("Cannot process request as Audit HTTPClient is null...");
-        }
-        return ret;
-    }
-
-    private <T extends HttpRequestBase> T addCommonHeaders(T t, Map<String, String> queryParams) {
-        t.addHeader(REST_HEADER_ACCEPT, REST_ACCEPTED_MIME_TYPE_JSON);
-        t.setHeader(REST_HEADER_CONTENT_TYPE, REST_CONTENT_TYPE_MIME_TYPE_JSON);
-
-        // Add JWT Bearer token if JWT authentication is configured
-        if (AUTH_TYPE_JWT.equalsIgnoreCase(authType) && StringUtils.isNotEmpty(jwtToken)) {
-            t.setHeader(REST_HEADER_AUTHORIZATION, "Bearer " + jwtToken);
-            LOG.debug("Added JWT Bearer token to request Authorization header");
-        }
-
-        return t;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <R> R parseResponse(HttpResponse response, Class<R> clazz) throws Exception {
-        R type = null;
-
-        if (response == null) {
-            String responseError = "Received NULL response from server";
-            LOG.error(responseError);
-            throw new Exception(responseError);
-        }
-
-        int httpStatus = response.getStatusLine().getStatusCode();
-
-        if (httpStatus == HttpStatus.SC_OK) {
-            InputStream responseInputStream = response.getEntity().getContent();
-            if (clazz.equals(String.class)) {
-                type = (R) IOUtils.toString(responseInputStream, Charset.defaultCharset());
-            } else {
-                type = gsonBuilder.fromJson(new InputStreamReader(responseInputStream), clazz);
-            }
-            responseInputStream.close();
-        } else {
-            String responseBody = "";
-            try {
-                if (response.getEntity() != null && response.getEntity().getContent() != null) {
-                    responseBody = IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset());
-                }
-            } catch (Exception e) {
-                LOG.debug("Failed to read error response body", e);
-            }
-
-            String error = String.format("Request failed with HTTP status %d. Response body: %s", httpStatus, responseBody);
-            if (httpStatus == HttpStatus.SC_UNAUTHORIZED) {
-                LOG.error("{} - Authentication failed. Verify Kerberos credentials are valid and properly configured.", error);
-            } else {
-                LOG.error(error);
-            }
-            throw new Exception(error);
-        }
-        return type;
-    }
-
-    private <T> T executeAction(PrivilegedExceptionAction<T> action, UserGroupInformation owner) throws Exception {
-        T ret = null;
-        if (owner != null) {
-            ret = owner.doAs(action);
-        } else {
-            ret = action.run();
-        }
-        return ret;
-    }
-
-    private URI buildURI(String url, Map<String, String> queryParams) throws URISyntaxException {
-        URIBuilder builder = new URIBuilder(url);
-        if (queryParams != null) {
-            for (Map.Entry<String, String> param : queryParams.entrySet()) {
-                builder.addParameter(param.getKey(), param.getValue());
-            }
-        }
-        return builder.build();
-    }
-
-    private CloseableHttpClient getCloseableHttpClient() {
-        CloseableHttpClient client = httpClient;
-        if (client == null) {
-            synchronized (this) {
-                client = httpClient;
-
-                if (client == null) {
-                    client     = buildHTTPClient();
-                    httpClient = client;
-                }
-            }
-        }
-        return client;
-    }
-
-    private KeyManager[] getKeyManagers() {
-        KeyManager[] kmList                 = null;
-        String       credentialProviderPath = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
-        String       keyStoreAlias          = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
-        String       keyStoreFile           = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE);
-        String       keyStoreFilepwd        = MiscUtil.getCredentialString(credentialProviderPath, keyStoreAlias);
-        if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
-            InputStream in = null;
-            try {
-                in = getFileInputStream(keyStoreFile);
-
-                if (in != null) {
-                    String keyStoreType = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE);
-                    keyStoreType = StringUtils.isNotEmpty(keyStoreType) ? keyStoreType : RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT;
-                    KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-
-                    keyStore.load(in, keyStoreFilepwd.toCharArray());
-
-                    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
-
-                    keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
-
-                    kmList = keyManagerFactory.getKeyManagers();
+            String jwtToken = initJwtToken();
+            if (StringUtils.isNotEmpty(jwtToken)) {
+                String jwtTokenFile = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN_FILE);
+                if (StringUtils.isNotEmpty(jwtTokenFile)) {
+                    config.set(restClientPrefix + ".policy.rest.client.jwt.source", "file");
+                    config.set(restClientPrefix + ".policy.rest.client.jwt.file", jwtTokenFile);
+                    LOG.info("JWT authentication configured via file: {}", jwtTokenFile);
                 } else {
-                    LOG.error("Unable to obtain keystore from file [{}]", keyStoreFile);
+                    LOG.warn("JWT token is set but file path is not available. JWT may not work as expected");
                 }
-            } catch (KeyStoreException e) {
-                LOG.error("Unable to obtain from KeyStore :{}", e.getMessage(), e);
-            } catch (NoSuchAlgorithmException e) {
-                LOG.error("SSL algorithm is NOT available in the environment", e);
-            } catch (CertificateException e) {
-                LOG.error("Unable to obtain the requested certification ", e);
-            } catch (FileNotFoundException e) {
-                LOG.error("Unable to find the necessary SSL Keystore Files", e);
-            } catch (IOException e) {
-                LOG.error("Unable to read the necessary SSL Keystore Files", e);
-            } catch (UnrecoverableKeyException e) {
-                LOG.error("Unable to recover the key from keystore", e);
-            } finally {
-                close(in, keyStoreFile);
             }
+        } else if (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType)) {
+            // For Kerberos, no additional configuration is needed in RangerRESTClient
+            // Authentication happens via Subject.doAs() security context
+            LOG.info("Kerberos authentication will be used via privileged action (Subject.doAs)");
+        } else if (AUTH_TYPE_BASIC.equalsIgnoreCase(authType) && StringUtils.isNotEmpty(userName) && StringUtils.isNotEmpty(password)) {
+            config.set(restClientPrefix + ".policy.rest.client.username", userName);
+            config.set(restClientPrefix + ".policy.rest.client.password", password);
+            LOG.info("Basic authentication configured for user: {}", userName);
         }
-        return kmList;
+
+        return config;
     }
 
-    private TrustManager[] getTrustManagers() {
-        TrustManager[] tmList                 = null;
-        String         credentialProviderPath = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
-        String         trustStoreAlias        = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
-        String         trustStoreFile         = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE);
-        String         trustStoreFilepwd      = MiscUtil.getCredentialString(credentialProviderPath, trustStoreAlias);
-        if (StringUtils.isNotEmpty(trustStoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
-            InputStream in = null;
-            try {
-                in = getFileInputStream(trustStoreFile);
-
-                if (in != null) {
-                    String trustStoreType = MiscUtil.getStringProperty(props, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE);
-                    trustStoreType = StringUtils.isNotEmpty(trustStoreType) ? trustStoreType : RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT;
-                    KeyStore trustStore = KeyStore.getInstance(trustStoreType);
-
-                    trustStore.load(in, trustStoreFilepwd.toCharArray());
-
-                    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(RANGER_SSL_TRUSTMANAGER_ALGO_TYPE);
-
-                    trustManagerFactory.init(trustStore);
-
-                    tmList = trustManagerFactory.getTrustManagers();
-                } else {
-                    LOG.error("Unable to obtain truststore from file [{}]", trustStoreFile);
-                }
-            } catch (KeyStoreException e) {
-                LOG.error("Unable to obtain from KeyStore", e);
-            } catch (NoSuchAlgorithmException e) {
-                LOG.error("SSL algorithm is NOT available in the environment :{}", e.getMessage(), e);
-            } catch (CertificateException e) {
-                LOG.error("Unable to obtain the requested certification :{}", e.getMessage(), e);
-            } catch (FileNotFoundException e) {
-                LOG.error("Unable to find the necessary SSL TrustStore File:{}", trustStoreFile, e);
-            } catch (IOException e) {
-                LOG.error("Unable to read the necessary SSL TrustStore Files :{}", trustStoreFile, e);
-            } finally {
-                close(in, trustStoreFile);
-            }
-        }
-        return tmList;
-    }
-
-    private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
-        SSLContext sslContext = null;
+    private boolean isKerberosAuthenticated() {
         try {
-            sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
-            if (sslContext != null) {
-                sslContext.init(kmList, tmList, new SecureRandom());
+            UserGroupInformation loggedInUser = UserGroupInformation.getLoginUser();
+
+            if (loggedInUser == null) {
+                return false;
             }
-        } catch (NoSuchAlgorithmException e) {
-            LOG.error("SSL algorithm is not available in the environment", e);
-        } catch (KeyManagementException e) {
-            LOG.error("Unable to initialise the SSLContext", e);
+
+            boolean isSecurityEnabled      = UserGroupInformation.isSecurityEnabled();
+            boolean hasKerberosCredentials = loggedInUser.hasKerberosCredentials();
+            UserGroupInformation.AuthenticationMethod authMethod = loggedInUser.getAuthenticationMethod();
+
+            return isSecurityEnabled && hasKerberosCredentials && authMethod.equals(UserGroupInformation.AuthenticationMethod.KERBEROS);
+        } catch (Exception e) {
+            LOG.warn("Failed to check Kerberos authentication status", e);
+            return false;
         }
-        return sslContext;
     }
 
     private InputStream getFileInputStream(String fileName) throws IOException {
-        InputStream in = null;
-        if (StringUtils.isNotEmpty(fileName)) {
-            File file = new File(fileName);
-            if (file != null && file.exists()) {
-                in = new FileInputStream(file);
-            } else {
-                in = ClassLoader.getSystemResourceAsStream(fileName);
-            }
-        }
-        return in;
-    }
-
-    private class AuditHTTPRetryHandler extends StandardHttpRequestRetryHandler {
-        public AuditHTTPRetryHandler(Integer poolRetryCount, boolean isIdempotentRequest) {
-            super(poolRetryCount, isIdempotentRequest);
+        if (StringUtils.isEmpty(fileName)) {
+            return null;
         }
 
-        @Override
-        public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
-            LOG.debug("==> AuditHTTPRetryHandler.retryRequest {} Execution Count = {}", exception.getMessage(), executionCount);
+        java.io.File file = new java.io.File(fileName);
 
-            boolean ret = super.retryRequest(exception, executionCount, context);
-
-            LOG.debug("<== AuditHTTPRetryHandler.retryRequest(): ret= {}", ret);
-
-            return ret;
+        if (file.exists()) {
+            return new java.io.FileInputStream(file);
+        } else {
+            return ClassLoader.getSystemResourceAsStream(fileName);
         }
     }
 }
