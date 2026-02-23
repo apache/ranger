@@ -50,6 +50,8 @@ public class SearchFilter {
     public static final String CREATE_TIME              = "createTime";    // sort
     public static final String UPDATE_TIME              = "updateTime";    // sort
     public static final String START_INDEX              = "startIndex";
+    public static final String BEGIN_INDEX              = "beginIndex";
+    public static final String OFFSET                   = "offset";
     public static final String PAGE_SIZE                = "pageSize";
     public static final String SORT_BY                  = "sortBy";
     public static final String RESOURCE_SIGNATURE       = "resourceSignature:";     // search
@@ -152,6 +154,8 @@ public class SearchFilter {
     private Map<String, Object[]> multiValueParams;
     private int                   startIndex;
     private int                   maxRows    = Integer.MAX_VALUE;
+    private int                   beginIndex = 0;
+    private int                   offset = -1;
     private boolean               getCount   = true;
     private String                sortBy;
     private String                sortType;
@@ -167,6 +171,8 @@ public class SearchFilter {
             setMultiValueParams(other.multiValueParams != null ? new HashMap<>(other.multiValueParams) : null);
             setStartIndex(other.startIndex);
             setMaxRows(other.maxRows);
+            setBeginIndex(other.beginIndex);
+            setOffset(other.offset);
             setGetCount(other.getCount);
             setSortBy(other.sortBy);
             setSortType(other.sortType);
@@ -271,6 +277,23 @@ public class SearchFilter {
     public void setStartIndex(int startIndex) {
         this.startIndex = startIndex;
     }
+
+    public int getBeginIndex() {
+        return beginIndex;
+    }
+
+    public void setBeginIndex(int beginIndex) {
+        this.beginIndex = beginIndex;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
 
     public int getMaxRows() {
         return maxRows;
