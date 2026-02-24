@@ -331,12 +331,6 @@ public class RangerAuditServerDestination extends AuditDestination {
     private ClientResponse postAuditEvents(String relativeUrl, Map<String, String> params, Collection<AuditEventBase> events) throws Exception {
         LOG.debug("Posting {} audit events to {}", events.size(), relativeUrl);
 
-        String jsonPayload = MiscUtil.stringify(events);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Serialized {} events to JSON payload (length: {} bytes)", events.size(), jsonPayload.length());
-        }
-
         WebResource webResource = restClient.getResource(relativeUrl);
         if (params != null && !params.isEmpty()) {
             for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -347,7 +341,7 @@ public class RangerAuditServerDestination extends AuditDestination {
         return webResource
                 .accept("application/json")
                 .type("application/json")
-                .entity(jsonPayload)
+                .entity(events)
                 .post(ClientResponse.class);
     }
 

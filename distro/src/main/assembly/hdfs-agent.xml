@@ -116,6 +116,9 @@
           <include>org.apache.orc:orc-shims:jar:${orc.version}</include>
           <include>io.airlift:aircompressor:jar:${aircompressor.version}</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
         </includes>
       </binaries>
     </moduleSet>

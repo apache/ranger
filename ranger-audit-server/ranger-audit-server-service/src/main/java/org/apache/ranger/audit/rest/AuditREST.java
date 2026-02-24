@@ -19,8 +19,6 @@
 
 package org.apache.ranger.audit.rest;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -55,7 +53,6 @@ import java.util.Set;
 @Scope("request")
 public class AuditREST {
     private static final Logger LOG = LoggerFactory.getLogger(AuditREST.class);
-    private static final TypeReference<List<AuthzAuditEvent>> AUDIT_EVENT_LIST_TYPE = new TypeReference<List<AuthzAuditEvent>>() {};
     private static final Set<String> allowedServiceUsers;
 
     static {
@@ -152,17 +149,16 @@ public class AuditREST {
     /**
      *  Access Audits producer endpoint.
      *  @param serviceName Required query parameter to identify the source service (hdfs, hive, kafka, solr, etc.)
-     *  @param accessAudits JSON payload containing audit events
      *  @param request HTTP request to extract authenticated user
      */
     @POST
     @Path("/access")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response accessAudit(@QueryParam("serviceName") String serviceName, String accessAudits, @Context HttpServletRequest request) {
+    public Response accessAudit(@QueryParam("serviceName") String serviceName, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
         String authenticatedUser = getAuthenticatedUser(request);
 
-        LOG.debug("==> AuditREST.accessAudit(): received JSON payload from service: {}, authenticatedUser: {}", StringUtils.isNotEmpty(serviceName) ? serviceName : "unknown", authenticatedUser);
+        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from service: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, StringUtils.isNotEmpty(serviceName) ? serviceName : "unknown", authenticatedUser);
 
         Response ret;
 
@@ -198,7 +194,7 @@ public class AuditREST {
             return ret;
         }
 
-        if (accessAudits == null || accessAudits.trim().isEmpty()) {
+        if (accessAudits == null || accessAudits.isEmpty()) {
             LOG.warn("Empty or null audit events batch received from service: {}, user: {}", serviceName, authenticatedUser);
             ret = Response.status(Response.Status.BAD_REQUEST)
                     .entity(buildErrorResponse("Audit events cannot be empty"))
@@ -210,17 +206,14 @@ public class AuditREST {
                     .build();
         } else {
             try {
-                ObjectMapper mapper = MiscUtil.getMapper();
-                List<AuthzAuditEvent> events = mapper.readValue(accessAudits, AUDIT_EVENT_LIST_TYPE);
+                LOG.debug("Processing {} audit events from service: {}", accessAudits.size(), serviceName);
 
-                LOG.debug("Successfully deserialized {} audit events from service: {}", events.size(), serviceName);
-
-                for (AuthzAuditEvent event : events) {
+                for (AuthzAuditEvent event : accessAudits) {
                     auditDestinationMgr.log(event);
                 }
 
                 Map<String, Object> response = new HashMap<>();
-                response.put("total", events.size());
+                response.put("total", accessAudits.size());
                 response.put("timestamp", System.currentTimeMillis());
                 if (StringUtils.isNotEmpty(serviceName)) {
                     response.put("serviceName", serviceName);
