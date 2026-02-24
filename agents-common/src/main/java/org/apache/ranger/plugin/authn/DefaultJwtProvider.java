@@ -40,6 +40,8 @@ public class DefaultJwtProvider implements JwtProvider {
 
     private final String propertyPrefix;
     private final Configuration config;
+    private long jwtFileLastModified       = -1;
+    private long jwtCredFileLastCheckedAt  = -1;
     private String jwt;
 
     public DefaultJwtProvider(String propertyPrefix, Configuration config){
@@ -67,27 +69,37 @@ public class DefaultJwtProvider implements JwtProvider {
                     if (StringUtils.isNotEmpty(jwtFilePath)) {
                         File jwtFile = new File(jwtFilePath);
                         if (jwtFile.exists()) {
-                            try (BufferedReader reader = new BufferedReader(new FileReader(jwtFile))) {
-                                String line = null;
-                                while ((line = reader.readLine()) != null) {
-                                    if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
-                                        jwt = line;
-                                        break;
+                            long lastModified = jwtFile.lastModified();
+                            if (lastModified == jwtFileLastModified) {
+                                return jwt; // Return cached JWT if file hasn't changed
+                            } else {
+                                try (BufferedReader reader = new BufferedReader(new FileReader(jwtFile))) {
+                                    String line;
+                                    while ((line = reader.readLine()) != null) {
+                                        if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
+                                            jwt = line;
+                                            break;
+                                        }
                                     }
+                                    jwtFileLastModified = lastModified;
+                                } catch (IOException e) {
+                                    LOG.error("Failed to read JWT from file: {}", jwtFilePath, e);
                                 }
-                            } catch (IOException e) {
-                                LOG.error("Failed to read JWT from file: {}", jwtFilePath, e);
                             }
                         }
                     }
                     break;
                 case "cred":
                     String credFilePath = config.get(propertyPrefix + JWT_CRED_FILE);
-                    String credAlias = config.get(propertyPrefix + JWT_CRED_ALIAS);
+                    String credAlias    = config.get(propertyPrefix + JWT_CRED_ALIAS);
                     if (StringUtils.isNotEmpty(credFilePath) && StringUtils.isNotEmpty(credAlias)) {
-                        String jwtFromCredFile = RangerCredentialProvider.getInstance().getCredentialString(credFilePath, credAlias);
-                        if (StringUtils.isNotBlank(jwtFromCredFile)) {
-                            jwt = jwtFromCredFile;
+                        long currentTime = System.currentTimeMillis();
+                        if (jwtCredFileLastCheckedAt == -1 || (currentTime - jwtCredFileLastCheckedAt) > 60_000) { // last check should be more than 1 minute ago
+                            String jwtFromCredFile = RangerCredentialProvider.getInstance().getCredentialString(credFilePath, credAlias);
+                            if (StringUtils.isNotBlank(jwtFromCredFile)) {
+                                jwt = jwtFromCredFile;
+                                jwtCredFileLastCheckedAt = currentTime;
+                            }
                         }
                     }
                     break;

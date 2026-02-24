@@ -778,6 +778,7 @@ public class RangerRESTClient {
     }
 
     private void setJWTFilter() {
+        JwtProvider jwtProvider = this.jwtProvider;
         if (jwtProvider != null) {
             LOG.info("Registering JWT auth header in REST client");
             jwtAuthFilter = new ClientFilter() {

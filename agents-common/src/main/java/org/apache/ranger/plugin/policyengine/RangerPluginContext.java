@@ -172,6 +172,11 @@ public class RangerPluginContext {
 
     public void registerJWTProvider(JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
+
+        RangerAdminRESTClient restClient = (adminClient instanceof RangerAdminRESTClient) ? (RangerAdminRESTClient) adminClient : null;
+        if (restClient != null && jwtProvider != null) {
+            restClient.setJwtProvider(jwtProvider);
+        }
     }
 
     public JwtProvider getJwtProvider() {
