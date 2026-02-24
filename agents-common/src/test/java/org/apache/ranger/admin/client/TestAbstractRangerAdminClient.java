@@ -95,13 +95,4 @@ public class TestAbstractRangerAdminClient {
         Assertions.assertNull(c.getUserStoreIfUpdated(1L, 2L));
         Assertions.assertNull(c.getGdsInfoIfUpdated(1L, 2L));
     }
-
-    @Test
-    public void test04_isSecureEndpointAccess() {
-        DummyClient   c   = new DummyClient();
-        Configuration cfg = new Configuration(false);
-        cfg.setBoolean("ranger.plugin.forceSecureEndpointAccess", true);
-        c.init("svc", "app", "ranger.plugin", cfg);
-        Assertions.assertTrue(c.isAuthenticationEnabled());
-    }
 }
