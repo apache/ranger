@@ -23,8 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
-import org.apache.ranger.plugin.authn.DefaultJwtProvider;
-import org.apache.ranger.plugin.authn.JwtProvider;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.service.RangerAuthContext;
@@ -42,14 +40,12 @@ public class RangerPluginContext {
     private final RangerPluginConfig                                                         config;
     private final Map<String, Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher>> resourceMatchers = new HashMap<>();
     private final ReentrantReadWriteLock                                                     lock             = new ReentrantReadWriteLock(true); // fair lock
-    private       JwtProvider                                                                jwtProvider;
     private       RangerAuthContext                                                          authContext;
     private       RangerAuthContextListener                                                  authContextListener;
     private       RangerAdminClient                                                          adminClient;
 
     public RangerPluginContext(RangerPluginConfig config) {
         this.config = config;
-        this.jwtProvider = new DefaultJwtProvider(config.getPropertyPrefix() + ".policy.rest.client", config);
     }
 
     public RangerPluginConfig getConfig() {
@@ -155,9 +151,6 @@ public class RangerPluginContext {
 
         if (ret == null) {
             ret = new RangerAdminRESTClient();
-            if (jwtProvider != null) {
-                ((RangerAdminRESTClient) ret).setJwtProvider(jwtProvider);
-            }
         }
 
         ret.init(pluginConfig.getServiceName(), pluginConfig.getAppId(), pluginConfig.getPropertyPrefix(), pluginConfig);
@@ -168,19 +161,6 @@ public class RangerPluginContext {
         setAdminClient(ret);
 
         return ret;
-    }
-
-    public void registerJWTProvider(JwtProvider jwtProvider) {
-        this.jwtProvider = jwtProvider;
-
-        RangerAdminRESTClient restClient = (adminClient instanceof RangerAdminRESTClient) ? (RangerAdminRESTClient) adminClient : null;
-        if (restClient != null) {
-            restClient.setJwtProvider(jwtProvider);
-        }
-    }
-
-    public JwtProvider getJwtProvider() {
-        return jwtProvider;
     }
 
     void cleanResourceMatchers() {

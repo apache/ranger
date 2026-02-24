@@ -23,7 +23,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
@@ -44,8 +43,6 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
 
     private boolean forceNonKerberos;
 
-    private boolean forceSecureEndpointAccess;
-
     @Override
     public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
         Gson gson = null;
@@ -57,8 +54,7 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
         }
 
         this.gson             = gson;
-        this.forceNonKerberos          = config.getBoolean(configPropertyPrefix + ".forceNonKerberos", false);
-        this.forceSecureEndpointAccess = config.getBoolean(configPropertyPrefix + ".forceSecureEndpointAccess", false);
+        this.forceNonKerberos = config.getBoolean(configPropertyPrefix + ".forceNonKerberos", false);
     }
 
     @Override
@@ -131,21 +127,12 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
         return null;
     }
 
-    public boolean isAuthenticationEnabled() {
-        return forceSecureEndpointAccess || isKerberosEnabled();
-    }
-
-    public boolean isKerberosEnabled() {
-        return isKerberosEnabled(MiscUtil.getUGILoginUser());
-    }
-
     public boolean isKerberosEnabled(UserGroupInformation user) {
         final boolean ret;
 
         if (forceNonKerberos) {
             ret = false;
         } else {
-            LOG.debug("UGI user: {}", user);
             ret = user != null && UserGroupInformation.isSecurityEnabled() && user.hasKerberosCredentials();
         }
 
