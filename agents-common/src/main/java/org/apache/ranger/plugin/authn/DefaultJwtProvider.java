@@ -31,82 +31,93 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class DefaultJwtProvider implements JwtProvider {
-    private static final Logger LOG           = LoggerFactory.getLogger(DefaultJwtProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultJwtProvider.class);
+
     public static final String JWT_SOURCE     = ".jwt.source";
     public static final String JWT_ENV        = ".jwt.env";
     public static final String JWT_FILE       = ".jwt.file";
     public static final String JWT_CRED_FILE  = ".jwt.cred.file";
     public static final String JWT_CRED_ALIAS = ".jwt.cred.alias";
 
-    private final String propertyPrefix;
-    private final Configuration config;
-    private long jwtFileLastModified       = -1;
-    private long jwtCredFileLastCheckedAt  = -1;
-    private String jwt;
+    private final String jwtEnvVar;
+    private final String jwtFilePath;
+    private final String jwtCredFilePath;
+    private final String jwtCredAlias;
+    private       long   jwtFileLastModified      = 0;
+    private       long   jwtCredFileLastCheckedAt = 0;
+
+    private volatile String jwt;
 
     public DefaultJwtProvider(String propertyPrefix, Configuration config){
-        this.propertyPrefix = propertyPrefix;
-        this.config = config;
-    }
+        String jwtSrc = config.get(propertyPrefix + JWT_SOURCE);
+
+        if (jwtSrc == null) {
+            jwtSrc = "";
+        }
+
+        switch (jwtSrc) {
+            case "env":
+                this.jwtEnvVar       = config.get(propertyPrefix + JWT_ENV);
+                this.jwtFilePath     = null;
+                this.jwtCredFilePath = null;
+                this.jwtCredAlias    = null;
+                break;
+
+            case "file":
+                this.jwtEnvVar       = null;
+                this.jwtFilePath     = config.get(propertyPrefix + JWT_FILE);
+                this.jwtCredFilePath = null;
+                this.jwtCredAlias    = null;
+                break;
+
+            case "cred":
+                this.jwtEnvVar       = null;
+                this.jwtFilePath     = null;
+                this.jwtCredFilePath = config.get(propertyPrefix + JWT_CRED_FILE);
+                this.jwtCredAlias    = config.get(propertyPrefix + JWT_CRED_ALIAS);
+                break;
+
+            default:
+                this.jwtEnvVar       = null;
+                this.jwtFilePath     = null;
+                this.jwtCredFilePath = null;
+                this.jwtCredAlias    = null;
+                break;
+        }
+}
 
     @Override
     public String getJwt() {
-        final String jwtSrc = config.get(propertyPrefix + JWT_SOURCE);
+        if (StringUtils.isNotEmpty(jwtEnvVar)) {
+            jwt = System.getenv(jwtEnvVar);
+        } else if (StringUtils.isNotEmpty(jwtFilePath)) {
+            File jwtFile = new File(jwtFilePath);
 
-        if (StringUtils.isNotEmpty(jwtSrc)) {
-            switch (jwtSrc) {
-                case "env":
-                    String jwtEnvVar = config.get(propertyPrefix + JWT_ENV);
-                    if (StringUtils.isNotEmpty(jwtEnvVar)) {
-                        String jwtFromEnv = System.getenv(jwtEnvVar);
-                        if (StringUtils.isNotBlank(jwtFromEnv)) {
-                            jwt = jwtFromEnv;
+            if (jwtFile.lastModified() != jwtFileLastModified && jwtFile.canRead()) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(jwtFile))) {
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
+                            break;
                         }
                     }
-                    break;
-                case "file":
-                    String jwtFilePath = config.get(propertyPrefix + JWT_FILE);
-                    if (StringUtils.isNotEmpty(jwtFilePath)) {
-                        File jwtFile = new File(jwtFilePath);
-                        if (jwtFile.exists()) {
-                            long lastModified = jwtFile.lastModified();
-                            if (lastModified == jwtFileLastModified) {
-                                return jwt; // Return cached JWT if file hasn't changed
-                            } else {
-                                try (BufferedReader reader = new BufferedReader(new FileReader(jwtFile))) {
-                                    String line;
-                                    while ((line = reader.readLine()) != null) {
-                                        if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
-                                            jwt = line;
-                                            break;
-                                        }
-                                    }
-                                    jwtFileLastModified = lastModified;
-                                } catch (IOException e) {
-                                    LOG.error("Failed to read JWT from file: {}", jwtFilePath, e);
-                                }
-                            }
-                        }
-                    }
-                    break;
-                case "cred":
-                    String credFilePath = config.get(propertyPrefix + JWT_CRED_FILE);
-                    String credAlias    = config.get(propertyPrefix + JWT_CRED_ALIAS);
-                    if (StringUtils.isNotEmpty(credFilePath) && StringUtils.isNotEmpty(credAlias)) {
-                        long currentTime = System.currentTimeMillis();
-                        if (jwtCredFileLastCheckedAt == -1 || (currentTime - jwtCredFileLastCheckedAt) > 60_000) { // last check should be more than 1 minute ago
-                            String jwtFromCredFile = RangerCredentialProvider.getInstance().getCredentialString(credFilePath, credAlias);
-                            if (StringUtils.isNotBlank(jwtFromCredFile)) {
-                                jwt = jwtFromCredFile;
-                                jwtCredFileLastCheckedAt = currentTime;
-                            }
-                        }
-                    }
-                    break;
+
+                    jwt                 = line;
+                    jwtFileLastModified = jwtFile.lastModified();
+                } catch (IOException e) {
+                    LOG.error("Failed to read JWT from file: {}", jwtFilePath, e);
+                }
             }
-        } else {
-            LOG.info("JWT source not configured, proceeding without JWT");
+        } else if (StringUtils.isNotEmpty(jwtCredFilePath) && StringUtils.isNotEmpty(jwtCredAlias)) {
+            long currentTime = System.currentTimeMillis();
+
+            if ((currentTime - jwtCredFileLastCheckedAt) > 60_000) { // last check should be more than 1 minute ago
+                jwt                      = RangerCredentialProvider.getInstance().getCredentialString(jwtCredFilePath, jwtCredAlias);
+                jwtCredFileLastCheckedAt = currentTime;
+            }
         }
+
         return jwt;
     }
 }
