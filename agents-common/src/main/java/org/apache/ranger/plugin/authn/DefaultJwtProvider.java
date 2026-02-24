@@ -32,20 +32,23 @@ import java.io.IOException;
 
 public class DefaultJwtProvider implements JwtProvider {
     private static final Logger LOG           = LoggerFactory.getLogger(DefaultJwtProvider.class);
-    public static final String JWT_SOURCE     = ".policy.rest.client.jwt.source";
-    public static final String JWT_ENV        = ".policy.rest.client.jwt.env";
-    public static final String JWT_FILE       = ".policy.rest.client.jwt.file";
-    public static final String JWT_CRED_FILE  = ".policy.rest.client.jwt.cred.file";
-    public static final String JWT_CRED_ALIAS = ".policy.rest.client.jwt.cred.alias";
+    public static final String JWT_SOURCE     = ".jwt.source";
+    public static final String JWT_ENV        = ".jwt.env";
+    public static final String JWT_FILE       = ".jwt.file";
+    public static final String JWT_CRED_FILE  = ".jwt.cred.file";
+    public static final String JWT_CRED_ALIAS = ".jwt.cred.alias";
 
+    private final String propertyPrefix;
+    private final Configuration config;
     private String jwt;
+
+    public DefaultJwtProvider(String propertyPrefix, Configuration config){
+        this.propertyPrefix = propertyPrefix;
+        this.config = config;
+    }
 
     @Override
     public String getJwt() {
-        return jwt;
-    }
-
-    public void setJwt(String propertyPrefix, Configuration config) {
         final String jwtSrc = config.get(propertyPrefix + JWT_SOURCE);
 
         if (StringUtils.isNotEmpty(jwtSrc)) {
@@ -69,6 +72,7 @@ public class DefaultJwtProvider implements JwtProvider {
                                 while ((line = reader.readLine()) != null) {
                                     if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
                                         jwt = line;
+                                        break;
                                     }
                                 }
                             } catch (IOException e) {
@@ -82,7 +86,7 @@ public class DefaultJwtProvider implements JwtProvider {
                     String credAlias = config.get(propertyPrefix + JWT_CRED_ALIAS);
                     if (StringUtils.isNotEmpty(credFilePath) && StringUtils.isNotEmpty(credAlias)) {
                         String jwtFromCredFile = RangerCredentialProvider.getInstance().getCredentialString(credFilePath, credAlias);
-                        if (StringUtils.isNotBlank(jwt)) {
+                        if (StringUtils.isNotBlank(jwtFromCredFile)) {
                             jwt = jwtFromCredFile;
                         }
                     }
@@ -91,5 +95,6 @@ public class DefaultJwtProvider implements JwtProvider {
         } else {
             LOG.info("JWT source not configured, proceeding without JWT");
         }
+        return jwt;
     }
 }

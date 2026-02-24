@@ -42,13 +42,14 @@ public class RangerPluginContext {
     private final RangerPluginConfig                                                         config;
     private final Map<String, Map<RangerPolicy.RangerPolicyResource, RangerResourceMatcher>> resourceMatchers = new HashMap<>();
     private final ReentrantReadWriteLock                                                     lock             = new ReentrantReadWriteLock(true); // fair lock
-    private       JwtProvider                                                                jwtProvider      = new DefaultJwtProvider();
+    private       JwtProvider                                                                jwtProvider;
     private       RangerAuthContext                                                          authContext;
     private       RangerAuthContextListener                                                  authContextListener;
     private       RangerAdminClient                                                          adminClient;
 
     public RangerPluginContext(RangerPluginConfig config) {
         this.config = config;
+        this.jwtProvider = new DefaultJwtProvider(config.getPropertyPrefix() + ".policy.rest.client", config);
     }
 
     public RangerPluginConfig getConfig() {
