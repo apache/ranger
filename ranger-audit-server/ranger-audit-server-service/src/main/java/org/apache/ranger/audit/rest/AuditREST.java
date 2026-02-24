@@ -155,7 +155,7 @@ public class AuditREST {
     @Path("/access")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response accessAudit(@QueryParam("serviceName") String serviceName, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
+    public Response logAccessAudit(@QueryParam("serviceName") String serviceName, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
         String authenticatedUser = getAuthenticatedUser(request);
 
         LOG.debug("==> AuditREST.accessAudit(): received {} audit events from service: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, StringUtils.isNotEmpty(serviceName) ? serviceName : "unknown", authenticatedUser);
