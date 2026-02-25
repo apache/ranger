@@ -28,6 +28,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.authn.JwtProvider;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
@@ -1024,7 +1025,13 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
     @Override
     public boolean isAuthenticationEnabled() {
-        return restClient.isAuthFilterPresent() || super.isAuthenticationEnabled();
+        return (restClient != null && restClient.isAuthFilterPresent()) || super.isAuthenticationEnabled();
+    }
+
+    public void setJwtProvider(JwtProvider jwtProvider) {
+        if (restClient != null) {
+            restClient.setJwtProvider(jwtProvider);
+        }
     }
 
     private void init(String url, String sslConfigFileName, int restClientConnTimeOutMs, int restClientReadTimeOutMs, int restClientMaxRetryAttempts, int restClientRetryIntervalMs, Configuration config) {
