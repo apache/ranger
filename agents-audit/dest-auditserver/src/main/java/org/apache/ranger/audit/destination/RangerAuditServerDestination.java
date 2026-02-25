@@ -55,8 +55,10 @@ public class RangerAuditServerDestination extends AuditDestination {
     public static final String PROP_AUDITSERVER_MAX_RETRY_ATTEMPTS           = "xasecure.audit.destination.auditserver.max.retry.attempts";
     public static final String PROP_AUDITSERVER_RETRY_INTERVAL_MS            = "xasecure.audit.destination.auditserver.retry.interval.ms";
     public static final String PROP_SERVICE_TYPE                             = "ranger.plugin.audit.service.type";
+    public static final String PROP_APP_ID                                   = "ranger.plugin.audit.app.id";
     public static final String REST_RELATIVE_PATH_POST                       = "/api/audit/access";
     public static final String QUERY_PARAM_SERVICE_NAME                      = "serviceName";
+    public static final String QUERY_PARAM_APP_ID                            = "appId";
 
     // Authentication types
     public static final String AUTH_TYPE_KERBEROS                            = "kerberos";
@@ -67,6 +69,7 @@ public class RangerAuditServerDestination extends AuditDestination {
     private              RangerRESTClient restClient;
     private              String           authType;
     private              String           serviceType;
+    private              String           appId;
 
     @Override
     public void init(Properties props, String propPrefix) {
@@ -84,6 +87,7 @@ public class RangerAuditServerDestination extends AuditDestination {
 
         this.authType    = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_AUTH_TYPE);
         this.serviceType = MiscUtil.getStringProperty(props, PROP_SERVICE_TYPE);
+        this.appId       = MiscUtil.getStringProperty(props, PROP_APP_ID);
 
         if (StringUtils.isEmpty(authType)) {
             // Authentication priority: JWT → Kerberos → Basic
@@ -108,6 +112,12 @@ public class RangerAuditServerDestination extends AuditDestination {
             LOG.error("Ensure that RangerBasePlugin is properly initialized with a valid serviceType (hdfs, hive, kafka, etc.)");
         } else {
             LOG.info("Audit destination configured for service type: {}", this.serviceType);
+        }
+
+        if (StringUtils.isNotEmpty(this.appId)) {
+            LOG.info("Audit destination configured with appId: {}", this.appId);
+        } else {
+            LOG.warn("appId not available in audit properties. Batch processing may not be optimal.");
         }
 
         if (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType)) {
@@ -265,6 +275,12 @@ public class RangerAuditServerDestination extends AuditDestination {
             LOG.error("Cannot send audit batch: serviceType is not set. This indicates a configuration error.");
             LOG.error("Audit server requires serviceName parameter. Please ensure RangerBasePlugin is properly initialized.");
             return false;
+        }
+
+        // Add appId to query parameters for batch processing
+        if (StringUtils.isNotEmpty(appId)) {
+            queryParams.put(QUERY_PARAM_APP_ID, appId);
+            LOG.debug("Adding appId={} to audit request for batch processing", appId);
         }
 
         try {

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.producer;
 
+import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.producer.kafka.AuditMessageQueue;
 import org.apache.ranger.audit.provider.AuditHandler;
@@ -34,6 +35,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 @Component
@@ -79,6 +83,37 @@ public class AuditDestinationMgr {
             init();
         }
         ret = auditHandler.log(authzAuditEvent);
+
+        return ret;
+    }
+
+    /**
+     * @param events List of audit events to process as a batch
+     * @param appId The application ID for this batch (used as Kafka partition key)
+     * @return true if batch was processed successfully, false otherwise
+     * @throws Exception if processing fails
+     */
+    public boolean logBatch(List<AuthzAuditEvent> events, String appId) throws Exception {
+        boolean ret = false;
+
+        if (auditHandler == null) {
+            init();
+        }
+
+        if (events == null || events.isEmpty()) {
+            LOG.warn("Empty event list provided to logBatch");
+            return true;
+        }
+
+        LOG.debug("Processing batch of {} events with appId: {}", events.size(), appId);
+
+        Collection<AuditEventBase> baseEvents = new ArrayList<>(events);
+
+        ret = auditHandler.log(baseEvents, appId);
+
+        if (!ret) {
+            LOG.error("Batch processing failed for {} events with appId: {}. Events have been spooled to recovery system.", events.size(), appId);
+        }
 
         return ret;
     }

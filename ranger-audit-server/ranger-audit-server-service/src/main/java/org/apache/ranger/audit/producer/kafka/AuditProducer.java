@@ -32,7 +32,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AuditProducer implements Runnable {
     private static final Logger LOG = LoggerFactory.getLogger(AuditProducer.class);
@@ -148,6 +153,107 @@ public class AuditProducer implements Runnable {
             });
         } catch (Exception e) {
             throw  new Exception(e);
+        }
+    }
+
+    /**
+     * Send a batch of audit events to Kafka efficiently using a batch key for all events.
+     *
+     * @param producer Kafka producer instance
+     * @param topic Topic to send to
+     * @param batchKey Single key (appId) to use for ALL events in the batch
+     * @param values List of serialized event messages
+     * @throws Exception if batch send fails
+     */
+    public static void sendBatch(KafkaProducer<String, String> producer, String topic, String batchKey, List<String> values) throws Exception {
+        int batchSize = values.size();
+        LOG.debug("==> AuditProducer.sendBatch(): Sending batch of {} events to topic: {} with single key: {}", batchSize, topic, batchKey);
+
+        final CountDownLatch   latch         = new CountDownLatch(batchSize);
+        final AtomicInteger    errorCount    = new AtomicInteger(0);
+        final List<Exception>  errors        = new ArrayList<>();
+        final List<Integer>    failedIndices = new ArrayList<>();
+        final List<String>     failedValues  = new ArrayList<>();
+
+        // Send all records asynchronously with the same batch key
+        // With custom partitioning: events distributed round-robin across partition range
+        // Without custom partitioning: all events go to same partition (hash-based)
+        for (int i = 0; i < batchSize; i++) {
+            final String value = values.get(i);
+            final int index = i;
+
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, batchKey, value);
+
+            try {
+                producer.send(record, new Callback() {
+                    @Override
+                    public void onCompletion(RecordMetadata metadata, Exception e) {
+                        if (e != null) {
+                            errorCount.incrementAndGet();
+                            synchronized (errors) {
+                                errors.add(e);
+                                failedIndices.add(index);
+                                failedValues.add(value);
+                            }
+                            LOG.error("Error sending audit event {} in batch to Kafka: {}", index, e.getMessage());
+                        } else {
+                            LOG.debug("Batch event {} sent to Topic: {} Partition: {} Offset: {}", index, metadata.topic(), metadata.partition(), metadata.offset());
+                        }
+                        latch.countDown();
+                    }
+                });
+            } catch (Exception e) {
+                errorCount.incrementAndGet();
+                synchronized (errors) {
+                    errors.add(e);
+                    failedIndices.add(i);
+                    failedValues.add(value);
+                }
+                LOG.error("Failed to queue audit event {} for sending: {}", i, e.getMessage());
+                latch.countDown();
+            }
+        }
+
+        // max wait time before timeout
+        boolean completed = latch.await(30, TimeUnit.SECONDS);
+
+        if (!completed) {
+            String errorMsg = String.format("Batch send timed out after 30 seconds. %d/%d events still pending", latch.getCount(), batchSize);
+            LOG.error(errorMsg);
+            throw new Exception(errorMsg);
+        }
+
+        if (errorCount.get() > 0) {
+            int successCount = batchSize - errorCount.get();
+            String errorMsg = String.format("Batch send had %d/%d failures, %d succeeded", errorCount.get(), batchSize, successCount);
+            LOG.error(errorMsg);
+            LOG.error("Failed event indices: {}", failedIndices);
+
+            // Create exception with failed values for selective retry
+            BatchSendException batchException = new BatchSendException(errorMsg, failedValues);
+            if (!errors.isEmpty()) {
+                batchException.initCause(errors.get(0));
+            }
+            throw batchException;
+        }
+
+        LOG.debug("<== AuditProducer.sendBatch(): Successfully sent batch of {} events to Kafka topic: {}, key: {}", batchSize, topic, batchKey);
+    }
+
+    /**
+     * Custom exception that carries the list of failed messages for selective retry.
+     * This prevents duplicates by only retrying the messages that actually failed.
+     */
+    public static class BatchSendException extends Exception {
+        private final List<String> failedMessages;
+
+        public BatchSendException(String message, List<String> failedMessages) {
+            super(message);
+            this.failedMessages = new ArrayList<>(failedMessages);
+        }
+
+        public List<String> getFailedMessages() {
+            return failedMessages;
         }
     }
 }

@@ -407,7 +407,12 @@ public class RangerBasePlugin {
                     auditProps.setProperty("ranger.plugin.audit.service.type", serviceType);
                     LOG.info("Added serviceType={} to audit properties for audit destination", serviceType);
                 }
-                providerFactory.init(auditProps, getAppId());
+                String appId = getAppId();
+                if (StringUtils.isNotEmpty(appId)) {
+                    auditProps.setProperty("ranger.plugin.audit.app.id", appId);
+                    LOG.info("Added appId={} to audit properties for audit destination", appId);
+                }
+                providerFactory.init(auditProps, appId);
             } else {
                 LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
                 LOG.error("No authorization audits will be generated. ");

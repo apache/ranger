@@ -149,16 +149,18 @@ public class AuditREST {
     /**
      *  Access Audits producer endpoint.
      *  @param serviceName Required query parameter to identify the source service (hdfs, hive, kafka, solr, etc.)
+     *  @param appId Optional query parameter for batch processing - identifies the application instance
+     *  @param accessAudits List of audit events to process
      *  @param request HTTP request to extract authenticated user
      */
     @POST
     @Path("/access")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response logAccessAudit(@QueryParam("serviceName") String serviceName, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
+    public Response logAccessAudit(@QueryParam("serviceName") String serviceName, @QueryParam("appId") String appId, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
         String authenticatedUser = getAuthenticatedUser(request);
 
-        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from service: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, StringUtils.isNotEmpty(serviceName) ? serviceName : "unknown", authenticatedUser);
+        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from service: {}, appId: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, StringUtils.isNotEmpty(serviceName) ? serviceName : "unknown", StringUtils.isNotEmpty(appId) ? appId : "none", authenticatedUser);
 
         Response ret;
 
@@ -206,27 +208,35 @@ public class AuditREST {
                     .build();
         } else {
             try {
-                LOG.debug("Processing {} audit events from service: {}", accessAudits.size(), serviceName);
+                LOG.debug("Processing {} audit events from service: {}, appId: {}", accessAudits.size(), serviceName, appId);
 
-                for (AuthzAuditEvent event : accessAudits) {
-                    auditDestinationMgr.log(event);
-                }
+                boolean success = auditDestinationMgr.logBatch(accessAudits, appId);
 
-                Map<String, Object> response = new HashMap<>();
-                response.put("total", accessAudits.size());
-                response.put("timestamp", System.currentTimeMillis());
-                if (StringUtils.isNotEmpty(serviceName)) {
-                    response.put("serviceName", serviceName);
+                if (success) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("total", accessAudits.size());
+                    response.put("timestamp", System.currentTimeMillis());
+                    if (StringUtils.isNotEmpty(serviceName)) {
+                        response.put("serviceName", serviceName);
+                    }
+                    if (StringUtils.isNotEmpty(appId)) {
+                        response.put("appId", appId);
+                    }
+                    if (StringUtils.isNotEmpty(authenticatedUser)) {
+                        response.put("authenticatedUser", authenticatedUser);
+                    }
+                    String jsonString = buildResponse(response);
+                    ret = Response.status(Response.Status.OK)
+                            .entity(jsonString)
+                            .build();
+                } else {
+                    LOG.warn("Batch processing failed for {} events from service: {}, appId: {}. Events spooled to recovery.", accessAudits.size(), serviceName, appId);
+                    ret = Response.status(Response.Status.ACCEPTED)
+                            .entity(buildErrorResponse("Batch processing failed. Events have been queued for retry."))
+                            .build();
                 }
-                if (StringUtils.isNotEmpty(authenticatedUser)) {
-                    response.put("authenticatedUser", authenticatedUser);
-                }
-                String jsonString = buildResponse(response);
-                ret = Response.status(Response.Status.OK)
-                        .entity(jsonString)
-                        .build();
             } catch (Exception e) {
-                LOG.error("Error processing access audits batch from service: {}", serviceName, e);
+                LOG.error("Error processing access audits batch from service: {}, appId: {}", serviceName, appId, e);
                 ret = Response.status(Response.Status.BAD_REQUEST)
                         .entity(buildErrorResponse("Failed to process audit events: " + e.getMessage()))
                         .build();

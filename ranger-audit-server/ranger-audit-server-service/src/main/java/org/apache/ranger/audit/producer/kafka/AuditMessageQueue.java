@@ -29,7 +29,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -178,8 +180,118 @@ public class AuditMessageQueue extends AuditDestination {
     }
 
     @Override
-    public boolean log(final Collection<AuditEventBase> events) {
-        return false;
+    public synchronized boolean log(final Collection<AuditEventBase> events) {
+        return log(events, null);
+    }
+
+    @Override
+    public synchronized boolean log(final Collection<AuditEventBase> events, String batchKey) {
+        if (events == null || events.isEmpty()) {
+            return true;
+        }
+
+        LOG.debug("==> AuditMessageQueue.log(Collection, batchKey): Processing batch of {} events with explicit batchKey: {}", events.size(), batchKey);
+
+        boolean allSuccess   = true;
+        int     successCount = 0;
+        int     failCount    = 0;
+
+        // Prepare batch data - all events use the SAME appId key for batch commit
+        List<AuthzAuditEvent> authzEvents = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
+
+        for (AuditEventBase event : events) {
+            if (event instanceof AuthzAuditEvent) {
+                AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
+
+                if (authzEvent.getAgentHostname() == null) {
+                    authzEvent.setAgentHostname(MiscUtil.getHostname());
+                }
+
+                if (authzEvent.getLogType() == null) {
+                    authzEvent.setLogType("RangerAudit");
+                }
+
+                if (authzEvent.getEventId() == null) {
+                    authzEvent.setEventId(MiscUtil.generateUniqueId());
+                }
+
+                // If batchKey not provided, use the first event's agentId as the batch key
+                if (batchKey == null) {
+                    batchKey = authzEvent.getAgentId();
+                    LOG.debug("Using first event's agentId as batch key: {}", batchKey);
+                }
+
+                authzEvents.add(authzEvent);
+                messages.add(MiscUtil.stringify(event));
+            }
+        }
+
+        if (authzEvents.isEmpty()) {
+            LOG.warn("No valid AuthzAuditEvent found in batch");
+            return false;
+        }
+
+        if (batchKey == null || batchKey.isEmpty()) {
+            LOG.warn("Batch key (appId) is null or empty. Using default key.");
+            batchKey = "unknown-appId";
+        }
+
+        LOG.debug("Batch of {} events will be committed with batch key (appId): {}", authzEvents.size(), batchKey);
+
+        try {
+            if (topicName == null || kafkaProducer == null) {
+                init(props, propPrefix);
+            }
+
+            if (kafkaProducer != null) {
+                // Send entire batch to Kafka with same batch key (appId) for all events
+                // With custom partitioning: events distributed round-robin for load balancing
+                // Without custom partitioning: all events to same partition for ordering
+                final String finalBatchKey = batchKey;
+                MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
+                    AuditProducer.sendBatch(kafkaProducer, topicName, finalBatchKey, messages);
+                    return null;
+                });
+                successCount = authzEvents.size();
+                allSuccess   = true;
+                LOG.debug("ranger-audit-server/ranger-audit-server-service/src/main/java/org/apache/ranger/audit/producer/kafka/AuditMessageQueue.javaSuccessfully sent batch of {} events to Kafka topic: {} with key: {}", successCount, topicName, finalBatchKey);
+            } else {
+                LOG.warn("Kafka producer not available, spooling batch of {} messages to recovery", authzEvents.size());
+                for (String message : messages) {
+                    spoolToRecovery(batchKey, message);
+                }
+                failCount  = authzEvents.size();
+                allSuccess = false;
+            }
+        } catch (AuditProducer.BatchSendException bse) {
+            // Partial failure - only retry the failed messages to avoid duplicates
+            List<String> failedMessages = bse.getFailedMessages();
+            int          failedCount    = failedMessages.size();
+            int          succeededCount = authzEvents.size() - failedCount;
+
+            LOG.error("Partial batch failure: {}/{} events failed, {} succeeded. Spooling only failed events to recovery.", failedCount, authzEvents.size(), succeededCount);
+
+            for (String message : failedMessages) {
+                spoolToRecovery(batchKey, message);
+            }
+
+            successCount = succeededCount;
+            failCount    = failedCount;
+            allSuccess   = false;
+        } catch (Throwable t) {
+            // Complete failure (timeout, connection error, etc.) - retry entire batch
+            LOG.error("Complete batch failure for {} events. Spooling entire batch to recovery. Error: {}", authzEvents.size(), t.getMessage());
+            for (String message : messages) {
+                spoolToRecovery(batchKey, message);
+            }
+            failCount  = authzEvents.size();
+            allSuccess = false;
+        }
+
+        LOG.debug("<== AuditMessageQueue.log(Collection, batchKey): successCount={}, failCount={}", successCount, failCount);
+
+        return allSuccess;
     }
 
     private void startRangerAuditRecoveryThread() {
