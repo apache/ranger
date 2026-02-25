@@ -96,7 +96,7 @@ public class RangerAuthzPlugin {
         RangerAccessResource    resource      = getResource(access.getResource().getName(), access.getResource().getAttributes());
         RangerAccessRequestImpl accessRequest = new RangerAccessRequestImpl(resource, null, userInfo.getName(), userInfo.getGroups(), userInfo.getRoles());
 
-        initializeRequest(accessRequest, context);
+        initializeRequest(accessRequest, access, context);
 
         boolean hasDeny          = false;
         boolean hasAllow         = false;
@@ -160,7 +160,7 @@ public class RangerAuthzPlugin {
 
         ret.setResource(resource);
         request.setResource(getResource(resource.getName(), null));
-        initializeRequest(request, context);
+        initializeRequest(request, null, context);
 
         RangerResourceACLs acls = plugin.getResourceACLs(request);
 
@@ -234,7 +234,11 @@ public class RangerAuthzPlugin {
         return new RangerAccessResourceImpl(elements, parent.getOwnerUser());
     }
 
-    private void initializeRequest(RangerAccessRequestImpl request, RangerAccessContext context) {
+    private void initializeRequest(RangerAccessRequestImpl request, RangerAccessInfo access, RangerAccessContext context) {
+        if (access != null) {
+            request.setAction(access.getAction());
+        }
+
         request.setAccessTime(new Date(context.getAccessTime()));
         request.setClientIPAddress(context.getClientIpAddress());
         request.setForwardedAddresses(context.getForwardedIpAddresses());
