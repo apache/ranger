@@ -1025,11 +1025,13 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
     @Override
     public boolean isAuthenticationEnabled() {
-        return restClient.isAuthFilterPresent() || super.isAuthenticationEnabled();
+        return (restClient != null && restClient.isAuthFilterPresent()) || super.isAuthenticationEnabled();
     }
 
     public void setJwtProvider(JwtProvider jwtProvider) {
-        restClient.setJwtProvider(jwtProvider);
+        if (restClient != null) {
+            restClient.setJwtProvider(jwtProvider);
+        }
     }
 
     private void init(String url, String sslConfigFileName, int restClientConnTimeOutMs, int restClientReadTimeOutMs, int restClientMaxRetryAttempts, int restClientRetryIntervalMs, Configuration config) {
