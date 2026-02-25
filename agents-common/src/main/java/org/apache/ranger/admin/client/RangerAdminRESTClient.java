@@ -30,6 +30,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.authn.JwtProvider;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.*;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
     private String           serviceNameUrlParam;
 	private String           pluginId;
 	private String           clusterName;
+	private JwtProvider      jwtProvider;
 	private RangerRESTClient restClient;
 	private RangerRESTUtils  restUtils   = new RangerRESTUtils();
 	private boolean 		 supportsPolicyDeltas;
@@ -761,7 +763,15 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 	@Override
 	public boolean isAuthenticationEnabled() {
-		return restClient.isAuthFilterPresent() || super.isAuthenticationEnabled();
+		return (restClient != null && restClient.isAuthFilterPresent()) || super.isAuthenticationEnabled();
+	}
+
+	public void setJwtProvider(JwtProvider jwtProvider) {
+		this.jwtProvider = jwtProvider;
+
+		if (restClient != null) {
+			restClient.setJwtProvider(jwtProvider);
+		}
 	}
 
 	private void init(String url, String sslConfigFileName, int restClientConnTimeOutMs , int restClientReadTimeOutMs, int restClientMaxRetryAttempts, int restClientRetryIntervalMs, Configuration config) {
@@ -770,6 +780,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		}
 
 		restClient = new RangerRESTClient(url, sslConfigFileName, config);
+		if (jwtProvider != null) {
+			restClient.setJwtProvider(jwtProvider);
+		}
 		restClient.setRestClientConnTimeOutMs(restClientConnTimeOutMs);
 		restClient.setRestClientReadTimeOutMs(restClientReadTimeOutMs);
 		restClient.setMaxRetryAttempts(restClientMaxRetryAttempts);

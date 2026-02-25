@@ -34,6 +34,7 @@ import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.authn.JwtProvider;
 import org.apache.ranger.plugin.contextenricher.RangerAdminUserStoreRetriever;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
@@ -213,6 +214,10 @@ public class RangerBasePlugin {
 		AuditHandler         ret             = providerFactory.getAuditProvider();
 
 		return ret;
+	}
+
+	public void registerJwtProvider(JwtProvider jwtProvider) {
+		pluginContext.registerJWTProvider(jwtProvider);
 	}
 
 	public String getServiceType() {

@@ -28,6 +28,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.plugin.authn.DefaultJwtProvider;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +88,10 @@ public class RangerAuditServerDestination extends AuditDestination {
         Configuration config = createRESTClientConfiguration(props, propPrefix, authType);
 
         this.restClient = new RangerRESTClient(url, sslConfigFileName, config);
+
+        if (AUTH_TYPE_JWT.equalsIgnoreCase(authType)) {
+            this.restClient.setJwtProvider(new DefaultJwtProvider("ranger.plugin.policy.rest.client", config));
+        }
 
         this.restClient.setRestClientConnTimeOutMs(connTimeoutMs);
         this.restClient.setRestClientReadTimeOutMs(readTimeoutMs);
