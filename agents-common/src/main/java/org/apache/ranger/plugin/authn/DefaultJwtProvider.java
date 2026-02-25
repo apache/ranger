@@ -43,12 +43,12 @@ public class DefaultJwtProvider implements JwtProvider {
     private final String jwtFilePath;
     private final String jwtCredFilePath;
     private final String jwtCredAlias;
-    private       long   jwtFileLastModified      = 0;
-    private       long   jwtCredFileLastCheckedAt = 0;
+    private       long   jwtFileLastModified;
+    private       long   jwtCredFileLastCheckedAt;
 
     private volatile String jwt;
 
-    public DefaultJwtProvider(String propertyPrefix, Configuration config){
+    public DefaultJwtProvider(String propertyPrefix, Configuration config) {
         String jwtSrc = config.get(propertyPrefix + JWT_SOURCE);
 
         if (jwtSrc == null) {
@@ -84,7 +84,7 @@ public class DefaultJwtProvider implements JwtProvider {
                 this.jwtCredAlias    = null;
                 break;
         }
-}
+    }
 
     @Override
     public String getJwt() {
