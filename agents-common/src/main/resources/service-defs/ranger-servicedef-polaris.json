@@ -73,7 +73,7 @@
       "parent":                 "namespace",
       "level":                  40,
       "isValidLeaf":            true,
-      "accessTypeRestrictions": [ "table-drop", "view-drop", "table-properties-read", "table-properties-write", "view-properties-read", "view-properties-write", "table-data-read", "table-data-write", "table-metadata-full", "view-metadata-full", "table-grants-list", "view-grants-list", "table-grants-manage", "view-grants-manage", "table-policy-attach", "table-policy-detach" ]
+      "accessTypeRestrictions": [ "table-drop", "view-drop", "table-properties-read", "table-properties-write", "view-properties-read", "view-properties-write", "table-data-read", "table-data-write", "table-metadata-full", "view-metadata-full", "table-grants-list", "view-grants-list", "table-grants-manage", "view-grants-manage", "table-policy-attach", "table-policy-detach", "table-properties-set", "table-properties-remove", "table-uuid-assign", "table-format-version-upgrade", "table-schema-add", "table-schema-set-current", "table-partition-spec-add", "table-partition-specs-remove", "table-sort-order-add", "table-sort-order-set-default", "table-snapshot-add", "table-snapshots-remove", "table-snapshot-ref-set", "table-snapshot-ref-remove", "table-location-set", "table-statistics-set", "table-statistics-remove", "table-structure-manage" ]
     },
     {
       "itemId":                 8,
