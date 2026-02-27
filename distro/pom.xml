@@ -495,13 +495,13 @@
                                         <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-audit-server-service.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-audit-consumer-solr.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-audit-consumer-hdfs.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/sample-client.xml</descriptor>
-                                        <descriptor>src/main/assembly/ranger-audit-server-service.xml</descriptor>
-                                        <descriptor>src/main/assembly/ranger-audit-consumer-solr.xml</descriptor>
-                                        <descriptor>src/main/assembly/ranger-audit-consumer-hdfs.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
@@ -1083,8 +1083,13 @@
                                         <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-audit-server-service.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-audit-consumer-solr.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-audit-consumer-hdfs.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
+                                        <descriptor>src/main/assembly/sample-client.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
