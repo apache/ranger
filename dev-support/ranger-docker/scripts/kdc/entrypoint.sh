@@ -74,6 +74,19 @@ function create_keytabs() {
   create_principal_and_keytab rangeradmin  ranger
   create_principal_and_keytab rangerlookup ranger
 
+  create_principal_and_keytab HTTP               ranger-audit
+  create_principal_and_keytab rangerauditserver  ranger-audit
+
+  # Ranger Audit Server Microservices
+  create_principal_and_keytab HTTP                      ranger-audit-server
+  create_principal_and_keytab rangerauditserver         ranger-audit-server
+
+  create_principal_and_keytab HTTP                      ranger-audit-consumer-solr
+  create_principal_and_keytab rangerauditserver         ranger-audit-consumer-solr
+
+  create_principal_and_keytab HTTP                      ranger-audit-consumer-hdfs
+  create_principal_and_keytab rangerauditserver         ranger-audit-consumer-hdfs
+
   create_principal_and_keytab rangertagsync ranger-tagsync
 
   create_principal_and_keytab rangerusersync ranger-usersync
@@ -132,7 +145,7 @@ if [ ! -f $DB_DIR/principal ]; then
   echo "Database initialized"
 
   create_keytabs
-  create_testusers ranger ranger-usersync ranger-tagsync ranger-audit ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino ranger-opensearch
+  create_testusers ranger ranger-usersync ranger-tagsync ranger-audit ranger-audit-server ranger-audit-consumer-solr ranger-audit-consumer-hdfs ranger-hadoop ranger-hive ranger-hbase ranger-kafka ranger-solr ranger-knox ranger-kms ranger-ozone ranger-trino ranger-opensearch
 else
   echo "KDC DB already exists; skipping create"
 fi

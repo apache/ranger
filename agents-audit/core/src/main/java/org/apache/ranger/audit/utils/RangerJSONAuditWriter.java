@@ -102,9 +102,13 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
                 } else {
                     out1 = getLogFileStream();
 
+                    logger.debug("Writing {} audit events to HDFS file: {}", events.size(), currentFileName);
+
                     for (String event : events) {
                         out1.println(event);
                     }
+
+                    logger.debug("Successfully wrote {} audit events to HDFS", events.size());
                 }
 
                 return out1;

@@ -118,3 +118,8 @@ docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.ym
 ~~~
 docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-trino.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
 ~~~
+
+#### To bring up audit server, solr and hdfs consumer. Make sure kafka,solr and hdfs containers are running before bring up audit server.
+~~~
+docker compose  -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-audit-server.yml  up -d
+~~~

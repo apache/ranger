@@ -29,6 +29,8 @@ public interface AuditHandler {
 
     boolean log(Collection<AuditEventBase> events);
 
+    boolean log(Collection<AuditEventBase> events, String batchKey);
+
     boolean logJSON(String event);
 
     boolean logJSON(Collection<String> events);
