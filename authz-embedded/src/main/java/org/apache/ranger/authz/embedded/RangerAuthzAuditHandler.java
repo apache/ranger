@@ -65,4 +65,8 @@ public class RangerAuthzAuditHandler extends RangerDefaultAuditHandler implement
     public void close() {
         auditEvents.forEach(super::logAuthzAudit);
     }
+
+    protected Collection<AuthzAuditEvent> getAuditEvents() {
+        return auditEvents;
+    }
 }
