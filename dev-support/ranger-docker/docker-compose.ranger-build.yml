@@ -24,6 +24,7 @@ services:
       - GIT_URL
       - RANGER_VERSION
       - SKIPTESTS
+      - JAVA_OPTS
 
 networks:
   ranger:
