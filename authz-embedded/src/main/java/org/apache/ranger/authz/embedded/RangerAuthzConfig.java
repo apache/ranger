@@ -24,7 +24,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Properties;
 
 public class RangerAuthzConfig {
-    public static final String PROP_PREFIX_INIT_SERVICES = "ranger.authz.init.services";
+    public static final String PROP_APP_TYPE             = "ranger.authz.app.type";
+    public static final String PROP_INIT_SERVICES        = "ranger.authz.init.services";
     public static final String PROP_PREFIX_DEFAULT       = "ranger.authz.default.";
     public static final String PROP_PREFIX_AUDIT         = "ranger.authz.audit.";
     public static final String PROP_PREFIX_SERVICE       = "ranger.authz.service.";
@@ -37,13 +38,17 @@ public class RangerAuthzConfig {
     }
 
     public String[] getInitServices() {
-        String initServices = properties.getProperty(PROP_PREFIX_INIT_SERVICES);
+        String initServices = properties.getProperty(PROP_INIT_SERVICES);
 
         if (StringUtils.isBlank(initServices)) {
             return new String[0];
         }
 
         return initServices.split(",");
+    }
+
+    public String getAppType() {
+        return properties.getProperty(PROP_APP_TYPE);
     }
 
     public Properties getAuditProperties() {
