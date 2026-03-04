@@ -38,7 +38,9 @@ public class RangerAdminMetricsSourcePolicyResourceAccess extends RangerAdminMet
     @Override
     protected void refresh() {
         Map<String, Long> accessPolicyMetrics = rangerMetricsFetcher.getPolicyMetrics(RangerPolicy.POLICY_TYPE_ACCESS);
+        Map<String, Long> securityZonePolicyMetrics = rangerMetricsFetcher.getSecurityZonePolicyMetrics();
 
         addMetricEntries("ResourceAccessCount", accessPolicyMetrics);
+        addMetricEntries("SecurityZonePolicy", securityZonePolicyMetrics);
     }
 }

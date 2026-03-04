@@ -26,21 +26,18 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class RangerAdminMetricsSourceUserGroup extends RangerAdminMetricsSourceBase {
+public class RangerAdminMetricsSourceGds extends RangerAdminMetricsSourceBase {
     @Autowired
     private RangerMetricsFetcher rangerMetricsFetcher;
 
-    public RangerAdminMetricsSourceUserGroup() {
-        super("admin", "UserGroup");
+    public RangerAdminMetricsSourceGds() {
+        super("admin", "Gds");
     }
 
     @Override
     protected void refresh() {
-        Map<String, Long> userGroupMetrics = rangerMetricsFetcher.getUserMetrics();
-        Map<String, Long> userSyncMetrics = rangerMetricsFetcher.getUserSyncMetrics();
+        Map<String, Long> gdsMetrics = rangerMetricsFetcher.getGdsMetrics();
 
-        addMetricEntries("UserCount", userGroupMetrics);
-        addMetricEntry("GroupCount", "", rangerMetricsFetcher.getGroupCount());
-        addMetricEntries("UserSyncLastUpdated", userSyncMetrics);
+        addMetricEntries("GdsCount", gdsMetrics);
     }
 }

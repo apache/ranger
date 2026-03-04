@@ -512,4 +512,10 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 
         return ret;
     }
+
+    public long getSecurityZonePolicyCount(Long zoneId) {
+        return getEntityManager().createNamedQuery("XXPolicy.getSecurityZonePolicyCount", Long.class)
+                    .setParameter("zoneId", zoneId)
+                    .getSingleResult();
+    }
 }
