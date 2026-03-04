@@ -22,6 +22,7 @@ package org.apache.ranger.authz.embedded;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authz.model.RangerAccessContext;
 import org.apache.ranger.authz.model.RangerAuthzRequest;
 import org.apache.ranger.authz.model.RangerAuthzResult;
@@ -32,6 +33,7 @@ import org.apache.ranger.authz.model.RangerResourcePermissions;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -111,11 +113,21 @@ public class TestEmbeddedAuthorizer {
                     continue;
                 }
 
-                RangerAuthzRequest request = test.request;
+                RangerAuthzRequest request  = test.request;
                 RangerAuthzResult  expected = test.result;
-                RangerAuthzResult  result   = authorizer.authorize(request);
 
-                assertEquals(expected, result);
+                if (test.audits == null) {
+                    RangerAuthzResult result = authorizer.authorize(request);
+
+                    assertEquals(expected, result);
+                } else {
+                    try (TestAuthzAuditHandler auditHandler = new TestAuthzAuditHandler("test")) {
+                        RangerAuthzResult result = authorizer.authorize(request, auditHandler);
+
+                        assertEquals(expected, result);
+                        auditEquals(test.audits, auditHandler.getAuditEvents());
+                    }
+                }
             }
         } finally {
             if (authorizer != null) {
@@ -142,9 +154,19 @@ public class TestEmbeddedAuthorizer {
 
                 RangerMultiAuthzRequest request  = test.request;
                 RangerMultiAuthzResult  expected = test.result;
-                RangerMultiAuthzResult  result   = authorizer.authorize(request);
 
-                assertEquals(expected, result);
+                if (test.audits == null) {
+                    RangerMultiAuthzResult result = authorizer.authorize(request);
+
+                    assertEquals(expected, result);
+                } else {
+                    try (TestAuthzAuditHandler auditHandler = new TestAuthzAuditHandler("test")) {
+                        RangerMultiAuthzResult result = authorizer.authorize(request, auditHandler);
+
+                        assertEquals(expected, result);
+                        auditEquals(test.audits, auditHandler.getAuditEvents());
+                    }
+                }
             }
         } finally {
             if (authorizer != null) {
@@ -187,19 +209,54 @@ public class TestEmbeddedAuthorizer {
         }
     }
 
+    private static void auditEquals(List<AuthzAuditEvent> expected, Collection<AuthzAuditEvent> actual) {
+        assertEquals(expected.size(), actual.size());
+
+        AuthzAuditEvent[] actualAudits = actual.toArray(new AuthzAuditEvent[0]);
+
+        for (int i = 0; i < expected.size(); i++) {
+            auditEquals(expected.get(i), actualAudits[i]);
+        }
+    }
+
+    private static void auditEquals(AuthzAuditEvent expected, AuthzAuditEvent actual) {
+        assertEquals(expected.getUser(), actual.getUser());
+        assertEquals(expected.getAccessType(), actual.getAccessType());
+        assertEquals(expected.getAction(), actual.getAction());
+        assertEquals(expected.getRepositoryName(), actual.getRepositoryName());
+        assertEquals(expected.getResourceType(), actual.getResourceType());
+        assertEquals(expected.getResourcePath(), actual.getResourcePath());
+        assertEquals(expected.getAccessResult(), actual.getAccessResult());
+        assertEquals(expected.getPolicyId(), actual.getPolicyId());
+        assertEquals(expected.getAgentId(), actual.getAgentId());
+        assertEquals(expected.getAclEnforcer(), actual.getAclEnforcer());
+    }
+
     private static class TestAuthzData {
-        public RangerAuthzRequest request;
-        public RangerAuthzResult  result;
+        public RangerAuthzRequest    request;
+        public RangerAuthzResult     result;
+        public List<AuthzAuditEvent> audits;
     }
 
     private static class TestMultiAuthzData {
         public RangerMultiAuthzRequest request;
         public RangerMultiAuthzResult  result;
+        public List<AuthzAuditEvent>   audits;
     }
 
     private static class TestResourcePermissionsData {
         public RangerResourceInfo        resource;
         public RangerAccessContext       context;
         public RangerResourcePermissions permissions;
+    }
+
+    private static class TestAuthzAuditHandler extends RangerAuthzAuditHandler {
+        public TestAuthzAuditHandler(String appType) {
+            super(appType);
+        }
+
+        public Collection<AuthzAuditEvent> getAuditEvents() {
+            return super.getAuditEvents();
+        }
     }
 }

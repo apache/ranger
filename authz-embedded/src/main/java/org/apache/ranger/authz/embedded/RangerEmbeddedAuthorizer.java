@@ -48,17 +48,21 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
     private static final Logger LOG = LoggerFactory.getLogger(RangerEmbeddedAuthorizer.class);
 
     private final RangerAuthzConfig              config;
+    private final String                         appType;
     private final Map<String, RangerAuthzPlugin> plugins = new HashMap<>();
 
     public RangerEmbeddedAuthorizer(Properties properties) {
         super(properties);
 
-        this.config = new RangerAuthzConfig(properties);
+        this.config  = new RangerAuthzConfig(properties);
+        this.appType = config.getAppType();
     }
 
     @Override
     public void init() throws RangerAuthzException {
-        AuditProviderFactory.getInstance().init(config.getAuditProperties(), "ranger-authz");
+        String appType = StringUtils.isNotBlank(this.appType) ? this.appType : "ranger-authz";
+
+        AuditProviderFactory.getInstance().init(config.getAuditProperties(), appType);
 
         String[] initServices = config.getInitServices();
 
@@ -83,8 +87,9 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         validateRequest(request);
 
         RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
+        String            appType = StringUtils.isNotBlank(this.appType) ? this.appType : plugin.getPlugin().getAppId();
 
-        try (RangerAuthzAuditHandler auditHandler = new RangerAuthzAuditHandler(plugin.getPlugin())) {
+        try (RangerAuthzAuditHandler auditHandler = new RangerAuthzAuditHandler(appType)) {
             return authorize(request, plugin, auditHandler);
         }
     }
@@ -93,45 +98,28 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
     public RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request) throws RangerAuthzException {
         validateRequest(request);
 
-        RangerAuthzPlugin      plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
-        RangerMultiAuthzResult result = new RangerMultiAuthzResult(request.getRequestId());
+        RangerAuthzPlugin plugin  = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
+        String            appType = StringUtils.isNotBlank(this.appType) ? this.appType : plugin.getPlugin().getAppId();
 
-        if (request.getAccesses() != null) {
-            int allowedCount       = 0;
-            int deniedCount        = 0;
-            int notDeterminedCount = 0;
-
-            result.setAccesses(new ArrayList<>(request.getAccesses().size()));
-
-            try (RangerAuthzAuditHandler auditHandler = new RangerAuthzAuditHandler(plugin.getPlugin())) {
-                for (RangerAccessInfo accessInfo : request.getAccesses()) {
-                    RangerAuthzRequest authzRequest = new RangerAuthzRequest(null, request.getUser(), accessInfo, request.getContext());
-                    RangerAuthzResult  authzResult  = authorize(authzRequest, plugin, auditHandler);
-
-                    if (authzResult.getDecision() == AccessDecision.ALLOW) {
-                        allowedCount++;
-                    } else if (authzResult.getDecision() == AccessDecision.DENY) {
-                        deniedCount++;
-                    } else if (authzResult.getDecision() == AccessDecision.NOT_DETERMINED) {
-                        notDeterminedCount++;
-                    }
-
-                    result.getAccesses().add(authzResult);
-                }
-            }
-
-            if (allowedCount == request.getAccesses().size()) {
-                result.setDecision(AccessDecision.ALLOW);
-            } else if (deniedCount == request.getAccesses().size()) {
-                result.setDecision(AccessDecision.DENY);
-            } else if (notDeterminedCount == request.getAccesses().size()) {
-                result.setDecision(AccessDecision.NOT_DETERMINED);
-            } else {
-                result.setDecision(AccessDecision.PARTIAL);
-            }
+        try (RangerAuthzAuditHandler auditHandler = new RangerAuthzAuditHandler(appType)) {
+            return authorize(request, plugin, auditHandler);
         }
+    }
 
-        return result;
+    public RangerAuthzResult authorize(RangerAuthzRequest request, RangerAuthzAuditHandler auditHandler) throws RangerAuthzException {
+        validateRequest(request);
+
+        RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
+
+        return authorize(request, plugin, auditHandler);
+    }
+
+    public RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request, RangerAuthzAuditHandler auditHandler) throws RangerAuthzException {
+        validateRequest(request);
+
+        RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
+
+        return authorize(request, plugin, auditHandler);
     }
 
     @Override
@@ -177,6 +165,45 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
 
     private RangerAuthzResult authorize(RangerAuthzRequest request, RangerAuthzPlugin plugin, RangerAuthzAuditHandler auditHandler) throws RangerAuthzException {
         return plugin.authorize(request, auditHandler);
+    }
+
+    private RangerMultiAuthzResult authorize(RangerMultiAuthzRequest request, RangerAuthzPlugin plugin, RangerAuthzAuditHandler auditHandler) throws RangerAuthzException {
+        RangerMultiAuthzResult result = new RangerMultiAuthzResult(request.getRequestId());
+
+        if (request.getAccesses() != null) {
+            int allowedCount       = 0;
+            int deniedCount        = 0;
+            int notDeterminedCount = 0;
+
+            result.setAccesses(new ArrayList<>(request.getAccesses().size()));
+
+            for (RangerAccessInfo accessInfo : request.getAccesses()) {
+                RangerAuthzRequest authzRequest = new RangerAuthzRequest(null, request.getUser(), accessInfo, request.getContext());
+                RangerAuthzResult  authzResult  = authorize(authzRequest, plugin, auditHandler);
+
+                if (authzResult.getDecision() == AccessDecision.ALLOW) {
+                    allowedCount++;
+                } else if (authzResult.getDecision() == AccessDecision.DENY) {
+                    deniedCount++;
+                } else if (authzResult.getDecision() == AccessDecision.NOT_DETERMINED) {
+                    notDeterminedCount++;
+                }
+
+                result.getAccesses().add(authzResult);
+            }
+
+            if (allowedCount == request.getAccesses().size()) {
+                result.setDecision(AccessDecision.ALLOW);
+            } else if (deniedCount == request.getAccesses().size()) {
+                result.setDecision(AccessDecision.DENY);
+            } else if (notDeterminedCount == request.getAccesses().size()) {
+                result.setDecision(AccessDecision.NOT_DETERMINED);
+            } else {
+                result.setDecision(AccessDecision.PARTIAL);
+            }
+        }
+
+        return result;
     }
 
     private RangerAuthzPlugin getOrCreatePlugin(String serviceName, String serviceType) throws RangerAuthzException {
