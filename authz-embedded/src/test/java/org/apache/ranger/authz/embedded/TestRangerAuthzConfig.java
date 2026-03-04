@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestRangerAuthzConfig {
@@ -35,6 +36,7 @@ public class TestRangerAuthzConfig {
         assertTrue(config.getServiceProperties("prod_hive", "hive").isEmpty());
         assertTrue(config.getServiceProperties("dev_hdfs", "hdfs").isEmpty());
         assertTrue(config.getAuditProperties().isEmpty());
+        assertNull(config.getAppType());
     }
 
     @Test
@@ -44,6 +46,7 @@ public class TestRangerAuthzConfig {
         validateDevHiveProperties(config.getServiceProperties("dev_hive", "hive"));
         validateProdHiveProperties(config.getServiceProperties("prod_hive", "hive"));
         validateDevHdfsProperties(config.getServiceProperties("dev_hdfs", "hdfs"));
+        assertEquals("ranger-pdp", config.getAppType());
     }
 
     @Test
@@ -75,6 +78,7 @@ public class TestRangerAuthzConfig {
         validateDevHdfsProperties(config.getServiceProperties("dev_hdfs", "hdfs"));
         validateAuditConfigV2(config.getAuditProperties());
         validateAuditConfigV3(config.getAuditProperties());
+        assertEquals("ranger-pdp", config.getAppType());
     }
 
     private void validateDevHiveProperties(Properties prop) {
@@ -155,6 +159,8 @@ public class TestRangerAuthzConfig {
 
     private static Properties createDefaultProperties() {
         Properties props = new Properties();
+
+        props.setProperty("ranger.authz.app.type", "ranger-pdp");
 
         props.setProperty("ranger.authz.default.policy.source.impl", "org.apache.ranger.admin.client.RangerAdminRESTClient");
         props.setProperty("ranger.authz.default.policy.rest.url", "http://localhost:6080");

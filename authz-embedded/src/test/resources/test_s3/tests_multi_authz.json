@@ -22,7 +22,12 @@
           }
         }
       ]
-    }
+    },
+    "audits": [
+      {
+        "reqUser": "path1-r-user", "access": "read", "action": "read", "repo": "dev_s3", "resType": "path", "resource": "mybucket/data/path1/file.orc", "result": 1, "policy": 1, "agent": "test", "enforcer": "ranger-acl"
+      }
+    ]
   },
   {
     "request": {

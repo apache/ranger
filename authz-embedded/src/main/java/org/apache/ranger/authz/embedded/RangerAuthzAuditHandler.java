@@ -22,20 +22,19 @@ package org.apache.ranger.authz.embedded;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 public class RangerAuthzAuditHandler extends RangerDefaultAuditHandler implements AutoCloseable {
-    private final RangerBasePlugin            plugin;
+    private final String                      appType;
     private final Collection<AuthzAuditEvent> auditEvents = new ArrayList<>();
     private       boolean                     deniedExists;
 
-    public RangerAuthzAuditHandler(RangerBasePlugin plugin) {
+    public RangerAuthzAuditHandler(String appType) {
         super();
 
-        this.plugin = plugin;
+        this.appType = appType;
     }
 
     @Override
@@ -44,7 +43,7 @@ public class RangerAuthzAuditHandler extends RangerDefaultAuditHandler implement
             AuthzAuditEvent auditEvent = getAuthzEvents(result);
 
             if (auditEvent != null) {
-                auditEvent.setAgentId(plugin.getAppId());
+                auditEvent.setAgentId(appType);
 
                 if (result.getIsAccessDetermined() && !result.getIsAllowed()) {
                     deniedExists = true;
@@ -65,5 +64,9 @@ public class RangerAuthzAuditHandler extends RangerDefaultAuditHandler implement
     @Override
     public void close() {
         auditEvents.forEach(super::logAuthzAudit);
+    }
+
+    protected Collection<AuthzAuditEvent> getAuditEvents() {
+        return auditEvents;
     }
 }
