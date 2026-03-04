@@ -38,6 +38,7 @@ services:
       - RANGER_DB_TYPE
       - KERBEROS_ENABLED
       - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
+      - JAVA_OPTS
     command:
       - /home/ranger/scripts/ranger.sh
 
