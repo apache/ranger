@@ -67,6 +67,7 @@
                             <include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
                             <include>jline:jline</include>
                             <include>com.jcraft:jsch</include>
+                            <include>com.google.code.gson:gson</include>
                             <include>com.google.code.findbugs:jsr305</include>
                             <include>io.netty:netty-all</include>
                             <include>org.xerial.snappy:snappy-java</include>
