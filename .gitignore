@@ -19,3 +19,9 @@ winpkg/target
 .python-version
 /security-admin/src/main/webapp/react-webapp/node_modules
 **/target
+
+# Runtime logs and process files
+logs/
+*.log
+*.pid
+catalina.out

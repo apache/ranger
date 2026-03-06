@@ -1,0 +1,156 @@
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+<configuration>
+    <!-- HDFS CONSUMER SERVICE CONFIGURATION -->
+    <!-- Server Configuration (Health Check Endpoint) -->
+    <property>
+        <name>log.dir</name>
+        <value>${audit.consumer.hdfs.log.dir}</value>
+        <description>Log directory for HDFS consumer service</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.consumer.hdfs.service.webapp.dir</name>
+        <value>webapp/ranger-audit-consumer-hdfs</value>
+        <description>Path to the extracted webapp directory</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.consumer.hdfs.service.contextName</name>
+        <value>/</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.consumer.hdfs.service.host</name>
+        <value>ranger-audit-consumer-hdfs.rangernw</value>
+        <description>Service hostname</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.consumer.hdfs.service.http.port</name>
+        <value>7092</value>
+        <description>Health check endpoint port (different from Solr: 7091)</description>
+    </property>
+
+    <!-- Used for KERBEROS authentication into HDFS -->
+    <property>
+        <name>ranger.audit.service.authentication.method</name>
+        <value>KERBEROS</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.service.host</name>
+        <value>ranger-audit-consumer-hdfs.rangernw</value>
+        <description>Hostname for resolving _HOST in Kerberos principal</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.service.kerberos.principal</name>
+        <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
+        <description>Principal for Kafka consumer and HDFS writes</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.service.kerberos.keytab</name>
+        <value>/etc/keytabs/rangerauditserver.keytab</value>
+    </property>
+
+    <!-- KAFKA CONSUMER CONFIGURATION                                 -->
+    <property>
+        <name>xasecure.audit.destination.kafka.bootstrap.servers</name>
+        <value>ranger-kafka:9092</value>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.topic.name</name>
+        <value>ranger_audits</value>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.security.protocol</name>
+        <value>SASL_PLAINTEXT</value>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.sasl.mechanism</name>
+        <value>GSSAPI</value>
+    </property>
+
+    <!-- HDFS Consumer Threading Configuration -->
+    <property>
+        <name>xasecure.audit.destination.kafka.consumer.thread.count</name>
+        <value>3</value>
+        <description>Number of HDFS consumer worker threads</description>
+    </property>
+
+    <!-- Offset Management -->
+    <property>
+        <name>xasecure.audit.destination.kafka.consumer.offset.commit.strategy</name>
+        <value>batch</value>
+        <description>batch or manual</description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.consumer.offset.commit.interval.ms</name>
+        <value>30000</value>
+        <description>Used only if strategy is 'manual'</description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.kafka.consumer.max.poll.records</name>
+        <value>500</value>
+        <description>Maximum records per poll</description>
+    </property>
+
+    <!-- Consumer Classes (ONLY HDFS) -->
+    <property>
+        <name>xasecure.audit.destination.kafka.consumer.classes</name>
+        <value>org.apache.ranger.audit.consumer.kafka.AuditHDFSConsumer</value>
+    </property>
+
+    <!-- HDFS DESTINATION CONFIGURATION - MUST BE ENABLED             -->
+    <property>
+        <name>xasecure.audit.destination.hdfs</name>
+        <value>true</value>
+        <description>MUST be true for HDFS consumer to work</description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.hdfs.dir</name>
+        <value>hdfs://ranger-hadoop:9000/ranger/audit</value>
+        <description>
+            Namenode host for HDFS audit destination.
+            example: hdfs://hdfs-namenode:8020/ranger/audit
+            In Docker, use the service name of the namenode: hdfs://ranger-hadoop:9000/ranger/audit
+        </description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.hdfs.batch.filespool.dir</name>
+        <value>/var/log/audit-consumer-hdfs/spool</value>
+    </property>
+
+    <!-- HDFS File Configuration -->
+    <property>
+        <name>xasecure.audit.destination.hdfs.batch.filequeue.filetype</name>
+        <value>json</value>
+        <description>File format: json or orc</description>
+    </property>
+
+    <property>
+        <name>xasecure.audit.destination.hdfs.file.rollover.sec</name>
+        <value>86400</value>
+        <description>File rollover time in seconds (default: 24 hours)</description>
+    </property>
+</configuration>

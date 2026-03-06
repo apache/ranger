@@ -2,6 +2,9 @@
 !config
 !dist/version
 !dist/ranger-*-admin.tar.gz
+!dist/ranger-*-ranger-audit-server-service.tar.gz
+!dist/ranger-*-ranger-audit-consumer-solr.tar.gz
+!dist/ranger-*-ranger-audit-consumer-hdfs.tar.gz
 !dist/ranger-*-kms.tar.gz
 !dist/ranger-*-usersync.tar.gz
 !dist/ranger-*-tagsync.tar.gz
