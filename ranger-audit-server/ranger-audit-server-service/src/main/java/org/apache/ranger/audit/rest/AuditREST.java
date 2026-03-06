@@ -148,7 +148,7 @@ public class AuditREST {
 
     /**
      *  Access Audits producer endpoint.
-     *  @param serviceName Required query parameter to identify the source service (hdfs, hive, kafka, solr, etc.)
+     *  @param serviceType Required query parameter to identify the source service (hdfs, hive, kafka, solr, etc.)
      *  @param appId Optional query parameter for batch processing - identifies the application instance
      *  @param accessAudits List of audit events to process
      *  @param request HTTP request to extract authenticated user
@@ -157,15 +157,15 @@ public class AuditREST {
     @Path("/access")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response logAccessAudit(@QueryParam("serviceName") String serviceName, @QueryParam("appId") String appId, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
+    public Response logAccessAudit(@QueryParam("serviceType") String serviceType, @QueryParam("appId") String appId, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
         String authenticatedUser = getAuthenticatedUser(request);
 
-        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from service: {}, appId: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, StringUtils.isNotEmpty(serviceName) ? serviceName : "unknown", StringUtils.isNotEmpty(appId) ? appId : "none", authenticatedUser);
+        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from serviceType: {}, appId: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, StringUtils.isNotEmpty(serviceType) ? serviceType : "unknown", StringUtils.isNotEmpty(appId) ? appId : "none", authenticatedUser);
 
         Response ret;
 
-        if (StringUtils.isEmpty(serviceName)) {
-            LOG.error("serviceName query parameter is required. Rejecting audit request.");
+        if (StringUtils.isEmpty(serviceType)) {
+            LOG.error("serviceType query parameter is required. Rejecting audit request.");
             ret = Response.status(Response.Status.BAD_REQUEST)
                     .entity(buildErrorResponse("serviceName query parameter is required"))
                     .build();
@@ -173,17 +173,9 @@ public class AuditREST {
         }
 
         if (StringUtils.isEmpty(authenticatedUser)) {
-            LOG.error("No authenticated user found in request for service: {}. Rejecting audit request.", serviceName);
+            LOG.error("No authenticated user found in request for serviceType: {}. Rejecting audit request.", serviceType);
             ret = Response.status(Response.Status.UNAUTHORIZED)
                     .entity(buildErrorResponse("Authentication required to send audit events"))
-                    .build();
-            return ret;
-        }
-
-        if (!serviceName.equals(authenticatedUser)) {
-            LOG.error("Authentication mismatch: serviceName={} but authenticatedUser={}. Rejecting audit request.", serviceName, authenticatedUser);
-            ret = Response.status(Response.Status.FORBIDDEN)
-                    .entity(buildErrorResponse("Service name does not match authenticated user"))
                     .build();
             return ret;
         }
@@ -197,7 +189,7 @@ public class AuditREST {
         }
 
         if (accessAudits == null || accessAudits.isEmpty()) {
-            LOG.warn("Empty or null audit events batch received from service: {}, user: {}", serviceName, authenticatedUser);
+            LOG.warn("Empty or null audit events batch received from serviceType: {}, user: {}", serviceType, authenticatedUser);
             ret = Response.status(Response.Status.BAD_REQUEST)
                     .entity(buildErrorResponse("Audit events cannot be empty"))
                     .build();
@@ -208,7 +200,7 @@ public class AuditREST {
                     .build();
         } else {
             try {
-                LOG.debug("Processing {} audit events from service: {}, appId: {}", accessAudits.size(), serviceName, appId);
+                LOG.debug("Processing {} audit events from service: {}, appId: {}", accessAudits.size(), serviceType, appId);
 
                 boolean success = auditDestinationMgr.logBatch(accessAudits, appId);
 
@@ -216,8 +208,8 @@ public class AuditREST {
                     Map<String, Object> response = new HashMap<>();
                     response.put("total", accessAudits.size());
                     response.put("timestamp", System.currentTimeMillis());
-                    if (StringUtils.isNotEmpty(serviceName)) {
-                        response.put("serviceName", serviceName);
+                    if (StringUtils.isNotEmpty(serviceType)) {
+                        response.put("serviceType", serviceType);
                     }
                     if (StringUtils.isNotEmpty(appId)) {
                         response.put("appId", appId);
@@ -230,20 +222,20 @@ public class AuditREST {
                             .entity(jsonString)
                             .build();
                 } else {
-                    LOG.warn("Batch processing failed for {} events from service: {}, appId: {}. Events spooled to recovery.", accessAudits.size(), serviceName, appId);
+                    LOG.warn("Batch processing failed for {} events from serviceType: {}, appId: {}. Events spooled to recovery.", accessAudits.size(), serviceType, appId);
                     ret = Response.status(Response.Status.ACCEPTED)
                             .entity(buildErrorResponse("Batch processing failed. Events have been queued for retry."))
                             .build();
                 }
             } catch (Exception e) {
-                LOG.error("Error processing access audits batch from service: {}, appId: {}", serviceName, appId, e);
+                LOG.error("Error processing access audits batch from serviceType: {}, appId: {}", serviceType, appId, e);
                 ret = Response.status(Response.Status.BAD_REQUEST)
                         .entity(buildErrorResponse("Failed to process audit events: " + e.getMessage()))
                         .build();
             }
         }
 
-        LOG.debug("<== AuditREST.accessAudit(): HttpStatus {} for service: {}, user: {}", ret.getStatus(), serviceName, authenticatedUser);
+        LOG.debug("<== AuditREST.accessAudit(): HttpStatus {} for serviceType: {}, user: {}", ret.getStatus(), serviceType, authenticatedUser);
 
         return ret;
     }
@@ -355,7 +347,7 @@ public class AuditREST {
         Set<String>       ret    = new HashSet<>();
         AuditServerConfig config = AuditServerConfig.getInstance();
 
-        String allowedUsersStr = config.get(AuditServerConstants.PROP_ALLOWED_USERS, AuditServerConstants.DEFAULT_ALLOWED_USERS);
+        String allowedUsersStr = config.get(AuditServerConstants.PROP_ALLOWED_USERS);
         if (StringUtils.isNotEmpty(allowedUsersStr)) {
             String[] users = allowedUsersStr.split(",");
             for (String user : users) {

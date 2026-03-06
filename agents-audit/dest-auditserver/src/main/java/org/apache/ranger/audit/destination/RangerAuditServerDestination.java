@@ -21,12 +21,15 @@ package org.apache.ranger.audit.destination;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +42,7 @@ import java.nio.charset.Charset;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -54,10 +58,8 @@ public class RangerAuditServerDestination extends AuditDestination {
     public static final String PROP_AUDITSERVER_SSL_CONFIG_FILE              = "xasecure.audit.destination.auditserver.ssl.config.file";
     public static final String PROP_AUDITSERVER_MAX_RETRY_ATTEMPTS           = "xasecure.audit.destination.auditserver.max.retry.attempts";
     public static final String PROP_AUDITSERVER_RETRY_INTERVAL_MS            = "xasecure.audit.destination.auditserver.retry.interval.ms";
-    public static final String PROP_SERVICE_TYPE                             = "ranger.plugin.audit.service.type";
-    public static final String PROP_APP_ID                                   = "ranger.plugin.audit.app.id";
     public static final String REST_RELATIVE_PATH_POST                       = "/api/audit/access";
-    public static final String QUERY_PARAM_SERVICE_NAME                      = "serviceName";
+    public static final String QUERY_PARAM_SERVICE_TYPE                      = "serviceType";
     public static final String QUERY_PARAM_APP_ID                            = "appId";
 
     // Authentication types
@@ -86,8 +88,6 @@ public class RangerAuditServerDestination extends AuditDestination {
         int    retryIntervalMs   = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_RETRY_INTERVAL_MS, 1000);
 
         this.authType    = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_AUTH_TYPE);
-        this.serviceType = MiscUtil.getStringProperty(props, PROP_SERVICE_TYPE);
-        this.appId       = MiscUtil.getStringProperty(props, PROP_APP_ID);
 
         if (StringUtils.isEmpty(authType)) {
             // Authentication priority: JWT → Kerberos → Basic
@@ -121,7 +121,7 @@ public class RangerAuditServerDestination extends AuditDestination {
         }
 
         if (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType)) {
-            preAuthenticateKerberos();
+            initKerberos();
         }
 
         Configuration config = createConfigurationFromProperties(props, authType, userName, password);
@@ -171,33 +171,33 @@ public class RangerAuditServerDestination extends AuditDestination {
         }
     }
 
-    private void preAuthenticateKerberos() {
-        LOG.info("==> RangerAuditServerDestination:preAuthenticateKerberos()");
+    private void initKerberos() {
+        LOG.info("==> RangerAuditServerDestination:initKerberos()");
 
         try {
             UserGroupInformation ugi = UserGroupInformation.getLoginUser();
 
             if (ugi == null) {
-                LOG.warn("No UserGroupInformation available for Kerberos pre-authentication");
+                LOG.warn("No UserGroupInformation available for Kerberos authentication");
                 return;
             }
 
             if (!ugi.hasKerberosCredentials()) {
-                LOG.warn("User {} does not have Kerberos credentials for pre-authentication", ugi.getUserName());
+                LOG.warn("User {} does not have Kerberos credentials for authentication", ugi.getUserName());
                 return;
             }
 
-            LOG.info("Pre-authenticating Kerberos for user: {}, authMethod: {}", ugi.getUserName(), ugi.getAuthenticationMethod());
+            LOG.info("Kerberos authentication for user: {}, authMethod: {}", ugi.getUserName(), ugi.getAuthenticationMethod());
 
             ugi.checkTGTAndReloginFromKeytab();
             LOG.debug("TGT verified and refreshed if needed for user: {}", ugi.getUserName());
 
-            LOG.info("Kerberos pre-authentication completed successfully");
+            LOG.info("Kerberos authentication completed successfully");
         } catch (Exception e) {
-            LOG.warn("Kerberos pre-authentication failed. First request will retry authentication", e);
+            LOG.warn("Kerberos authentication failed. First request will retry authentication", e);
         }
 
-        LOG.info("<== RangerAuditServerDestination:preAuthenticateKerberos()");
+        LOG.info("<== RangerAuditServerDestination:initKerberos()");
     }
 
     @Override
@@ -267,20 +267,24 @@ public class RangerAuditServerDestination extends AuditDestination {
         boolean ret = false;
         Map<String, String> queryParams = new HashMap<>();
 
-        // Add serviceName to query parameters
+        // Add serviceType to query parameters
+        serviceType = fetchServiceType(events);
         if (StringUtils.isNotEmpty(serviceType)) {
-            queryParams.put(QUERY_PARAM_SERVICE_NAME, serviceType);
-            LOG.debug("Adding serviceName={} to audit request", serviceType);
+            queryParams.put(QUERY_PARAM_SERVICE_TYPE, serviceType);
+            LOG.debug("Adding serviceType={} to audit request", serviceType);
+            LOG.info("Adding serviceType={} to audit request", serviceType);
         } else {
             LOG.error("Cannot send audit batch: serviceType is not set. This indicates a configuration error.");
-            LOG.error("Audit server requires serviceName parameter. Please ensure RangerBasePlugin is properly initialized.");
+            LOG.error("Audit server requires serviceType parameter. Please ensure RangerBasePlugin is properly initialized.");
             return false;
         }
 
         // Add appId to query parameters for batch processing
+        appId = fetchAppId(events);
         if (StringUtils.isNotEmpty(appId)) {
             queryParams.put(QUERY_PARAM_APP_ID, appId);
             LOG.debug("Adding appId={} to audit request for batch processing", appId);
+            LOG.info("Adding appId={} to audit request for batch processing", appId);
         }
 
         try {
@@ -341,6 +345,35 @@ public class RangerAuditServerDestination extends AuditDestination {
             LOG.error("Failed to send audit batch of {} events. Error: {}", events.size(), e.getMessage(), e);
             ret = false;
         }
+        return ret;
+    }
+
+    private String fetchServiceType(Collection<AuditEventBase> events) {
+        String ret = null;
+
+        Iterator<AuditEventBase> auditEventInterator = events.iterator();
+        if (auditEventInterator.hasNext()) {
+            AuthzAuditEvent auditEvent = (AuthzAuditEvent) auditEventInterator.next();
+            if (auditEvent != null) {
+                String additionalInfo = auditEvent.getAdditionalInfo();
+                Map<String, String> addInfoMap = JsonUtils.jsonToMapStringString(additionalInfo);
+                if (MapUtils.isNotEmpty(addInfoMap)) {
+                    ret = addInfoMap.get("serviceType");
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private String fetchAppId(Collection<AuditEventBase> events) {
+        String ret = null;
+
+        AuthzAuditEvent auditEvent = (AuthzAuditEvent) events.iterator().next();
+        if (auditEvent != null) {
+            ret = auditEvent.getAgentId();
+        }
+
         return ret;
     }
 

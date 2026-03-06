@@ -83,4 +83,4 @@ USER ranger
 
 # Start the audit server using the custom startup script
 WORKDIR /opt/ranger-audit-server
-ENTRYPOINT ["/home/ranger/scripts/ranger-audit-server.sh"]
+ENTRYPOINT ${RANGER_SCRIPTS}/ranger-audit-server.sh

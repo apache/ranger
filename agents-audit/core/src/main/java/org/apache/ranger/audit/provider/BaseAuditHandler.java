@@ -107,11 +107,6 @@ public abstract class BaseAuditHandler implements AuditHandler {
         return log(Collections.singletonList(event));
     }
 
-    @Override
-    public boolean log(Collection<AuditEventBase> events, String batchKey) {
-        return log(events);
-    }
-
     /*
      * (non-Javadoc)
      *

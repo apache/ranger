@@ -232,7 +232,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
     }
 
     public String getAdditionalInfo(RangerAccessRequest request, RangerAccessResult result) {
-        String              ret        = org.apache.commons.lang3.StringUtils.EMPTY;
+        String              ret        = null;
         Map<String, String> addInfomap = new HashMap<>();
 
         if (!CollectionUtils.isEmpty(request.getForwardedAddresses())) {

@@ -27,10 +27,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -39,8 +35,6 @@ import java.util.Set;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class AuthzAuditEvent extends AuditEventBase {
     protected static final int    MAX_ACTION_FIELD_SIZE       = 1800;
     protected static final int    MAX_REQUEST_DATA_FIELD_SIZE = 1800;

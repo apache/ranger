@@ -27,7 +27,6 @@ public class AuditServerConstants {
 
     public static final String PROP_ALLOWED_USERS                          = "ranger.audit.service.allowed.users";
     public static final String PROP_AUTH_TO_LOCAL                          = "ranger.audit.service.auth.to.local";
-    public static final String DEFAULT_ALLOWED_USERS                       = "hdfs,hive,hbase,kafka,yarn,solr,knox,storm,atlas,nifi,ozone,kudu,presto,trino";
 
     public static final String JAAS_KRB5_MODULE                            = "com.sun.security.auth.module.Krb5LoginModule required";
     public static final String JAAS_USE_KEYTAB                             = "useKeyTab=true";

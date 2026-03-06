@@ -195,8 +195,11 @@ public class AuditRouterHDFS {
         String writerImpl = getWriterImplementation(fileType);
 
         // Configure directory properties
-        String baseDir    = MiscUtil.getStringProperty(props, hdfsPropPrefix + ".dir", "/ranger/audit/" + serviceType);
-        String subDir     = MiscUtil.getStringProperty(props, hdfsPropPrefix + ".subdir", appId + "/%time:yyyyMMdd%/");
+        String baseDir    = MiscUtil.getStringProperty(props, hdfsPropPrefix + ".dir", "/ranger/audit");
+
+        // Default: {serviceType}/{appId}/%time:yyyyMMdd%/
+        String defaultSubDir = (serviceType != null && !serviceType.isEmpty()) ? serviceType + "/" + appId + "/%time:yyyyMMdd%/" : appId + "/%time:yyyyMMdd%/";
+        String subDir        = MiscUtil.getStringProperty(props, hdfsPropPrefix + ".subdir", defaultSubDir);
 
         // Set file extension based on file type
         String fileExtension  = getFileExtension(fileType);

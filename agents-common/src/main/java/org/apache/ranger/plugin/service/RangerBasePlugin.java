@@ -401,8 +401,10 @@ public class RangerBasePlugin {
 
         if (!providerFactory.isInitDone()) {
             if (pluginConfig.getProperties() != null) {
-                Properties auditProps  = pluginConfig.getProperties();
-                String     serviceType = getServiceType();
+                Properties baseProps  = pluginConfig.getProperties();
+                Properties auditProps = new Properties();
+                auditProps.putAll(baseProps);
+                String serviceType = getServiceType();
                 if (StringUtils.isNotEmpty(serviceType)) {
                     auditProps.setProperty("ranger.plugin.audit.service.type", serviceType);
                     LOG.info("Added serviceType={} to audit properties for audit destination", serviceType);

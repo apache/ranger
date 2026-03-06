@@ -38,10 +38,6 @@
             <version>${fasterxml.jackson.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-audit-core</artifactId>
             <version>${project.version}</version>

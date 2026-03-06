@@ -41,11 +41,6 @@ public class DummyAuditProvider implements AuditHandler {
     }
 
     @Override
-    public boolean log(Collection<AuditEventBase> events, String batchKey) {
-        return log(events);
-    }
-
-    @Override
     public boolean logJSON(String event) {
         AuditEventBase eventObj = MiscUtil.fromJson(event, AuthzAuditEvent.class);
 
