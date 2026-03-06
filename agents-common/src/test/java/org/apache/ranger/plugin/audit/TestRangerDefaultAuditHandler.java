@@ -289,7 +289,7 @@ public class TestRangerDefaultAuditHandler {
         RangerAccessResult      res  = new RangerAccessResult(0, "svc", null, req);
         req.setRemoteIPAddress(null);
         req.setForwardedAddresses(new ArrayList<>());
-        Assertions.assertTrue(handler.getAdditionalInfo(req, res).isEmpty());
+        Assertions.assertNull(handler.getAdditionalInfo(req, res));
 
         RangerAccessRequestImpl req2 = new RangerAccessRequestImpl();
         RangerAccessResult      res2 = new RangerAccessResult(0, "svc", null, req2);
