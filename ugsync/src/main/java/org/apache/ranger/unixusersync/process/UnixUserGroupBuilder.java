@@ -44,11 +44,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class UnixUserGroupBuilder implements UserGroupSource {
     private static final Logger LOG = LoggerFactory.getLogger(UnixUserGroupBuilder.class);
 
     private static final String OS = System.getProperty("os.name");
+    // Matches POSIX usernames + AD/Kerberos UPN/sAMAccountName characters.
+    private static final Pattern SAFE_USER_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9@._\\\\-]+$");
     /**
      * Shell commands to get users and groups
      */
@@ -135,6 +138,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
         }
 
         buildUserGroupInfo();
+    }
+
+    private static boolean isNameSafe(String name) {
+        if (name == null || name.isEmpty()) {
+            return false;
+        }
+        return SAFE_USER_NAME_PATTERN.matcher(name).matches();
     }
 
     @Override
@@ -389,7 +399,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
                 // "id" is same across Linux / BSD / MacOSX
                 // gids are used as id might return groups with spaces, ie "domain users"
-                Process process = Runtime.getRuntime().exec(new String[] {"bash", "-c", "id -G " + userName});
+                if (!isNameSafe(userName)) {
+                    LOG.warn("Skipping user with unsafe characters in name: [{}]", userName);
+                    continue;
+                }
+                Process process = Runtime.getRuntime().exec(new String[] {"id", "-G", userName});
 
                 try {
                     reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -451,6 +465,10 @@ public class UnixUserGroupBuilder implements UserGroupSource {
             groupMembers = tokens[3];
         }
 
+        if (!isNameSafe(groupName)) {
+            LOG.warn("Skipping group with unsafe characters in name: [{}]", groupName);
+            return;
+        }
         groupId2groupNameMap.remove(groupId);
 
         int numGroupId = Integer.parseInt(groupId);
@@ -471,6 +489,10 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
         if (groupMembers != null && !groupMembers.trim().isEmpty()) {
             for (String user : groupMembers.split(",")) {
+                if (!isNameSafe(user)) {
+                    LOG.warn("Skipping group member with unsafe characters in username: [{}] in group [{}]", user, groupName);
+                    continue;
+                }
                 groupUserTable.put(groupName, user, groupId);
             }
         } else {
@@ -531,6 +553,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                 if (useGid) {
                     command = String.format(groupCmd, group.getKey());
                 } else {
+                    String groupName = group.getValue();
+                    if (!isNameSafe(groupName)) {
+                        LOG.warn("Skipping group lookup for unsafe group name: [{}]", groupName);
+                        continue;
+                    }
                     command = String.format(groupCmd, group.getValue());
                 }
 
@@ -566,6 +593,10 @@ public class UnixUserGroupBuilder implements UserGroupSource {
             LOG.debug("Adding extra groups");
 
             for (String group : groups) {
+                if (!isNameSafe(group)) {
+                    LOG.warn("Skipping configured group with unsafe characters: [{}]", group);
+                    continue;
+                }
                 String   command = String.format(groupCmd, group);
                 String[] cmd     = new String[] {"bash", "-c", command};
 
