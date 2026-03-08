@@ -531,7 +531,6 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                 if (useGid) {
                     command = String.format(groupCmd, group.getKey());
                 } else {
-                    String groupName = group.getValue();
                     command = String.format(groupCmd, group.getValue());
                 }
 
