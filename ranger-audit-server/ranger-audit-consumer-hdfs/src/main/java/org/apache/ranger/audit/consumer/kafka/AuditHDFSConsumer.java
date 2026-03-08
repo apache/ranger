@@ -116,9 +116,9 @@ public class AuditHDFSConsumer extends AuditConsumerBase implements AuditConsume
                 return;
             }
 
-            String principal = auditConfig.get(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL);
-            String keytab    = auditConfig.get(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB);
-            String hostName  = auditConfig.get(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + "host");
+            String principal = auditConfig.get(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL);
+            String keytab    = auditConfig.get(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB);
+            String hostName  = auditConfig.get(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + "host");
 
             if (principal == null || keytab == null) {
                 LOG.warn("Kerberos is enabled but principal or keytab is null! principal={}, keytab={}", principal, keytab);

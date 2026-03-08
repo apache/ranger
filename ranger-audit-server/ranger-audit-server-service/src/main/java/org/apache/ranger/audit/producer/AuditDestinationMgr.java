@@ -20,7 +20,6 @@
 package org.apache.ranger.audit.producer;
 
 import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.producer.kafka.AuditMessageQueue;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
@@ -35,9 +34,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 
 @Component
@@ -52,39 +49,27 @@ public class AuditDestinationMgr {
         init();
     }
 
-    public void init() {
-        LOG.info("==> AuditDestinationMgr.init()");
+    @PreDestroy
+    public void shutdown() {
+        LOG.info("==> AuditDestinationMgr.shutdown()");
 
-        auditServerUtils = new AuditServerUtils();
-        AuditServerConfig auditConfig = AuditServerConfig.getInstance();
-        Properties        properties  = auditConfig.getProperties();
-        if (properties != null) {
-            auditServerUtils.setAuditConfig(properties);
+        AuditHandler auditHandler = this.auditHandler;
+
+        if (auditHandler != null) {
+            try {
+                LOG.info("Shutting down audit handler: {}", auditHandler.getClass().getSimpleName());
+
+                auditHandler.stop();
+
+                LOG.info("Audit handler shutdown completed successfully");
+            } catch (Exception e) {
+                LOG.error("Error shutting down audit handler", e);
+            } finally {
+                this.auditHandler = null;
+            }
         }
 
-        String kafkaDestPrefix = AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.DEFAULT_SERVICE_NAME;
-        boolean isAuditToKafkaDestinationEnabled = MiscUtil.getBooleanProperty(properties, kafkaDestPrefix, false);
-        if (isAuditToKafkaDestinationEnabled) {
-            auditHandler = new AuditMessageQueue();
-            auditHandler.init(properties, kafkaDestPrefix);
-            auditHandler.start();
-            LOG.info("Kafka producer initialized and started");
-        } else {
-            LOG.warn("Kafka audit destination is not enabled. Producer service will not function.");
-        }
-
-        LOG.info("<== AuditDestinationMgr.init()  AuditDestination: {} ", kafkaDestPrefix);
-    }
-
-    public boolean log(AuthzAuditEvent authzAuditEvent) throws Exception {
-        boolean ret = false;
-
-        if (auditHandler == null) {
-            init();
-        }
-        ret = auditHandler.log(authzAuditEvent);
-
-        return ret;
+        LOG.info("<== AuditDestinationMgr.shutdown()");
     }
 
     /**
@@ -93,23 +78,15 @@ public class AuditDestinationMgr {
      * @return true if batch was processed successfully, false otherwise
      * @throws Exception if processing fails
      */
-    public boolean logBatch(List<AuthzAuditEvent> events, String appId) throws Exception {
-        boolean ret = false;
-
+    public boolean logBatch(Collection<? extends AuditEventBase> events, String appId) throws Exception {
         if (auditHandler == null) {
             init();
         }
 
-        if (events == null || events.isEmpty()) {
-            LOG.warn("Empty event list provided to logBatch");
-            return true;
-        }
-
         LOG.debug("Processing batch of {} events with appId: {}", events.size(), appId);
 
-        Collection<AuditEventBase> baseEvents = new ArrayList<>(events);
-
-        ret = auditHandler.log(baseEvents, appId);
+        AuditHandler auditHandler = this.auditHandler;
+        boolean      ret          = auditHandler != null && auditHandler.log((Collection<AuditEventBase>) events, appId);
 
         if (!ret) {
             LOG.error("Batch processing failed for {} events with appId: {}. Events have been spooled to recovery system.", events.size(), appId);
@@ -118,20 +95,32 @@ public class AuditDestinationMgr {
         return ret;
     }
 
-    @PreDestroy
-    public void shutdown() {
-        LOG.info("==> AuditDestinationMgr.shutdown()");
+    private void init() {
+        LOG.info("==> AuditDestinationMgr.init()");
 
-        if (auditHandler != null) {
-            try {
-                LOG.info("Shutting down audit handler: {}", auditHandler.getClass().getSimpleName());
-                auditHandler.stop();
-                LOG.info("Audit handler shutdown completed successfully");
-            } catch (Exception e) {
-                LOG.error("Error shutting down audit handler", e);
-            }
+        auditServerUtils = new AuditServerUtils();
+
+        AuditServerConfig auditConfig = AuditServerConfig.getInstance();
+        Properties        properties  = auditConfig.getProperties();
+
+        if (properties != null) {
+            auditServerUtils.setAuditConfig(properties);
         }
 
-        LOG.info("<== AuditDestinationMgr.shutdown()");
+        String  kafkaDestPrefix                  = AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.DEFAULT_SERVICE_NAME;
+        boolean isAuditToKafkaDestinationEnabled = MiscUtil.getBooleanProperty(properties, kafkaDestPrefix, false);
+
+        if (isAuditToKafkaDestinationEnabled) {
+            auditHandler = new AuditMessageQueue();
+
+            auditHandler.init(properties, kafkaDestPrefix);
+            auditHandler.start();
+
+            LOG.info("Kafka producer initialized and started");
+        } else {
+            LOG.warn("Kafka audit destination is not enabled. Producer service will not function.");
+        }
+
+        LOG.info("<== AuditDestinationMgr.init(): auditDestination: {} ", kafkaDestPrefix);
     }
 }

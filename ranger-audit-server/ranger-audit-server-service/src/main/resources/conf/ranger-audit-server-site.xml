@@ -21,18 +21,18 @@
     </property>
 
     <property>
-        <name>ranger.audit.service.webapp.dir</name>
+        <name>ranger.audit.server.webapp.dir</name>
         <value>webapp/ranger-audit-server-service</value>
         <description>Path to the extracted webapp directory (relative to AUDIT_SERVER_HOME_DIR). Must be extracted directory, not WAR file, because Jersey cannot scan packages in unexpanded WAR files.</description>
     </property>
 
     <property>
-        <name>ranger.audit.service.contextName</name>
+        <name>ranger.audit.server.contextName</name>
         <value>/</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.host</name>
+        <name>ranger.audit.server.host</name>
         <value>ranger-audit-server.rangernw</value>
         <description>
             - In Docker: Use full service name with domain (e.g., ranger-audit-server.rangernw)
@@ -41,53 +41,53 @@
     </property>
 
     <property>
-        <name>ranger.audit.service.http.port</name>
+        <name>ranger.audit.server.http.port</name>
         <value>7081</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.https.port</name>
+        <name>ranger.audit.server.https.port</name>
         <value>7182</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.http.enabled</name>
+        <name>ranger.audit.server.http.enabled</name>
         <value>true</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.enableTLS</name>
+        <name>ranger.audit.server.enableTLS</name>
         <value>false</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.https.attrib.ssl.enabled</name>
+        <name>ranger.audit.server.https.attrib.ssl.enabled</name>
         <value>false</value>
     </property>
 
     <!-- HTTPS/SSL Configuration -->
     <property>
-        <name>ranger.audit.service.https.attrib.keystore.keyalias</name>
+        <name>ranger.audit.server.https.attrib.keystore.keyalias</name>
         <value>myKey</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.https.attrib.keystore.pass</name>
+        <name>ranger.audit.server.https.attrib.keystore.pass</name>
         <value>_</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.https.attrib.keystore.file</name>
+        <name>ranger.audit.server.https.attrib.keystore.file</name>
         <value>/etc/ranger/ranger-audit-server/keys/server.jks</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.https.attrib.keystore.credential.alias</name>
+        <name>ranger.audit.server.https.attrib.keystore.credential.alias</name>
         <value>keyStoreCredentialAlias</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.tomcat.ciphers</name>
+        <name>ranger.audit.server.tomcat.ciphers</name>
         <value></value>
     </property>
 
@@ -193,16 +193,26 @@
     </property>
 
     <property>
-        <name>ranger.audit.service.allowed.users</name>
-        <value>hdfs,hive,hbase,kafka,yarn,solr,knox,storm,atlas,nifi,ozone,kudu,presto,trino</value>
-        <description>
-            Comma-separated list of allowed service users that can send audits to Ranger Audit Server.
-        </description>
+        <name>ranger.audit.server.service.dev_hdfs.allowed.users</name>
+        <value>hdfs</value>
+        <description>Comma-separated list of allowed users that can send audits for dev_hdfs service</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.server.service.dev_hive.allowed.users</name>
+        <value>hive</value>
+        <description>Comma-separated list of allowed users that can send audits for dev_hive service.</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.server.service.dev_hbase.allowed.users</name>
+        <value>hbase</value>
+        <description>Comma-separated list of allowed users that can send audits for dev_hbase service.</description>
     </property>
 
     <!-- AUTH_TO_LOCAL RULES FOR KERBEROS PRINCIPAL MAPPING -->
     <property>
-        <name>ranger.audit.service.auth.to.local</name>
+        <name>ranger.audit.server.auth.to.local</name>
         <value>
                RULE:[2:$1/$2@$0]([ndj]n/.*@.*|hdfs/.*@.*)s/.*/hdfs/
                RULE:[2:$1/$2@$0]([rn]m/.*@.*|yarn/.*@.*)s/.*/yarn/
@@ -228,12 +238,12 @@
 
     <!-- KERBEROS FOR KAFKA PRODUCER -->
     <property>
-        <name>ranger.audit.service.authentication.method</name>
+        <name>ranger.audit.server.authentication.method</name>
         <value>KERBEROS</value>
     </property>
 
     <property>
-        <name>ranger.audit.service.kerberos.principal</name>
+        <name>ranger.audit.server.kerberos.principal</name>
         <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
         <description>
             rangerauditserver user kerberos principal for authentication into kafka
@@ -241,7 +251,7 @@
     </property>
 
     <property>
-        <name>ranger.audit.service.kerberos.keytab</name>
+        <name>ranger.audit.server.kerberos.keytab</name>
         <value>/etc/keytabs/rangerauditserver.keytab</value>
         <description>
             keytab of the rangerauditserver principal

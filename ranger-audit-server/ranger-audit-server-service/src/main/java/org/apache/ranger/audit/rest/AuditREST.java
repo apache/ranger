@@ -42,18 +42,23 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.apache.ranger.audit.server.AuditServerConstants.PROP_PREFIX_AUDIT_SERVER_SERVICE;
+import static org.apache.ranger.audit.server.AuditServerConstants.PROP_SUFFIX_ALLOWED_USERS;
 
 @Path("/audit")
 @Component
 @Scope("request")
 public class AuditREST {
     private static final Logger LOG = LoggerFactory.getLogger(AuditREST.class);
-    private static final Set<String> allowedServiceUsers;
+
+    private static final Map<String, Set<String>> allowedServiceUsers;
 
     static {
         allowedServiceUsers = initializeAllowedUsers();
@@ -71,40 +76,36 @@ public class AuditREST {
     @Produces("application/json")
     public Response healthCheck() {
         LOG.debug("==> AuditREST.healthCheck()");
-        Response ret;
-        String   jsonString;
+
+        Response.Status     status;
+        Map<String, Object> resp = new HashMap<>();
+
+        resp.put("service", "ranger-audit-server");
 
         try {
             // Check if audit destination manager is available and healthy
             if (auditDestinationMgr != null) {
-                Map<String, Object> resp = new HashMap<>();
+                status = Response.Status.OK;
+
                 resp.put("status", "UP");
-                resp.put("service", "ranger-audit-server");
-                jsonString = buildResponse(resp);
-                ret = Response.ok()
-                        .entity(jsonString)
-                        .build();
             } else {
-                Map<String, Object> resp = new HashMap<>();
+                status = Response.Status.SERVICE_UNAVAILABLE;
+
                 resp.put("status", "DOWN");
-                resp.put("service", "ranger-audit-server");
                 resp.put("reason", "AuditDestinationMgr not available");
-                jsonString = buildResponse(resp);
-                ret = Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                        .entity(jsonString)
-                        .build();
             }
         } catch (Exception e) {
             LOG.error("Health check failed", e);
-            Map<String, Object> resp = new HashMap<>();
+
+            status = Response.Status.SERVICE_UNAVAILABLE;
+
             resp.put("status", "DOWN");
-            resp.put("service", "ranger-audit-server");
             resp.put("reason",  e.getMessage());
-            jsonString = buildResponse(resp);
-            ret = Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity(jsonString)
-                    .build();
         }
+
+        Response ret = Response.status(status)
+                .entity(buildResponse(resp))
+                .build();
 
         LOG.debug("<== AuditREST.healthCheck(): {}", ret);
 
@@ -148,7 +149,7 @@ public class AuditREST {
 
     /**
      *  Access Audits producer endpoint.
-     *  @param serviceType Required query parameter to identify the source service (hdfs, hive, kafka, solr, etc.)
+     *  @param serviceName Required query parameter to identify the source service (hdfs, hive, kafka, solr, etc.)
      *  @param appId Optional query parameter for batch processing - identifies the application instance
      *  @param accessAudits List of audit events to process
      *  @param request HTTP request to extract authenticated user
@@ -157,58 +158,54 @@ public class AuditREST {
     @Path("/access")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response logAccessAudit(@QueryParam("serviceType") Integer serviceType, @QueryParam("appId") String appId, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
-        String authenticatedUser = getAuthenticatedUser(request);
-
-        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from serviceType: {}, appId: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, serviceType != null ? serviceType : "unknown", StringUtils.isNotEmpty(appId) ? appId : "none", authenticatedUser);
+    public Response logAccessAudit(@QueryParam("serviceName") String serviceName, @QueryParam("appId") String appId, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
+        LOG.debug("==> AuditREST.logAccessAudit(serviceName={}, appId={}, auditsCount={}}", serviceName, appId, accessAudits != null ? accessAudits.size() : 0);
 
         Response ret;
+        String authenticatedUser = getAuthenticatedUser(request);
 
-        if (serviceType == null) {
-            LOG.error("serviceType query parameter is required. Rejecting audit request.");
-            ret = Response.status(Response.Status.BAD_REQUEST)
-                    .entity(buildErrorResponse("serviceName query parameter is required"))
-                    .build();
-            return ret;
-        }
-
-        if (StringUtils.isEmpty(authenticatedUser)) {
-            LOG.error("No authenticated user found in request for serviceType: {}. Rejecting audit request.", serviceType);
-            ret = Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(buildErrorResponse("Authentication required to send audit events"))
-                    .build();
-            return ret;
-        }
-
-        if (!isAllowedServiceUser(authenticatedUser)) {
-            LOG.error("Unauthorized user: authenticatedUser={} is not in the allowed service users list. Rejecting audit request.", authenticatedUser);
-            ret = Response.status(Response.Status.FORBIDDEN)
-                    .entity(buildErrorResponse("User is not authorized to send audit events"))
-                    .build();
-            return ret;
-        }
-
-        if (accessAudits == null || accessAudits.isEmpty()) {
-            LOG.warn("Empty or null audit events batch received from serviceType: {}, user: {}", serviceType, authenticatedUser);
-            ret = Response.status(Response.Status.BAD_REQUEST)
-                    .entity(buildErrorResponse("Audit events cannot be empty"))
-                    .build();
-        } else if (auditDestinationMgr == null) {
+        if (auditDestinationMgr == null) {
             LOG.error("AuditDestinationMgr not initialized");
+
             ret = Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity(buildErrorResponse("Audit service not available"))
                     .build();
+        } else if (accessAudits == null || accessAudits.isEmpty()) {
+            LOG.warn("Empty or null audit events batch received from serviceName: {}, user: {}", serviceName, authenticatedUser);
+
+            ret = Response.status(Response.Status.BAD_REQUEST)
+                    .entity(buildErrorResponse("Audit events cannot be empty"))
+                    .build();
+        } else if (StringUtils.isBlank(serviceName)) {
+            LOG.error("serviceName query parameter is required. Rejecting audit request.");
+
+            ret = Response.status(Response.Status.BAD_REQUEST)
+                    .entity(buildErrorResponse("serviceName query parameter is required"))
+                    .build();
+        } else if (StringUtils.isEmpty(authenticatedUser)) {
+            LOG.error("No authenticated user found. Rejecting audit request.");
+
+            ret = Response.status(Response.Status.UNAUTHORIZED)
+                    .entity(buildErrorResponse("Authentication required to send audit events"))
+                    .build();
+        } else if (!isAllowedServiceUser(serviceName, authenticatedUser)) {
+            LOG.error("Unauthorized user: user={} is authorized report audit logs for service={}. Rejecting audit request.", authenticatedUser, serviceName);
+
+            ret = Response.status(Response.Status.FORBIDDEN)
+                    .entity(buildErrorResponse("User is not authorized to send audit events"))
+                    .build();
         } else {
             try {
-                LOG.debug("Processing {} audit events from service: {}, appId: {}", accessAudits.size(), serviceType, appId);
+                LOG.debug("Processing {} audit events from service: {}, appId: {}", accessAudits.size(), serviceName, appId);
 
                 boolean success = auditDestinationMgr.logBatch(accessAudits, appId);
 
                 if (success) {
                     Map<String, Object> response = new HashMap<>();
+
                     response.put("total", accessAudits.size());
                     response.put("timestamp", System.currentTimeMillis());
-                    response.put("serviceType", serviceType);
+                    response.put("serviceName", serviceName);
 
                     if (StringUtils.isNotEmpty(appId)) {
                         response.put("appId", appId);
@@ -224,20 +221,22 @@ public class AuditREST {
                             .entity(jsonString)
                             .build();
                 } else {
-                    LOG.warn("Batch processing failed for {} events from serviceType: {}, appId: {}. Events spooled to recovery.", accessAudits.size(), serviceType, appId);
+                    LOG.warn("Batch processing failed for {} events from serviceName: {}, appId: {}. Events spooled to recovery.", accessAudits.size(), serviceName, appId);
+
                     ret = Response.status(Response.Status.ACCEPTED)
                             .entity(buildErrorResponse("Batch processing failed. Events have been queued for retry."))
                             .build();
                 }
             } catch (Exception e) {
-                LOG.error("Error processing access audits batch from serviceType: {}, appId: {}", serviceType, appId, e);
+                LOG.error("Error processing access audits batch from serviceName: {}, appId: {}", serviceName, appId, e);
+
                 ret = Response.status(Response.Status.BAD_REQUEST)
                         .entity(buildErrorResponse("Failed to process audit events: " + e.getMessage()))
                         .build();
             }
         }
 
-        LOG.debug("<== AuditREST.accessAudit(): HttpStatus {} for serviceType: {}, user: {}", ret.getStatus(), serviceType, authenticatedUser);
+        LOG.debug("<== AuditREST.accessAudit(): HttpStatus {} for serviceName: {}, user: {}", ret.getStatus(), serviceName, authenticatedUser);
 
         return ret;
     }
@@ -266,16 +265,15 @@ public class AuditREST {
     private String getAuthenticatedUser(HttpServletRequest request) {
         if (request != null && request.getUserPrincipal() != null) {
             String principalName = request.getUserPrincipal().getName();
-            LOG.debug("Authenticated user from Principal: {}", principalName);
-            String shortName = applyAuthToLocal(principalName);
-            if (!shortName.equals(principalName)) {
-                LOG.debug("Applied auth_to_local: '{}' -> '{}'", principalName, shortName);
-            }
+            String shortName     = applyAuthToLocal(principalName);
+
+            LOG.debug("Authenticated user: Principal: {}, shortName: {}", principalName, shortName);
 
             return shortName;
         }
 
         LOG.debug("No authenticated user found in request");
+
         return null;
     }
 
@@ -325,41 +323,51 @@ public class AuditREST {
 
     /**
      * Check if the user login into audit server for posting audits is in the allowed service users list
+     * @param serviceName The name of service from which audit is being sent
      * @param userName The username to check
      * @return true if user is allowed, false otherwise
      */
-    private boolean isAllowedServiceUser(String userName) {
+    private boolean isAllowedServiceUser(String serviceName, String userName) {
         boolean ret;
 
-        if (StringUtils.isEmpty(userName)) {
-            ret = false;
+        if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(userName)) {
+            Set<String> allowedUsers = allowedServiceUsers.get(serviceName);
+
+            ret = allowedUsers != null && allowedUsers.contains(userName);
         } else {
-            ret = allowedServiceUsers.contains(userName);
-            LOG.debug("User '{}' allowed: {}", userName, ret);
+            ret = false;
         }
+
+        LOG.debug("isAllowedServiceUser(serviceName={}, userName={}): ret={}", serviceName, userName, ret);
 
         return ret;
     }
 
     /**
      * Initialize the set of allowed service users from configuration
-     * @return Set of allowed usernames
+     * @return Map of allowed usernames per service
      */
-    private static Set<String> initializeAllowedUsers() {
-        Set<String>       ret    = new HashSet<>();
-        AuditServerConfig config = AuditServerConfig.getInstance();
+    private static Map<String, Set<String>> initializeAllowedUsers() {
+        Map<String, Set<String>> ret    = new HashMap<>();
+        AuditServerConfig        config = AuditServerConfig.getInstance();
 
-        String allowedUsersStr = config.get(AuditServerConstants.PROP_ALLOWED_USERS);
-        if (StringUtils.isNotEmpty(allowedUsersStr)) {
-            String[] users = allowedUsersStr.split(",");
-            for (String user : users) {
-                String trimmedUser = user.trim();
-                if (StringUtils.isNotEmpty(trimmedUser)) {
-                    ret.add(trimmedUser);
+        for (Map.Entry<String, String> entry : config) {
+            String key = entry.getKey();
+
+            if (key.startsWith(PROP_PREFIX_AUDIT_SERVER_SERVICE) && key.endsWith(PROP_SUFFIX_ALLOWED_USERS)) {
+                int    nameLen      = key.length() - PROP_PREFIX_AUDIT_SERVER_SERVICE.length() - PROP_SUFFIX_ALLOWED_USERS.length();
+                String serviceName  = key.substring(PROP_PREFIX_AUDIT_SERVER_SERVICE.length(), nameLen);
+
+                if (StringUtils.isNotBlank(serviceName)) {
+                    Set<String> allowedUsers = Arrays.stream(entry.getValue().split(",")).map(String::trim).filter(StringUtils::isNotBlank).collect(Collectors.toSet());
+
+                    if (!allowedUsers.isEmpty()) {
+                        ret.put(serviceName, allowedUsers);
+                    }
+
+                    LOG.debug("Allowed users for service {}: {}", serviceName, allowedUsers);
                 }
             }
-
-            LOG.debug("Allowed service users: {}", ret);
         }
 
         return ret;

@@ -161,9 +161,9 @@ public class AuditMessageQueueUtils {
     public String getJAASConfig(Properties props, String propPrefix) {
         // Use ranger service principal and keytab for Kafka authentication
         // This ensures consistent identity across all Ranger services and destination writes
-        String hostName  = props.getProperty(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + "host");
-        String principal = props.getProperty(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL);
-        String keytab    = props.getProperty(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB);
+        String hostName  = props.getProperty(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + "host");
+        String principal = props.getProperty(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL);
+        String keytab    = props.getProperty(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB);
 
         AuditServerLogFormatter.builder("Kerberos Configuration")
                 .add("Principal (raw)", principal)
@@ -191,7 +191,7 @@ public class AuditMessageQueueUtils {
         }
 
         try {
-            principal = SecureClientLogin.getPrincipal(props.getProperty(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL), hostName);
+            principal = SecureClientLogin.getPrincipal(props.getProperty(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL), hostName);
             LOG.info("Principal (resolved): {}", principal);
         } catch (Exception e) {
             principal = null;
@@ -200,8 +200,8 @@ public class AuditMessageQueueUtils {
 
         if (keytab == null || principal == null) {
             AuditServerLogFormatter.builder("Please configure the following properties in ranger-audit-server-site.xml:")
-                    .add(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL, "ranger/_HOST@YOUR-REALM")
-                    .add(AuditServerConstants.AUDIT_SERVER_PROP_PREFIX + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB, "/path/to/ranger.keytab")
+                    .add(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL, "ranger/_HOST@YOUR-REALM")
+                    .add(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB, "/path/to/ranger.keytab")
                     .logError(LOG);
             throw new IllegalStateException("Ranger service principal and keytab must be configured for Kafka authentication. ");
         }

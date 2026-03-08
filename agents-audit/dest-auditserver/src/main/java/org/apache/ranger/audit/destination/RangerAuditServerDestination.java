@@ -61,7 +61,7 @@ public class RangerAuditServerDestination extends AuditDestination {
     public static final String PROP_AUDITSERVER_MAX_RETRY_ATTEMPTS     = "xasecure.audit.destination.auditserver.max.retry.attempts";
     public static final String PROP_AUDITSERVER_RETRY_INTERVAL_MS      = "xasecure.audit.destination.auditserver.retry.interval.ms";
     public static final String REST_RELATIVE_PATH_POST                 = "/api/audit/access";
-    public static final String QUERY_PARAM_SERVICE_TYPE                = "serviceType";
+    public static final String QUERY_PARAM_SERVICE_NAME                = "serviceName";
     public static final String QUERY_PARAM_APP_ID                      = "appId";
 
     // Authentication types
@@ -194,12 +194,12 @@ public class RangerAuditServerDestination extends AuditDestination {
     private boolean sendBatch(Collection<AuditEventBase> events) {
         boolean             ret;
         Map<String, String> queryParams = new HashMap<>();
-        int                 serviceType = fetchServiceType(events);
+        String              serviceName = fetchServiceName(events);
         String              appId       = fetchAppId(events);
 
-        LOG.debug("Adding serviceType={} to audit request", serviceType);
+        LOG.debug("Adding serviceName={} to audit request", serviceName);
 
-        queryParams.put(QUERY_PARAM_SERVICE_TYPE, Integer.toString(serviceType));
+        queryParams.put(QUERY_PARAM_SERVICE_NAME, serviceName);
 
         if (StringUtils.isNotEmpty(appId)) {
             LOG.debug("Adding appId={} to audit request for batch processing", appId);
@@ -279,6 +279,13 @@ public class RangerAuditServerDestination extends AuditDestination {
         AuditEventBase           auditEvent = iter.hasNext() ? iter.next() : null;
 
         return (auditEvent instanceof AuthzAuditEvent) ? ((AuthzAuditEvent) auditEvent).getRepositoryType() : -1;
+    }
+
+    private String fetchServiceName(Collection<AuditEventBase> events) {
+        Iterator<AuditEventBase> iter       = events.iterator();
+        AuditEventBase           auditEvent = iter.hasNext() ? iter.next() : null;
+
+        return (auditEvent instanceof AuthzAuditEvent) ? ((AuthzAuditEvent) auditEvent).getRepositoryName() : null;
     }
 
     private String fetchAppId(Collection<AuditEventBase> events) {
