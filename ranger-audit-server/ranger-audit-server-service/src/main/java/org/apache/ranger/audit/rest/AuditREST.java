@@ -157,14 +157,14 @@ public class AuditREST {
     @Path("/access")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response logAccessAudit(@QueryParam("serviceType") String serviceType, @QueryParam("appId") String appId, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
+    public Response logAccessAudit(@QueryParam("serviceType") Integer serviceType, @QueryParam("appId") String appId, List<AuthzAuditEvent> accessAudits, @Context HttpServletRequest request) {
         String authenticatedUser = getAuthenticatedUser(request);
 
-        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from serviceType: {}, appId: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, StringUtils.isNotEmpty(serviceType) ? serviceType : "unknown", StringUtils.isNotEmpty(appId) ? appId : "none", authenticatedUser);
+        LOG.debug("==> AuditREST.accessAudit(): received {} audit events from serviceType: {}, appId: {}, authenticatedUser: {}", accessAudits != null ? accessAudits.size() : 0, serviceType != null ? serviceType : "unknown", StringUtils.isNotEmpty(appId) ? appId : "none", authenticatedUser);
 
         Response ret;
 
-        if (StringUtils.isEmpty(serviceType)) {
+        if (serviceType == null) {
             LOG.error("serviceType query parameter is required. Rejecting audit request.");
             ret = Response.status(Response.Status.BAD_REQUEST)
                     .entity(buildErrorResponse("serviceName query parameter is required"))
@@ -208,16 +208,18 @@ public class AuditREST {
                     Map<String, Object> response = new HashMap<>();
                     response.put("total", accessAudits.size());
                     response.put("timestamp", System.currentTimeMillis());
-                    if (StringUtils.isNotEmpty(serviceType)) {
-                        response.put("serviceType", serviceType);
-                    }
+                    response.put("serviceType", serviceType);
+
                     if (StringUtils.isNotEmpty(appId)) {
                         response.put("appId", appId);
                     }
+
                     if (StringUtils.isNotEmpty(authenticatedUser)) {
                         response.put("authenticatedUser", authenticatedUser);
                     }
+
                     String jsonString = buildResponse(response);
+
                     ret = Response.status(Response.Status.OK)
                             .entity(jsonString)
                             .build();
@@ -294,8 +296,8 @@ public class AuditREST {
 
         try {
             KerberosName kerberosName = new KerberosName(principal);
-            String shortName = kerberosName.getShortName();
-            return shortName;
+
+            return kerberosName.getShortName();
         } catch (Exception e) {
             LOG.warn("Failed to apply auth_to_local rules to principal '{}': {}. Using original principal.", principal, e.getMessage());
             return principal;

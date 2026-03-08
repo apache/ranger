@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.audit;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -139,7 +138,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
             ret.setDatasets(getDatasets(request));
             ret.setProjects(getProjects(request));
             ret.setDatasetIds(getDatasetIds(request));
-            ret.setAdditionalInfo(getAdditionalInfo(request, result));
+            ret.setAdditionalInfo(getAdditionalInfo(request));
             ret.setClusterName(request.getClusterName());
             ret.setZoneName(result.getZoneName());
             ret.setAgentHostname(restUtils.getAgentHostname());
@@ -231,28 +230,22 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
         return gdsResult != null ? gdsResult.getDatasetIds() : null;
     }
 
-    public String getAdditionalInfo(RangerAccessRequest request, RangerAccessResult result) {
-        String              ret        = null;
-        Map<String, String> addInfomap = new HashMap<>();
-
-        if (!CollectionUtils.isEmpty(request.getForwardedAddresses())) {
-            addInfomap.put("forwarded-ip-addresses", "[" + org.apache.commons.lang3.StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
+    public String getAdditionalInfo(RangerAccessRequest request) {
+        if (StringUtils.isBlank(request.getRemoteIPAddress()) && CollectionUtils.isEmpty(request.getForwardedAddresses())) {
+            return null;
         }
 
-        if (org.apache.commons.lang3.StringUtils.isNotEmpty(request.getRemoteIPAddress())) {
+        Map<String, String> addInfomap = new HashMap<>();
+
+        if (CollectionUtils.isNotEmpty(request.getForwardedAddresses())) {
+            addInfomap.put("forwarded-ip-addresses", "[" + StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
+        }
+
+        if (StringUtils.isNotBlank(request.getRemoteIPAddress())) {
             addInfomap.put("remote-ip-address", request.getRemoteIPAddress());
         }
 
-        String serviceType = result.getServiceTypeName();
-        if (org.apache.commons.lang3.StringUtils.isNotEmpty(serviceType)) {
-            addInfomap.put("serviceType", serviceType);
-        }
-
-        if (MapUtils.isNotEmpty(addInfomap)) {
-            ret = JsonUtils.mapToJson(addInfomap);
-        }
-
-        return ret;
+        return JsonUtils.mapToJson(addInfomap);
     }
 
     protected final Set<String> getTags(RangerAccessRequest request) {

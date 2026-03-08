@@ -289,14 +289,14 @@ public class TestRangerDefaultAuditHandler {
         RangerAccessResult      res  = new RangerAccessResult(0, "svc", null, req);
         req.setRemoteIPAddress(null);
         req.setForwardedAddresses(new ArrayList<>());
-        Assertions.assertNull(handler.getAdditionalInfo(req, res));
+        Assertions.assertNull(handler.getAdditionalInfo(req));
 
         RangerAccessRequestImpl req2 = new RangerAccessRequestImpl();
         RangerAccessResult      res2 = new RangerAccessResult(0, "svc", null, req2);
         req2.setRemoteIPAddress("10.1.1.1");
         List<String> fwd = new ArrayList<>(Arrays.asList("1.1.1.1"));
         req2.setForwardedAddresses(fwd);
-        String info = handler.getAdditionalInfo(req2, res2);
+        String info = handler.getAdditionalInfo(req2);
         Assertions.assertNotNull(info);
         Assertions.assertTrue(info.contains("10.1.1.1"));
     }
