@@ -388,6 +388,7 @@ export default function ServiceAuditFilter(props) {
                                     options={getAccessTypeOptions()}
                                     showSelectAll={true}
                                     selectAllLabel="Select All"
+                                    popOverheader="Add/Edit Permissions"
                                   />
                                 </div>
                               )}

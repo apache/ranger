@@ -579,6 +579,11 @@ h3.wrap-header {
   padding: 3px;
 }
 
+.rule-condition-wrapper {
+  white-space: normal;
+  word-break: break-all;
+}
+
 /* Service Manager */
 .select-zone-name {
   cursor: not-allowed;
@@ -672,6 +677,16 @@ table.no-bg-color thead tr th:first-child {
 }
 
 .table-responsive .table thead th {
+  font-size: 13px;
+  padding: 8px;
+}
+
+.table-fixed table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.table-fixed .table thead th {
   font-size: 13px;
   padding: 8px;
 }
@@ -1651,6 +1666,11 @@ header {
 
 .permission-infinite-scroll {
   height: 276px;
+  overflow-y: auto;
+}
+
+.permission-item {
+  max-height: 256px;
   overflow-y: auto;
 }
 
