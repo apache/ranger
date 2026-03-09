@@ -42,9 +42,11 @@ import {
   dragEnter,
   drop,
   dragOver,
-  policyConditionUpdatedJSON
+  policyConditionUpdatedJSON,
+  getPolicyConditionDisplayLbl
 } from "Utils/XAUtils";
 import { selectInputCustomStyles } from "Components/CommonComponents";
+import PolicyConditionsComp from "./PolicyConditionsComp";
 
 const noneOptions = {
   label: "None",
@@ -72,6 +74,7 @@ export default function PolicyPermissionItem(props) {
   const [roleLoading, setRoleLoading] = useState(false);
   const [groupLoading, setGroupLoading] = useState(false);
   const [userLoading, setUserLoading] = useState(false);
+  const [activeConditionRow, setActiveConditionRow] = useState(null);
 
   const permList = ["Select Roles", "Select Groups", "Select Users"];
 
@@ -324,6 +327,44 @@ export default function PolicyPermissionItem(props) {
     });
   };
 
+  const policyConditionDisplayValue = (value) => {
+    const selectVal = value;
+    let ipRangVal, uiHintVal;
+    if (selectVal) {
+      return Object.keys(selectVal).map((property) => {
+        let conditionObj = find(
+          serviceCompDetails.policyConditions,
+          function (m) {
+            if (m.name == property) {
+              return m;
+            }
+          }
+        );
+        if (conditionObj?.uiHint && conditionObj?.uiHint != "") {
+          uiHintVal = JSON.parse(conditionObj.uiHint);
+        }
+        if (isArray(selectVal[property])) {
+          ipRangVal = (selectVal[property] || []).map((m) => m).join(", ");
+        }
+        return (
+          <h6 key={property}>
+            <div
+              className={`${
+                uiHintVal?.isMultiline
+                  ? "editable-label rule-condition-wrapper"
+                  : "badge bg-dark rule-condition-wrapper"
+              }`}
+            >
+              {`${getPolicyConditionDisplayLbl(conditionObj.label)}: ${
+                isArray(selectVal[property]) ? ipRangVal : selectVal[property]
+              }`}
+            </div>
+          </h6>
+        );
+      });
+    }
+  };
+
   return (
     <div>
       <Col sm="12">
@@ -466,20 +507,70 @@ export default function PolicyPermissionItem(props) {
                                       index
                                     )
                                   }
-                                  render={({ input }) => (
-                                    <div className="table-editable permission-item">
-                                      <Editable
-                                        {...input}
-                                        // placement="auto"
-                                        type="custom"
-                                        conditionDefVal={policyConditionUpdatedJSON(
-                                          serviceCompDetails.policyConditions
+                                  render={({ input }) => {
+                                    const showConditionsModal =
+                                      activeConditionRow === name;
+                                    const hasValue =
+                                      Object.keys(input?.value || {}).length !==
+                                      0;
+
+                                    return (
+                                      <>
+                                        {/* Only render modal for the clicked row */}
+                                        {showConditionsModal && (
+                                          <div>
+                                            <PolicyConditionsComp
+                                              policyConditionDetails={policyConditionUpdatedJSON(
+                                                serviceCompDetails.policyConditions
+                                              )}
+                                              inputVal={input}
+                                              showModal={true}
+                                              handleCloseModal={() =>
+                                                setActiveConditionRow(null)
+                                              }
+                                              modalHeader="Rule Conditions"
+                                            />
+                                          </div>
                                         )}
-                                        selectProps={{ isMulti: true }}
-                                        popOverheader="Rule Conditions"
-                                      />
-                                    </div>
-                                  )}
+
+                                        <div className="table-editable">
+                                          <div className="editable">
+                                            <div className="text-center">
+                                              {hasValue ? (
+                                                policyConditionDisplayValue(
+                                                  input.value
+                                                )
+                                              ) : (
+                                                <span className="editable-add-text">
+                                                  Add Conditions
+                                                </span>
+                                              )}
+
+                                              <Button
+                                                className="mg-10 mx-auto d-block btn-mini"
+                                                variant="outline-dark"
+                                                size="sm"
+                                                type="button"
+                                                onClick={() =>
+                                                  setActiveConditionRow(name)
+                                                }
+                                                data-js="customPolicyConditions"
+                                                data-cy="customPolicyConditions"
+                                              >
+                                                <i
+                                                  className={
+                                                    hasValue
+                                                      ? "fa-fw fa fa-pencil"
+                                                      : "fa-fw fa fa-plus"
+                                                  }
+                                                />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </>
+                                    );
+                                  }}
                                 />
                               </td>
                             )

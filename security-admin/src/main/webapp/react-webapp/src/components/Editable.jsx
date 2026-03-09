@@ -505,7 +505,6 @@ const Editable = (props) => {
                 variant="outline-dark"
                 size="sm"
                 type="button"
-                s
               >
                 <i className="fa-fw fa fa-plus"></i>
               </Button>

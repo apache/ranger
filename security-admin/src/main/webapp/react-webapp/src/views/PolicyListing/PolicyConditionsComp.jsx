@@ -32,8 +32,13 @@ import {
 const esprima = require("esprima");
 
 export default function PolicyConditionsComp(props) {
-  const { policyConditionDetails, inputVal, showModal, handleCloseModal } =
-    props;
+  const {
+    policyConditionDetails,
+    inputVal,
+    showModal,
+    handleCloseModal,
+    modalHeader
+  } = props;
 
   const accessedOpt = [
     { value: "yes", label: "Yes" },
@@ -125,11 +130,11 @@ export default function PolicyConditionsComp(props) {
       >
         <Form
           onSubmit={handleSubmit}
-          initialValues={formInitialData}
+          initialValues={formInitialData()}
           render={({ handleSubmit }) => (
             <form onSubmit={handleSubmit}>
               <Modal.Header closeButton>
-                <Modal.Title>Policy Condition</Modal.Title>
+                <Modal.Title>{modalHeader}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 {policyConditionDetails?.length > 0 &&

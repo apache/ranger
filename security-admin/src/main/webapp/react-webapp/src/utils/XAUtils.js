@@ -24,7 +24,8 @@ import {
   PathAssociateWithModule,
   QueryParams,
   RangerPolicyType,
-  ServiceType
+  ServiceType,
+  policyConditionDisplayLabel
 } from "Utils/XAEnums";
 import {
   filter,
@@ -1584,4 +1585,11 @@ export const currentTimeZone = (timeZoneDate) => {
         .toString()
         .replace(/^.*GMT.*\(/, "")
         .replace(/\)$/, "");
+};
+
+// Common function to get display label for policy condition
+export const getPolicyConditionDisplayLbl = (lbl) => {
+  return policyConditionDisplayLabel.hasOwnProperty(lbl)
+    ? policyConditionDisplayLabel[lbl]
+    : lbl;
 };
