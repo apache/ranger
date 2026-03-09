@@ -369,7 +369,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 				// "id" is same across Linux / BSD / MacOSX
 				// gids are used as id might return groups with spaces, ie "domain users"
-				Process process = Runtime.getRuntime().exec(new String[]{"bash", "-c", "id -G " + userName});
+				Process process = Runtime.getRuntime().exec(new String[] {"id", "-G", userName});
 
 				try {
 					reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
