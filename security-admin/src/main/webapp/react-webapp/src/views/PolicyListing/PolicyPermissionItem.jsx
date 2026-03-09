@@ -43,9 +43,13 @@ import {
   drop,
   dragOver,
   policyConditionUpdatedJSON,
-  getPolicyConditionDisplayLbl
+  getPolicyConditionDisplayLbl,
+  safeJsonParse
 } from "Utils/XAUtils";
-import { selectInputCustomStyles } from "Components/CommonComponents";
+import {
+  selectInputCustomStyles,
+  ConfirmationClearIndicator
+} from "Components/CommonComponents";
 import PolicyConditionsComp from "./PolicyConditionsComp";
 
 const noneOptions = {
@@ -327,7 +331,7 @@ export default function PolicyPermissionItem(props) {
     });
   };
 
-  const policyConditionDisplayValue = (value) => {
+  const ruleConditionDisplayValue = (value) => {
     const selectVal = value;
     let ipRangVal, uiHintVal;
     if (selectVal) {
@@ -341,25 +345,27 @@ export default function PolicyPermissionItem(props) {
           }
         );
         if (conditionObj?.uiHint && conditionObj?.uiHint != "") {
-          uiHintVal = JSON.parse(conditionObj.uiHint);
+          uiHintVal = safeJsonParse(conditionObj.uiHint, {});
         }
         if (isArray(selectVal[property])) {
           ipRangVal = (selectVal[property] || []).map((m) => m).join(", ");
         }
         return (
-          <h6 key={property}>
-            <div
+          <div key={property}>
+            <span
               className={`${
                 uiHintVal?.isMultiline
                   ? "editable-label rule-condition-wrapper"
                   : "badge bg-dark rule-condition-wrapper"
               }`}
             >
-              {`${getPolicyConditionDisplayLbl(conditionObj.label)}: ${
-                isArray(selectVal[property]) ? ipRangVal : selectVal[property]
-              }`}
-            </div>
-          </h6>
+              <span className="line-clamp line-clamp-5 text-start">
+                {`${getPolicyConditionDisplayLbl(conditionObj.label)}: ${
+                  isArray(selectVal[property]) ? ipRangVal : selectVal[property]
+                }`}
+              </span>
+            </span>
+          </div>
         );
       });
     }
@@ -420,6 +426,11 @@ export default function PolicyPermissionItem(props) {
                                       isMulti
                                       tabSelectsValue={false}
                                       placeholder="Select Roles"
+                                      clearConfirmMessage="Roles"
+                                      components={{
+                                        ClearIndicator:
+                                          ConfirmationClearIndicator
+                                      }}
                                     />
                                   </div>
                                 )}
@@ -453,6 +464,11 @@ export default function PolicyPermissionItem(props) {
                                       isMulti
                                       tabSelectsValue={false}
                                       placeholder="Select Groups"
+                                      clearConfirmMessage="Groups"
+                                      components={{
+                                        ClearIndicator:
+                                          ConfirmationClearIndicator
+                                      }}
                                     />
                                   </div>
                                 )}
@@ -486,6 +502,11 @@ export default function PolicyPermissionItem(props) {
                                       isMulti
                                       tabSelectsValue={false}
                                       placeholder="Select Users"
+                                      clearConfirmMessage="Users"
+                                      components={{
+                                        ClearIndicator:
+                                          ConfirmationClearIndicator
+                                      }}
                                     />
                                   </div>
                                 )}
@@ -535,13 +556,24 @@ export default function PolicyPermissionItem(props) {
 
                                         <div className="table-editable">
                                           <div className="editable">
-                                            <div className="text-center">
+                                            <div>
                                               {hasValue ? (
-                                                policyConditionDisplayValue(
-                                                  input.value
-                                                )
+                                                <span
+                                                  onClick={() =>
+                                                    setActiveConditionRow(name)
+                                                  }
+                                                >
+                                                  {ruleConditionDisplayValue(
+                                                    input.value
+                                                  )}
+                                                </span>
                                               ) : (
-                                                <span className="editable-add-text">
+                                                <span
+                                                  className="editable-add-text text-center"
+                                                  onClick={() =>
+                                                    setActiveConditionRow(name)
+                                                  }
+                                                >
                                                   Add Conditions
                                                 </span>
                                               )}
@@ -710,7 +742,7 @@ export default function PolicyPermissionItem(props) {
                                         )}
                                       </div>
                                     ) : (
-                                      <div>
+                                      <div className="text-center">
                                         <span className="editable-add-text text-secondary">
                                           Select Masking Option
                                         </span>

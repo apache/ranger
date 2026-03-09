@@ -1589,7 +1589,17 @@ export const currentTimeZone = (timeZoneDate) => {
 
 // Common function to get display label for policy condition
 export const getPolicyConditionDisplayLbl = (lbl) => {
-  return policyConditionDisplayLabel.hasOwnProperty(lbl)
+  return has(policyConditionDisplayLabel, lbl)
     ? policyConditionDisplayLabel[lbl]
     : lbl;
+};
+
+// Common function to safeguard JSON parsing
+export const safeJsonParse = (value, fallback) => {
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error("JSON Parsing Error:", error);
+    return fallback;
+  }
 };

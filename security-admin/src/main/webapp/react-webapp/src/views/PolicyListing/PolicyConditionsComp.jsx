@@ -60,7 +60,7 @@ export default function PolicyConditionsComp(props) {
   };
 
   const formInitialData = () => {
-    var conditions = {};
+    let conditions = {};
     if (inputVal && inputVal.value) {
       for (let val in inputVal.value) {
         conditions[val] = inputVal.value[val];
@@ -204,7 +204,7 @@ export default function PolicyConditionsComp(props) {
                                               : "form-control"
                                           }
                                           as="textarea"
-                                          rows={3}
+                                          rows={12}
                                           onBlur={(e) =>
                                             trimInputValue(e, input)
                                           }
@@ -248,10 +248,6 @@ export default function PolicyConditionsComp(props) {
                                     onCreateOption={(inputValue) => {
                                       const trimmedValue = inputValue.trim();
                                       if (trimmedValue) {
-                                        const newOption = {
-                                          label: trimmedValue,
-                                          value: trimmedValue
-                                        };
                                         const currentValues = input.value || [];
                                         const newValues = [
                                           ...currentValues,

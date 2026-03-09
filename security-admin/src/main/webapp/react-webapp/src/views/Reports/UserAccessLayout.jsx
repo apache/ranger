@@ -494,7 +494,7 @@ function UserAccessLayout() {
                 <Accordion.Body>
                   <Form
                     onSubmit={onSubmit}
-                    initialValues={getInitialSearchParams}
+                    initialValues={getInitialSearchParams()}
                     render={({ handleSubmit, submitting, values }) => (
                       <form onSubmit={handleSubmit}>
                         <Row className="form-group">

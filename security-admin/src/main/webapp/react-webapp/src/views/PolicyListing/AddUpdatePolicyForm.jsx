@@ -71,7 +71,8 @@ import {
   getResourcesDefVal,
   getAllTimeZoneList,
   policyConditionUpdatedJSON,
-  policyInfo
+  policyInfo,
+  getPolicyConditionDisplayLbl
 } from "Utils/XAUtils";
 import { useAccordionButton } from "react-bootstrap/AccordionButton";
 import AccordionContext from "react-bootstrap/AccordionContext";
@@ -1546,23 +1547,25 @@ export default function AddUpdatePolicyForm() {
                                           return (
                                             <tr key={keyName}>
                                               <td>
-                                                <center>
-                                                  {conditionObj.label}
-                                                </center>
+                                                <span>
+                                                  {getPolicyConditionDisplayLbl(
+                                                    conditionObj.label
+                                                  )}
+                                                </span>
                                               </td>
                                               <td>
                                                 {isArray(
                                                   values?.conditions[keyName]
                                                 ) ? (
-                                                  <center>
+                                                  <span className="line-clamp line-clamp-3">
                                                     {values.conditions[
                                                       keyName
                                                     ].join(", ")}
-                                                  </center>
+                                                  </span>
                                                 ) : (
-                                                  <center>
+                                                  <span className="line-clamp line-clamp-3">
                                                     {values.conditions[keyName]}
-                                                  </center>
+                                                  </span>
                                                 )}
                                               </td>
                                             </tr>
@@ -1573,7 +1576,9 @@ export default function AddUpdatePolicyForm() {
                                   ) : (
                                     <tr>
                                       <td>
-                                        <center> No Conditions </center>
+                                        <center className="text-muted">
+                                          No Conditions
+                                        </center>
                                       </td>
                                     </tr>
                                   )}

@@ -574,9 +574,9 @@ h3.wrap-header {
   margin-top: 5px;
   margin-bottom: 5px;
   border-radius: 5px;
-  font-size: 70%;
-  font-weight: 700;
   padding: 3px;
+  font-size: 14px;
+  display: block;
 }
 
 .rule-condition-wrapper {
@@ -635,6 +635,7 @@ table.no-bg-color thead tr th:first-child {
   white-space: nowrap;
   vertical-align: sub;
   display: inline-block;
+  font-size: 14px;
 }
 
 .service-name,
@@ -1607,7 +1608,6 @@ header {
   display: inline-flex;
   flex-wrap: wrap;
   font-size: 1rem;
-  max-height: 100px;
   overflow-y: auto;
   width: 100%;
 }
@@ -1617,7 +1617,6 @@ header {
   flex-wrap: wrap;
   font-size: 1rem;
   overflow-y: auto;
-  max-height: 100px;
   width: 100%;
 }
 
@@ -3040,4 +3039,33 @@ table a {
 }
 .switch[class*="btn-outline"] .switch-handle {
   background-color: #6c757d !important;
+}
+
+.line-clamp-3 {
+  --line-clamp: 3;
+}
+
+.line-clamp-5 {
+  --line-clamp: 5;
+}
+
+.line-clamp {
+  white-space: normal;
+  word-break: break-all;
+  width: 100%;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--line-clamp, 3);
+  overflow: auto;
+  line-height: 21px;
+}
+
+.condition-group-table td {
+  font-size: 14px;
+  color: rgb(33, 37, 41);
+}
+
+.condition-group-table th {
+  font-size: 15px !important;
+  color: #333;
 }

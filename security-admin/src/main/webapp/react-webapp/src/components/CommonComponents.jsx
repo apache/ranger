@@ -20,10 +20,18 @@
 import { isEmpty, isObject, lastIndexOf } from "lodash";
 import moment from "moment-timezone";
 import React, { Component, useEffect, useMemo, useState } from "react";
-import { Alert, Badge, Button, OverlayTrigger, Popover } from "react-bootstrap";
+import {
+  Alert,
+  Badge,
+  Button,
+  OverlayTrigger,
+  Popover,
+  Modal
+} from "react-bootstrap";
 import { Field } from "react-final-form";
 import { useLocation } from "react-router-dom";
 import blockLoading from "Images/blockLoading.gif";
+import { components as selectComponents } from "react-select";
 
 export const Loader = () => {
   return (
@@ -576,4 +584,58 @@ export const trimInputValue = (e, input) => {
     input.onChange(trimmed);
   }
   input.onBlur(e); // Always call onBlur to trigger validation
+};
+
+export const ConfirmationClearIndicator = (props) => {
+  const [show, setShow] = useState(false);
+
+  const message = `Are you sure you want to remove all selected ${props?.selectProps?.clearConfirmMessage} from this field?`;
+
+  const open = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShow(true);
+  };
+
+  const onNo = (e) => {
+    e.stopPropagation();
+    setShow(false);
+  };
+
+  const onYes = (e) => {
+    e.stopPropagation();
+    props.clearValue(); // clears all selected values (global clear)
+    props?.selectProps?.onClearConfirmed?.();
+    setShow(false);
+  };
+
+  // Remove react-select's default inner event handlers so clicks only on our icon trigger the modal
+  const { innerProps = {}, ...rest } = props;
+  const { onMouseDown, ...cleanInnerProps } = innerProps;
+
+  return (
+    <>
+      <selectComponents.ClearIndicator {...rest} innerProps={cleanInnerProps}>
+        <span
+          style={{ cursor: "pointer" }}
+          onMouseDown={open}
+          title="Clear all"
+        >
+          <i className="fa fa-times fa-2"></i>
+        </span>
+      </selectComponents.ClearIndicator>
+
+      <Modal show={show} onHide={() => setShow(false)}>
+        <Modal.Body>{message}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" size="sm" onMouseDown={onNo}>
+            No
+          </Button>
+          <Button variant="danger" size="sm" onMouseDown={onYes}>
+            Yes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
 };
