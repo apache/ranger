@@ -1603,3 +1603,36 @@ export const safeJsonParse = (value, fallback) => {
     return fallback;
   }
 };
+
+//CommonFunction to get display label for policy permission item
+export const getPolicyPermissionItemDisplayLbl = (
+  serviceDef,
+  policyType,
+  accessType
+) => {
+  let accessTypeDefVal = [];
+  const accesTypeKeys = map(accessType, (item) => {
+    return isObject(item) ? item.type : item;
+  });
+  if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
+    accessTypeDefVal = serviceDef.dataMaskDef.accessTypes;
+  } else if (
+    RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
+  ) {
+    accessTypeDefVal = serviceDef.rowFilterDef.accessTypes;
+  } else {
+    accessTypeDefVal = serviceDef.accessTypes;
+  }
+  if (serviceDef.name == "tag") {
+    return map(sortBy(accesTypeKeys), (val) => ({ label: val }));
+  } else {
+    if (accessType.length == accessTypeDefVal.length) {
+      return sortBy(accessTypeDefVal, "label");
+    } else {
+      const accessTypeDisplayLblObj = filter(accessTypeDefVal, (item) =>
+        includes(accesTypeKeys, { type: item.name })
+      );
+      return sortBy(accessTypeDisplayLblObj, "label");
+    }
+  }
+};

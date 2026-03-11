@@ -31,7 +31,8 @@ import {
   map,
   filter,
   some,
-  isEqual
+  isEqual,
+  sortBy
 } from "lodash";
 import { toast } from "react-toastify";
 import Editable from "Components/Editable";
@@ -198,10 +199,10 @@ export default function PolicyPermissionItem(props) {
         }
       }
     }
-    return srcOp.map(({ label, name: value }) => ({
-      label,
-      value
-    }));
+    return sortBy(
+      srcOp.map(({ label, name: value }) => ({ label, value })),
+      serviceCompDetails?.name == "tag" ? "value" : "label"
+    );
   };
 
   const getMaskingAccessTypeOptions = (index) => {

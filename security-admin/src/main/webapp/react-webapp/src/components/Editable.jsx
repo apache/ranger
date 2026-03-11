@@ -516,7 +516,7 @@ const Editable = (props) => {
           selectVal && selectVal?.length > 0 ? (
             <>
               <span className="editable-edit-text">
-                {selectVal.map((op, index) => (
+                {sortBy(selectVal, "label").map((op, index) => (
                   <h6 className="d-inline me-1" key={index}>
                     <Badge bg="info">{op.label}</Badge>
                   </h6>

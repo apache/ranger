@@ -38,6 +38,7 @@ import {
   isKMSAuditor,
   getPolicyConditionDisplayLbl
 } from "Utils/XAUtils";
+import { getPolicyPermissionItemDisplayLbl } from "../../utils/XAUtils";
 
 function SearchPolicyTable(props) {
   const [searchPoliciesData, setSearchPolicies] = useState([]);
@@ -305,7 +306,11 @@ function PolicyConditionData(props) {
 
     if (!isEmpty(policyItem)) {
       tableRow = policyItem?.map((items, index) => {
-        access = items.accesses?.map((obj) => obj.type);
+        access = getPolicyPermissionItemDisplayLbl(
+          props.serviceDef,
+          0,
+          items.accesses
+        )?.map((obj) => obj.label);
         return (
           <tr key={index}>
             <td>
@@ -388,7 +393,11 @@ function PolicyConditionData(props) {
     let access = [];
     if (!isEmpty(policyItem)) {
       tableRow = policyItem?.map((items, index) => {
-        access = items.accesses?.map((obj) => obj.type);
+        access = getPolicyPermissionItemDisplayLbl(
+          props.serviceDef,
+          1,
+          items.accesses
+        )?.map((obj) => obj.label);
         return (
           <tr key={index}>
             <td>
@@ -473,7 +482,11 @@ function PolicyConditionData(props) {
     let access = [];
     if (!isEmpty(policyItem)) {
       tableRow = policyItem?.map((items, index) => {
-        access = items.accesses?.map((obj) => obj.type);
+        access = getPolicyPermissionItemDisplayLbl(
+          props.serviceDef,
+          2,
+          items.accesses
+        )?.map((obj) => obj.label);
         return (
           <tr key={index}>
             <td>
@@ -569,7 +582,7 @@ function PolicyConditionData(props) {
                   {!isEmpty(props?.serviceDef?.policyConditions) && (
                     <th className="text-center text-nowrap">Rule Conditions</th>
                   )}
-                  <th>Accesses</th>
+                  <th>Permissions</th>
                   {props?.serviceDef?.name != "tag" && <th>Delegate Admin</th>}
                 </tr>
               </thead>
@@ -596,7 +609,7 @@ function PolicyConditionData(props) {
                           Rule Conditions
                         </th>
                       )}
-                      <th>Accesses</th>
+                      <th>Permissions</th>
                       {props?.serviceDef?.name != "tag" && (
                         <th>Delegate Admin</th>
                       )}
@@ -624,7 +637,7 @@ function PolicyConditionData(props) {
                           Rule Conditions
                         </th>
                       )}
-                      <th>Accesses</th>
+                      <th>Permissions</th>
                       {props?.serviceDef?.name != "tag" && (
                         <th>Delegate Admin</th>
                       )}
@@ -652,7 +665,7 @@ function PolicyConditionData(props) {
                           Rule Conditions
                         </th>
                       )}
-                      <th>Accesses</th>
+                      <th>Permissions</th>
                       {props?.serviceDef?.name != "tag" && (
                         <th>Delegate Admin</th>
                       )}
@@ -685,7 +698,7 @@ function PolicyConditionData(props) {
                   {!isEmpty(props?.serviceDef?.policyConditions) && (
                     <th className="text-center text-nowrap">Rule Conditions</th>
                   )}
-                  <th>Accesses</th>
+                  <th>Permissions</th>
                   <th>Masking Condition</th>
                 </tr>
               </thead>
@@ -714,7 +727,7 @@ function PolicyConditionData(props) {
                   {!isEmpty(props?.serviceDef?.policyConditions) && (
                     <th className="text-center text-nowrap">Rule Conditions</th>
                   )}
-                  <th>Accesses</th>
+                  <th>Permissions</th>
                   <th>Row Level Filter</th>
                 </tr>
               </thead>
