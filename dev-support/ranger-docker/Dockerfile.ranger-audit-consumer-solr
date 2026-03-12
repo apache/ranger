@@ -36,25 +36,25 @@ RUN apt-get update && apt-get install -y \
 VOLUME /etc/keytabs
 
 # Set up working directory
-WORKDIR /opt/ranger-audit-consumer-solr
+WORKDIR /opt/ranger/audit-consumer-solr
 
 # Copy ranger-audit-consumer-solr distribution
-COPY ./dist/ranger-${RANGER_VERSION}-ranger-audit-consumer-solr.tar.gz /tmp/
+COPY ./dist/ranger-${RANGER_VERSION}-audit-consumer-solr.tar.gz /tmp/
 
 # Copy scripts and Kerberos configuration
-COPY ./scripts/audit-server/service-check-functions.sh           ${RANGER_SCRIPTS}/
-COPY ./scripts/audit-server/ranger-audit-consumer-solr.sh        ${RANGER_SCRIPTS}/
+COPY ./scripts/audit-server/service-check-functions.sh    ${RANGER_SCRIPTS}/
+COPY ./scripts/audit-server/ranger-audit-consumer-solr.sh ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
 # Extract and setup
-RUN tar xzf /tmp/ranger-${RANGER_VERSION}-ranger-audit-consumer-solr.tar.gz -C /opt/ranger-audit-consumer-solr --strip-components=1 && \
-    rm -f /tmp/ranger-${RANGER_VERSION}-ranger-audit-consumer-solr.tar.gz && \
-    mkdir -p /var/log/ranger/ranger-audit-consumer-solr && \
+RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-consumer-solr.tar.gz -C /opt/ranger/audit-consumer-solr --strip-components=1 && \
+    rm -f /tmp/ranger-${RANGER_VERSION}-audit-consumer-solr.tar.gz && \
+    mkdir -p /var/log/ranger/audit-consumer-solr && \
     mkdir -p /home/ranger/scripts && \
-    rm -rf /opt/ranger-audit-consumer-solr/logs && \
-    ln -sf /var/log/ranger/ranger-audit-consumer-solr /opt/ranger-audit-consumer-solr/logs && \
-    chown -R ranger:ranger /opt/ranger-audit-consumer-solr/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
-    chmod -R 755 /opt/ranger-audit-consumer-solr && \
+    rm -rf /opt/ranger/audit-consumer-solr/logs && \
+    ln -sf /var/log/ranger/audit-consumer-solr /opt/ranger/audit-consumer-solr/logs && \
+    chown -R ranger:ranger /opt/ranger/audit-consumer-solr/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
+    chmod -R 755 /opt/ranger/audit-consumer-solr && \
     chmod 755 ${RANGER_SCRIPTS}/ranger-audit-consumer-solr.sh && \
     chmod 755 ${RANGER_SCRIPTS}/wait_for_keytab.sh
 
@@ -63,9 +63,9 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH=$JAVA_HOME/bin:$PATH
 
 # Environment variables for Solr consumer
-ENV AUDIT_CONSUMER_HOME_DIR=/opt/ranger-audit-consumer-solr
-ENV AUDIT_CONSUMER_CONF_DIR=/opt/ranger-audit-consumer-solr/conf
-ENV AUDIT_CONSUMER_LOG_DIR=/var/log/ranger/ranger-audit-consumer-solr
+ENV AUDIT_CONSUMER_HOME_DIR=/opt/ranger/audit-consumer-solr
+ENV AUDIT_CONSUMER_CONF_DIR=/opt/ranger/audit-consumer-solr/conf
+ENV AUDIT_CONSUMER_LOG_DIR=/var/log/ranger/audit-consumer-solr
 ENV RANGER_USER=ranger
 
 # Expose health check port
@@ -82,5 +82,5 @@ ENV KERBEROS_ENABLED=${KERBEROS_ENABLED:-false}
 USER ranger
 
 # Start the Solr consumer using the custom startup script
-WORKDIR /opt/ranger-audit-consumer-solr
+WORKDIR /opt/ranger/audit-consumer-solr
 ENTRYPOINT ["/home/ranger/scripts/ranger-audit-consumer-solr.sh"]

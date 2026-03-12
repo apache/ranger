@@ -36,10 +36,10 @@ RUN apt-get update && apt-get install -y \
 VOLUME /etc/keytabs
 
 # Set up working directory
-WORKDIR /opt/ranger-audit-server
+WORKDIR /opt/ranger/audit-server
 
-# Copy ranger-audit-server-service distribution
-COPY ./dist/ranger-${RANGER_VERSION}-ranger-audit-server-service.tar.gz /tmp/
+# Copy ranger-audit-server distribution
+COPY ./dist/ranger-${RANGER_VERSION}-audit-server.tar.gz /tmp/
 
 # Copy scripts and Kerberos configuration
 COPY ./scripts/audit-server/service-check-functions.sh    ${RANGER_SCRIPTS}/
@@ -47,15 +47,15 @@ COPY ./scripts/audit-server/ranger-audit-server.sh        ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
 # Extract and setup
-RUN tar xzf /tmp/ranger-${RANGER_VERSION}-ranger-audit-server-service.tar.gz -C /opt/ranger-audit-server --strip-components=1 && \
-    rm -f /tmp/ranger-${RANGER_VERSION}-ranger-audit-server-service.tar.gz && \
-    mkdir -p /var/log/ranger/ranger-audit-server/audit/spool && \
-    mkdir -p /var/log/ranger/ranger-audit-server/audit/archive && \
+RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-server.tar.gz -C /opt/ranger/audit-server --strip-components=1 && \
+    rm -f /tmp/ranger-${RANGER_VERSION}-audit-server.tar.gz && \
+    mkdir -p /var/log/ranger/audit-server/audit/spool && \
+    mkdir -p /var/log/ranger/audit-server/audit/archive && \
     mkdir -p /home/ranger/scripts && \
-    rm -rf /opt/ranger-audit-server/logs && \
-    ln -sf /var/log/ranger/ranger-audit-server /opt/ranger-audit-server/logs && \
-    chown -R ranger:ranger /opt/ranger-audit-server/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
-    chmod -R 755 /opt/ranger-audit-server && \
+    rm -rf /opt/ranger/audit-server/logs && \
+    ln -sf /var/log/ranger/audit-server /opt/ranger/audit-server/logs && \
+    chown -R ranger:ranger /opt/ranger/audit-server/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
+    chmod -R 755 /opt/ranger/audit-server && \
     chmod 755 ${RANGER_SCRIPTS}/ranger-audit-server.sh
 
 # Set Java home
@@ -63,9 +63,9 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH=$JAVA_HOME/bin:$PATH
 
 # Environment variables for audit server
-ENV AUDIT_SERVER_HOME_DIR=/opt/ranger-audit-server
-ENV AUDIT_SERVER_CONF_DIR=/opt/ranger-audit-server/conf
-ENV AUDIT_SERVER_LOG_DIR=/var/log/ranger/ranger-audit-server
+ENV AUDIT_SERVER_HOME_DIR=/opt/ranger/audit-server
+ENV AUDIT_SERVER_CONF_DIR=/opt/ranger/audit-server/conf
+ENV AUDIT_SERVER_LOG_DIR=/var/log/ranger/audit-server
 ENV RANGER_USER=ranger
 
 # Expose ports (HTTP and HTTPS)
@@ -82,5 +82,5 @@ ENV KERBEROS_ENABLED=${KERBEROS_ENABLED:-false}
 USER ranger
 
 # Start the audit server using the custom startup script
-WORKDIR /opt/ranger-audit-server
+WORKDIR /opt/ranger/audit-server
 ENTRYPOINT ${RANGER_SCRIPTS}/ranger-audit-server.sh

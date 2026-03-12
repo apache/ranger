@@ -18,9 +18,9 @@
 
 set -e
 
-AUDIT_SERVER_HOME_DIR="${AUDIT_SERVER_HOME_DIR:-/opt/ranger-audit-server}"
-AUDIT_SERVER_CONF_DIR="${AUDIT_SERVER_CONF_DIR:-/opt/ranger-audit-server/conf}"
-AUDIT_SERVER_LOG_DIR="${AUDIT_SERVER_LOG_DIR:-/var/log/ranger/ranger-audit-server}"
+AUDIT_SERVER_HOME_DIR="${AUDIT_SERVER_HOME_DIR:-/opt/ranger/audit-server}"
+AUDIT_SERVER_CONF_DIR="${AUDIT_SERVER_CONF_DIR:-/opt/ranger/audit-server/conf}"
+AUDIT_SERVER_LOG_DIR="${AUDIT_SERVER_LOG_DIR:-/var/log/ranger/audit-server}"
 
 # Create log directory if it doesn't exist
 mkdir -p ${AUDIT_SERVER_LOG_DIR}
@@ -91,8 +91,8 @@ echo "[INFO] AUDIT_SERVER_OPTS: ${AUDIT_SERVER_OPTS}"
 
 # Build classpath from WAR file
 WEBAPP_ROOT="${AUDIT_SERVER_HOME_DIR}/webapp"
-WAR_FILE="${WEBAPP_ROOT}/ranger-audit-server-service.war"
-WEBAPP_DIR="${WEBAPP_ROOT}/ranger-audit-server-service"
+WAR_FILE="${WEBAPP_ROOT}/ranger-audit-server.war"
+WEBAPP_DIR="${WEBAPP_ROOT}/ranger-audit-server"
 
 # Extract WAR if not already extracted
 if [ -f "${WAR_FILE}" ] && [ ! -d "${WEBAPP_DIR}" ]; then

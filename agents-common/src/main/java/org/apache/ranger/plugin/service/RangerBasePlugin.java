@@ -400,25 +400,7 @@ public class RangerBasePlugin {
         AuditProviderFactory providerFactory = AuditProviderFactory.getInstance();
 
         if (!providerFactory.isInitDone()) {
-            if (pluginConfig.getProperties() != null) {
-                Properties baseProps  = pluginConfig.getProperties();
-                Properties auditProps = new Properties();
-                auditProps.putAll(baseProps);
-                String serviceType = getServiceType();
-                if (StringUtils.isNotEmpty(serviceType)) {
-                    auditProps.setProperty("ranger.plugin.audit.service.type", serviceType);
-                    LOG.info("Added serviceType={} to audit properties for audit destination", serviceType);
-                }
-                String appId = getAppId();
-                if (StringUtils.isNotEmpty(appId)) {
-                    auditProps.setProperty("ranger.plugin.audit.app.id", appId);
-                    LOG.info("Added appId={} to audit properties for audit destination", appId);
-                }
-                providerFactory.init(auditProps, appId);
-            } else {
-                LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
-                LOG.error("No authorization audits will be generated. ");
-            }
+            providerFactory.init(pluginConfig.getProperties(), getAppId());
         }
 
         if (!pluginConfig.getPolicyEngineOptions().disablePolicyRefresher) {

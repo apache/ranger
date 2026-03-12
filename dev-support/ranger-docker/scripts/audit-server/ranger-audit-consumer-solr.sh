@@ -18,9 +18,9 @@
 
 set -e
 
-AUDIT_CONSUMER_HOME_DIR="${AUDIT_CONSUMER_HOME_DIR:-/opt/ranger-audit-consumer-solr}"
-AUDIT_CONSUMER_CONF_DIR="${AUDIT_CONSUMER_CONF_DIR:-/opt/ranger-audit-consumer-solr/conf}"
-AUDIT_CONSUMER_LOG_DIR="${AUDIT_CONSUMER_LOG_DIR:-/var/log/ranger/ranger-audit-consumer-solr}"
+AUDIT_CONSUMER_HOME_DIR="${AUDIT_CONSUMER_HOME_DIR:-/opt/ranger/audit-consumer-solr}"
+AUDIT_CONSUMER_CONF_DIR="${AUDIT_CONSUMER_CONF_DIR:-/opt/ranger/audit-consumer-solr/conf}"
+AUDIT_CONSUMER_LOG_DIR="${AUDIT_CONSUMER_LOG_DIR:-/var/log/ranger/audit-consumer-solr}"
 
 # Create log directory if it doesn't exist
 mkdir -p ${AUDIT_CONSUMER_LOG_DIR}

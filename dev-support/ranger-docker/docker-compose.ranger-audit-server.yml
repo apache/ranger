@@ -40,9 +40,9 @@ services:
       - "7182:7182"
     environment:
       JAVA_HOME: /opt/java/openjdk
-      AUDIT_SERVER_HOME_DIR: /opt/ranger-audit-server
-      AUDIT_SERVER_CONF_DIR: /opt/ranger-audit-server/conf
-      AUDIT_SERVER_LOG_DIR: /var/log/ranger/ranger-audit-server
+      AUDIT_SERVER_HOME_DIR: /opt/ranger/audit-server
+      AUDIT_SERVER_CONF_DIR: /opt/ranger/audit-server/conf
+      AUDIT_SERVER_LOG_DIR: /var/log/ranger/audit-server
       AUDIT_SERVER_HEAP: "-Xms512m -Xmx2g"
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
@@ -51,8 +51,8 @@ services:
       - ranger
     volumes:
       - ./dist/keytabs/ranger-audit-server:/etc/keytabs
-      - ranger-audit-server-logs:/opt/ranger-audit-server/logs
-      - ranger-audit-server-spool:/var/log/ranger/ranger-audit-server/audit
+      - ranger-audit-server-logs:/var/log/ranger/audit-server
+      - ranger-audit-server-spool:/var/log/ranger/audit-server/audit
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7081/api/audit/health"]
       interval: 30s
@@ -88,9 +88,9 @@ services:
       - "7091:7091"
     environment:
       JAVA_HOME: /opt/java/openjdk
-      AUDIT_CONSUMER_HOME_DIR: /opt/ranger-audit-consumer-solr
-      AUDIT_CONSUMER_CONF_DIR: /opt/ranger-audit-consumer-solr/conf
-      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/ranger-audit-consumer-solr
+      AUDIT_CONSUMER_HOME_DIR: /opt/ranger/audit-consumer-solr
+      AUDIT_CONSUMER_CONF_DIR: /opt/ranger/audit-consumer-solr/conf
+      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/audit-consumer-solr
       AUDIT_CONSUMER_HEAP: "-Xms512m -Xmx2g"
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
@@ -100,7 +100,7 @@ services:
       - ranger
     volumes:
       - ./dist/keytabs/ranger-audit-consumer-solr:/etc/keytabs
-      - ranger-audit-consumer-solr-logs:/opt/ranger-audit-consumer-solr/logs
+      - ranger-audit-consumer-solr-logs:/var/log/ranger/audit-consumer-solr
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7091/api/health"]
       interval: 30s
@@ -136,9 +136,9 @@ services:
       - "7092:7092"
     environment:
       JAVA_HOME: /opt/java/openjdk
-      AUDIT_CONSUMER_HOME_DIR: /opt/ranger-audit-consumer-hdfs
-      AUDIT_CONSUMER_CONF_DIR: /opt/ranger-audit-consumer-hdfs/conf
-      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/ranger-audit-consumer-hdfs
+      AUDIT_CONSUMER_HOME_DIR: /opt/ranger/audit-consumer-hdfs
+      AUDIT_CONSUMER_CONF_DIR: /opt/ranger/audit-consumer-hdfs/conf
+      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/audit-consumer-hdfs
       AUDIT_CONSUMER_HEAP: "-Xms512m -Xmx2g"
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
@@ -148,7 +148,7 @@ services:
       - ranger
     volumes:
       - ./dist/keytabs/ranger-audit-consumer-hdfs:/etc/keytabs
-      - ranger-audit-consumer-hdfs-logs:/opt/ranger-audit-consumer-hdfs/logs
+      - ranger-audit-consumer-hdfs-logs:/var/log/ranger/audit-consumer-hdfs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7092/api/health"]
       interval: 30s
