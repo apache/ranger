@@ -43,6 +43,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -50,94 +51,47 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Solr consumer that writes audits into Solr index using rangerauditserver user
  */
-public class AuditSolrConsumer extends AuditConsumerBase implements AuditConsumer {
-    private static final Logger                           LOG                              = LoggerFactory.getLogger(AuditSolrConsumer.class);
-    private static final String                           RANGER_AUDIT_SOLR_CONSUMER_GROUP = AuditServerConstants.DEFAULT_RANGER_AUDIT_SOLR_CONSUMER_GROUP;
+public class AuditSolrConsumer extends AuditConsumerBase {
+    private static final Logger LOG = LoggerFactory.getLogger(AuditSolrConsumer.class);
+
+    private static final String RANGER_AUDIT_SOLR_CONSUMER_GROUP = AuditServerConstants.DEFAULT_RANGER_AUDIT_SOLR_CONSUMER_GROUP;
 
     // Register AuditSolrConsumer factory in the audit consumer registry
     static {
         try {
-            AuditConsumerRegistry.getInstance().registerFactory(AuditServerConstants.PROP_SOLR_DEST_PREFIX, (props, propPrefix) -> new AuditSolrConsumer(props, propPrefix));
+            AuditConsumerRegistry.getInstance().registerFactory(AuditServerConstants.PROP_SOLR_DEST_PREFIX, AuditSolrConsumer::new);
+
             LOG.info("Registered Solr consumer factory with AuditConsumerRegistry");
         } catch (Exception e) {
             LOG.error("Failed to register Solr consumer factory", e);
         }
     }
 
-    private        final AtomicBoolean                    running              = new AtomicBoolean(false);
-    private        final Map<String, ConsumerWorker>      consumerWorkers      = new ConcurrentHashMap<>();
-    private              ExecutorService                  consumerThreadPool;
-    private              int                              consumerThreadCount  = 1;
-    // Offset management configuration (batch or manual only supported)
-    private              String                           offsetCommitStrategy = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
-    private              long                             offsetCommitInterval = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
+    private final AtomicBoolean               running         = new AtomicBoolean(false);
+    private final Map<String, ConsumerWorker> consumerWorkers = new ConcurrentHashMap<>();
+    private final SolrAuditDestination        solrAuditDestination;
 
-    public               SolrAuditDestination             solrAuditDestination;
-    public               Properties                       props;
-    public               String                           propPrefix;
+    private ExecutorService consumerThreadPool;
+    private int             consumerThreadCount = 1;
+
+    // Offset management configuration (batch or manual only supported)
+    private String offsetCommitStrategy = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
+    private long   offsetCommitInterval = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
 
     public AuditSolrConsumer(Properties props, String propPrefix) throws Exception {
         super(props, propPrefix, RANGER_AUDIT_SOLR_CONSUMER_GROUP);
-        this.props      = props;
-        this.propPrefix = propPrefix;
+
+        this.solrAuditDestination = new SolrAuditDestination();
+
         init(props, propPrefix);
-    }
-
-    @Override
-    public void init(Properties props, String propPrefix) throws Exception {
-        LOG.info("==> AuditSolrConsumer.init()");
-
-        consumer             = getConsumer();
-        solrAuditDestination = new SolrAuditDestination();
-        solrAuditDestination.init(props, AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.PROP_SOLR_DEST_PREFIX);
-
-        // Initialize consumer configuration
-        initConsumerConfig(props, propPrefix);
-
-        LOG.info("<== AuditSolrConsumer.init()");
-    }
-
-    private void initConsumerConfig(Properties props, String propPrefix) {
-        LOG.info("==> AuditSolrConsumer.initConsumerConfig()");
-
-        // Get consumer thread count
-        this.consumerThreadCount = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONSUMER_THREAD_COUNT, 1);
-        LOG.info("Consumer thread count: {}", consumerThreadCount);
-
-        // Initialize offset management configuration
-        initializeOffsetManagement(props, propPrefix);
-
-        LOG.info("<== AuditSolrConsumer.initConsumerConfig()");
-    }
-
-    private void initializeOffsetManagement(Properties props, String propPrefix) {
-        LOG.info("==> AuditSolrConsumer.initializeOffsetManagement()");
-
-        this.offsetCommitStrategy = MiscUtil.getStringProperty(props,
-                propPrefix + "." + AuditServerConstants.PROP_CONSUMER_OFFSET_COMMIT_STRATEGY,
-                AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY);
-
-        // Get offset commit interval (only used for manual strategy)
-        this.offsetCommitInterval = MiscUtil.getLongProperty(props,
-                propPrefix + "." + AuditServerConstants.PROP_CONSUMER_OFFSET_COMMIT_INTERVAL,
-                AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS);
-
-        AuditServerLogFormatter.builder("AuditSolrConsumer Offset Management Configuration")
-                .add("Commit Strategy", offsetCommitStrategy)
-                .add("Commit Interval (ms)", offsetCommitInterval + " (used in manual mode only)")
-                .logInfo(LOG);
-
-        LOG.info("<== AuditSolrConsumer.initializeOffsetManagement()");
     }
 
     @Override
     public void run() {
         try {
-            if (solrAuditDestination == null) {
-                init(this.props, this.propPrefix);
+            if (running.compareAndSet(false, true)) {
+                startConsumerWorkers();
             }
-
-            startMultithreadedConsumption();
 
             // Keep main thread alive while consumer threads are running
             while (running.get()) {
@@ -150,19 +104,76 @@ public class AuditSolrConsumer extends AuditConsumerBase implements AuditConsume
         }
     }
 
-    /**
-     * Start multithreaded consumption with generic workers for horizontal scaling.
-     * Creates configured number of generic workers that can process ANY partition assigned by Kafka.
-     * This enables true horizontal scaling across multiple audit-server instances.
-     */
-    private void startMultithreadedConsumption() {
-        LOG.info("==> AuditSolrConsumer.startMultithreadedConsumption()");
+    @Override
+    public void shutdown() {
+        LOG.info("Shutting down AuditSolrConsumer...");
 
-        if (running.compareAndSet(false, true)) {
-            startConsumerWorkers();
+        running.set(false);
+
+        // Shutdown consumer workers
+        if (consumerThreadPool != null) {
+            consumerThreadPool.shutdownNow();
+
+            try {
+                if (!consumerThreadPool.awaitTermination(30, TimeUnit.SECONDS)) {
+                    LOG.warn("Consumer thread pool did not terminate within 30 seconds");
+                }
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting for consumer thread pool to terminate", e);
+                Thread.currentThread().interrupt();
+            }
         }
 
-        LOG.info("<== AuditSolrConsumer.startMultithreadedConsumption()");
+        // Close main consumer
+        if (consumer != null) {
+            try {
+                consumer.close();
+            } catch (Exception e) {
+                LOG.error("Error closing main consumer", e);
+            }
+        }
+
+        consumerWorkers.clear();
+
+        LOG.info("AuditSolrConsumer shutdown complete");
+    }
+
+    private void init(Properties props, String propPrefix) throws Exception {
+        LOG.info("==> AuditSolrConsumer.init()");
+
+        solrAuditDestination.init(props, AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.PROP_SOLR_DEST_PREFIX);
+
+        this.consumerThreadCount = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONSUMER_THREAD_COUNT, 1);
+
+        LOG.info("Consumer thread count: {}", consumerThreadCount);
+
+        this.offsetCommitStrategy = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONSUMER_OFFSET_COMMIT_STRATEGY, AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY);
+
+        // Get offset commit interval (only used for manual strategy)
+        this.offsetCommitInterval = MiscUtil.getLongProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONSUMER_OFFSET_COMMIT_INTERVAL, AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS);
+
+        AuditServerLogFormatter.builder("AuditSolrConsumer Offset Management Configuration")
+                .add("Commit Strategy", offsetCommitStrategy)
+                .add("Commit Interval (ms)", offsetCommitInterval + " (used in manual mode only)")
+                .logInfo(LOG);
+
+        LOG.info("<== AuditSolrConsumer.init()");
+    }
+
+    /**
+     * Process a batch of audit messages.
+     * This method leverages SolrAuditDestination's batch processing capability
+     * to send multiple audits to Solr in a single request, improving performance.
+     *
+     * @param audits Collection of audit messages in JSON format
+     * @throws Exception if batch processing fails
+     */
+    public void processMessageBatch(Collection<String> audits) throws Exception {
+        boolean processed = audits != null && !audits.isEmpty() && solrAuditDestination.logJSON(audits);
+
+        if (!processed) {
+            throw new Exception("Failure in sending audits into Solr");
+        }
     }
 
     /**
@@ -386,86 +397,5 @@ public class AuditSolrConsumer extends AuditConsumerBase implements AuditConsume
                 }
             }
         }
-    }
-
-    @Override
-    public KafkaConsumer<String, String> getKafkaConsumer() {
-        return consumer;
-    }
-
-    @Override
-    public void processMessage(String audit) throws Exception {
-        boolean processed = false;
-
-        if (solrAuditDestination != null) {
-            processed = solrAuditDestination.logJSON(audit);
-        }
-
-        if (!processed) {
-            String errorMessage = "Failure in committing audits into Solr";
-            throw new Exception(errorMessage);
-        }
-    }
-
-    /**
-     * Process a batch of audit messages.
-     * This method leverages SolrAuditDestination's batch processing capability
-     * to send multiple audits to Solr in a single request, improving performance.
-     *
-     * @param audits Collection of audit messages in JSON format
-     * @throws Exception if batch processing fails
-     */
-    public void processMessageBatch(Collection<String> audits) throws Exception {
-        boolean processed = false;
-
-        if (solrAuditDestination != null && audits != null && !audits.isEmpty()) {
-            processed = solrAuditDestination.logJSON(audits);
-        }
-
-        if (!processed) {
-            String errorMessage = "Failure in sending audits into Solr";
-            throw new Exception(errorMessage);
-        }
-    }
-
-    @Override
-    public String getTopicName() {
-        return topicName;
-    }
-
-    @Override
-    public void shutdown() {
-        LOG.info("Shutting down AuditSolrConsumer...");
-
-        running.set(false);
-
-        // Shutdown consumer workers
-        if (consumerThreadPool != null) {
-            consumerThreadPool.shutdownNow();
-            try {
-                if (!consumerThreadPool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
-                    LOG.warn("Consumer thread pool did not terminate within 30 seconds");
-                }
-            } catch (InterruptedException e) {
-                LOG.warn("Interrupted while waiting for consumer thread pool to terminate", e);
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        // Close main consumer
-        if (consumer != null) {
-            try {
-                consumer.close();
-            } catch (Exception e) {
-                LOG.error("Error closing main consumer", e);
-            }
-        }
-
-        consumerWorkers.clear();
-        LOG.info("AuditSolrConsumer shutdown complete");
-    }
-
-    public String getConsumerGroupId() {
-        return consumerGroupId;
     }
 }

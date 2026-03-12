@@ -21,7 +21,6 @@ package org.apache.ranger.audit.destination;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -34,11 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,20 +43,21 @@ import java.util.Properties;
 public class RangerAuditServerDestination extends AuditDestination {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAuditServerDestination.class);
 
-    public static final String PROP_AUDITSERVER_URL                    = "xasecure.audit.destination.auditserver.url";
-    public static final String PROP_AUDITSERVER_USER_NAME              = "xasecure.audit.destination.auditserver.username";
-    public static final String PROP_AUDITSERVER_USER_PASSWORD          = "xasecure.audit.destination.auditserver.password";
-    public static final String PROP_AUDITSERVER_AUTH_TYPE              = "xasecure.audit.destination.auditserver.authentication.type";
-    public static final String PROP_AUDITSERVER_JWT_TOKEN              = "xasecure.audit.destination.auditserver.jwt.token";
-    public static final String PROP_AUDITSERVER_JWT_TOKEN_FILE         = "xasecure.audit.destination.auditserver.jwt.token.file";
-    public static final String PROP_AUDITSERVER_CLIENT_CONN_TIMEOUT_MS = "xasecure.audit.destination.auditserver.connection.timeout.ms";
-    public static final String PROP_AUDITSERVER_CLIENT_READ_TIMEOUT_MS = "xasecure.audit.destination.auditserver.read.timeout.ms";
-    public static final String PROP_AUDITSERVER_SSL_CONFIG_FILE        = "xasecure.audit.destination.auditserver.ssl.config.file";
-    public static final String PROP_AUDITSERVER_MAX_RETRY_ATTEMPTS     = "xasecure.audit.destination.auditserver.max.retry.attempts";
-    public static final String PROP_AUDITSERVER_RETRY_INTERVAL_MS      = "xasecure.audit.destination.auditserver.retry.interval.ms";
-    public static final String REST_RELATIVE_PATH_POST                 = "/api/audit/access";
-    public static final String QUERY_PARAM_SERVICE_NAME                = "serviceName";
-    public static final String QUERY_PARAM_APP_ID                      = "appId";
+    public static final String PROP_URL                    = "url";
+    public static final String PROP_SSL_CONFIG_FILE        = "ssl.config.file";
+    public static final String PROP_AUTHN_TYPE             = "authn.type";
+    public static final String PROP_AUTHN_BASIC_USERNAME   = "authn.basic.username";
+    public static final String PROP_AUTHN_BASIC_PASSWORD   = "authn.basic.password";
+    public static final String PROP_AUTHN_JWT_ENV          = "authn.jwt.env";
+    public static final String PROP_AUTHN_JWT_FILE         = "authn.jwt.file";
+    public static final String PROP_CLIENT_CONN_TIMEOUT_MS = "connection.timeout.ms";
+    public static final String PROP_CLIENT_READ_TIMEOUT_MS = "read.timeout.ms";
+    public static final String PROP_MAX_RETRY_ATTEMPTS     = "max.retry.attempts";
+    public static final String PROP_RETRY_INTERVAL_MS      = "retry.interval.ms";
+
+    public static final String REST_RELATIVE_PATH_POST  = "/api/audit/access";
+    public static final String QUERY_PARAM_SERVICE_NAME = "serviceName";
+    public static final String QUERY_PARAM_APP_ID       = "appId";
 
     // Authentication types
     public static final String AUTH_TYPE_KERBEROS = "kerberos";
@@ -74,41 +69,20 @@ public class RangerAuditServerDestination extends AuditDestination {
     @Override
     public void init(Properties props, String propPrefix) {
         LOG.info("==> RangerAuditServerDestination:init()");
+
         super.init(props, propPrefix);
 
-        String url               = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_URL);
-        String sslConfigFileName = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_SSL_CONFIG_FILE);
-        String userName          = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_USER_NAME);
-        String password          = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_USER_PASSWORD);
-        int    connTimeoutMs     = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_CLIENT_CONN_TIMEOUT_MS, 120000);
-        int    readTimeoutMs     = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_CLIENT_READ_TIMEOUT_MS, 30000);
-        int    maxRetryAttempts  = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_MAX_RETRY_ATTEMPTS, 3);
-        int    retryIntervalMs   = MiscUtil.getIntProperty(props, PROP_AUDITSERVER_RETRY_INTERVAL_MS, 1000);
-
-        String authType = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_AUTH_TYPE);
-
-        if (StringUtils.isEmpty(authType)) { // Authentication priority: JWT → Kerberos → Basic
-            try {
-                if (StringUtils.isNotEmpty(MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN)) ||
-                        StringUtils.isNotEmpty(MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN_FILE))) {
-                    authType = AUTH_TYPE_JWT;
-                } else if (isKerberosAuthenticated()) {
-                    authType = AUTH_TYPE_KERBEROS;
-                } else if (StringUtils.isNotEmpty(userName)) {
-                    authType = AUTH_TYPE_BASIC;
-                }
-            } catch (Exception e) {
-                LOG.warn("Failed to auto-detect authentication type", e);
-            }
-        }
+        String url               = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_URL);
+        String sslConfigFileName = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_SSL_CONFIG_FILE);
+        int    connTimeoutMs     = MiscUtil.getIntProperty(props, propPrefix + "." + PROP_CLIENT_CONN_TIMEOUT_MS, 120000);
+        int    readTimeoutMs     = MiscUtil.getIntProperty(props, propPrefix + "." + PROP_CLIENT_READ_TIMEOUT_MS, 30000);
+        int    maxRetryAttempts  = MiscUtil.getIntProperty(props, propPrefix + "." + PROP_MAX_RETRY_ATTEMPTS, 3);
+        int    retryIntervalMs   = MiscUtil.getIntProperty(props, propPrefix + "." + PROP_RETRY_INTERVAL_MS, 1000);
+        String authType          = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_AUTHN_TYPE);
 
         LOG.info("Audit destination authentication type: {}", authType);
 
-        if (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType)) {
-            initKerberos();
-        }
-
-        Configuration config = createConfigurationFromProperties(props, authType, userName, password);
+        Configuration config = createRESTClientConfiguration(props, propPrefix, authType);
 
         this.restClient = new RangerRESTClient(url, sslConfigFileName, config);
 
@@ -126,10 +100,12 @@ public class RangerAuditServerDestination extends AuditDestination {
 
         logStatus();
 
+        RangerRESTClient restClient = this.restClient;
+
         if (restClient != null) {
             restClient.resetClient();
 
-            restClient = null;
+            this.restClient = null;
         }
     }
 
@@ -151,8 +127,10 @@ public class RangerAuditServerDestination extends AuditDestination {
 
             addTotalCount(events.size());
 
+            RangerRESTClient restClient = this.restClient;
+
             if (restClient != null) {
-                ret = logAsBatch(events);
+                ret = logAsBatch(events, restClient);
             } else {
                 LOG.error("REST client is not initialized. Cannot send audit events");
 
@@ -167,16 +145,12 @@ public class RangerAuditServerDestination extends AuditDestination {
         return ret;
     }
 
-    public boolean isAsync() {
-        return true;
-    }
-
-    private boolean logAsBatch(Collection<AuditEventBase> events) {
+    private boolean logAsBatch(Collection<AuditEventBase> events, RangerRESTClient restClient) {
         int totalEvents = events.size();
 
-        LOG.debug("==> logAsBatch() Sending batch of {} events to Audit Server....", totalEvents);
+        LOG.debug("==> logAsBatch(): sending batch of {} events to Audit Server", totalEvents);
 
-        boolean batchSuccess = sendBatch(events);
+        boolean batchSuccess = sendBatch(events, restClient);
 
         if (batchSuccess) {
             addSuccessCount(totalEvents);
@@ -186,12 +160,12 @@ public class RangerAuditServerDestination extends AuditDestination {
             addFailedCount(totalEvents);
         }
 
-        LOG.debug("<== logAsBatch() Batch processing complete: {}/{} events sent successfully", batchSuccess ? totalEvents : 0, totalEvents);
+        LOG.debug("<== logAsBatch(): batch processing complete: {}/{} events sent successfully", batchSuccess ? totalEvents : 0, totalEvents);
 
         return batchSuccess;
     }
 
-    private boolean sendBatch(Collection<AuditEventBase> events) {
+    private boolean sendBatch(Collection<AuditEventBase> events, RangerRESTClient restClient) {
         boolean             ret;
         Map<String, String> queryParams = new HashMap<>();
         String              serviceName = fetchServiceName(events);
@@ -222,14 +196,14 @@ public class RangerAuditServerDestination extends AuditDestination {
             if (isSecureMode) {
                 response = MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<ClientResponse>) () -> {
                     try {
-                        return postAuditEvents(REST_RELATIVE_PATH_POST, queryParams, events);
+                        return postAuditEvents(restClient, queryParams, events);
                     } catch (Exception e) {
                         LOG.error("Failed to post audit events in privileged action: {}", e.getMessage());
                         throw e;
                     }
                 });
             } else {
-                response = postAuditEvents(REST_RELATIVE_PATH_POST, queryParams, events);
+                response = postAuditEvents(restClient, queryParams, events);
             }
 
             if (response != null) {
@@ -274,31 +248,10 @@ public class RangerAuditServerDestination extends AuditDestination {
         return ret;
     }
 
-    private int fetchServiceType(Collection<AuditEventBase> events) {
-        Iterator<AuditEventBase> iter       = events.iterator();
-        AuditEventBase           auditEvent = iter.hasNext() ? iter.next() : null;
+    private ClientResponse postAuditEvents(RangerRESTClient restClient, Map<String, String> params, Collection<AuditEventBase> events) {
+        LOG.debug("Posting {} audit events to {}", events.size(), REST_RELATIVE_PATH_POST);
 
-        return (auditEvent instanceof AuthzAuditEvent) ? ((AuthzAuditEvent) auditEvent).getRepositoryType() : -1;
-    }
-
-    private String fetchServiceName(Collection<AuditEventBase> events) {
-        Iterator<AuditEventBase> iter       = events.iterator();
-        AuditEventBase           auditEvent = iter.hasNext() ? iter.next() : null;
-
-        return (auditEvent instanceof AuthzAuditEvent) ? ((AuthzAuditEvent) auditEvent).getRepositoryName() : null;
-    }
-
-    private String fetchAppId(Collection<AuditEventBase> events) {
-        Iterator<AuditEventBase> iter       = events.iterator();
-        AuditEventBase           auditEvent = iter.hasNext() ? iter.next() : null;
-
-        return (auditEvent instanceof AuthzAuditEvent) ? ((AuthzAuditEvent) auditEvent).getAgentId() : null;
-    }
-
-    private ClientResponse postAuditEvents(String relativeUrl, Map<String, String> params, Collection<AuditEventBase> events) throws Exception {
-        LOG.debug("Posting {} audit events to {}", events.size(), relativeUrl);
-
-        WebResource webResource = restClient.getResource(relativeUrl);
+        WebResource webResource = restClient.getResource(REST_RELATIVE_PATH_POST);
 
         if (params != null && !params.isEmpty()) {
             for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -313,7 +266,7 @@ public class RangerAuditServerDestination extends AuditDestination {
                 .post(ClientResponse.class);
     }
 
-    private Configuration createConfigurationFromProperties(Properties props, String authType, String userName, String password) {
+    private static Configuration createRESTClientConfiguration(Properties props, String propPrefix, String authType) {
         Configuration config = new Configuration();
 
         for (String key : props.stringPropertyNames()) {
@@ -323,76 +276,43 @@ public class RangerAuditServerDestination extends AuditDestination {
         final String restClientPrefix = "ranger.plugin";
 
         if (AUTH_TYPE_JWT.equalsIgnoreCase(authType)) {
-            String jwtToken = initJwtToken();
+            String jwtEnv  = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_AUTHN_JWT_ENV);
+            String jwtFile = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_AUTHN_JWT_FILE);
 
-            if (StringUtils.isNotEmpty(jwtToken)) {
-                String jwtTokenFile = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN_FILE);
-
-                if (StringUtils.isNotEmpty(jwtTokenFile)) {
-                    config.set(restClientPrefix + ".policy.rest.client.jwt.source", "file");
-                    config.set(restClientPrefix + ".policy.rest.client.jwt.file", jwtTokenFile);
-
-                    LOG.info("JWT authentication configured via file: {}", jwtTokenFile);
-                } else {
-                    LOG.warn("JWT token is set but file path is not available. JWT may not work as expected");
-                }
+            if (StringUtils.isNotBlank(jwtEnv)) {
+                config.set(restClientPrefix + ".policy.rest.client.jwt.source", "env");
+                config.set(restClientPrefix + ".policy.rest.client.jwt.env", jwtEnv);
+            } else if (StringUtils.isNotBlank(jwtFile)) {
+                config.set(restClientPrefix + ".policy.rest.client.jwt.source", "file");
+                config.set(restClientPrefix + ".policy.rest.client.jwt.file", jwtFile);
+            } else {
+                LOG.warn("JWT authentication configured but no token found. Configure {} or {}", PROP_AUTHN_JWT_ENV, PROP_AUTHN_JWT_FILE);
             }
         } else if (AUTH_TYPE_KERBEROS.equalsIgnoreCase(authType)) {
+            initKerberos();
+
             // For Kerberos, no additional configuration is needed in RangerRESTClient
             // Authentication happens via Subject.doAs() security context
             LOG.info("Kerberos authentication will be used via privileged action (Subject.doAs)");
-        } else if (AUTH_TYPE_BASIC.equalsIgnoreCase(authType) && StringUtils.isNotEmpty(userName) && StringUtils.isNotEmpty(password)) {
-            config.set(restClientPrefix + ".policy.rest.client.username", userName);
-            config.set(restClientPrefix + ".policy.rest.client.password", password);
+        } else if (AUTH_TYPE_BASIC.equalsIgnoreCase(authType)) {
+            String userName          = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_AUTHN_BASIC_USERNAME);
+            String password          = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_AUTHN_BASIC_PASSWORD);
 
-            LOG.info("Basic authentication configured for user: {}", userName);
+            if (StringUtils.isNotBlank(userName) && StringUtils.isNotBlank(password)) {
+                config.set(restClientPrefix + ".policy.rest.client.username", userName);
+                config.set(restClientPrefix + ".policy.rest.client.password", password);
+
+                LOG.info("Basic authentication configured for user: {}", userName);
+            } else {
+                LOG.warn("Basic authentication configured but username/password not found. Configure {} and {}", PROP_AUTHN_BASIC_USERNAME, PROP_AUTHN_BASIC_PASSWORD);
+            }
         }
 
         return config;
     }
 
-    private String initJwtToken() {
-        LOG.info("==> RangerAuditServerDestination:initJwtToken()");
-
-        String jwtToken = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN);
-
-        if (StringUtils.isEmpty(jwtToken)) {
-            String jwtTokenFile = MiscUtil.getStringProperty(props, PROP_AUDITSERVER_JWT_TOKEN_FILE);
-
-            if (StringUtils.isNotEmpty(jwtTokenFile)) {
-                try {
-                    jwtToken = readJwtTokenFromFile(jwtTokenFile);
-
-                    LOG.info("JWT token loaded from file: {}", jwtTokenFile);
-                } catch (Exception e) {
-                    LOG.error("Failed to read JWT token from file: {}", jwtTokenFile, e);
-                }
-            }
-        }
-
-        if (StringUtils.isEmpty(jwtToken)) {
-            LOG.warn("JWT authentication configured but no token found. Configure {} or {}", PROP_AUDITSERVER_JWT_TOKEN, PROP_AUDITSERVER_JWT_TOKEN_FILE);
-        } else {
-            LOG.info("JWT authentication initialized successfully");
-        }
-
-        LOG.info("<== RangerAuditServerDestination:initJwtToken()");
-
-        return jwtToken;
-    }
-
-    private String readJwtTokenFromFile(String tokenFile) throws IOException {
-        try (InputStream in = getFileInputStream(tokenFile)) {
-            if (in != null) {
-                return IOUtils.toString(in, Charset.defaultCharset()).trim();
-            } else {
-                throw new IOException("Unable to read JWT token file: " + tokenFile);
-            }
-        }
-    }
-
-    private void initKerberos() {
-        LOG.info("==> RangerAuditServerDestination:initKerberos()");
+    private static void initKerberos() {
+        LOG.info("==> RangerAuditServerDestination.initKerberos()");
 
         try {
             UserGroupInformation ugi = UserGroupInformation.getLoginUser();
@@ -414,10 +334,10 @@ public class RangerAuditServerDestination extends AuditDestination {
             LOG.warn("Kerberos authentication failed. First request will retry authentication", e);
         }
 
-        LOG.info("<== RangerAuditServerDestination:initKerberos()");
+        LOG.info("<== RangerAuditServerDestination.initKerberos()");
     }
 
-    private boolean isKerberosAuthenticated() {
+    private static boolean isKerberosAuthenticated() {
         try {
             boolean isSecurityEnabled = UserGroupInformation.isSecurityEnabled();
 
@@ -435,13 +355,17 @@ public class RangerAuditServerDestination extends AuditDestination {
         return false;
     }
 
-    private InputStream getFileInputStream(String fileName) throws IOException {
-        if (StringUtils.isNotBlank(fileName)) {
-            File file = new File(fileName);
+    private static String fetchServiceName(Collection<AuditEventBase> events) {
+        Iterator<AuditEventBase> iter       = events.iterator();
+        AuditEventBase           auditEvent = iter.hasNext() ? iter.next() : null;
 
-            return file.exists() ? new FileInputStream(file) : ClassLoader.getSystemResourceAsStream(fileName);
-        } else {
-            return null;
-        }
+        return (auditEvent instanceof AuthzAuditEvent) ? ((AuthzAuditEvent) auditEvent).getRepositoryName() : null;
+    }
+
+    private static String fetchAppId(Collection<AuditEventBase> events) {
+        Iterator<AuditEventBase> iter       = events.iterator();
+        AuditEventBase           auditEvent = iter.hasNext() ? iter.next() : null;
+
+        return (auditEvent instanceof AuthzAuditEvent) ? ((AuthzAuditEvent) auditEvent).getAgentId() : null;
     }
 }

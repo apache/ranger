@@ -29,11 +29,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public class AuditConsumerBase {
+public abstract class AuditConsumerBase implements AuditConsumer {
     private static final Logger LOG = LoggerFactory.getLogger(AuditConsumerBase.class);
 
     protected final Properties                    consumerProps = new Properties();
-    protected       KafkaConsumer<String, String> consumer;
+    protected final KafkaConsumer<String, String> consumer;
     protected final String                        topicName;
     protected final String                        consumerGroupId;
 
@@ -83,19 +83,25 @@ public class AuditConsumerBase {
         topicName =  MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
     }
 
+    @Override
+    public KafkaConsumer<String, String> getConsumer() {
+        return consumer;
+    }
+
+    @Override
+    public String getTopicName() {
+        return topicName;
+    }
+
+    public String getConsumerGroupId() {
+        return consumerGroupId;
+    }
+
     private String getConsumerGroupId(Properties props, String propPrefix, String defaultConsumerGroupId) {
         String configuredGroupId = MiscUtil.getStringProperty(props, propPrefix + ".consumer.group.id");
         if (configuredGroupId != null && !configuredGroupId.trim().isEmpty()) {
             return configuredGroupId.trim();
         }
         return defaultConsumerGroupId;
-    }
-
-    public KafkaConsumer<String, String> getConsumer() {
-        return consumer;
-    }
-
-    public String getConsumerGroupId() {
-        return consumerGroupId;
     }
 }

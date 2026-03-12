@@ -21,23 +21,11 @@ package org.apache.ranger.audit.consumer.kafka;
 
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-import java.util.Properties;
-
 /**
  * Interface for Ranger Kafka consumers that consume audit events from Kafka
  * and forward them to various destinations like Solr, HDFS, etc.
  */
 public interface AuditConsumer extends Runnable {
-    /**
-     * Initialize the consumer with the given properties and property prefix.
-     * This method should set up the destination handler and configure the Kafka consumer.
-     *
-     * @param props Configuration properties
-     * @param propPrefix Property prefix for consumer-specific configuration
-     * @throws Exception if initialization fails
-     */
-    void init(Properties props, String propPrefix) throws Exception;
-
     /**
      * Start consuming messages from Kafka topic and process them.
      * This method should implement the main consumption loop.
@@ -47,21 +35,17 @@ public interface AuditConsumer extends Runnable {
     void run();
 
     /**
+     * Shutdown the consumer gracefully.
+     * This method should clean up resources and close connections.
+     */
+    void shutdown();
+
+    /**
      * Get the underlying Kafka consumer instance.
      *
      * @return KafkaConsumer instance used by this consumer
      */
-    KafkaConsumer<String, String> getKafkaConsumer();
-
-    /**
-     * Process a single audit message received from Kafka.
-     * Implementation should handle the specific logic for forwarding
-     * the message to the appropriate destination (Solr, HDFS, etc.).
-     *
-     * @param audit The audit message in JSON format
-     * @throws Exception if message processing fails
-     */
-    void processMessage(String audit) throws Exception;
+    KafkaConsumer<String, String> getConsumer();
 
     /**
      * Get the topic name this consumer is subscribed to.
@@ -69,10 +53,4 @@ public interface AuditConsumer extends Runnable {
      * @return Kafka topic name
      */
     String getTopicName();
-
-    /**
-     * Shutdown the consumer gracefully.
-     * This method should clean up resources and close connections.
-     */
-    void shutdown();
 }

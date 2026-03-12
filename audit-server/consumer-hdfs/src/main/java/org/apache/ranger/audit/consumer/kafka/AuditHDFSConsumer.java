@@ -48,48 +48,111 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class AuditHDFSConsumer extends AuditConsumerBase implements AuditConsumer {
-    private static final Logger LOG                                = LoggerFactory.getLogger(AuditHDFSConsumer.class);
-    private static final String RANGER_AUDIT_HDFS_CONSUMER_GROUP   = AuditServerConstants.DEFAULT_RANGER_AUDIT_HDFS_CONSUMER_GROUP;
+public class AuditHDFSConsumer extends AuditConsumerBase {
+    private static final Logger LOG = LoggerFactory.getLogger(AuditHDFSConsumer.class);
+
+    private static final String RANGER_AUDIT_HDFS_CONSUMER_GROUP = AuditServerConstants.DEFAULT_RANGER_AUDIT_HDFS_CONSUMER_GROUP;
 
     // Register AuditHDFSConsumer factory in the audit consumer registry
     static {
         try {
-            AuditConsumerRegistry.getInstance().registerFactory(AuditServerConstants.PROP_HDFS_DEST_PREFIX, (props, propPrefix) -> new AuditHDFSConsumer(props, propPrefix));
+            AuditConsumerRegistry.getInstance().registerFactory(AuditServerConstants.PROP_HDFS_DEST_PREFIX, AuditHDFSConsumer::new);
             LOG.info("Registered HDFS consumer with AuditConsumerRegistry");
         } catch (Exception e) {
             LOG.error("Failed to register HDFS consumer factory", e);
         }
     }
 
-    private final AtomicBoolean               running              = new AtomicBoolean(false);
-    private       ExecutorService             consumerThreadPool;
-    private final Map<String, ConsumerWorker> consumerWorkers      = new ConcurrentHashMap<>();
-    private       int                         consumerThreadCount  = 1;
+    private final AtomicBoolean               running         = new AtomicBoolean(false);
+    private final Map<String, ConsumerWorker> consumerWorkers = new ConcurrentHashMap<>();
+    private final AuditRouterHDFS             auditRouterHDFS;
+
+    private ExecutorService consumerThreadPool;
+    private int             consumerThreadCount  = 1;
+
     // Offset management configuration (batch or manual only supported)
-    private       String                      offsetCommitStrategy = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
-    private       long                        offsetCommitInterval = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
-    // Message routing handler for HDFS destination
-    private       AuditRouterHDFS             auditRouterHDFS;
-    private       Properties                  props;
-    private       String                      propPrefix;
+    private String offsetCommitStrategy = AuditServerConstants.DEFAULT_OFFSET_COMMIT_STRATEGY;
+    private long   offsetCommitInterval = AuditServerConstants.DEFAULT_OFFSET_COMMIT_INTERVAL_MS;
 
     public AuditHDFSConsumer(Properties props, String propPrefix) throws Exception {
         super(props, propPrefix, RANGER_AUDIT_HDFS_CONSUMER_GROUP);
-        this.props = new Properties();
-        this.props.putAll(props);
-        this.propPrefix = propPrefix;
+
+        auditRouterHDFS = new AuditRouterHDFS();
+
         init(props, propPrefix);
     }
 
     @Override
-    public void init(Properties props, String propPrefix) throws Exception {
+    public void run() {
+        try {
+            LOG.info("Starting AuditHDFSConsumer with appId-based thread");
+            startMultithreadedConsumption();
+
+            // Keep main thread alive while consumer threads are running
+            while (running.get()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    LOG.info("HDFS consumer main thread interrupted");
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        } catch (Throwable e) {
+            LOG.error("Error in AuditHDFSConsumer", e);
+        } finally {
+            shutdown();
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        LOG.info("==> AuditHDFSConsumer.shutdown()");
+
+        // Stop consumer threads
+        running.set(false);
+
+        // Shutdown consumer workers
+        if (consumerThreadPool != null) {
+            consumerThreadPool.shutdownNow();
+            try {
+                if (!consumerThreadPool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                    LOG.warn("HDFS consumer thread pool did not terminate within 30 seconds");
+                }
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while waiting for HDFS consumer thread pool to terminate", e);
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        consumerWorkers.clear();
+
+        // Shutdown destination handler
+        if (auditRouterHDFS != null) {
+            try {
+                auditRouterHDFS.shutdown();
+            } catch (Exception e) {
+                LOG.error("Error shutting down HDFS destination handler", e);
+            }
+        }
+
+        // Close main Kafka consumer
+        if (consumer != null) {
+            try {
+                consumer.close();
+            } catch (Exception e) {
+                LOG.error("Error closing main Kafka consumer", e);
+            }
+        }
+
+        LOG.info("<== AuditHDFSConsumer.shutdown() complete");
+    }
+
+    private void init(Properties props, String propPrefix) throws Exception {
         LOG.info("==> AuditHDFSConsumer.init():  AuditHDFSConsumer initializing with appId-based threading and offset management");
 
-        consumer = getKafkaConsumer();
-
         // Initialize Ranger UGI for HDFS operations if Kerberos is enabled
-        initializeRangerUGI();
+        initializeRangerUGI(props, propPrefix);
 
         // Add Hadoop configuration properties from HdfsConsumerConfig to props
         addHadoopConfigToProps(props);
@@ -98,13 +161,16 @@ public class AuditHDFSConsumer extends AuditConsumerBase implements AuditConsume
         initConsumerConfig(props, propPrefix);
 
         // Initialize destination handler for message processing
-        auditRouterHDFS = new AuditRouterHDFS();
         auditRouterHDFS.init(props, AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.PROP_HDFS_DEST_PREFIX);
 
         LOG.info("<== AuditHDFSConsumer.init(): AuditHDFSConsumer initialized successfully");
     }
 
-    private void initializeRangerUGI() throws Exception {
+    private void processMessage(String message, String partitionKey) throws Exception {
+        auditRouterHDFS.routeAuditMessage(message, partitionKey);
+    }
+
+    private void initializeRangerUGI(Properties props, String propPrefix) throws Exception {
         LOG.info("==> AuditHDFSConsumer.initializeRangerUGI()");
 
         try {
@@ -116,13 +182,13 @@ public class AuditHDFSConsumer extends AuditConsumerBase implements AuditConsume
                 return;
             }
 
-            String principal = auditConfig.get(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL);
-            String keytab    = auditConfig.get(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB);
-            String hostName  = auditConfig.get(AuditServerConstants.PROP_PREFIX_AUDIT_SERVER + "host");
+            String principal = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL);
+            String keytab    = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB);
+            String hostName  = MiscUtil.getStringProperty(props, propPrefix + "." + "host");
 
             if (principal == null || keytab == null) {
                 LOG.warn("Kerberos is enabled but principal or keytab is null! principal={}, keytab={}", principal, keytab);
-                String msg = String.format("Kerberos is enabled but principal or keytab is null! principal={}, keytab={}", principal, keytab);
+                String msg = String.format("Kerberos is enabled but principal or keytab is null! principal=%s, keytab=%s", principal, keytab);
                 throw new Exception(msg);
             }
 
@@ -205,56 +271,6 @@ public class AuditHDFSConsumer extends AuditConsumerBase implements AuditConsume
                 .logInfo(LOG);
 
         LOG.info("<== AuditHDFSConsumer.initializeOffsetManagement()");
-    }
-
-    @Override
-    public void run() {
-        try {
-            if (auditRouterHDFS == null) {
-                init(this.props, this.propPrefix);
-            }
-
-            LOG.info("Starting AuditHDFSConsumer with appId-based thread");
-            startMultithreadedConsumption();
-
-            // Keep main thread alive while consumer threads are running
-            while (running.get()) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    LOG.info("HDFS consumer main thread interrupted");
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        } catch (Throwable e) {
-            LOG.error("Error in AuditHDFSConsumer", e);
-        } finally {
-            shutdown();
-        }
-    }
-
-    @Override
-    public KafkaConsumer<String, String> getKafkaConsumer() {
-        return consumer;
-    }
-
-    @Override
-    public void processMessage(String audit) throws Exception {
-        processMessage(audit, null);
-    }
-
-    public void processMessage(String message, String partitionKey) throws Exception {
-        auditRouterHDFS.routeAuditMessage(message, partitionKey);
-    }
-
-    @Override
-    public String getTopicName() {
-        return topicName;
-    }
-
-    public String getConsumerGroupId() {
-        return consumerGroupId;
     }
 
     private void startMultithreadedConsumption() {
@@ -450,48 +466,5 @@ public class AuditHDFSConsumer extends AuditConsumerBase implements AuditConsume
                 }
             }
         }
-    }
-
-    @Override
-    public void shutdown() {
-        LOG.info("==> AuditHDFSConsumer.shutdown()");
-
-        // Stop consumer threads
-        running.set(false);
-
-        // Shutdown consumer workers
-        if (consumerThreadPool != null) {
-            consumerThreadPool.shutdownNow();
-            try {
-                if (!consumerThreadPool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
-                    LOG.warn("HDFS consumer thread pool did not terminate within 30 seconds");
-                }
-            } catch (InterruptedException e) {
-                LOG.warn("Interrupted while waiting for HDFS consumer thread pool to terminate", e);
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        consumerWorkers.clear();
-
-        // Shutdown destination handler
-        if (auditRouterHDFS != null) {
-            try {
-                auditRouterHDFS.shutdown();
-            } catch (Exception e) {
-                LOG.error("Error shutting down HDFS destination handler", e);
-            }
-        }
-
-        // Close main Kafka consumer
-        if (consumer != null) {
-            try {
-                consumer.close();
-            } catch (Exception e) {
-                LOG.error("Error closing main Kafka consumer", e);
-            }
-        }
-
-        LOG.info("<== AuditHDFSConsumer.shutdown() complete");
     }
 }
