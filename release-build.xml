@@ -28,11 +28,32 @@
 		<fail message="Missing ranger-release-version; -Dranger-release-version=&lt;version-number&gt; should be defined" unless="ranger-release-version"/>
     </target>
 	
+	<!-- Macro to sign and generate checksums for a given file -->
+	<macrodef name="sign-and-checksum">
+		<attribute name="filename"/>
+		<sequential>
+			<exec executable="gpg">
+				<arg value="--armor"/>
+				<arg value="--local-user"/>
+				<arg value="${signing-key}"/>
+				<arg value="--output"/>
+				<arg value="${release-dir}/@{filename}.asc"/>
+				<arg value="--detach-sig"/>
+				<arg value="${release-dir}/@{filename}"/>
+			</exec>
+			<exec executable="sha512sum" output="${release-dir}/@{filename}.sha512" dir="${release-dir}">
+				<arg value="@{filename}"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
 	<target name="build-release" depends="version-check">
 		<tstamp/>
+		<!--
 		<exec executable="mvn">
 			<arg value="clean" />
         </exec>
+        -->
 		<mkdir dir="${release-dir}" />
 		<tar destfile="${release-dir}/${build-release-tar-file}" compression="gzip" longfile="posix">
 			<tarfileset prefix="${release-name}" dir=".">
@@ -51,20 +72,40 @@
 				<exclude name="winpkg/*"/>
 			</tarfileset>
 		</tar>
-		<exec executable="gpg">
-			<arg value="--armor"/>
-			<arg value="--local-user"/>
-			<arg value="${signing-key}"/>
-			<arg value="--output"/>
-			<arg value="${release-dir}/${build-release-tar-file}.asc"/>
-			<arg value="--detach-sig"/>
-			<arg value="${release-dir}/${build-release-tar-file}"/>
-		</exec>
-		<exec executable="sha512sum" output="${release-dir}/${build-release-tar-file}.sha512" dir="${release-dir}">
-			<arg value="${build-release-tar-file}"/>
-		</exec>
+		
+		<!-- Sign and checksum main release tarball -->
+		<sign-and-checksum filename="${build-release-tar-file}"/>
 		<exec executable="sha256sum" output="${release-dir}/${build-release-tar-file}.sha256" dir="${release-dir}">
 			<arg value="${build-release-tar-file}"/>
 		</exec>
+		
+		<!-- Sign and checksum plugin files -->
+		<sign-and-checksum filename="ranger-${ranger-release-version}-atlas-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-elasticsearch-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-hbase-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-hdfs-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-hive-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-kafka-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-knox-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-kylin-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-ozone-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-presto-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-schema-registry-plugin.jar"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-solr-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-sqoop-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-storm-plugin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-yarn-plugin.tar.gz"/>
+		
+		<!-- Sign and checksum admin/service files -->
+		<sign-and-checksum filename="ranger-${ranger-release-version}-admin.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-kms.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-tagsync.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-usersync.tar.gz"/>
+		
+		<!-- Sign and checksum utility files -->
+		<sign-and-checksum filename="ranger-${ranger-release-version}-migration-util.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-ranger-tools.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-sample-client.tar.gz"/>
+		<sign-and-checksum filename="ranger-${ranger-release-version}-solr_audit_conf.tar.gz"/>
 	</target>
 </project>
