@@ -54,25 +54,25 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     public static final String PROP_REQUEST_ID_HEADER_NAME     = "ranger.authn.header.requestid";
 
     private static boolean headerAuthEnabled;
-    private static String  userNameHeader;
+    private static String  userNameHeaderName;
 
     @Autowired
     UserMgr userMgr;
 
+    private String username;
+
     @PostConstruct
     public void initialize(FilterConfig filterConfig) throws ServletException {
-        headerAuthEnabled = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
-        userNameHeader    = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
+        headerAuthEnabled  = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
+        userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest  httpRequest  = (HttpServletRequest) request;
-        String username                  = StringUtils.trimToNull(httpRequest.getHeader(userNameHeader));
+        username                         = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
 
-        if (!headerAuthEnabled || StringUtils.isBlank(username)) {
-            LOG.debug("Header-based authentication is disabled or username header is missing/empty!");
-        } else {
+        if (isHeaderAuthEnabled()) {
             List<GrantedAuthority>      grantedAuthorities = getAuthoritiesFromRanger(username);
             final UserDetails           principal          = new User(username, "", grantedAuthorities);
             UsernamePasswordAuthenticationToken authToken  = new UsernamePasswordAuthenticationToken(principal, "", grantedAuthorities);
@@ -82,9 +82,15 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
             LOG.debug("Authenticated request using trusted headers for user={}", username);
+        } else {
+            LOG.debug("Header-based authentication is disabled or username header is missing/empty!");
         }
 
         chain.doFilter(request, response);
+    }
+
+    public boolean isHeaderAuthEnabled() {
+        return headerAuthEnabled && StringUtils.isNotBlank(username);
     }
 
     /**

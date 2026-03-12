@@ -166,14 +166,20 @@ public class TestRangerSecurityContextFormationFilter {
         int tp = (int) m.invoke(filter, reqTp);
         assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, tp);
 
-        // Header-based trusted auth
+        // Header-based trusted auth — static fields are set in the constructor, so
+        // a fresh instance must be created after setting the properties.
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
         try {
+            RangerSecurityContextFormationFilter headerFilter = new RangerSecurityContextFormationFilter();
             HttpServletRequest reqHeader = Mockito.mock(HttpServletRequest.class);
-            int header = (int) m.invoke(filter, reqHeader);
+            when(reqHeader.getHeader("x-awc-username")).thenReturn("joeuser");
+            int header = (int) m.invoke(headerFilter, reqHeader);
             assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, header);
         } finally {
             PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
+            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
+            new RangerSecurityContextFormationFilter(); // reset static fields to defaults
         }
 
         // Password default

@@ -72,8 +72,15 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
     String testIP;
 
+    private static boolean headerAuthEnabled;
+    private static String  userNameHeaderName;
+    private static String  requestIdHeaderName;
+
     public RangerSecurityContextFormationFilter() {
         testIP = PropertiesUtil.getProperty("xa.env.ip");
+        headerAuthEnabled   = PropertiesUtil.getBooleanProperty(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, false);
+        userNameHeaderName  = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
+        requestIdHeaderName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
     }
 
     /*
@@ -118,7 +125,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
                 requestContext.setIpAddress(reqIP);
                 requestContext.setUserAgent(userAgent);
                 requestContext.setDeviceType(httpUtil.getDeviceType(httpRequest));
-                String requestId = getServerRequestId(httpRequest);
+                String requestId = isHeaderAuthEnabled(httpRequest) ? getServerRequestId(httpRequest) : null;
                 requestContext.setServerRequestId(requestId != null ? requestId : guidUtil.genGUID());
                 requestContext.setRequestURL(httpRequest.getRequestURI());
                 requestContext.setClientTimeOffsetInMinute(clientTimeOffset);
@@ -171,7 +178,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
         Object  ssoEnabledObj = request.getAttribute("ssoEnabled");
         boolean ssoEnabled    = ssoEnabledObj != null ? Boolean.parseBoolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
 
-        if (isHeaderAuthenticated()) {
+        if (isHeaderAuthEnabled(request)) {
             authType = XXAuthSession.AUTH_TYPE_TRUSTED_PROXY;
         } else if (ssoEnabled) {
             authType = XXAuthSession.AUTH_TYPE_SSO;
@@ -190,13 +197,11 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
         return authType;
     }
 
-    private boolean isHeaderAuthenticated() {
-        return PropertiesUtil.getBooleanProperty(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, false);
+    private boolean isHeaderAuthEnabled(HttpServletRequest request) {
+        return headerAuthEnabled && StringUtils.isNotBlank(StringUtils.trimToNull(request.getHeader(userNameHeaderName)));
     }
 
     private String getServerRequestId(HttpServletRequest request) {
-        String headerName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
-
-        return StringUtils.trimToNull(request.getHeader(headerName));
+        return StringUtils.trimToNull(request.getHeader(requestIdHeaderName));
     }
 }
