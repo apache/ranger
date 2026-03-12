@@ -193,6 +193,7 @@ public class TestRangerSecurityContextFormationFilter {
     @Test
     public void testDoFilter_authenticated_createsSecurityContextAndUserSession() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME, "x-awc-requestid");
 
         try {
@@ -219,6 +220,7 @@ public class TestRangerSecurityContextFormationFilter {
             Mockito.when(req.getSession(false)).thenReturn(session);
             Mockito.when(session.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY)).thenReturn(null);
             Mockito.when(req.getHeader(RangerSecurityContextFormationFilter.USER_AGENT)).thenReturn("Mozilla/5.0");
+            Mockito.when(req.getHeader("x-awc-username")).thenReturn("user");
             Mockito.when(req.getRequestURI()).thenReturn("/secure");
             Mockito.when(req.getHeader("x-awc-requestid")).thenReturn("awc-request-1");
             Mockito.when(httpUtil.getDeviceType(req)).thenReturn(RangerCommonEnums.DEVICE_BROWSER);
@@ -250,6 +252,7 @@ public class TestRangerSecurityContextFormationFilter {
             assertNull(RangerContextHolder.getOpContext());
         } finally {
             PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
+            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
             PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
         }
     }
