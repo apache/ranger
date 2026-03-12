@@ -187,6 +187,7 @@ public class TestRangerSecurityContextFormationFilter {
     @Test
     public void testDoFilter_authenticated_createsSecurityContextAndUserSession() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME, "x-awc-requestid");
 
         try {
             RangerSecurityContextFormationFilter filter = new RangerSecurityContextFormationFilter();
@@ -243,6 +244,7 @@ public class TestRangerSecurityContextFormationFilter {
             assertNull(RangerContextHolder.getOpContext());
         } finally {
             PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
+            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
         }
     }
 }

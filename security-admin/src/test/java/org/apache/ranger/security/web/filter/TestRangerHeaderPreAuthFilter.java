@@ -20,18 +20,17 @@ package org.apache.ranger.security.web.filter;
 
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.entity.XXPortalUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -48,30 +47,37 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.anyString;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerHeaderPreAuthFilter {
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws ServletException {
         SecurityContextHolder.clearContext();
+        // reset static fields to defaults before each test
+        new RangerHeaderPreAuthFilter().initialize(null);
     }
 
     @AfterEach
-    public void tearDown() {
+    public void tearDown() throws ServletException {
         SecurityContextHolder.clearContext();
 
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
+
+        // reset static fields after clearing properties
+        new RangerHeaderPreAuthFilter().initialize(null);
     }
 
     @Test
-    public void testDoFilter_disabled_bypassesHeaderAuthentication() throws Exception {
-        RangerHeaderPreAuthFilter filter = new RangerHeaderPreAuthFilter();
+    public void testDoFilter_disabled_passesThrough() throws Exception {
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
         UserMgr                   userMgr = mock(UserMgr.class);
 
         filter.userMgr = userMgr;
+        filter.initialize(null);
 
         HttpServletRequest  request  = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -80,34 +86,58 @@ public class TestRangerHeaderPreAuthFilter {
         filter.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
-        verify(userMgr, never()).findByLoginId(Mockito.anyString());
+        verify(userMgr, never()).getRolesByLoginId(anyString());
         assertNull(SecurityContextHolder.getContext().getAuthentication());
     }
 
     @Test
-    public void testDoFilter_enabled_setsAuthenticationFromRangerDbRoles() throws Exception {
+    public void testDoFilter_enabled_missingUsername_passesThrough() throws Exception {
         PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
 
-        RangerHeaderPreAuthFilter filter = new RangerHeaderPreAuthFilter();
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
         UserMgr                   userMgr = mock(UserMgr.class);
-        XXPortalUser              portalUser = new XXPortalUser();
 
-        portalUser.setLoginId("joeuser");
         filter.userMgr = userMgr;
+        filter.initialize(null);
 
-        when(userMgr.findByLoginId("joeuser")).thenReturn(portalUser);
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain         chain    = mock(FilterChain.class);
+
+        // no username header — getHeader returns null by default
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    @Test
+    public void testDoFilter_enabled_withUsername_setsAuthenticationFromRangerDbRoles() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize(null);
+
         when(userMgr.getRolesByLoginId("joeuser")).thenReturn(Arrays.asList("ROLE_SYS_ADMIN", "ROLE_USER"));
 
         HttpServletRequest  request  = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
+
         when(request.getHeader("x-awc-username")).thenReturn("joeuser");
-        when(request.getHeader("x-awc-requestid")).thenReturn("03e3f8a4-b8e5-4c61-8ff5-b50236a05eea");
 
         FilterChain chain = new FilterChain() {
             @Override
             public void doFilter(ServletRequest req, ServletResponse res) {
                 assertNotNull(SecurityContextHolder.getContext().getAuthentication());
                 assertEquals("joeuser", SecurityContextHolder.getContext().getAuthentication().getName());
+
                 Collection<?> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
                 assertEquals(2, authorities.size());
                 assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
@@ -116,64 +146,5 @@ public class TestRangerHeaderPreAuthFilter {
         };
 
         filter.doFilter(request, response, chain);
-    }
-
-    @Test
-    public void testDoFilter_enabled_missingRequestIdReturnsUnauthorized() throws Exception {
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-
-        RangerHeaderPreAuthFilter filter = new RangerHeaderPreAuthFilter();
-        filter.userMgr = mock(UserMgr.class);
-
-        HttpServletRequest  request  = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        FilterChain         chain    = mock(FilterChain.class);
-        when(request.getHeader("x-awc-username")).thenReturn("joeuser");
-
-        filter.doFilter(request, response, chain);
-
-        verify(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing trusted request-id header");
-        verify(chain, never()).doFilter(request, response);
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-    }
-
-    @Test
-    public void testDoFilter_enabled_missingUsernameReturnsUnauthorized() throws Exception {
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-
-        RangerHeaderPreAuthFilter filter = new RangerHeaderPreAuthFilter();
-        filter.userMgr = mock(UserMgr.class);
-
-        HttpServletRequest  request  = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        FilterChain         chain    = mock(FilterChain.class);
-
-        filter.doFilter(request, response, chain);
-
-        verify(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing trusted username header");
-        verify(chain, never()).doFilter(request, response);
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-    }
-
-    @Test
-    public void testDoFilter_enabled_unknownUserReturnsUnauthorized() throws Exception {
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-
-        RangerHeaderPreAuthFilter filter = new RangerHeaderPreAuthFilter();
-        UserMgr                   userMgr = mock(UserMgr.class);
-
-        filter.userMgr = userMgr;
-
-        HttpServletRequest  request  = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        FilterChain         chain    = mock(FilterChain.class);
-        when(request.getHeader("x-awc-username")).thenReturn("joeuser");
-        when(request.getHeader("x-awc-requestid")).thenReturn("03e3f8a4-b8e5-4c61-8ff5-b50236a05eea");
-
-        filter.doFilter(request, response, chain);
-
-        verify(userMgr).findByLoginId("joeuser");
-        verify(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unknown Ranger user");
-        verify(chain, never()).doFilter(request, response);
     }
 }

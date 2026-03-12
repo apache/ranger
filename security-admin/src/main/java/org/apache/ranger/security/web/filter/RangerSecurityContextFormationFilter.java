@@ -195,7 +195,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
     }
 
     private String getServerRequestId(HttpServletRequest request) {
-        String headerName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME, RangerHeaderPreAuthFilter.DEFAULT_REQUEST_ID_HEADER_NAME);
+        String headerName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
 
         return StringUtils.trimToNull(request.getHeader(headerName));
     }

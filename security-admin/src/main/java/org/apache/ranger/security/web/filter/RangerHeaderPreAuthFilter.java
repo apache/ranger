@@ -21,7 +21,6 @@ package org.apache.ranger.security.web.filter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.entity.XXPortalUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,12 +33,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.web.filter.GenericFilterBean;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,59 +52,39 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     public static final String PROP_HEADER_AUTH_ENABLED        = "ranger.authn.header.enabled";
     public static final String PROP_USERNAME_HEADER_NAME       = "ranger.authn.header.username";
     public static final String PROP_REQUEST_ID_HEADER_NAME     = "ranger.authn.header.requestid";
-    public static final String DEFAULT_USERNAME_HEADER_NAME    = "x-awc-username";
-    public static final String DEFAULT_REQUEST_ID_HEADER_NAME  = "x-awc-requestid";
+
+    private static boolean headerAuthEnabled;
+    private static String  userNameHeader;
 
     @Autowired
     UserMgr userMgr;
 
+    @PostConstruct
+    public void initialize(FilterConfig filterConfig) throws ServletException {
+        headerAuthEnabled = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
+        userNameHeader    = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
+    }
+
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest  httpRequest  = (HttpServletRequest) request;
+        String username                  = StringUtils.trimToNull(httpRequest.getHeader(userNameHeader));
 
-        if (!PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false)) {
-            chain.doFilter(request, response);
+        if (!headerAuthEnabled || StringUtils.isBlank(username)) {
+            LOG.debug("Header-based authentication is disabled or username header is missing/empty!");
+        } else {
+            List<GrantedAuthority>      grantedAuthorities = getAuthoritiesFromRanger(username);
+            final UserDetails           principal          = new User(username, "", grantedAuthorities);
+            UsernamePasswordAuthenticationToken authToken  = new UsernamePasswordAuthenticationToken(principal, "", grantedAuthorities);
 
-            return;
+            authToken.setDetails(new WebAuthenticationDetails(httpRequest));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            LOG.debug("Authenticated request using trusted headers for user={}", username);
         }
-
-        String username  = StringUtils.trimToNull(httpRequest.getHeader(getUsernameHeaderName()));
-        String requestId = StringUtils.trimToNull(httpRequest.getHeader(getRequestIdHeaderName()));
-
-        if (username == null) {
-            sendUnauthorized(response, "Missing trusted username header");
-
-            return;
-        } else if (requestId == null) {
-            sendUnauthorized(response, "Missing trusted request-id header");
-
-            return;
-        }
-
-        XXPortalUser rangerUser = userMgr.findByLoginId(username);
-
-        if (rangerUser == null) {
-            LOG.warn("Skipping header-based authentication for unknown Ranger user={}", username);
-            sendUnauthorized(response, "Unknown Ranger user");
-
-            return;
-        }
-
-        List<GrantedAuthority>      grantedAuthorities = getAuthoritiesFromRanger(username);
-        final UserDetails           principal          = new User(username, "", grantedAuthorities);
-        UsernamePasswordAuthenticationToken authToken  = new UsernamePasswordAuthenticationToken(principal, "", grantedAuthorities);
-
-        authToken.setDetails(new WebAuthenticationDetails(httpRequest));
-
-        SecurityContextHolder.getContext().setAuthentication(authToken);
-
-        LOG.debug("Authenticated request using trusted headers for user={}", username);
 
         chain.doFilter(request, response);
-    }
-
-    private void sendUnauthorized(ServletResponse response, String message) throws IOException {
-        ((HttpServletResponse) response).sendError(HttpServletResponse.SC_UNAUTHORIZED, message);
     }
 
     /**
@@ -123,13 +103,5 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
         }
 
         return ret;
-    }
-
-    private String getUsernameHeaderName() {
-        return PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME, DEFAULT_USERNAME_HEADER_NAME);
-    }
-
-    private String getRequestIdHeaderName() {
-        return PropertiesUtil.getProperty(PROP_REQUEST_ID_HEADER_NAME, DEFAULT_REQUEST_ID_HEADER_NAME);
     }
 }
