@@ -18,11 +18,12 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.apache.ranger.authz.handler.jwt.RangerDefaultJwtAuthHandler;
 import org.apache.ranger.authz.handler.jwt.RangerJwtAuthHandler;
 import org.apache.ranger.common.PropertiesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -52,7 +53,7 @@ import java.util.Properties;
 @Lazy(true)
 @Component
 public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements Filter {
-    private static final Logger LOG = Logger.getLogger(RangerJwtAuthFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerJwtAuthFilter.class);
 
     private static final String DEFAULT_RANGER_ROLE = "ROLE_USER";
 
@@ -109,7 +110,7 @@ public class RangerJwtAuthFilter extends RangerDefaultJwtAuthHandler implements 
 
         if (auth != null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("<<<=== RangerJwtAuthFilter.doFilter() - user=[" + auth.getPrincipal() + "], isUserAuthenticated? [" + auth.isAuthenticated() + "]");
+                LOG.debug("<<<=== RangerJwtAuthFilter.doFilter() - user=[{}], isUserAuthenticated? [{}]", auth.getPrincipal(), auth.isAuthenticated());
             }
         } else {
             LOG.warn("<<<=== RangerJwtAuthFilter.doFilter() - Failed to authenticate request using Ranger JWT authentication framework.");

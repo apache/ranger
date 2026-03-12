@@ -15,7 +15,12 @@
       "permissions": {
         "select": { "permission": "select", "access": { "decision": "ALLOW", "policy": { "id": 1, "version": 1 } } }
       }
-    }
+    },
+    "audits": [
+      {
+        "reqUser": "tbl1-r-user", "access": "select", "action": "select", "repo": "dev_hive", "resType": "table", "resource": "mydb/tbl1", "result": 1, "policy": 1, "agent": "test", "enforcer": "ranger-acl"
+      }
+    ]
   },
   {
     "request": {

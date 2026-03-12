@@ -546,7 +546,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         MessageDigest md = MessageDigest.getInstance(mdAlgo);
         byte[] saltGen = md.digest(salt.getBytes());
         byte[] salt = new byte[saltSize];
-        System.arraycopy(saltGen, 0, salt, 0, RangerMasterKey.saltSize);
+        System.arraycopy(saltGen, 0, salt, 0, saltSize);
         return salt;
     }
 
