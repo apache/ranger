@@ -18,20 +18,17 @@
  */
 package org.apache.ranger.authentication.unix.jaas;
 
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sun.security.x509.AlgorithmId;
-import sun.security.x509.CertificateAlgorithmId;
-import sun.security.x509.CertificateSerialNumber;
-import sun.security.x509.CertificateValidity;
-import sun.security.x509.CertificateVersion;
-import sun.security.x509.CertificateX509Key;
-import sun.security.x509.X500Name;
-import sun.security.x509.X509CertImpl;
-import sun.security.x509.X509CertInfo;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -383,23 +380,29 @@ public class TestRemoteUnixLoginModule {
         }
 
         private static X509Certificate generateSelfSigned(String dn, KeyPair keyPair) throws Exception {
-            long now  = System.currentTimeMillis();
-            Date from = new Date(now - 60000);
-            Date to   = new Date(now + 86400000L);
+            // Generate a self-signed certificate at runtime using Bouncy Castle
+            // This avoids hardcoded certificates and uses only standard APIs
 
-            X509CertInfo info = new X509CertInfo();
-            info.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
-            info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(new BigInteger(64, new SecureRandom())));
-            X500Name owner = new X500Name(dn);
-            info.set(X509CertInfo.SUBJECT, owner);
-            info.set(X509CertInfo.ISSUER, owner);
-            info.set(X509CertInfo.VALIDITY, new CertificateValidity(from, to));
-            info.set(X509CertInfo.KEY, new CertificateX509Key(keyPair.getPublic()));
-            info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(AlgorithmId.get("SHA256withRSA")));
+            long now = System.currentTimeMillis();
+            Date notBefore = new Date(now - 60000); // 1 minute ago
+            Date notAfter = new Date(now + 86400000L); // 1 day from now
 
-            X509CertImpl cert = new X509CertImpl(info);
-            cert.sign(keyPair.getPrivate(), "SHA256withRSA");
-            return cert;
+            BigInteger serial = new BigInteger(64, new SecureRandom());
+            X500Name subject = new X500Name(dn);
+
+            JcaX509v3CertificateBuilder certBuilder = new JcaX509v3CertificateBuilder(
+                    subject,           // issuer = subject (self-signed)
+                    serial,
+                    notBefore,
+                    notAfter,
+                    subject,
+                    keyPair.getPublic());
+
+            ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
+
+            X509CertificateHolder holder = certBuilder.build(signer);
+
+            return new JcaX509CertificateConverter().getCertificate(holder);
         }
     }
 }

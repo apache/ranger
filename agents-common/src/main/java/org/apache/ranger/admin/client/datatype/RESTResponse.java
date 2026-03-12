@@ -21,11 +21,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.Response;
 
 import java.util.List;
 
@@ -51,10 +52,22 @@ public class RESTResponse implements java.io.Serializable {
     private String        msgDesc;
     private List<Message> messageList;
 
-    public static RESTResponse fromClientResponse(ClientResponse response) {
+    public static RESTResponse fromClientResponse(Response response) {
         RESTResponse ret        = null;
-        String       jsonString = response == null ? null : response.getEntity(String.class);
-        int          httpStatus = response == null ? 0 : response.getStatus();
+        String       jsonString = null;
+        try {
+            if (response != null) {
+                if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                    jsonString = JsonUtilsV2.readResponse(response, String.class);
+                } else {
+                    ret = JsonUtilsV2.readResponse(response, RESTResponse.class);
+                }
+            }
+        } catch (Exception e) {
+            LOG.debug("readJsonResponseString() failed", e);
+        }
+
+        int httpStatus = response == null ? 0 : response.getStatus();
 
         if (!StringUtil.isEmpty(jsonString)) {
             ret = RESTResponse.fromJson(jsonString);

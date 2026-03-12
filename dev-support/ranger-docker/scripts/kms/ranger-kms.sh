@@ -48,6 +48,11 @@ fi
 # delete PID file if exists
 rm -f /var/run/ranger_kms/rangerkms.pid
 
+if [ -n "${JAVA_OPTS}" ]; then
+  echo "export JAVA_OPTS=\"${JAVA_OPTS}\"" \
+    > ${RANGER_HOME}/kms/ews/webapp/WEB-INF/classes/conf/ranger-kms-env-javaops.sh
+fi
+
 cd ${RANGER_HOME}/kms && ./ranger-kms-services.sh start
 
 RANGER_KMS_PID=`ps -ef  | grep -v grep | grep "Dproc_rangerkms" | awk '{print $2}'`

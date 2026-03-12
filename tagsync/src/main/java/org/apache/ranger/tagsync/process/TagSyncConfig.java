@@ -95,6 +95,7 @@ public class TagSyncConfig extends Configuration {
     private static final int    DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE = 1;
     private static final String TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
     private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.atlasrest.entities.batch.size";
+    private static final String SSL_POLICYMGR_CONFIG_FILE = "ranger-tagsync-policymgr-ssl.xml";
 
     private static TagSyncConfig instance;
     private static String        localHostname;
@@ -492,10 +493,9 @@ public class TagSyncConfig extends Configuration {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("DEFAULT_CONFIG_FILE=").append(DEFAULT_CONFIG_FILE).append(", ")
-                .append("CONFIG_FILE=").append(CONFIG_FILE).append("\n\n");
+        sb.append("DEFAULT_CONFIG_FILE=").append(DEFAULT_CONFIG_FILE).append(", ").append("CONFIG_FILE=").append(CONFIG_FILE).append("\n\n");
 
-        return sb + super.toString();
+        return sb.toString() + super.toString();
     }
 
     public String getTagSyncMetricsFileName() {
@@ -549,6 +549,7 @@ public class TagSyncConfig extends Configuration {
         readConfigFile(CORE_SITE_FILE);
         readConfigFile(DEFAULT_CONFIG_FILE);
         readConfigFile(CONFIG_FILE);
+        readConfigFile(SSL_POLICYMGR_CONFIG_FILE);
 
         props = getProps();
 
@@ -562,6 +563,11 @@ public class TagSyncConfig extends Configuration {
             if (systemPropertyValue != null) {
                 props.setProperty(propertyName, systemPropertyValue);
             }
+        }
+
+        if (null != props.getProperty("xasecure.policymgr.clientssl.keystore.credential.file") && null != props.getProperty("xasecure.policymgr.clientssl.keystore")) {
+            props.setProperty("ranger.tagsync.credential.provider.path", props.getProperty("xasecure.policymgr.clientssl.keystore.credential.file"));
+            props.setProperty("ranger.tagsync.https.attrib.keystore.file", props.getProperty("xasecure.policymgr.clientssl.keystore"));
         }
     }
 
