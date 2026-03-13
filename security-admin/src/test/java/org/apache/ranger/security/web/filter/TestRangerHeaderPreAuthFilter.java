@@ -20,6 +20,7 @@ package org.apache.ranger.security.web.filter;
 
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.entity.XXAuthSession;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -30,7 +31,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
@@ -53,22 +53,17 @@ import static org.mockito.Mockito.when;
 @TestMethodOrder(MethodOrderer.MethodName.class)
 public class TestRangerHeaderPreAuthFilter {
     @BeforeEach
-    public void setUp() throws ServletException {
+    public void setUp() {
         SecurityContextHolder.clearContext();
-        // reset static fields to defaults before each test
-        new RangerHeaderPreAuthFilter().initialize(null);
     }
 
     @AfterEach
-    public void tearDown() throws ServletException {
+    public void tearDown() {
         SecurityContextHolder.clearContext();
 
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
         PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
-
-        // reset static fields after clearing properties
-        new RangerHeaderPreAuthFilter().initialize(null);
     }
 
     @Test
@@ -135,10 +130,16 @@ public class TestRangerHeaderPreAuthFilter {
         FilterChain chain = new FilterChain() {
             @Override
             public void doFilter(ServletRequest req, ServletResponse res) {
-                assertNotNull(SecurityContextHolder.getContext().getAuthentication());
-                assertEquals("joeuser", SecurityContextHolder.getContext().getAuthentication().getName());
+                org.springframework.security.core.Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-                Collection<?> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+                assertNotNull(auth);
+                assertTrue(auth instanceof RangerAuthenticationToken);
+                RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
+                assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
+                assertEquals(RangerAuthenticationToken.AuthMechanism.HEADER, rangerAuth.getAuthMechanism());
+                assertEquals("joeuser", auth.getName());
+
+                Collection<?> authorities = auth.getAuthorities();
                 assertEquals(2, authorities.size());
                 assertTrue(authorities.stream().anyMatch(a -> "ROLE_SYS_ADMIN".equals(a.toString())));
                 assertTrue(authorities.stream().anyMatch(a -> "ROLE_USER".equals(a.toString())));

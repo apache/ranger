@@ -22,7 +22,6 @@ import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.HTTPUtil;
-import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXAuthSession;
@@ -36,10 +35,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
@@ -53,6 +52,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -141,119 +141,100 @@ public class TestRangerSecurityContextFormationFilter {
     @Test
     public void testGetAuthType_reflectionVariants() throws Exception {
         RangerSecurityContextFormationFilter filter = new RangerSecurityContextFormationFilter();
-        Method m = RangerSecurityContextFormationFilter.class.getDeclaredMethod("getAuthType", HttpServletRequest.class);
+        Method m = RangerSecurityContextFormationFilter.class.getDeclaredMethod("getAuthType", Authentication.class, HttpServletRequest.class);
         m.setAccessible(true);
 
-        // SSO enabled
+        List<GrantedAuthority> authorities  = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        UserDetails            userDetails  = new org.springframework.security.core.userdetails.User("u", "", authorities);
+        HttpServletRequest     emptyRequest = Mockito.mock(HttpServletRequest.class);
+
+        // Header-based trusted proxy — identified via RangerAuthenticationToken, no request attributes needed
+        assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY,
+                m.invoke(filter, new RangerAuthenticationToken(userDetails, authorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, RangerAuthenticationToken.AuthMechanism.HEADER), emptyRequest));
+
+        // SSO — identified via request attribute (RangerSSOAuthenticationFilter sets UsernamePasswordAuthenticationToken)
         HttpServletRequest reqSso = Mockito.mock(HttpServletRequest.class);
-        when(reqSso.getAttribute("ssoEnabled")).thenReturn(true);
-        int sso = (int) m.invoke(filter, reqSso);
-        assertEquals(XXAuthSession.AUTH_TYPE_SSO, sso);
+        Mockito.when(reqSso.getAttribute("ssoEnabled")).thenReturn(true);
+        assertEquals(XXAuthSession.AUTH_TYPE_SSO,
+                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqSso));
 
-        // Kerberos
+        // Kerberos — identified via spnegoEnabled attribute
         HttpServletRequest reqKrb = Mockito.mock(HttpServletRequest.class);
-        when(reqKrb.getAttribute("ssoEnabled")).thenReturn(false);
-        when(reqKrb.getAttribute("spnegoEnabled")).thenReturn(true);
-        when(reqKrb.getAttribute("trustedProxyEnabled")).thenReturn(false);
-        int krb = (int) m.invoke(filter, reqKrb);
-        assertEquals(XXAuthSession.AUTH_TYPE_KERBEROS, krb);
+        Mockito.when(reqKrb.getAttribute("ssoEnabled")).thenReturn(false);
+        Mockito.when(reqKrb.getAttribute("spnegoEnabled")).thenReturn(true);
+        Mockito.when(reqKrb.getAttribute("trustedProxyEnabled")).thenReturn(false);
+        assertEquals(XXAuthSession.AUTH_TYPE_KERBEROS,
+                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqKrb));
 
-        // Trusted proxy
-        HttpServletRequest reqTp = Mockito.mock(HttpServletRequest.class);
-        when(reqTp.getAttribute("ssoEnabled")).thenReturn(false);
-        when(reqTp.getAttribute("spnegoEnabled")).thenReturn(true);
-        when(reqTp.getAttribute("trustedProxyEnabled")).thenReturn(true);
-        int tp = (int) m.invoke(filter, reqTp);
-        assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, tp);
+        // Kerberos trusted proxy — both spnegoEnabled and trustedProxyEnabled
+        HttpServletRequest reqKrbTp = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(reqKrbTp.getAttribute("ssoEnabled")).thenReturn(false);
+        Mockito.when(reqKrbTp.getAttribute("spnegoEnabled")).thenReturn(true);
+        Mockito.when(reqKrbTp.getAttribute("trustedProxyEnabled")).thenReturn(true);
+        assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY,
+                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqKrbTp));
 
-        // Header-based trusted auth — static fields are set in the constructor, so
-        // a fresh instance must be created after setting the properties.
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
-        try {
-            RangerSecurityContextFormationFilter headerFilter = new RangerSecurityContextFormationFilter();
-            HttpServletRequest reqHeader = Mockito.mock(HttpServletRequest.class);
-            when(reqHeader.getHeader("x-awc-username")).thenReturn("joeuser");
-            int header = (int) m.invoke(headerFilter, reqHeader);
-            assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, header);
-        } finally {
-            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
-            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
-            new RangerSecurityContextFormationFilter(); // reset static fields to defaults
-        }
-
-        // Password default
-        HttpServletRequest reqPwd = Mockito.mock(HttpServletRequest.class);
-        when(reqPwd.getAttribute("ssoEnabled")).thenReturn(false);
-        when(reqPwd.getAttribute("spnegoEnabled")).thenReturn(false);
-        int pwd = (int) m.invoke(filter, reqPwd);
-        assertEquals(XXAuthSession.AUTH_TYPE_PASSWORD, pwd);
+        // Password — no RangerAuthenticationToken, no SSO/Kerberos attributes
+        assertEquals(XXAuthSession.AUTH_TYPE_PASSWORD,
+                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), emptyRequest));
     }
 
     @Test
     public void testDoFilter_authenticated_createsSecurityContextAndUserSession() throws Exception {
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
-        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME, "x-awc-requestid");
+        RangerSecurityContextFormationFilter filter = new RangerSecurityContextFormationFilter();
 
-        try {
-            RangerSecurityContextFormationFilter filter = new RangerSecurityContextFormationFilter();
+        SessionMgr sessionMgr = Mockito.mock(SessionMgr.class);
+        HTTPUtil    httpUtil   = Mockito.mock(HTTPUtil.class);
+        GUIDUtil    guidUtil   = Mockito.mock(GUIDUtil.class);
+        XUserMgr    xUserMgr  = Mockito.mock(XUserMgr.class);
 
-            SessionMgr sessionMgr = Mockito.mock(SessionMgr.class);
-            HTTPUtil httpUtil = Mockito.mock(HTTPUtil.class);
-            GUIDUtil guidUtil = Mockito.mock(GUIDUtil.class);
-            XUserMgr xUserMgr = Mockito.mock(XUserMgr.class);
-            filter.sessionMgr = sessionMgr;
-            filter.httpUtil = httpUtil;
-            filter.guidUtil = guidUtil;
-            filter.xUserMgr = xUserMgr;
+        filter.sessionMgr = sessionMgr;
+        filter.httpUtil   = httpUtil;
+        filter.guidUtil   = guidUtil;
+        filter.xUserMgr   = xUserMgr;
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken("user", "pwd",
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+        UserDetails            userDetails = new org.springframework.security.core.userdetails.User("user", "", authorities);
+        RangerAuthenticationToken        authentication = new RangerAuthenticationToken(userDetails, authorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, RangerAuthenticationToken.AuthMechanism.HEADER, "awc-request-1");
 
-            HttpServletRequest req = Mockito.mock(HttpServletRequest.class);
-            HttpServletResponse res = Mockito.mock(HttpServletResponse.class);
-            HttpSession session = Mockito.mock(HttpSession.class);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            Mockito.when(req.getSession(false)).thenReturn(session);
-            Mockito.when(session.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY)).thenReturn(null);
-            Mockito.when(req.getHeader(RangerSecurityContextFormationFilter.USER_AGENT)).thenReturn("Mozilla/5.0");
-            Mockito.when(req.getHeader("x-awc-username")).thenReturn("user");
-            Mockito.when(req.getRequestURI()).thenReturn("/secure");
-            Mockito.when(req.getHeader("x-awc-requestid")).thenReturn("awc-request-1");
-            Mockito.when(httpUtil.getDeviceType(req)).thenReturn(RangerCommonEnums.DEVICE_BROWSER);
+        HttpServletRequest  req     = Mockito.mock(HttpServletRequest.class);
+        HttpServletResponse res     = Mockito.mock(HttpServletResponse.class);
+        HttpSession         session = Mockito.mock(HttpSession.class);
 
-            UserSessionBase userSession = Mockito.mock(UserSessionBase.class);
-            Mockito.when(userSession.getClientTimeOffsetInMinute()).thenReturn(0);
-            Mockito.when(sessionMgr.processSuccessLogin(Mockito.anyInt(), Mockito.anyString(), Mockito.any(HttpServletRequest.class)))
-                    .thenReturn(userSession);
+        Mockito.when(req.getSession(false)).thenReturn(session);
+        Mockito.when(session.getAttribute(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY)).thenReturn(null);
+        Mockito.when(req.getHeader(RangerSecurityContextFormationFilter.USER_AGENT)).thenReturn("Mozilla/5.0");
+        Mockito.when(req.getRequestURI()).thenReturn("/secure");
+        Mockito.when(httpUtil.getDeviceType(req)).thenReturn(RangerCommonEnums.DEVICE_BROWSER);
 
-            FilterChain chain = new FilterChain() {
-                @Override
-                public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
-                    RangerSecurityContext ctx = RangerContextHolder.getSecurityContext();
-                    assertNotNull(ctx);
-                    assertNotNull(ctx.getRequestContext());
-                    assertEquals("awc-request-1", ctx.getRequestContext().getServerRequestId());
-                    assertSame(userSession, ctx.getUserSession());
-                }
-            };
+        UserSessionBase userSession = Mockito.mock(UserSessionBase.class);
 
-            filter.doFilter(req, res, chain);
+        Mockito.when(userSession.getClientTimeOffsetInMinute()).thenReturn(0);
+        Mockito.when(sessionMgr.processSuccessLogin(Mockito.anyInt(), Mockito.anyString(), Mockito.any(HttpServletRequest.class)))
+                .thenReturn(userSession);
 
-            Mockito.verify(session, Mockito.times(1)).setAttribute(Mockito.eq(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY), Mockito.any());
-            Mockito.verify(res).setHeader("X-Frame-Options", "DENY");
-            Mockito.verify(sessionMgr, Mockito.times(1)).processSuccessLogin(Mockito.anyInt(), Mockito.anyString(), Mockito.any(HttpServletRequest.class));
-            Mockito.verify(userSession, Mockito.times(1)).setClientTimeOffsetInMinute(Mockito.anyInt());
+        FilterChain chain = new FilterChain() {
+            @Override
+            public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) {
+                RangerSecurityContext ctx = RangerContextHolder.getSecurityContext();
 
-            assertNull(RangerContextHolder.getSecurityContext());
-            assertNull(RangerContextHolder.getOpContext());
-        } finally {
-            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED);
-            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME);
-            PropertiesUtil.getPropertiesMap().remove(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
-        }
+                assertNotNull(ctx);
+                assertNotNull(ctx.getRequestContext());
+                assertEquals("awc-request-1", ctx.getRequestContext().getServerRequestId());
+                assertSame(userSession, ctx.getUserSession());
+            }
+        };
+
+        filter.doFilter(req, res, chain);
+
+        Mockito.verify(session, Mockito.times(1)).setAttribute(Mockito.eq(RangerSecurityContextFormationFilter.AKA_SC_SESSION_KEY), Mockito.any());
+        Mockito.verify(res).setHeader("X-Frame-Options", "DENY");
+        Mockito.verify(sessionMgr, Mockito.times(1)).processSuccessLogin(Mockito.anyInt(), Mockito.anyString(), Mockito.any(HttpServletRequest.class));
+        Mockito.verify(userSession, Mockito.times(1)).setClientTimeOffsetInMinute(Mockito.anyInt());
+
+        assertNull(RangerContextHolder.getSecurityContext());
+        assertNull(RangerContextHolder.getOpContext());
     }
 }

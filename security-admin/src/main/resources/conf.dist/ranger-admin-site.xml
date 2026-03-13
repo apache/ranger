@@ -273,15 +273,15 @@
 	<!-- SSO Properties Ends-->
 	<!-- Trusted header auth properties start -->
 	<property>
-		<name>ranger.authn.header.enabled</name>
+		<name>ranger.admin.authn.header.enabled</name>
 		<value>false</value>
 	</property>
 	<property>
-		<name>ranger.authn.header.username</name>
+		<name>ranger.admin.authn.header.username</name>
 		<value>x-awc-username</value>
 	</property>
 	<property>
-		<name>ranger.authn.header.requestid</name>
+		<name>ranger.admin.authn.header.requestid</name>
 		<value>x-awc-requestid</value>
 	</property>
 	<!-- Trusted header auth properties end -->

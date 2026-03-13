@@ -23,8 +23,9 @@ import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.ranger.entity.XXAuthSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,12 +50,13 @@ import java.util.List;
 public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     private static final Logger LOG = LoggerFactory.getLogger(RangerHeaderPreAuthFilter.class);
 
-    public static final String PROP_HEADER_AUTH_ENABLED        = "ranger.authn.header.enabled";
-    public static final String PROP_USERNAME_HEADER_NAME       = "ranger.authn.header.username";
-    public static final String PROP_REQUEST_ID_HEADER_NAME     = "ranger.authn.header.requestid";
+    public static final String PROP_HEADER_AUTH_ENABLED        = "ranger.admin.authn.header.enabled";
+    public static final String PROP_USERNAME_HEADER_NAME       = "ranger.admin.authn.header.username";
+    public static final String PROP_REQUEST_ID_HEADER_NAME     = "ranger.admin.authn.header.requestid";
 
-    private static boolean headerAuthEnabled;
-    private static String  userNameHeaderName;
+    private boolean headerAuthEnabled;
+    private String  userNameHeaderName;
+    private String  requestIdHeaderName;
 
     @Autowired
     UserMgr userMgr;
@@ -63,8 +65,9 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     @PostConstruct
     public void initialize(FilterConfig filterConfig) throws ServletException {
-        headerAuthEnabled  = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
-        userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
+        headerAuthEnabled   = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
+        userNameHeaderName  = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
+        requestIdHeaderName = PropertiesUtil.getProperty(PROP_REQUEST_ID_HEADER_NAME);
     }
 
     @Override
@@ -72,10 +75,11 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
         HttpServletRequest  httpRequest  = (HttpServletRequest) request;
         username                         = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
 
-        if (isHeaderAuthEnabled()) {
-            List<GrantedAuthority>      grantedAuthorities = getAuthoritiesFromRanger(username);
-            final UserDetails           principal          = new User(username, "", grantedAuthorities);
-            UsernamePasswordAuthenticationToken authToken  = new UsernamePasswordAuthenticationToken(principal, "", grantedAuthorities);
+        if (headerAuthEnabled && StringUtils.isNotBlank(username)) {
+            String                     requestId          = StringUtils.trimToNull(httpRequest.getHeader(requestIdHeaderName));
+            List<GrantedAuthority>     grantedAuthorities = getAuthoritiesFromRanger(username);
+            final UserDetails          principal          = new User(username, "", grantedAuthorities);
+            RangerAuthenticationToken  authToken          = new RangerAuthenticationToken(principal, grantedAuthorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, RangerAuthenticationToken.AuthMechanism.HEADER, requestId);
 
             authToken.setDetails(new WebAuthenticationDetails(httpRequest));
 
@@ -90,7 +94,8 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     }
 
     public boolean isHeaderAuthEnabled() {
-        return headerAuthEnabled && StringUtils.isNotBlank(username);
+        Authentication authn = SecurityContextHolder.getContext().getAuthentication();
+        return authn instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) authn).getAuthMechanism() == RangerAuthenticationToken.AuthMechanism.HEADER;
     }
 
     /**
