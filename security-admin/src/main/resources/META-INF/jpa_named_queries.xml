@@ -1707,6 +1707,10 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXUGSyncAuditInfo.getUGSyncLastUpdatedTime">
+		<query>SELECT MAX(obj.eventTime) from XXUgsyncAuditInfo obj</query>
+	</named-query>
+
 	<!-- SecurityZone  -->
     <named-query name="XXSecurityZone.findByZoneId">
         <query>
@@ -2202,6 +2206,10 @@
 		         JOIN XXService xs ON obj.service = xs.id
 		         JOIN XXServiceDef xsd ON xsd.id = xs.type
 		        WHERE xsd.name = :serviceType</query>
+	</named-query>
+
+	<named-query name="XXPolicy.getSecurityZonePolicyCount">
+		<query>SELECT count(obj.id) FROM XXPolicy obj where obj.zoneId IS NOT NULL AND obj.zoneId != :zoneId</query>
 	</named-query>
 
 	<named-query name="XXGdsDataset.findByGuid">
