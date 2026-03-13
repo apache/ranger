@@ -24,14 +24,13 @@ import com.sun.jersey.api.client.WebResource;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.http.HttpStatus;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletResponse;
 
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
@@ -209,7 +208,7 @@ public class RangerAuditServerDestination extends AuditDestination {
             if (response != null) {
                 int status = response.getStatus();
 
-                if (status == HttpServletResponse.SC_OK) {
+                if (status == HttpStatus.SC_OK) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Audit batch sent successfully. {} events delivered. Response: {}", events.size(), response.getEntity(String.class));
                     }
@@ -228,7 +227,7 @@ public class RangerAuditServerDestination extends AuditDestination {
 
                     LOG.error("Failed to send audit batch. HTTP status: {}, Response: {}", status, errorBody);
 
-                    if (status == HttpServletResponse.SC_UNAUTHORIZED) {
+                    if (status == HttpStatus.SC_UNAUTHORIZED) {
                         LOG.error("Authentication failure (401). Verify credentials are valid and audit server is properly configured.");
                     }
 
