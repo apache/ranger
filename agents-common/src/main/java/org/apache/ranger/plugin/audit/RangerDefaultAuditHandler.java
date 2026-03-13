@@ -236,8 +236,14 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
         }
 
         Map<String, String> addInfomap = new HashMap<>();
-        addInfomap.put("forwarded-ip-addresses", "[" + StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
-        addInfomap.put("remote-ip-address", request.getRemoteIPAddress());
+
+        if (CollectionUtils.isNotEmpty(request.getForwardedAddresses())) {
+            addInfomap.put("forwarded-ip-addresses", "[" + StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
+        }
+
+        if (StringUtils.isNotBlank(request.getRemoteIPAddress())) {
+            addInfomap.put("remote-ip-address", request.getRemoteIPAddress());
+        }
 
         return JsonUtils.mapToJson(addInfomap);
     }

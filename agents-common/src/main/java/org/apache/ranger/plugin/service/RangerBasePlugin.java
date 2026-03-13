@@ -404,12 +404,7 @@ public class RangerBasePlugin {
         AuditProviderFactory providerFactory = AuditProviderFactory.getInstance();
 
         if (!providerFactory.isInitDone()) {
-            if (pluginConfig.getProperties() != null) {
-                providerFactory.init(pluginConfig.getProperties(), getAppId());
-            } else {
-                LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
-                LOG.error("No authorization audits will be generated. ");
-            }
+            providerFactory.init(pluginConfig.getProperties(), getAppId());
         }
 
         if (!pluginConfig.getPolicyEngineOptions().disablePolicyRefresher) {
