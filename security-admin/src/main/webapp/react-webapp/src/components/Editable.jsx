@@ -387,7 +387,8 @@ const Editable = (props) => {
     options = [],
     conditionDefVal,
     servicedefName,
-    isGDS
+    isGDS,
+    popOverheader
   } = props;
 
   const initialLoad = useRef(true);
@@ -451,7 +452,9 @@ const Editable = (props) => {
             <div
               key={property}
               className={`${
-                uiHintVal?.isMultiline ? "editable-label" : "badge bg-dark"
+                uiHintVal?.isMultiline
+                  ? "editable-label rule-condition-wrapper"
+                  : "badge bg-dark"
               }`}
             >
               {`${conditionObj.label}: ${
@@ -502,7 +505,6 @@ const Editable = (props) => {
                 variant="outline-dark"
                 size="sm"
                 type="button"
-                s
               >
                 <i className="fa-fw fa fa-plus"></i>
               </Button>
@@ -514,7 +516,7 @@ const Editable = (props) => {
           selectVal && selectVal?.length > 0 ? (
             <>
               <span className="editable-edit-text">
-                {selectVal.map((op, index) => (
+                {sortBy(selectVal, "label").map((op, index) => (
                   <h6 className="d-inline me-1" key={index}>
                     <Badge bg="info">{op.label}</Badge>
                   </h6>
@@ -729,9 +731,7 @@ const Editable = (props) => {
         type === TYPE_CHECKBOX && "popover-maxHeight popover-minHeight"
       }`}
     >
-      <Popover.Header>
-        {type === TYPE_CHECKBOX ? "Select" : "Enter"}
-      </Popover.Header>
+      <Popover.Header>{popOverheader}</Popover.Header>
       <Popover.Body>
         {type === TYPE_CHECKBOX ? (
           <CheckboxComp

@@ -26,7 +26,7 @@ import AsyncSelect from "react-select/async";
 import Editable from "Components/Editable";
 import CreatableField from "Components/CreatableField";
 import ModalResourceComp from "Views/Resources/ModalResourceComp";
-import { uniq, map, join, isEmpty, isArray } from "lodash";
+import { uniq, map, join, isEmpty, isArray, sortBy } from "lodash";
 import TagBasePermissionItem from "Views/PolicyListing/TagBasePermissionItem";
 import { dragStart, dragEnter, drop, dragOver } from "Utils/XAUtils";
 import { selectInputCustomStyles } from "Components/CommonComponents";
@@ -155,10 +155,10 @@ export default function ServiceAuditFilter(props) {
   const getAccessTypeOptions = () => {
     let srcOp = [];
     srcOp = serviceDefDetails?.accessTypes;
-    return srcOp?.map(({ label, name: value }) => ({
-      label,
-      value
-    }));
+    return sortBy(
+      srcOp?.map(({ label, name: value }) => ({ label, value })),
+      serviceDefDetails.name == "tag" ? "value" : "label"
+    );
   };
 
   const permList = [
@@ -388,6 +388,7 @@ export default function ServiceAuditFilter(props) {
                                     options={getAccessTypeOptions()}
                                     showSelectAll={true}
                                     selectAllLabel="Select All"
+                                    popOverheader="Add/Edit Permissions"
                                   />
                                 </div>
                               )}

@@ -24,7 +24,12 @@ import { RangerPolicyType, DefStatus } from "Utils/XAEnums";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
 import { cloneDeep, find, isEmpty, map, sortBy } from "lodash";
-import { getResourcesDefVal, serverError } from "Utils/XAUtils";
+import {
+  getResourcesDefVal,
+  serverError,
+  getPolicyConditionDisplayLbl,
+  getPolicyPermissionItemDisplayLbl
+} from "Utils/XAUtils";
 import { ModalLoader } from "Components/CommonComponents";
 import { getServiceDef } from "Utils/appState";
 
@@ -377,7 +382,7 @@ export function PolicyViewDetails(props) {
             <th className="text-center text-nowrap">Select User</th>
             {!isEmpty(
               filterServiceDef && filterServiceDef.policyConditions
-            ) && <th className="text-center text-nowrap">Policy Conditions</th>}
+            ) && <th className="text-center text-nowrap">Rule Conditions</th>}
             <th className="text-center text-nowrap">
               {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value
                 ? "Permissions"
@@ -450,7 +455,7 @@ export function PolicyViewDetails(props) {
                     {!isEmpty(
                       filterServiceDef && filterServiceDef.policyConditions
                     ) && (
-                      <td className="text-center">
+                      <td>
                         {!isEmpty(items.conditions)
                           ? items.conditions.map((obj, index) => {
                               let conditionObj =
@@ -458,15 +463,13 @@ export function PolicyViewDetails(props) {
                                   return e.name == obj.type;
                                 });
                               return (
-                                <h6 className="d-inline me-1" key={index}>
-                                  <Badge
-                                    bg="info"
-                                    className="d-inline me-1"
-                                    key={obj.values}
-                                  >{`${conditionObj.label}: ${obj.values.join(
-                                    ", "
-                                  )}`}</Badge>
-                                </h6>
+                                <Badge
+                                  bg="info"
+                                  className="me-1 line-clamp line-clamp-3 text-start"
+                                  key={obj.values}
+                                >{`${getPolicyConditionDisplayLbl(
+                                  conditionObj.label
+                                )}: ${obj.values.join(", ")}`}</Badge>
                               );
                             })
                           : "--"}
@@ -476,14 +479,18 @@ export function PolicyViewDetails(props) {
                     {!isEmpty(items.accesses) ? (
                       <td className="text-center d-flex flex-wrap policyview-permission-wrap">
                         {" "}
-                        {items.accesses.map((obj, index) => (
+                        {getPolicyPermissionItemDisplayLbl(
+                          filterServiceDef,
+                          policyType,
+                          items.accesses
+                        ).map((obj, index) => (
                           <h6 className="d-inline me-1" key={index}>
                             <Badge
                               bg="info"
                               className="d-inline me-1"
-                              key={obj.type}
+                              key={obj.label}
                             >
-                              {obj.type}
+                              {obj.label}
                             </Badge>
                           </h6>
                         ))}
@@ -548,7 +555,9 @@ export function PolicyViewDetails(props) {
     const getConditionLabel = (label) => {
       let filterLabel = find(serviceDef.policyConditions, { name: label });
 
-      return filterLabel && filterLabel?.label ? filterLabel.label : "";
+      return filterLabel && filterLabel?.label
+        ? getPolicyConditionDisplayLbl(filterLabel.label)
+        : "";
     };
     return (
       !isEmpty(conditions) && (
@@ -559,8 +568,12 @@ export function PolicyViewDetails(props) {
               <tbody>
                 {conditions.map((obj) => (
                   <tr key={obj.type} colSpan="2">
-                    <td width="40%">{getConditionLabel(obj.type)}</td>
-                    <td width="60% text-truncate">{obj.values.join(", ")}</td>
+                    <td width="30%">{getConditionLabel(obj.type)}</td>
+                    <td width="70%">
+                      <span className="line-clamp line-clamp-5 text-start">
+                        {obj.values.join(", ")}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -682,14 +695,14 @@ export function PolicyViewDetails(props) {
       {getPolicyConditions(conditions, serviceDef)}
       {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
         <>
-          <p className="form-header">Allow Conditions :</p>
+          <p className="form-header">Allow Rules :</p>
           <div className="overflow-auto">
             <Table bordered size="sm" className="table-audit-filter-ready-only">
               {getFilterPolicy(
                 policyItems,
                 serviceDef,
                 serviceType,
-                ` No policy items of "Allow Conditions" are present`
+                ` No policy items of "Allow Rules" are present`
               )}
             </Table>
           </div>
@@ -700,7 +713,7 @@ export function PolicyViewDetails(props) {
       {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
         serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
-            <p className="form-header">Exclude from Allow Conditions :</p>
+            <p className="form-header">Exclude from Allow Rules :</p>
             <div className="overflow-auto">
               <Table
                 bordered
@@ -711,7 +724,7 @@ export function PolicyViewDetails(props) {
                   allowExceptions,
                   serviceDef,
                   serviceType,
-                  `No policy items of "Exclude from Allow Conditions" are present`
+                  `No policy items of "Exclude from Allow Rules" are present`
                 )}
               </Table>
             </div>
@@ -742,7 +755,7 @@ export function PolicyViewDetails(props) {
         policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
         serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
-            <p className="form-header">Deny Conditions :</p>
+            <p className="form-header">Deny Rules :</p>
             <div className="overflow-auto">
               <Table
                 bordered
@@ -753,7 +766,7 @@ export function PolicyViewDetails(props) {
                   denyPolicyItems,
                   serviceDef,
                   serviceType,
-                  ` No policy items of "Deny Conditions" are present`
+                  ` No policy items of "Deny Rules" are present`
                 )}
               </Table>
             </div>
@@ -764,7 +777,7 @@ export function PolicyViewDetails(props) {
         policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
         serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
-            <p className="form-header">Exclude from Deny Conditions :</p>
+            <p className="form-header">Exclude from Deny Rules :</p>
             <div className="overflow-auto">
               <Table
                 bordered
@@ -775,7 +788,7 @@ export function PolicyViewDetails(props) {
                   denyExceptions,
                   serviceDef,
                   serviceType,
-                  `No policy items of "Exclude from Deny Conditions" are present`
+                  `No policy items of "Exclude from Deny Rules" are present`
                 )}
               </Table>
             </div>
@@ -783,14 +796,14 @@ export function PolicyViewDetails(props) {
         )}
       {policyType == RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value && (
         <>
-          <p className="form-header">Row Level Conditions :</p>
+          <p className="form-header">Row Level Rules :</p>
           <div className="overflow-auto">
             <Table bordered size="sm" className="table-audit-filter-ready-only">
               {getFilterPolicy(
                 rowFilterPolicyItems,
                 serviceDef,
                 serviceType,
-                `No policy items of "Row Level Conditions" are present`
+                `No policy items of "Row Level Rules" are present`
               )}
             </Table>
           </div>
@@ -798,7 +811,7 @@ export function PolicyViewDetails(props) {
       )}
       {policyType == RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value && (
         <>
-          <p className="form-header">Masking Conditions :</p>
+          <p className="form-header">Masking Rules :</p>
           <div className="overflow-auto">
             <Table bordered size="sm" className="table-audit-filter-ready-only">
               {getFilterPolicy(
