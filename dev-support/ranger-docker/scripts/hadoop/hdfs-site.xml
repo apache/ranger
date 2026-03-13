@@ -60,4 +60,16 @@
     <name>dfs.web.authentication.kerberos.keytab</name>
     <value>/etc/keytabs/HTTP.keytab</value>
   </property>
+  <property>
+    <name>dfs.secondary.namenode.kerberos.principal</name>
+    <value>nn/ranger-hadoop.rangernw@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>dfs.secondary.namenode.keytab.file</name>
+    <value>/etc/keytabs/nn.keytab</value>
+  </property>
+  <property>
+    <name>dfs.secondary.namenode.kerberos.internal.spnego.principal</name>
+    <value>HTTP/ranger-hadoop.rangernw@EXAMPLE.COM</value>
+  </property>
 </configuration>

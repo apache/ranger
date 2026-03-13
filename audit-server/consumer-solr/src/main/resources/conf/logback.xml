@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<configuration>
+    <!-- System properties for log directory and file -->
+    <property name="LOG_DIR" value="${audit.consumer.solr.log.dir:-./logs}" />
+    <property name="LOG_FILE" value="${audit.consumer.solr.log.file:-consumer-solr.log}" />
+
+    <!-- Console Appender -->
+    <appender name="LogToConsole" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p - %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Rolling File Appender -->
+    <appender name="LogToRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${LOG_FILE}</file>
+        <encoder>
+            <pattern>%d %p %c{1} [%t] %m%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${LOG_FILE}-%d{MM-dd-yyyy}-%i.log.gz</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>200MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>10</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Ranger Audit Logger -->
+    <logger name="org.apache.ranger.audit" level="INFO" additivity="false">
+        <appender-ref ref="LogToRollingFile" />
+        <appender-ref ref="LogToConsole" />
+    </logger>
+
+    <!-- Spring Logger -->
+    <logger name="org.springframework" level="INFO" additivity="false">
+        <appender-ref ref="LogToRollingFile" />
+        <appender-ref ref="LogToConsole" />
+    </logger>
+
+    <!-- Kafka Logger (reduce verbosity) -->
+    <logger name="org.apache.kafka" level="INFO" additivity="false">
+        <appender-ref ref="LogToRollingFile" />
+        <appender-ref ref="LogToConsole" />
+    </logger>
+
+    <!-- Lucene/Solr Logger (reduce verbosity) -->
+    <logger name="org.apache.lucene" level="INFO" additivity="false">
+        <appender-ref ref="LogToRollingFile" />
+        <appender-ref ref="LogToConsole" />
+    </logger>
+
+    <logger name="org.apache.solr" level="INFO" additivity="false">
+        <appender-ref ref="LogToRollingFile" />
+        <appender-ref ref="LogToConsole" />
+    </logger>
+
+    <!-- Root Logger -->
+    <root level="INFO">
+        <appender-ref ref="LogToRollingFile" />
+        <appender-ref ref="LogToConsole" />
+    </root>
+</configuration>
