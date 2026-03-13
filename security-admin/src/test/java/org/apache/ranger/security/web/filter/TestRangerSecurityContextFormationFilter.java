@@ -174,9 +174,11 @@ public class TestRangerSecurityContextFormationFilter {
         assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY,
                 m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqKrbTp));
 
-        // Password — no RangerAuthenticationToken, no SSO/Kerberos attributes
+        // Password — no RangerAuthenticationToken, ssoEnabled explicitly false, no Kerberos attributes
+        HttpServletRequest reqPwd = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(reqPwd.getAttribute("ssoEnabled")).thenReturn(false);
         assertEquals(XXAuthSession.AUTH_TYPE_PASSWORD,
-                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), emptyRequest));
+                m.invoke(filter, new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("u", "pwd", authorities), reqPwd));
     }
 
     @Test
