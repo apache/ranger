@@ -35,7 +35,6 @@ import org.apache.ranger.plugin.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
 import java.io.UnsupportedEncodingException;
@@ -153,7 +152,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+		if (response == null || response.getStatus() == HttpStatus.SC_NOT_MODIFIED || response.getStatus() == HttpStatus.SC_NO_CONTENT) {
 			if (response == null) {
 				LOG.error("Error getting policies; Received NULL response!!. secureMode=" + isSecureMode + ", serviceName=" + serviceName);
 			} else {
@@ -166,9 +165,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				}
 			}
 			ret = null;
-		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+		} else if (response.getStatus() == HttpStatus.SC_OK) {
 			ret = JsonUtilsV2.readResponse(response, ServicePolicies.class);
-		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting policies; service not found. secureMode=" + isSecureMode
 							  + ", response=" + response.getStatus() + ", serviceName=" + serviceName
@@ -235,7 +234,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+		if (response == null || response.getStatus() == HttpStatus.SC_NOT_MODIFIED || response.getStatus() == HttpStatus.SC_NO_CONTENT) {
 			if (response == null) {
 				LOG.error("Error getting Roles; Received NULL response!!. secureMode=" + isSecureMode + ", serviceName=" + serviceName);
 			} else {
@@ -248,9 +247,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				}
 			}
 			ret = null;
-		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+		} else if (response.getStatus() == HttpStatus.SC_OK) {
 			ret = JsonUtilsV2.readResponse(response, RangerRoles.class);
-		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting Roles; service not found. secureMode=" + isSecureMode
 							  + ", response=" + response.getStatus() + ", serviceName=" + serviceName
@@ -310,11 +309,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+		if(response != null && response.getStatus() != HttpStatus.SC_OK) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("createRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+			if(response.getStatus()==HttpStatus.SC_UNAUTHORIZED) {
 				throw new AccessControlException();
 			}
 
@@ -368,11 +367,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		if(response == null) {
 			throw new Exception("unknown error during deleteRole. roleName="  + roleName);
-		} else if(response.getStatus() != HttpServletResponse.SC_OK && response.getStatus() != HttpServletResponse.SC_NO_CONTENT) {
+		} else if(response.getStatus() != HttpStatus.SC_OK && response.getStatus() != HttpStatus.SC_NO_CONTENT) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("createRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+			if(response.getStatus()==HttpStatus.SC_UNAUTHORIZED) {
 				throw new AccessControlException();
 			}
 
@@ -417,11 +416,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		checkAndResetSessionCookie(response);
 
 		if(response != null) {
-			if (response.getStatus() != HttpServletResponse.SC_OK) {
+			if (response.getStatus() != HttpStatus.SC_OK) {
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
 				LOG.error("getUserRoles() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-				if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+				if (response.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
 					throw new AccessControlException();
 				}
 
@@ -476,11 +475,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		checkAndResetSessionCookie(response);
 
 		if(response != null) {
-			if (response.getStatus() != HttpServletResponse.SC_OK) {
+			if (response.getStatus() != HttpStatus.SC_OK) {
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
 				LOG.error("getAllRoles() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-				if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+				if (response.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
 					throw new AccessControlException();
 				}
 
@@ -534,11 +533,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		checkAndResetSessionCookie(response);
 
 		if(response != null) {
-			if (response.getStatus() != HttpServletResponse.SC_OK) {
+			if (response.getStatus() != HttpStatus.SC_OK) {
 				RESTResponse resp = RESTResponse.fromClientResponse(response);
 				LOG.error("getPrincipalsForRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-				if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+				if (response.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
 					throw new AccessControlException();
 				}
 
@@ -587,11 +586,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+		if(response != null && response.getStatus() != HttpStatus.SC_OK) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("grantRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+			if(response.getStatus()==HttpStatus.SC_UNAUTHORIZED) {
 				throw new AccessControlException();
 			}
 
@@ -612,7 +611,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		}
 
 		final ClientResponse response;
-		
+
 		boolean isSecureMode = isAuthenticationEnabled();
 		String relativeURL = RangerRESTUtils.REST_URL_SERVICE_REVOKE_ROLE + serviceNameUrlParam;
 		Cookie sessionId = this.sessionId;
@@ -636,11 +635,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+		if(response != null && response.getStatus() != HttpStatus.SC_OK) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("revokeRole() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+			if(response.getStatus()==HttpStatus.SC_UNAUTHORIZED) {
 				throw new AccessControlException();
 			}
 
@@ -689,11 +688,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+		if(response != null && response.getStatus() != HttpStatus.SC_OK) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("grantAccess() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-			if(response.getStatus()==HttpServletResponse.SC_UNAUTHORIZED) {
+			if(response.getStatus()==HttpStatus.SC_UNAUTHORIZED) {
 				throw new AccessControlException();
 			}
 
@@ -742,11 +741,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if(response != null && response.getStatus() != HttpServletResponse.SC_OK) {
+		if(response != null && response.getStatus() != HttpStatus.SC_OK) {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("revokeAccess() failed: HTTP status=" + response.getStatus() + ", message=" + resp.getMessage() + ", isSecure=" + isSecureMode);
 
-			if(response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+			if(response.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
 				throw new AccessControlException();
 			}
 
@@ -821,7 +820,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+		if (response == null || response.getStatus() == HttpStatus.SC_NOT_MODIFIED) {
 			if (response == null) {
 				LOG.error("Error getting tags; Received NULL response!!. secureMode=" + isSecureMode + ", serviceName=" + serviceName);
 			} else {
@@ -834,9 +833,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				}
 			}
 			ret = null;
-		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+		} else if (response.getStatus() == HttpStatus.SC_OK) {
 			ret = JsonUtilsV2.readResponse(response, ServiceTags.class);
-		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting tags; service not found. secureMode=" + isSecureMode
 							  + ", response=" + response.getStatus() + ", serviceName=" + serviceName
@@ -895,7 +894,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if(response != null && response.getStatus() == HttpServletResponse.SC_OK) {
+		if(response != null && response.getStatus() == HttpStatus.SC_OK) {
 			ret = JsonUtilsV2.readResponse(response, TYPE_LIST_STRING);
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
@@ -953,7 +952,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		checkAndResetSessionCookie(response);
 
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+		if (response == null || response.getStatus() == HttpStatus.SC_NOT_MODIFIED) {
 			if (response == null) {
 				LOG.error("Error getting UserStore; Received NULL response!!. secureMode=" + isSecureMode + ", serviceName=" + serviceName);
 			} else {
@@ -966,9 +965,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 				}
 			}
 			ret = null;
-		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+		} else if (response.getStatus() == HttpStatus.SC_OK) {
 			ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
-		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode
 					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName

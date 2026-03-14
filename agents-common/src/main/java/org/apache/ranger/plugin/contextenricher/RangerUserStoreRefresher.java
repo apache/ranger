@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.contextenricher;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.http.HttpStatus;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -34,7 +35,6 @@ import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.Reader;
 import java.io.Writer;
@@ -397,7 +397,7 @@ public class RangerUserStoreRefresher extends Thread {
             response = rangerRESTClient.get(relativeURL, queryParams);
         }
 
-        if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+        if (response == null || response.getStatus() == HttpStatus.SC_NOT_MODIFIED) {
             if (response == null) {
                 LOG.error("Error getting UserStore; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user);
             } else {
@@ -410,9 +410,9 @@ public class RangerUserStoreRefresher extends Thread {
                 }
             }
             ret = null;
-        } else if (response.getStatus() == HttpServletResponse.SC_OK) {
+        } else if (response.getStatus() == HttpStatus.SC_OK) {
             ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
-        } else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+        } else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
             ret = null;
             LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode + ", user=" + user
                     + ", response=" + response.getStatus()
