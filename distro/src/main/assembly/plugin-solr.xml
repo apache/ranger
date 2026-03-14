@@ -55,7 +55,9 @@
         <includes>
           <include>commons-collections:commons-collections</include>
           <include>com.google.code.gson:gson</include>
-          <include>com.sun.jersey:jersey-bundle</include>
+          <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
+          <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
+          <include>javax.ws.rs:jsr311-api:jar:${jsr311-api.version}</include>
           <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
           <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>

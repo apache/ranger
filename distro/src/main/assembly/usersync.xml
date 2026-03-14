@@ -41,7 +41,7 @@
 						<unpack>false</unpack>
 						<includes>
 							<include>com.google.code.gson:gson</include>
-							<include>com.sun.jersey:jersey-bundle</include>
+							<include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
 							<include>commons-cli:commons-cli</include>
 							<include>commons-collections:commons-collections</include>
 							<include>commons-logging:commons-logging</include>

@@ -57,12 +57,6 @@
             <artifactId>jersey-client</artifactId>
             <version>${jersey-bundle.version}</version>
             <type>jar</type>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.ws.rs</groupId>
-                    <artifactId>jsr311-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
