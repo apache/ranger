@@ -34,8 +34,6 @@ import org.apache.ranger.plugin.util.RangerUserStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletResponse;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -46,6 +44,10 @@ import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+
+import static org.apache.http.HttpStatus.SC_NOT_FOUND;
+import static org.apache.http.HttpStatus.SC_NOT_MODIFIED;
+import static org.apache.http.HttpStatus.SC_OK;
 
 public class RangerUserStoreRefresher extends Thread {
     private static final Logger LOG                     = LoggerFactory.getLogger(RangerUserStoreRefresher.class);
@@ -378,7 +380,7 @@ public class RangerUserStoreRefresher extends Thread {
 
         final RangerUserStore ret;
 
-        if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
+        if (response == null || response.getStatus() == SC_NOT_MODIFIED) {
             if (response == null) {
                 LOG.error("Error getting UserStore; Received NULL response!!. secureMode={}, user={}", isSecureMode, user);
             } else {
@@ -389,9 +391,9 @@ public class RangerUserStoreRefresher extends Thread {
             }
 
             ret = null;
-        } else if (response.getStatus() == HttpServletResponse.SC_OK) {
+        } else if (response.getStatus() == SC_OK) {
             ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
-        } else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+        } else if (response.getStatus() == SC_NOT_FOUND) {
             ret = null;
 
             LOG.error("Error getting UserStore; service not found. secureMode={}, user={}, response={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",

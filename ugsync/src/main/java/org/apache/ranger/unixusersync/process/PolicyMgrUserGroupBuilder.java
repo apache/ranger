@@ -24,6 +24,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.http.HttpStatus;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
@@ -40,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
 
@@ -1439,14 +1439,14 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
 
                 sessionId           = null;
                 isValidRangerCookie = false;
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+            } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 sessionId           = null;
                 isValidRangerCookie = false;
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
+            } else if (clientResp.getStatus() == HttpStatus.SC_NO_CONTENT || clientResp.getStatus() == HttpStatus.SC_OK) {
                 List<NewCookie> respCookieList = clientResp.getCookies();
 
                 for (NewCookie cookie : respCookieList) {
@@ -1461,8 +1461,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             }
 
-            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT
-                    && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+            if (clientResp.getStatus() != HttpStatus.SC_OK && clientResp.getStatus() != HttpStatus.SC_NO_CONTENT
+                    && clientResp.getStatus() != HttpStatus.SC_BAD_REQUEST) {
                 sessionId           = null;
                 isValidRangerCookie = false;
             }
@@ -1493,10 +1493,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
+            } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 LOG.warn("Credentials response from ranger is 401.");
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+            } else if (clientResp.getStatus() == HttpStatus.SC_OK || clientResp.getStatus() == HttpStatus.SC_NO_CONTENT) {
                 cookieList = clientResp.getCookies();
 
                 for (NewCookie cookie : cookieList) {
@@ -1511,7 +1511,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             }
 
-            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+            if (clientResp.getStatus() != HttpStatus.SC_OK && clientResp.getStatus() != HttpStatus.SC_NO_CONTENT && clientResp.getStatus() != HttpStatus.SC_BAD_REQUEST) {
                 sessionId           = null;
                 isValidRangerCookie = false;
             }
@@ -1544,10 +1544,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
+            } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 LOG.warn("Credentials response from ranger is 401.");
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+            } else if (clientResp.getStatus() == HttpStatus.SC_OK || clientResp.getStatus() == HttpStatus.SC_NO_CONTENT) {
                 cookieList = clientResp.getCookies();
 
                 for (NewCookie cookie : cookieList) {
@@ -1562,7 +1562,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             }
 
-            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+            if (clientResp.getStatus() != HttpStatus.SC_OK && clientResp.getStatus() != HttpStatus.SC_NO_CONTENT && clientResp.getStatus() != HttpStatus.SC_BAD_REQUEST) {
                 sessionId           = null;
                 isValidRangerCookie = false;
             }
@@ -1595,14 +1595,14 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
         if (clientResp != null) {
             if (!(clientResp.toString().contains(apiURL))) {
-                clientResp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                clientResp.setStatus(HttpStatus.SC_NOT_FOUND);
 
                 sessionId           = null;
                 isValidRangerCookie = false;
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+            } else if (clientResp.getStatus() == HttpStatus.SC_UNAUTHORIZED) {
                 sessionId           = null;
                 isValidRangerCookie = false;
-            } else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
+            } else if (clientResp.getStatus() == HttpStatus.SC_NO_CONTENT || clientResp.getStatus() == HttpStatus.SC_OK) {
                 List<NewCookie> respCookieList = clientResp.getCookies();
 
                 for (NewCookie cookie : respCookieList) {
@@ -1617,7 +1617,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
                 }
             }
 
-            if (clientResp.getStatus() != HttpServletResponse.SC_OK && clientResp.getStatus() != HttpServletResponse.SC_NO_CONTENT && clientResp.getStatus() != HttpServletResponse.SC_BAD_REQUEST) {
+            if (clientResp.getStatus() != HttpStatus.SC_OK && clientResp.getStatus() != HttpStatus.SC_NO_CONTENT && clientResp.getStatus() != HttpStatus.SC_BAD_REQUEST) {
                 sessionId           = null;
                 isValidRangerCookie = false;
             }
