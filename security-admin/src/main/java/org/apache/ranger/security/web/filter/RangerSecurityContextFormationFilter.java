@@ -33,6 +33,8 @@ import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.util.RestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -50,6 +52,8 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 public class RangerSecurityContextFormationFilter extends GenericFilterBean {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityContextFormationFilter.class);
+
     public static final String AKA_SC_SESSION_KEY = "AKA_SECURITY_CONTEXT";
     public static final String USER_AGENT         = "User-Agent";
 
@@ -113,7 +117,8 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
                 requestContext.setIpAddress(reqIP);
                 requestContext.setUserAgent(userAgent);
                 requestContext.setDeviceType(httpUtil.getDeviceType(httpRequest));
-                requestContext.setServerRequestId(guidUtil.genGUID());
+                String requestId = (auth instanceof RangerAuthenticationToken) ? ((RangerAuthenticationToken) auth).getRequestId() : null;
+                requestContext.setServerRequestId(requestId != null ? requestId : guidUtil.genGUID());
                 requestContext.setRequestURL(httpRequest.getRequestURI());
                 requestContext.setClientTimeOffsetInMinute(clientTimeOffset);
 
@@ -121,7 +126,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
                 RangerContextHolder.setSecurityContext(context);
 
-                int             authType    = getAuthType(httpRequest);
+                int             authType    = getAuthType(auth, httpRequest);
                 UserSessionBase userSession = sessionMgr.processSuccessLogin(authType, userAgent, httpRequest);
 
                 if (userSession != null) {
@@ -160,25 +165,26 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
         }
     }
 
-    private int getAuthType(HttpServletRequest request) {
-        int     authType;
+    private int getAuthType(Authentication auth, HttpServletRequest request) {
+        if (auth instanceof RangerAuthenticationToken) {
+            return ((RangerAuthenticationToken) auth).getAuthType();
+        }
+
         Object  ssoEnabledObj = request.getAttribute("ssoEnabled");
         boolean ssoEnabled    = ssoEnabledObj != null ? Boolean.parseBoolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
 
         if (ssoEnabled) {
-            authType = XXAuthSession.AUTH_TYPE_SSO;
+            return XXAuthSession.AUTH_TYPE_SSO;
         } else if (request.getAttribute("spnegoEnabled") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("spnegoEnabled")))) {
             if (request.getAttribute("trustedProxyEnabled") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("trustedProxyEnabled")))) {
-                logger.debug("Setting auth type as trusted proxy");
+                LOG.debug("Setting auth type as trusted proxy");
 
-                authType = XXAuthSession.AUTH_TYPE_TRUSTED_PROXY;
+                return XXAuthSession.AUTH_TYPE_TRUSTED_PROXY;
             } else {
-                authType = XXAuthSession.AUTH_TYPE_KERBEROS;
+                return XXAuthSession.AUTH_TYPE_KERBEROS;
             }
-        } else {
-            authType = XXAuthSession.AUTH_TYPE_PASSWORD;
         }
 
-        return authType;
+        return XXAuthSession.AUTH_TYPE_PASSWORD;
     }
 }
