@@ -19,7 +19,6 @@
 package org.apache.ranger.common;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

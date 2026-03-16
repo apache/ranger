@@ -19,8 +19,8 @@ package org.apache.hadoop.crypto.key;
 
 import org.apache.hadoop.crypto.key.kms.server.DerbyTestUtils;
 import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
+import org.apache.ranger.common.JsonUtilsV2;
 import org.apache.ranger.kms.dao.DaoManager;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;

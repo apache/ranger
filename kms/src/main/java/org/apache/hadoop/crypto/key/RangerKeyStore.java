@@ -24,10 +24,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.KeyProvider.Metadata;
 import org.apache.hadoop.crypto.key.RangerKeyStoreProvider.KeyMetadata;
+import org.apache.ranger.common.JsonUtilsV2;
 import org.apache.ranger.entity.XXRangerKeyStore;
 import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.ranger.kms.dao.RangerKMSDao;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
