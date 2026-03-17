@@ -22,6 +22,7 @@
  */
 package org.apache.ranger.security.web.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.GUIDUtil;
@@ -117,7 +118,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
                 requestContext.setIpAddress(reqIP);
                 requestContext.setUserAgent(userAgent);
                 requestContext.setDeviceType(httpUtil.getDeviceType(httpRequest));
-                String requestId = (auth instanceof RangerAuthenticationToken) ? ((RangerAuthenticationToken) auth).getRequestId() : null;
+                String requestId = getServerRequestId(auth, httpRequest);
                 requestContext.setServerRequestId(requestId != null ? requestId : guidUtil.genGUID());
                 requestContext.setRequestURL(httpRequest.getRequestURI());
                 requestContext.setClientTimeOffsetInMinute(clientTimeOffset);
@@ -186,5 +187,15 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
         }
 
         return XXAuthSession.AUTH_TYPE_PASSWORD;
+    }
+
+    private String getServerRequestId(Authentication auth, HttpServletRequest request) {
+        if (auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+            String requestIdHeaderName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
+
+            return StringUtils.trimToNull(request.getHeader(requestIdHeaderName));
+        }
+
+        return null;
     }
 }

@@ -136,7 +136,6 @@ public class TestRangerHeaderPreAuthFilter {
                 assertTrue(auth instanceof RangerAuthenticationToken);
                 RangerAuthenticationToken rangerAuth = (RangerAuthenticationToken) auth;
                 assertEquals(XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, rangerAuth.getAuthType());
-                assertEquals(RangerAuthenticationToken.AuthMechanism.HEADER, rangerAuth.getAuthMechanism());
                 assertEquals("joeuser", auth.getName());
 
                 Collection<?> authorities = auth.getAuthorities();

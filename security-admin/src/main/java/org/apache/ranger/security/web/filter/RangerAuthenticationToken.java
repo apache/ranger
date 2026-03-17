@@ -27,30 +27,14 @@ import java.util.Collection;
 public class RangerAuthenticationToken extends AbstractAuthenticationToken {
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Identifies which Ranger authentication mechanism produced this token.
-     */
-    public enum AuthMechanism {
-        /** Trusted-proxy header auth via RangerHeaderPreAuthFilter */
-        HEADER
-    }
+    private final Object principal;
+    private final int    authType;
 
-    private final Object        principal;
-    private final AuthMechanism authMechanism;
-    private final int           authType;
-    private final String        requestId;
-
-    public RangerAuthenticationToken(UserDetails principal, Collection<? extends GrantedAuthority> authorities, int authType, AuthMechanism authMechanism) {
-        this(principal, authorities, authType, authMechanism, null);
-    }
-
-    public RangerAuthenticationToken(UserDetails principal, Collection<? extends GrantedAuthority> authorities, int authType, AuthMechanism authMechanism, String requestId) {
+    public RangerAuthenticationToken(UserDetails principal, Collection<? extends GrantedAuthority> authorities, int authType) {
         super(authorities);
 
-        this.principal     = principal;
-        this.authType      = authType;
-        this.authMechanism = authMechanism;
-        this.requestId     = requestId;
+        this.principal = principal;
+        this.authType  = authType;
 
         super.setAuthenticated(true);
     }
@@ -65,25 +49,7 @@ public class RangerAuthenticationToken extends AbstractAuthenticationToken {
         return null;
     }
 
-    /**
-     * The Ranger authentication mechanism that produced this token.
-     * Use this to distinguish header auth from SSO, Kerberos, etc.
-     */
-    public AuthMechanism getAuthMechanism() {
-        return authMechanism;
-    }
-
-    /**
-     * Maps to XXAuthSession.AUTH_TYPE_* for session/audit recording.
-     */
     public int getAuthType() {
         return authType;
-    }
-
-    /**
-     * The upstream request ID. Populated only for HEADER auth tokens.
-     */
-    public String getRequestId() {
-        return requestId;
     }
 }

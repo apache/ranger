@@ -56,7 +56,6 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     private boolean headerAuthEnabled;
     private String  userNameHeaderName;
-    private String  requestIdHeaderName;
 
     @Autowired
     UserMgr userMgr;
@@ -65,9 +64,8 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     @PostConstruct
     public void initialize(FilterConfig filterConfig) throws ServletException {
-        headerAuthEnabled   = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
-        userNameHeaderName  = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
-        requestIdHeaderName = PropertiesUtil.getProperty(PROP_REQUEST_ID_HEADER_NAME);
+        headerAuthEnabled  = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
+        userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
     }
 
     @Override
@@ -76,10 +74,9 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
         username                         = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
 
         if (headerAuthEnabled && StringUtils.isNotBlank(username)) {
-            String                     requestId          = StringUtils.trimToNull(httpRequest.getHeader(requestIdHeaderName));
             List<GrantedAuthority>     grantedAuthorities = getAuthoritiesFromRanger(username);
             final UserDetails          principal          = new User(username, "", grantedAuthorities);
-            RangerAuthenticationToken  authToken          = new RangerAuthenticationToken(principal, grantedAuthorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY, RangerAuthenticationToken.AuthMechanism.HEADER, requestId);
+            RangerAuthenticationToken  authToken          = new RangerAuthenticationToken(principal, grantedAuthorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY);
 
             authToken.setDetails(new WebAuthenticationDetails(httpRequest));
 
@@ -95,7 +92,7 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
 
     public boolean isHeaderAuthEnabled() {
         Authentication authn = SecurityContextHolder.getContext().getAuthentication();
-        return authn instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) authn).getAuthMechanism() == RangerAuthenticationToken.AuthMechanism.HEADER;
+        return authn instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) authn).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY;
     }
 
     /**
