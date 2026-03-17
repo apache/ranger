@@ -133,13 +133,15 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
         String defaultPath = fullPath;
 
+        fileSystemScheme = getFileSystemScheme();
+
         conf = createConfiguration();
 
         URI uri = URI.create(fullPath);
 
-        fileSystem       = FileSystem.get(uri, conf);
-        auditPath        = new Path(fullPath);
-        fileSystemScheme = getFileSystemScheme();
+        fileSystem = FileSystem.get(uri, conf);
+
+        auditPath  = new Path(fullPath);
 
         logger.info("Checking whether log file exists. {} Path={}, UGI={}", fileSystemScheme, fullPath, MiscUtil.getUGILoginUser());
 
@@ -195,6 +197,9 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
         if (parentPath != null && fileSystem != null && !fileSystem.exists(parentPath)) {
             fileSystem.mkdirs(parentPath);
+            logger.info("Successfully created parent folder: {}", parentPath);
+        } else {
+            logger.info("Parent folder already exists or not required: {}", parentPath);
         }
     }
 
@@ -308,14 +313,17 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
             if (!appendMode) {
                 // Create the file to write
-                logger.info("Creating new log file. auditPath = {}", fullPath);
-
                 createFileSystemFolders();
 
+                logger.info("Creating new log file. fullPath = {}", fullPath);
+
                 ostream = fileSystem.create(auditPath);
+                logger.info("Successfully created {} output stream for file: {}", fileSystemScheme, fullPath);
             }
             logWriter             = new PrintWriter(ostream);
             isHFlushCapableStream = ostream.hasCapability(StreamCapabilities.HFLUSH);
+
+            logger.info("{} audit writer initialized successfully. File: {}, HFlush capable: {}", fileSystemScheme, fullPath, isHFlushCapableStream);
         }
 
         logger.debug("<== AbstractRangerAuditWriter.createWriter()");

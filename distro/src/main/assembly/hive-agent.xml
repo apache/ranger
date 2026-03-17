@@ -42,6 +42,7 @@
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
         <include>org.apache.ranger:ranger-audit-core</include>
+        <include>org.apache.ranger:ranger-audit-dest-auditserver</include>
         <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
         <include>org.apache.ranger:ranger-audit-dest-solr</include>
         <include>org.apache.ranger:ranger-authz-api</include>
@@ -80,6 +81,9 @@
           <include>joda-time:joda-time</include>
           <include>com.carrotsearch:hppc</include>
           <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:jar:${fasterxml.jackson.version}</include>
+          <include>com.fasterxml.jackson.module:jackson-module-jaxb-annotations:jar:${fasterxml.jackson.version}</include>
         </includes>
       </binaries>
     </moduleSet>

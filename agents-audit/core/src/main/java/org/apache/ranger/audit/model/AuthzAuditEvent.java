@@ -19,7 +19,10 @@
 
 package org.apache.ranger.audit.model;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +31,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize
 public class AuthzAuditEvent extends AuditEventBase {
     protected static final int    MAX_ACTION_FIELD_SIZE       = 1800;

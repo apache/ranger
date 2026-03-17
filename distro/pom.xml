@@ -32,6 +32,27 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>audit-consumer-hdfs</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>audit-consumer-solr</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>audit-server</artifactId>
+            <version>${project.version}</version>
+            <type>war</type>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>credentialbuilder</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -63,6 +84,12 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-atlas-plugin-shim</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-audit-common</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -468,6 +495,9 @@
                                         <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-server.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-consumer-solr.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-consumer-hdfs.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
@@ -1053,8 +1083,13 @@
                                         <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-server.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-consumer-solr.xml</descriptor>
+                                        <descriptor>src/main/assembly/audit-consumer-hdfs.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
+                                        <descriptor>src/main/assembly/sample-client.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
