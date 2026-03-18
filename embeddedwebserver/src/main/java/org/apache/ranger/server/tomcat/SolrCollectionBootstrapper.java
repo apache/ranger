@@ -43,7 +43,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.util.EntityUtils;
-import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -460,7 +459,7 @@ public class SolrCollectionBootstrapper extends Thread {
 	private static List<String> getZkHosts() {
 		String zkHosts = "";
 		List<String> zookeeperHosts = null;
-		if (!StringUtil.isEmpty(EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS))) {
+		if (!StringUtils.isEmpty(EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS))) {
 			zkHosts = EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS).trim();
 			zookeeperHosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
 		}
