@@ -29,6 +29,7 @@ public class TimedEventUtil {
     public static void runWithTimeout(final Runnable runnable, long timeout, TimeUnit timeUnit) throws Exception {
         timedTask(() -> {
             runnable.run();
+
             return null;
         }, timeout, timeUnit);
     }
