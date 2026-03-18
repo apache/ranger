@@ -71,9 +71,15 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
     GUIDUtil guidUtil;
 
     String testIP;
+    String requestIdHeaderName;
 
     public RangerSecurityContextFormationFilter() {
         testIP = PropertiesUtil.getProperty("xa.env.ip");
+    }
+
+    @Override
+    public void init(FilterConfig conf) throws ServletException {
+        this.requestIdHeaderName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
     }
 
     /*
@@ -118,8 +124,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
                 requestContext.setIpAddress(reqIP);
                 requestContext.setUserAgent(userAgent);
                 requestContext.setDeviceType(httpUtil.getDeviceType(httpRequest));
-                String requestId = getServerRequestId(auth, httpRequest);
-                requestContext.setServerRequestId(requestId != null ? requestId : guidUtil.genGUID());
+                requestContext.setServerRequestId(getRequestId(auth, httpRequest));
                 requestContext.setRequestURL(httpRequest.getRequestURI());
                 requestContext.setClientTimeOffsetInMinute(clientTimeOffset);
 
@@ -189,13 +194,13 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
         return XXAuthSession.AUTH_TYPE_PASSWORD;
     }
 
-    private String getServerRequestId(Authentication auth, HttpServletRequest request) {
-        if (auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
-            String requestIdHeaderName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
+    private String getRequestId(Authentication auth, HttpServletRequest request) {
+        String ret = null;
 
-            return StringUtils.trimToNull(request.getHeader(requestIdHeaderName));
+        if (requestIdHeaderName != null && auth instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) auth).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+            ret = StringUtils.trimToNull(request.getHeader(requestIdHeaderName));
         }
 
-        return null;
+        return ret != null ? ret : guidUtil.genGUID();
     }
 }
