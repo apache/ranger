@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -65,6 +66,14 @@ public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
 
         try {
             return getEntityManager().createNamedQuery("XXUgsyncAuditInfo.findBySyncSource", tClass).setParameter("syncSource", syncSource).getResultList();
+        } catch (NoResultException e) {
+            return null;
+        }
+    }
+
+    public Date getUGSyncLastUpdatedTime() {
+        try {
+            return getEntityManager().createNamedQuery("XXUGSyncAuditInfo.getUGSyncLastUpdatedTime", Date.class).getSingleResult();
         } catch (NoResultException e) {
             return null;
         }
