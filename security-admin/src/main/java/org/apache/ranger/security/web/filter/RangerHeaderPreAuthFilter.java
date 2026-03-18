@@ -60,8 +60,6 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     @Autowired
     UserMgr userMgr;
 
-    private String username;
-
     @PostConstruct
     public void initialize(FilterConfig filterConfig) throws ServletException {
         headerAuthEnabled  = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
@@ -71,28 +69,32 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest  httpRequest  = (HttpServletRequest) request;
-        username                         = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
 
-        if (headerAuthEnabled && StringUtils.isNotBlank(username)) {
-            List<GrantedAuthority>     grantedAuthorities = getAuthoritiesFromRanger(username);
-            final UserDetails          principal          = new User(username, "", grantedAuthorities);
-            RangerAuthenticationToken  authToken          = new RangerAuthenticationToken(principal, grantedAuthorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY);
+        if (headerAuthEnabled) {
+            Authentication existingAuthn = SecurityContextHolder.getContext().getAuthentication();
 
-            authToken.setDetails(new WebAuthenticationDetails(httpRequest));
+            if (existingAuthn == null || !existingAuthn.isAuthenticated()) {
+                String username = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
 
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (StringUtils.isNotBlank(username)) {
+                    List<GrantedAuthority>    grantedAuthorities = getAuthoritiesFromRanger(username);
+                    final UserDetails         principal          = new User(username, "", grantedAuthorities);
+                    RangerAuthenticationToken authToken          = new RangerAuthenticationToken(principal, grantedAuthorities, XXAuthSession.AUTH_TYPE_TRUSTED_PROXY);
 
-            LOG.debug("Authenticated request using trusted headers for user={}", username);
+                    authToken.setDetails(new WebAuthenticationDetails(httpRequest));
+
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    LOG.debug("Authenticated request using trusted headers for user={}", username);
+                } else {
+                    LOG.debug("Username header '{}' is missing or empty in the request!", userNameHeaderName);
+                }
+            }
         } else {
-            LOG.debug("Header-based authentication is disabled or username header is missing/empty!");
+            LOG.debug("Header-based authentication is disabled!");
         }
 
         chain.doFilter(request, response);
-    }
-
-    public boolean isHeaderAuthEnabled() {
-        Authentication authn = SecurityContextHolder.getContext().getAuthentication();
-        return authn instanceof RangerAuthenticationToken && ((RangerAuthenticationToken) authn).getAuthType() == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY;
     }
 
     /**

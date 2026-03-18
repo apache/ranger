@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.FilterChain;
@@ -146,5 +147,33 @@ public class TestRangerHeaderPreAuthFilter {
         };
 
         filter.doFilter(request, response, chain);
+    }
+
+    @Test
+    public void testDoFilter_enabled_existingAuthenticatedContext_doesNotOverrideAuthentication() throws Exception {
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_HEADER_AUTH_ENABLED, "true");
+        PropertiesUtil.getPropertiesMap().put(RangerHeaderPreAuthFilter.PROP_USERNAME_HEADER_NAME, "x-awc-username");
+
+        RangerHeaderPreAuthFilter filter  = new RangerHeaderPreAuthFilter();
+        UserMgr                   userMgr = mock(UserMgr.class);
+
+        filter.userMgr = userMgr;
+        filter.initialize(null);
+
+        UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken("existing-user", "pwd");
+
+        SecurityContextHolder.getContext().setAuthentication(existingAuth);
+
+        HttpServletRequest  request  = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+        FilterChain         chain    = mock(FilterChain.class);
+
+        when(request.getHeader("x-awc-username")).thenReturn("joeuser");
+
+        filter.doFilter(request, response, chain);
+
+        verify(chain).doFilter(request, response);
+        verify(userMgr, never()).getRolesByLoginId(anyString());
+        assertEquals(existingAuth, SecurityContextHolder.getContext().getAuthentication());
     }
 }
