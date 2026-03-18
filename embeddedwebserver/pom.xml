@@ -89,11 +89,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-annotations-api</artifactId>
             <version>${tomcat.embed.version}</version>

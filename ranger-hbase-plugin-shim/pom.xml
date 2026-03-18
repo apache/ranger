@@ -84,11 +84,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.el</artifactId>
             <version>${javax.el.version}</version>
