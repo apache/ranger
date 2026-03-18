@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.server.tomcat;
+package org.apache.ranger.plugin.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

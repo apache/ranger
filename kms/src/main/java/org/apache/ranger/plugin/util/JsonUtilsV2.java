@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.common;
+package org.apache.ranger.plugin.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

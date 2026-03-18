@@ -27,8 +27,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
 import org.apache.hadoop.thirdparty.com.google.common.base.Preconditions;
 import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
-import org.apache.ranger.common.AutoClosableLock.AutoClosableReadLock;
-import org.apache.ranger.common.AutoClosableLock.AutoClosableWriteLock;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableReadLock;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableWriteLock;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;

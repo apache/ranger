@@ -18,11 +18,11 @@
 
 package org.apache.ranger.kms.metrics;
 
-import org.apache.ranger.common.JsonUtilsV2;
 import org.apache.ranger.kms.metrics.collector.KMSMetricsCollector;
 import org.apache.ranger.kms.metrics.source.KMSMetricSource;
 import org.apache.ranger.metrics.RangerMetricsSystemWrapper;
 import org.apache.ranger.metrics.wrapper.RangerMetricsSourceWrapper;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

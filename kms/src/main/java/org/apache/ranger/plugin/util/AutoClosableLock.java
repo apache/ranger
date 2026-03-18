@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.common;
+package org.apache.ranger.plugin.util;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;

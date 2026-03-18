@@ -18,7 +18,7 @@
 package org.apache.hadoop.crypto.key.kms.server;
 
 import org.apache.hadoop.classification.InterfaceAudience;
-import org.apache.ranger.common.JsonUtilsV2;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;

@@ -22,12 +22,12 @@ import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.CipherSuite;
 import org.apache.hadoop.fs.Path;
-import org.apache.ranger.common.AutoClosableLock.AutoClosableReadLock;
-import org.apache.ranger.common.AutoClosableLock.AutoClosableTryWriteLock;
-import org.apache.ranger.common.AutoClosableLock.AutoClosableWriteLock;
-import org.apache.ranger.common.JsonUtilsV2;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableReadLock;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableTryWriteLock;
+import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableWriteLock;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
