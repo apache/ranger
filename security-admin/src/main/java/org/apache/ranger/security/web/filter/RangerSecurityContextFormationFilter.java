@@ -70,15 +70,11 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
     @Autowired
     GUIDUtil guidUtil;
 
-    String testIP;
-    String requestIdHeaderName;
+    private final String testIP;
+    private final String requestIdHeaderName;
 
     public RangerSecurityContextFormationFilter() {
-        testIP = PropertiesUtil.getProperty("xa.env.ip");
-    }
-
-    @Override
-    public void init(FilterConfig conf) throws ServletException {
+        this.testIP              = PropertiesUtil.getProperty("xa.env.ip");
         this.requestIdHeaderName = PropertiesUtil.getProperty(RangerHeaderPreAuthFilter.PROP_REQUEST_ID_HEADER_NAME);
     }
 
