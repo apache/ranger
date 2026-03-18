@@ -170,8 +170,6 @@ public class TestRangerHeaderPreAuthFilter {
         HttpServletResponse response = mock(HttpServletResponse.class);
         FilterChain         chain    = mock(FilterChain.class);
 
-        when(request.getHeader("x-awc-username")).thenReturn("joeuser");
-
         filter.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
