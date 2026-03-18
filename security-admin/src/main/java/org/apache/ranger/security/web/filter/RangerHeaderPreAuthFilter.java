@@ -32,9 +32,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
-import org.springframework.web.filter.GenericFilterBean;
 
-import javax.annotation.PostConstruct;
+import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -47,12 +46,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RangerHeaderPreAuthFilter extends GenericFilterBean {
+public class RangerHeaderPreAuthFilter implements Filter {
     private static final Logger LOG = LoggerFactory.getLogger(RangerHeaderPreAuthFilter.class);
 
-    public static final String PROP_HEADER_AUTH_ENABLED        = "ranger.admin.authn.header.enabled";
-    public static final String PROP_USERNAME_HEADER_NAME       = "ranger.admin.authn.header.username";
-    public static final String PROP_REQUEST_ID_HEADER_NAME     = "ranger.admin.authn.header.requestid";
+    public static final String PROP_HEADER_AUTH_ENABLED    = "ranger.admin.authn.header.enabled";
+    public static final String PROP_USERNAME_HEADER_NAME   = "ranger.admin.authn.header.username";
+    public static final String PROP_REQUEST_ID_HEADER_NAME = "ranger.admin.authn.header.requestid";
 
     private boolean headerAuthEnabled;
     private String  userNameHeaderName;
@@ -60,21 +59,32 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     @Autowired
     UserMgr userMgr;
 
-    @PostConstruct
-    public void initialize(FilterConfig filterConfig) throws ServletException {
+    public RangerHeaderPreAuthFilter() {
+        loadConfiguration();
+    }
+
+    @Override
+    public void init(FilterConfig config) throws ServletException {
+        loadConfiguration();
+    }
+
+    private void loadConfiguration() {
         headerAuthEnabled  = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
         userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest  httpRequest  = (HttpServletRequest) request;
+    public void destroy() {
+    }
 
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         if (headerAuthEnabled) {
             Authentication existingAuthn = SecurityContextHolder.getContext().getAuthentication();
 
             if (existingAuthn == null || !existingAuthn.isAuthenticated()) {
-                String username = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
+                HttpServletRequest  httpRequest = (HttpServletRequest) request;
+                String              username    = StringUtils.trimToNull(httpRequest.getHeader(userNameHeaderName));
 
                 if (StringUtils.isNotBlank(username)) {
                     List<GrantedAuthority>    grantedAuthorities = getAuthoritiesFromRanger(username);
@@ -101,8 +111,8 @@ public class RangerHeaderPreAuthFilter extends GenericFilterBean {
      * Loads authorities from Ranger DB
      */
     private List<GrantedAuthority> getAuthoritiesFromRanger(String username) {
-        List<GrantedAuthority> ret = new ArrayList<>();
-        Collection<String>    roleList = userMgr.getRolesByLoginId(username);
+        List<GrantedAuthority> ret      = new ArrayList<>();
+        Collection<String>     roleList = userMgr.getRolesByLoginId(username);
 
         if (roleList != null) {
             for (String role : roleList) {
