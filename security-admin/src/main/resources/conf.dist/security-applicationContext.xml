@@ -62,6 +62,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 		</security:headers>
 		<security:session-management session-fixation-protection="newSession" />
 		<intercept-url pattern="/**" access="isAuthenticated()"/>
+		<security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter" />
 		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
 		<security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER" />
@@ -111,6 +112,9 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
     </beans:bean>
 
 	<beans:bean id="mdcFilter" class="org.apache.ranger.security.web.filter.RangerMDCFilter">
+    </beans:bean>
+
+	<beans:bean id="headerPreAuthFilter" class="org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter">
     </beans:bean>
 
     <beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
