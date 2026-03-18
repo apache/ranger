@@ -42,6 +42,7 @@
                     <include>org.apache.hadoop.thirdparty:hadoop-shaded-guava:jar:${hadoop-shaded-guava.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>com.google.code.gson:gson</include>
+                    <include>com.sun.jersey:jersey-bundle</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
@@ -214,8 +215,6 @@
                     <include>org.apache.hadoop:hadoop-client-api:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-client-runtime:jar:${hadoop.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-                    <include>org.apache.ranger:ranger-authz-api</include>
-                    <include>org.apache.ranger:ranger-plugins-common</include>
                     <include>org.apache.ranger:ugsync-util</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
@@ -230,7 +229,6 @@
                     <include>org.slf4j:slf4j-api</include>
                     <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
                     <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
@@ -283,6 +281,7 @@
                 <include>org.apache.ranger:ranger-audit-core</include>
                 <include>org.apache.ranger:ranger-audit-dest-hdfs</include>
                 <include>org.apache.ranger:ranger-audit-dest-solr</include>
+                <include>org.apache.ranger:ranger-authz-api</include>
                 <include>org.apache.ranger:ranger-plugins-cred</include>
                 <include>org.apache.ranger:ranger-plugins-common</include>
                 <include>org.apache.ranger:ugsync-util</include>
