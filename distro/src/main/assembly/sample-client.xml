@@ -28,6 +28,7 @@
             <includes>
                 <include>org.apache.ranger:ranger-authz-api</include>
                 <include>org.apache.ranger:sample-client</include>
+                <include>org.apache.ranger:ranger-common-utils</include>
                 <include>org.apache.ranger:ranger-intg</include>
                 <include>org.apache.ranger:ranger-plugins-common</include>
                 <include>org.apache.ranger:ugsync-util</include>

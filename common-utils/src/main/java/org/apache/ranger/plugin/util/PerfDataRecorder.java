@@ -19,8 +19,6 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.hadoop.thirdparty.com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +39,7 @@ public class PerfDataRecorder {
     private       RangerReadWriteLock        lock;
 
     private PerfDataRecorder(List<String> names) {
-        if (CollectionUtils.isNotEmpty(names)) {
+        if (names != null) {
             for (String name : names) {
                 // Create structure
                 perfStatistics.put(name, new PerfStatistic());
@@ -98,9 +96,9 @@ public class PerfDataRecorder {
 
     public static Map<String, PerfStatistic> exposeStatistics() {
         if (instance != null) {
-            return ImmutableMap.copyOf(instance.perfStatistics);
+            return Collections.unmodifiableMap(new HashMap<>(instance.perfStatistics));
         }
-        return ImmutableMap.of();
+        return Collections.emptyMap();
     }
 
     private void dumpStatistics() {

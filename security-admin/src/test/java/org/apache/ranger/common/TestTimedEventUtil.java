@@ -16,6 +16,7 @@
  */
 package org.apache.ranger.common;
 
+import org.apache.ranger.plugin.util.TimedEventUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
