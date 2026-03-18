@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -160,7 +161,7 @@ public class TestRangerHeaderPreAuthFilter {
         filter.userMgr = userMgr;
         filter.initialize(null);
 
-        UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken("existing-user", "pwd");
+        UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken("existing-user", "pwd", Collections.singletonList(new SimpleGrantedAuthority("test-role")));
 
         SecurityContextHolder.getContext().setAuthentication(existingAuth);
 
