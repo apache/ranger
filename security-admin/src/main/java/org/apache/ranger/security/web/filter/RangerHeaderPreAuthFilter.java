@@ -32,10 +32,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
+import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.Filter;
+import javax.annotation.PostConstruct;
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RangerHeaderPreAuthFilter implements Filter {
+public class RangerHeaderPreAuthFilter extends GenericFilterBean {
     private static final Logger LOG = LoggerFactory.getLogger(RangerHeaderPreAuthFilter.class);
 
     public static final String PROP_HEADER_AUTH_ENABLED    = "ranger.admin.authn.header.enabled";
@@ -59,22 +59,10 @@ public class RangerHeaderPreAuthFilter implements Filter {
     @Autowired
     UserMgr userMgr;
 
-    public RangerHeaderPreAuthFilter() {
-        loadConfiguration();
-    }
-
-    @Override
-    public void init(FilterConfig config) throws ServletException {
-        loadConfiguration();
-    }
-
-    private void loadConfiguration() {
+    @PostConstruct
+    protected void initialize() {
         headerAuthEnabled  = PropertiesUtil.getBooleanProperty(PROP_HEADER_AUTH_ENABLED, false);
         userNameHeaderName = PropertiesUtil.getProperty(PROP_USERNAME_HEADER_NAME);
-    }
-
-    @Override
-    public void destroy() {
     }
 
     @Override
