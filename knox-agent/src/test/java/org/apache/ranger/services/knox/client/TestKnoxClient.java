@@ -37,6 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -433,6 +434,87 @@ public class TestKnoxClient {
             Assertions.assertTrue(out.contains("Found service for topology:"));
         } finally {
             System.setOut(origOut);
+        }
+    }
+
+    @Test
+    public void test12_validateResourceName_rejectsPathTraversal() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> pathTraversalInputs = Arrays.asList("../etc/passwd", "../../sensitive", "topology/../admin", "topology//malicious", "test\\windows\\path", "..\\..\\config");
+
+        for (String input : pathTraversalInputs) {
+            HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                    () -> invokeValidateResourceName(client, input, "topology name"),
+                    "Path traversal should be rejected: " + input);
+            Assertions.assertTrue(ex.getMessage().contains("Path traversal"),
+                    "Error should indicate path traversal for: " + input);
+        }
+    }
+
+    @Test
+    public void test13_validateResourceName_rejectsSpecialCharacters() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> invalidInputs = Arrays.asList("'; DROP TABLE users; --", "topology<script>alert(1)</script>", "test@topology", "topology#name", "test!topology", "topology&name", "topology(with)parens", "topology{with}braces", "topology[with]brackets", "topology$name", "topology%encoded", "topology name", "topology\ttab", "topology\nnewline", "topology;rm -rf /", "topology|cat /etc/passwd", "topology`whoami`", "topology$(whoami)");
+
+        for (String input : invalidInputs) {
+            HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                    () -> invokeValidateResourceName(client, input, "topology name"), "Special characters should be rejected: " + input);
+            Assertions.assertTrue(ex.getMessage().contains("Invalid"), "Error should indicate invalid input for: " + input);
+        }
+    }
+
+    @Test
+    public void test14_validateResourceName_acceptsValidNames() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> validInputs = Arrays.asList("topology", "topology_name", "topology123", "TOPOLOGY", "Topology_Name_123", "_topology", "topology_", "topology.name", "topology-name", "topology*", "top*");
+
+        for (String input : validInputs) {
+            try {
+                invokeValidateResourceName(client, input, "topology name");
+            } catch (Exception e) {
+                throw new AssertionError("Valid topology name should not throw exception: " + input, e);
+            }
+        }
+    }
+
+    @Test
+    public void test15_validateResourceName_rejectsNullByteInjection() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                () -> invokeValidateResourceName(client, "topology\0null", "topology name"));
+        Assertions.assertTrue(ex.getMessage().contains("Invalid"));
+    }
+
+    @Test
+    public void test16_validateResourceName_rejectsUrlEncoded() throws Exception {
+        KnoxClient client = new KnoxClient("https://localhost:8443/gateway/admin/api/v1/topologies", "admin", "pwd");
+
+        List<String> encodedInputs = Arrays.asList("%2e%2e%2f", "topology%00", "test%20space");
+
+        for (String input : encodedInputs) {
+            HadoopException ex = Assertions.assertThrows(HadoopException.class,
+                    () -> invokeValidateResourceName(client, input, "topology name"),
+                    "URL encoded attack should be rejected: " + input);
+            Assertions.assertTrue(ex.getMessage().contains("Invalid"),
+                    "Error should indicate invalid input for: " + input);
+        }
+    }
+
+    private void invokeValidateResourceName(KnoxClient client, String resourceName, String resourceType) throws Exception {
+        Method method = KnoxClient.class.getDeclaredMethod("validateResourceName", String.class, String.class);
+        method.setAccessible(true);
+        try {
+            method.invoke(client, resourceName, resourceType);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof HadoopException) {
+                throw (HadoopException) cause;
+            }
+            throw e;
         }
     }
 }

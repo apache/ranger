@@ -19,7 +19,6 @@
 package org.apache.ranger.services.presto.client;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
@@ -118,6 +117,8 @@ public class PrestoClient extends BaseClient implements Closeable {
                 ret = getSchemas(ndl, cats, shms);
             } catch (HadoopException he) {
                 LOG.error("<== PrestoClient.getSchemaList() :Unable to get the Schema List", he);
+
+                throw he;
             }
 
             return ret;
@@ -300,35 +301,32 @@ public class PrestoClient extends BaseClient implements Closeable {
         List<String> ret = new ArrayList<>();
 
         if (con != null) {
-            Statement stat = null;
-            ResultSet rs   = null;
-            String    sql  = "SHOW CATALOGS";
+            ResultSet rs = null;
 
             try {
-                if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
-                    // Cannot use a prepared statement for this as presto does not support that
-                    sql += " LIKE '" + escapeSql(needle) + "%'";
-                }
-
-                stat = con.createStatement();
-                rs   = stat.executeQuery(sql);
+                validateSqlIdentifier(needle, "catalog pattern");
+                String catalogPattern = convertToSqlPattern(needle);
+                rs = con.getMetaData().getCatalogs();
 
                 while (rs.next()) {
-                    String catalogName = rs.getString(1);
+                    String catalogName = rs.getString("TABLE_CAT");
 
                     if (catalogs != null && catalogs.contains(catalogName)) {
                         continue;
                     }
 
-                    ret.add(catalogName);
+                    if (catalogPattern == null || catalogPattern.equals("%") || matchesSqlPattern(catalogName, catalogPattern)) {
+                        ret.add(catalogName);
+                    }
                 }
             } catch (SQLTimeoutException sqlt) {
-                String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Time Out, Unable to retrieve catalog list.";
                 HadoopException hdpException = new HadoopException(msgDesc, sqlt);
 
                 hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
+                throw hdpException;
             } catch (SQLException se) {
-                String          msg = "Unable to execute SQL [" + sql + "]. ";
+                String          msg = "Unable to retrieve catalog list. ";
                 HadoopException he  = new HadoopException(msg, se);
 
                 he.generateResponseDataMap(false, getMessage(se), msg + ERR_MSG, null, null);
@@ -336,7 +334,6 @@ public class PrestoClient extends BaseClient implements Closeable {
                 throw he;
             } finally {
                 close(rs);
-                close(stat);
             }
         }
 
@@ -347,43 +344,31 @@ public class PrestoClient extends BaseClient implements Closeable {
         List<String> ret = new ArrayList<>();
 
         if (con != null) {
-            Statement stat = null;
-            ResultSet rs   = null;
-            String    sql  = null;
+            ResultSet rs = null;
 
             try {
+                validateSqlIdentifier(needle, "schema pattern");
+                String schemaPattern = convertToSqlPattern(needle);
                 if (catalogs != null && !catalogs.isEmpty()) {
                     for (String catalog : catalogs) {
-                        sql = "SHOW SCHEMAS FROM \"" + escapeSql(catalog) + "\"";
+                        validateSqlIdentifier(catalog, "catalog name");
+                        rs = con.getMetaData().getSchemas(catalog, schemaPattern);
 
-                        try {
-                            if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
-                                sql += " LIKE '" + escapeSql(needle) + "%'";
+                        while (rs.next()) {
+                            String schema = rs.getString("TABLE_SCHEM");
+
+                            if (schemas != null && schemas.contains(schema)) {
+                                continue;
                             }
 
-                            stat = con.createStatement();
-                            rs   = stat.executeQuery(sql);
-
-                            while (rs.next()) {
-                                String schema = rs.getString(1);
-
-                                if (schemas != null && schemas.contains(schema)) {
-                                    continue;
-                                }
-
-                                ret.add(schema);
-                            }
-                        } finally {
-                            close(rs);
-                            close(stat);
-
-                            rs   = null;
-                            stat = null;
+                            ret.add(schema);
                         }
+                        close(rs);
+                        rs = null;
                     }
                 }
             } catch (SQLTimeoutException sqlt) {
-                String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Time Out, Unable to retrieve schema list.";
                 HadoopException hdpException = new HadoopException(msgDesc, sqlt);
 
                 hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
@@ -392,7 +377,7 @@ public class PrestoClient extends BaseClient implements Closeable {
 
                 throw hdpException;
             } catch (SQLException sqle) {
-                String          msgDesc      = "Unable to execute SQL [" + sql + "].";
+                String          msgDesc      = "Unable to retrieve schema list.";
                 HadoopException hdpException = new HadoopException(msgDesc, sqle);
 
                 hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
@@ -400,6 +385,8 @@ public class PrestoClient extends BaseClient implements Closeable {
                 LOG.debug("<== PrestoClient.getSchemas() Error : ", sqle);
 
                 throw hdpException;
+            } finally {
+                close(rs);
             }
         }
 
@@ -410,61 +397,52 @@ public class PrestoClient extends BaseClient implements Closeable {
         List<String> ret = new ArrayList<>();
 
         if (con != null) {
-            Statement stat = null;
-            ResultSet rs   = null;
-            String    sql  = null;
+            ResultSet rs = null;
 
-            if (catalogs != null && !catalogs.isEmpty() && schemas != null && !schemas.isEmpty()) {
-                try {
+            try {
+                validateSqlIdentifier(needle, "table pattern");
+                String tablePattern = convertToSqlPattern(needle);
+                if (catalogs != null && !catalogs.isEmpty() && schemas != null && !schemas.isEmpty()) {
                     for (String catalog : catalogs) {
+                        validateSqlIdentifier(catalog, "catalog name");
                         for (String schema : schemas) {
-                            sql = "SHOW tables FROM \"" + escapeSql(catalog) + "\".\"" + escapeSql(schema) + "\"";
+                            validateSqlIdentifier(schema, "schema name");
+                            rs = con.getMetaData().getTables(catalog, schema, tablePattern, new String[] {"TABLE", "VIEW"});
 
-                            try {
-                                if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
-                                    sql += " LIKE '" + escapeSql(needle) + "%'";
+                            while (rs.next()) {
+                                String table = rs.getString("TABLE_NAME");
+
+                                if (tables != null && tables.contains(table)) {
+                                    continue;
                                 }
 
-                                stat = con.createStatement();
-                                rs   = stat.executeQuery(sql);
-
-                                while (rs.next()) {
-                                    String table = rs.getString(1);
-
-                                    if (tables != null && tables.contains(table)) {
-                                        continue;
-                                    }
-
-                                    ret.add(table);
-                                }
-                            } finally {
-                                close(rs);
-                                close(stat);
-
-                                rs   = null;
-                                stat = null;
+                                ret.add(table);
                             }
+                            close(rs);
+                            rs = null;
                         }
                     }
-                } catch (SQLTimeoutException sqlt) {
-                    String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
-                    HadoopException hdpException = new HadoopException(msgDesc, sqlt);
-
-                    hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
-
-                    LOG.debug("<== PrestoClient.getTables() Error : ", sqlt);
-
-                    throw hdpException;
-                } catch (SQLException sqle) {
-                    String          msgDesc      = "Unable to execute SQL [" + sql + "].";
-                    HadoopException hdpException = new HadoopException(msgDesc, sqle);
-
-                    hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
-
-                    LOG.debug("<== PrestoClient.getTables() Error : ", sqle);
-
-                    throw hdpException;
                 }
+            } catch (SQLTimeoutException sqlt) {
+                String          msgDesc      = "Time Out, Unable to retrieve table list.";
+                HadoopException hdpException = new HadoopException(msgDesc, sqlt);
+
+                hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
+
+                LOG.debug("<== PrestoClient.getTables() Error : ", sqlt);
+
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String          msgDesc      = "Unable to retrieve table list.";
+                HadoopException hdpException = new HadoopException(msgDesc, sqle);
+
+                hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
+
+                LOG.debug("<== PrestoClient.getTables() Error : ", sqle);
+
+                throw hdpException;
+            } finally {
+                close(rs);
             }
         }
 
@@ -477,66 +455,62 @@ public class PrestoClient extends BaseClient implements Closeable {
         if (con != null) {
             String    regex = null;
             ResultSet rs    = null;
-            String    sql   = null;
-            Statement stat  = null;
 
             if (needle != null && !needle.isEmpty()) {
                 regex = needle;
             }
 
-            if (catalogs != null && !catalogs.isEmpty() && schemas != null && !schemas.isEmpty() && tables != null && !tables.isEmpty()) {
-                try {
+            try {
+                validateSqlIdentifier(needle, "column pattern");
+                String columnPattern = convertToSqlPattern(needle);
+                if (catalogs != null && !catalogs.isEmpty() && schemas != null && !schemas.isEmpty() && tables != null && !tables.isEmpty()) {
                     for (String catalog : catalogs) {
+                        validateSqlIdentifier(catalog, "catalog name");
                         for (String schema : schemas) {
+                            validateSqlIdentifier(schema, "schema name");
                             for (String table : tables) {
-                                sql = "SHOW COLUMNS FROM \"" + escapeSql(catalog) + "\"." + "\"" + escapeSql(schema) + "\"." + "\"" + escapeSql(table) + "\"";
+                                validateSqlIdentifier(table, "table name");
+                                rs = con.getMetaData().getColumns(catalog, schema, table, columnPattern);
 
-                                try {
-                                    stat = con.createStatement();
-                                    rs   = stat.executeQuery(sql);
+                                while (rs.next()) {
+                                    String column = rs.getString("COLUMN_NAME");
 
-                                    while (rs.next()) {
-                                        String column = rs.getString(1);
-
-                                        if (columns != null && columns.contains(column)) {
-                                            continue;
-                                        }
-
-                                        if (regex == null) {
-                                            ret.add(column);
-                                        } else if (FilenameUtils.wildcardMatch(column, regex)) {
-                                            ret.add(column);
-                                        }
+                                    if (columns != null && columns.contains(column)) {
+                                        continue;
                                     }
-                                } finally {
-                                    close(rs);
-                                    close(stat);
 
-                                    stat = null;
-                                    rs   = null;
+                                    if (regex == null) {
+                                        ret.add(column);
+                                    } else if (FilenameUtils.wildcardMatch(column, regex)) {
+                                        ret.add(column);
+                                    }
                                 }
+                                close(rs);
+                                rs = null;
                             }
                         }
                     }
-                } catch (SQLTimeoutException sqlt) {
-                    String          msgDesc      = "Time Out, Unable to execute SQL [" + sql + "].";
-                    HadoopException hdpException = new HadoopException(msgDesc, sqlt);
-
-                    hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
-
-                    LOG.debug("<== PrestoClient.getColumns() Error : ", sqlt);
-
-                    throw hdpException;
-                } catch (SQLException sqle) {
-                    String          msgDesc      = "Unable to execute SQL [" + sql + "].";
-                    HadoopException hdpException = new HadoopException(msgDesc, sqle);
-
-                    hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
-
-                    LOG.debug("<== PrestoClient.getColumns() Error : ", sqle);
-
-                    throw hdpException;
                 }
+            } catch (SQLTimeoutException sqlt) {
+                String          msgDesc      = "Time Out, Unable to retrieve column list.";
+                HadoopException hdpException = new HadoopException(msgDesc, sqlt);
+
+                hdpException.generateResponseDataMap(false, getMessage(sqlt), msgDesc + ERR_MSG, null, null);
+
+                LOG.debug("<== PrestoClient.getColumns() Error : ", sqlt);
+
+                throw hdpException;
+            } catch (SQLException sqle) {
+                String          msgDesc      = "Unable to retrieve column list.";
+                HadoopException hdpException = new HadoopException(msgDesc, sqle);
+
+                hdpException.generateResponseDataMap(false, getMessage(sqle), msgDesc + ERR_MSG, null, null);
+
+                LOG.debug("<== PrestoClient.getColumns() Error : ", sqle);
+
+                throw hdpException;
+            } finally {
+                close(rs);
             }
         }
 
@@ -551,12 +525,5 @@ public class PrestoClient extends BaseClient implements Closeable {
         } catch (SQLException e) {
             LOG.error("Unable to close Presto SQL connection", e);
         }
-    }
-
-    private static String escapeSql(String str) {
-        if (str == null) {
-            return null;
-        }
-        return StringUtils.replace(str, "'", "''");
     }
 }

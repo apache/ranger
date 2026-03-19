@@ -184,6 +184,114 @@ public abstract class BaseClient {
         }
     }
 
+    protected void validateSqlIdentifier(String identifier, String identifierType) throws HadoopException {
+        if (identifier == null) {
+            return;
+        }
+        if (identifier.contains("..") || identifier.contains("//") || identifier.contains("\\")) {
+            String msgDesc = "Invalid " + identifierType + ": [" + identifier + "]. Path traversal patterns are not allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+        if (!identifier.matches("^[a-zA-Z0-9_*%\\$\\{\\}\\=\\/\\.\\-]+$")) {
+            String msgDesc = "Invalid " + identifierType + ": [" + identifier + "]. Only alphanumeric characters, underscores, asterisks, curly braces, percent signs are allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+    }
+
+    protected String convertToSqlPattern(String pattern) {
+        if (pattern == null || pattern.isEmpty() || pattern.equals("*")) {
+            return "%";
+        }
+        return pattern.replace("*", "%");
+    }
+
+    protected boolean matchesSqlPattern(String value, String pattern) {
+        if (pattern == null || pattern.equals("%")) {
+            return true;
+        }
+        String regex = pattern.replace("%", ".*").replace("_", ".");
+        return value.matches(regex);
+    }
+
+    protected void validateUrlResourceName(String resourceName, String resourceType) throws HadoopException {
+        if (resourceName == null) {
+            return;
+        }
+        if (resourceName.contains("..") || resourceName.contains("//") || resourceName.contains("\\")) {
+            String msgDesc = "Invalid " + resourceType + ": [" + resourceName + "]. Path traversal patterns are not allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+        if (!resourceName.matches("^[a-zA-Z0-9_.*\\-]+$")) {
+            String msgDesc = "Invalid " + resourceType + ": [" + resourceName + "]. Only alphanumeric characters, underscores, dots, hyphens, and simple wildcards are allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+    }
+
+    protected void validateWildcardPattern(String pattern, String patternType) throws HadoopException {
+        if (pattern == null || pattern.isEmpty()) {
+            return;
+        }
+        if (pattern.contains("..") || pattern.contains("//") || pattern.contains("\\")) {
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Path traversal patterns are not allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+        if (!pattern.matches("^[a-zA-Z0-9_.*?\\[\\]\\-\\$%\\{\\}\\=\\/]+$")) {
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters, underscores, dots, hyphens, curly braces and simple wildcards are allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+    }
+
+    protected String convertWildcardToRegex(String wildcard) {
+        if (wildcard == null || wildcard.isEmpty()) {
+            return ".*";
+        }
+        StringBuilder regex = new StringBuilder("^");
+        for (int i = 0; i < wildcard.length(); i++) {
+            char c = wildcard.charAt(i);
+            switch (c) {
+                case '*':
+                    regex.append(".*");
+                    break;
+                case '?':
+                    regex.append(".");
+                    break;
+                case '.':
+                case '\\':
+                case '^':
+                case '$':
+                case '|':
+                    regex.append('\\').append(c);
+                    break;
+                case '{':
+                case '}':
+                    regex.append('\\').append(c);
+                    break;
+                default:
+                    regex.append(c);
+            }
+        }
+        regex.append('$');
+        return regex.toString();
+    }
+
     private HadoopException createException(Exception exp) {
         return createException("Unable to login to Hadoop environment [" + serviceName + "]", exp);
     }

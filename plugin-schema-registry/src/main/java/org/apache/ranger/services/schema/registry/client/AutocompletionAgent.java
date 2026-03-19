@@ -18,6 +18,7 @@
 package org.apache.ranger.services.schema.registry.client;
 
 import org.apache.ranger.plugin.client.BaseClient;
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.schema.registry.client.connection.DefaultSchemaRegistryClient;
 import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
 import org.slf4j.Logger;
@@ -38,6 +39,7 @@ public class AutocompletionAgent {
 
     private static final String errMessage = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check server logs for more info.";
     private static final String successMsg = "ConnectionTest Successful";
+    private static final String ERROR_MSG = " You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check server logs for more info.";
 
     private final ISchemaRegistryClient client;
     private final String                serviceName;
@@ -118,15 +120,59 @@ public class AutocompletionAgent {
     }
 
     List<String> expandSchemaMetadataNameRegex(List<String> schemaGroupList, String lookupSchemaMetadataName) {
+        validatePattern(lookupSchemaMetadataName, "schema metadata pattern");
+        String safePattern = convertWildcardToRegex(lookupSchemaMetadataName);
         List<String>       res     = new ArrayList<>();
         Collection<String> schemas = client.getSchemaNames(schemaGroupList);
 
         schemas.forEach(sName -> {
-            if (sName.matches(lookupSchemaMetadataName)) {
+            if (sName.matches(safePattern)) {
                 res.add(sName);
             }
         });
 
         return res;
+    }
+
+    private void validatePattern(String pattern, String patternType) {
+        if (pattern == null || pattern.isEmpty()) {
+            return;
+        }
+        if (!pattern.matches("^[a-zA-Z0-9_*?\\[\\]\\-\\$%\\{\\}\\=\\/]+$")) {
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters, underscores, hyphens, and simple wildcards (*, ?, [], {}, -) are allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+    }
+
+    private String convertWildcardToRegex(String wildcard) {
+        if (wildcard == null || wildcard.isEmpty()) {
+            return ".*";
+        }
+        StringBuilder sb = new StringBuilder("^");
+        for (int i = 0; i < wildcard.length(); i++) {
+            char c = wildcard.charAt(i);
+            switch (c) {
+                case '*':
+                    sb.append(".*");
+                    break;
+                case '?':
+                    sb.append(".");
+                    break;
+                case '.':
+                case '\\':
+                case '^':
+                case '$':
+                case '|':
+                    sb.append('\\').append(c);
+                    break;
+                default:
+                    sb.append(c);
+            }
+        }
+        sb.append("$");
+        return sb.toString();
     }
 }
