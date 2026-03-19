@@ -608,6 +608,7 @@ function AccessGrantForm({
                                                       isMulti: true
                                                     }}
                                                     isGDS={true}
+                                                    popOverheader="Policy Conditions"
                                                   />
                                                 </div>
                                               )}
@@ -728,6 +729,7 @@ function AccessGrantForm({
                               inputVal={input}
                               showModal={showModal}
                               handleCloseModal={policyConditionState}
+                              modalHeader="Policy Conditions"
                             />
                           )}
                         />

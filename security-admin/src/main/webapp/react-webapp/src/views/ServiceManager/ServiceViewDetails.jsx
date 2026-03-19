@@ -33,6 +33,7 @@ import {
 } from "lodash";
 import { ModalLoader } from "Components/CommonComponents";
 import { additionalServiceConfigs } from "Utils/XAEnums";
+import { getPolicyPermissionItemDisplayLbl } from "Utils/XAUtils";
 
 export const ServiceViewDetails = (props) => {
   const { serviceData: service, serviceDefData } = props;
@@ -261,13 +262,17 @@ export const ServiceViewDetails = (props) => {
           </td>
           <td className="text-center">
             {a.accessTypes !== undefined && a.accessTypes.length > 0
-              ? a.accessTypes.map((accessType) => (
+              ? getPolicyPermissionItemDisplayLbl(
+                  serviceDefData,
+                  0,
+                  a.accessTypes
+                ).map((accessType) => (
                   <Badge
                     bg="info"
                     className="m-1 text-truncate"
-                    key={accessType}
+                    key={accessType.label}
                   >
-                    {accessType}
+                    {accessType.label}
                   </Badge>
                 ))
               : "--"}
