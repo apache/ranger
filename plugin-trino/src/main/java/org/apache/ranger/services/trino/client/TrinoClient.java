@@ -393,6 +393,8 @@ public class TrinoClient
                 }
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }
@@ -454,6 +456,8 @@ public class TrinoClient
                 }
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }
@@ -527,6 +531,8 @@ public class TrinoClient
                 }
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }

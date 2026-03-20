@@ -337,6 +337,8 @@ public class HiveClient extends BaseClient implements Closeable {
                 LOG.debug("<== HiveClient.getDBList() Error : ", sqle);
 
                 throw hdpException;
+            }  catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }
@@ -429,6 +431,8 @@ public class HiveClient extends BaseClient implements Closeable {
                 LOG.debug("<== HiveClient.getTblList() Error : ", sqle);
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }
@@ -549,6 +553,8 @@ public class HiveClient extends BaseClient implements Closeable {
                 LOG.debug("<== HiveClient.getClmList() Error : ", sqle);
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }

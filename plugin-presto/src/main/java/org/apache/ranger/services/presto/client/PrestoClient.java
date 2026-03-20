@@ -387,6 +387,8 @@ public class PrestoClient extends BaseClient implements Closeable {
                 LOG.debug("<== PrestoClient.getSchemas() Error : ", sqle);
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }
@@ -443,6 +445,8 @@ public class PrestoClient extends BaseClient implements Closeable {
                 LOG.debug("<== PrestoClient.getTables() Error : ", sqle);
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }
@@ -511,6 +515,8 @@ public class PrestoClient extends BaseClient implements Closeable {
                 LOG.debug("<== PrestoClient.getColumns() Error : ", sqle);
 
                 throw hdpException;
+            } catch (HadoopException he) {
+                throw he;
             } finally {
                 close(rs);
             }
