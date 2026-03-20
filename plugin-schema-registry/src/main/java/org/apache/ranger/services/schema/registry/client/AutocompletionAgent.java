@@ -139,7 +139,7 @@ public class AutocompletionAgent {
             return;
         }
         if (!pattern.matches("^[a-zA-Z0-9_*?\\[\\]\\-\\$%\\{\\}\\=\\/\\.]+$")) {
-            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( _, -, *, ?, [], {}, %, $, = / ) are allowed.";
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
             LOG.error(msgDesc);

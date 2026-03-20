@@ -221,7 +221,7 @@ public abstract class BaseClient {
         try {
             return value.matches(regex);
         } catch (PatternSyntaxException pe) {
-            String msgDesc = "Invalid " + value + ": [" + value + "]. Only alphanumeric characters, underscores, asterisks, dots, hyphen, forward slash, dollar signs, curly braces, percent signs are allowed.";
+            String msgDesc = "Invalid " + pattern + ": [" + value + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
             LOG.error(msgDesc);
@@ -241,7 +241,7 @@ public abstract class BaseClient {
             throw hdpException;
         }
         if (!resourceName.matches("^[a-zA-Z0-9_.*\\-]+$")) {
-            String msgDesc = "Invalid " + resourceType + ": [" + resourceName + "]. Only alphanumeric characters, underscores, dots, hyphens, and simple wildcards are allowed.";
+            String msgDesc = "Invalid " + resourceType + ": [" + resourceName + "]. Only alphanumeric characters with ( ., _, *, -) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
             LOG.error(msgDesc);
@@ -261,7 +261,7 @@ public abstract class BaseClient {
             throw hdpException;
         }
         if (!pattern.matches("^[a-zA-Z0-9_.*?\\[\\]\\-\\$%\\{\\}\\=\\/]+$")) {
-            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters, underscores, dots, hyphens, curly braces and simple wildcards are allowed.";
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
             LOG.error(msgDesc);
@@ -331,6 +331,8 @@ public abstract class BaseClient {
                     break;
                 case '{':
                 case '}':
+                case '[':
+                case ']':
                     regex.append('\\').append(c);
                     break;
                 default:

@@ -544,14 +544,4 @@ public class TrinoClient
             LOG.error("Unable to close Trino SQL connection", e);
         }
     }
-
-    private static String escapeSql(String str) {
-        if (str == null) {
-            return null;
-        }
-        str = str.replace("\\", "\\\\");
-        str = str.replace("\"", "\"\"");
-        str = str.replace("'", "''");
-        return str;
-    }
 }
