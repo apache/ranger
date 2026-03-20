@@ -93,7 +93,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-plugins-common</artifactId>
+            <artifactId>ranger-common-utils</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

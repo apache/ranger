@@ -17,11 +17,8 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.ranger.plugin.util.AutoClosableLock.AutoClosableTryLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nonnull;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -177,7 +174,7 @@ public class RangerCache<K, V> {
             private final AtomicInteger number     = new AtomicInteger(1);
 
             @Override
-            public Thread newThread(@Nonnull Runnable r) {
+            public Thread newThread(Runnable r) {
                 Thread t = new Thread(r, namePrefix + number.getAndIncrement());
 
                 if (!t.isDaemon()) {
@@ -303,7 +300,7 @@ public class RangerCache<K, V> {
             if (needsRefresh()) {
                 long startTime = System.currentTimeMillis();
 
-                try (AutoClosableTryLock tryLock = new AutoClosableTryLock(lock, timeoutMs, TimeUnit.MILLISECONDS)) {
+                try (AutoClosableLock.AutoClosableTryLock tryLock = new AutoClosableLock.AutoClosableTryLock(lock, timeoutMs, TimeUnit.MILLISECONDS)) {
                     if (tryLock.isLocked()) {
                         if (needsRefresh()) {
                             Future<?> future = this.refresher;

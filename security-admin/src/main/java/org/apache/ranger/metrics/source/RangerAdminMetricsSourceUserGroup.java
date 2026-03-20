@@ -37,8 +37,10 @@ public class RangerAdminMetricsSourceUserGroup extends RangerAdminMetricsSourceB
     @Override
     protected void refresh() {
         Map<String, Long> userGroupMetrics = rangerMetricsFetcher.getUserMetrics();
+        Map<String, Long> userSyncMetrics = rangerMetricsFetcher.getUserSyncMetrics();
 
         addMetricEntries("UserCount", userGroupMetrics);
         addMetricEntry("GroupCount", "", rangerMetricsFetcher.getGroupCount());
+        addMetricEntries("UserSyncLastUpdated", userSyncMetrics);
     }
 }

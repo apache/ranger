@@ -392,7 +392,7 @@ public class RangerUserStoreRefresher extends Thread {
 
             ret = null;
         } else if (response.getStatus() == SC_OK) {
-            ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
+            ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), RangerUserStore.class);
         } else if (response.getStatus() == SC_NOT_FOUND) {
             ret = null;
 
