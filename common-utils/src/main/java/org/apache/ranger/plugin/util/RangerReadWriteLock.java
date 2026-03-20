@@ -23,7 +23,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RangerReadWriteLock {
-
     private static final RangerLock NO_OP_LOCK = new RangerLock(null);
 
     private final ReentrantReadWriteLock lock;
@@ -47,7 +46,7 @@ public class RangerReadWriteLock {
     public RangerLock getWriteLock() {
         final RangerLock ret;
         if (lock != null) {
-            boolean isLocked = false;
+            boolean                          isLocked  = false;
             ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
             while (!isLocked) {
                 isLocked = writeLock.tryLock();
@@ -66,13 +65,13 @@ public class RangerReadWriteLock {
     @Override
     public String toString() {
         if (lock != null) {
-            return "ReadWriteLock:[" + lock.toString() + "], ReadLock:[" + lock.readLock().toString() + "], WriteLock:[" + lock.writeLock().toString() + "]";
+            return "ReadWriteLock:[" + lock + "], ReadLock:[" + lock.readLock() + "], WriteLock:[" + lock.writeLock() + "]";
         } else {
             return "ReadWriteLock:[null]";
         }
     }
 
-    static final public class RangerLock implements AutoCloseable {
+    public static final class RangerLock implements AutoCloseable {
         private final Lock lock;
 
         private RangerLock(Lock lock) {

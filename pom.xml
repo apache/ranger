@@ -791,6 +791,7 @@
                 <module>agents-installer</module>
                 <module>authz-api</module>
                 <module>authz-embedded</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
@@ -858,6 +859,7 @@
             <modules>
                 <module>agents-common</module>
                 <module>agents-cred</module>
+                <module>common-utils</module>
                 <module>intg</module>
                 <module>ranger-examples</module>
             </modules>
@@ -866,6 +868,7 @@
             <id>ranger-admin</id>
             <modules>
                 <module>agents-common</module>
+                <module>common-utils</module>
                 <module>security-admin</module>
                 <module>ugsync-util</module>
             </modules>
@@ -877,6 +880,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>hdfs-agent</module>
                 <module>ranger-hdfs-plugin-shim</module>
@@ -891,6 +895,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>hive-agent</module>
                 <module>ranger-hive-plugin-shim</module>
@@ -905,6 +910,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>hbase-agent</module>
                 <module>ranger-hbase-plugin-shim</module>
@@ -919,6 +925,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>knox-agent</module>
                 <module>ranger-knox-plugin-shim</module>
@@ -933,6 +940,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-storm-plugin-shim</module>
@@ -947,6 +955,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-yarn</module>
                 <module>ranger-plugin-classloader</module>
@@ -961,6 +970,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-ozone</module>
                 <module>ranger-ozone-plugin-shim</module>
@@ -975,6 +985,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-kafka</module>
                 <module>ranger-kafka-plugin-shim</module>
@@ -989,6 +1000,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-solr</module>
                 <module>ranger-plugin-classloader</module>
@@ -1003,6 +1015,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-kms</module>
                 <module>ranger-kms-plugin-shim</module>
@@ -1017,6 +1030,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-atlas</module>
                 <module>ranger-atlas-plugin-shim</module>
@@ -1031,6 +1045,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-sqoop</module>
                 <module>ranger-plugin-classloader</module>
@@ -1045,6 +1060,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-kylin</module>
                 <module>ranger-kylin-plugin-shim</module>
@@ -1059,6 +1075,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
@@ -1073,6 +1090,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-presto</module>
                 <module>ranger-plugin-classloader</module>
@@ -1087,6 +1105,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-trino</module>
                 <module>ranger-plugin-classloader</module>
@@ -1100,6 +1119,7 @@
                 <module>agents-common</module>
                 <module>agents-cred</module>
                 <module>agents-installer</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>plugin-nestedstructure</module>
                 <module>ranger-util</module>
@@ -1119,6 +1139,7 @@
                 <module>agents-installer</module>
                 <module>authz-api</module>
                 <module>authz-embedded</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
@@ -1210,6 +1231,7 @@
                 <module>agents-installer</module>
                 <module>authz-api</module>
                 <module>authz-embedded</module>
+                <module>common-utils</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
                 <module>hbase-agent</module>

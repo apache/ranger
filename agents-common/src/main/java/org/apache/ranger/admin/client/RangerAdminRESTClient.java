@@ -166,7 +166,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpStatus.SC_OK) {
-			ret = JsonUtilsV2.readResponse(response, ServicePolicies.class);
+			ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), ServicePolicies.class);
 		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting policies; service not found. secureMode=" + isSecureMode
@@ -248,7 +248,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpStatus.SC_OK) {
-			ret = JsonUtilsV2.readResponse(response, RangerRoles.class);
+			ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), RangerRoles.class);
 		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting Roles; service not found. secureMode=" + isSecureMode
@@ -321,7 +321,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		} else if(response == null) {
 			throw new Exception("unknown error during createRole. roleName="  + request.getName());
 		} else {
-			ret = JsonUtilsV2.readResponse(response, RangerRole.class);
+			ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), RangerRole.class);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -426,7 +426,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 				throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
 			} else {
-				ret = JsonUtilsV2.readResponse(response, TYPE_LIST_STRING);
+				ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), TYPE_LIST_STRING);
 			}
 		} else {
 			throw new Exception("unknown error during getUserRoles. execUser="  + execUser);
@@ -485,7 +485,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 				throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
 			} else {
-				ret = JsonUtilsV2.readResponse(response, TYPE_LIST_STRING);
+				ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), TYPE_LIST_STRING);
 			}
 		} else {
 			throw new Exception("unknown error during getAllRoles.");
@@ -543,7 +543,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 				throw new Exception("HTTP " + response.getStatus() + " Error: " + resp.getMessage());
 			} else {
-				ret = JsonUtilsV2.readResponse(response, RangerRole.class);
+				ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), RangerRole.class);
 			}
 		} else {
 			throw new Exception("unknown error during getPrincipalsForRole. roleName="  + roleName);
@@ -834,7 +834,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpStatus.SC_OK) {
-			ret = JsonUtilsV2.readResponse(response, ServiceTags.class);
+			ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), ServiceTags.class);
 		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting tags; service not found. secureMode=" + isSecureMode
@@ -895,7 +895,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		checkAndResetSessionCookie(response);
 
 		if(response != null && response.getStatus() == HttpStatus.SC_OK) {
-			ret = JsonUtilsV2.readResponse(response, TYPE_LIST_STRING);
+			ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), TYPE_LIST_STRING);
 		} else {
 			RESTResponse resp = RESTResponse.fromClientResponse(response);
 			LOG.error("Error getting tags. response=" + resp + ", serviceName=" + serviceName + ", " + "pattern=" + pattern);
@@ -966,7 +966,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			ret = null;
 		} else if (response.getStatus() == HttpStatus.SC_OK) {
-			ret = JsonUtilsV2.readResponse(response, RangerUserStore.class);
+			ret = JsonUtilsV2.jsonToObj(response.getEntity(String.class), RangerUserStore.class);
 		} else if (response.getStatus() == HttpStatus.SC_NOT_FOUND) {
 			ret = null;
 			LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode

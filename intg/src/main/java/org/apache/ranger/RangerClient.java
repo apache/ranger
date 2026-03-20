@@ -599,7 +599,7 @@ public class RangerClient {
         final ClientResponse clientResponse = responseHandler(api, params, request);
         if (responseType != null) {
             try {
-                ret = JsonUtilsV2.readResponse(clientResponse, responseType);
+                ret = JsonUtilsV2.jsonToObj(clientResponse.getEntity(String.class), responseType);
             } catch (Exception excp) {
                 LOG.error("failed to read response: api={}", api, excp);
             }
@@ -622,7 +622,7 @@ public class RangerClient {
         final ClientResponse clientResponse = responseHandler(api, params, request);
         if (responseType != null) {
             try {
-                ret = JsonUtilsV2.readResponse(clientResponse, responseType);
+                ret = JsonUtilsV2.jsonToObj(clientResponse.getEntity(String.class), responseType);
             } catch (Exception excp) {
                 throw new RangerServiceException(api, clientResponse);
             }
