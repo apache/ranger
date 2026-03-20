@@ -18,6 +18,7 @@
 package org.apache.ranger.services.schema.registry.client;
 
 import org.apache.ranger.plugin.client.BaseClient;
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.schema.registry.client.connection.DefaultSchemaRegistryClient;
 import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
 import org.slf4j.Logger;
@@ -118,15 +119,65 @@ public class AutocompletionAgent {
     }
 
     List<String> expandSchemaMetadataNameRegex(List<String> schemaGroupList, String lookupSchemaMetadataName) {
+        validatePattern(lookupSchemaMetadataName, "schema metadata pattern");
+        String safePattern = convertWildcardToRegex(lookupSchemaMetadataName);
         List<String>       res     = new ArrayList<>();
         Collection<String> schemas = client.getSchemaNames(schemaGroupList);
 
         schemas.forEach(sName -> {
-            if (sName.matches(lookupSchemaMetadataName)) {
+            if (sName.matches(safePattern)) {
                 res.add(sName);
             }
         });
 
         return res;
+    }
+
+    private void validatePattern(String pattern, String patternType) {
+        if (pattern == null || pattern.isEmpty()) {
+            return;
+        }
+        if (!pattern.matches("^[a-zA-Z0-9*?\\[\\]\\-\\$%\\{\\}\\=\\/\\._]+$")) {
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMessage, null, null);
+            LOG.error(msgDesc);
+            throw hdpException;
+        }
+    }
+
+    protected String convertWildcardToRegex(String wildcard) {
+        if (wildcard == null || wildcard.isEmpty()) {
+            return ".*";
+        }
+        StringBuilder regex = new StringBuilder("^");
+        for (int i = 0; i < wildcard.length(); i++) {
+            char c = wildcard.charAt(i);
+            switch (c) {
+                case '*':
+                    regex.append(".*");
+                    break;
+                case '?':
+                    regex.append(".");
+                    break;
+                case '.':
+                case '\\':
+                case '^':
+                case '$':
+                case '|':
+                    regex.append('\\').append(c);
+                    break;
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                    regex.append('\\').append(c);
+                    break;
+                default:
+                    regex.append(c);
+            }
+        }
+        regex.append('$');
+        return regex.toString();
     }
 }

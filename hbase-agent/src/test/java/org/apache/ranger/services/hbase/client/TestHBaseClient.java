@@ -314,11 +314,11 @@ public class TestHBaseClient {
 
             List<String> tables = new ArrayList<>(Collections.singletonList("t1"));
             List<String> existing = new ArrayList<>(Collections.singletonList("cf1"));
-            List<String> ret = client.getColumnFamilyList("cf.*", tables, existing);
+            List<String> ret = client.getColumnFamilyList("cf*", tables, existing);
             assertEquals(Collections.singletonList("cf2"), ret);
 
             Mockito.when(admin.getDescriptor(tn)).thenThrow(new IOException("io"));
-            assertThrows(HadoopException.class, () -> client.getColumnFamilyList("cf.*", tables, null));
+            assertThrows(HadoopException.class, () -> client.getColumnFamilyList("cf*", tables, null));
         }
     }
 
@@ -586,6 +586,208 @@ public class TestHBaseClient {
         ColumnFamilyDescriptor cfd = Mockito.mock(ColumnFamilyDescriptor.class);
         Mockito.when(cfd.getNameAsString()).thenReturn(name);
         return cfd;
+    }
+
+    @Test
+    public void test19_validatePattern_validWildcards() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+            Connection connection = Mockito.mock(Connection.class);
+            Admin admin = Mockito.mock(Admin.class);
+            connFactoryStatic.when(() -> ConnectionFactory.createConnection(Mockito.any(Configuration.class)))
+                    .thenReturn(connection);
+            Mockito.when(connection.getAdmin()).thenReturn(admin);
+            Mockito.when(admin.listTableDescriptors(Mockito.any(Pattern.class))).thenReturn(new ArrayList<>());
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> validPatterns = Arrays.asList("user*", "test?", "table_name", "prefix-*", "test{user}");
+            for (String pattern : validPatterns) {
+                List<String> result = client.getTableList(pattern, null);
+                assertNotNull(result, "Valid pattern should not throw exception: " + pattern);
+            }
+        }
+    }
+
+    @Test
+    public void test20_validatePattern_rejectsReDoSPatterns() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> redosPatterns = Arrays.asList("(a+)+", "(a|a)*", "(a+)+$", "a{100,200}", "(x+x+)+y");
+
+            for (String pattern : redosPatterns) {
+                HadoopException ex = assertThrows(HadoopException.class,
+                        () -> client.getTableList(pattern, null),
+                        "ReDoS pattern should be rejected: " + pattern);
+                String msg = ex.getMessage();
+                assertTrue(msg != null && msg.contains("Invalid") && msg.contains("Only alphanumeric"), "Error should indicate invalid pattern for: " + pattern + ", but got: " + msg);
+            }
+        }
+    }
+
+    @Test
+    public void test21_validatePattern_rejectsComplexRegex() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> maliciousPatterns = Arrays.asList("test(abc)", "a+b", "x|y", "$(command)");
+
+            for (String pattern : maliciousPatterns) {
+                HadoopException ex = assertThrows(HadoopException.class,
+                        () -> client.getTableList(pattern, null),
+                        "Complex regex should be rejected: " + pattern);
+                assertTrue(ex.getMessage().contains("Invalid") && ex.getMessage().contains("Only alphanumeric"), "Error should indicate invalid pattern for: " + pattern);
+            }
+        }
+    }
+
+    @Test
+    public void test22_validatePattern_rejectsInjectionAttempts() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> injectionAttempts = Arrays.asList("'; DROP TABLE users; --", "../../../etc/passwd", "test<script>alert(1)</script>", "table\nname", "test\0null");
+
+            for (String pattern : injectionAttempts) {
+                HadoopException ex = assertThrows(HadoopException.class,
+                        () -> client.getTableList(pattern, null),
+                        "Injection attempt should be rejected: " + pattern);
+                assertTrue(ex.getMessage().contains("Invalid"),
+                        "Error should indicate invalid pattern for: " + pattern);
+            }
+        }
+    }
+
+    @Test
+    public void test23_columnFamilyMatching_rejectsReDoS() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> tables = Arrays.asList("table1");
+            List<String> redosPatterns = Arrays.asList("(a+)+", "(x|x)*");
+
+            for (String pattern : redosPatterns) {
+                HadoopException ex = assertThrows(HadoopException.class,
+                        () -> client.getColumnFamilyList(pattern, tables, null),
+                        "ReDoS pattern should be rejected in column family: " + pattern);
+                assertTrue(ex.getMessage().contains("Invalid") && ex.getMessage().contains("Only alphanumeric"),
+                        "Error should indicate invalid pattern for: " + pattern);
+            }
+        }
+    }
+
+    @Test
+    public void test24_convertWildcardToRegex_correctConversion() throws Exception {
+        Map<String, String> props = new HashMap<>();
+        props.put("username", "user");
+
+        try (MockedStatic<HBaseConfiguration> confStatic = Mockito.mockStatic(HBaseConfiguration.class);
+                MockedStatic<Subject> subjectStatic = Mockito.mockStatic(Subject.class);
+                MockedStatic<ConnectionFactory> connFactoryStatic = Mockito.mockStatic(ConnectionFactory.class)) {
+            Configuration conf = Mockito.mock(Configuration.class);
+            confStatic.when(HBaseConfiguration::create).thenReturn(conf);
+
+            Subject subject = Mockito.mock(Subject.class);
+            subjectStatic.when(() -> Subject.doAs(Mockito.any(), Mockito.any(PrivilegedAction.class)))
+                    .thenAnswer(inv -> {
+                        PrivilegedAction<?> action = inv.getArgument(1);
+                        return action.run();
+                    });
+
+            Connection connection = Mockito.mock(Connection.class);
+            Admin admin = Mockito.mock(Admin.class);
+            connFactoryStatic.when(() -> ConnectionFactory.createConnection(Mockito.any(Configuration.class)))
+                    .thenReturn(connection);
+            Mockito.when(connection.getAdmin()).thenReturn(admin);
+
+            TableDescriptor td1 = Mockito.mock(TableDescriptor.class);
+            TableName tn1 = TableName.valueOf("test_table");
+            Mockito.when(td1.getTableName()).thenReturn(tn1);
+            Mockito.when(admin.listTableDescriptors(Mockito.any(Pattern.class))).thenAnswer(inv -> {
+                Pattern pattern = inv.getArgument(0);
+                List<TableDescriptor> result = new ArrayList<>();
+                if (pattern.matcher("test_table").matches()) {
+                    result.add(td1);
+                }
+                return result;
+            });
+
+            HBaseClient client = new TestableHBaseClient("svc", props, subject);
+
+            List<String> result = client.getTableList("test*", null);
+            assertEquals(1, result.size());
+            assertTrue(result.contains("test_table"));
+        }
     }
 
     private static class TestableHBaseClient extends HBaseClient {

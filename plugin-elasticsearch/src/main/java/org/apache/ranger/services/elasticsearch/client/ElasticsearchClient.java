@@ -133,6 +133,7 @@ public class ElasticsearchClient extends BaseClient {
             String indexApi;
 
             if (StringUtils.isNotEmpty(indexMatching)) {
+                validateUrlResourceName(indexMatching, "index pattern");
                 indexApi = '/' + indexMatching;
 
                 if (!indexApi.endsWith("*")) {

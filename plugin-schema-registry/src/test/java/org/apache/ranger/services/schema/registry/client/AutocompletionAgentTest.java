@@ -17,6 +17,7 @@
 
 package org.apache.ranger.services.schema.registry.client;
 
+import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
 import org.apache.ranger.services.schema.registry.client.util.DefaultSchemaRegistryClientForTesting;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AutocompletionAgentTest {
     @Test
@@ -173,5 +176,114 @@ public class AutocompletionAgentTest {
 
         res = autocompletionAgent.getSchemaMetadataList("tesSome", schemaList, new ArrayList<>());
         assertEquals(0, res.size());
+    }
+
+    @Test
+    public void testValidatePattern_validAlphanumeric() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("mySchema123");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "mySchema123");
+        assertEquals(1, result.size());
+        assertEquals("mySchema123", result.get(0));
+    }
+
+    @Test
+    public void testValidatePattern_validWildcards() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("mySchema123");
+                schemas.add("testSchema");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "my*");
+        assertEquals(1, result.size());
+        assertEquals("mySchema123", result.get(0));
+    }
+
+    @Test
+    public void testValidatePattern_rejectsReDoSPattern() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting();
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        HadoopException exception = assertThrows(HadoopException.class, () -> {
+            agent.expandSchemaMetadataNameRegex(groups, "(a+)+");
+        });
+        String errorMsg = exception.getMessage();
+        assertTrue(errorMsg.contains("Only alphanumeric characters") || errorMsg.contains("Invalid schema metadata pattern"), "Expected validation error, got: " + errorMsg);
+    }
+
+    @Test
+    public void testValidatePattern_rejectsComplexRegex() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting();
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        HadoopException exception = assertThrows(HadoopException.class, () -> {
+            agent.expandSchemaMetadataNameRegex(groups, "test{1,5}");
+        });
+        String errorMsg = exception.getMessage();
+        assertTrue(errorMsg.contains("Only alphanumeric characters") || errorMsg.contains("Invalid schema metadata pattern"), "Expected validation error, got: " + errorMsg);
+    }
+
+    @Test
+    public void testValidatePattern_rejectsInjectionAttempt() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting();
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        HadoopException exception = assertThrows(HadoopException.class, () -> {
+            agent.expandSchemaMetadataNameRegex(groups, "test'; DROP TABLE users--");
+        });
+        assertTrue(exception.getMessage().contains("Only alphanumeric characters"));
+    }
+
+    @Test
+    public void testConvertWildcardToRegex_asterisk() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("testSchema");
+                schemas.add("prodSchema");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "test*");
+        assertEquals(1, result.size());
+        assertEquals("testSchema", result.get(0));
+    }
+
+    @Test
+    public void testConvertWildcardToRegex_questionMark() {
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting() {
+            public List<String> getSchemaNames(List<String> schemaGroup) {
+                List<String> schemas = new ArrayList<>();
+                schemas.add("schema1");
+                schemas.add("schema12");
+                return schemas;
+            }
+        };
+        AutocompletionAgent agent = new AutocompletionAgent("test", client);
+        List<String> groups = new ArrayList<>();
+        groups.add("testGroup");
+        List<String> result = agent.expandSchemaMetadataNameRegex(groups, "schema?");
+        assertEquals(1, result.size());
+        assertEquals("schema1", result.get(0));
     }
 }

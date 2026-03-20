@@ -340,6 +340,7 @@ public class KnoxClient {
                 client.addFilter(new HTTPBasicAuthFilter(userName, decryptedPwd));
 
                 for (String topologyName : knoxTopologyList) {
+                    validateResourceName(topologyName, "topology name");
                     WebResource webResource = client.resource(knoxUrl + "/" + topologyName);
 
                     response = webResource.accept(EXPECTED_MIME_TYPE).get(ClientResponse.class);
@@ -419,5 +420,33 @@ public class KnoxClient {
             throw hdpException;
         }
         return serviceList;
+    }
+
+    private void validateResourceName(String resourceName, String resourceType) {
+        if (resourceName == null) {
+            return;
+        }
+
+        if (resourceName.contains("..") || resourceName.contains("//") || resourceName.contains("\\")) {
+            String          msgDesc      = "Invalid " + resourceType + ": [" + resourceName + "]. Path traversal patterns are not allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
+
+            LOG.error(msgDesc);
+
+            throw hdpException;
+        }
+
+        if (!resourceName.matches("^[a-zA-Z0-9_.*\\-]+$")) {
+            String          msgDesc      = "Invalid " + resourceType + ": [" + resourceName + "]. Only alphanumeric characters, dots, underscores, hyphens, and wildcards are allowed.";
+            HadoopException hdpException = new HadoopException(msgDesc);
+
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
+
+            LOG.error(msgDesc);
+
+            throw hdpException;
+        }
     }
 }
