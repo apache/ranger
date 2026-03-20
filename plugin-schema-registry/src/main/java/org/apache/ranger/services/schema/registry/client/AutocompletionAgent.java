@@ -39,7 +39,6 @@ public class AutocompletionAgent {
 
     private static final String errMessage = "You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check server logs for more info.";
     private static final String successMsg = "ConnectionTest Successful";
-    private static final String ERROR_MSG = " You can still save the repository and start creating policies, but you would not be able to use autocomplete for resource names. Check server logs for more info.";
 
     private final ISchemaRegistryClient client;
     private final String                serviceName;
@@ -141,7 +140,7 @@ public class AutocompletionAgent {
         if (!pattern.matches("^[a-zA-Z0-9*?\\[\\]\\-\\$%\\{\\}\\=\\/\\._]+$")) {
             String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
-            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
+            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMessage, null, null);
             LOG.error(msgDesc);
             throw hdpException;
         }

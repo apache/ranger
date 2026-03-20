@@ -333,7 +333,7 @@ public class PrestoClient extends BaseClient implements Closeable {
 
                 throw he;
             } catch (HadoopException he) {
-                throw  he;
+                throw he;
             } finally {
                 close(rs);
             }

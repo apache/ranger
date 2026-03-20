@@ -206,10 +206,14 @@ public abstract class BaseClient {
     }
 
     protected String convertToSqlPattern(String pattern) throws HadoopException {
-        if (pattern == null || pattern.isEmpty() || pattern.equals("*")) {
+        if (pattern == null || pattern.isEmpty()) {
             return "%";
         }
-        return pattern.replace("*", "%");
+        // Convert custom wildcards to SQL LIKE pattern:
+        // '*' -> '%' (multi-character wildcard)
+        // '?' -> '_' (single-character wildcard)
+        String sqlPattern = pattern.replace("*", "%").replace("?", "_");
+        return sqlPattern;
     }
 
     protected boolean matchesSqlPattern(String value, String pattern) throws HadoopException {
