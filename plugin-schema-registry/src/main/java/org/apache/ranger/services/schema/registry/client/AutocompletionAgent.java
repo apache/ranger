@@ -138,8 +138,8 @@ public class AutocompletionAgent {
         if (pattern == null || pattern.isEmpty()) {
             return;
         }
-        if (!pattern.matches("^[a-zA-Z0-9_*?\\[\\]\\-\\$%\\{\\}\\=\\/]+$")) {
-            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters, underscores, hyphens, and simple wildcards (*, ?, [], {}, -) are allowed.";
+        if (!pattern.matches("^[a-zA-Z0-9_*?\\[\\]\\-\\$%\\{\\}\\=\\/\\.]+$")) {
+            String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( _, -, *, ?, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + ERROR_MSG, null, null);
             LOG.error(msgDesc);
@@ -147,32 +147,38 @@ public class AutocompletionAgent {
         }
     }
 
-    private String convertWildcardToRegex(String wildcard) {
+    protected String convertWildcardToRegex(String wildcard) {
         if (wildcard == null || wildcard.isEmpty()) {
             return ".*";
         }
-        StringBuilder sb = new StringBuilder("^");
+        StringBuilder regex = new StringBuilder("^");
         for (int i = 0; i < wildcard.length(); i++) {
             char c = wildcard.charAt(i);
             switch (c) {
                 case '*':
-                    sb.append(".*");
+                    regex.append(".*");
                     break;
                 case '?':
-                    sb.append(".");
+                    regex.append(".");
                     break;
                 case '.':
                 case '\\':
                 case '^':
                 case '$':
                 case '|':
-                    sb.append('\\').append(c);
+                    regex.append('\\').append(c);
+                    break;
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                    regex.append('\\').append(c);
                     break;
                 default:
-                    sb.append(c);
+                    regex.append(c);
             }
         }
-        sb.append("$");
-        return sb.toString();
+        regex.append('$');
+        return regex.toString();
     }
 }

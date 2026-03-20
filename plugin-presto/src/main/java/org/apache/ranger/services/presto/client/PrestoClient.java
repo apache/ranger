@@ -332,6 +332,8 @@ public class PrestoClient extends BaseClient implements Closeable {
                 he.generateResponseDataMap(false, getMessage(se), msg + ERR_MSG, null, null);
 
                 throw he;
+            } catch (HadoopException he) {
+                throw  he;
             } finally {
                 close(rs);
             }
