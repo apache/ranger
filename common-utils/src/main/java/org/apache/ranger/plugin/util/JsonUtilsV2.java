@@ -21,8 +21,8 @@ package org.apache.ranger.plugin.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.jersey.api.client.ClientResponse;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.Writer;
@@ -31,69 +31,50 @@ import java.util.List;
 import java.util.Map;
 
 public class JsonUtilsV2 {
-    private static final ThreadLocal<ObjectMapper> mapper = ThreadLocal.withInitial(ObjectMapper::new);
+    private static final ThreadLocal<ObjectMapper>          MAPPER                     = ThreadLocal.withInitial(ObjectMapper::new);
+    private static final TypeReference<Map<String, String>> TYPE_REF_MAP_STRING_STRING = new TypeReference<Map<String, String>>() {};
 
     private JsonUtilsV2() {
         // to block instantiation
     }
 
     public static ObjectMapper getMapper() {
-        return mapper.get();
+        return MAPPER.get();
     }
 
-    public static Map<String, String> jsonToMap(String jsonStr) throws Exception {
-        final Map<String, String> ret;
-
-        if (jsonStr == null || jsonStr.isEmpty()) {
-            ret = new HashMap<>();
-        } else {
-            ret = getMapper().readValue(jsonStr, new TypeReference<Map<String, String>>() {});
-        }
-
-        return ret;
+    public static Map<String, String> jsonToMap(String jsonStr) throws IOException {
+        return (jsonStr == null || jsonStr.isEmpty()) ? new HashMap<>() : getMapper().readValue(jsonStr, TYPE_REF_MAP_STRING_STRING);
     }
 
-    public static String mapToJson(Map<?, ?> map) throws Exception {
+    public static String mapToJson(Map<?, ?> map) throws IOException {
         return getMapper().writeValueAsString(map);
     }
 
-    public static String listToJson(List<?> list) throws Exception {
+    public static String listToJson(List<?> list) throws IOException {
         return getMapper().writeValueAsString(list);
     }
 
-    public static String objToJson(Serializable obj) throws Exception {
+    public static String objToJson(Serializable obj) throws IOException {
         return getMapper().writeValueAsString(obj);
     }
 
-    public static <T> T jsonToObj(String json, Class<T> tClass) throws Exception {
+    public static <T> T jsonToObj(String json, Class<T> tClass) throws IOException {
         return getMapper().readValue(json, tClass);
     }
 
-    public static <T> T jsonToObj(String json, TypeReference<T> typeRef) throws Exception {
+    public static <T> T jsonToObj(String json, TypeReference<T> typeRef) throws IOException {
         return getMapper().readValue(json, typeRef);
     }
 
-    public static void writeValue(Writer writer, Object obj) throws Exception {
+    public static void writeValue(Writer writer, Object obj) throws IOException {
         getMapper().writeValue(writer, obj);
     }
 
-    public static <T> T readValue(Reader reader, Class<T> tClass) throws Exception {
+    public static <T> T readValue(Reader reader, Class<T> tClass) throws IOException {
         return getMapper().readValue(reader, tClass);
     }
 
-    public static String nonSerializableObjToJson(Object obj) throws Exception {
+    public static String nonSerializableObjToJson(Object obj) throws IOException {
         return getMapper().writeValueAsString(obj);
-    }
-
-    public static <T> T readResponse(ClientResponse response, Class<T> cls) throws Exception {
-        String jsonStr = response.getEntity(String.class);
-
-        return jsonToObj(jsonStr, cls);
-    }
-
-    public static <T> T readResponse(ClientResponse response, TypeReference<T> cls) throws Exception {
-        String jsonStr = response.getEntity(String.class);
-
-        return jsonToObj(jsonStr, cls);
     }
 }
