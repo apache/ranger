@@ -196,7 +196,7 @@ public abstract class BaseClient {
             LOG.error(msgDesc);
             throw hdpException;
         }
-        if (!identifier.matches("^[a-zA-Z0-9_*?\\[\\]\\-\\$%\\{\\}\\=\\/\\.]+$")) {
+        if (!identifier.matches("^[a-zA-Z0-9*?\\[\\]\\-\\$%\\{\\}\\=\\/\\._]+$")) {
             String msgDesc = "Invalid " + identifierType + ": [" + identifier + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
@@ -221,7 +221,7 @@ public abstract class BaseClient {
         try {
             return value.matches(regex);
         } catch (PatternSyntaxException pe) {
-            String msgDesc = "Invalid " + pattern + ": [" + value + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
+            String msgDesc = "Invalid value: [" + value + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
             HadoopException hdpException = new HadoopException(msgDesc);
             hdpException.generateResponseDataMap(false, msgDesc, msgDesc + DEFAULT_ERROR_MESSAGE, null, null);
             LOG.error(msgDesc);
