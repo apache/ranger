@@ -51,9 +51,8 @@
                 <includes>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>com.kstruct:gethostname4j</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
-                    <include>com.sun.jersey:jersey-core</include>
-                    <include>com.sun.jersey:jersey-client</include>
+                    <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
+                    <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
                     <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
@@ -108,9 +107,8 @@
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
-                    <include>com.sun.jersey:jersey-core</include>
-                    <include>com.sun.jersey:jersey-client</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
+                    <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
