@@ -88,6 +88,7 @@
                     <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
                     <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
                     <include>com.sun.jersey:jersey-json:jar:${jersey-bundle.version}</include>
+                    <include>javax.ws.rs:jsr311-api:jar:${jsr311-api.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-core:jar:${fasterxml.jackson.version}</include>
                     <include>com.fasterxml.jackson.core:jackson-databind:jar:${fasterxml.jackson.version}</include>
