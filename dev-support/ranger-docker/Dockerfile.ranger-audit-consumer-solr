@@ -38,7 +38,7 @@ VOLUME /etc/keytabs
 # Set up working directory
 WORKDIR /opt/ranger/audit-consumer-solr
 
-# Copy ranger-audit-consumer-solr distribution
+# Copy audit-consumer-solr distribution (from refactored audit-dispatcher module)
 COPY ./dist/ranger-${RANGER_VERSION}-audit-consumer-solr.tar.gz /tmp/
 
 # Copy scripts and Kerberos configuration
@@ -46,7 +46,7 @@ COPY ./scripts/audit-server/service-check-functions.sh    ${RANGER_SCRIPTS}/
 COPY ./scripts/audit-server/ranger-audit-consumer-solr.sh ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
-# Extract and setup
+# Extract and setup (refactored module structure)
 RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-consumer-solr.tar.gz -C /opt/ranger/audit-consumer-solr --strip-components=1 && \
     rm -f /tmp/ranger-${RANGER_VERSION}-audit-consumer-solr.tar.gz && \
     mkdir -p /var/log/ranger/audit-consumer-solr && \

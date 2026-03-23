@@ -26,7 +26,7 @@
     <!-- Scripts directory -->
     <fileSet>
       <outputDirectory>bin</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/consumer-hdfs/scripts</directory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-hdfs/scripts</directory>
       <includes>
         <include>**/*.sh</include>
         <include>**/*.py</include>
@@ -37,7 +37,7 @@
     <!-- Configuration files -->
     <fileSet>
       <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/consumer-hdfs/src/main/resources/conf</directory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-hdfs/src/main/resources/conf</directory>
       <includes>
         <include>ranger-audit-consumer-hdfs-site.xml</include>
         <include>core-site.xml</include>
@@ -78,7 +78,7 @@
     <!-- WAR file -->
     <file>
       <outputDirectory>webapp</outputDirectory>
-      <source>${project.parent.basedir}/audit-server/consumer-hdfs/target/audit-consumer-hdfs-${project.version}.war</source>
+      <source>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-hdfs/target/audit-consumer-hdfs-${project.version}.war</source>
       <destName>ranger-audit-consumer-hdfs.war</destName>
     </file>
   </files>

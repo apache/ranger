@@ -38,7 +38,7 @@ VOLUME /etc/keytabs
 # Set up working directory
 WORKDIR /opt/ranger/audit-consumer-hdfs
 
-# Copy ranger-audit-consumer-hdfs distribution
+# Copy audit-consumer-hdfs distribution (from refactored audit-dispatcher module)
 COPY ./dist/ranger-${RANGER_VERSION}-audit-consumer-hdfs.tar.gz /tmp/
 
 # Copy scripts, Hadoop configs, and Kerberos configuration
@@ -46,7 +46,7 @@ COPY ./scripts/audit-server/service-check-functions.sh    ${RANGER_SCRIPTS}/
 COPY ./scripts/audit-server/ranger-audit-consumer-hdfs.sh ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
-# Extract and setup
+# Extract and setup (refactored module structure)
 RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-consumer-hdfs.tar.gz -C /opt/ranger/audit-consumer-hdfs --strip-components=1 && \
     rm -f /tmp/ranger-${RANGER_VERSION}-audit-consumer-hdfs.tar.gz && \
     mkdir -p /var/log/ranger/audit-consumer-hdfs && \

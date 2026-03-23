@@ -88,18 +88,18 @@ echo "[INFO] JAVA_HOME: ${JAVA_HOME}"
 echo "[INFO] AUDIT_CONSUMER_HEAP: ${AUDIT_CONSUMER_HEAP}"
 echo "[INFO] AUDIT_CONSUMER_OPTS: ${AUDIT_CONSUMER_OPTS}"
 
-# Build classpath from WAR file
+# Build classpath from WAR file (refactored artifact name)
 WEBAPP_ROOT="${AUDIT_CONSUMER_HOME_DIR}/webapp"
 WAR_FILE="${WEBAPP_ROOT}/ranger-audit-consumer-solr.war"
-WEBAPP_DIR="${WEBAPP_ROOT}/ranger-audit-consumer-solr"
+WEBAPP_DIR="${WEBAPP_ROOT}/audit-consumer-solr"
 
 # Extract WAR if not already extracted
-if [ -f "${WAR_FILE}" ] && [ ! -d "${WEBAPP_DIR}" ]; then
+if [ -f "${WAR_FILE}" ] && [ ! -d "${WEBAPP_DIR}/WEB-INF" ]; then
   echo "[INFO] Extracting WAR file..."
   mkdir -p "${WEBAPP_DIR}"
   cd "${WEBAPP_DIR}"
   jar xf "${WAR_FILE}"
-  cd -
+  cd - > /dev/null
 fi
 
 # Build classpath
@@ -119,11 +119,11 @@ fi
 
 export RANGER_CLASSPATH
 
-echo "[INFO] Starting Ranger Audit Consumer - Solr..."
+echo "[INFO] Starting Ranger Audit Consumer - Solr (refactored module)..."
 echo "[INFO] Webapp dir: ${WEBAPP_DIR}"
 java ${AUDIT_CONSUMER_HEAP} ${AUDIT_CONSUMER_OPTS} \
   -Daudit.config=${AUDIT_CONSUMER_CONF_DIR}/ranger-audit-consumer-solr-site.xml \
-  -Dranger.audit.consumer.webapp.dir="${WAR_FILE}" \
+  -Dranger.audit.consumer.webapp.dir="${WEBAPP_DIR}" \
   -cp "${RANGER_CLASSPATH}" \
   org.apache.ranger.audit.consumer.SolrConsumerApplication \
   >> ${AUDIT_CONSUMER_LOG_DIR}/catalina.out 2>&1 &

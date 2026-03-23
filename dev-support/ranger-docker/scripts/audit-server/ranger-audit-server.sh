@@ -18,16 +18,17 @@
 
 set -e
 
-AUDIT_SERVER_HOME_DIR="${AUDIT_SERVER_HOME_DIR:-/opt/ranger/audit-server}"
-AUDIT_SERVER_CONF_DIR="${AUDIT_SERVER_CONF_DIR:-/opt/ranger/audit-server/conf}"
-AUDIT_SERVER_LOG_DIR="${AUDIT_SERVER_LOG_DIR:-/var/log/ranger/audit-server}"
+# Support both old and new environment variable names for backward compatibility
+AUDIT_SERVER_HOME_DIR="${AUDIT_INGESTOR_HOME_DIR:-${AUDIT_SERVER_HOME_DIR:-/opt/ranger/audit-ingestor}}"
+AUDIT_SERVER_CONF_DIR="${AUDIT_INGESTOR_CONF_DIR:-${AUDIT_SERVER_CONF_DIR:-/opt/ranger/audit-ingestor/conf}}"
+AUDIT_SERVER_LOG_DIR="${AUDIT_INGESTOR_LOG_DIR:-${AUDIT_SERVER_LOG_DIR:-/var/log/ranger/audit-ingestor}}"
 
 # Create log directory if it doesn't exist
 mkdir -p ${AUDIT_SERVER_LOG_DIR}
 chown -R ranger:ranger /var/log/ranger 2>/dev/null || true
 
 echo "=========================================="
-echo "Starting Ranger Audit Server Service..."
+echo "Starting Ranger Audit Ingestor Service..."
 echo "=========================================="
 echo "AUDIT_SERVER_HOME_DIR: ${AUDIT_SERVER_HOME_DIR}"
 echo "AUDIT_SERVER_CONF_DIR: ${AUDIT_SERVER_CONF_DIR}"
@@ -39,28 +40,28 @@ source /home/ranger/scripts/service-check-functions.sh
 
 # Quick check for Kafka availability
 # The audit server has a built-in recovery/spool mechanism for when Kafka is unavailable
-KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS:-ranger-kafka.rangernw:9092}"
+KAFKA_BOOTSTRAP_SERVERS="${KAFKA_BOOTSTRAP_SERVERS:-ranger-kafka:9092}"
 if check_tcp_port "Kafka" "${KAFKA_BOOTSTRAP_SERVERS}" 30; then
   echo "[INFO] Kafka is available at startup"
 else
   echo "[INFO] Kafka not immediately available - audit server will use recovery/spool mechanism"
 fi
 
-# Start the audit server
-echo "[INFO] Starting Ranger Audit Server Service..."
+# Start the audit ingestor
+echo "[INFO] Starting Ranger Audit Ingestor Service (refactored module)..."
 cd ${AUDIT_SERVER_HOME_DIR}
 
-# Export environment variables for Java and audit server
+# Export environment variables for Java and audit ingestor
 export JAVA_HOME=${JAVA_HOME:-/opt/java/openjdk}
 export PATH=$JAVA_HOME/bin:$PATH
 export AUDIT_SERVER_LOG_DIR=${AUDIT_SERVER_LOG_DIR}
 
-# Set heap size
-AUDIT_SERVER_HEAP="${AUDIT_SERVER_HEAP:--Xms512m -Xmx2g}"
+# Set heap size (support both old and new env var names)
+AUDIT_SERVER_HEAP="${AUDIT_INGESTOR_HEAP:-${AUDIT_SERVER_HEAP:--Xms512m -Xmx2g}}"
 export AUDIT_SERVER_HEAP
 
-# Set JVM options including logback configuration
-if [ -z "$AUDIT_SERVER_OPTS" ]; then
+# Set JVM options including logback configuration (support both old and new env var names)
+if [ -z "$AUDIT_SERVER_OPTS" ] && [ -z "$AUDIT_INGESTOR_OPTS" ]; then
   AUDIT_SERVER_OPTS="-Dlogback.configurationFile=${AUDIT_SERVER_CONF_DIR}/logback.xml"
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -Daudit.server.log.dir=${AUDIT_SERVER_LOG_DIR}"
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -Daudit.server.log.file=ranger-audit-server.log"
@@ -68,6 +69,8 @@ if [ -z "$AUDIT_SERVER_OPTS" ]; then
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -XX:InitiatingHeapOccupancyPercent=35"
   AUDIT_SERVER_OPTS="${AUDIT_SERVER_OPTS} -XX:ConcGCThreads=4 -XX:ParallelGCThreads=8"
+else
+  AUDIT_SERVER_OPTS="${AUDIT_INGESTOR_OPTS:-${AUDIT_SERVER_OPTS}}"
 fi
 
 # Point to krb5.conf for Kerberos
@@ -89,18 +92,18 @@ echo "[INFO] JAVA_HOME: ${JAVA_HOME}"
 echo "[INFO] AUDIT_SERVER_HEAP: ${AUDIT_SERVER_HEAP}"
 echo "[INFO] AUDIT_SERVER_OPTS: ${AUDIT_SERVER_OPTS}"
 
-# Build classpath from WAR file
+# Build classpath from WAR file (refactored artifact name: ranger-audit-server.war)
 WEBAPP_ROOT="${AUDIT_SERVER_HOME_DIR}/webapp"
 WAR_FILE="${WEBAPP_ROOT}/ranger-audit-server.war"
-WEBAPP_DIR="${WEBAPP_ROOT}/ranger-audit-server"
+WEBAPP_DIR="${WEBAPP_ROOT}/audit-ingestor"
 
 # Extract WAR if not already extracted
-if [ -f "${WAR_FILE}" ] && [ ! -d "${WEBAPP_DIR}" ]; then
+if [ -f "${WAR_FILE}" ] && [ ! -d "${WEBAPP_DIR}/WEB-INF" ]; then
   echo "[INFO] Extracting WAR file..."
   mkdir -p "${WEBAPP_DIR}"
   cd "${WEBAPP_DIR}"
   jar xf "${WAR_FILE}"
-  cd -
+  cd - > /dev/null
 fi
 
 # Build classpath
@@ -120,7 +123,7 @@ fi
 
 export RANGER_CLASSPATH
 
-echo "[INFO] Starting Ranger Audit Server Service..."
+echo "[INFO] Starting Ranger Audit Ingestor Service (refactored module)..."
 echo "[INFO] Webapp dir: ${WEBAPP_DIR}"
 java ${AUDIT_SERVER_HEAP} ${AUDIT_SERVER_OPTS} \
   -Daudit.config=${AUDIT_SERVER_CONF_DIR}/ranger-audit-server-site.xml \
@@ -129,9 +132,9 @@ java ${AUDIT_SERVER_HEAP} ${AUDIT_SERVER_OPTS} \
   >> ${AUDIT_SERVER_LOG_DIR}/catalina.out 2>&1 &
 
 PID=$!
-echo $PID > ${AUDIT_SERVER_LOG_DIR}/ranger-audit-server.pid
+echo $PID > ${AUDIT_SERVER_LOG_DIR}/ranger-audit-ingestor.pid
 
-echo "[INFO] Ranger Audit Server started with PID: $PID"
+echo "[INFO] Ranger Audit Ingestor started with PID: $PID"
 
 # Keep the container running by tailing logs
 tail -f ${AUDIT_SERVER_LOG_DIR}/catalina.out 2>/dev/null

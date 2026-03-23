@@ -62,5 +62,5 @@ else
 fi
 
 echo "=========================================="
-echo "✓ All Ranger Audit Services Stopped"
+echo "All Ranger Audit Services Stopped"
 echo "=========================================="

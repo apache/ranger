@@ -67,7 +67,7 @@ else
 fi
 
 echo "=========================================="
-echo "✓ All Ranger Audit Services Started"
+echo "All Ranger Audit Services Started"
 echo "=========================================="
 echo ""
 echo "Service Endpoints:"

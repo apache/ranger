@@ -15,19 +15,23 @@
 # limitations under the License.
 
 services:
-  # Core Audit Server Service - Receives audits from plugins and produces to Kafka
-  ranger-audit-server:
+  # Audit Ingestor Service - Receives audits from plugins and produces to Kafka (REFACTORED)
+  ranger-audit-ingestor:
     build:
       context: .
-      dockerfile: Dockerfile.ranger-audit-server
+      dockerfile: Dockerfile.ranger-audit-ingestor
       args:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
-    image: ranger-audit-server:latest
-    container_name: ranger-audit-server
+    image: ranger-audit-ingestor:latest
+    container_name: ranger-audit-ingestor
     hostname: ranger-audit-server.rangernw
+    networks:
+      ranger:
+        aliases:
+          - ranger-audit-server.rangernw
     stdin_open: true
     tty: true
     depends_on:
@@ -40,19 +44,17 @@ services:
       - "7182:7182"
     environment:
       JAVA_HOME: /opt/java/openjdk
-      AUDIT_SERVER_HOME_DIR: /opt/ranger/audit-server
-      AUDIT_SERVER_CONF_DIR: /opt/ranger/audit-server/conf
-      AUDIT_SERVER_LOG_DIR: /var/log/ranger/audit-server
-      AUDIT_SERVER_HEAP: "-Xms512m -Xmx2g"
+      AUDIT_INGESTOR_HOME_DIR: /opt/ranger/audit-ingestor
+      AUDIT_INGESTOR_CONF_DIR: /opt/ranger/audit-ingestor/conf
+      AUDIT_INGESTOR_LOG_DIR: /var/log/ranger/audit-ingestor
+      AUDIT_INGESTOR_HEAP: "-Xms512m -Xmx2g"
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
       KAFKA_BOOTSTRAP_SERVERS: ranger-kafka.rangernw:9092
-    networks:
-      - ranger
     volumes:
       - ./dist/keytabs/ranger-audit-server:/etc/keytabs
-      - ranger-audit-server-logs:/var/log/ranger/audit-server
-      - ranger-audit-server-spool:/var/log/ranger/audit-server/audit
+      - ranger-audit-ingestor-logs:/var/log/ranger/audit-ingestor
+      - ranger-audit-ingestor-spool:/var/log/ranger/audit-ingestor/audit
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7081/api/audit/health"]
       interval: 30s
@@ -60,17 +62,17 @@ services:
       retries: 3
       start_period: 60s
 
-  # Solr Consumer Service - Consumes from Kafka and indexes to Solr
+  # Solr Consumer Service (Unified Dispatcher)
   ranger-audit-consumer-solr:
     build:
       context: .
-      dockerfile: Dockerfile.ranger-audit-consumer-solr
+      dockerfile: Dockerfile.ranger-audit-dispatcher
       args:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
-    image: ranger-audit-consumer-solr:latest
+    image: ranger-audit-dispatcher:latest
     container_name: ranger-audit-consumer-solr
     hostname: ranger-audit-consumer-solr.rangernw
     stdin_open: true
@@ -82,15 +84,16 @@ services:
         condition: service_started
       ranger-solr:
         condition: service_started
-      ranger-audit-server:
+      ranger-audit-ingestor:
         condition: service_healthy
     ports:
-      - "7091:7091"
+      - "7091:7090"
+    command: ["solr"]
     environment:
       JAVA_HOME: /opt/java/openjdk
-      AUDIT_CONSUMER_HOME_DIR: /opt/ranger/audit-consumer-solr
-      AUDIT_CONSUMER_CONF_DIR: /opt/ranger/audit-consumer-solr/conf
-      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/audit-consumer-solr
+      AUDIT_CONSUMER_HOME_DIR: /opt/ranger/audit-dispatcher
+      AUDIT_CONSUMER_CONF_DIR: /opt/ranger/audit-dispatcher/conf
+      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/audit-dispatcher/solr
       AUDIT_CONSUMER_HEAP: "-Xms512m -Xmx2g"
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
@@ -100,25 +103,26 @@ services:
       - ranger
     volumes:
       - ./dist/keytabs/ranger-audit-consumer-solr:/etc/keytabs
-      - ranger-audit-consumer-solr-logs:/var/log/ranger/audit-consumer-solr
+      - ranger-audit-consumer-solr-logs:/var/log/ranger/audit-dispatcher/solr
+      - ./scripts/audit-server/ranger-audit-consumer-solr-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-consumer-solr-site.xml
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7091/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:7090/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
 
-  # HDFS Consumer Service - Consumes from Kafka and writes to HDFS
+  # HDFS Consumer Service (Unified Dispatcher)
   ranger-audit-consumer-hdfs:
     build:
       context: .
-      dockerfile: Dockerfile.ranger-audit-consumer-hdfs
+      dockerfile: Dockerfile.ranger-audit-dispatcher
       args:
         - RANGER_BASE_IMAGE=${RANGER_BASE_IMAGE}
         - RANGER_BASE_VERSION=${RANGER_BASE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
         - KERBEROS_ENABLED=${KERBEROS_ENABLED}
-    image: ranger-audit-consumer-hdfs:latest
+    image: ranger-audit-dispatcher:latest
     container_name: ranger-audit-consumer-hdfs
     hostname: ranger-audit-consumer-hdfs.rangernw
     stdin_open: true
@@ -130,15 +134,16 @@ services:
         condition: service_started
       ranger-hadoop:
         condition: service_healthy
-      ranger-audit-server:
+      ranger-audit-ingestor:
         condition: service_healthy
     ports:
-      - "7092:7092"
+      - "7092:7090"
+    command: ["hdfs"]
     environment:
       JAVA_HOME: /opt/java/openjdk
-      AUDIT_CONSUMER_HOME_DIR: /opt/ranger/audit-consumer-hdfs
-      AUDIT_CONSUMER_CONF_DIR: /opt/ranger/audit-consumer-hdfs/conf
-      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/audit-consumer-hdfs
+      AUDIT_CONSUMER_HOME_DIR: /opt/ranger/audit-dispatcher
+      AUDIT_CONSUMER_CONF_DIR: /opt/ranger/audit-dispatcher/conf
+      AUDIT_CONSUMER_LOG_DIR: /var/log/ranger/audit-dispatcher/hdfs
       AUDIT_CONSUMER_HEAP: "-Xms512m -Xmx2g"
       RANGER_VERSION: ${RANGER_VERSION}
       KERBEROS_ENABLED: ${KERBEROS_ENABLED}
@@ -148,17 +153,18 @@ services:
       - ranger
     volumes:
       - ./dist/keytabs/ranger-audit-consumer-hdfs:/etc/keytabs
-      - ranger-audit-consumer-hdfs-logs:/var/log/ranger/audit-consumer-hdfs
+      - ranger-audit-consumer-hdfs-logs:/var/log/ranger/audit-dispatcher/hdfs
+      - ./scripts/audit-server/ranger-audit-consumer-hdfs-site.xml:/opt/ranger/audit-dispatcher/conf/ranger-audit-consumer-hdfs-site.xml
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7092/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:7090/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
 
 volumes:
-  ranger-audit-server-logs:
-  ranger-audit-server-spool:
+  ranger-audit-ingestor-logs:
+  ranger-audit-ingestor-spool:
   ranger-audit-consumer-solr-logs:
   ranger-audit-consumer-hdfs-logs:
 
