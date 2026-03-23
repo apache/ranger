@@ -75,7 +75,7 @@ public class TestRangerHeaderPreAuthFilter {
         UserMgr                   userMgr = mock(UserMgr.class);
 
         filter.userMgr = userMgr;
-        filter.init(null);
+        filter.initialize();
 
         HttpServletRequest  request  = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -97,7 +97,7 @@ public class TestRangerHeaderPreAuthFilter {
         UserMgr                   userMgr = mock(UserMgr.class);
 
         filter.userMgr = userMgr;
-        filter.init(null);
+        filter.initialize();
 
         HttpServletRequest  request  = mock(HttpServletRequest.class);
         HttpServletResponse response = mock(HttpServletResponse.class);
@@ -121,7 +121,7 @@ public class TestRangerHeaderPreAuthFilter {
         UserMgr                   userMgr = mock(UserMgr.class);
 
         filter.userMgr = userMgr;
-        filter.init(null);
+        filter.initialize();
 
         when(userMgr.getRolesByLoginId("joeuser")).thenReturn(Arrays.asList("ROLE_SYS_ADMIN", "ROLE_USER"));
 
@@ -160,7 +160,7 @@ public class TestRangerHeaderPreAuthFilter {
         UserMgr                   userMgr = mock(UserMgr.class);
 
         filter.userMgr = userMgr;
-        filter.init(null);
+        filter.initialize();
 
         UsernamePasswordAuthenticationToken existingAuth = new UsernamePasswordAuthenticationToken("existing-user", "pwd", Collections.singletonList(new SimpleGrantedAuthority("test-role")));
 
