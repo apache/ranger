@@ -55,6 +55,8 @@ import org.springframework.security.ldap.authentication.ad.ActiveDirectoryLdapAu
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
+import org.springframework.security.saml2.provider.service.authentication.Saml2Authentication;
 
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
@@ -147,6 +149,12 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
                     if (authentication != null && authentication.isAuthenticated()) {
                         return authentication;
                     }
+                } else if ("SAML".equalsIgnoreCase(rangerAuthenticationMethod)) {
+                    authentication = getSAMLAuthentication(authentication);
+
+                    if (authentication != null && authentication.isAuthenticated()) {
+                        return authentication;
+                    }
                 }
 
                 // Following are JDBC
@@ -215,7 +223,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public boolean supports(Class<?> authentication) {
-        return authentication.equals(UsernamePasswordAuthenticationToken.class);
+        return authentication.equals(UsernamePasswordAuthenticationToken.class) || Saml2Authentication.class.isAssignableFrom(authentication);
     }
 
     public Authentication getADAuthentication(Authentication authentication) {
@@ -364,6 +372,60 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
         }
 
         return authentication;
+    }
+
+    private Authentication getSAMLAuthentication(Authentication authentication) {
+        try {
+            if (!(authentication instanceof Saml2Authentication)) {
+                logger.debug("Not a SAML authentication, skipping");
+                return null;
+            }
+
+            String username = authentication.getName();
+            if (StringUtil.isEmpty(username)) {
+                throw new BadCredentialsException("No username in SAML authentication");
+            }
+
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof Saml2AuthenticatedPrincipal)) {
+                logger.warn("Expected Saml2AuthenticatedPrincipal but got {}", principal.getClass().getName());
+                return null;
+            }
+
+            Saml2AuthenticatedPrincipal samlPrincipal = (Saml2AuthenticatedPrincipal) principal;
+
+            // Get username from attribute or NameID
+            String usernameAttr = PropertiesUtil.getProperty("ranger.saml.attribute.username", "NameID");
+            if (!"NameID".equalsIgnoreCase(usernameAttr)) {
+                String attrValue = samlPrincipal.getFirstAttribute(usernameAttr);
+                if (!StringUtil.isEmpty(attrValue)) {
+                    username = attrValue;
+                }
+            }
+
+            String email = samlPrincipal.getFirstAttribute("email");
+            String groupAttrName = PropertiesUtil.getProperty("ranger.saml.attribute.role", "groups");
+            List<String> groups = samlPrincipal.getAttribute(groupAttrName);
+            String rangerSamlDefaultRole = PropertiesUtil.getProperty("ranger.saml.default.role", "ROLE_USER");
+
+            logger.info("SAML authenticated user: {}, email: {}, groups: {}", username, email, groups);
+
+            List<GrantedAuthority> grantedAuths = getAuthorities(username);
+            if (grantedAuths.isEmpty()) {
+                logger.info("SAML user '{}' not found in Ranger DB. " + "Assigning session default role: {}", username, rangerSamlDefaultRole);
+                grantedAuths.add(new SimpleGrantedAuthority(rangerSamlDefaultRole));
+            }
+            final UserDetails userDetails = new User(username, "", grantedAuths);
+            UsernamePasswordAuthenticationToken result = new UsernamePasswordAuthenticationToken(userDetails, "", grantedAuths);
+            result.setDetails(authentication.getDetails());
+            logger.info("SAML authentication successful for user: {} with authorities: {}", username, grantedAuths);
+            return result;
+        } catch (BadCredentialsException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("SAML authentication processing failed", e);
+            throw new BadCredentialsException("SAML processing error", e);
+        }
     }
 
     public String getRangerAuthenticationMethod() {

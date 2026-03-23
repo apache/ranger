@@ -52,7 +52,9 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/service/xusers/download/*" security="none"/>
 	<security:http pattern="/service/actuator/health" security="none" />
 	<security:http pattern="/service/metrics/**" security="none" />
-	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
+	<security:http pattern="/saml2/service-provider-metadata/*" security="none" />
+
+	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="rangerDelegatingEntryPoint">
 		<csrf disabled="true"/>
 		<security:headers>
 			<security:frame-options/>
@@ -63,20 +65,23 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 			<security:content-security-policy policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'"/>
 		</security:headers>
 		<security:session-management session-fixation-protection="newSession" />
+		<intercept-url pattern="/login/saml2/sso/ranger-saml" access="permitAll"/>
+		<intercept-url pattern="/saml2/authenticate/ranger-saml" access="permitAll"/>
 		<intercept-url pattern="/**" access="isAuthenticated()"/>
 		<security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter" />
 		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
 		<security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER" />
 		<security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER" />
+		<security:custom-filter ref="saml2WebSsoAuthenticationRequestFilter" after="CSRF_FILTER"/>
+		<security:custom-filter ref="saml2AuthenticationFilter" before="CAS_FILTER" />
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
 		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
 
 		<security:access-denied-handler error-page="/login.jsp"/>
 		<security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout" success-handler-ref="customLogoutSuccessHandler" />
-		<http-basic entry-point-ref="authenticationProcessingFilterEntryPoint"/>
+		<http-basic entry-point-ref="rangerDelegatingEntryPoint"/>
 	</security:http>
-
 	<beans:bean id="customAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
 		<beans:constructor-arg>
             <beans:list>
@@ -85,7 +90,11 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
             </beans:list>
         </beans:constructor-arg>
 	</beans:bean>
-
+	<beans:bean id="rangerDelegatingEntryPoint"
+				class="org.apache.ranger.security.web.authentication.RangerDelegatingAuthenticationEntryPoint">
+		<beans:constructor-arg value="/saml2/authenticate/${ranger.saml.entity.id}"/>
+		<beans:constructor-arg ref="authenticationProcessingFilterEntryPoint"/>
+	</beans:bean>
 	<beans:bean id="customUsernamePasswordAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerUsernamePasswordAuthenticationFilter">
 		<beans:property name="authenticationManager" ref="authenticationManager"/>
 		<beans:property name="authenticationSuccessHandler" ref="ajaxAuthSuccessHandler"/>
@@ -102,6 +111,12 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 
 	<beans:bean id="ajaxAuthFailureHandler" class="org.apache.ranger.security.web.authentication.RangerAuthFailureHandler">
 		<beans:property name="defaultFailureUrl" value="/login.jsp"/>
+	</beans:bean>
+
+	<beans:bean id="samlSuccessHandler"
+				class="org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler">
+		<beans:property name="defaultTargetUrl" value="${ranger.saml.success.url}"/>
+		<beans:property name="alwaysUseDefaultTargetUrl" value="true"/>
 	</beans:bean>
 
 	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
@@ -135,9 +150,64 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
     	<beans:property name="rangerAuthenticationMethod" value="${ranger.authentication.method}" />
  	</beans:bean>
 
+	<beans:bean id="samlAuthenticationProvider"
+				class="org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider"/>
 	<security:authentication-manager alias="authenticationManager">
-         <security:authentication-provider ref="customAuthenticationProvider"/>
+		<security:authentication-provider ref="samlAuthenticationProvider"/>
+		<security:authentication-provider ref="customAuthenticationProvider"/>
 	</security:authentication-manager>
 	<security:global-method-security pre-post-annotations="enabled" />
 	<beans:bean id="securityEventListener" class ="org.apache.ranger.security.listener.SpringEventListener"/>
+	<beans:bean id="samlRegistrationBuilder"
+				class="org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrations"
+				factory-method="fromMetadataLocation">
+		<beans:constructor-arg value="${ranger.saml.idp.metadata.location}"/>
+	</beans:bean>
+	<beans:bean id="samlRegistrationBuilderWithId"
+				factory-bean="samlRegistrationBuilder"
+				factory-method="registrationId">
+		<beans:constructor-arg value="${ranger.saml.entity.id}"/>
+	</beans:bean>
+	<beans:bean id="samlRegistrationBuilderWithEntityId"
+				factory-bean="samlRegistrationBuilderWithId"
+				factory-method="entityId">
+		<beans:constructor-arg value="${ranger.saml.entity.id}"/>
+	</beans:bean>
+	<beans:bean id="relyingPartyRegistration"
+				class="org.apache.ranger.security.web.saml.RangerSamlRegistrationFactory"
+				factory-method="buildWithSigningCredential">
+		<beans:constructor-arg ref="samlRegistrationBuilderWithEntityId"/>
+		<beans:constructor-arg value="${ranger.saml.sp.key}"/>
+		<beans:constructor-arg value="${ranger.saml.sp.cert}"/>
+	</beans:bean>
+	<!-- <beans:bean id="relyingPartyRegistration" factory-bean="samlRegistrationBuilderWithId" factory-method="build"/> -->
+	<beans:bean id="relyingPartyRegistrationRepository"
+				class="org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository">
+		<beans:constructor-arg ref="relyingPartyRegistration"/>
+	</beans:bean>
+	<beans:bean id="relyingPartyRegistrationResolver"
+				class="org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver">
+		<beans:constructor-arg ref="relyingPartyRegistrationRepository"/>
+	</beans:bean>
+
+	<beans:bean id="saml2AuthenticationTokenConverter"
+				class="org.springframework.security.saml2.provider.service.web.Saml2AuthenticationTokenConverter">
+		<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+	</beans:bean>
+	<beans:bean id="saml2AuthenticationFilter"
+				class="org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationFilter">
+		<beans:constructor-arg ref="saml2AuthenticationTokenConverter"/>
+		<beans:constructor-arg value="/login/saml2/sso/{registrationId}"/>
+		<beans:property name="authenticationManager" ref="authenticationManager"/>
+		<beans:property name="authenticationSuccessHandler" ref="samlSuccessHandler"/>
+		<beans:property name="authenticationFailureHandler" ref="ajaxAuthFailureHandler"/>
+	</beans:bean>
+	<beans:bean id="saml2AuthenticationRequestResolver"
+				class="org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver">
+		<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+	</beans:bean>
+	<beans:bean id="saml2WebSsoAuthenticationRequestFilter"
+				class="org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationRequestFilter">
+		<beans:constructor-arg ref="saml2AuthenticationRequestResolver"/>
+	</beans:bean>
 </beans:beans>
