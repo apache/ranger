@@ -52,7 +52,9 @@ import javax.naming.ldap.LdapContext;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -85,6 +87,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @CreateLdapConnectionPool(maxActive = 1, maxWait = 5000)
 @ApplyLdifFiles("ADSchema.ldif")
 public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
+    private static final String STR_EPOCH = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date(0));
+
     @Test
     public void testA_init_and_isChanged() throws Exception {
         resetConfig();
@@ -408,7 +412,7 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
 
         assertEquals("uid", uName.get(b));
         assertEquals("(uid=*)", uFil.get(b));
-        assertTrue(((String) ts.get(b)).startsWith("1970"));
+        assertEquals(STR_EPOCH, ts.get(b));
     }
 
     @Test
@@ -633,9 +637,9 @@ public class TestLdapUserGroupBuilder extends AbstractLdapTestUnit {
             extAllF.setAccessible(true);
             String extGrp = (String) extGrpF.get(b);
             String extAll = (String) extAllF.get(b);
-            assertTrue(extGrp.startsWith("(objectclass="));
-            assertTrue(extAll.contains("modifyTimestamp>="));
-            assertTrue(extAll.contains("1970"));
+            assertTrue(extGrp.startsWith("(objectclass="), () -> extGrp + ": must start with '" + "(objectclass=" + "'");
+            assertTrue(extAll.contains("modifyTimestamp>="), () -> extAll + ": must contain '" + "modifyTimestamp>=" + "'");
+            assertTrue(extAll.contains(STR_EPOCH), () -> extAll + ": must contain '" + STR_EPOCH + "'");
 
             @SuppressWarnings("unchecked")
             Map<String, Map<String, String>> srcGroups = (Map<String, Map<String, String>>) srcGroupsF.get(b);
