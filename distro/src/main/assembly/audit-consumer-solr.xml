@@ -26,7 +26,7 @@
     <!-- Scripts directory -->
     <fileSet>
       <outputDirectory>bin</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/consumer-solr/scripts</directory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-solr/scripts</directory>
       <includes>
         <include>**/*.sh</include>
         <include>**/*.py</include>
@@ -37,7 +37,7 @@
     <!-- Configuration files -->
     <fileSet>
       <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/consumer-solr/src/main/resources/conf</directory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-solr/src/main/resources/conf</directory>
       <includes>
         <include>ranger-audit-consumer-solr-site.xml</include>
         <include>logback.xml</include>
@@ -76,7 +76,7 @@
     <!-- WAR file -->
     <file>
       <outputDirectory>webapp</outputDirectory>
-      <source>${project.parent.basedir}/audit-server/consumer-solr/target/audit-consumer-solr-${project.version}.war</source>
+      <source>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-solr/target/audit-consumer-solr-${project.version}.war</source>
       <destName>ranger-audit-consumer-solr.war</destName>
     </file>
   </files>

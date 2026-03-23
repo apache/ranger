@@ -33,10 +33,9 @@
 
     <!-- Child Modules -->
     <modules>
-        <module>common</module>
-        <module>consumer-hdfs</module>
-        <module>consumer-solr</module>
-        <module>server</module>
+        <module>audit-common</module>
+        <module>audit-dispatcher</module>
+        <module>audit-ingestor</module>
     </modules>
 
     <properties>
@@ -275,7 +274,7 @@
 
             <dependency>
                 <groupId>org.apache.ranger</groupId>
-                <artifactId>ranger-audit-common</artifactId>
+                <artifactId>ranger-audit-consumer-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -294,6 +293,12 @@
             <dependency>
                 <groupId>org.apache.ranger</groupId>
                 <artifactId>ranger-audit-dest-solr</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.ranger</groupId>
+                <artifactId>ranger-audit-server-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -429,7 +434,7 @@
                 <version>${maven.pmd.plugin.version}</version>
                 <configuration>
                     <rulesets>
-                        <ruleset>${project.parent.parent.basedir}/dev-support/ranger-pmd-ruleset.xml</ruleset>
+                        <ruleset>${project.parent.basedir}/dev-support/ranger-pmd-ruleset.xml</ruleset>
                     </rulesets>
                     <sourceEncoding>UTF-8</sourceEncoding>
                     <failOnViolation>true</failOnViolation>
