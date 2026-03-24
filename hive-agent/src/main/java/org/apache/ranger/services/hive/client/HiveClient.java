@@ -261,6 +261,8 @@ public class HiveClient extends BaseClient implements Closeable {
 
         List<String> ret = new ArrayList<>();
 
+        validateSqlIdentifier(databaseMatching, "database pattern");
+
         try {
             if (hiveClient != null) {
                 List<String> hiveDBList;
@@ -354,8 +356,11 @@ public class HiveClient extends BaseClient implements Closeable {
 
         List<String> ret = new ArrayList<>();
 
+        validateSqlIdentifier(tableNameMatching, "table pattern");
+
         if (hiveClient != null && dbList != null && !dbList.isEmpty()) {
             for (String dbName : dbList) {
+                validateSqlIdentifier(dbName, "database name");
                 try {
                     List<String> hiveTblList = hiveClient.getTables(dbName, tableNameMatching);
 
@@ -449,13 +454,17 @@ public class HiveClient extends BaseClient implements Closeable {
         List<String> ret                     = new ArrayList<>();
         String       columnNameMatchingRegEx = null;
 
+        validateSqlIdentifier(columnNameMatching, "column pattern");
+
         if (columnNameMatching != null && !columnNameMatching.isEmpty()) {
             columnNameMatchingRegEx = columnNameMatching;
         }
 
         if (hiveClient != null && dbList != null && !dbList.isEmpty() && tblList != null && !tblList.isEmpty()) {
             for (String db : dbList) {
+                validateSqlIdentifier(db, "database name");
                 for (String tbl : tblList) {
+                    validateSqlIdentifier(tbl, "table name");
                     try {
                         List<FieldSchema> hiveSch = hiveClient.getFields(db, tbl);
 
