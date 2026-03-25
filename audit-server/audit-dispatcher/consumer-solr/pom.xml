@@ -253,11 +253,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-audit-consumer-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <!-- Ranger Dependencies -->
         <dependency>

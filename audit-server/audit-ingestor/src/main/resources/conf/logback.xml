@@ -15,7 +15,7 @@
 <configuration>
     <!-- System properties for log directory and file -->
     <property name="LOG_DIR" value="${audit.server.log.dir:-./logs}" />
-    <property name="LOG_FILE" value="${audit.server.log.file:-audit-server.log}" />
+    <property name="LOG_FILE" value="${audit.server.log.file:-ranger-audit-ingestor.log}" />
 
     <!-- Console Appender -->
     <appender name="LogToConsole" class="ch.qos.logback.core.ConsoleAppender">
