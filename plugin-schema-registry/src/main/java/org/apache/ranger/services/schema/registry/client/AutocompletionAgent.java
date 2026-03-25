@@ -18,7 +18,6 @@
 package org.apache.ranger.services.schema.registry.client;
 
 import org.apache.ranger.plugin.client.BaseClient;
-import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.schema.registry.client.connection.DefaultSchemaRegistryClient;
 import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
 import org.slf4j.Logger;
@@ -139,10 +138,8 @@ public class AutocompletionAgent {
         }
         if (!pattern.matches("^[a-zA-Z0-9*?\\[\\]\\-\\$%\\{\\}\\=\\/\\._]+$")) {
             String msgDesc = "Invalid " + patternType + ": [" + pattern + "]. Only alphanumeric characters along with ( ., _, -, *, ?, [], {}, %, $, = / ) are allowed.";
-            HadoopException hdpException = new HadoopException(msgDesc);
-            hdpException.generateResponseDataMap(false, msgDesc, msgDesc + errMessage, null, null);
             LOG.error(msgDesc);
-            throw hdpException;
+            throw new IllegalArgumentException(msgDesc);
         }
     }
 
