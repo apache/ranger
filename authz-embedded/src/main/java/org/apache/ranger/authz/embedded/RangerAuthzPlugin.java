@@ -64,13 +64,13 @@ import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACC
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACCESS_CONDITIONAL;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.ACCESS_DENIED;
 
-public class RangerAuthzPlugin {
+class RangerAuthzPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAuthzPlugin.class);
 
     private final RangerBasePlugin                      plugin;
     private final Map<String, RangerResourceNameParser> rrnTemplates = new HashMap<>();
 
-    RangerAuthzPlugin(String serviceType, String serviceName, Properties properties) {
+    public RangerAuthzPlugin(String serviceType, String serviceName, Properties properties) {
         plugin = new RangerBasePlugin(getPluginConfig(serviceType, serviceName, properties)) {
             @Override
             public void setPolicies(ServicePolicies policies) {

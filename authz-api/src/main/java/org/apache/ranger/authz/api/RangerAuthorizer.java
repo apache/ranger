@@ -79,6 +79,11 @@ public abstract class RangerAuthorizer {
         validateAccessContext(request.getContext());
     }
 
+    protected void validateRequest(RangerResourcePermissionsRequest request) throws RangerAuthzException {
+        validateResourceInfo(request.getResource());
+        validateAccessContext(request.getContext());
+    }
+
     protected void validateUserInfo(RangerUserInfo user) throws RangerAuthzException {
         if (user == null || StringUtils.isBlank(user.getName())) {
             throw new RangerAuthzException(INVALID_REQUEST_USER_INFO_MISSING);

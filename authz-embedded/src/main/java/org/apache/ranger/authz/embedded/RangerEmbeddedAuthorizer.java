@@ -108,7 +108,7 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
 
     @Override
     public RangerResourcePermissions getResourcePermissions(RangerResourcePermissionsRequest request) throws RangerAuthzException {
-        validateAccessContext(request.getContext());
+        validateRequest(request);
 
         RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
 
