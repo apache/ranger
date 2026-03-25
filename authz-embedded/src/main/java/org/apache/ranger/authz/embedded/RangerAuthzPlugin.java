@@ -35,8 +35,8 @@ import org.apache.ranger.authz.model.RangerAuthzResult.PermissionResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.PolicyInfo;
 import org.apache.ranger.authz.model.RangerAuthzResult.ResultInfo;
 import org.apache.ranger.authz.model.RangerAuthzResult.RowFilterResult;
-import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
+import org.apache.ranger.authz.model.RangerResourcePermissionsRequest;
 import org.apache.ranger.authz.model.RangerUserInfo;
 import org.apache.ranger.authz.util.RangerResourceNameParser;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -70,7 +70,7 @@ public class RangerAuthzPlugin {
     private final RangerBasePlugin                      plugin;
     private final Map<String, RangerResourceNameParser> rrnTemplates = new HashMap<>();
 
-    public RangerAuthzPlugin(String serviceType, String serviceName, Properties properties) {
+    RangerAuthzPlugin(String serviceType, String serviceName, Properties properties) {
         plugin = new RangerBasePlugin(getPluginConfig(serviceType, serviceName, properties)) {
             @Override
             public void setPolicies(ServicePolicies policies) {
@@ -154,15 +154,15 @@ public class RangerAuthzPlugin {
         return ret;
     }
 
-    public RangerResourcePermissions getResourcePermissions(RangerResourceInfo resource, RangerAccessContext context) throws RangerAuthzException {
-        RangerResourcePermissions ret     = new RangerResourcePermissions();
-        RangerAccessRequestImpl   request = new RangerAccessRequestImpl();
+    public RangerResourcePermissions getResourcePermissions(RangerResourcePermissionsRequest request) throws RangerAuthzException {
+        RangerResourcePermissions ret = new RangerResourcePermissions();
+        RangerAccessRequestImpl   req = new RangerAccessRequestImpl();
 
-        ret.setResource(resource);
-        request.setResource(getResource(resource.getName(), null));
-        initializeRequest(request, null, context);
+        ret.setResource(request.getResource());
+        req.setResource(getResource(request.getResource().getName(), null));
+        initializeRequest(req, null, request.getContext());
 
-        RangerResourceACLs acls = plugin.getResourceACLs(request);
+        RangerResourceACLs acls = plugin.getResourceACLs(req);
 
         if (acls != null) {
             for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry : acls.getUserACLs().entrySet()) {
