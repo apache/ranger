@@ -143,7 +143,9 @@
             <directoryMode>755</directoryMode>
             <fileMode>644</fileMode>
             <includes>
-              <include>com.sun.jersey:jersey-bundle:jar:${jersey-bundle.version}</include>
+              <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
+              <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
+              <include>javax.ws.rs:jsr311-api:jar:${jsr311-api.version}</include>
             </includes>
           </dependencySet>
         </dependencySets>
