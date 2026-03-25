@@ -62,7 +62,7 @@ def test_create_encryption_zone(hadoop_container):
         print(output)
 
 
-# Grant Permissions to 'Hive' User to above EZ----------------------------------------
+#Grant Permissions to 'Hive' User to above EZ----------------------------------------
 def test_grant_permissions(hadoop_container):
     grant_permission_commands= [cmd.format(ez_name=ez_name, user=HIVE_USER) for cmd in GRANT_PERMISSIONS_COMMANDS]
 

@@ -100,6 +100,7 @@ for service in "${EXTRA_SERVICES[@]}"; do
   ALL_SERVICES+=("ranger-${service}")
 done
 
+docker-compose -f docker-compose.ranger.yml up -d ranger-zk
 # only create/build if containers do not exist
 missing=false
 for container in "${ALL_SERVICES[@]}"; do
@@ -142,15 +143,79 @@ RUN_TESTS="${RUN_TESTS:-1}"
 if [[ $flag == true ]]; then
   if [[ "${RUN_TESTS}" == "1" ]]; then
     echo "All required containers are up. Running test cases..."
+    # ...existing code...
     cd "$TESTS_PATH" || exit 1         # Switch to the tests directory
 
-    python3 -m venv myenv || { echo "Failed to create venv"; exit 1; }         # Create a new virtual environment
-    source myenv/bin/activate || { echo "Failed to activate venv"; exit 1; }   # Activate it
-    pip install --upgrade pip
-    pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }  # Install dependencies
+    # Prefer python3.13 for compatibility with pydantic_core; override with PYTHON_BIN if needed
+    PYTHON_BIN="${PYTHON_BIN:-python3.13}"
+    if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+      echo "Interpreter $PYTHON_BIN not found. Please install Python 3.13 or set PYTHON_BIN to a valid interpreter."
+      echo "As a fallback you can set PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1 in the environment (unsafe/unsupported)."
+      exit 1
+    fi
 
-    pytest -vs hdfs/ --html=report_hdfs.html # Runs all tests in the hdfs directory
-    pytest -vs kms/ --html=report_kms.html   # Runs all tests in the kms directory
+    # Create virtualenv with the chosen interpreter
+    "$PYTHON_BIN" -m venv myenv || { echo "Failed to create venv with $PYTHON_BIN"; exit 1; }
+    source myenv/bin/activate || { echo "Failed to activate venv"; exit 1; }
+    python -m pip install --upgrade pip
+
+    # Remove any lines starting with '//' (e.g. injected filepath comments) before installing
+    REQ_FILE="requirements.txt"
+    CLEAN_REQ="$(mktemp)"
+    sed '/^\/\//d' "$REQ_FILE" > "$CLEAN_REQ"
+    pip install -r "$CLEAN_REQ" || { echo "Failed to install requirements"; rm -f "$CLEAN_REQ"; exit 1; }
+    rm -f "$CLEAN_REQ"
+
+    # Handle test type parameter (default: all)
+    TEST_TYPE="${TEST_TYPE:-all}"
+
+    echo "Requested test type(s): ${TEST_TYPE}"
+
+    # ---------- Logical Groups ----------
+    declare -A GROUPS
+    GROUPS[admin]="xuserrest servicerest"
+    GROUPS[all]="kms admin"
+
+    # ---------- Split multiple args ----------
+    IFS=',' read -ra REQUESTED <<< "${TEST_TYPE}"
+
+    declare -a FINAL_SUITES=()
+
+    add_suite() {
+        local suite="$1"
+
+        # prevent duplicates
+        for existing in "${FINAL_SUITES[@]}"; do
+            [[ "$existing" == "$suite" ]] && return
+        done
+
+        FINAL_SUITES+=("$suite")
+    }
+
+    expand_suite() {
+        local item="$1"
+
+        # expand logical group recursively
+        if [[ -n "${GROUPS[$item]:-}" ]]; then
+            for sub in ${GROUPS[$item]}; do
+                expand_suite "$sub"
+            done
+        else
+            add_suite "$item"
+        fi
+    }
+    # expand user input
+    for item in "${REQUESTED[@]}"; do
+        expand_suite "$item"
+    done
+
+    echo "Final test suites: ${FINAL_SUITES[*]}"
+
+    # ---------- Run pytest ----------
+    for suite in "${FINAL_SUITES[@]}"; do
+        echo "Running ${suite} tests..."
+        pytest -vs "${suite}/" --html="report_${suite}.html"
+    done
   else
       echo "All required containers are up. Skipping tests (TESTS_RUN=${TESTS_RUN})."
   fi
