@@ -34,7 +34,9 @@ from utility.utils import (
     user_exists,
     delete_user,
     validate_external_user_schema,
-    init_configs
+    init_configs,
+    validate_xgroup_schema,
+    assign_groups_to_user
 )
 import uuid
 import pytest
@@ -335,9 +337,145 @@ class TestUsers:
                 delete_user(user_id,  self.ranger_admin_config, self.base_url, self.headers)
 
 
-    # @pytest.mark.positive
-    # @pytest.mark.post
-    # def test_create_roleassignment():
+    @pytest.mark.positive
+    @pytest.mark.post
+    @pytest.mark.parametrize("auth_role", ["admin"])
+    def test_create_user_userinfo(self, request, auth_role):
+        if auth_role != "admin":
+            assert False, "Test requires admin privileges"
+        auth = self.ranger_admin_config
+        test_user, test_id = request.getfixturevalue("temp_secure_user")(["user"])
+        print(f"\nCreating a new secure user with userinfo endpoint")
+        assert user_exists(test_id, self.ranger_admin_config, self.base_url, self.headers), "User should exist before performing userinfo based creation"
+        
+        payload = {
+            "xuserInfo": {
+                    "name": test_user["name"]  
+                },
+            "xgroupInfo": [
+                    {
+                    "name": random.choice(string.ascii_letters) + ''.join(random.choices(string.ascii_letters + string.digits, k=7)),
+                    "groupType": 1,
+                    "groupSource": 1,
+                    "description": "this is for test"
+                    
+                    }
+                ]
+        }
+
+        assert payload["xuserInfo"]["name"] == test_user["name"], "User info name should match the test user name"
+        assert len(payload["xgroupInfo"]) >= 1, "There should be at least one group info"
+
+        response = requests.post(
+            f"{self.base_url}/xusers/users/userinfo",
+            json=payload,
+            auth=auth,
+            headers=self.headers
+        )
+
+        assert_response(response, 200)
+
+        data = response.json()
+
+        validate_xgroup_schema(data["xgroupInfo"][0])
+
+        assert data["xgroupInfo"][0]["name"] == payload["xgroupInfo"][0]["name"], "Response group name should match the test user name"
+
+
+
+ 
+
+    @pytest.mark.positive
+    @pytest.mark.post
+    @pytest.mark.parametrize("auth_role", ["admin"])
+    def test_create_roleassignment(self, auth_role, request):
+
+        if auth_role != "admin":
+            pytest.fail("Test requires admin privileges")
+        auth = self.ranger_admin_config
+
+        users = [request.getfixturevalue("temp_secure_user")(["user"])[0] for _ in range(8)]
+        for u in users:
+            assert u["userSource"] == 1, f"{u['name']} should be external user"
+
+        uA, uB, uC, uD, uE, uF, uG, uH = [u["name"] for u in users]
+
+        group_admin = f"grp_admin_{uuid.uuid4().hex[:6]}"
+        group_auditor = f"grp_aud_{uuid.uuid4().hex[:6]}"
+        group_user = f"grp_user_{uuid.uuid4().hex[:6]}"
+
+        assign_groups_to_user(uB, [group_auditor], auth, self.base_url, self.headers)  # groupMap
+        assign_groups_to_user(uE, [group_admin], auth, self.base_url, self.headers)   # wlGroup
+        assign_groups_to_user(uF, [group_admin], auth, self.base_url, self.headers)   # override userMap
+        assign_groups_to_user(uG, [group_user], auth, self.base_url, self.headers)    # override groupMap
+        assign_groups_to_user(uH, [group_admin], auth, self.base_url, self.headers)   # wlUser vs wlGroup
+
+        user_map = {
+            uA: "ROLE_SYS_ADMIN",
+            uF: "ROLE_ADMIN_AUDITOR",  # will be overridden by whitelist group
+        }
+
+        group_map = {
+            group_auditor: "ROLE_ADMIN_AUDITOR",
+        }
+
+        white_user_map = {
+            uD: "ROLE_ADMIN_AUDITOR",
+            uH: "ROLE_SYS_ADMIN",  # overrides whitelist group
+        }
+
+        white_group_map = {
+            group_admin: "ROLE_SYS_ADMIN",
+            group_user: "ROLE_USER",
+        }
+
+        payload = {
+            "users": [uA, uB, uC, uD, uE, uF, uG, uH],
+            "userRoleAssignments": user_map,
+            "groupRoleAssignments": group_map,
+            "whiteListUserRoleAssignments": white_user_map,
+            "whiteListGroupRoleAssignments": white_group_map,
+            "isReset": False,
+            "isLastPage": False
+        }
+
+        response = requests.post(
+            f"{self.base_url}/xusers/users/roleassignments",
+            json=payload,
+            auth=auth,
+            headers=self.headers
+        )
+
+        assert_response(response, 200)
+
+        expected = {
+            uA: "ROLE_SYS_ADMIN",          # userMap
+            uB: "ROLE_ADMIN_AUDITOR",      # groupMap
+            uC: "ROLE_USER",               # default
+            uD: "ROLE_ADMIN_AUDITOR",      # whitelist user
+            uE: "ROLE_SYS_ADMIN",          # whitelist group
+            uF: "ROLE_SYS_ADMIN",          # wlGroup > userMap
+            uG: "ROLE_USER",               # wlGroup > groupMap
+            uH: "ROLE_SYS_ADMIN",          # wlUser > wlGroup
+        }
+
+        for user, expected_role in expected.items():
+            resp = requests.get(
+            f"{self.base_url}/xusers/users/userName/{user}",
+            auth=auth,
+            headers=self.headers
+            )
+
+            assert resp.status_code == 200, f"Failed to fetch {user}"
+            data = resp.json()
+            validate_user_schema(data)
+
+            actual_roles = data["userRoleList"]
+            print(f"{user} → {actual_roles}")
+            assert expected_role in actual_roles, \
+                f"{user}: expected {expected_role}, got {actual_roles}"
+
+
         
     @pytest.mark.positive
     @pytest.mark.put
@@ -633,7 +771,136 @@ class TestUsers:
         )
         assert response.status_code == 403, f"{auth_role} should not have permission to create external users, but got {response.status_code}"
 
+    @pytest.mark.negative
+    @pytest.mark.post
+    @pytest.mark.parametrize("auth_role", ["auditor", "user", "keyadmin"])
+    def test_create_user_userinfo_with_invalid_roles(self, request, auth_role):
+        if auth_role == "auditor":
+            auth = self.ranger_auditor_config
+        elif auth_role == "user":
+            auth = self.ranger_user_config
+        elif auth_role == "keyadmin":
+            auth = self.ranger_key_admin_config
+
+        test_user, test_id = self.user, self.ranger_user_id
+        assert user_exists(test_id, self.ranger_admin_config, self.base_url, self.headers), "User should exist before performing userinfo based creation"
+        
+        payload = {
+            "xuserInfo": {
+                    "name": test_user["name"]  
+                },
+            "xgroupInfo": [
+                    {
+                    "name": random.choice(string.ascii_letters) + ''.join(random.choices(string.ascii_letters + string.digits, k=7)),
+                    "groupType": 1,
+                    "groupSource": 1,
+                    "description": "this is for test"
+                    
+                    }
+                ]
+        }
+
+        response = requests.post(
+            f"{self.base_url}/xusers/users/userinfo",
+            json=payload,
+            auth=auth,
+            headers=self.headers
+        )
+
+        assert_response(response, 403, f"{auth_role} should not have permission to create users using userinfo endpoint")
+
+    @pytest.mark.negative
+    @pytest.mark.post
+    @pytest.mark.parametrize("missing_field", ["name", "xuserInfo_name"])
+    def test_create_user_userinfo_with_invalid_payload(self, request, missing_field):
+        auth = self.ranger_admin_config
+
+        if missing_field == "name":
+            username= f"non_exister_userinfo_{''.join(random.choices(string.ascii_lowercase, k=5))}"
+            x_group_name  = "sample"
+        elif missing_field == "xuserInfo_name":
+            username = self.user["name"]
+            x_group_name = None
+        payload = {
+            "xuserInfo": {
+                    "name": username  
+                },
+            "xgroupInfo": [
+                    {
+                    "name": x_group_name,
+                    }
+                ]
+        }
+
+        response = requests.post(
+            f"{self.base_url}/xusers/users/userinfo",
+            json=payload,
+            auth=auth,
+            headers=self.headers
+        )
+
+        assert_response(response, 404, f"Userinfo creation should not be allowed with missing field: {missing_field}")
+
+    @pytest.mark.negative
+    @pytest.mark.post
+    @pytest.mark.parametrize("auth_role", ["auditor", "user", "keyadmin"])
+    def test_create_roleassignment_with_invalid_roles(self, request, auth_role):
+        
+        if auth_role == "auditor":
+            auth = self.ranger_auditor_config
+        elif auth_role == "user":
+            auth = self.ranger_user_config
+        elif auth_role == "keyadmin":
+            auth = self.ranger_key_admin_config 
+
+        payload = {
+            "users": [self.user1["name"]],
+            "userRoleAssignments": {self.user1["name"]: "ROLE_SYS_ADMIN"},
+            "groupRoleAssignments": {},
+            "whiteListUserRoleAssignments": {},
+            "whiteListGroupRoleAssignments": {},
+            "isReset": False,
+            "isLastPage": False
+        }
+
+        response = requests.post(
+            f"{self.base_url}/xusers/users/roleassignments",
+            json=payload,
+            auth=auth,
+            headers=self.headers
+        )
+
+        assert_response(response, 403, f"{auth_role} should not have permission to assign roles, but got {response.status_code}")
+
+    @pytest.mark.negative
+    @pytest.mark.post
+    @pytest.mark.parametrize("invalid_role", ["ROLE_NON_EXISTEN", "ROLE_KEY_ADMIN"])
+    def test_create_roleassignment_to_invalid_assignment(self, invalid_role):
+        auth = self.ranger_admin_config
+
+        payload = {
+            "users": [self.user1["name"]],
+            "userRoleAssignments": {self.user1["name"]: invalid_role},
+            "groupRoleAssignments": {},
+            "whiteListUserRoleAssignments": {},
+            "whiteListGroupRoleAssignments": {},
+            "isReset": False,
+            "isLastPage": False
+        }
+
+        response = requests.post(
+            f"{self.base_url}/xusers/users/roleassignments",
+            json=payload,
+            auth=auth,
+            headers=self.headers
+        )
+        if invalid_role == "ROLE_NON_EXISTEN":
+            expected_status = 400
+        elif invalid_role == "ROLE_KEY_ADMIN":
+            expected_status = 403  # since ROLE_KEY_ADMIN is not a valid role but it has admin keyword so it will be blocked by permission check before role validation
+        assert_response(response, expected_status, f"Assigning non-existent role should fail with {expected_status}, but got {response.status_code}")
     
+
 
     @pytest.mark.negative
     @pytest.mark.put

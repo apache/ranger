@@ -230,26 +230,7 @@ def user_exists(user_id, ranger_admin_config, base_url, headers, auth=None):
 
     return response.status_code == 200
 
-"""def delete_user(user_id, force=False):
 
-    if RANGER_CONFIG is None:
-        raise RuntimeError("RANGER_CONFIG not initialized")
-
-    query_params = {
-        "forceDelete": "true" if force else "false"
-    }
-
-    response = requests.delete(
-        f"{RANGER_CONFIG['base_url']}/xusers/secure/users/{user_id}",
-        auth=RANGER_CONFIG["auth"],
-        headers={
-            **RANGER_CONFIG["headers"],
-            "X-Requested-By": "ranger"
-        },
-        params=query_params
-    )
-
-    return response.status_code in [200, 204]"""
 
 def delete_user(user_id,  ranger_admin_config, base_url, headers, force=False):
 
@@ -295,3 +276,55 @@ def validate_external_user_schema(data):
     assert len(data["vXStrings"][0]["value"]) <= 255
 
     assert "queryTimeMS" in data and isinstance(data["queryTimeMS"], int)
+
+def validate_xgroup_schema(data):
+
+    assert "id" in data
+    assert isinstance(data["id"], int)
+    assert BIGINT_MIN <= data["id"] <= BIGINT_MAX
+
+    assert isinstance(data.get("name"), str)
+    assert 1 <= len(data["name"]) <= 767
+
+    if data.get("description"):
+        assert isinstance(data["description"], str)
+        assert len(data["description"]) <= 1024
+
+    if "groupType" in data:
+        assert data.get("groupType") in [0, 1]
+
+    if "isVisible" in data:
+        assert data.get("isVisible") in [0, 1]
+    
+    if "groupSource" in data:
+        assert data.get("groupSource") in [0, 1]
+        
+    for field in ["createDate", "updateDate"]:
+        if field in data:
+            datetime.fromisoformat(
+                data[field].replace("Z", "+00:00")
+            )
+
+
+def assign_groups_to_user(user_name, group_names, ranger_admin_config, base_url, headers):
+    RANGER_CONFIG = {"base_url": base_url, "auth": ranger_admin_config, "headers": headers}
+    if RANGER_CONFIG is None:
+        raise RuntimeError("RANGER_CONFIG not initialized")
+
+    payload = {
+            "xuserInfo": {
+                    "name": user_name
+                },
+            "xgroupInfo": [
+                {"name": group} for group in group_names
+                ]
+        }
+    response = requests.post(
+            f"{RANGER_CONFIG['base_url']}/xusers/users/userinfo",
+            json=payload,
+            auth=RANGER_CONFIG["auth"],
+            headers=RANGER_CONFIG["headers"]
+        )
+    print("Assign Groups Response:", response.status_code, response.text)
+    assert response.status_code == 200, f"Failed to assign groups to user: {response.text}"
+    
