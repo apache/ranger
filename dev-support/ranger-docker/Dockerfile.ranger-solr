@@ -24,7 +24,7 @@ ARG SOLR_PLUGIN_VERSION
 
 USER root
 
-RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y krb5-user
+RUN apt update && DEBIAN_FRONTEND="noninteractive" apt-get install -y vim krb5-user
 
 RUN mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf /home/ranger/dist /opt/ranger /home/ranger/scripts
 RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
