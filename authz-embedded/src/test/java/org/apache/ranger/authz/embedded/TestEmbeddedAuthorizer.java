@@ -30,6 +30,7 @@ import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
+import org.apache.ranger.authz.model.RangerResourcePermissionsRequest;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
@@ -86,7 +87,7 @@ public class TestEmbeddedAuthorizer {
                     continue;
                 }
 
-                RangerResourcePermissions permissions = authorizer.getResourcePermissions(test.resource, test.context);
+                RangerResourcePermissions permissions = authorizer.getResourcePermissions(new RangerResourcePermissionsRequest(test.resource, test.context));
 
                 assertEquals(test.permissions, permissions, "Resource permissions do not match for resource=" + test.resource);
             }

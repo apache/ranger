@@ -30,8 +30,8 @@ import org.apache.ranger.authz.model.RangerAuthzResult;
 import org.apache.ranger.authz.model.RangerAuthzResult.AccessDecision;
 import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
-import org.apache.ranger.authz.model.RangerResourceInfo;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
+import org.apache.ranger.authz.model.RangerResourcePermissionsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,6 +106,15 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         }
     }
 
+    @Override
+    public RangerResourcePermissions getResourcePermissions(RangerResourcePermissionsRequest request) throws RangerAuthzException {
+        validateRequest(request);
+
+        RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
+
+        return plugin.getResourcePermissions(request);
+    }
+
     public RangerAuthzResult authorize(RangerAuthzRequest request, RangerAuthzAuditHandler auditHandler) throws RangerAuthzException {
         validateRequest(request);
 
@@ -120,15 +129,6 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
 
         return authorize(request, plugin, auditHandler);
-    }
-
-    @Override
-    public RangerResourcePermissions getResourcePermissions(RangerResourceInfo resource, RangerAccessContext context) throws RangerAuthzException {
-        validateAccessContext(context);
-
-        RangerAuthzPlugin plugin = getOrCreatePlugin(context.getServiceName(), context.getServiceType());
-
-        return plugin.getResourcePermissions(resource, context);
     }
 
     @Override
