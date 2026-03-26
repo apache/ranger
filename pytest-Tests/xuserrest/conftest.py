@@ -217,7 +217,7 @@ def temp_secure_user(ranger_config, client_roles):
             "password": "Test@123",
             "status": 1,
             "isVisible": 1,
-            "userSource":1,
+            "userSource":1, # to ensure it's created as an external user
             "userRoleList": final_role_list,
             "groupIdList": [],
             "groupNameList": []

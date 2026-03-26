@@ -370,7 +370,7 @@ class TestSecureUserEndpoint:
                 "X-Requested-By": "ranger"
             }
         )
-        assert response.status_code == 204, f"Failed to update active status: {response.text}"
+        assert_response(response, 204, f"Failed to update active status")
         response1 = requests.get(
             f"{self.base_url}/xusers/secure/users/{user_id1}",
             auth=self.ranger_admin_config,
@@ -410,7 +410,8 @@ class TestSecureUserEndpoint:
                 "X-Requested-By": "ranger"
             }
         )
-        assert response.status_code == 204, f"Failed to update active status: {response.text}"
+        assert_response(response, 204, f"Failed to update visibility")
+
         response1 = requests.get(
             f"{self.base_url}/xusers/secure/users/{user_id1}",
             auth=self.ranger_admin_config,
@@ -558,7 +559,7 @@ class TestSecureUserEndpoint:
             }
         )
 
-        assert resp.status_code == 204, f"Failed to delete user: {resp.text}"
+        assert_response(resp, 204, f"Failed to delete user: {target_user['name']}")
 
 
     @pytest.mark.delete
@@ -607,7 +608,7 @@ class TestSecureUserEndpoint:
             headers={**self.headers, "X-Requested-By": "ranger"}
         )
 
-        assert resp.status_code == 204, f"Failed to delete user: {resp.text}"
+        assert_response(resp, 204, f"Failed to delete user: {target_user['name']}")
 
         response = requests.get(
             f"{self.base_url}/xusers/secure/users/{user_name}",
@@ -654,15 +655,7 @@ class TestSecureUserEndpoint:
             headers=self.headers,
         )
 
-        assert response.status_code in expected_codes, (
-        f"\nNegative test failed"
-        f"\nEndpoint : /xusers/secure/users/{user_id}"
-        f"\nAuth     : {auth}"
-        f"\nExpected : {expected_codes}"
-        f"\nActual   : {response.status_code}"
-        f"\nResponse : {response.text}"
-        )
-
+        assert_response(response, expected_codes, f"Expected status codes {expected_codes} but got {response.status_code} for user_id: {user_id} with auth: {auth}")
 
     @pytest.mark.get
     @pytest.mark.negative
@@ -693,15 +686,7 @@ class TestSecureUserEndpoint:
             auth=auth,
             headers=self.headers,
         )
-        assert response.status_code in [401, 403], (
-        f"\nUnauthorized role accessed secure endpoint"
-        f"\nRole     : {role}"
-        f"\nUser ID  : {user_id}"
-        f"\nStatus   : {response.status_code}"
-        f"\nResponse : {response.text}"
-        )
-
-
+        assert_response(response, [401, 403], f"Unauthorized role accessed secure endpoint: Role={role}, User ID={user_id}")
 
     @pytest.mark.get
     @pytest.mark.negative
@@ -723,7 +708,7 @@ class TestSecureUserEndpoint:
             headers=self.headers
         )
 
-        assert response.status_code == 403, f"{target_role} should not access external user endpoint, but got {response.status_code}"
+        assert_response(response, 403, f"{target_role} should not access external user endpoint")
 
 
     @pytest.mark.get
@@ -900,7 +885,7 @@ class TestSecureUserEndpoint:
             )
 
             print(f"{username} → {response.status_code}")
-            assert response.status_code == 403, f"{username} should not have permission to create secure users"
+            assert_response(response, 403, f"{username} should not have permission to create secure users, but got {response.status_code}")
 
 
     @pytest.mark.put
@@ -919,8 +904,7 @@ class TestSecureUserEndpoint:
             auth=self.ranger_admin_config,
             headers=self.headers
             )
-
-        assert update_response.status_code == 404, "Expected status code 404 for non-existing user ID"
+        assert_response(update_response, 404, "Expected status code 404 for non-existing user ID")
 
     @pytest.mark.put
     @pytest.mark.negative
@@ -949,7 +933,7 @@ class TestSecureUserEndpoint:
 
             print("we got response", update_response.status_code, " for username, ", username)
 
-            assert update_response.status_code == 403
+            assert_response(update_response, 403, f"{username} should not have permission to edit secure users, but got {update_response.status_code}")
 
     @pytest.mark.put
     @pytest.mark.negative
@@ -1000,8 +984,7 @@ class TestSecureUserEndpoint:
 
         print(field, "update response code:", update_response.status_code)
 
-        assert update_response.status_code == 400, f"Expected status code 400 when trying to modify mandatory field: {field}"
-
+        assert_response(update_response, 400, f"Expected status code 400 when trying to modify mandatory field: {field}")
 
 
     @pytest.mark.put
@@ -1037,7 +1020,7 @@ class TestSecureUserEndpoint:
                 }
             )
 
-            assert response.status_code == 403, f"Expected 403 for user {username}, but got {response.status_code}. Response: {response.text}"
+            assert_response(response, 403, f"{username} should not have permission to update active status, but got {response.status_code}")
 
         verify_response = requests.get(
             f"{self.base_url}/xusers/secure/users/{target_id}",
@@ -1079,7 +1062,7 @@ class TestSecureUserEndpoint:
                 }
             )
 
-            assert response.status_code == 403, f"Expected 403 for user {username}, but got {response.status_code}. Response: {response.text}"
+            assert_response(response, 403, f"{username} should not have permission to update visibility, but got {response.status_code}")
 
         verify_response = requests.get(
             f"{self.base_url}/xusers/secure/users/{target_id}",
@@ -1328,7 +1311,7 @@ class TestSecureUserEndpoint:
             }
         )
 
-        assert response.status_code == 400, f"Expected 400 for invalid username, but got {response.status_code}. Response: {response.text}"
+        assert_response(response, 400, f"Expected 400 for invalid username, but got {response.status_code}. Response: {response.text}")
     
     @pytest.mark.delete
     @pytest.mark.negative

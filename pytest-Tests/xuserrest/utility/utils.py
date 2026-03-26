@@ -29,6 +29,7 @@ import requests
 from datetime import datetime
 #from common.utils import fetch_logs
 import inspect
+import subprocess
 
 BIGINT_MIN = -9223372036854775808
 BIGINT_MAX = 9223372036854775807
@@ -50,7 +51,7 @@ def init_configs(ranger_config, ranger_key_admin_config, ranger_auditor_config, 
     RANGER_USER_CONFIG = ranger_user_config
 
 
-def assert_response(response, expected_status, service_name=SERVICE_NAME):
+def assert_response(response, expected_status, text = None, service_name=SERVICE_NAME):
 
     actual_status = response.status_code
 
@@ -67,13 +68,14 @@ def assert_response(response, expected_status, service_name=SERVICE_NAME):
         )
 
     if not valid:
-        # logs = fetch_logs(service_name)
-        logs = "Logs fetching is currently disabled."
+        logs = fetch_ranger_logs(actual_status)
+
         pytest.fail(
+                
             f"\nExpected: {expected_status}"
             f"\nActual: {actual_status}"
-            f"\nResponse: {response.text}"
-            f"\nLogs:\n{logs}"
+            + (f"\n{text}" if text is not None else "")
+            + f"\nLogs:\n{logs}"
         )
 
 
@@ -328,3 +330,87 @@ def assign_groups_to_user(user_name, group_names, ranger_admin_config, base_url,
     print("Assign Groups Response:", response.status_code, response.text)
     assert response.status_code == 200, f"Failed to assign groups to user: {response.text}"
     
+
+
+import subprocess
+
+RANGER_CONTAINER_NAME = "ranger"
+RANGER_LOG_FILE = "/var/log/ranger/ranger-admin-ranger.rangernw-.log"
+
+
+def fetch_ranger_logs(resp_code=None, lines: int = 80) -> str:
+    """
+    Generic Ranger debugging logs.
+
+    Sections:
+      1. Recent Activity (always)
+      2. Recent Errors/Warns (system health)
+      3. Response-code related events
+    """
+
+    # ---- HTTP response meaning map ----
+    keyword_map = {
+        # SUCCESS
+        200: "success|create|update|delete|assigned|completed",
+        201: "created|create|success",
+        204: "delete|removed|no content|success",
+
+        # CLIENT ERRORS
+        400: "invalid|validation|bad request|missing",
+        401: "authentication|unauthorized|login failed",
+        403: "denied|forbidden|permission|not allowed",
+        404: "not found",
+        405: "method not allowed|unsupported method",
+        409: "conflict|already exists|duplicate",
+
+        # SERVER ERRORS
+        500: "error|exception|failed",
+        502: "gateway|proxy|upstream",
+        503: "unavailable|timeout|overloaded"
+    }
+    if isinstance(resp_code, int):
+
+        resp_filter = keyword_map.get(
+        resp_code,
+        "error|warn|exception|failed|denied"
+        )
+    elif isinstance(resp_code, (list, tuple, set)):
+        filters = [keyword_map.get(code, "error|warn|exception|failed|denied") for code in resp_code]
+        resp_filter = "|".join(filters)
+
+    try:
+        cmd = [
+            "docker", "exec",
+            RANGER_CONTAINER_NAME,
+            "bash", "-c",
+            f"""
+            LOG="{RANGER_LOG_FILE}"
+
+            echo "========== RECENT ACTIVITY =========="
+            tail -n {lines} $LOG 2>/dev/null | tail -n 12
+
+            echo
+            echo "========== RECENT ERRORS / WARNS =========="
+            tail -n {lines} $LOG 2>/dev/null | \
+            grep -i -E "error|warn|exception|fatal" -A2 -B2 | tail -n 25
+
+            echo
+            echo "========== RELATED TO HTTP {resp_code} =========="
+            tail -n {lines} $LOG 2>/dev/null | \
+            grep -i -E "{resp_filter}" -A2 -B2 | tail -n 25
+            """
+        ]
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+
+        output = result.stdout.strip()
+
+        return output if output else "No relevant Ranger logs found."
+
+    except Exception as e:
+        return f"Failed to fetch Ranger logs: {e}"

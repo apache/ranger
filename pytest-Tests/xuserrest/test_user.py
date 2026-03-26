@@ -114,7 +114,7 @@ class TestUsers:
             headers=self.headers
         )
 
-        assert response.status_code == 200, f"Failed to fetch users list: {response.status_code}"
+        assert_response(response, 200, f"Failed to fetch users list: {response.status_code}")
 
         data = response.json()
         assert "vXUsers" in data, "Invalid users list schema"
@@ -144,7 +144,7 @@ class TestUsers:
             headers=self.headers
         )
 
-        assert response.status_code == 200, f"Failed to fetch user count: {response.status_code}"
+        assert_response(response, 200, f"Failed to fetch user count: {response.status_code}")
 
         data = response.json()
         print(f"Total user count response: {data['value']}, auth : {auth[0]}")
@@ -190,7 +190,7 @@ class TestUsers:
             headers=self.headers
             )
         
-        assert response.status_code == 200, f"Failed to fetch user of role {user_role} using {auth_role}"
+        assert_response(response, 200, f"Failed to fetch user of role {user_role} using {auth_role}")
 
         data = response.json()
         validate_user_schema(data)
@@ -242,7 +242,7 @@ class TestUsers:
             headers=self.headers
         )
         
-        assert response.status_code == 200, f"Failed to fetch user of role {user_role} using {auth_role}"
+        assert_response(response, 200, f"Failed to fetch user of role {user_role} using {auth_role}")
 
         data = response.json()
         validate_user_schema(data)
@@ -596,7 +596,8 @@ class TestUsers:
             auth=self.ranger_admin_config,
             headers=self.headers
         )
-        assert response.status_code == 400, f"Expected status code not returned, got {response.status_code}"
+
+        assert_response(response, 400, "Expected status code not returned for invalid user ID")
 
 
     @pytest.mark.negative
@@ -638,7 +639,7 @@ class TestUsers:
             headers=self.headers
             )       
         
-        assert response.status_code == 403, f"{auth_role} should not have permission to access user of role {user_role}, but got {response.status_code}"
+        assert_response(response, 403, f"{auth_role} should not have permission to access user of role {user_role}")
 
 
     @pytest.mark.negative
@@ -684,7 +685,7 @@ class TestUsers:
             headers=self.headers
         )
         
-        assert response.status_code == 403, f"Unauthorized access should be denied for {auth_role} to access user of role {user_role}, but got {response.status_code}"
+        assert_response(response, 403, f"Unauthorized access should be denied for {auth_role} to access user of role {user_role}")
 
     @pytest.mark.post 
     @pytest.mark.negative
@@ -745,7 +746,7 @@ class TestUsers:
             )
 
             print(f"{username} → {response.status_code}")
-            assert response.status_code == 403, f"{username} should not have permission to create secure users"
+            assert_response(response, 403, f"{username} should not have permission to create secure users, but got {response.status_code}")
     
 
     @pytest.mark.negative
@@ -769,7 +770,7 @@ class TestUsers:
             auth=auth,
             headers=self.headers
         )
-        assert response.status_code == 403, f"{auth_role} should not have permission to create external users, but got {response.status_code}"
+        assert_response(response, 403, f"{auth_role} should not have permission to create external users, but got {response.status_code}")
 
     @pytest.mark.negative
     @pytest.mark.post
@@ -872,6 +873,7 @@ class TestUsers:
 
         assert_response(response, 403, f"{auth_role} should not have permission to assign roles, but got {response.status_code}")
 
+
     @pytest.mark.negative
     @pytest.mark.post
     @pytest.mark.parametrize("invalid_role", ["ROLE_NON_EXISTEN", "ROLE_KEY_ADMIN"])
@@ -956,9 +958,9 @@ class TestUsers:
             headers=self.headers
         )
         if auth_role in ["auditor", "user"]:
-            assert response.status_code == 403, f"{auth_role} should not have permission to update secure users"
+            assert_response(response, 403, f"{auth_role} should not have permission to update users, but got {response.status_code}")
         elif auth_role in ["admin", "keyadmin"]:
-            assert response.status_code == 400, f"{auth_role} should not have permission to update {user_role} role, expected 400 but got {response.status_code}"
+            assert_response(response, 400, f"{auth_role} should not have permission to update {user_role} role, expected 400 but got {response.status_code}")
     
 
 
@@ -980,7 +982,7 @@ class TestUsers:
             headers=self.headers
         )
         print(response.status_code, response.text)
-        assert response.status_code == 403, f"Operation is expected to be denied but got {response.status_code}"
+        assert_response(response, 403, "Operation is expected to be denied")
 
 
     @pytest.mark.negative
@@ -996,7 +998,7 @@ class TestUsers:
             auth=self.ranger_admin_config,
             headers={**self.headers, "X-Requested-By": "ranger"}
         )
-        assert response.status_code in [400, 404], f"Expected status code not returned, got {response.status_code}"
+        assert_response(response, [400, 404], f"Expected status code not returned for invalid user ID, got {response.status_code}")
     
     @pytest.mark.negative
     @pytest.mark.delete
@@ -1022,7 +1024,7 @@ class TestUsers:
             auth=auth,
             headers={**self.headers, "X-Requested-By": "ranger"}
         )
-        assert response.status_code in [403, 405], f"{auth_role} should not have permission to delete users, but got {response.status_code}"
+        assert_response(response, [403, 405], f"{auth_role} should not have permission to delete users")
 
 
     @pytest.mark.negative
@@ -1049,4 +1051,4 @@ class TestUsers:
             auth=auth,
             headers={**self.headers, "X-Requested-By": "ranger"}
         )
-        assert response.status_code in [403, 405], f"{auth_role} should not have permission to delete users, but got {response.status_code}"
+        assert_response(response, [403, 405], f"{auth_role} should not have permission to delete users")
