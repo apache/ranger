@@ -218,7 +218,7 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
 
                     LOG.debug("properties for service {}: {}", serviceName, pluginProperties);
 
-                    ret = new RangerAuthzPlugin(serviceType, serviceName, pluginProperties);
+                    ret = new RangerAuthzPlugin(serviceType, serviceName, appType, pluginProperties);
 
                     plugins.put(serviceName, ret);
                 }

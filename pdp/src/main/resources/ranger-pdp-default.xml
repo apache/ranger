@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<configuration>
+  <property>
+    <name>ranger.pdp.port</name>
+    <value>6500</value>
+    <description>Port the PDP server listens on.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.log.dir</name>
+    <value>/var/log/ranger/pdp</value>
+    <description>Directory for PDP server log files.</description>
+  </property>
+
+  <!-- SSL/TLS -->
+  <property>
+    <name>ranger.pdp.ssl.enabled</name>
+    <value>false</value>
+    <description>Set to true to enable HTTPS.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.ssl.keystore.file</name>
+    <value/>
+    <description>Path to the keystore file (required when SSL is enabled).</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.ssl.keystore.password</name>
+    <value/>
+    <description>Keystore password.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.ssl.keystore.type</name>
+    <value>JKS</value>
+    <description>Keystore type (JKS, PKCS12).</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.ssl.truststore.enabled</name>
+    <value>false</value>
+    <description>Set to true to require client certificate authentication.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.ssl.truststore.file</name>
+    <value/>
+    <description>Path to the truststore file.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.ssl.truststore.password</name>
+    <value/>
+    <description>Truststore password.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.ssl.truststore.type</name>
+    <value>JKS</value>
+    <description>Truststore type (JKS, PKCS12).</description>
+  </property>
+
+  <!-- HTTP/2 -->
+  <property>
+    <name>ranger.pdp.http2.enabled</name>
+    <value>true</value>
+    <description>
+      Enable HTTP/2 via upgrade on the connector.
+      Supports both h2 (over TLS) and h2c (cleartext upgrade) alongside HTTP/1.1.
+    </description>
+  </property>
+
+  <!-- Connector concurrency / queue limits -->
+  <property>
+    <name>ranger.pdp.http.connector.maxThreads</name>
+    <value>200</value>
+    <description>Maximum number of worker threads handling simultaneous requests.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.http.connector.minSpareThreads</name>
+    <value>20</value>
+    <description>Minimum number of spare worker threads kept ready.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.http.connector.acceptCount</name>
+    <value>100</value>
+    <description>Queued connection backlog when all worker threads are busy.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.http.connector.maxConnections</name>
+    <value>10000</value>
+    <description>Maximum concurrent TCP connections accepted by the connector.</description>
+  </property>
+
+  <!-- ================================================================
+       Authentication for incoming REST requests
+       Comma-separated list of methods tried in the listed order.
+       Supported values: header, jwt, kerberos
+       ================================================================ -->
+  <property>
+    <name>ranger.pdp.auth.types</name>
+    <value>header,jwt,kerberos</value>
+    <description>
+      Comma-separated list of authentication methods for incoming REST requests,
+      tried in listed order. Supported values: header, jwt, kerberos.
+    </description>
+  </property>
+
+  <!-- HTTP Header authentication
+       Consistent with: ranger.admin.authn.header.* in security-admin -->
+  <property>
+    <name>ranger.pdp.authn.header.enabled</name>
+    <value>false</value>
+    <description>
+      Enable trusted HTTP header authentication. Use only behind a trusted proxy.
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.header.username</name>
+    <value>X-Forwarded-User</value>
+    <description>HTTP header name from which the authenticated username is read.</description>
+  </property>
+
+  <!-- JWT bearer token authentication
+       PDP validates tokens presented as "Authorization: Bearer token" or via cookie.
+       This is distinct from Knox SSO (browser redirect flow); no SSO redirect is performed. -->
+  <property>
+    <name>ranger.pdp.jwt.provider.url</name>
+    <value/>
+    <description>URL of the JWT provider (used to fetch the public key).</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.jwt.public.key</name>
+    <value/>
+    <description>Base64-encoded public key for verifying JWT signatures.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.jwt.cookie.name</name>
+    <value>hadoop-jwt</value>
+    <description>Cookie name from which a JWT bearer token may be read.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.jwt.audiences</name>
+    <value/>
+    <description>Comma-separated list of accepted JWT audiences. Empty means any audience is accepted.</description>
+  </property>
+
+  <!-- Kerberos / SPNEGO authentication for incoming REST requests -->
+  <property>
+    <name>ranger.pdp.kerberos.spnego.principal</name>
+    <value/>
+    <description>Kerberos service principal for SPNEGO authentication, e.g. HTTP/host@REALM.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.kerberos.spnego.keytab</name>
+    <value/>
+    <description>Path to the keytab file for the SPNEGO service principal.</description>
+  </property>
+
+  <property>
+    <name>hadoop.security.auth_to_local</name>
+    <value>DEFAULT</value>
+    <description>Rules for mapping Kerberos principal names to short usernames.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.kerberos.token.valid.seconds</name>
+    <value>30</value>
+    <description>Validity period (seconds) for Kerberos authentication tokens.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.kerberos.cookie.domain</name>
+    <value/>
+    <description>Cookie domain used for the Kerberos authentication cookie.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.kerberos.cookie.path</name>
+    <value>/</value>
+    <description>Cookie path used for the Kerberos authentication cookie.</description>
+  </property>
+
+  <!--
+    Allowed callers for PDP REST APIs, per serviceName in request context.
+    Format:
+      ranger.pdp.service.<serviceName>.allowed.users=user1,user2
+      ranger.pdp.service.*.allowed.users=user3,user4
+    If no such entries are configured, this validation is disabled.
+  -->
+  <property>
+    <name>ranger.pdp.service.*.allowed.users</name>
+    <value/>
+    <description>Comma-separated users allowed to invoke PDP APIs for all services.</description>
+  </property>
+
+  <!-- ================================================================
+       RangerEmbeddedAuthorizer - Connection to Ranger Admin Server
+       All properties below are passed directly to RangerEmbeddedAuthorizer.
+       The ranger.authz.default.* prefix applies to all service types.
+       Use ranger.authz.service.<serviceName>.* to override per service.
+       ================================================================ -->
+  <property>
+    <name>ranger.authz.app.type</name>
+    <value>ranger-pdp</value>
+    <description>Application type reported in audit records.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.init.services</name>
+    <value/>
+    <description>
+      Comma-separated list of Ranger service names to eagerly initialize at startup.
+      Leave empty for lazy initialization on first access.
+      Example: dev_hive,dev_hdfs
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.source.impl</name>
+    <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>
+    <description>Policy source implementation. Use RangerAdminRESTClient to download policies live from Ranger Admin.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.url</name>
+    <value>http://localhost:6080</value>
+    <description>
+      URL of the Ranger Admin server. Comma-separated for HA.
+      Example: http://ranger-admin-1:6080,http://ranger-admin-2:6080
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.ssl.config.file</name>
+    <value/>
+    <description>
+      Path to the XML file containing SSL keystore/truststore settings for the
+      connection to Ranger Admin (required when the Admin URL uses https://).
+      The file uses the standard Ranger policymgr SSL property names:
+        xasecure.policymgr.clientssl.truststore
+        xasecure.policymgr.clientssl.truststore.credential.file
+        xasecure.policymgr.clientssl.keystore             (for mutual TLS)
+        xasecure.policymgr.clientssl.keystore.credential.file
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.client.connection.timeoutMs</name>
+    <value>120000</value>
+    <description>HTTP connection timeout (ms) for calls to Ranger Admin.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.client.read.timeoutMs</name>
+    <value>30000</value>
+    <description>HTTP read timeout (ms) for calls to Ranger Admin.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.pollIntervalMs</name>
+    <value>30000</value>
+    <description>How often (ms) to poll Ranger Admin for updated policies and roles.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.cache.dir</name>
+    <value>/var/ranger/cache/pdp</value>
+    <description>
+      Directory for local JSON cache files (policies, tags, roles, userstore, GDS).
+      The PDP can serve authorization requests from cache while Ranger Admin is unavailable.
+    </description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.client.username</name>
+    <value>admin</value>
+    <description>Username for connecting to Ranger Admin (basic auth).</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.policy.rest.client.password</name>
+    <value>admin</value>
+    <description>Password for connecting to Ranger Admin (basic auth).</description>
+  </property>
+
+  <!-- Kerberos login for connecting to Ranger Admin (alternative to basic auth).
+       Set ugi.initialize=true and choose login type:
+         keytab: supply ugi.keytab.principal and ugi.keytab.file
+         jaas:   supply ugi.jaas.appconfig (JAAS stanza name in jaas.conf) -->
+
+  <property>
+    <name>ranger.authz.default.ugi.initialize</name>
+    <value>false</value>
+    <description>Set to true to enable Kerberos login for the Ranger Admin connection.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.ugi.login.type</name>
+    <value/>
+    <description>Kerberos login type: keytab or jaas.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.ugi.keytab.principal</name>
+    <value/>
+    <description>Kerberos principal for keytab-based login.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.ugi.keytab.file</name>
+    <value/>
+    <description>Path to the keytab file for keytab-based login.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.ugi.jaas.appconfig</name>
+    <value/>
+    <description>JAAS application configuration name for jaas-based login.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.default.use.rangerGroups</name>
+    <value>false</value>
+    <description>
+      When true, group membership is resolved from Ranger's internal userstore
+      (downloaded from Ranger Admin) rather than the local OS.
+    </description>
+  </property>
+
+  <!-- ================================================================
+       Audit
+       The ranger.authz.audit.* properties map to xasecure.audit.* used
+       by the Ranger audit framework.
+       ================================================================ -->
+  <property>
+    <name>ranger.authz.audit.is.enabled</name>
+    <value>true</value>
+    <description>Master switch for audit logging.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.solr</name>
+    <value>false</value>
+    <description>Enable Solr as an audit destination.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.solr.urls</name>
+    <value/>
+    <description>Solr URL for audit logging.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.hdfs</name>
+    <value>false</value>
+    <description>Enable HDFS as an audit destination.</description>
+  </property>
+
+  <property>
+    <name>ranger.authz.audit.destination.hdfs.dir</name>
+    <value/>
+    <description>HDFS directory path for audit log files.</description>
+  </property>
+</configuration>

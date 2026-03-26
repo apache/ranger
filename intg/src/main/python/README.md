@@ -122,6 +122,93 @@ print('    deleted service: id=' + str(created_service.id))
 
 ```
 
+```python test_ranger_pdp.py```
+```python
+from apache_ranger.client.ranger_pdp_client import RangerPDPClient
+from apache_ranger.model.ranger_authz       import RangerAccessContext, RangerAccessInfo
+from apache_ranger.model.ranger_authz       import RangerAuthzRequest, RangerMultiAuthzRequest
+from apache_ranger.model.ranger_authz       import RangerResourceInfo, RangerResourcePermissionsRequest, RangerUserInfo
+
+##
+## Step 1: create a client to connect to Ranger PDP
+##
+pdp_url  = 'http://localhost:6500'
+
+# For Kerberos authentication
+#
+# from requests_kerberos import HTTPKerberosAuth
+#
+# pdp = RangerPDPClient(pdp_url, HTTPKerberosAuth())
+
+# For trusted-header authN with PDP (example only):
+#
+pdp = RangerPDPClient(pdp_url, auth=None, headers={ 'X-Forwarded-User': 'hive' })
+
+##
+## Step 2: call PDP authorization APIs
+##
+req = RangerAuthzRequest({
+    'requestId': 'req-1',
+    'user':      RangerUserInfo({'name': 'alice'}),
+    'access':    RangerAccessInfo({'resource': RangerResourceInfo({'name': 'table:default/test_tbl1'}), 'permissions': ['create']}),
+    'context':   RangerAccessContext({'serviceType': 'hive', 'serviceName': 'dev_hive'})
+})
+
+res = pdp.authorize(req)
+
+print('authorize():')
+print(f'    {req}')
+print(f'    {res}')
+print('\n')
+
+
+req = RangerAuthzRequest({
+    'requestId': 'req-2',
+    'user':      RangerUserInfo({'name': 'alice'}),
+    'access':    RangerAccessInfo({'resource': RangerResourceInfo({'name': 'table:default/test_tbl1', 'subResources': ['column:id', 'column:name', 'column:email']}), 'permissions': ['select']}),
+    'context':   RangerAccessContext({'serviceType': 'hive', 'serviceName': 'dev_hive'})
+})
+
+res = pdp.authorize(req)
+
+print('authorize():')
+print(f'    {req}')
+print(f'    {res}')
+print('\n')
+
+
+req = RangerMultiAuthzRequest({
+    'requestId': 'req-3',
+    'user':      RangerUserInfo({'name': 'alice'}),
+    'accesses': [
+        RangerAccessInfo({'resource': RangerResourceInfo({'name': 'table:default/test_tbl1', 'subResources': ['column:id', 'column:name', 'column:email']}), 'permissions': ['select']}),
+        RangerAccessInfo({'resource': RangerResourceInfo({'name': 'table:default/test_vw1'}), 'permissions': ['create']})
+    ],
+    'context': RangerAccessContext({'serviceType': 'hive', 'serviceName': 'dev_hive'})
+})
+
+res = pdp.authorize_multi(req)
+
+print('authorize_multi():')
+print(f'    {req}')
+print(f'    {res}')
+print('\n')
+
+
+req = RangerResourcePermissionsRequest({
+    'requestId': 'req-4',
+    'resource':  RangerResourceInfo({'name': 'table:default/test_tbl1'}),
+    'context':   RangerAccessContext({'serviceType': 'hive', 'serviceName': 'dev_hive'})
+})
+
+res = pdp.get_resource_permissions(req)
+
+print('get_resource_permissions():')
+print(f'    {req}')
+print(f'    {res}')
+print('\n')
+```
+
 ```python test_ranger_kms.py```
 ```python
 # test_ranger_kms.py
