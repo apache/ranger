@@ -174,7 +174,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
         Object  ssoEnabledObj = request.getAttribute("ssoEnabled");
         boolean ssoEnabled    = ssoEnabledObj != null ? Boolean.parseBoolean(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-
+        String authMethod = PropertiesUtil.getProperty("ranger.authentication.method", "NONE");
         if (ssoEnabled) {
             return XXAuthSession.AUTH_TYPE_SSO;
         } else if (request.getAttribute("spnegoEnabled") != null && Boolean.parseBoolean(String.valueOf(request.getAttribute("spnegoEnabled")))) {
@@ -185,6 +185,8 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
             } else {
                 return XXAuthSession.AUTH_TYPE_KERBEROS;
             }
+        } else if ("SAML".equalsIgnoreCase(authMethod)) {
+            return XXAuthSession.AUTH_TYPE_SAML;
         }
 
         return XXAuthSession.AUTH_TYPE_PASSWORD;

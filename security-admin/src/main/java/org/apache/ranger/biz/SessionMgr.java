@@ -511,9 +511,11 @@ public class SessionMgr {
         UserSessionBase       session    = context != null ? context.getUserSession() : null;
         boolean               ssoEnabled = session != null ? session.isSSOEnabled() : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
         XXPortalUser          gjUser     = daoManager.getXXPortalUser().findByLoginId(currentLoginId);
+        String authMethod = PropertiesUtil.getProperty("ranger.authentication.method", "NONE");
+        boolean samlEnabled = "SAML".equalsIgnoreCase(authMethod);
 
-        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled))) {
-            logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO or Spnego authenticated", currentLoginId);
+        if (gjUser == null && ((request.getAttribute("spnegoEnabled") != null && (boolean) request.getAttribute("spnegoEnabled")) || (ssoEnabled) || (samlEnabled))) {
+            logger.debug("User : {} doesn't exist in Ranger DB So creating user as it's SSO or Spnego or saml authenticated", currentLoginId);
 
             xUserMgr.createServiceConfigUser(currentLoginId);
         }
