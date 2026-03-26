@@ -89,7 +89,7 @@
     { "itemId": 5, "name": "delete",      "label": "Delete",      "category": "DELETE" },
     { "itemId": 6, "name": "read_acl",    "label": "Read_ACL",    "category": "READ" },
     { "itemId": 7, "name": "write_acl",   "label": "Write_ACL",   "category": "UPDATE" },
-    { "itemId": 8, "name": "assume_role", "label": "Assume_Role", "category": "MANAGE" }
+    { "itemId": 9, "name": "assume_role", "label": "Assume_Role", "category": "MANAGE" }
   ],
   "configs": [
     { "itemId": 1, "name": "username",                       "type": "string",   "mandatory": true, "label": "Username" },
