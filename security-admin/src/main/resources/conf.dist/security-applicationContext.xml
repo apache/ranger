@@ -67,6 +67,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 		<security:session-management session-fixation-protection="newSession" />
 		<intercept-url pattern="/login/saml2/sso/ranger-saml" access="permitAll"/>
 		<intercept-url pattern="/saml2/authenticate/ranger-saml" access="permitAll"/>
+		<intercept-url pattern="/logout/saml2/**" access="permitAll"/>
 		<intercept-url pattern="/**" access="isAuthenticated()"/>
 		<security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter" />
 		<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
@@ -75,11 +76,13 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 		<security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER" />
 		<security:custom-filter ref="saml2WebSsoAuthenticationRequestFilter" after="CSRF_FILTER"/>
 		<security:custom-filter ref="saml2AuthenticationFilter" before="CAS_FILTER" />
+		<security:custom-filter ref="samlLogoutRequestFilter" before="LOGOUT_FILTER"/>
+		<security:custom-filter ref="samlLogoutResponseFilter" after="LOGOUT_FILTER"/>
 		<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
 		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
 
 		<security:access-denied-handler error-page="/login.jsp"/>
-		<security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout" success-handler-ref="customLogoutSuccessHandler" />
+		<security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout" success-handler-ref="rangerDelegatingLogoutSuccessHandler" />
 		<http-basic entry-point-ref="rangerDelegatingEntryPoint"/>
 	</security:http>
 	<beans:bean id="customAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
@@ -120,6 +123,47 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	</beans:bean>
 
 	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
+	</beans:bean>
+
+	<beans:bean id="samlLogoutRequestResolver"
+				class="org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml4LogoutRequestResolver">
+		<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+	</beans:bean>
+	<beans:bean id="samlInitiatedLogoutSuccessHandler"
+				class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2RelyingPartyInitiatedLogoutSuccessHandler">
+		<beans:constructor-arg ref="samlLogoutRequestResolver"/>
+	</beans:bean>
+	<beans:bean id="rangerDelegatingLogoutSuccessHandler"
+				class="org.apache.ranger.security.web.authentication.RangerDelegatingLogoutSuccessHandler">
+		<beans:constructor-arg ref="samlInitiatedLogoutSuccessHandler"/>
+		<beans:constructor-arg ref="customLogoutSuccessHandler"/>
+	</beans:bean>
+	<beans:bean id="samlLogoutRequestValidator"
+				class="org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutRequestValidator"/>
+	<beans:bean id="samlLogoutResponseResolver"
+				class="org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml4LogoutResponseResolver">
+		<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+	</beans:bean>
+	<beans:bean id="securityContextLogoutHandler"
+				class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
+	<beans:bean id="samlLogoutRequestFilter"
+				class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutRequestFilter">
+		<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+		<beans:constructor-arg ref="samlLogoutRequestValidator"/>
+		<beans:constructor-arg ref="samlLogoutResponseResolver"/>
+		<beans:constructor-arg ref="securityContextLogoutHandler"/>
+	</beans:bean>
+	<beans:bean id="samlLogoutResponseValidator"
+				class="org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutResponseValidator"/>
+	<beans:bean id="samlPostLogoutRedirectHandler"
+				class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
+		<beans:property name="defaultTargetUrl" value="/login.jsp?loggedOut=true"/>
+	</beans:bean>
+	<beans:bean id="samlLogoutResponseFilter"
+				class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutResponseFilter">
+		<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+		<beans:constructor-arg ref="samlLogoutResponseValidator"/>
+		<beans:constructor-arg ref="samlPostLogoutRedirectHandler"/>
 	</beans:bean>
 
 	<beans:bean id="krbAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerKRBAuthenticationFilter">
@@ -200,7 +244,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 		<beans:constructor-arg value="/login/saml2/sso/{registrationId}"/>
 		<beans:property name="authenticationManager" ref="authenticationManager"/>
 		<beans:property name="authenticationSuccessHandler" ref="samlSuccessHandler"/>
-		<beans:property name="authenticationFailureHandler" ref="ajaxAuthFailureHandler"/>
+		<beans:property name="authenticationFailureHandler" ref="samlAuthFailureHandler"/>
 	</beans:bean>
 	<beans:bean id="saml2AuthenticationRequestResolver"
 				class="org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver">
@@ -209,5 +253,9 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<beans:bean id="saml2WebSsoAuthenticationRequestFilter"
 				class="org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationRequestFilter">
 		<beans:constructor-arg ref="saml2AuthenticationRequestResolver"/>
+	</beans:bean>
+	<beans:bean id="samlAuthFailureHandler"
+				class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+		<beans:property name="defaultFailureUrl" value="/login.jsp?error=true"/>
 	</beans:bean>
 </beans:beans>

@@ -23,6 +23,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.converter.RsaKeyConverters;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
+import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 
 import java.io.FileInputStream;
 import java.security.cert.CertificateFactory;
@@ -39,6 +40,11 @@ public class RangerSamlRegistrationFactory {
             certificate = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(fis);
         }
         Saml2X509Credential signingCredential = Saml2X509Credential.signing(privateKey, certificate);
-        return builder.signingX509Credentials(c -> c.add(signingCredential)).build();
+        return builder
+                .signingX509Credentials(c -> c.add(signingCredential))
+                .singleLogoutServiceLocation("{baseUrl}/logout/saml2/slo")
+                .singleLogoutServiceResponseLocation("{baseUrl}/logout/saml2/slo")
+                .singleLogoutServiceBinding(Saml2MessageBinding.REDIRECT)
+                .build();
     }
 }

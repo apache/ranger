@@ -1420,6 +1420,17 @@ export const updateTagActive = (isTagView) => {
 
 export const handleLogout = async (checkKnoxSSOVal, navigate) => {
   try {
+    // For SAML, we must do a full browser navigation to /logout so Spring Security
+    // can perform the SLO redirect chain (Ranger -> IdP -> back to Ranger).
+    // An AJAX call cannot follow the cross-domain SLO redirect, which causes the
+    // IdP session to remain active and results in an automatic re-login loop.
+    const userProfile = getUserProfile();
+    const authMethod = userProfile?.configProperties?.authenticationMethod;
+    if (authMethod?.toUpperCase() === "SAML") {
+      window.location.replace("logout");
+      return;
+    }
+
     await fetchApi({
       url: "logout",
       baseURL: "",
