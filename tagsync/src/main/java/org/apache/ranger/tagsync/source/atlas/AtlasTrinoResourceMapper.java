@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AtlasTrinoResourceMapper extends AtlasResourceMapper {
-    public static final String ENTITY_TYPE_TRINO_INSTANCE = "trino_instance";
     public static final String ENTITY_TYPE_TRINO_CATALOG  = "trino_catalog";
     public static final String ENTITY_TYPE_TRINO_SCHEMA   = "trino_schema";
     public static final String ENTITY_TYPE_TRINO_TABLE    = "trino_table";
@@ -89,9 +88,7 @@ public class AtlasTrinoResourceMapper extends AtlasResourceMapper {
         }
 
         Map<String, RangerPolicyResource> elements = new HashMap<>();
-        if (StringUtils.equals(entityType, ENTITY_TYPE_TRINO_INSTANCE) && StringUtils.equals(resourceStr, qualifiedName)) {
-            elements.put(ENTITY_TYPE_TRINO_INSTANCE, new RangerPolicyResource(resourceStr)); // there is no mapping for trino_instance in Ranger
-        } else if (StringUtils.equals(entityType, ENTITY_TYPE_TRINO_CATALOG)) {
+        if (StringUtils.equals(entityType, ENTITY_TYPE_TRINO_CATALOG)) {
             if (parts.length == 1 && StringUtils.isNotEmpty(parts[0])) {
                 elements.put(RANGER_TYPE_TRINO_CATALOG, new RangerPolicyResource(parts[0]));
             }

@@ -30,7 +30,6 @@ import java.util.Collections;
 import static org.apache.ranger.tagsync.source.atlas.AtlasResourceMapper.ENTITY_ATTRIBUTE_QUALIFIED_NAME;
 import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.ENTITY_TYPE_TRINO_CATALOG;
 import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.ENTITY_TYPE_TRINO_COLUMN;
-import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.ENTITY_TYPE_TRINO_INSTANCE;
 import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.ENTITY_TYPE_TRINO_SCHEMA;
 import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.ENTITY_TYPE_TRINO_TABLE;
 import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.RANGER_TYPE_TRINO_CATALOG;
@@ -39,7 +38,6 @@ import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.RA
 import static org.apache.ranger.tagsync.source.atlas.AtlasTrinoResourceMapper.RANGER_TYPE_TRINO_TABLE;
 
 public class TestTrinoResourceMapper {
-    private static final String INSTANCE_QUALIFIED_NAME         = "dev";
     private static final String CATALOG_QUALIFIED_NAME          = "sales@dev";
     private static final String SCHEMA_QUALIFIED_NAME           = "sales.reporting@dev";
     private static final String TABLE_QUALIFIED_NAME            = "sales.reporting.orders@dev";
@@ -53,25 +51,6 @@ public class TestTrinoResourceMapper {
     private static final String RANGER_COLUMN   = "customer_id";
 
     AtlasTrinoResourceMapper resourceMapper = new AtlasTrinoResourceMapper();
-
-    @Test
-    public void testTrinoInstance() throws Exception {
-        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
-        RangerServiceResource resource = resourceMapper.buildResource(entity);
-
-        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
-        assertInstanceResource(resource);
-    }
-
-    @Test
-    public void testTrinoInstanceUsesQualifiedNameAsServiceNameSource() throws Exception {
-        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
-        RangerServiceResource resource = resourceMapper.buildResource(entity);
-
-        Assertions.assertEquals("dev_trino", resource.getServiceName());
-        assertResourceElementCount(resource, 1);
-        assertResourceElementValue(resource, ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
-    }
 
     @Test
     public void testTrinoCatalog() throws Exception {
@@ -144,13 +123,6 @@ public class TestTrinoResourceMapper {
         assertException(getEntity(ENTITY_TYPE_TRINO_COLUMN, INVALID_RESOURCE_QUALIFIED_NAME), "invalid resource format");
     }
 
-    @Test
-    public void testInvalidInstanceEntity() {
-        assertException(getEntity(ENTITY_TYPE_TRINO_INSTANCE, null), "attribute 'qualifiedName' not found");
-        assertException(getEntity(ENTITY_TYPE_TRINO_INSTANCE, ""), "attribute 'qualifiedName' not found");
-        assertException(getEntity(ENTITY_TYPE_TRINO_INSTANCE, CATALOG_QUALIFIED_NAME), "unrecognized entity-type");
-    }
-
     private RangerAtlasEntity getEntity(String entityType, String qualifiedName) {
         return new RangerAtlasEntity(entityType, "guid-" + entityType, Collections.singletonMap(ENTITY_ATTRIBUTE_QUALIFIED_NAME, qualifiedName));
     }
@@ -160,11 +132,6 @@ public class TestTrinoResourceMapper {
         Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         Assertions.assertNotNull(resource.getResourceElements());
         Assertions.assertEquals(count, resource.getResourceElements().size());
-    }
-
-    private void assertInstanceResource(RangerServiceResource resource) {
-        assertResourceElementCount(resource, 1);
-        assertResourceElementValue(resource, ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
     }
 
     private void assertCatalogResource(RangerServiceResource resource) {
