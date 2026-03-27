@@ -39,7 +39,6 @@ public class AtlasTrinoResourceMapper extends AtlasResourceMapper {
     public static final String RANGER_TYPE_TRINO_COLUMN   = "column";
 
     public static final String[] SUPPORTED_ENTITY_TYPES = {
-            ENTITY_TYPE_TRINO_INSTANCE,
             ENTITY_TYPE_TRINO_CATALOG,
             ENTITY_TYPE_TRINO_SCHEMA,
             ENTITY_TYPE_TRINO_TABLE,
