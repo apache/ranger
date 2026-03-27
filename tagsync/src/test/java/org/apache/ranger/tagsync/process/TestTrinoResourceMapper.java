@@ -55,6 +55,25 @@ public class TestTrinoResourceMapper {
     AtlasTrinoResourceMapper resourceMapper = new AtlasTrinoResourceMapper();
 
     @Test
+    public void testTrinoInstance() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+
+        Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertInstanceResource(resource);
+    }
+
+    @Test
+    public void testTrinoInstanceUsesQualifiedNameAsServiceNameSource() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+
+        Assertions.assertEquals("dev_trino", resource.getServiceName());
+        assertResourceElementCount(resource, 1);
+        assertResourceElementValue(resource, ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
+    }
+
+    @Test
     public void testTrinoCatalog() throws Exception {
         RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_TRINO_CATALOG, CATALOG_QUALIFIED_NAME);
         RangerServiceResource resource = resourceMapper.buildResource(entity);
@@ -94,31 +113,34 @@ public class TestTrinoResourceMapper {
     public void testInvalidCatalogEntity() {
         assertException(getEntity(ENTITY_TYPE_TRINO_CATALOG, null), "attribute 'qualifiedName' not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_CATALOG, ""), "attribute 'qualifiedName' not found");
-        assertException(getEntity(ENTITY_TYPE_TRINO_CATALOG, "sales"), "trino-instance not found");
     }
 
     @Test
     public void testInvalidSchemaEntity() {
         assertException(getEntity(ENTITY_TYPE_TRINO_SCHEMA, null), "attribute 'qualifiedName' not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_SCHEMA, ""), "attribute 'qualifiedName' not found");
-        assertException(getEntity(ENTITY_TYPE_TRINO_SCHEMA, "sales.reporting"), "trino-instance not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_SCHEMA, CATALOG_QUALIFIED_NAME), "invalid qualifiedName");
     }
 
     @Test
-    public void testInvalidTableEntity() {
+    public void testInvalidTableEntity() throws Exception {
         assertException(getEntity(ENTITY_TYPE_TRINO_TABLE, null), "attribute 'qualifiedName' not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_TABLE, ""), "attribute 'qualifiedName' not found");
-        assertException(getEntity(ENTITY_TYPE_TRINO_TABLE, "sales.reporting.orders"), "trino-instance not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_TABLE, SCHEMA_QUALIFIED_NAME), "invalid qualifiedName");
+
+        RangerServiceResource resource = resourceMapper.buildResource(getEntity(ENTITY_TYPE_TRINO_TABLE, "sales.reporting.orders"));
+        Assertions.assertNotEquals(1, resource.getResourceElements().size());
     }
 
     @Test
-    public void testInvalidColumnEntity() {
+    public void testInvalidColumnEntity() throws Exception {
         assertException(getEntity(ENTITY_TYPE_TRINO_COLUMN, null), "attribute 'qualifiedName' not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_COLUMN, ""), "attribute 'qualifiedName' not found");
-        assertException(getEntity(ENTITY_TYPE_TRINO_COLUMN, "sales.reporting.orders.customer_id"), "trino-instance not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_COLUMN, TABLE_QUALIFIED_NAME), "invalid qualifiedName");
+
+        RangerServiceResource resource = resourceMapper.buildResource(getEntity(ENTITY_TYPE_TRINO_COLUMN, "sales.reporting.orders.customer_id"));
+        Assertions.assertNotEquals(1, resource.getResourceElements().size());
+
         assertException(getEntity(ENTITY_TYPE_TRINO_COLUMN, INVALID_RESOURCE_QUALIFIED_NAME), "invalid resource format");
     }
 
@@ -126,7 +148,7 @@ public class TestTrinoResourceMapper {
     public void testInvalidInstanceEntity() {
         assertException(getEntity(ENTITY_TYPE_TRINO_INSTANCE, null), "attribute 'qualifiedName' not found");
         assertException(getEntity(ENTITY_TYPE_TRINO_INSTANCE, ""), "attribute 'qualifiedName' not found");
-        assertException(getEntity(ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME), "trino-instance not found");
+        assertException(getEntity(ENTITY_TYPE_TRINO_INSTANCE, CATALOG_QUALIFIED_NAME), "unrecognized entity-type");
     }
 
     private RangerAtlasEntity getEntity(String entityType, String qualifiedName) {
@@ -138,6 +160,11 @@ public class TestTrinoResourceMapper {
         Assertions.assertEquals(SERVICE_NAME, resource.getServiceName());
         Assertions.assertNotNull(resource.getResourceElements());
         Assertions.assertEquals(count, resource.getResourceElements().size());
+    }
+
+    private void assertInstanceResource(RangerServiceResource resource) {
+        assertResourceElementCount(resource, 1);
+        assertResourceElementValue(resource, ENTITY_TYPE_TRINO_INSTANCE, INSTANCE_QUALIFIED_NAME);
     }
 
     private void assertCatalogResource(RangerServiceResource resource) {
@@ -177,7 +204,7 @@ public class TestTrinoResourceMapper {
         try {
             RangerServiceResource resource = resourceMapper.buildResource(entity);
 
-            Assertions.assertFalse(true, "Expected buildResource() to fail. But it returned " + resource);
+            Assertions.fail("Expected buildResource() to fail. But it returned " + resource);
         } catch (Exception excp) {
             Assertions.assertTrue(excp.getMessage().startsWith(exceptionMessage), "Unexpected exception message: expected=" + exceptionMessage + "; found " + excp.getMessage());
         }

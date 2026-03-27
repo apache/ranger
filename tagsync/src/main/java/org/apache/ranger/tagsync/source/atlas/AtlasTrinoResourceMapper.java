@@ -75,6 +75,10 @@ public class AtlasTrinoResourceMapper extends AtlasResourceMapper {
         }
 
         String trinoInstance = getClusterNameFromQualifiedName(qualifiedName);
+        if (StringUtils.equals(resourceStr, qualifiedName)){
+            trinoInstance = resourceStr;
+        }
+
         if (StringUtils.isEmpty(trinoInstance)) {
             throwExceptionWithMessage("trino-instance not found in attribute '" + ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
         }
