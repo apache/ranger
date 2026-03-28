@@ -499,5 +499,4 @@ public class RangerPdpREST {
             return message;
         }
     }
-
 }
