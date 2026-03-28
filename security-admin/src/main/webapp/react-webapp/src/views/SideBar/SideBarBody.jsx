@@ -220,6 +220,8 @@ export const SideBarBody = (props) => {
       if (checkKnoxSSOresp?.status == "419") {
         setUserProfile(null);
         window.location.replace("login.jsp");
+      } else {
+        handleLogout(null);
       }
       console.error(`Error occurred while logout! ${error}`);
     }
@@ -245,7 +247,7 @@ export const SideBarBody = (props) => {
           "cache-control": "no-cache"
         }
       });
-      if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
+      if (checkKnoxSSOVal !== undefined && checkKnoxSSOVal !== null) {
         if (checkKnoxSSOVal?.toString() == "false") {
           window.location.replace("locallogin");
           window.localStorage.clear();

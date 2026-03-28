@@ -109,7 +109,7 @@
 	</property>
 	<property>
 		<name>ranger.authentication.method</name>
-		<value>SAML</value>
+		<value>NONE</value>
 		<description></description>
 	</property>
 	<property>
@@ -477,17 +477,17 @@
 	</property>
 	<property>
 		<name>ranger.saml.idp.metadata.location</name>
-		<value>file:/opt/ranger/ranger-3.0.0-SNAPSHOT-admin/conf/saml/keycloak-IdP-metadata.xml</value>
+		<value></value>
 		<description>IdP metadata file location (file: or http: URI)</description>
 	</property>
 	<property>
 		<name>ranger.saml.sp.key</name>
-		<value>/opt/ranger/ranger-3.0.0-SNAPSHOT-admin/conf/saml/ranger-sp-clean.key</value>
+		<value></value>
 		<description>Absolute path to the SP private key (PKCS8 PEM) used to sign AuthnRequests</description>
 	</property>
 	<property>
 		<name>ranger.saml.sp.cert</name>
-		<value>/opt/ranger/ranger-3.0.0-SNAPSHOT-admin/conf/saml/ranger-sp.crt</value>
+		<value></value>
 		<description>Absolute path to the SP public certificate (X.509 PEM)</description>
 	</property>
 	<property>
