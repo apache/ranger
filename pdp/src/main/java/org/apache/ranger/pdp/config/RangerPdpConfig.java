@@ -138,7 +138,7 @@ public class RangerPdpConfig {
     }
 
     public String getAuthTypes() {
-        return get(RangerPdpConstants.PROP_AUTH_TYPES, "header,jwt,kerberos");
+        return get(RangerPdpConstants.PROP_AUTH_TYPES, "jwt,kerberos");
     }
 
     // --- HTTP Header auth ---

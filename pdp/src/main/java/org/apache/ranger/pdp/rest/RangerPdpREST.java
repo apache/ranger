@@ -240,7 +240,7 @@ public class RangerPdpREST {
                 }
             }
 
-            LOG.debug("==> getResourcePermissions(caller={}, serviceName={}): ret={}", caller, serviceName, ret != null ? ret.getStatus() : null);
+            LOG.debug("<== getResourcePermissions(caller={}, serviceName={}): ret={}", caller, serviceName, ret != null ? ret.getStatus() : null);
         } finally {
             recordRequestMetrics(ret, startNanos, httpRequest);
         }
@@ -401,16 +401,8 @@ public class RangerPdpREST {
         }
     }
 
-    /**
-     * Allowed-users config format:
-     *  ranger.pdp.service.<serviceName>.allowed.users=user1,user2
-     *  ranger.pdp.service.*.allowed.users=user3,user4
-     *
-     * If no allowed-users entries are configured, this check is disabled
-     * (backward-compatible behavior).
-     */
     private boolean isDelegationUserForService(String serviceName, String userName) {
-        boolean ret;
+        final boolean            ret;
         Map<String, Set<String>> delegationUsersByService = this.delegationUsersByService;
 
         if (delegationUsersByService.isEmpty()) {

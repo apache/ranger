@@ -17,10 +17,7 @@
   limitations under the License.
 -->
 <!-- Ranger PDP Server - Docker Configuration -->
-
 <configuration>
-
-  <!-- Server -->
   <property>
     <name>ranger.pdp.port</name>
     <value>6500</value>
@@ -29,6 +26,42 @@
   <property>
     <name>ranger.pdp.log.dir</name>
     <value>/var/log/ranger/pdp</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.*.delegation.users</name>
+    <value>ranger</value>
+  </property>
+
+  <!-- Only delegation users are allowed call on behalf of other users -->
+  <property>
+    <name>ranger.pdp.service.dev_hdfs.delegation.users</name>
+    <value>hdfs</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_hive.delegation.users</name>
+    <value>hive</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_hbase.delegation.users</name>
+    <value>hbase</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_kafka.delegation.users</name>
+    <value>kafka</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_trino.delegation.users</name>
+    <value>trino</value>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.dev_polaris.delegation.users</name>
+    <value>polaris</value>
   </property>
 
   <!-- SSL/TLS: disabled for Docker dev environment -->
@@ -64,10 +97,7 @@
     <value>10000</value>
   </property>
 
-  <!--
-    Authentication types: use Kerberos (SPNEGO) in Docker.
-    The KDC container provisions HTTP/ranger-pdp.rangernw@EXAMPLE.COM.
-  -->
+  <!-- Authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.auth.types</name>
     <value>kerberos</value>
@@ -79,17 +109,18 @@
     <value>false</value>
   </property>
 
-  <!-- JWT bearer token authentication: disabled -->
+  <property>
+    <name>ranger.pdp.authn.header.username</name>
+    <value>X-Forwarded-User</value>
+  </property>
+
+  <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.jwt.provider.url</name>
     <value/>
   </property>
 
-  <!--
-    Kerberos / SPNEGO authentication.
-    Principal and keytab are provisioned by the ranger-kdc container and
-    volume-mounted from ./dist/keytabs/ranger-pdp/ into /etc/keytabs/.
-  -->
+  <!-- Kerberos / SPNEGO authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.kerberos.spnego.principal</name>
     <value>HTTP/ranger-pdp.rangernw@EXAMPLE.COM</value>
@@ -103,42 +134,6 @@
   <property>
     <name>hadoop.security.auth_to_local</name>
     <value>DEFAULT</value>
-  </property>
-
-  <!-- Only delegation users are allowed call on behalf of other users -->
-  <property>
-    <name>ranger.pdp.service.dev_hdfs.delegation.users</name>
-    <value>hdfs</value>
-  </property>
-
-  <property>
-      <name>ranger.pdp.service.dev_hive.delegation.users</name>
-      <value>hive</value>
-  </property>
-
-  <property>
-    <name>ranger.pdp.service.dev_hbase.delegation.users</name>
-    <value>hbase</value>
-  </property>
-
-  <property>
-    <name>ranger.pdp.service.dev_kafka.delegation.users</name>
-    <value>kafka</value>
-  </property>
-
-  <property>
-    <name>ranger.pdp.service.dev_trino.delegation.users</name>
-    <value>trino</value>
-  </property>
-
-  <property>
-    <name>ranger.pdp.service.dev_polaris.delegation.users</name>
-    <value>polaris</value>
-  </property>
-
-  <property>
-    <name>ranger.pdp.service.*.delegation.users</name>
-    <value>ranger</value>
   </property>
 
   <!-- Connection to Ranger Admin Server -->

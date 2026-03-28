@@ -60,21 +60,15 @@ class RangerPDPClient:
         resp = self.client_http.call_api(RangerPDPClient.AUTHORIZE_MULTI, request_data=req)
         return type_coerce(resp, RangerMultiAuthzResult)
 
-    def get_resource_permissions(self, resource, context=None):
+    def get_resource_permissions(self, resource_perm_request):
         """
         Call POST /authz/v1/permissions
-        :param resource: dict-like resource payload OR RangerResourcePermissionsRequest
-        :param context: dict-like access context payload (ignored if 'resource' is already request object)
+        :param resource_perm_request: dict-like OR RangerResourcePermissionsRequest
         :return: RangerResourcePermissions
         """
-        req = type_coerce(resource, RangerResourcePermissionsRequest)
-        if req is None:
-            req = RangerResourcePermissionsRequest({
-                'resource': resource,
-                'context': context
-            })
-
+        req  = type_coerce(resource_perm_request, RangerResourcePermissionsRequest)
         resp = self.client_http.call_api(RangerPDPClient.GET_RESOURCE_PERMISSIONS, request_data=req)
+
         return type_coerce(resp, RangerResourcePermissions)
 
     # URIs

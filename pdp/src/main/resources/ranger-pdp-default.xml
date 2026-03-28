@@ -16,7 +16,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
 <configuration>
   <property>
     <name>ranger.pdp.port</name>
@@ -28,6 +27,12 @@
     <name>ranger.pdp.log.dir</name>
     <value>/var/log/ranger/pdp</value>
     <description>Directory for PDP server log files.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.service.*.delegation.users</name>
+    <value/>
+    <description>Comma-separated users, allowed to call on behalf of other users in all services</description>
   </property>
 
   <!-- SSL/TLS -->
@@ -114,22 +119,17 @@
     <description>Maximum concurrent TCP connections accepted by the connector.</description>
   </property>
 
-  <!-- ================================================================
-       Authentication for incoming REST requests
-       Comma-separated list of methods tried in the listed order.
-       Supported values: header, jwt, kerberos
-       ================================================================ -->
+  <!-- Authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.auth.types</name>
-    <value>header,jwt,kerberos</value>
+    <value>jwt,kerberos</value>
     <description>
       Comma-separated list of authentication methods for incoming REST requests,
       tried in listed order. Supported values: header, jwt, kerberos.
     </description>
   </property>
 
-  <!-- HTTP Header authentication
-       Consistent with: ranger.admin.authn.header.* in security-admin -->
+  <!-- HTTP Header authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.authn.header.enabled</name>
     <value>false</value>
@@ -144,9 +144,7 @@
     <description>HTTP header name from which the authenticated username is read.</description>
   </property>
 
-  <!-- JWT bearer token authentication
-       PDP validates tokens presented as "Authorization: Bearer token" or via cookie.
-       This is distinct from Knox SSO (browser redirect flow); no SSO redirect is performed. -->
+  <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
     <name>ranger.pdp.jwt.provider.url</name>
     <value/>
@@ -204,29 +202,10 @@
 
   <property>
     <name>ranger.pdp.kerberos.cookie.path</name>
-    <value>/</value>
+    <value/>
     <description>Cookie path used for the Kerberos authentication cookie.</description>
   </property>
 
-  <!--
-    Allowed callers for PDP REST APIs, per serviceName in request context.
-    Format:
-      ranger.pdp.service.<serviceName>.allowed.users=user1,user2
-      ranger.pdp.service.*.allowed.users=user3,user4
-    If no such entries are configured, this validation is disabled.
-  -->
-  <property>
-    <name>ranger.pdp.service.*.allowed.users</name>
-    <value/>
-    <description>Comma-separated users allowed to invoke PDP APIs for all services.</description>
-  </property>
-
-  <!-- ================================================================
-       RangerEmbeddedAuthorizer - Connection to Ranger Admin Server
-       All properties below are passed directly to RangerEmbeddedAuthorizer.
-       The ranger.authz.default.* prefix applies to all service types.
-       Use ranger.authz.service.<serviceName>.* to override per service.
-       ================================================================ -->
   <property>
     <name>ranger.authz.app.type</name>
     <value>ranger-pdp</value>
@@ -299,6 +278,7 @@
     </description>
   </property>
 
+  <!-- Basic Auth authentication for connecting to Ranger Admin -->
   <property>
     <name>ranger.authz.default.policy.rest.client.username</name>
     <value>admin</value>
@@ -311,11 +291,7 @@
     <description>Password for connecting to Ranger Admin (basic auth).</description>
   </property>
 
-  <!-- Kerberos login for connecting to Ranger Admin (alternative to basic auth).
-       Set ugi.initialize=true and choose login type:
-         keytab: supply ugi.keytab.principal and ugi.keytab.file
-         jaas:   supply ugi.jaas.appconfig (JAAS stanza name in jaas.conf) -->
-
+  <!-- Kerberos authentication for connecting to Ranger Admin-->
   <property>
     <name>ranger.authz.default.ugi.initialize</name>
     <value>false</value>
@@ -355,11 +331,7 @@
     </description>
   </property>
 
-  <!-- ================================================================
-       Audit
-       The ranger.authz.audit.* properties map to xasecure.audit.* used
-       by the Ranger audit framework.
-       ================================================================ -->
+  <!-- Audit -->
   <property>
     <name>ranger.authz.audit.is.enabled</name>
     <value>true</value>

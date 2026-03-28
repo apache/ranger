@@ -181,7 +181,7 @@ req = RangerMultiAuthzRequest({
     'requestId': 'req-3',
     'user':      RangerUserInfo({'name': 'alice'}),
     'accesses': [
-        RangerAccessInfo({'resource': RangerResourceInfo({'name': 'table:default/test_tbl1', 'subResources': ['column:id', 'column:name', 'column:email']}), 'permissions': ['select']}),
+        RangerAccessInfo({'resource': RangerResourceInfo({'name': 'table:default/test_tbl1', 'subResources': ['column:id', 'column:name', 'column:email'], 'attributes': {'OWNER': 'alice'}}), 'permissions': ['select']}),
         RangerAccessInfo({'resource': RangerResourceInfo({'name': 'table:default/test_vw1'}), 'permissions': ['create']})
     ],
     'context': RangerAccessContext({'serviceType': 'hive', 'serviceName': 'dev_hive'})
