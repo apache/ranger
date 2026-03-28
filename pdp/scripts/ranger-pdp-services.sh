@@ -75,7 +75,7 @@ if [ "${action}" == "START" ]; then
 
     if [ ! -d "$RANGER_PDP_LOG_DIR" ]; then
         mkdir -p "$RANGER_PDP_LOG_DIR"
-        chmod 777 "$RANGER_PDP_LOG_DIR"
+        chmod 755 "$RANGER_PDP_LOG_DIR"
     fi
 
     cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*"
@@ -144,7 +144,7 @@ elif [ "${action}" == "RUN" ]; then
 
     if [ ! -d "$RANGER_PDP_LOG_DIR" ]; then
         mkdir -p "$RANGER_PDP_LOG_DIR"
-        chmod 777 "$RANGER_PDP_LOG_DIR"
+        chmod 755 "$RANGER_PDP_LOG_DIR"
     fi
 
     if [ -z "${RANGER_PDP_CONF_DIR}" ]; then

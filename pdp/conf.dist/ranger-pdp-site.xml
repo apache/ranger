@@ -16,7 +16,6 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!-- Copy this file to conf/ranger-pdp-site.xml and edit to override defaults. -->
 <configuration>
   <property>
     <name>ranger.pdp.port</name>
@@ -147,64 +146,64 @@
 
   <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
-    <name>ranger.pdp.jwt.provider.url</name>
+    <name>ranger.pdp.authn.jwt.provider.url</name>
     <value/>
     <description>URL of the JWT provider (used to fetch the public key).</description>
   </property>
 
   <property>
-    <name>ranger.pdp.jwt.public.key</name>
+    <name>ranger.pdp.authn.jwt.public.key</name>
     <value/>
-    <description>Base64-encoded public key for verifying JWT signatures.</description>
+    <description>PEM-encoded public key for verifying JWT signatures.</description>
   </property>
 
   <property>
-    <name>ranger.pdp.jwt.cookie.name</name>
+    <name>ranger.pdp.authn.jwt.cookie.name</name>
     <value>hadoop-jwt</value>
     <description>Cookie name from which a JWT bearer token may be read.</description>
   </property>
 
   <property>
-    <name>ranger.pdp.jwt.audiences</name>
+    <name>ranger.pdp.authn.jwt.audiences</name>
     <value/>
     <description>Comma-separated list of accepted JWT audiences. Empty means any audience is accepted.</description>
   </property>
 
   <!-- Kerberos / SPNEGO authentication for incoming REST requests -->
   <property>
-    <name>ranger.pdp.kerberos.spnego.principal</name>
+    <name>ranger.pdp.authn.kerberos.spnego.principal</name>
     <value/>
     <description>Kerberos service principal for SPNEGO authentication, e.g. HTTP/host@REALM.</description>
   </property>
 
   <property>
-    <name>ranger.pdp.kerberos.spnego.keytab</name>
+    <name>ranger.pdp.authn.kerberos.spnego.keytab</name>
     <value/>
     <description>Path to the keytab file for the SPNEGO service principal.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.kerberos.token.valid.seconds</name>
+    <value>30</value>
+    <description>Validity period (seconds) for Kerberos authentication tokens.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.kerberos.cookie.domain</name>
+    <value/>
+    <description>Cookie domain used for the Kerberos authentication cookie.</description>
+  </property>
+
+  <property>
+    <name>ranger.pdp.authn.kerberos.cookie.path</name>
+    <value/>
+    <description>Cookie path used for the Kerberos authentication cookie.</description>
   </property>
 
   <property>
     <name>hadoop.security.auth_to_local</name>
     <value>DEFAULT</value>
     <description>Rules for mapping Kerberos principal names to short usernames.</description>
-  </property>
-
-  <property>
-    <name>ranger.pdp.kerberos.token.valid.seconds</name>
-    <value>30</value>
-    <description>Validity period (seconds) for Kerberos authentication tokens.</description>
-  </property>
-
-  <property>
-    <name>ranger.pdp.kerberos.cookie.domain</name>
-    <value/>
-    <description>Cookie domain used for the Kerberos authentication cookie.</description>
-  </property>
-
-  <property>
-    <name>ranger.pdp.kerberos.cookie.path</name>
-    <value/>
-    <description>Cookie path used for the Kerberos authentication cookie.</description>
   </property>
 
   <property>

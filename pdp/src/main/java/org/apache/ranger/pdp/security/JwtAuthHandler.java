@@ -37,7 +37,7 @@ import java.util.Properties;
  * then in the configured JWT cookie.  Delegates signature verification and expiry/audience
  * checks to {@link RangerDefaultJwtAuthHandler} from the {@code ranger-authn} module.
  *
- * <p>Configuration keys (all prefixed with {@code ranger.pdp.auth.jwt.}):
+ * <p>Configuration keys (all prefixed with {@code ranger.pdp.authn.jwt.}):
  * <ul>
  *   <li>{@code provider.url}  – JWKS endpoint URL (optional if public key is set)
  *   <li>{@code public.key}    – PEM-encoded public key (optional if provider URL is set)

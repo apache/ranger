@@ -97,7 +97,7 @@ public class KerberosAuthHandler implements PdpAuthHandler {
         String keytab    = config.getProperty(RangerPdpAuthFilter.PARAM_SPNEGO_KEYTAB);
 
         if (StringUtils.isBlank(principal) || StringUtils.isBlank(keytab)) {
-            throw new IllegalArgumentException("Kerberos auth requires configurations " + RangerPdpConstants.PROP_SPNEGO_PRINCIPAL + " and " + RangerPdpConstants.PROP_SPNEGO_KEYTAB);
+            throw new IllegalArgumentException("Kerberos auth requires configurations " + RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL + " and " + RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB);
         }
 
         String configuredNameRules = config.getProperty(RangerPdpAuthFilter.PARAM_KRB_NAME_RULES, "DEFAULT");

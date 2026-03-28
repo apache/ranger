@@ -27,13 +27,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class RangerPdpConfigTest {
     @AfterEach
     public void clearSystemOverrides() {
-        System.clearProperty(RangerPdpConstants.PROP_HEADER_AUTHN_USERNAME);
+        System.clearProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME);
         System.clearProperty(RangerPdpConstants.PROP_PORT);
     }
 
     @Test
     public void testHeaderUserNameCanBeOverriddenBySystemProperty() {
-        System.setProperty(RangerPdpConstants.PROP_HEADER_AUTHN_USERNAME, "X-Test-User");
+        System.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Test-User");
 
         RangerPdpConfig config = new RangerPdpConfig();
 

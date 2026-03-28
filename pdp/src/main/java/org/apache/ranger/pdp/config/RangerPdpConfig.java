@@ -20,15 +20,11 @@
 package org.apache.ranger.pdp.config;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.plugin.util.XMLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,11 +54,9 @@ public class RangerPdpConfig {
     private static final String DEFAULT_CONFIG_FILE = "ranger-pdp-default.xml";
     private static final String SITE_CONFIG_FILE    = "ranger-pdp-site.xml";
 
-    private final Properties props;
+    private final Properties props = new Properties();
 
     public RangerPdpConfig() {
-        props = new Properties();
-
         loadFromClasspath(DEFAULT_CONFIG_FILE);
         loadFromClasspath(SITE_CONFIG_FILE);
 
@@ -142,57 +136,54 @@ public class RangerPdpConfig {
     }
 
     // --- HTTP Header auth ---
-
     public boolean isHeaderAuthnEnabled() {
-        return getBoolean(RangerPdpConstants.PROP_HEADER_AUTHN_ENABLED, false);
+        return getBoolean(RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED, false);
     }
 
     public String getHeaderAuthnUsername() {
-        return get(RangerPdpConstants.PROP_HEADER_AUTHN_USERNAME, "X-Forwarded-User");
+        return get(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Forwarded-User");
     }
 
     // --- JWT bearer token auth ---
-
     public String getJwtProviderUrl() {
-        return get(RangerPdpConstants.PROP_JWT_PROVIDER_URL, "");
+        return get(RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, "");
     }
 
     public String getJwtPublicKey() {
-        return get(RangerPdpConstants.PROP_JWT_PUBLIC_KEY, "");
+        return get(RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, "");
     }
 
     public String getJwtCookieName() {
-        return get(RangerPdpConstants.PROP_JWT_COOKIE_NAME, "hadoop-jwt");
+        return get(RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME, "hadoop-jwt");
     }
 
     public String getJwtAudiences() {
-        return get(RangerPdpConstants.PROP_JWT_AUDIENCES, "");
+        return get(RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, "");
     }
 
     // --- Kerberos / SPNEGO ---
-
     public String getSpnegoPrincipal() {
-        return get(RangerPdpConstants.PROP_SPNEGO_PRINCIPAL, "");
+        return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL, "");
     }
 
     public String getSpnegoKeytab() {
-        return get(RangerPdpConstants.PROP_SPNEGO_KEYTAB, "");
+        return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB, "");
+    }
+
+    public int getKerberosTokenValiditySeconds() {
+        return getInt(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY, 30);
+    }
+
+    public String getKerberosCookieDomain() {
+        return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_DOMAIN, "");
+    }
+
+    public String getKerberosCookiePath() {
+        return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_PATH, "/");
     }
 
     public String getKerberosNameRules() {
         return get(RangerPdpConstants.PROP_KRB_NAME_RULES, "DEFAULT");
-    }
-
-    public int getKerberosTokenValiditySeconds() {
-        return getInt(RangerPdpConstants.PROP_KRB_TOKEN_VALIDITY, 30);
-    }
-
-    public String getKerberosCookieDomain() {
-        return get(RangerPdpConstants.PROP_KRB_COOKIE_DOMAIN, "");
-    }
-
-    public String getKerberosCookiePath() {
-        return get(RangerPdpConstants.PROP_KRB_COOKIE_PATH, "/");
     }
 
     /**
@@ -270,32 +261,9 @@ public class RangerPdpConfig {
      * </pre>
      */
     private void parseHadoopXml(InputStream in, String source) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        XMLUtils.loadConfig(in, props);
 
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document        doc     = builder.parse(in);
-            NodeList        entries = doc.getElementsByTagName("property");
-            int             loaded  = 0;
-
-            for (int i = 0; i < entries.getLength(); i++) {
-                Element entry = (Element) entries.item(i);
-                String  name  = childText(entry, "name");
-                String  value = childText(entry, "value");
-
-                if (StringUtils.isNotBlank(name)) {
-                    props.setProperty(name, value != null ? value : "");
-                    loaded++;
-                }
-            }
-
-            LOG.info("Loaded {} properties from {}", loaded, source);
-        } catch (Exception e) {
-            LOG.warn("Failed to parse config XML: {}", source, e);
-        }
+        LOG.info("Loaded {} properties from {}", props.size(), source);
     }
 
     /** Returns the trimmed text content of the first child element with the given tag name. */

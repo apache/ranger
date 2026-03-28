@@ -116,18 +116,18 @@
 
   <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
-    <name>ranger.pdp.jwt.provider.url</name>
+    <name>ranger.pdp.authn.jwt.provider.url</name>
     <value/>
   </property>
 
   <!-- Kerberos / SPNEGO authentication for incoming REST requests -->
   <property>
-    <name>ranger.pdp.kerberos.spnego.principal</name>
+    <name>ranger.pdp.authn.kerberos.spnego.principal</name>
     <value>HTTP/ranger-pdp.rangernw@EXAMPLE.COM</value>
   </property>
 
   <property>
-    <name>ranger.pdp.kerberos.spnego.keytab</name>
+    <name>ranger.pdp.authn.kerberos.spnego.keytab</name>
     <value>/etc/keytabs/HTTP.keytab</value>
   </property>
 

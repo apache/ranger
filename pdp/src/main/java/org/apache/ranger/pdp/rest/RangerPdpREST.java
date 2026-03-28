@@ -62,6 +62,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_PDP_SERVICE_PREFIX;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_SUFFIX_DELEGATION_USERS;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.WILDCARD_SERVICE_NAME;
@@ -145,7 +149,7 @@ public class RangerPdpREST {
                 } catch (Exception e) {
                     LOG.error("authorize(requestId={}): internal error; caller={}", requestId, caller, e);
 
-                    ret = serverError(e);
+                    ret = serverError();
                 }
             }
 
@@ -192,7 +196,7 @@ public class RangerPdpREST {
                 } catch (Exception e) {
                     LOG.error("authorizeMulti(requestId={}): internal error; caller={}", requestId, caller, e);
 
-                    ret = serverError(e);
+                    ret = serverError();
                 }
             }
 
@@ -236,7 +240,7 @@ public class RangerPdpREST {
                 } catch (Exception e) {
                     LOG.error("getResourcePermissions(): unexpected error; caller={}", caller, e);
 
-                    ret = serverError(e);
+                    ret = serverError();
                 }
             }
 
@@ -270,8 +274,8 @@ public class RangerPdpREST {
         final Response ret;
 
         if (StringUtils.isBlank(caller)) {
-            ret = Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorResponse(Response.Status.UNAUTHORIZED, "Authentication required"))
+            ret = Response.status(UNAUTHORIZED)
+                    .entity(new ErrorResponse(UNAUTHORIZED, "Authentication required"))
                     .build();
         } else {
             boolean needsDelegation = isDelegationNeeded(caller, user) || isDelegationNeeded(access);
@@ -280,8 +284,8 @@ public class RangerPdpREST {
                 if (!isDelegationUserForService(serviceName, caller)) {
                     LOG.info("{} is not a delegation user in service {}", caller, serviceName);
 
-                    ret = Response.status(Response.Status.FORBIDDEN)
-                            .entity(new ErrorResponse(Response.Status.FORBIDDEN, caller + " is not authorized"))
+                    ret = Response.status(FORBIDDEN)
+                            .entity(new ErrorResponse(FORBIDDEN, caller + " is not authorized"))
                             .build();
                 } else {
                     ret = RESPONSE_OK;
@@ -298,8 +302,8 @@ public class RangerPdpREST {
         final Response ret;
 
         if (StringUtils.isBlank(caller)) {
-            ret = Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorResponse(Response.Status.UNAUTHORIZED, "Authentication required"))
+            ret = Response.status(UNAUTHORIZED)
+                    .entity(new ErrorResponse(UNAUTHORIZED, "Authentication required"))
                     .build();
         } else {
             boolean needsDelegation = isDelegationNeeded(caller, user) || isDelegationNeeded(accesses);
@@ -308,8 +312,8 @@ public class RangerPdpREST {
                 if (!isDelegationUserForService(serviceName, caller)) {
                     LOG.info("{} is not a delegation user in service {}", caller, serviceName);
 
-                    ret = Response.status(Response.Status.FORBIDDEN)
-                            .entity(new ErrorResponse(Response.Status.FORBIDDEN, caller + " is not authorized"))
+                    ret = Response.status(FORBIDDEN)
+                            .entity(new ErrorResponse(FORBIDDEN, caller + " is not authorized"))
                             .build();
                 } else {
                     ret = RESPONSE_OK;
@@ -326,14 +330,14 @@ public class RangerPdpREST {
         final Response ret;
 
         if (StringUtils.isBlank(caller)) {
-            ret = Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(new ErrorResponse(Response.Status.UNAUTHORIZED, "Authentication required"))
+            ret = Response.status(UNAUTHORIZED)
+                    .entity(new ErrorResponse(UNAUTHORIZED, "Authentication required"))
                     .build();
         } else if (!isDelegationUserForService(serviceName, caller)) {
             LOG.info("{} is not a delegation user in service {}", caller, serviceName);
 
-            ret = Response.status(Response.Status.FORBIDDEN)
-                    .entity(new ErrorResponse(Response.Status.FORBIDDEN, caller + " is not authorized"))
+            ret = Response.status(FORBIDDEN)
+                    .entity(new ErrorResponse(FORBIDDEN, caller + " is not authorized"))
                     .build();
         } else {
             ret = RESPONSE_OK;
@@ -461,14 +465,14 @@ public class RangerPdpREST {
     }
 
     private Response badRequest(RangerAuthzException e) {
-        return Response.status(Response.Status.BAD_REQUEST)
-                       .entity(new ErrorResponse(Response.Status.BAD_REQUEST, e.getMessage()))
+        return Response.status(BAD_REQUEST)
+                       .entity(new ErrorResponse(BAD_REQUEST, e.getMessage()))
                        .build();
     }
 
-    private Response serverError(Exception e) {
+    private Response serverError() {
         return Response.serverError()
-                       .entity(new ErrorResponse(Response.Status.INTERNAL_SERVER_ERROR, e.getMessage()))
+                       .entity(new ErrorResponse(INTERNAL_SERVER_ERROR, "Internal Server Error"))
                        .build();
     }
 

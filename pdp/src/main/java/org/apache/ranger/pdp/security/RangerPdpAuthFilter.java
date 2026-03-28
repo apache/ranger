@@ -59,22 +59,22 @@ public class RangerPdpAuthFilter implements Filter {
     public static final String PARAM_AUTH_TYPES = RangerPdpConstants.PROP_AUTH_TYPES;
 
     // HTTP Header auth — consistent with ranger.admin.authn.header.* in security-admin
-    public static final String PARAM_HEADER_AUTHN_ENABLED  = RangerPdpConstants.PROP_HEADER_AUTHN_ENABLED;
-    public static final String PARAM_HEADER_AUTHN_USERNAME = RangerPdpConstants.PROP_HEADER_AUTHN_USERNAME;
+    public static final String PARAM_HEADER_AUTHN_ENABLED  = RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED;
+    public static final String PARAM_HEADER_AUTHN_USERNAME = RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME;
 
     // JWT bearer token auth
-    public static final String PARAM_JWT_PROVIDER_URL = RangerPdpConstants.PROP_JWT_PROVIDER_URL;
-    public static final String PARAM_JWT_PUBLIC_KEY   = RangerPdpConstants.PROP_JWT_PUBLIC_KEY;
-    public static final String PARAM_JWT_COOKIE_NAME  = RangerPdpConstants.PROP_JWT_COOKIE_NAME;
-    public static final String PARAM_JWT_AUDIENCES    = RangerPdpConstants.PROP_JWT_AUDIENCES;
+    public static final String PARAM_JWT_PROVIDER_URL = RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL;
+    public static final String PARAM_JWT_PUBLIC_KEY   = RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY;
+    public static final String PARAM_JWT_COOKIE_NAME  = RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME;
+    public static final String PARAM_JWT_AUDIENCES    = RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES;
 
     // Kerberos / SPNEGO
-    public static final String PARAM_SPNEGO_PRINCIPAL   = RangerPdpConstants.PROP_SPNEGO_PRINCIPAL;
-    public static final String PARAM_SPNEGO_KEYTAB      = RangerPdpConstants.PROP_SPNEGO_KEYTAB;
+    public static final String PARAM_SPNEGO_PRINCIPAL   = RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL;
+    public static final String PARAM_SPNEGO_KEYTAB      = RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB;
     public static final String PARAM_KRB_NAME_RULES     = RangerPdpConstants.PROP_KRB_NAME_RULES;
-    public static final String PARAM_KRB_TOKEN_VALIDITY = RangerPdpConstants.PROP_KRB_TOKEN_VALIDITY;
-    public static final String PARAM_KRB_COOKIE_DOMAIN  = RangerPdpConstants.PROP_KRB_COOKIE_DOMAIN;
-    public static final String PARAM_KRB_COOKIE_PATH    = RangerPdpConstants.PROP_KRB_COOKIE_PATH;
+    public static final String PARAM_KRB_TOKEN_VALIDITY = RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY;
+    public static final String PARAM_KRB_COOKIE_DOMAIN  = RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_DOMAIN;
+    public static final String PARAM_KRB_COOKIE_PATH    = RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_PATH;
 
     private final List<PdpAuthHandler> handlers = new ArrayList<>();
 
@@ -85,7 +85,7 @@ public class RangerPdpAuthFilter implements Filter {
         boolean    headerAuthEnabled = Boolean.parseBoolean(StringUtils.defaultIfBlank(filterConfig.getInitParameter(PARAM_HEADER_AUTHN_ENABLED), "false"));
 
         if (StringUtils.isBlank(types)) {
-            types = "header,jwt,kerberos";
+            types = "jwt,kerberos";
         }
 
         for (String type : types.split(",")) {
@@ -93,22 +93,25 @@ public class RangerPdpAuthFilter implements Filter {
 
             if ("header".equals(normalizedType) && !headerAuthEnabled) {
                 LOG.info("Header auth type is configured but disabled via {}=false; skipping handler registration", PARAM_HEADER_AUTHN_ENABLED);
+
                 continue;
             }
 
             PdpAuthHandler handler = createHandler(normalizedType);
 
-            if (handler != null) {
-                try {
-                    handler.init(config);
-                    handlers.add(handler);
+            if (handler == null) {
+                LOG.warn("Unknown auth type ignored: {}", type);
 
-                    LOG.info("Registered auth handler: {}", normalizedType);
-                } catch (Exception e) {
-                    throw new ServletException("Failed to initialize auth handler: " + type, e);
-                }
-            } else {
-                LOG.warn("Unknown auth type ignored: {}", type.trim());
+                continue;
+            }
+
+            try {
+                handler.init(config);
+                handlers.add(handler);
+
+                LOG.info("Registered auth handler: {}", normalizedType);
+            } catch (Exception e) {
+                LOG.error("Failed to initialize auth handler: {}", type, e);
             }
         }
 

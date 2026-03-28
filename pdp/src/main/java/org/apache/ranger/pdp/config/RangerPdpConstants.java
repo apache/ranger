@@ -61,22 +61,22 @@ public final class RangerPdpConstants {
     public static final String PROP_AUTH_TYPES = "ranger.pdp.auth.types";
 
     // HTTP header auth
-    public static final String PROP_HEADER_AUTHN_ENABLED  = "ranger.pdp.authn.header.enabled";
-    public static final String PROP_HEADER_AUTHN_USERNAME = "ranger.pdp.authn.header.username";
+    public static final String PROP_AUTHN_HEADER_ENABLED  = "ranger.pdp.authn.header.enabled";
+    public static final String PROP_AUTHN_HEADER_USERNAME = "ranger.pdp.authn.header.username";
 
     // JWT auth
-    public static final String PROP_JWT_PROVIDER_URL = "ranger.pdp.jwt.provider.url";
-    public static final String PROP_JWT_PUBLIC_KEY   = "ranger.pdp.jwt.public.key";
-    public static final String PROP_JWT_COOKIE_NAME  = "ranger.pdp.jwt.cookie.name";
-    public static final String PROP_JWT_AUDIENCES    = "ranger.pdp.jwt.audiences";
+    public static final String PROP_AUTHN_JWT_PROVIDER_URL = "ranger.pdp.authn.jwt.provider.url";
+    public static final String PROP_AUTHN_JWT_PUBLIC_KEY   = "ranger.pdp.authn.jwt.public.key";
+    public static final String PROP_AUTHN_JWT_COOKIE_NAME  = "ranger.pdp.authn.jwt.cookie.name";
+    public static final String PROP_AUTHN_JWT_AUDIENCES    = "ranger.pdp.authn.jwt.audiences";
 
     // Kerberos/SPNEGO auth
-    public static final String PROP_SPNEGO_PRINCIPAL   = "ranger.pdp.kerberos.spnego.principal";
-    public static final String PROP_SPNEGO_KEYTAB      = "ranger.pdp.kerberos.spnego.keytab";
-    public static final String PROP_KRB_NAME_RULES     = "hadoop.security.auth_to_local";
-    public static final String PROP_KRB_TOKEN_VALIDITY = "ranger.pdp.kerberos.token.valid.seconds";
-    public static final String PROP_KRB_COOKIE_DOMAIN  = "ranger.pdp.kerberos.cookie.domain";
-    public static final String PROP_KRB_COOKIE_PATH    = "ranger.pdp.kerberos.cookie.path";
+    public static final String PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL   = "ranger.pdp.authn.kerberos.spnego.principal";
+    public static final String PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB      = "ranger.pdp.authn.kerberos.spnego.keytab";
+    public static final String PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY = "ranger.pdp.authn.kerberos.token.valid.seconds";
+    public static final String PROP_AUTHN_KERBEROS_KRB_COOKIE_DOMAIN  = "ranger.pdp.authn.kerberos.cookie.domain";
+    public static final String PROP_AUTHN_KERBEROS_KRB_COOKIE_PATH    = "ranger.pdp.authn.kerberos.cookie.path";
+    public static final String PROP_KRB_NAME_RULES                    = "hadoop.security.auth_to_local";
 
     // Authorizer/audit properties referenced by PDP code
     public static final String PROP_AUTHZ_POLICY_CACHE_DIR = "ranger.authz.default.policy.cache.dir";
