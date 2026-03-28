@@ -99,14 +99,14 @@
 
   <!-- Authentication for incoming REST requests -->
   <property>
-    <name>ranger.pdp.auth.types</name>
-    <value>kerberos</value>
+    <name>ranger.pdp.authn.types</name>
+    <value>header,jwt,kerberos</value>
   </property>
 
   <!-- HTTP Header authentication: disabled -->
   <property>
     <name>ranger.pdp.authn.header.enabled</name>
-    <value>false</value>
+    <value>true</value>
   </property>
 
   <property>
@@ -116,12 +116,22 @@
 
   <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
+    <name>ranger.pdp.authn.jwt.enabled</name>
+    <value>false</value>
+  </property>
+
+    <property>
     <name>ranger.pdp.authn.jwt.provider.url</name>
     <value/>
   </property>
 
   <!-- Kerberos / SPNEGO authentication for incoming REST requests -->
   <property>
+    <name>ranger.pdp.authn.kerberos.enabled</name>
+    <value>true</value>
+  </property>
+
+    <property>
     <name>ranger.pdp.authn.kerberos.spnego.principal</name>
     <value>HTTP/ranger-pdp.rangernw@EXAMPLE.COM</value>
   </property>
@@ -132,14 +142,14 @@
   </property>
 
   <property>
-    <name>hadoop.security.auth_to_local</name>
+    <name>ranger.pdp.authn.kerberos.name.rules</name>
     <value>DEFAULT</value>
   </property>
 
   <!-- Connection to Ranger Admin Server -->
   <property>
     <name>ranger.authz.default.policy.rest.url</name>
-    <value>http://ranger.rangernw:6080</value>
+    <value>http://ranger:6080</value>
   </property>
 
   <property>
@@ -175,7 +185,7 @@
 
   <property>
     <name>ranger.authz.audit.destination.solr.urls</name>
-    <value>http://ranger-solr.rangernw:8983/solr/ranger_audits</value>
+    <value>http://ranger-solr:8983/solr/ranger_audits</value>
   </property>
 
   <property>
@@ -200,7 +210,7 @@
 
   <property>
     <name>ranger.authz.audit.jaas.Client.option.serviceName</name>
-    <value>ranger-pdp</value>
+    <value>HTTP</value>
   </property>
 
   <property>

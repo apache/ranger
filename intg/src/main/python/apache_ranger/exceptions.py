@@ -33,8 +33,6 @@ class RangerServiceException(Exception):
         self.msgDesc         = None
         self.messageList     = None
 
-        print(response)
-
         if api is not None and response is not None:
             if response.content:
               try:

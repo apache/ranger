@@ -21,15 +21,14 @@ package org.apache.ranger.pdp.config;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.util.XMLUtils;
+import org.ietf.jgss.GSSCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Properties;
 
 /**
@@ -131,8 +130,8 @@ public class RangerPdpConfig {
         return getInt(RangerPdpConstants.PROP_HTTP_CONNECTOR_MAX_CONNECTIONS, 10000);
     }
 
-    public String getAuthTypes() {
-        return get(RangerPdpConstants.PROP_AUTH_TYPES, "jwt,kerberos");
+    public String getAuthnTypes() {
+        return get(RangerPdpConstants.PROP_AUTHN_TYPES, "header,jwt,kerberos");
     }
 
     // --- HTTP Header auth ---
@@ -145,6 +144,10 @@ public class RangerPdpConfig {
     }
 
     // --- JWT bearer token auth ---
+    public boolean isJwtAuthnEnabled() {
+        return getBoolean(RangerPdpConstants.PROP_AUTHN_JWT_ENABLED, false);
+    }
+
     public String getJwtProviderUrl() {
         return get(RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, "");
     }
@@ -162,6 +165,10 @@ public class RangerPdpConfig {
     }
 
     // --- Kerberos / SPNEGO ---
+    public boolean isKerberosAuthnEnabled() {
+        return getBoolean(RangerPdpConstants.PROP_AUTHN_KERBEROS_ENABLED, false);
+    }
+
     public String getSpnegoPrincipal() {
         return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL, "");
     }
@@ -171,19 +178,11 @@ public class RangerPdpConfig {
     }
 
     public int getKerberosTokenValiditySeconds() {
-        return getInt(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY, 30);
-    }
-
-    public String getKerberosCookieDomain() {
-        return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_DOMAIN, "");
-    }
-
-    public String getKerberosCookiePath() {
-        return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_PATH, "/");
+        return getInt(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY, GSSCredential.INDEFINITE_LIFETIME);
     }
 
     public String getKerberosNameRules() {
-        return get(RangerPdpConstants.PROP_KRB_NAME_RULES, "DEFAULT");
+        return get(RangerPdpConstants.PROP_AUTHN_KERBEROS_NAME_RULES, "DEFAULT");
     }
 
     /**
@@ -237,7 +236,7 @@ public class RangerPdpConfig {
             return;
         }
 
-        try (InputStream in = new FileInputStream(file)) {
+        try (InputStream in = Files.newInputStream(file.toPath())) {
             parseHadoopXml(in, file.getAbsolutePath());
         } catch (IOException e) {
             LOG.warn("Failed to read config file: {}", file, e);
@@ -261,22 +260,11 @@ public class RangerPdpConfig {
      * </pre>
      */
     private void parseHadoopXml(InputStream in, String source) {
+        LOG.info("Loading from {}. Properties count {}", source, props.size());
+
         XMLUtils.loadConfig(in, props);
 
-        LOG.info("Loaded {} properties from {}", props.size(), source);
-    }
-
-    /** Returns the trimmed text content of the first child element with the given tag name. */
-    private static String childText(Element parent, String tagName) {
-        NodeList nodes = parent.getElementsByTagName(tagName);
-
-        if (nodes.getLength() > 0) {
-            String text = nodes.item(0).getTextContent();
-
-            return text != null ? text.trim() : null;
-        }
-
-        return null;
+        LOG.info("Loaded from {}. Properties count {}", source, props.size());
     }
 
     /**
@@ -285,10 +273,7 @@ public class RangerPdpConfig {
      */
     private void applySystemPropertyOverrides() {
         for (String key : System.getProperties().stringPropertyNames()) {
-            if (key.startsWith(RangerPdpConstants.PROP_PDP_PREFIX)
-                    || key.startsWith(RangerPdpConstants.PROP_AUTHZ_PREFIX)
-                    || key.startsWith(RangerPdpConstants.PROP_SPNEGO_PREFIX)
-                    || key.startsWith(RangerPdpConstants.PROP_HADOOP_SECURITY_PREFIX)) {
+            if (key.startsWith(RangerPdpConstants.PROP_PDP_PREFIX) || key.startsWith(RangerPdpConstants.PROP_AUTHZ_PREFIX)) {
                 props.setProperty(key, System.getProperty(key));
             }
         }

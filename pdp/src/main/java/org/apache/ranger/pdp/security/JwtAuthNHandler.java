@@ -21,13 +21,13 @@ package org.apache.ranger.pdp.security;
 
 import org.apache.ranger.authz.handler.RangerAuth;
 import org.apache.ranger.authz.handler.jwt.RangerDefaultJwtAuthHandler;
+import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -45,8 +45,8 @@ import java.util.Properties;
  *   <li>{@code audiences}     – comma-separated list of accepted audiences (optional)
  * </ul>
  */
-public class JwtAuthHandler implements PdpAuthHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(JwtAuthHandler.class);
+public class JwtAuthNHandler implements PdpAuthNHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(JwtAuthNHandler.class);
 
     public static final String AUTH_TYPE = "JWT";
 
@@ -56,10 +56,10 @@ public class JwtAuthHandler implements PdpAuthHandler {
     public void init(Properties config) throws Exception {
         Properties jwtConfig = new Properties();
 
-        copyIfPresent(config, RangerPdpAuthFilter.PARAM_JWT_PROVIDER_URL, jwtConfig, RangerDefaultJwtAuthHandler.KEY_PROVIDER_URL);
-        copyIfPresent(config, RangerPdpAuthFilter.PARAM_JWT_PUBLIC_KEY, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_PUBLIC_KEY);
-        copyIfPresent(config, RangerPdpAuthFilter.PARAM_JWT_COOKIE_NAME, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_COOKIE_NAME);
-        copyIfPresent(config, RangerPdpAuthFilter.PARAM_JWT_AUDIENCES, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_AUDIENCES);
+        copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, jwtConfig, RangerDefaultJwtAuthHandler.KEY_PROVIDER_URL);
+        copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_PUBLIC_KEY);
+        copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_COOKIE_NAME);
+        copyIfPresent(config, RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, jwtConfig, RangerDefaultJwtAuthHandler.KEY_JWT_AUDIENCES);
 
         delegate = new RangerDefaultJwtAuthHandler();
 
@@ -69,7 +69,7 @@ public class JwtAuthHandler implements PdpAuthHandler {
     }
 
     @Override
-    public Result authenticate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public Result authenticate(HttpServletRequest request, HttpServletResponse response) {
         if (!RangerDefaultJwtAuthHandler.canAuthenticateRequest(request)) {
             return Result.skip();
         }

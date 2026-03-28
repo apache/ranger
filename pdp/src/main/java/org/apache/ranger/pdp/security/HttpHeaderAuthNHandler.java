@@ -20,6 +20,7 @@
 package org.apache.ranger.pdp.security;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +41,8 @@ import java.util.Properties;
  * is reachable exclusively through the trusted proxy.  Direct client access would allow
  * unauthenticated identity spoofing.
  */
-public class HttpHeaderAuthHandler implements PdpAuthHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(HttpHeaderAuthHandler.class);
+public class HttpHeaderAuthNHandler implements PdpAuthNHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(HttpHeaderAuthNHandler.class);
 
     public static final String AUTH_TYPE = "HEADER";
 
@@ -49,7 +50,7 @@ public class HttpHeaderAuthHandler implements PdpAuthHandler {
 
     @Override
     public void init(Properties config) {
-        usernameHeader = config.getProperty(RangerPdpAuthFilter.PARAM_HEADER_AUTHN_USERNAME, "X-Forwarded-User");
+        usernameHeader = config.getProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Forwarded-User");
 
         LOG.info("HttpHeaderAuthHandler initialized; username header={}", usernameHeader);
     }

@@ -19,6 +19,7 @@
 
 package org.apache.ranger.pdp.security;
 
+import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.junit.jupiter.api.Test;
 
 import javax.servlet.FilterConfig;
@@ -35,37 +36,37 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class RangerPdpAuthFilterTest {
+public class RangerPdpAuthNFilterTest {
     @Test
     public void testInit_skipsHeaderHandlerWhenDisabled() {
-        RangerPdpAuthFilter filter = new RangerPdpAuthFilter();
-        Map<String, String> params = new HashMap<>();
+        RangerPdpAuthNFilter filter = new RangerPdpAuthNFilter();
+        Map<String, String>  params = new HashMap<>();
 
-        params.put(RangerPdpAuthFilter.PARAM_AUTH_TYPES, "header");
-        params.put(RangerPdpAuthFilter.PARAM_HEADER_AUTHN_ENABLED, "false");
+        params.put(RangerPdpConstants.PROP_AUTHN_TYPES, "header");
+        params.put(RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED, "false");
 
         assertThrows(ServletException.class, () -> filter.init(new TestFilterConfig(params)));
     }
 
     @Test
     public void testInit_registersHeaderHandlerWhenEnabled() throws Exception {
-        RangerPdpAuthFilter filter = new RangerPdpAuthFilter();
-        Map<String, String> params = new HashMap<>();
+        RangerPdpAuthNFilter filter = new RangerPdpAuthNFilter();
+        Map<String, String>  params = new HashMap<>();
 
-        params.put(RangerPdpAuthFilter.PARAM_AUTH_TYPES, "header");
-        params.put(RangerPdpAuthFilter.PARAM_HEADER_AUTHN_ENABLED, "true");
+        params.put(RangerPdpConstants.PROP_AUTHN_TYPES, "header");
+        params.put(RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED, "true");
 
         filter.init(new TestFilterConfig(params));
 
-        Field handlersField = RangerPdpAuthFilter.class.getDeclaredField("handlers");
+        Field handlersField = RangerPdpAuthNFilter.class.getDeclaredField("handlers");
 
         handlersField.setAccessible(true);
 
         @SuppressWarnings("unchecked")
-        List<PdpAuthHandler> handlers = (List<PdpAuthHandler>) handlersField.get(filter);
+        List<PdpAuthNHandler> handlers = (List<PdpAuthNHandler>) handlersField.get(filter);
 
         assertEquals(1, handlers.size());
-        assertEquals(HttpHeaderAuthHandler.class, handlers.get(0).getClass());
+        assertEquals(HttpHeaderAuthNHandler.class, handlers.get(0).getClass());
     }
 
     private static final class TestFilterConfig implements FilterConfig {

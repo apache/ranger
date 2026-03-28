@@ -23,12 +23,13 @@
       <pattern>%d{ISO8601} %-5p [%X{requestId}] %c{1} - %m%n</pattern>
     </encoder>
   </appender>
+
   <logger name="com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator" level="OFF"/>
   <logger name="org.apache.directory.server.core" level="OFF"/>
   <logger name="org.apache.hadoop.security" level="OFF"/>
   <logger name="org.apache.hadoop.conf" level="ERROR"/>
-  <logger name="org.apache.hadoop.crytpo.key.kms.server" level="ALL"/>
   <logger name="org.apache.hadoop.util.NativeCodeLoader" level="OFF"/>
+
   <root level="INFO">
     <appender-ref ref="stdout"/>
   </root>

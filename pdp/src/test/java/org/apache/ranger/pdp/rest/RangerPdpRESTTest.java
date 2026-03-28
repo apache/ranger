@@ -29,6 +29,7 @@ import org.apache.ranger.authz.model.RangerMultiAuthzRequest;
 import org.apache.ranger.authz.model.RangerMultiAuthzResult;
 import org.apache.ranger.authz.model.RangerResourcePermissions;
 import org.apache.ranger.authz.model.RangerResourcePermissionsRequest;
+import org.apache.ranger.authz.model.RangerUserInfo;
 import org.apache.ranger.pdp.RangerPdpStats;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
@@ -49,12 +50,17 @@ import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_SUFFIX_DELEGA
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class RangerPdpRESTTest {
+    private static final String              CALLER_DELEGATION_ALLOWED     = "alice";
+    private static final String              CALLER_DELEGATION_NOT_ALLOWED = "bob";
+    private static final RangerUserInfo      USER_USER1                    = new RangerUserInfo("user1");
+    private static final RangerAccessContext CONTEXT_SERVICE_SVC1          = new RangerAccessContext("hive", "svc1");
+
     @Test
     public void testAuthorizeReturnsUnauthorizedWhenCallerMissing() throws Exception {
         RangerPdpStats     stats      = new RangerPdpStats();
         TestAuthorizer     authorizer = new TestAuthorizer();
         RangerPdpREST      rest       = createRest(authorizer, stats);
-        RangerAuthzRequest request    = new RangerAuthzRequest(null, null, new RangerAccessContext("hive", "svc1"));
+        RangerAuthzRequest request    = new RangerAuthzRequest(USER_USER1, null, CONTEXT_SERVICE_SVC1);
         Response           response   = rest.authorize(request, httpRequest(null, stats));
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
@@ -66,8 +72,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats     stats      = new RangerPdpStats();
         TestAuthorizer     authorizer = new TestAuthorizer();
         RangerPdpREST      rest       = createRest(authorizer, stats);
-        RangerAuthzRequest request    = new RangerAuthzRequest(null, null, new RangerAccessContext("hive", "svc1"));
-        Response           response   = rest.authorize(request, httpRequest("bob", stats));
+        RangerAuthzRequest request    = new RangerAuthzRequest(USER_USER1, null, CONTEXT_SERVICE_SVC1);
+        Response           response   = rest.authorize(request, httpRequest(CALLER_DELEGATION_NOT_ALLOWED, stats));
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalAuthFailures());
@@ -78,8 +84,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats     stats      = new RangerPdpStats();
         TestAuthorizer     authorizer = new TestAuthorizer(new RangerAuthzResult("req-1", RangerAuthzResult.AccessDecision.ALLOW));
         RangerPdpREST      rest       = createRest(authorizer, stats);
-        RangerAuthzRequest request    = new RangerAuthzRequest("req-1", null, null, new RangerAccessContext("hive", "svc1"));
-        Response           response   = rest.authorize(request, httpRequest("alice", stats));
+        RangerAuthzRequest request    = new RangerAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1);
+        Response           response   = rest.authorize(request, httpRequest(CALLER_DELEGATION_ALLOWED, stats));
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalRequests());
@@ -91,8 +97,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats     stats      = new RangerPdpStats();
         TestAuthorizer     authorizer = new TestAuthorizer(new RangerAuthzException(RangerAuthzApiErrorCode.INVALID_REQUEST_ACCESS_CONTEXT_MISSING));
         RangerPdpREST      rest       = createRest(authorizer, stats);
-        RangerAuthzRequest request    = new RangerAuthzRequest(null, null, new RangerAccessContext("hive", "svc1"));
-        Response           response   = rest.authorize(request, httpRequest("alice", stats));
+        RangerAuthzRequest request    = new RangerAuthzRequest(USER_USER1, null, CONTEXT_SERVICE_SVC1);
+        Response           response   = rest.authorize(request, httpRequest(CALLER_DELEGATION_ALLOWED, stats));
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalAuthzBadRequest());
@@ -103,7 +109,7 @@ public class RangerPdpRESTTest {
         RangerPdpStats          stats      = new RangerPdpStats();
         TestAuthorizer          authorizer = new TestAuthorizer();
         RangerPdpREST           rest       = createRest(authorizer, stats);
-        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest(null, null, new RangerAccessContext("hive", "svc1"));
+        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1);
         Response                response   = rest.authorizeMulti(request, httpRequest(null, stats));
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
@@ -115,8 +121,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats          stats      = new RangerPdpStats();
         TestAuthorizer          authorizer = new TestAuthorizer();
         RangerPdpREST           rest       = createRest(authorizer, stats);
-        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest(null, null, new RangerAccessContext("hive", "svc1"));
-        Response                response   = rest.authorizeMulti(request, httpRequest("bob", stats));
+        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1);
+        Response                response   = rest.authorizeMulti(request, httpRequest(CALLER_DELEGATION_NOT_ALLOWED, stats));
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalAuthFailures());
@@ -127,8 +133,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats          stats      = new RangerPdpStats();
         TestAuthorizer          authorizer = new TestAuthorizer(new RangerMultiAuthzResult("req-1", RangerAuthzResult.AccessDecision.ALLOW));
         RangerPdpREST           rest       = createRest(authorizer, stats);
-        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest("req-1", null, null, new RangerAccessContext("hive", "svc1"));
-        Response                response   = rest.authorizeMulti(request, httpRequest("alice", stats));
+        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1);
+        Response                response   = rest.authorizeMulti(request, httpRequest(CALLER_DELEGATION_ALLOWED, stats));
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalRequests());
@@ -140,8 +146,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats          stats      = new RangerPdpStats();
         TestAuthorizer          authorizer = new TestAuthorizer(new RangerAuthzException(RangerAuthzApiErrorCode.INVALID_REQUEST_ACCESS_CONTEXT_MISSING));
         RangerPdpREST           rest       = createRest(authorizer, stats);
-        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest(null, null, new RangerAccessContext("hive", "svc1"));
-        Response                response   = rest.authorizeMulti(request, httpRequest("alice", stats));
+        RangerMultiAuthzRequest request    = new RangerMultiAuthzRequest("req-1", USER_USER1, null, CONTEXT_SERVICE_SVC1);
+        Response                response   = rest.authorizeMulti(request, httpRequest(CALLER_DELEGATION_ALLOWED, stats));
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalAuthzBadRequest());
@@ -152,7 +158,7 @@ public class RangerPdpRESTTest {
         RangerPdpStats                   stats      = new RangerPdpStats();
         TestAuthorizer                   authorizer = new TestAuthorizer();
         RangerPdpREST                    rest       = createRest(authorizer, stats);
-        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest(null, new RangerAccessContext("hive", "svc1"));
+        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest("req-1", null, CONTEXT_SERVICE_SVC1);
         Response                         response   = rest.getResourcePermissions(request, httpRequest(null, stats));
 
         assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.getStatus());
@@ -164,8 +170,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats                   stats      = new RangerPdpStats();
         TestAuthorizer                   authorizer = new TestAuthorizer();
         RangerPdpREST                    rest       = createRest(authorizer, stats);
-        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest(null, new RangerAccessContext("hive", "svc1"));
-        Response                         response   = rest.getResourcePermissions(request, httpRequest("bob", stats));
+        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest("req-1", null, CONTEXT_SERVICE_SVC1);
+        Response                         response   = rest.getResourcePermissions(request, httpRequest(CALLER_DELEGATION_NOT_ALLOWED, stats));
 
         assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalAuthFailures());
@@ -176,8 +182,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats                   stats      = new RangerPdpStats();
         TestAuthorizer                   authorizer = new TestAuthorizer(new RangerResourcePermissions());
         RangerPdpREST                    rest       = createRest(authorizer, stats);
-        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest("req-1", null, new RangerAccessContext("hive", "svc1"));
-        Response                         response   = rest.getResourcePermissions(request, httpRequest("alice", stats));
+        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest("req-1", null, CONTEXT_SERVICE_SVC1);
+        Response                         response   = rest.getResourcePermissions(request, httpRequest(CALLER_DELEGATION_ALLOWED, stats));
 
         assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalRequests());
@@ -189,8 +195,8 @@ public class RangerPdpRESTTest {
         RangerPdpStats                   stats      = new RangerPdpStats();
         TestAuthorizer                   authorizer = new TestAuthorizer(new RangerAuthzException(RangerAuthzApiErrorCode.INVALID_REQUEST_ACCESS_CONTEXT_MISSING));
         RangerPdpREST                    rest       = createRest(authorizer, stats);
-        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest("req-1", null, new RangerAccessContext("hive", "svc1"));
-        Response                         response   = rest.getResourcePermissions(request, httpRequest("alice", stats));
+        RangerResourcePermissionsRequest request    = new RangerResourcePermissionsRequest("req-1", null, CONTEXT_SERVICE_SVC1);
+        Response                         response   = rest.getResourcePermissions(request, httpRequest(CALLER_DELEGATION_ALLOWED, stats));
 
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
         assertEquals(1L, stats.getTotalAuthzBadRequest());
@@ -263,7 +269,7 @@ public class RangerPdpRESTTest {
     private static Properties defaultConfig() {
         Properties ret = new Properties();
 
-        ret.setProperty(PROP_PDP_SERVICE_PREFIX +  "svc1" + PROP_SUFFIX_DELEGATION_USERS, "alice");
+        ret.setProperty(PROP_PDP_SERVICE_PREFIX +  "svc1" + PROP_SUFFIX_DELEGATION_USERS, CALLER_DELEGATION_ALLOWED);
 
         return ret;
     }

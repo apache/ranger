@@ -19,6 +19,7 @@
 
 package org.apache.ranger.pdp.security;
 
+import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.junit.jupiter.api.Test;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,35 +30,35 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class HttpHeaderAuthHandlerTest {
+public class HttpHeaderAuthNHandlerTest {
     @Test
     public void testAuthenticate_usesDefaultHeaderName() {
-        HttpHeaderAuthHandler handler = new HttpHeaderAuthHandler();
-        Properties            config  = new Properties();
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
 
         handler.init(config);
 
-        HttpServletRequest    request = requestWithHeader("X-Forwarded-User", "alice");
-        PdpAuthHandler.Result result  = handler.authenticate(request, null);
+        HttpServletRequest     request = requestWithHeader("X-Forwarded-User", "alice");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
-        assertEquals(PdpAuthHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
         assertEquals("alice", result.getUserName());
-        assertEquals(HttpHeaderAuthHandler.AUTH_TYPE, result.getAuthType());
+        assertEquals(HttpHeaderAuthNHandler.AUTH_TYPE, result.getAuthType());
     }
 
     @Test
     public void testAuthenticate_usesConfiguredHeaderName() {
-        HttpHeaderAuthHandler handler = new HttpHeaderAuthHandler();
-        Properties            config  = new Properties();
+        HttpHeaderAuthNHandler handler = new HttpHeaderAuthNHandler();
+        Properties             config  = new Properties();
 
-        config.setProperty(RangerPdpAuthFilter.PARAM_HEADER_AUTHN_USERNAME, "X-Authenticated-User");
+        config.setProperty(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, "X-Authenticated-User");
 
         handler.init(config);
 
-        HttpServletRequest    request = requestWithHeader("X-Authenticated-User", "bob");
-        PdpAuthHandler.Result result  = handler.authenticate(request, null);
+        HttpServletRequest     request = requestWithHeader("X-Authenticated-User", "bob");
+        PdpAuthNHandler.Result result  = handler.authenticate(request, null);
 
-        assertEquals(PdpAuthHandler.Result.Status.AUTHENTICATED, result.getStatus());
+        assertEquals(PdpAuthNHandler.Result.Status.AUTHENTICATED, result.getStatus());
         assertEquals("bob", result.getUserName());
     }
 

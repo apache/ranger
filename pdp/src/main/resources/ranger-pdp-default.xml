@@ -121,8 +121,8 @@
 
   <!-- Authentication for incoming REST requests -->
   <property>
-    <name>ranger.pdp.auth.types</name>
-    <value>jwt,kerberos</value>
+    <name>ranger.pdp.authn.types</name>
+    <value>header,jwt,kerberos</value>
     <description>
       Comma-separated list of authentication methods for incoming REST requests,
       tried in listed order. Supported values: header, jwt, kerberos.
@@ -146,6 +146,12 @@
 
   <!-- JWT bearer token authentication for incoming REST requests -->
   <property>
+    <name>ranger.pdp.authn.jwt.enabled</name>
+    <value>false</value>
+    <description>Enable JWT authentication.</description>
+  </property>
+
+    <property>
     <name>ranger.pdp.authn.jwt.provider.url</name>
     <value/>
     <description>URL of the JWT provider (used to fetch the public key).</description>
@@ -171,6 +177,12 @@
 
   <!-- Kerberos / SPNEGO authentication for incoming REST requests -->
   <property>
+    <name>ranger.pdp.authn.kerberos.enabled</name>
+    <value>false</value>
+    <description>Enable Kerberos authentication.</description>
+  </property>
+
+    <property>
     <name>ranger.pdp.authn.kerberos.spnego.principal</name>
     <value/>
     <description>Kerberos service principal for SPNEGO authentication, e.g. HTTP/host@REALM.</description>
@@ -184,24 +196,12 @@
 
   <property>
     <name>ranger.pdp.authn.kerberos.token.valid.seconds</name>
-    <value>30</value>
+    <value>3600</value>
     <description>Validity period (seconds) for Kerberos authentication tokens.</description>
   </property>
 
   <property>
-    <name>ranger.pdp.authn.kerberos.cookie.domain</name>
-    <value/>
-    <description>Cookie domain used for the Kerberos authentication cookie.</description>
-  </property>
-
-  <property>
-    <name>ranger.pdp.authn.kerberos.cookie.path</name>
-    <value/>
-    <description>Cookie path used for the Kerberos authentication cookie.</description>
-  </property>
-
-  <property>
-    <name>hadoop.security.auth_to_local</name>
+    <name>ranger.pdp.authn.kerberos.name.rules</name>
     <value>DEFAULT</value>
     <description>Rules for mapping Kerberos principal names to short usernames.</description>
   </property>

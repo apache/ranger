@@ -74,6 +74,25 @@ Recommended:
 - `ranger-pdp-site.xml` from ConfigMap
 - keytabs/JWT keys/credentials from Secrets
 
+## Authentication Config Keys
+
+When configuring inbound PDP authentication in `ranger-pdp-site.xml`, use the
+`ranger.pdp.authn.*` property names:
+
+- `ranger.pdp.authn.types`
+- `ranger.pdp.authn.header.enabled`
+- `ranger.pdp.authn.header.username`
+- `ranger.pdp.authn.jwt.enabled`
+- `ranger.pdp.authn.jwt.provider.url`
+- `ranger.pdp.authn.jwt.public.key`
+- `ranger.pdp.authn.jwt.cookie.name`
+- `ranger.pdp.authn.jwt.audiences`
+- `ranger.pdp.authn.kerberos.enabled`
+- `ranger.pdp.authn.kerberos.spnego.principal`
+- `ranger.pdp.authn.kerberos.spnego.keytab`
+- `ranger.pdp.authn.kerberos.token.valid.seconds`
+- `ranger.pdp.authn.kerberos.name.rules`
+
 ## Network Policy
 
 Allow egress only to dependencies:

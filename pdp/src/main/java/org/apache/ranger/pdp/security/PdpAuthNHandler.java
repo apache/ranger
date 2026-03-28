@@ -29,10 +29,10 @@ import java.util.Properties;
  * Contract for PDP authentication handlers.
  *
  * <p>Each handler is responsible for a single credential type (Kerberos, JWT, HTTP Header).
- * The {@link RangerPdpAuthFilter} tries handlers in configured order and uses the first one
+ * The {@link RangerPdpAuthNFilter} tries handlers in configured order and uses the first one
  * that returns {@link Result.Status#AUTHENTICATED}.
  */
-public interface PdpAuthHandler {
+public interface PdpAuthNHandler {
     /**
      * Initializes the handler with filter init parameters.
      *

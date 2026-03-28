@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_AUTHN_TYPES;
+
 /**
  * Servlet filter that enforces authentication for all PDP REST endpoints.
  *
@@ -52,66 +54,31 @@ import java.util.Properties;
  * sends a {@code 401} response with {@code WWW-Authenticate} headers for every
  * configured handler that provides a challenge.
  */
-public class RangerPdpAuthFilter implements Filter {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerPdpAuthFilter.class);
+public class RangerPdpAuthNFilter implements Filter {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPdpAuthNFilter.class);
 
-    // Auth type list — pdp-specific
-    public static final String PARAM_AUTH_TYPES = RangerPdpConstants.PROP_AUTH_TYPES;
-
-    // HTTP Header auth — consistent with ranger.admin.authn.header.* in security-admin
-    public static final String PARAM_HEADER_AUTHN_ENABLED  = RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED;
-    public static final String PARAM_HEADER_AUTHN_USERNAME = RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME;
-
-    // JWT bearer token auth
-    public static final String PARAM_JWT_PROVIDER_URL = RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL;
-    public static final String PARAM_JWT_PUBLIC_KEY   = RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY;
-    public static final String PARAM_JWT_COOKIE_NAME  = RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME;
-    public static final String PARAM_JWT_AUDIENCES    = RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES;
-
-    // Kerberos / SPNEGO
-    public static final String PARAM_SPNEGO_PRINCIPAL   = RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL;
-    public static final String PARAM_SPNEGO_KEYTAB      = RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB;
-    public static final String PARAM_KRB_NAME_RULES     = RangerPdpConstants.PROP_KRB_NAME_RULES;
-    public static final String PARAM_KRB_TOKEN_VALIDITY = RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY;
-    public static final String PARAM_KRB_COOKIE_DOMAIN  = RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_DOMAIN;
-    public static final String PARAM_KRB_COOKIE_PATH    = RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_COOKIE_PATH;
-
-    private final List<PdpAuthHandler> handlers = new ArrayList<>();
+    private final List<PdpAuthNHandler> handlers = new ArrayList<>();
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        Properties config            = toProperties(filterConfig);
-        String     types             = filterConfig.getInitParameter(PARAM_AUTH_TYPES);
-        boolean    headerAuthEnabled = Boolean.parseBoolean(StringUtils.defaultIfBlank(filterConfig.getInitParameter(PARAM_HEADER_AUTHN_ENABLED), "false"));
+        Properties config     = toProperties(filterConfig);
+        String     authnTypes = filterConfig.getInitParameter(PROP_AUTHN_TYPES);
 
-        if (StringUtils.isBlank(types)) {
-            types = "jwt,kerberos";
-        }
-
-        for (String type : types.split(",")) {
-            String normalizedType = type.trim().toLowerCase();
-
-            if ("header".equals(normalizedType) && !headerAuthEnabled) {
-                LOG.info("Header auth type is configured but disabled via {}=false; skipping handler registration", PARAM_HEADER_AUTHN_ENABLED);
-
-                continue;
-            }
-
-            PdpAuthHandler handler = createHandler(normalizedType);
+        for (String authnType : authnTypes.split(",")) {
+            PdpAuthNHandler handler = createHandler(authnType.trim().toLowerCase(), filterConfig);
 
             if (handler == null) {
-                LOG.warn("Unknown auth type ignored: {}", type);
-
                 continue;
             }
 
             try {
                 handler.init(config);
+
                 handlers.add(handler);
 
-                LOG.info("Registered auth handler: {}", normalizedType);
-            } catch (Exception e) {
-                LOG.error("Failed to initialize auth handler: {}", type, e);
+                LOG.info("{}: successfully registered authentication handler", authnType);
+            } catch (Exception excp) {
+                LOG.error("{}: failed to initialize authentication handler. Handler disabled", authnType, excp);
             }
         }
 
@@ -125,8 +92,8 @@ public class RangerPdpAuthFilter implements Filter {
         HttpServletRequest  httpReq  = (HttpServletRequest) request;
         HttpServletResponse httpResp = (HttpServletResponse) response;
 
-        for (PdpAuthHandler handler : handlers) {
-            PdpAuthHandler.Result result = handler.authenticate(httpReq, httpResp);
+        for (PdpAuthNHandler handler : handlers) {
+            PdpAuthNHandler.Result result = handler.authenticate(httpReq, httpResp);
 
             switch (result.getStatus()) {
                 case AUTHENTICATED:
@@ -161,7 +128,7 @@ public class RangerPdpAuthFilter implements Filter {
     }
 
     private void sendUnauthenticated(HttpServletResponse response) throws IOException {
-        for (PdpAuthHandler handler : handlers) {
+        for (PdpAuthNHandler handler : handlers) {
             String challenge = handler.getChallengeHeader();
 
             if (StringUtils.isNotBlank(challenge)) {
@@ -174,18 +141,33 @@ public class RangerPdpAuthFilter implements Filter {
         response.getWriter().write("{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}");
     }
 
-    private PdpAuthHandler createHandler(String type) {
+    private PdpAuthNHandler createHandler(String type, FilterConfig filterConfig) {
+        final PdpAuthNHandler ret;
+
         switch (type) {
-            case "header":    return new HttpHeaderAuthHandler();
-            case "jwt":       return new JwtAuthHandler();
-            case "kerberos":  return new KerberosAuthHandler();
-            default:          return null;
+            case "header":
+                ret = getBoolean(filterConfig, RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED) ? new HttpHeaderAuthNHandler() : null;
+                break;
+            case "jwt":
+                ret = getBoolean(filterConfig, RangerPdpConstants.PROP_AUTHN_JWT_ENABLED) ? new JwtAuthNHandler() : null;
+                break;
+            case "kerberos":
+                ret = getBoolean(filterConfig, RangerPdpConstants.PROP_AUTHN_KERBEROS_ENABLED) ? new KerberosAuthNHandler() : null;
+                break;
+            default:
+                ret = null;
+                break;
         }
+
+        if (ret == null) {
+            LOG.warn("{}: authentication type unknown or disabled. Ignored", type);
+        }
+
+        return ret;
     }
 
     private Properties toProperties(FilterConfig filterConfig) {
-        Properties props = new Properties();
-
+        Properties                    props = new Properties();
         java.util.Enumeration<String> names = filterConfig.getInitParameterNames();
 
         while (names.hasMoreElements()) {
@@ -195,5 +177,9 @@ public class RangerPdpAuthFilter implements Filter {
         }
 
         return props;
+    }
+
+    private boolean getBoolean(FilterConfig config, String name) {
+        return Boolean.parseBoolean(config.getInitParameter(name));
     }
 }

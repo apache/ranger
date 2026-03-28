@@ -29,13 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class KerberosAuthHandlerTest {
     @AfterEach
-    public void restoreDefaultRules() throws Exception {
+    public void restoreDefaultRules() {
         KerberosName.setRules("DEFAULT");
     }
 
     @Test
     public void testApplyNameRules_usesConfiguredRules() throws Exception {
-        KerberosAuthHandler handler = new KerberosAuthHandler();
+        KerberosAuthNHandler handler = new KerberosAuthNHandler();
 
         invokePrivateVoid(handler, "initializeKerberosNameRules", new Class<?>[] {String.class}, "DEFAULT");
 
@@ -46,7 +46,7 @@ public class KerberosAuthHandlerTest {
 
     @Test
     public void testApplyNameRules_fallsBackForInvalidPrincipal() throws Exception {
-        KerberosAuthHandler handler = new KerberosAuthHandler();
+        KerberosAuthNHandler handler = new KerberosAuthNHandler();
 
         invokePrivateVoid(handler, "initializeKerberosNameRules", new Class<?>[] {String.class}, "DEFAULT");
 

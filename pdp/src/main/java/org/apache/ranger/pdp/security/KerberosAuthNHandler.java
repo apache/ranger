@@ -27,6 +27,7 @@ import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
 import org.ietf.jgss.GSSManager;
+import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,6 @@ import javax.security.auth.login.LoginException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,8 +69,8 @@ import java.util.Properties;
  *   <li>On failure a {@code 401 Negotiate} challenge is sent and {@code CHALLENGE} is returned.
  * </ol>
  */
-public class KerberosAuthHandler implements PdpAuthHandler {
-    private static final Logger LOG = LoggerFactory.getLogger(KerberosAuthHandler.class);
+public class KerberosAuthNHandler implements PdpAuthNHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(KerberosAuthNHandler.class);
 
     public static final String AUTH_TYPE = "KERBEROS";
 
@@ -89,28 +89,40 @@ public class KerberosAuthHandler implements PdpAuthHandler {
         }
     }
 
-    private Subject serviceSubject;
+    private Subject       serviceSubject;
+    private GSSManager    gssManager;
+    private GSSCredential serverCred;
 
     @Override
     public void init(Properties config) throws Exception {
-        String principal = config.getProperty(RangerPdpAuthFilter.PARAM_SPNEGO_PRINCIPAL);
-        String keytab    = config.getProperty(RangerPdpAuthFilter.PARAM_SPNEGO_KEYTAB);
+        String principal     = config.getProperty(RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL);
+        String keytab        = config.getProperty(RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB);
+        String nameRules     = config.getProperty(RangerPdpConstants.PROP_AUTHN_KERBEROS_NAME_RULES, "DEFAULT");
+        String tokenValidity = config.getProperty(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY);
+
+        int tokenLifetime = StringUtils.isBlank(tokenValidity) ? GSSCredential.INDEFINITE_LIFETIME : Integer.parseInt(tokenValidity);
 
         if (StringUtils.isBlank(principal) || StringUtils.isBlank(keytab)) {
             throw new IllegalArgumentException("Kerberos auth requires configurations " + RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL + " and " + RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB);
         }
 
-        String configuredNameRules = config.getProperty(RangerPdpAuthFilter.PARAM_KRB_NAME_RULES, "DEFAULT");
-
         serviceSubject = loginWithKeytab(principal, keytab);
 
-        initializeKerberosNameRules(configuredNameRules);
+        initializeKerberosNameRules(nameRules);
 
-        LOG.info("KerberosAuthHandler initialized; principal={}", principal);
+        gssManager = GSSManager.getInstance();
+
+        GSSName serverName = gssManager.createName(principal, GSSName.NT_USER_NAME);
+
+        // Create acceptor credentials in the logged-in Subject to avoid fallback to JVM default keytab.
+        serverCred = Subject.doAs(serviceSubject, (PrivilegedExceptionAction<GSSCredential>) () ->
+                gssManager.createCredential(serverName, tokenLifetime, new Oid[] {SPNEGO_OID, KRB5_OID}, GSSCredential.ACCEPT_ONLY));
+
+        LOG.info("KerberosAuthHandler initialized; principal={} (bound acceptor credential to configured principal)", principal);
     }
 
     @Override
-    public Result authenticate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public Result authenticate(HttpServletRequest request, HttpServletResponse response) {
         String authHeader = request.getHeader(AUTHORIZATION);
 
         if (authHeader == null || !authHeader.startsWith(NEGOTIATE_PREFIX)) {
@@ -135,10 +147,8 @@ public class KerberosAuthHandler implements PdpAuthHandler {
         return NEGOTIATE_PREFIX.trim();
     }
 
-    private Result validateSpnegoToken(byte[] inputToken, HttpServletResponse response) throws GSSException, IOException {
-        GSSManager    manager    = GSSManager.getInstance();
-        GSSCredential serverCred = manager.createCredential(null, GSSCredential.INDEFINITE_LIFETIME, new Oid[] {SPNEGO_OID, KRB5_OID}, GSSCredential.ACCEPT_ONLY);
-        GSSContext    gssCtx     = manager.createContext(serverCred);
+    private Result validateSpnegoToken(byte[] inputToken, HttpServletResponse response) throws GSSException {
+        GSSContext gssCtx = gssManager.createContext(serverCred);
 
         try {
             byte[] outputToken = gssCtx.acceptSecContext(inputToken, 0, inputToken.length);
@@ -162,13 +172,13 @@ public class KerberosAuthHandler implements PdpAuthHandler {
         } finally {
             try {
                 gssCtx.dispose();
-            } catch (GSSException ignored) {
-                // best-effort cleanup
+            } catch (GSSException excp) {
+                LOG.debug("GSSContext.dispose() failed. Ignored", excp);
             }
         }
     }
 
-    private void sendUnauthorized(HttpServletResponse response, byte[] outputToken) throws IOException {
+    private void sendUnauthorized(HttpServletResponse response, byte[] outputToken) {
         if (!response.isCommitted()) {
             if (outputToken != null && outputToken.length > 0) {
                 response.setHeader(WWW_AUTHENTICATE, NEGOTIATE_PREFIX + Base64.encodeBase64String(outputToken));
@@ -205,7 +215,7 @@ public class KerberosAuthHandler implements PdpAuthHandler {
 
         KerberosName.setRules(effectiveRules);
 
-        LOG.info("Initialized Kerberos name rules: {}='{}'", RangerPdpConstants.PROP_KRB_NAME_RULES, effectiveRules);
+        LOG.info("Initialized Kerberos name rules: {}='{}'", RangerPdpConstants.PROP_AUTHN_KERBEROS_NAME_RULES, effectiveRules);
     }
 
     private String defaultShortName(String principal) {

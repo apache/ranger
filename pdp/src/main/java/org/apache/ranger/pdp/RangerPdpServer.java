@@ -31,7 +31,7 @@ import org.apache.ranger.authz.embedded.RangerEmbeddedAuthorizer;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.apache.ranger.pdp.rest.RangerPdpApplication;
-import org.apache.ranger.pdp.security.RangerPdpAuthFilter;
+import org.apache.ranger.pdp.security.RangerPdpAuthNFilter;
 import org.apache.ranger.pdp.security.RangerPdpRequestContextFilter;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
@@ -51,7 +51,7 @@ import java.io.File;
  * <ul>
  *   <li>Creates and initialises a {@link RangerEmbeddedAuthorizer} singleton
  *   <li>Exposes the three authorizer methods as REST endpoints under {@code /authz/v1/}
- *   <li>Enforces authentication via {@link RangerPdpAuthFilter} (Kerberos/JWT/HTTP-Header)
+ *   <li>Enforces authentication via {@link RangerPdpAuthNFilter} (Kerberos/JWT/HTTP-Header)
  *   <li>Optionally enables HTTP/2 ({@code Http2Protocol} upgrade on the connector)
  * </ul>
  *
@@ -200,7 +200,7 @@ public class RangerPdpServer {
     }
 
     /**
-     * Registers {@link RangerPdpAuthFilter} on all {@code /authz/*} paths.
+     * Registers {@link RangerPdpAuthNFilter} on all {@code /authz/*} paths.
      * Init parameters are forwarded from the server config so the filter can
      * instantiate and configure the auth handlers.
      */
@@ -217,23 +217,26 @@ public class RangerPdpServer {
         reqCtxFilterMap.addURLPattern("/*");
 
         authFilterDef.setFilterName("rangerPdpAuthFilter");
-        authFilterDef.setFilter(new RangerPdpAuthFilter());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_AUTH_TYPES,           config.getAuthTypes());
+        authFilterDef.setFilter(new RangerPdpAuthNFilter());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_TYPES, config.getAuthnTypes());
+
         // HTTP Header auth
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_HEADER_AUTHN_ENABLED,  String.valueOf(config.isHeaderAuthnEnabled()));
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_HEADER_AUTHN_USERNAME, config.getHeaderAuthnUsername());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_ENABLED, Boolean.toString(config.isHeaderAuthnEnabled()));
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_HEADER_USERNAME, config.getHeaderAuthnUsername());
+
         // JWT bearer token auth
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_JWT_PROVIDER_URL, config.getJwtProviderUrl());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_JWT_PUBLIC_KEY,   config.getJwtPublicKey());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_JWT_COOKIE_NAME,  config.getJwtCookieName());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_JWT_AUDIENCES,    config.getJwtAudiences());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_ENABLED, Boolean.toString(config.isJwtAuthnEnabled()));
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_PROVIDER_URL, config.getJwtProviderUrl());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_PUBLIC_KEY, config.getJwtPublicKey());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_COOKIE_NAME, config.getJwtCookieName());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_JWT_AUDIENCES, config.getJwtAudiences());
+
         // Kerberos / SPNEGO
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_SPNEGO_PRINCIPAL,     config.getSpnegoPrincipal());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_SPNEGO_KEYTAB,        config.getSpnegoKeytab());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_KRB_NAME_RULES,       config.getKerberosNameRules());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_KRB_TOKEN_VALIDITY,   String.valueOf(config.getKerberosTokenValiditySeconds()));
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_KRB_COOKIE_DOMAIN,    config.getKerberosCookieDomain());
-        authFilterDef.addInitParameter(RangerPdpAuthFilter.PARAM_KRB_COOKIE_PATH,      config.getKerberosCookiePath());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_KERBEROS_ENABLED, Boolean.toString(config.isKerberosAuthnEnabled()));
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_PRINCIPAL,   config.getSpnegoPrincipal());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_KERBEROS_SPNEGO_KEYTAB,      config.getSpnegoKeytab());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_KERBEROS_NAME_RULES,         config.getKerberosNameRules());
+        authFilterDef.addInitParameter(RangerPdpConstants.PROP_AUTHN_KERBEROS_KRB_TOKEN_VALIDITY, String.valueOf(config.getKerberosTokenValiditySeconds()));
 
         authFilterMap.setFilterName("rangerPdpAuthFilter");
         authFilterMap.addURLPattern("/authz/*");

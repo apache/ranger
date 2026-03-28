@@ -222,8 +222,9 @@ class RangerResourcePermissionsRequest(RangerBase):
     def __init__(self, attrs=None):
         attrs = non_null(attrs, {})
         RangerBase.__init__(self, attrs)
-        self.resource = attrs.get("resource")
-        self.context  = attrs.get("context")
+        self.requestId = attrs.get("requestId")
+        self.resource  = attrs.get("resource")
+        self.context   = attrs.get("context")
 
     def type_coerce_attrs(self):
         super(RangerResourcePermissionsRequest, self).type_coerce_attrs()

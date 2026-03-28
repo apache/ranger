@@ -66,6 +66,7 @@ import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_USER_INFO_MISSING;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_PDP_SERVICE_PREFIX;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_SUFFIX_DELEGATION_USERS;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.WILDCARD_SERVICE_NAME;
@@ -277,6 +278,10 @@ public class RangerPdpREST {
             ret = Response.status(UNAUTHORIZED)
                     .entity(new ErrorResponse(UNAUTHORIZED, "Authentication required"))
                     .build();
+        } else if (user == null || StringUtils.isBlank(user.getName())) {
+            ret = Response.status(BAD_REQUEST)
+                    .entity(new ErrorResponse(BAD_REQUEST, INVALID_REQUEST_USER_INFO_MISSING.getMessage()))
+                    .build();
         } else {
             boolean needsDelegation = isDelegationNeeded(caller, user) || isDelegationNeeded(access);
 
@@ -304,6 +309,10 @@ public class RangerPdpREST {
         if (StringUtils.isBlank(caller)) {
             ret = Response.status(UNAUTHORIZED)
                     .entity(new ErrorResponse(UNAUTHORIZED, "Authentication required"))
+                    .build();
+        } else if (user == null || StringUtils.isBlank(user.getName())) {
+            ret = Response.status(BAD_REQUEST)
+                    .entity(new ErrorResponse(BAD_REQUEST, INVALID_REQUEST_USER_INFO_MISSING.getMessage()))
                     .build();
         } else {
             boolean needsDelegation = isDelegationNeeded(caller, user) || isDelegationNeeded(accesses);
@@ -347,7 +356,7 @@ public class RangerPdpREST {
     }
 
     private boolean isDelegationNeeded(String caller, RangerUserInfo user) {
-        String  userName        = user != null ? user.getName() : null;
+        String  userName        = user.getName();
         boolean needsDelegation = !caller.equals(userName);
 
         if (!needsDelegation) {
