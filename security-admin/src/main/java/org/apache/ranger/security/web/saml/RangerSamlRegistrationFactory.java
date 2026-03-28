@@ -16,9 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.ranger.security.web.saml;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.converter.RsaKeyConverters;
 import org.springframework.security.saml2.core.Saml2X509Credential;
@@ -31,9 +32,21 @@ import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 
 public class RangerSamlRegistrationFactory {
-    private RangerSamlRegistrationFactory(){}
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSamlRegistrationFactory.class);
+
+    private RangerSamlRegistrationFactory() {
+    }
 
     public static RelyingPartyRegistration buildWithSigningCredential(RelyingPartyRegistration.Builder builder, String privateKeyPath, String certPath) throws Exception {
+        // If SAML is not configured, return a basic registration without signing credentials
+        if (privateKeyPath == null || privateKeyPath.trim().isEmpty() || certPath == null || certPath.trim().isEmpty()) {
+            LOG.info("SAML signing credentials not configured, skipping credential setup");
+            return builder
+                    .singleLogoutServiceLocation("{baseUrl}/logout/saml2/slo")
+                    .singleLogoutServiceResponseLocation("{baseUrl}/logout/saml2/slo")
+                    .singleLogoutServiceBinding(Saml2MessageBinding.POST)
+                    .build();
+        }
         RSAPrivateKey privateKey = RsaKeyConverters.pkcs8().convert(new FileSystemResource(privateKeyPath).getInputStream());
         X509Certificate certificate;
         try (FileInputStream fis = new FileInputStream(certPath)) {
@@ -44,7 +57,7 @@ public class RangerSamlRegistrationFactory {
                 .signingX509Credentials(c -> c.add(signingCredential))
                 .singleLogoutServiceLocation("{baseUrl}/logout/saml2/slo")
                 .singleLogoutServiceResponseLocation("{baseUrl}/logout/saml2/slo")
-                .singleLogoutServiceBinding(Saml2MessageBinding.REDIRECT)
+                .singleLogoutServiceBinding(Saml2MessageBinding.POST)
                 .build();
     }
 }
