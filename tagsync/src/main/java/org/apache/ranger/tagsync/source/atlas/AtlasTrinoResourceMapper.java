@@ -50,7 +50,6 @@ public class AtlasTrinoResourceMapper extends AtlasResourceMapper {
 
     /*
      * qualifiedName can be of format, depending upon the entity-type:
-     * trino_instance: <instanceName>
      * trino_catalog:  <catalog>@<instanceName>
      * trino_schema:   <catalog>.<schema>@<instanceName>
      * trino_table:    <catalog>.<schema>.<table>@<instanceName>

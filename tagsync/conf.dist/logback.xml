@@ -31,9 +31,6 @@
       <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
-  <logger name="org.apache.ranger" additivity="false" level="info"> <!-- toggle to debug for testing -->
-    <appender-ref ref="logFile"/>
-  </logger>
   <root level="info">
     <appender-ref ref="logFile"/>
   </root>
