@@ -75,7 +75,7 @@ import static org.apache.ranger.pdp.config.RangerPdpConstants.WILDCARD_SERVICE_N
  * REST resource that exposes the three core {@link RangerAuthorizer} methods over HTTP.
  *
  * <p>All endpoints are under {@code /authz/v1} and produce/consume {@code application/json}.
- * Authentication is enforced upstream by {@link RangerPdpAuthFilter}; the authenticated
+ * Authentication is enforced upstream by {@link org.apache.ranger.pdp.security.RangerPdpAuthNFilter}; the authenticated
  * caller's identity is read from the {@link RangerPdpConstants#ATTR_AUTHENTICATED_USER}
  * request attribute.
  *

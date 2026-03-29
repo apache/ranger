@@ -31,7 +31,7 @@ public final class RangerPdpConstants {
 
     // Request attributes set by auth filter
     public static final String ATTR_AUTHENTICATED_USER = "ranger.pdp.authenticated.user";
-    public static final String ATTR_AUTH_TYPE          = "ranger.pdp.auth.type";
+    public static final String ATTR_AUTHN_TYPE         = "ranger.pdp.authn.type";
 
     // Server
     public static final String PROP_CONF_DIR = "ranger.pdp.conf.dir";

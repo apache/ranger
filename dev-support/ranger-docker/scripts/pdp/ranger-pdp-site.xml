@@ -103,10 +103,10 @@
     <value>header,jwt,kerberos</value>
   </property>
 
-  <!-- HTTP Header authentication: disabled -->
+  <!-- HTTP Header authentication -->
   <property>
     <name>ranger.pdp.authn.header.enabled</name>
-    <value>true</value>
+    <value>false</value>
   </property>
 
   <property>

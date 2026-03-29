@@ -43,7 +43,7 @@ import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_AUTHN_TYPES;
 /**
  * Servlet filter that enforces authentication for all PDP REST endpoints.
  *
- * <p>Handlers are configured via the {@code ranger.pdp.auth.types} filter init parameter
+ * <p>Handlers are configured via the {@code ranger.pdp.authn.types} filter init parameter
  * (comma-separated list of {@code header}, {@code jwt}, {@code kerberos}).  Handlers are
  * tried in the listed order; the first successful match wins.
  *
@@ -64,21 +64,23 @@ public class RangerPdpAuthNFilter implements Filter {
         Properties config     = toProperties(filterConfig);
         String     authnTypes = filterConfig.getInitParameter(PROP_AUTHN_TYPES);
 
-        for (String authnType : authnTypes.split(",")) {
-            PdpAuthNHandler handler = createHandler(authnType.trim().toLowerCase(), filterConfig);
+        if (StringUtils.isNotBlank(authnTypes)) {
+            for (String authnType : authnTypes.split(",")) {
+                PdpAuthNHandler handler = createHandler(authnType.trim().toLowerCase(), filterConfig);
 
-            if (handler == null) {
-                continue;
-            }
+                if (handler == null) {
+                    continue;
+                }
 
-            try {
-                handler.init(config);
+                try {
+                    handler.init(config);
 
-                handlers.add(handler);
+                    handlers.add(handler);
 
-                LOG.info("{}: successfully registered authentication handler", authnType);
-            } catch (Exception excp) {
-                LOG.error("{}: failed to initialize authentication handler. Handler disabled", authnType, excp);
+                    LOG.info("{}: successfully registered authentication handler", authnType);
+                } catch (Exception excp) {
+                    LOG.error("{}: failed to initialize authentication handler. Handler disabled", authnType, excp);
+                }
             }
         }
 
@@ -98,7 +100,7 @@ public class RangerPdpAuthNFilter implements Filter {
             switch (result.getStatus()) {
                 case AUTHENTICATED:
                     httpReq.setAttribute(RangerPdpConstants.ATTR_AUTHENTICATED_USER, result.getUserName());
-                    httpReq.setAttribute(RangerPdpConstants.ATTR_AUTH_TYPE, result.getAuthType());
+                    httpReq.setAttribute(RangerPdpConstants.ATTR_AUTHN_TYPE, result.getAuthType());
 
                     LOG.debug("doFilter(): authenticated user={}, type={}", result.getUserName(), result.getAuthType());
 

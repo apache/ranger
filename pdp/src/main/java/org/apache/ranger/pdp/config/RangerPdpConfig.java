@@ -42,8 +42,8 @@ import java.util.Properties;
  *
  * <p>Authentication property names:
  * <ul>
- *   <li>Kerberos/SPNEGO:    {@code ranger.pdp.kerberos.spnego.*}
- *   <li>JWT bearer token:   {@code ranger.pdp.jwt.*}
+ *   <li>Kerberos/SPNEGO:    {@code ranger.pdp.authn.kerberos.*}
+ *   <li>JWT bearer token:   {@code ranger.pdp.authn.jwt.*}
  *   <li>HTTP header:        {@code ranger.pdp.authn.header.*}
  * </ul>
  */

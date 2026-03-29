@@ -54,9 +54,9 @@ import java.util.Properties;
  * <p>Uses the JDK's built-in GSSAPI/JGSS support – no external Kerberos library is required.
  * The service principal and keytab must be configured via:
  * <ul>
- *   <li>{@code ranger.pdp.kerberos.spnego.principal} – e.g. {@code HTTP/host.example.com@REALM}
- *   <li>{@code ranger.pdp.kerberos.spnego.keytab}    – absolute path to the keytab file
- *   <li>{@code hadoop.security.auth_to_local} – Hadoop-style name rules (default: {@code DEFAULT})
+ *   <li>{@code ranger.pdp.authn.kerberos.spnego.principal} – e.g. {@code HTTP/host.example.com@REALM}
+ *   <li>{@code ranger.pdp.authn.kerberos.spnego.keytab}    – absolute path to the keytab file
+ *   <li>{@code ranger.pdp.authn.kerberos.name.rules}       – Hadoop-style name rules (default: {@code DEFAULT})
  * </ul>
  *
  * <p>Authentication flow:
