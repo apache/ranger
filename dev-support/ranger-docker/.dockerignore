@@ -5,6 +5,7 @@
 !dist/ranger-*-kms.tar.gz
 !dist/ranger-*-usersync.tar.gz
 !dist/ranger-*-tagsync.tar.gz
+!dist/ranger-*-pdp.tar.gz
 !dist/ranger-*-audit-server.tar.gz
 !dist/ranger-*-audit-consumer-solr.tar.gz
 !dist/ranger-*-audit-consumer-hdfs.tar.gz
