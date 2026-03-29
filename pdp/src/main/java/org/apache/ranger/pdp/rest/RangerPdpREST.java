@@ -64,6 +64,7 @@ import java.util.stream.Collectors;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.OK;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_USER_INFO_MISSING;
 import static org.apache.ranger.pdp.config.RangerPdpConstants.PROP_PDP_SERVICE_PREFIX;
@@ -137,7 +138,7 @@ public class RangerPdpREST {
 
             ret = validateCaller(caller, user, access, serviceName);
 
-            if (RESPONSE_OK.equals(ret)) {
+            if (isStatusOk(ret)) {
                 try {
                     RangerAuthzResult result = authorizer.authorize(request);
 
@@ -184,7 +185,7 @@ public class RangerPdpREST {
 
             ret = validateCaller(caller, user, accesses, serviceName);
 
-            if (RESPONSE_OK.equals(ret)) {
+            if (isStatusOk(ret)) {
                 try {
                     RangerMultiAuthzResult result = authorizer.authorize(request);
 
@@ -228,7 +229,7 @@ public class RangerPdpREST {
 
             ret = validateCaller(caller, serviceName);
 
-            if (RESPONSE_OK.equals(ret)) {
+            if (isStatusOk(ret)) {
                 try {
                     RangerResourcePermissions result = authorizer.getResourcePermissions(request);
 
@@ -482,5 +483,9 @@ public class RangerPdpREST {
         return Response.serverError()
                        .entity(new ErrorResponse(INTERNAL_SERVER_ERROR, "Internal Server Error"))
                        .build();
+    }
+
+    private boolean isStatusOk(Response resp) {
+        return resp != null && resp.getStatus() == OK.getStatusCode();
     }
 }

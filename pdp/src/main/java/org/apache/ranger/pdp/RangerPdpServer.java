@@ -110,9 +110,11 @@ public class RangerPdpServer {
     }
 
     private void initAuthorizer() throws RangerAuthzException {
-        authorizer = new RangerEmbeddedAuthorizer(config.getAuthzProperties());
+        RangerAuthorizer authorizer = new RangerEmbeddedAuthorizer(config.getAuthzProperties());
 
         authorizer.init();
+
+        this.authorizer = authorizer;
 
         runtimeStats.setAuthorizerInitialized(true);
 

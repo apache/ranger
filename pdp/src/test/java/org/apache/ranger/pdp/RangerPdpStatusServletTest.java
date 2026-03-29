@@ -67,19 +67,14 @@ public class RangerPdpStatusServletTest {
     }
 
     @Test
-    public void testPolicyCacheAgeMsUsesConfiguredDirectory(@TempDir Path tempDir) throws Exception {
-        File cacheJson = tempDir.resolve("policy_cache.json").toFile();
-
-        assertTrue(cacheJson.createNewFile());
-
-        System.setProperty(RangerPdpConstants.PROP_AUTHZ_POLICY_CACHE_DIR, tempDir.toString());
-
+    public void testLoadedServicesCount() throws Exception {
         RangerPdpStatusServlet servlet = new RangerPdpStatusServlet(new RangerPdpStats(), new RangerPdpConfig(), RangerPdpStatusServlet.Mode.READY);
-        Method                 method  = RangerPdpStatusServlet.class.getDeclaredMethod("getPolicyCacheAgeMs");
+        HttpServletRequest     req     = proxy(HttpServletRequest.class, (proxy, method, args) -> null);
+        Method                 method  = RangerPdpStatusServlet.class.getDeclaredMethod("getLoadedServicesCount", HttpServletRequest.class);
 
         method.setAccessible(true);
 
-        long ageMs = (Long) method.invoke(servlet);
+        Integer ageMs = (Integer) method.invoke(servlet, req);
 
         assertTrue(ageMs >= 0L);
     }

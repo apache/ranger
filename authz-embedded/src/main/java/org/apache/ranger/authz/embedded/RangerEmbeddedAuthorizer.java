@@ -36,9 +36,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.apache.ranger.authz.api.RangerAuthzApiErrorCode.INVALID_REQUEST_SERVICE_NAME_OR_TYPE_MANDATORY;
 import static org.apache.ranger.authz.embedded.RangerEmbeddedAuthzErrorCode.NO_DEFAULT_SERVICE_FOR_SERVICE_TYPE;
@@ -129,6 +131,10 @@ public class RangerEmbeddedAuthorizer extends RangerAuthorizer {
         RangerAuthzPlugin plugin = getOrCreatePlugin(request.getContext().getServiceName(), request.getContext().getServiceType());
 
         return authorize(request, plugin, auditHandler);
+    }
+
+    public Set<String> getLoadedServices() {
+        return Collections.unmodifiableSet(this.plugins.keySet());
     }
 
     @Override

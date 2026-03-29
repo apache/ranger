@@ -20,19 +20,20 @@
 package org.apache.ranger.pdp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.ranger.authz.embedded.RangerEmbeddedAuthorizer;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class RangerPdpStatusServlet extends HttpServlet {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -56,10 +57,10 @@ public class RangerPdpStatusServlet extends HttpServlet {
                 writeLive(resp);
                 break;
             case READY:
-                writeReady(resp);
+                writeReady(req, resp);
                 break;
             case METRICS:
-                writeMetrics(resp);
+                writeMetrics(req, resp);
                 break;
             default:
                 resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -79,7 +80,7 @@ public class RangerPdpStatusServlet extends HttpServlet {
         MAPPER.writeValue(resp.getOutputStream(), payload);
     }
 
-    private void writeReady(HttpServletResponse resp) throws IOException {
+    private void writeReady(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         boolean ready = runtimeState.isServerStarted() && runtimeState.isAuthorizerInitialized() && runtimeState.isAcceptingRequests();
 
         Map<String, Object> payload = new LinkedHashMap<>();
@@ -89,7 +90,7 @@ public class RangerPdpStatusServlet extends HttpServlet {
         payload.put("ready", ready);
         payload.put("authorizerInitialized", runtimeState.isAuthorizerInitialized());
         payload.put("acceptingRequests", runtimeState.isAcceptingRequests());
-        payload.put("policyCacheAgeMs", getPolicyCacheAgeMs());
+        payload.put("loadedServicesCount", getLoadedServicesCount(req));
 
         resp.setStatus(ready ? HttpServletResponse.SC_OK : HttpServletResponse.SC_SERVICE_UNAVAILABLE);
         resp.setContentType(MediaType.APPLICATION_JSON);
@@ -97,7 +98,7 @@ public class RangerPdpStatusServlet extends HttpServlet {
         MAPPER.writeValue(resp.getOutputStream(), payload);
     }
 
-    private void writeMetrics(HttpServletResponse resp) throws IOException {
+    private void writeMetrics(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         StringBuilder sb = new StringBuilder(512);
 
         sb.append("# TYPE ranger_pdp_requests_total counter\n");
@@ -112,8 +113,8 @@ public class RangerPdpStatusServlet extends HttpServlet {
         sb.append("ranger_pdp_auth_failures_total ").append(runtimeState.getTotalAuthFailures()).append('\n');
         sb.append("# TYPE ranger_pdp_request_latency_avg_ms gauge\n");
         sb.append("ranger_pdp_request_latency_avg_ms ").append(runtimeState.getAverageLatencyMs()).append('\n');
-        sb.append("# TYPE ranger_pdp_policy_cache_age_ms gauge\n");
-        sb.append("ranger_pdp_policy_cache_age_ms ").append(getPolicyCacheAgeMs()).append('\n');
+        sb.append("# TYPE ranger_pdp_loaded_services_count counter\n");
+        sb.append("ranger_pdp_loaded_services_count ").append(getLoadedServicesCount(req)).append('\n');
 
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("text/plain; version=0.0.4");
@@ -121,29 +122,11 @@ public class RangerPdpStatusServlet extends HttpServlet {
         resp.getWriter().write(sb.toString());
     }
 
-    private long getPolicyCacheAgeMs() {
-        String cacheDir = config.get(RangerPdpConstants.PROP_AUTHZ_POLICY_CACHE_DIR, null);
+    private int getLoadedServicesCount(HttpServletRequest req) {
+        ServletContext context    = req.getServletContext();
+        Object         authorizer = context != null ? context.getAttribute(RangerPdpConstants.SERVLET_CTX_ATTR_AUTHORIZER) : null;
+        Set<String>    services   = authorizer instanceof RangerEmbeddedAuthorizer ? ((RangerEmbeddedAuthorizer) authorizer).getLoadedServices() : null;
 
-        if (StringUtils.isNotBlank(cacheDir)) {
-            File dir = new File(cacheDir);
-
-            if (dir.exists() && dir.isDirectory()) {
-                File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
-
-                if (files != null && files.length > 0) {
-                    long latestMtime = 0L;
-
-                    for (File f : files) {
-                        latestMtime = Math.max(latestMtime, f.lastModified());
-                    }
-
-                    if (latestMtime > 0L) {
-                        return Math.max(0L, System.currentTimeMillis() - latestMtime);
-                    }
-                }
-            }
-        }
-
-        return -1;
+        return services != null ? services.size() : 0;
     }
 }
