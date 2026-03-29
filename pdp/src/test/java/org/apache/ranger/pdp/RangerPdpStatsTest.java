@@ -31,14 +31,14 @@ public class RangerPdpStatsTest {
         stats.recordRequestSuccess(5_000_000L);    // 5 ms
         stats.recordRequestBadRequest(15_000_000L); // 15 ms
         stats.recordRequestError(10_000_000L);      // 10 ms
-        stats.recordAuthFailure();
+        stats.recordAuthFailure(10_000_000L);
 
-        assertEquals(3L, stats.getTotalRequests());
+        assertEquals(4L, stats.getTotalRequests());
         assertEquals(1L, stats.getTotalAuthzSuccess());
         assertEquals(1L, stats.getTotalAuthzBadRequest());
         assertEquals(1L, stats.getTotalAuthzErrors());
         assertEquals(1L, stats.getTotalAuthFailures());
-        assertEquals(30_000_000L, stats.getTotalLatencyNanos());
+        assertEquals(40_000_000L, stats.getTotalLatencyNanos());
         assertEquals(10L, stats.getAverageLatencyMs());
     }
 

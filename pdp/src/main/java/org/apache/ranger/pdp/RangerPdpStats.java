@@ -76,8 +76,10 @@ public class RangerPdpStats {
         totalLatencyNanos.addAndGet(Math.max(0L, elapsedNanos));
     }
 
-    public void recordAuthFailure() {
+    public void recordAuthFailure(long elapsedNanos) {
+        totalRequests.incrementAndGet();
         totalAuthFailures.incrementAndGet();
+        totalLatencyNanos.addAndGet(Math.max(0L, elapsedNanos));
     }
 
     public long getTotalRequests() {

@@ -52,7 +52,7 @@ public class RangerPdpStatusServletTest {
 
         stats.recordRequestSuccess(5_000_000L);
         stats.recordRequestError(5_000_000L);
-        stats.recordAuthFailure();
+        stats.recordAuthFailure(5_000_000L);
 
         RangerPdpStatusServlet servlet = new RangerPdpStatusServlet(stats, new RangerPdpConfig(), RangerPdpStatusServlet.Mode.METRICS);
         HttpServletRequest     req     = proxy(HttpServletRequest.class, (proxy, method, args) -> null);
@@ -62,7 +62,7 @@ public class RangerPdpStatusServletTest {
         servlet.doGet(req, resp);
 
         assertEquals(HttpServletResponse.SC_OK, capture.status);
-        assertTrue(capture.body.toString().contains("ranger_pdp_requests_total 2"));
+        assertTrue(capture.body.toString().contains("ranger_pdp_requests_total 3"));
         assertTrue(capture.body.toString().contains("ranger_pdp_auth_failures_total 1"));
     }
 

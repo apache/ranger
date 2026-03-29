@@ -406,7 +406,7 @@ public class RangerPdpREST {
         if (status >= 200 && status < 300) {
             state.recordRequestSuccess(elapsed);
         } else if (status == 401 || status == 403) { // UNAUTHORIZED or FORBIDDEN
-            state.recordAuthFailure();
+            state.recordAuthFailure(elapsed);
         } else if (status == 400) {
             state.recordRequestBadRequest(elapsed);
         } else {
