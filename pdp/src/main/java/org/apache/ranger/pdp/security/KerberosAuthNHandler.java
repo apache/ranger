@@ -118,7 +118,7 @@ public class KerberosAuthNHandler implements PdpAuthNHandler {
         serverCred = Subject.doAs(serviceSubject, (PrivilegedExceptionAction<GSSCredential>) () ->
                 gssManager.createCredential(serverName, tokenLifetime, new Oid[] {SPNEGO_OID, KRB5_OID}, GSSCredential.ACCEPT_ONLY));
 
-        LOG.info("KerberosAuthHandler initialized; principal={} (bound acceptor credential to configured principal)", principal);
+        LOG.info("KerberosAuthNHandler initialized; principal={} (bound acceptor credential to configured principal)", principal);
     }
 
     @Override

@@ -27,6 +27,7 @@ import org.apache.ranger.pdp.config.RangerPdpConstants;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +74,7 @@ public class RangerPdpStatusServlet extends HttpServlet {
         payload.put("live", runtimeState.isServerStarted());
 
         resp.setStatus(runtimeState.isServerStarted() ? HttpServletResponse.SC_OK : HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        resp.setContentType("application/json");
+        resp.setContentType(MediaType.APPLICATION_JSON);
 
         MAPPER.writeValue(resp.getOutputStream(), payload);
     }
@@ -91,7 +92,7 @@ public class RangerPdpStatusServlet extends HttpServlet {
         payload.put("policyCacheAgeMs", getPolicyCacheAgeMs());
 
         resp.setStatus(ready ? HttpServletResponse.SC_OK : HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-        resp.setContentType("application/json");
+        resp.setContentType(MediaType.APPLICATION_JSON);
 
         MAPPER.writeValue(resp.getOutputStream(), payload);
     }

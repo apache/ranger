@@ -32,6 +32,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -138,9 +140,9 @@ public class RangerPdpAuthNFilter implements Filter {
             }
         }
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"code\":\"UNAUTHENTICATED\",\"message\":\"Authentication required\"}");
+        response.setStatus(Response.Status.UNAUTHORIZED.getStatusCode());
+        response.setContentType(MediaType.APPLICATION_JSON);
+        response.getWriter().write("{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required\"}");
     }
 
     private PdpAuthNHandler createHandler(String type, FilterConfig filterConfig) {

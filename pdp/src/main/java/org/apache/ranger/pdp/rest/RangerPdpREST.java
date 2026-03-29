@@ -19,8 +19,6 @@
 
 package org.apache.ranger.pdp.rest;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +36,7 @@ import org.apache.ranger.authz.model.RangerUserInfo;
 import org.apache.ranger.pdp.RangerPdpStats;
 import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
+import org.apache.ranger.pdp.model.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -483,25 +482,5 @@ public class RangerPdpREST {
         return Response.serverError()
                        .entity(new ErrorResponse(INTERNAL_SERVER_ERROR, "Internal Server Error"))
                        .build();
-    }
-
-    @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class ErrorResponse {
-        private final String code;
-        private final String message;
-
-        public ErrorResponse(Response.Status status, String message) {
-            this.code    = status.name();
-            this.message = message;
-        }
-
-        public String getCode() {
-            return code;
-        }
-
-        public String getMessage() {
-            return message;
-        }
     }
 }

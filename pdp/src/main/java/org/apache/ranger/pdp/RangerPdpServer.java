@@ -186,7 +186,7 @@ public class RangerPdpServer {
                 connector.setProperty("truststoreFile",  config.getTruststoreFile());
                 connector.setProperty("truststorePass",  config.getTruststorePassword());
                 connector.setProperty("truststoreType",  config.getTruststoreType());
-                connector.setProperty("clientAuth",      "want");
+                connector.setProperty("clientAuth",      "true");
             }
         }
 

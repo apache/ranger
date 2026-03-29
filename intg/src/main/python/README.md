@@ -166,13 +166,14 @@ from apache_ranger.model.ranger_authz import (
 pdp = RangerPDPClient("http://localhost:6500", HTTPKerberosAuth())
 
 req = RangerAuthzRequest({
-    "requestId": "req-1",
-    "user": RangerUserInfo({"name": "alice"}),
-    "access": RangerAccessInfo({
-        "resource": RangerResourceInfo({"name": "table:default/test_tbl1"}),
-        "permissions": ["select"]
+    'requestId': 'req-1',
+    'user': RangerUserInfo({'name': 'alice'}),
+    'access': RangerAccessInfo({
+        'resource': RangerResourceInfo({'name': 'table:default/test_tbl1', 'subResources': ['column:id', 'column:name', 'column:email']}),
+        'action': 'QUERY',
+        'permissions': ['select']
     }),
-    "context": RangerAccessContext({"serviceType": "hive", "serviceName": "dev_hive"})
+    'context': RangerAccessContext({'serviceType': 'hive', 'serviceName': 'dev_hive'})
 })
 
 res = pdp.authorize(req)
@@ -193,7 +194,8 @@ payload = {
     "requestId": "req-1",
     "user": {"name": "alice"},
     "access": {
-        "resource": {"name": "table:default/test_tbl1"},
+        "resource": {"name": "table:default/test_tbl1", "subResources": ["column:id", "column:name", "column:email"]},
+        "action": "QUERY",
         "permissions": ["select"]
     },
     "context": {"serviceType": "hive", "serviceName": "dev_hive"}
