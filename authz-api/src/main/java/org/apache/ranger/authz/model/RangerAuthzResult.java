@@ -41,11 +41,22 @@ public class RangerAuthzResult {
     }
 
     public RangerAuthzResult(String requestId) {
-        this(requestId, null);
+        this.requestId = requestId;
+    }
+
+    public RangerAuthzResult(String requestId, AccessDecision decision) {
+        this.requestId = requestId;
+        this.decision  = decision;
     }
 
     public RangerAuthzResult(String requestId, Map<String, PermissionResult> permissions) {
         this.requestId   = requestId;
+        this.permissions = permissions;
+    }
+
+    public RangerAuthzResult(String requestId, AccessDecision decision, Map<String, PermissionResult> permissions) {
+        this.requestId   = requestId;
+        this.decision    = decision;
         this.permissions = permissions;
     }
 
