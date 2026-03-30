@@ -16,12 +16,12 @@
   limitations under the License.
 -->
 <beans:beans xmlns="http://www.springframework.org/schema/security"
-xmlns:beans="http://www.springframework.org/schema/beans"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns:security="http://www.springframework.org/schema/security"
-xmlns:util="http://www.springframework.org/schema/util"
-xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
-xsi:schemaLocation="http://www.springframework.org/schema/beans
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:security="http://www.springframework.org/schema/security"
+             xmlns:util="http://www.springframework.org/schema/util"
+             xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
 http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
 http://www.springframework.org/schema/security
 http://www.springframework.org/schema/security/spring-security-5.7.xsd
@@ -30,294 +30,309 @@ http://www.springframework.org/schema/util/spring-util-4.3.xsd
 http://www.springframework.org/schema/security/oauth2
 http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 
-	<security:http pattern="/login.jsp" security="none" />
-	<security:http pattern="/dist/**" security="none" />
-	<security:http pattern="/favicon.ico" security="none"/>
-	<security:http pattern="/images/**" security="none" />
-	<security:http pattern="/styles/**" security="none" />
-	<security:http pattern="/fonts/**" security="none" />
-	<security:http pattern="/scripts/prelogin/XAPrelogin.js" security="none" />
-	<security:http pattern="/libs/bower/jquery/js/core-lib.js" security="none" />
-	<security:http pattern="/images/ranger_logo.png" security="none" />
-	<security:http pattern="/images/favicon.ico" security="none"/>
-	<security:http pattern="/service/assets/policyList/*" security="none"/>
-	<security:http pattern="/service/assets/resources/grant" security="none"/>
-	<security:http pattern="/service/assets/resources/revoke" security="none"/>
-	<security:http pattern="/service/gds/download/*" security="none"/>
-	<security:http pattern="/service/plugins/policies/download/*" security="none"/>
-	<security:http pattern="/service/plugins/services/grant/*" security="none"/>
-	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
-	<security:http pattern="/service/tags/download/*" security="none"/>
-	<security:http pattern="/service/roles/download/*" security="none"/>
-	<security:http pattern="/service/xusers/download/*" security="none"/>
-	<security:http pattern="/service/actuator/health" security="none" />
-	<security:http pattern="/service/metrics/**" security="none" />
+    <security:http pattern="/login.jsp" security="none"/>
+    <security:http pattern="/dist/**" security="none"/>
+    <security:http pattern="/favicon.ico" security="none"/>
+    <security:http pattern="/images/**" security="none"/>
+    <security:http pattern="/styles/**" security="none"/>
+    <security:http pattern="/fonts/**" security="none"/>
+    <security:http pattern="/scripts/prelogin/XAPrelogin.js" security="none"/>
+    <security:http pattern="/libs/bower/jquery/js/core-lib.js" security="none"/>
+    <security:http pattern="/images/ranger_logo.png" security="none"/>
+    <security:http pattern="/images/favicon.ico" security="none"/>
+    <security:http pattern="/service/assets/policyList/*" security="none"/>
+    <security:http pattern="/service/assets/resources/grant" security="none"/>
+    <security:http pattern="/service/assets/resources/revoke" security="none"/>
+    <security:http pattern="/service/gds/download/*" security="none"/>
+    <security:http pattern="/service/plugins/policies/download/*" security="none"/>
+    <security:http pattern="/service/plugins/services/grant/*" security="none"/>
+    <security:http pattern="/service/plugins/services/revoke/*" security="none"/>
+    <security:http pattern="/service/tags/download/*" security="none"/>
+    <security:http pattern="/service/roles/download/*" security="none"/>
+    <security:http pattern="/service/xusers/download/*" security="none"/>
+    <security:http pattern="/service/actuator/health" security="none"/>
+    <security:http pattern="/service/metrics/**" security="none"/>
 
-	<!-- Non-SAML profile: no OpenSAML classes loaded, safe for JDK 8 -->
-	<beans:beans profile="!saml">
-		<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
-			<csrf disabled="true"/>
-			<security:headers>
-				<security:frame-options/>
-				<security:cache-control/>
-				<security:content-type-options/>
-				<security:xss-protection/>
-				<security:hsts/>
-				<security:content-security-policy policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'"/>
-			</security:headers>
-			<security:session-management session-fixation-protection="newSession" />
-			<intercept-url pattern="/**" access="isAuthenticated()"/>
-			<security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter" />
-			<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
-			<security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER" />
-			<security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER" />
-			<security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER" />
-			<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
-			<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
-			<security:access-denied-handler error-page="/login.jsp"/>
-			<security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout" success-handler-ref="customLogoutSuccessHandler" />
-			<http-basic entry-point-ref="authenticationProcessingFilterEntryPoint"/>
-		</security:http>
+    <!-- Non-SAML profile: no OpenSAML classes loaded, safe for JDK 8 -->
+    <beans:beans profile="!saml">
+        <security:http disable-url-rewriting="true" use-expressions="true" create-session="always"
+                       entry-point-ref="authenticationProcessingFilterEntryPoint">
+            <csrf disabled="true"/>
+            <security:headers>
+                <security:frame-options/>
+                <security:cache-control/>
+                <security:content-type-options/>
+                <security:xss-protection/>
+                <security:hsts/>
+                <security:content-security-policy
+                        policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'"/>
+            </security:headers>
+            <security:session-management session-fixation-protection="newSession"/>
+            <intercept-url pattern="/**" access="isAuthenticated()"/>
+            <security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter"/>
+            <custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER"/>
+            <security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER"/>
+            <security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER"/>
+            <security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER"/>
+            <security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
+            <security:custom-filter position="LAST" ref="userContextFormationFilter"/>
+            <security:access-denied-handler error-page="/login.jsp"/>
+            <security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout"
+                             success-handler-ref="customLogoutSuccessHandler"/>
+            <http-basic entry-point-ref="authenticationProcessingFilterEntryPoint"/>
+        </security:http>
 
-		<security:authentication-manager alias="authenticationManager">
-			<security:authentication-provider ref="customAuthenticationProvider"/>
-		</security:authentication-manager>
-	</beans:beans>
+        <security:authentication-manager alias="authenticationManager">
+            <security:authentication-provider ref="customAuthenticationProvider"/>
+        </security:authentication-manager>
+    </beans:beans>
 
-	<!-- SAML profile: activated when ranger.authentication.method=SAML, requires JDK 11+ -->
-	<beans:beans profile="saml">
-		<security:http pattern="/saml2/service-provider-metadata/*" security="none" />
+    <!-- SAML profile: activated when ranger.authentication.method=SAML, requires JDK 11+ -->
+    <beans:beans profile="saml">
+        <security:http pattern="/saml2/service-provider-metadata/*" security="none"/>
 
-		<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="rangerDelegatingEntryPoint">
-			<csrf disabled="true"/>
-			<security:headers>
-				<security:frame-options/>
-				<security:cache-control/>
-				<security:content-type-options/>
-				<security:xss-protection/>
-				<security:hsts/>
-				<security:content-security-policy policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'"/>
-			</security:headers>
-			<security:session-management session-fixation-protection="newSession" />
-			<intercept-url pattern="/login/saml2/sso/ranger-saml" access="permitAll"/>
-			<intercept-url pattern="/saml2/authenticate/ranger-saml" access="permitAll"/>
-			<intercept-url pattern="/logout/saml2/**" access="permitAll"/>
-			<intercept-url pattern="/**" access="isAuthenticated()"/>
-			<security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter" />
-			<custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER" />
-			<security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER" />
-			<security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER" />
-			<security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER" />
-			<security:custom-filter ref="saml2WebSsoAuthenticationRequestFilter" after="CSRF_FILTER"/>
-			<security:custom-filter ref="saml2AuthenticationFilter" before="CAS_FILTER" />
-			<security:custom-filter ref="samlLogoutRequestFilter" before="LOGOUT_FILTER"/>
-			<security:custom-filter ref="samlLogoutResponseFilter" after="LOGOUT_FILTER"/>
-			<security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
-			<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
-			<security:access-denied-handler error-page="/login.jsp"/>
-			<security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout" success-handler-ref="rangerDelegatingLogoutSuccessHandler" />
-			<http-basic entry-point-ref="rangerDelegatingEntryPoint"/>
-		</security:http>
+        <security:http disable-url-rewriting="true" use-expressions="true" create-session="always"
+                       entry-point-ref="rangerDelegatingEntryPoint">
+            <csrf disabled="true"/>
+            <security:headers>
+                <security:frame-options/>
+                <security:cache-control/>
+                <security:content-type-options/>
+                <security:xss-protection/>
+                <security:hsts/>
+                <security:content-security-policy
+                        policy-directives="default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';font-src 'self'"/>
+            </security:headers>
+            <security:session-management session-fixation-protection="newSession"/>
+            <intercept-url pattern="/login/saml2/sso/ranger-saml" access="permitAll"/>
+            <intercept-url pattern="/saml2/authenticate/ranger-saml" access="permitAll"/>
+            <intercept-url pattern="/logout/saml2/**" access="permitAll"/>
+            <intercept-url pattern="/**" access="isAuthenticated()"/>
+            <security:custom-filter position="PRE_AUTH_FILTER" ref="headerPreAuthFilter"/>
+            <custom-filter ref="ssoAuthenticationFilter" after="BASIC_AUTH_FILTER"/>
+            <security:custom-filter ref="rangerJwtAuthWrapper" before="SERVLET_API_SUPPORT_FILTER"/>
+            <security:custom-filter ref="krbAuthenticationFilter" after="SERVLET_API_SUPPORT_FILTER"/>
+            <security:custom-filter ref="CSRFPreventionFilter" after="REMEMBER_ME_FILTER"/>
+            <security:custom-filter ref="saml2WebSsoAuthenticationRequestFilter" after="CSRF_FILTER"/>
+            <security:custom-filter ref="saml2AuthenticationFilter" before="CAS_FILTER"/>
+            <security:custom-filter ref="samlLogoutRequestFilter" before="LOGOUT_FILTER"/>
+            <security:custom-filter ref="samlLogoutResponseFilter" after="LOGOUT_FILTER"/>
+            <security:custom-filter position="FORM_LOGIN_FILTER" ref="customUsernamePasswordAuthenticationFilter"/>
+            <security:custom-filter position="LAST" ref="userContextFormationFilter"/>
+            <security:access-denied-handler error-page="/login.jsp"/>
+            <security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout"
+                             success-handler-ref="rangerDelegatingLogoutSuccessHandler"/>
+            <http-basic entry-point-ref="rangerDelegatingEntryPoint"/>
+        </security:http>
 
-		<security:authentication-manager alias="authenticationManager">
-			<security:authentication-provider ref="samlAuthenticationProvider"/>
-			<security:authentication-provider ref="customAuthenticationProvider"/>
-		</security:authentication-manager>
+        <security:authentication-manager alias="authenticationManager">
+            <security:authentication-provider ref="samlAuthenticationProvider"/>
+            <security:authentication-provider ref="customAuthenticationProvider"/>
+        </security:authentication-manager>
 
-		<beans:bean id="rangerDelegatingEntryPoint"
-					class="org.apache.ranger.security.web.authentication.RangerDelegatingAuthenticationEntryPoint">
-			<beans:constructor-arg value="/saml2/authenticate/${ranger.saml.entity.id}"/>
-			<beans:constructor-arg ref="authenticationProcessingFilterEntryPoint"/>
-		</beans:bean>
+        <beans:bean id="rangerDelegatingEntryPoint"
+                    class="org.apache.ranger.security.web.authentication.RangerDelegatingAuthenticationEntryPoint">
+            <beans:constructor-arg value="/saml2/authenticate/${ranger.saml.entity.id}"/>
+            <beans:constructor-arg ref="authenticationProcessingFilterEntryPoint"/>
+        </beans:bean>
 
-		<beans:bean id="samlSuccessHandler"
-					class="org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler">
-			<beans:property name="defaultTargetUrl" value="${ranger.saml.success.url}"/>
-			<beans:property name="alwaysUseDefaultTargetUrl" value="true"/>
-		</beans:bean>
+        <beans:bean id="samlSuccessHandler"
+                    class="org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler">
+            <beans:property name="defaultTargetUrl" value="${ranger.saml.success.url}"/>
+            <beans:property name="alwaysUseDefaultTargetUrl" value="true"/>
+        </beans:bean>
 
-		<beans:bean id="samlLogoutRequestResolver"
-					class="org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml4LogoutRequestResolver">
-			<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
-		</beans:bean>
+        <beans:bean id="samlLogoutRequestResolver"
+                    class="org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml4LogoutRequestResolver">
+            <beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+        </beans:bean>
 
-		<beans:bean id="samlInitiatedLogoutSuccessHandler"
-					class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2RelyingPartyInitiatedLogoutSuccessHandler">
-			<beans:constructor-arg ref="samlLogoutRequestResolver"/>
-		</beans:bean>
+        <beans:bean id="samlInitiatedLogoutSuccessHandler"
+                    class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2RelyingPartyInitiatedLogoutSuccessHandler">
+            <beans:constructor-arg ref="samlLogoutRequestResolver"/>
+        </beans:bean>
 
-		<beans:bean id="rangerDelegatingLogoutSuccessHandler"
-					class="org.apache.ranger.security.web.authentication.RangerDelegatingLogoutSuccessHandler">
-			<beans:constructor-arg ref="samlInitiatedLogoutSuccessHandler"/>
-			<beans:constructor-arg ref="customLogoutSuccessHandler"/>
-		</beans:bean>
+        <beans:bean id="rangerDelegatingLogoutSuccessHandler"
+                    class="org.apache.ranger.security.web.authentication.RangerDelegatingLogoutSuccessHandler">
+            <beans:constructor-arg ref="samlInitiatedLogoutSuccessHandler"/>
+            <beans:constructor-arg ref="customLogoutSuccessHandler"/>
+        </beans:bean>
 
-		<beans:bean id="samlLogoutRequestValidator"
-					class="org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutRequestValidator"/>
+        <beans:bean id="samlLogoutRequestValidator"
+                    class="org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutRequestValidator"/>
 
-		<beans:bean id="samlLogoutResponseResolver"
-					class="org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml4LogoutResponseResolver">
-			<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
-		</beans:bean>
+        <beans:bean id="samlLogoutResponseResolver"
+                    class="org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml4LogoutResponseResolver">
+            <beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+        </beans:bean>
 
-		<beans:bean id="securityContextLogoutHandler"
-					class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
+        <beans:bean id="securityContextLogoutHandler"
+                    class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
 
-		<beans:bean id="samlLogoutRequestFilter"
-					class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutRequestFilter">
-			<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
-			<beans:constructor-arg ref="samlLogoutRequestValidator"/>
-			<beans:constructor-arg ref="samlLogoutResponseResolver"/>
-			<beans:constructor-arg ref="securityContextLogoutHandler"/>
-		</beans:bean>
+        <beans:bean id="samlLogoutRequestFilter"
+                    class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutRequestFilter">
+            <beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+            <beans:constructor-arg ref="samlLogoutRequestValidator"/>
+            <beans:constructor-arg ref="samlLogoutResponseResolver"/>
+            <beans:constructor-arg ref="securityContextLogoutHandler"/>
+        </beans:bean>
 
-		<beans:bean id="samlLogoutResponseValidator"
-					class="org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutResponseValidator"/>
+        <beans:bean id="samlLogoutResponseValidator"
+                    class="org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutResponseValidator"/>
 
-		<beans:bean id="samlPostLogoutRedirectHandler"
-					class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
-			<beans:property name="defaultTargetUrl" value="/login.jsp?loggedOut=true"/>
-		</beans:bean>
+        <beans:bean id="samlPostLogoutRedirectHandler"
+                    class="org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler">
+            <beans:property name="defaultTargetUrl" value="/login.jsp?loggedOut=true"/>
+        </beans:bean>
 
-		<beans:bean id="samlLogoutResponseFilter"
-					class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutResponseFilter">
-			<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
-			<beans:constructor-arg ref="samlLogoutResponseValidator"/>
-			<beans:constructor-arg ref="samlPostLogoutRedirectHandler"/>
-		</beans:bean>
+        <beans:bean id="samlLogoutResponseFilter"
+                    class="org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutResponseFilter">
+            <beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+            <beans:constructor-arg ref="samlLogoutResponseValidator"/>
+            <beans:constructor-arg ref="samlPostLogoutRedirectHandler"/>
+        </beans:bean>
 
-		<beans:bean id="samlAuthenticationProvider"
-					class="org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider"/>
+        <beans:bean id="samlAuthenticationProvider"
+                    class="org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider"/>
 
-		<beans:bean id="samlRegistrationBuilder"
-					class="org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrations"
-					factory-method="fromMetadataLocation">
-			<beans:constructor-arg value="${ranger.saml.idp.metadata.location}"/>
-		</beans:bean>
+        <beans:bean id="samlRegistrationBuilder"
+                    class="org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrations"
+                    factory-method="fromMetadataLocation">
+            <beans:constructor-arg value="${ranger.saml.idp.metadata.location}"/>
+        </beans:bean>
 
-		<beans:bean id="samlRegistrationBuilderWithId"
-					factory-bean="samlRegistrationBuilder"
-					factory-method="registrationId">
-			<beans:constructor-arg value="${ranger.saml.entity.id}"/>
-		</beans:bean>
+        <beans:bean id="samlRegistrationBuilderWithId"
+                    factory-bean="samlRegistrationBuilder"
+                    factory-method="registrationId">
+            <beans:constructor-arg value="${ranger.saml.entity.id}"/>
+        </beans:bean>
 
-		<beans:bean id="samlRegistrationBuilderWithEntityId"
-					factory-bean="samlRegistrationBuilderWithId"
-					factory-method="entityId">
-			<beans:constructor-arg value="${ranger.saml.entity.id}"/>
-		</beans:bean>
+        <beans:bean id="samlRegistrationBuilderWithEntityId"
+                    factory-bean="samlRegistrationBuilderWithId"
+                    factory-method="entityId">
+            <beans:constructor-arg value="${ranger.saml.entity.id}"/>
+        </beans:bean>
 
-		<beans:bean id="relyingPartyRegistration"
-					class="org.apache.ranger.security.web.saml.RangerSamlRegistrationFactory"
-					factory-method="buildWithSigningCredential">
-			<beans:constructor-arg ref="samlRegistrationBuilderWithEntityId"/>
-			<beans:constructor-arg value="${ranger.saml.sp.key}"/>
-			<beans:constructor-arg value="${ranger.saml.sp.cert}"/>
-		</beans:bean>
+        <beans:bean id="relyingPartyRegistration"
+                    class="org.apache.ranger.security.web.saml.RangerSamlRegistrationFactory"
+                    factory-method="buildWithSigningCredential">
+            <beans:constructor-arg ref="samlRegistrationBuilderWithEntityId"/>
+            <beans:constructor-arg value="${ranger.saml.sp.key}"/>
+            <beans:constructor-arg value="${ranger.saml.sp.cert}"/>
+        </beans:bean>
 
-		<beans:bean id="relyingPartyRegistrationRepository"
-					class="org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository">
-			<beans:constructor-arg ref="relyingPartyRegistration"/>
-		</beans:bean>
+        <beans:bean id="relyingPartyRegistrationRepository"
+                    class="org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository">
+            <beans:constructor-arg ref="relyingPartyRegistration"/>
+        </beans:bean>
 
-		<beans:bean id="relyingPartyRegistrationResolver"
-					class="org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver">
-			<beans:constructor-arg ref="relyingPartyRegistrationRepository"/>
-		</beans:bean>
+        <beans:bean id="relyingPartyRegistrationResolver"
+                    class="org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver">
+            <beans:constructor-arg ref="relyingPartyRegistrationRepository"/>
+        </beans:bean>
 
-		<beans:bean id="saml2AuthenticationTokenConverter"
-					class="org.springframework.security.saml2.provider.service.web.Saml2AuthenticationTokenConverter">
-			<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
-		</beans:bean>
+        <beans:bean id="saml2AuthenticationTokenConverter"
+                    class="org.springframework.security.saml2.provider.service.web.Saml2AuthenticationTokenConverter">
+            <beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+        </beans:bean>
 
-		<beans:bean id="saml2AuthenticationFilter"
-					class="org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationFilter">
-			<beans:constructor-arg ref="saml2AuthenticationTokenConverter"/>
-			<beans:constructor-arg value="/login/saml2/sso/{registrationId}"/>
-			<beans:property name="authenticationManager" ref="authenticationManager"/>
-			<beans:property name="authenticationSuccessHandler" ref="samlSuccessHandler"/>
-			<beans:property name="authenticationFailureHandler" ref="samlAuthFailureHandler"/>
-		</beans:bean>
+        <beans:bean id="saml2AuthenticationFilter"
+                    class="org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationFilter">
+            <beans:constructor-arg ref="saml2AuthenticationTokenConverter"/>
+            <beans:constructor-arg value="/login/saml2/sso/{registrationId}"/>
+            <beans:property name="authenticationManager" ref="authenticationManager"/>
+            <beans:property name="authenticationSuccessHandler" ref="samlSuccessHandler"/>
+            <beans:property name="authenticationFailureHandler" ref="samlAuthFailureHandler"/>
+        </beans:bean>
 
-		<beans:bean id="saml2AuthenticationRequestResolver"
-					class="org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver">
-			<beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
-		</beans:bean>
+        <beans:bean id="saml2AuthenticationRequestResolver"
+                    class="org.springframework.security.saml2.provider.service.web.authentication.OpenSaml4AuthenticationRequestResolver">
+            <beans:constructor-arg ref="relyingPartyRegistrationResolver"/>
+        </beans:bean>
 
-		<beans:bean id="saml2WebSsoAuthenticationRequestFilter"
-					class="org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationRequestFilter">
-			<beans:constructor-arg ref="saml2AuthenticationRequestResolver"/>
-		</beans:bean>
+        <beans:bean id="saml2WebSsoAuthenticationRequestFilter"
+                    class="org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationRequestFilter">
+            <beans:constructor-arg ref="saml2AuthenticationRequestResolver"/>
+        </beans:bean>
 
-		<beans:bean id="samlAuthFailureHandler"
-					class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
-			<beans:property name="defaultFailureUrl" value="/login.jsp?error=true"/>
-		</beans:bean>
-	</beans:beans>
+        <beans:bean id="samlAuthFailureHandler"
+                    class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">
+            <beans:property name="defaultFailureUrl" value="/login.jsp?error=true"/>
+        </beans:bean>
+    </beans:beans>
 
-	<!-- Common beans - unchanged, loaded for all profiles -->
-	<beans:beans>
-	<beans:bean id="customAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
-		<beans:constructor-arg>
-            <beans:list>
-                <beans:bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
-                <beans:bean class="org.springframework.security.access.vote.RoleVoter" />
-            </beans:list>
-        </beans:constructor-arg>
-	</beans:bean>
+    <!-- Common beans - unchanged, loaded for all profiles -->
+    <beans:beans>
+        <beans:bean id="customAccessDecisionManager" class="org.springframework.security.access.vote.AffirmativeBased">
+            <beans:constructor-arg>
+                <beans:list>
+                    <beans:bean class="org.springframework.security.access.vote.AuthenticatedVoter"/>
+                    <beans:bean class="org.springframework.security.access.vote.RoleVoter"/>
+                </beans:list>
+            </beans:constructor-arg>
+        </beans:bean>
 
-	<beans:bean id="customUsernamePasswordAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerUsernamePasswordAuthenticationFilter">
-		<beans:property name="authenticationManager" ref="authenticationManager"/>
-		<beans:property name="authenticationSuccessHandler" ref="ajaxAuthSuccessHandler"/>
-		<beans:property name="authenticationFailureHandler" ref="ajaxAuthFailureHandler"/>
-	</beans:bean>
+        <beans:bean id="customUsernamePasswordAuthenticationFilter"
+                    class="org.apache.ranger.security.web.filter.RangerUsernamePasswordAuthenticationFilter">
+            <beans:property name="authenticationManager" ref="authenticationManager"/>
+            <beans:property name="authenticationSuccessHandler" ref="ajaxAuthSuccessHandler"/>
+            <beans:property name="authenticationFailureHandler" ref="ajaxAuthFailureHandler"/>
+        </beans:bean>
 
-	<beans:bean id="authenticationProcessingFilterEntryPoint" class="org.apache.ranger.security.web.authentication.RangerAuthenticationEntryPoint">
-		<beans:constructor-arg value="/login.jsp"/>
-	</beans:bean>
+        <beans:bean id="authenticationProcessingFilterEntryPoint"
+                    class="org.apache.ranger.security.web.authentication.RangerAuthenticationEntryPoint">
+            <beans:constructor-arg value="/login.jsp"/>
+        </beans:bean>
 
-	<beans:bean id="ajaxAuthSuccessHandler" class="org.apache.ranger.security.web.authentication.RangerAuthSuccessHandler">
-		<beans:property name="defaultTargetUrl" value="/dashboard.jsp"/>
-	</beans:bean>
+        <beans:bean id="ajaxAuthSuccessHandler"
+                    class="org.apache.ranger.security.web.authentication.RangerAuthSuccessHandler">
+            <beans:property name="defaultTargetUrl" value="/dashboard.jsp"/>
+        </beans:bean>
 
-	<beans:bean id="ajaxAuthFailureHandler" class="org.apache.ranger.security.web.authentication.RangerAuthFailureHandler">
-		<beans:property name="defaultFailureUrl" value="/login.jsp"/>
-	</beans:bean>
+        <beans:bean id="ajaxAuthFailureHandler"
+                    class="org.apache.ranger.security.web.authentication.RangerAuthFailureHandler">
+            <beans:property name="defaultFailureUrl" value="/login.jsp"/>
+        </beans:bean>
 
-	<beans:bean id="customLogoutSuccessHandler" class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
-	</beans:bean>
+        <beans:bean id="customLogoutSuccessHandler"
+                    class="org.apache.ranger.security.web.authentication.CustomLogoutSuccessHandler">
+        </beans:bean>
 
-	<beans:bean id="krbAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerKRBAuthenticationFilter">
-    </beans:bean>
+        <beans:bean id="krbAuthenticationFilter"
+                    class="org.apache.ranger.security.web.filter.RangerKRBAuthenticationFilter">
+        </beans:bean>
 
-	<beans:bean id="CSRFPreventionFilter" class="org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter">
-    </beans:bean>
+        <beans:bean id="CSRFPreventionFilter" class="org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter">
+        </beans:bean>
 
-	<beans:bean id="mdcFilter" class="org.apache.ranger.security.web.filter.RangerMDCFilter">
-    </beans:bean>
+        <beans:bean id="mdcFilter" class="org.apache.ranger.security.web.filter.RangerMDCFilter">
+        </beans:bean>
 
-	<beans:bean id="headerPreAuthFilter" class="org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter">
-    </beans:bean>
+        <beans:bean id="headerPreAuthFilter" class="org.apache.ranger.security.web.filter.RangerHeaderPreAuthFilter">
+        </beans:bean>
 
-    <beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
-    </beans:bean>
+        <beans:bean id="ssoAuthenticationFilter"
+                    class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
+        </beans:bean>
 
-	<beans:bean id="userContextFormationFilter" class="org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter"/>
+        <beans:bean id="userContextFormationFilter"
+                    class="org.apache.ranger.security.web.filter.RangerSecurityContextFormationFilter"/>
 
-	<security:jdbc-user-service id="userService" data-source-ref="defaultDataSource"
-			users-by-username-query="select LOGIN_ID,PASSWORD,STATUS from x_portal_user where LOGIN_ID=?"
-			group-authorities-by-username-query=""
-			authorities-by-username-query="SELECT usr.LOGIN_ID,usr_role.USER_ROLE FROM x_portal_user usr,x_portal_user_role usr_role
+        <security:jdbc-user-service id="userService" data-source-ref="defaultDataSource"
+                                    users-by-username-query="select LOGIN_ID,PASSWORD,STATUS from x_portal_user where LOGIN_ID=?"
+                                    group-authorities-by-username-query=""
+                                    authorities-by-username-query="SELECT usr.LOGIN_ID,usr_role.USER_ROLE FROM x_portal_user usr,x_portal_user_role usr_role
 			WHERE usr.LOGIN_ID=?
 			AND usr_role.USER_ID = usr.ID"
-			/>
-	<beans:bean id="customAuthenticationProvider" class="org.apache.ranger.security.handler.RangerAuthenticationProvider" >
-    	<beans:property name="rangerAuthenticationMethod" value="${ranger.authentication.method}" />
-	</beans:bean>
+        />
+        <beans:bean id="customAuthenticationProvider"
+                    class="org.apache.ranger.security.handler.RangerAuthenticationProvider">
+            <beans:property name="rangerAuthenticationMethod" value="${ranger.authentication.method}"/>
+        </beans:bean>
 
-	<security:global-method-security pre-post-annotations="enabled" />
+        <security:global-method-security pre-post-annotations="enabled"/>
 
-	<beans:bean id="securityEventListener" class="org.apache.ranger.security.listener.SpringEventListener"/>
-	</beans:beans>
+        <beans:bean id="securityEventListener" class="org.apache.ranger.security.listener.SpringEventListener"/>
+    </beans:beans>
 
 </beans:beans>

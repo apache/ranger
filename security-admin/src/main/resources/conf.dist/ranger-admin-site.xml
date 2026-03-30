@@ -473,7 +473,7 @@
 	<property>
 		<name>ranger.saml.entity.id</name>
 		<value>ranger-saml</value>
-		<description>SAML SP Entity ID — must match the Client ID registered in the IdP (e.g. Keycloak)</description>
+		<description>SAML SP Entity ID must match the Client ID registered in the IdP (e.g. Keycloak)</description>
 	</property>
 	<property>
 		<name>ranger.saml.idp.metadata.location</name>
