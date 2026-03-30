@@ -52,11 +52,13 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
     public static final String      KEY_JWT_PUBLIC_KEY  = "jwt.public-key";    // JWT token provider public key
     public static final String      KEY_JWT_COOKIE_NAME = "jwt.cookie-name";   // JWT cookie name
     public static final String      KEY_JWT_AUDIENCES   = "jwt.audiences";
+    public static final String      KEY_JWT_ISS         = "jwt.issuers";
     public static final String      JWT_AUTHZ_PREFIX    = "Bearer ";
 
     protected static String cookieName = "hadoop-jwt";
 
     protected List<String>               audiences;
+    protected List<String>               issuers;
     protected JWKSource<SecurityContext> keySource;
     private   JWSVerifier                 verifier;
     private   String               jwksProviderUrl;
@@ -97,6 +99,12 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         String audiencesStr = config.getProperty(KEY_JWT_AUDIENCES);
         if (StringUtils.isNotBlank(audiencesStr)) {
             audiences = Arrays.asList(audiencesStr.split(","));
+        }
+
+        // setup issuers if configured
+        String issuersStr = config.getProperty(KEY_JWT_ISS);
+        if (StringUtils.isNotBlank(issuersStr)) {
+            issuers = Arrays.asList(issuersStr.split(","));
         }
 
         if (LOG.isDebugEnabled()) {
@@ -182,20 +190,25 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
         boolean expValid = validateExpiration(jwtToken);
         boolean sigValid = false;
         boolean audValid = false;
+        boolean issValid = false;
 
         if (expValid) {
             sigValid = validateSignature(jwtToken);
 
             if (sigValid) {
                 audValid = validateAudiences(jwtToken);
+
+                if (audValid) {
+                    issValid = validateIssuer(jwtToken);
+                }
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("expValid={}, sigValid={}, audValid={}", expValid, sigValid, audValid);
+            LOG.debug("expValid={}, sigValid={}, audValid={}, issValid={}", expValid, sigValid, audValid, issValid);
         }
 
-        return sigValid && audValid && expValid;
+        return sigValid && audValid && expValid && issValid;
     }
 
     /**
@@ -282,6 +295,38 @@ public abstract class RangerJwtAuthHandler implements RangerAuthHandler {
                 }
                 if (!valid) {
                     LOG.warn("JWT audience validation failed.");
+                }
+            }
+        } catch (ParseException pe) {
+            LOG.warn("Unable to parse the JWT token.", pe);
+        }
+        return valid;
+    }
+
+    /**
+     * Validate whether any of the accepted issuer claims is present in the issued
+     * token claims list for issuer. Override this method in subclasses in order
+     * to customize the audience validation behavior.
+     *
+     * @param jwtToken the JWT token from which the JWT issuer will be obtained
+     * @return true if an expected issuer is present, otherwise false
+     */
+    protected boolean validateIssuer(final SignedJWT jwtToken) {
+        boolean valid = false;
+        try {
+            String tokenIssuer = jwtToken.getJWTClaimsSet().getIssuer();
+            // if there were no expected issuers configured then just consider any issuer acceptable
+            if (issuers == null) {
+                valid = true;
+            } else {
+                // if any of the configured issuers is found then consider it acceptable
+                if (issuers.contains(tokenIssuer)) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("JWT token issuer has been successfully validated.");
+                    }
+                    valid = true;
+                } else {
+                    LOG.warn("JWT issuer validation failed.");
                 }
             }
         } catch (ParseException pe) {

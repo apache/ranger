@@ -80,6 +80,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
     public static final String JWT_PUBLIC_KEY                       = "ranger.sso.publicKey";
     public static final String JWT_COOKIE_NAME                      = "ranger.sso.cookiename";
     public static final String JWT_AUDIENCES                        = "ranger.sso.audiences";
+    public static final String JWT_ISSUERS                          = "ranger.sso.issuers";
     public static final String JWT_ORIGINAL_URL_QUERY_PARAM         = "ranger.sso.query.param.originalurl";
     public static final String JWT_COOKIE_NAME_DEFAULT              = "hadoop-jwt";
     public static final String JWT_ORIGINAL_URL_QUERY_PARAM_DEFAULT = "originalUrl";
