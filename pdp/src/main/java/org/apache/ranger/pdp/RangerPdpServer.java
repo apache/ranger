@@ -264,9 +264,9 @@ public class RangerPdpServer {
     }
 
     private void addStatusEndpoints(Context ctx) {
-        HttpServlet liveServlet    = new RangerPdpStatusServlet(runtimeStats, config, RangerPdpStatusServlet.Mode.LIVE);
-        HttpServlet readyServlet   = new RangerPdpStatusServlet(runtimeStats, config, RangerPdpStatusServlet.Mode.READY);
-        HttpServlet metricsServlet = new RangerPdpStatusServlet(runtimeStats, config, RangerPdpStatusServlet.Mode.METRICS);
+        HttpServlet liveServlet    = new RangerPdpStatusServlet(runtimeStats, RangerPdpStatusServlet.Mode.LIVE);
+        HttpServlet readyServlet   = new RangerPdpStatusServlet(runtimeStats, RangerPdpStatusServlet.Mode.READY);
+        HttpServlet metricsServlet = new RangerPdpStatusServlet(runtimeStats, RangerPdpStatusServlet.Mode.METRICS);
 
         Tomcat.addServlet(ctx, "pdpLiveServlet", liveServlet).setLoadOnStartup(1);
         Tomcat.addServlet(ctx, "pdpReadyServlet", readyServlet).setLoadOnStartup(1);

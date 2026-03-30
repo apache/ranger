@@ -18,22 +18,18 @@
 
 package org.apache.ranger.pdp;
 
-import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,7 +50,7 @@ public class RangerPdpStatusServletTest {
         stats.recordRequestError(5_000_000L);
         stats.recordAuthFailure(5_000_000L);
 
-        RangerPdpStatusServlet servlet = new RangerPdpStatusServlet(stats, new RangerPdpConfig(), RangerPdpStatusServlet.Mode.METRICS);
+        RangerPdpStatusServlet servlet = new RangerPdpStatusServlet(stats, RangerPdpStatusServlet.Mode.METRICS);
         HttpServletRequest     req     = proxy(HttpServletRequest.class, (proxy, method, args) -> null);
         ResponseCapture        capture = new ResponseCapture();
         HttpServletResponse    resp    = capture.responseProxy();
@@ -68,15 +64,15 @@ public class RangerPdpStatusServletTest {
 
     @Test
     public void testLoadedServicesCount() throws Exception {
-        RangerPdpStatusServlet servlet = new RangerPdpStatusServlet(new RangerPdpStats(), new RangerPdpConfig(), RangerPdpStatusServlet.Mode.READY);
+        RangerPdpStatusServlet servlet = new RangerPdpStatusServlet(new RangerPdpStats(), RangerPdpStatusServlet.Mode.READY);
         HttpServletRequest     req     = proxy(HttpServletRequest.class, (proxy, method, args) -> null);
         Method                 method  = RangerPdpStatusServlet.class.getDeclaredMethod("getLoadedServicesCount", HttpServletRequest.class);
 
         method.setAccessible(true);
 
-        Integer ageMs = (Integer) method.invoke(servlet, req);
+        Integer servicesCount = (Integer) method.invoke(servlet, req);
 
-        assertTrue(ageMs >= 0L);
+        assertTrue(servicesCount >= 0L);
     }
 
     @SuppressWarnings("unchecked")

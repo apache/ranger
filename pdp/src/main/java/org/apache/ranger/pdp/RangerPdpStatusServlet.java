@@ -21,7 +21,6 @@ package org.apache.ranger.pdp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ranger.authz.embedded.RangerEmbeddedAuthorizer;
-import org.apache.ranger.pdp.config.RangerPdpConfig;
 import org.apache.ranger.pdp.config.RangerPdpConstants;
 
 import javax.servlet.ServletContext;
@@ -39,14 +38,12 @@ public class RangerPdpStatusServlet extends HttpServlet {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final RangerPdpStats  runtimeState;
-    private final RangerPdpConfig config;
     private final Mode            mode;
 
     public enum Mode { LIVE, READY, METRICS }
 
-    public RangerPdpStatusServlet(RangerPdpStats runtimeState, RangerPdpConfig config, Mode mode) {
+    public RangerPdpStatusServlet(RangerPdpStats runtimeState, Mode mode) {
         this.runtimeState = runtimeState;
-        this.config       = config;
         this.mode         = mode;
     }
 
@@ -113,7 +110,7 @@ public class RangerPdpStatusServlet extends HttpServlet {
         sb.append("ranger_pdp_auth_failures_total ").append(runtimeState.getTotalAuthFailures()).append('\n');
         sb.append("# TYPE ranger_pdp_request_latency_avg_ms gauge\n");
         sb.append("ranger_pdp_request_latency_avg_ms ").append(runtimeState.getAverageLatencyMs()).append('\n');
-        sb.append("# TYPE ranger_pdp_loaded_services_count counter\n");
+        sb.append("# TYPE ranger_pdp_loaded_services_count gauge\n");
         sb.append("ranger_pdp_loaded_services_count ").append(getLoadedServicesCount(req)).append('\n');
 
         resp.setStatus(HttpServletResponse.SC_OK);

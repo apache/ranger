@@ -39,7 +39,7 @@ PDP exposes Prometheus-style text metrics at:
 
 - `GET /metrics`
 
-Current metrics include request counts, auth failures, average latency and policy-cache age.
+Current metrics include request counts, auth failures, average latency and loaded services count.
 
 ## Runtime Tuning
 
