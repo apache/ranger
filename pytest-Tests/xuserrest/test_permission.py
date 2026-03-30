@@ -705,7 +705,7 @@ class TestPermissions:
         )
     
     @pytest.mark.delete
-    @pytest.mark.positive
+    @pytest.mark.negative
     @pytest.mark.parametrize(
         "role, auth",
         [
