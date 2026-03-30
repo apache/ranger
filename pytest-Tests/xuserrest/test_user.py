@@ -50,47 +50,59 @@ import random
 class TestUsers:
     SERVICE_NAME = "admin"
 
-    @pytest.fixture(autouse=True)
-    def _setup(self, request, default_headers):
-        
-        self.admin = request.getfixturevalue("temp_secure_user")(["admin"])[0]
-        self.ranger_key_admin = request.getfixturevalue("temp_keyadmin_user")()[0]
-        self.audit = request.getfixturevalue("temp_secure_user")(["auditor"])[0]
-        self.user = request.getfixturevalue("temp_secure_user")(["user"])[0]
+    @pytest.fixture(autouse=True, scope="class")
+    def _setup(
+        self,
+        request,
+        temp_secure_user,
+        temp_keyadmin_user,
+        default_headers,
+        ranger_config,
+    ):
+        cls = request.cls
 
+        # ---------- primary users ----------
+        cls.admin, _ = temp_secure_user(["admin"])
+        cls.ranger_key_admin, _ = temp_keyadmin_user()
+        cls.audit, _ = temp_secure_user(["auditor"])
+        cls.user, _ = temp_secure_user(["user"])
 
-        self.ranger_admin_config = (self.admin["name"], "Test@123")
-        self.ranger_key_admin_config = (self.ranger_key_admin["name"], "Test@123")
-        self.ranger_auditor_config = (self.audit["name"], "Test@123")
-        self.ranger_user_config = (self.user["name"], "Test@123")
+        cls.ranger_admin_config = (cls.admin["name"], "Test@123")
+        cls.ranger_key_admin_config = (cls.ranger_key_admin["name"], "Test@123")
+        cls.ranger_auditor_config = (cls.audit["name"], "Test@123")
+        cls.ranger_user_config = (cls.user["name"], "Test@123")
 
-        self.ranger_admin_id = self.admin["id"]
-        self.ranger_key_admin_id = self.ranger_key_admin["id"]
-        self.ranger_auditor_id = self.audit["id"]
-        self.ranger_user_id = self.user["id"]
+        cls.ranger_admin_id = cls.admin["id"]
+        cls.ranger_key_admin_id = cls.ranger_key_admin["id"]
+        cls.ranger_auditor_id = cls.audit["id"]
+        cls.ranger_user_id = cls.user["id"]
 
-        self.admin1 = request.getfixturevalue("temp_secure_user")(["admin"])[0]
-        self.ranger_key_admin1 = request.getfixturevalue("temp_keyadmin_user")()[0]
-        self.audit1 = request.getfixturevalue("temp_secure_user")(["auditor"])[0]
-        self.user1 = request.getfixturevalue("temp_secure_user")(["user"])[0]
+        # ---------- secondary users ----------
+        cls.admin1, _ = temp_secure_user(["admin"])
+        cls.ranger_key_admin1, _ = temp_keyadmin_user()
+        cls.audit1, _ = temp_secure_user(["auditor"])
+        cls.user1, _ = temp_secure_user(["user"])
 
+        cls.ranger_admin_config1 = (cls.admin1["name"], "Test@123")
+        cls.ranger_key_admin_config1 = (cls.ranger_key_admin1["name"], "Test@123")
+        cls.ranger_auditor_config1 = (cls.audit1["name"], "Test@123")
+        cls.ranger_user_config1 = (cls.user1["name"], "Test@123")
 
-        self.ranger_admin_config1 = (self.admin1["name"], "Test@123")
-        self.ranger_key_admin_config1 = (self.ranger_key_admin1["name"], "Test@123")
-        self.ranger_auditor_config1 = (self.audit1["name"], "Test@123")
-        self.ranger_user_config1 = (self.user1["name"], "Test@123")
+        cls.ranger_admin_id1 = cls.admin1["id"]
+        cls.ranger_key_admin_id1 = cls.ranger_key_admin1["id"]
+        cls.ranger_auditor_id1 = cls.audit1["id"]
+        cls.ranger_user_id1 = cls.user1["id"]
 
-        self.ranger_admin_id1 = self.admin1["id"]
-        self.ranger_key_admin_id1 = self.ranger_key_admin1["id"]
-        self.ranger_auditor_id1 = self.audit1["id"]
-        self.ranger_user_id1 = self.user1["id"]
+        # ---------- common ----------
+        cls.headers = default_headers
+        cls.base_url = ranger_config["base_url"]
 
-        self.headers = default_headers
-        self.base_url = request.getfixturevalue("ranger_config")["base_url"]
-
-        init_configs(self.ranger_admin_config, self.ranger_key_admin_config, self.ranger_auditor_config, self.ranger_user_config)
-
-        
+        init_configs(
+            cls.ranger_admin_config,
+            cls.ranger_key_admin_config,
+            cls.ranger_auditor_config,
+            cls.ranger_user_config,
+        )
 
     # Positive Test Cases
     @pytest.mark.positive

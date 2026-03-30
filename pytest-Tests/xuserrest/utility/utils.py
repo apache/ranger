@@ -27,9 +27,12 @@ import json
 import pytest
 import requests
 from datetime import datetime
-#from common.utils import fetch_logs
 import inspect
 import subprocess
+
+
+RANGER_CONTAINER_NAME = "ranger"
+RANGER_LOG_FILE = "/var/log/ranger/ranger-admin-ranger.rangernw-.log"
 
 BIGINT_MIN = -9223372036854775808
 BIGINT_MAX = 9223372036854775807
@@ -331,13 +334,6 @@ def assign_groups_to_user(user_name, group_names, ranger_admin_config, base_url,
     assert response.status_code == 200, f"Failed to assign groups to user: {response.text}"
     
 
-
-import subprocess
-
-RANGER_CONTAINER_NAME = "ranger"
-RANGER_LOG_FILE = "/var/log/ranger/ranger-admin-ranger.rangernw-.log"
-
-
 def fetch_ranger_logs(resp_code=None, lines: int = 80) -> str:
     """
     Generic Ranger debugging logs.
@@ -414,3 +410,48 @@ def fetch_ranger_logs(resp_code=None, lines: int = 80) -> str:
 
     except Exception as e:
         return f"Failed to fetch Ranger logs: {e}"
+    
+def permission_module_exists(module_name= None, ranger_admin_config = None, base_url=None, headers=None):
+    RANGER_CONFIG = {"base_url": base_url, "auth": ranger_admin_config, "headers": headers}
+    if RANGER_CONFIG is None:
+        raise RuntimeError("RANGER_CONFIG not initialized")
+    if module_name is None:
+        raise ValueError("module_name must be provided")
+    resp = requests.get(
+        f"{base_url}/xusers/permission",
+        params={"module": module_name},
+        auth=ranger_admin_config,
+        headers=headers
+    )
+    if resp.status_code != 200:
+        return False
+
+    data = resp.json()
+    print("Permission module response data:", data)
+    module_list = data.get("vXModuleDef", [])
+
+    return len(module_list) > 0
+
+def build_user_permission(user_id, module_id, is_allowed):
+    return {
+        "userId": user_id,
+        "moduleId": module_id,
+        "isAllowed": is_allowed
+    }
+
+
+def build_group_permission(group_id, module_id, is_allowed):
+    return {
+        "groupId": group_id,
+        "moduleId": module_id,
+        "isAllowed": is_allowed
+    }
+
+
+def build_permission_payload(module_id, module_name, user_perm_list=None, group_perm_list=None):
+    return {
+        "id": module_id,
+        "module": module_name,
+        "userPermList": user_perm_list or [],
+        "groupPermList": group_perm_list or []
+    }

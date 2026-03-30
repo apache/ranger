@@ -182,7 +182,7 @@ def get_user_by_id(ranger_config):
 
     return _get_user
 
-@pytest.fixture()
+@pytest.fixture(scope="class")
 def temp_secure_user(ranger_config, client_roles):
 
     if "ROLE_SYS_ADMIN" not in client_roles:
@@ -263,7 +263,7 @@ def temp_secure_user(ranger_config, client_roles):
                 f"Unexpected error deleting user ID {user_id}: {response.text}"
             )
 
-@pytest.fixture()
+@pytest.fixture(scope="class")
 def temp_keyadmin_user(ranger_config, client_roles, role = "keyadmin"):
 
     if "ROLE_SYS_ADMIN" not in client_roles:
@@ -337,3 +337,66 @@ def temp_keyadmin_user(ranger_config, client_roles, role = "keyadmin"):
             auth=ranger_config["auth"],
             headers={**ranger_config["headers"], "X-Requested-By": "ranger"}
         )
+
+@pytest.fixture(scope="class")
+def temp_permission_module(ranger_config, client_roles):
+
+    if "ROLE_SYS_ADMIN" not in client_roles:
+        pytest.fail("Admin privileges required to create permission module")
+
+    created_module_ids = []
+
+    def _create_permission_module():
+
+
+        module_name = f"pytest_permission_{uuid.uuid4().hex[:8]}"
+        payload = {
+            "module": module_name,
+        }
+
+        # Fetch existing permissions to get a valid module and permission ID
+        response = requests.post(
+            f"{ranger_config['base_url']}/xusers/permission",
+            json=payload,
+            auth=ranger_config["auth"],
+            headers=ranger_config["headers"]
+        )
+        
+
+        assert response.status_code in (200, 201), \
+            f"Failed to create permission module: {response.text}"
+
+        module = response.json()
+
+        # Ranger may return id OR moduleId depending on version
+        module_id = module.get("id") or module.get("moduleId")
+
+        created_module_ids.append(module_id)
+
+        print(f"\n[Fixture] Created permission module: {module_name} ({module_id})")
+
+        return module, module_id
+
+    yield _create_permission_module
+
+    # ---------------- CLEANUP ----------------
+    for module_id in created_module_ids:
+        print(f"[Fixture] Cleaning permission module {module_id}")
+
+        response = requests.delete(
+            f"{ranger_config['base_url']}/xusers/permission/{module_id}",
+            auth=ranger_config["auth"],
+            headers={
+                **ranger_config["headers"],
+                "X-Requested-By": "ranger"
+            }
+        )
+
+        if response.status_code in (200, 204):
+            print(f"[Fixture] Deleted permission module {module_id}")
+        elif response.status_code == 404:
+            print(f"[Fixture] Permission module {module_id} already deleted")
+        else:
+            pytest.fail(
+                f"Unexpected error deleting permission module {module_id}: {response.text}"
+            )
