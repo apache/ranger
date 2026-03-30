@@ -50,8 +50,8 @@ class DataframeUtils:
         :param timestamp_col_name: Column name of the timestamp column
         :return: Pandas dataframe with truncated data
         """
-        mask = (pd.to_datetime(data[timestamp_col_name]) >= pd.to_datetime(start_time, infer_datetime_format=True)) & (
-                    pd.to_datetime(data[timestamp_col_name]) <= pd.to_datetime(end_time, infer_datetime_format=True))
+        mask = (pd.to_datetime(data[timestamp_col_name]) >= pd.to_datetime(start_time)) & (
+                    pd.to_datetime(data[timestamp_col_name]) <= pd.to_datetime(end_time))
         return data.loc[mask]
 
     def align_dataframes(self, system_logs_df, access_logs_df, system_logs_timestamp_col_name = 'time',

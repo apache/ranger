@@ -22,7 +22,7 @@ under the License.
 Run the below command to generate pydocs for the package. Code base has doc strings describing the methods and classes from which the document is generated.
  
 ```bash
-> python -m pydoc -b
+> python3 -m pydoc -b
 ```
 
 Other README files can be found in the following directory:
@@ -41,11 +41,7 @@ or
 
 ## Client side Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install requirements for running the performance tests.
-Ensure right path to requirements.txt is given.
-
 ```bash
-> pip install -r requirements.txt
 
 > apt-get install sshpass 
 or
@@ -54,11 +50,21 @@ or
 
 
 ## Usage
+
 ```cd``` into ```python``` directory before executing below commands
+
+Ensure you have ```Python 3.11``` installed.
+It is recommended to create a virtual environment using this version and work inside it.
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install requirements for running the performance tests.
+
+```bash 
+> pip install -r requirements.txt
+```
 
 First time usage or to reset the config files:
 ```bash 
-> python setup_performance_analyzer.py
+> python3 setup_performance_analyzer.py
 ```
 
 Subsequent usage:
@@ -77,7 +83,7 @@ For single api testing (Command line arguments override config file values)
 usage:
     
 ```bash
-> python performance_analyzer.py --ranger_url <ranger_url> --calls <number of times to call api> --api <name of function of python client corresponding to api> --username <Auth username> --password <Auth password> --client_ip <client ip address>  --ssh_host <ranger host to connect for ssh> --ssh_user <Server user e.g. root> --ssh_password <Server password>
+> python3 performance_analyzer.py --ranger_url <ranger_url> --calls <number of times to call api> --api <name of function of python client corresponding to api> --username <Auth username> --password <Auth password> --client_ip <client ip address>  --ssh_host <ranger host to connect for ssh> --ssh_user <Server user e.g. root> --ssh_password <Server password>
 ```
 
 Example command:
@@ -92,4 +98,4 @@ System metrics on server side are collected using [vmstat](https://phoenixnap.co
 ## Warnings
 Ensure sudo/root privileges for the user on the server side for vmstat command.
 
-Ensure VPN is enables and client can communicate with the server. Else, in some cases stale values from previous successful run of the tool may be presented 
+Ensure VPN is enabled and client can communicate with the server. Else, in some cases stale values from previous successful run of the tool may be presented. 
