@@ -42,7 +42,7 @@ WORKDIR /opt/ranger/audit-dispatcher
 COPY ./dist/ranger-${RANGER_VERSION}-audit-dispatcher.tar.gz /tmp/
 
 # Copy scripts and Kerberos configuration
-COPY ./scripts/audit-server/service-check-functions.sh    ${RANGER_SCRIPTS}/
+COPY ./scripts/audit-dispatcher/service-check-functions.sh    ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
 # Extract and setup
@@ -52,20 +52,21 @@ RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-dispatcher.tar.gz -C /opt/ranger
     mkdir -p /home/ranger/scripts && \
     rm -rf /opt/ranger/audit-dispatcher/logs && \
     ln -sf /var/log/ranger/audit-dispatcher /opt/ranger/audit-dispatcher/logs && \
-    cp /opt/ranger/audit-dispatcher/scripts/start-audit-consumer.sh ${RANGER_SCRIPTS}/ && \
+    cp /opt/ranger/audit-dispatcher/scripts/start-audit-dispatcher.sh ${RANGER_SCRIPTS}/ && \
     chown -R ranger:ranger /opt/ranger/audit-dispatcher/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
     chmod -R 755 /opt/ranger/audit-dispatcher && \
-    chmod 755 ${RANGER_SCRIPTS}/start-audit-consumer.sh
+    chmod 755 ${RANGER_SCRIPTS}/start-audit-dispatcher.sh
 
 # Set Java home
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH=$JAVA_HOME/bin:$PATH
 
-# Environment variables for consumer
-ENV AUDIT_CONSUMER_HOME_DIR=/opt/ranger/audit-dispatcher
-ENV AUDIT_CONSUMER_CONF_DIR=/opt/ranger/audit-dispatcher/conf
-ENV AUDIT_CONSUMER_LOG_DIR=/var/log/ranger/audit-dispatcher
+# Environment variables for dispatcher
+ENV AUDIT_DISPATCHER_HOME_DIR=/opt/ranger/audit-dispatcher
+ENV AUDIT_DISPATCHER_CONF_DIR=/opt/ranger/audit-dispatcher/conf
+ENV AUDIT_DISPATCHER_LOG_DIR=/var/log/ranger/audit-dispatcher
 ENV RANGER_USER=ranger
+ENV HADOOP_HOME=/opt/ranger/audit-dispatcher
 
 # Environment variable for Kerberos support
 ENV KERBEROS_ENABLED=${KERBEROS_ENABLED:-false}
@@ -73,6 +74,6 @@ ENV KERBEROS_ENABLED=${KERBEROS_ENABLED:-false}
 # Switch to ranger user
 USER ranger
 
-# Start the consumer using the custom startup script
+# Start the dispatcher using the custom startup script
 WORKDIR /opt/ranger/audit-dispatcher
-ENTRYPOINT ["/home/ranger/scripts/start-audit-consumer.sh"]
+ENTRYPOINT ["/home/ranger/scripts/start-audit-dispatcher.sh"]

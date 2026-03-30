@@ -63,7 +63,7 @@ public class AuditDelegationTokenFilter extends DelegationTokenAuthenticationFil
     private String tokenKindStr;
 
     private static final String AUDIT_DELEGATION_TOKEN_KIND_DEFAULT = "AUDIT_DELEGATION_TOKEN";
-    private static final String DEFAULT_CONFIG_PREFIX               = "ranger.audit.server";
+    private static final String DEFAULT_CONFIG_PREFIX               = "ranger.audit.ingestor";
     private static final String PROP_CONFIG_PREFIX                  = "config.prefix";
 
     /**
@@ -183,7 +183,7 @@ public class AuditDelegationTokenFilter extends DelegationTokenAuthenticationFil
         props.setProperty(DelegationTokenAuthenticationHandler.TOKEN_KIND, tokenKindStr);
 
         // Resolve _HOST into bind address
-        String bindAddress = auditConfig.get("ranger.audit.server.bind.address");
+        String bindAddress = auditConfig.get("ranger.audit.ingestor.bind.address");
         LOG.debug("Bind address from config: [{}]", bindAddress);
 
         if (Objects.isNull(bindAddress)) {

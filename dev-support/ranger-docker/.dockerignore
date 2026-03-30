@@ -5,7 +5,7 @@
 !dist/ranger-*-kms.tar.gz
 !dist/ranger-*-usersync.tar.gz
 !dist/ranger-*-tagsync.tar.gz
-!dist/ranger-*-audit-server.tar.gz
+!dist/ranger-*-audit-ingestor.tar.gz
 !dist/ranger-*-audit-dispatcher.tar.gz
 !dist/ranger-*-hdfs-plugin.tar.gz
 !dist/ranger-*-yarn-plugin.tar.gz

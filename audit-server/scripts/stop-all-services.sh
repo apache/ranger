@@ -20,9 +20,9 @@
 # Stop All Ranger Audit Services
 # ========================================
 # This script stops all three audit services in the reverse order:
-# 1. HDFS Consumer
-# 2. Solr Consumer
-# 3. Audit Server
+# 1. HDFS Dispatcher
+# 2. Solr Dispatcher
+# 3. Audit Ingestor
 
 set -e
 
@@ -34,31 +34,31 @@ echo "Stopping All Ranger Audit Services"
 echo "=========================================="
 echo ""
 
-# Stop HDFS Consumer
-echo "[1/3] Stopping Ranger Audit Consumer - HDFS..."
-if [ -f "${PARENT_DIR}/ranger-audit-consumer-hdfs/scripts/stop-consumer-hdfs.sh" ]; then
-  bash "${PARENT_DIR}/ranger-audit-consumer-hdfs/scripts/stop-consumer-hdfs.sh" || true
+# Stop HDFS Dispatcher
+echo "[1/3] Stopping Ranger Audit Dispatcher - HDFS..."
+if [ -f "${PARENT_DIR}/audit-dispatcher/scripts/stop-audit-dispatcher.sh" ]; then
+  bash "${PARENT_DIR}/audit-dispatcher/scripts/stop-audit-dispatcher.sh" hdfs || true
   echo ""
 else
-  echo "[WARNING] HDFS Consumer stop script not found, skipping..."
+  echo "[WARNING] HDFS Dispatcher stop script not found, skipping..."
 fi
 
-# Stop Solr Consumer
-echo "[2/3] Stopping Ranger Audit Consumer - Solr..."
-if [ -f "${PARENT_DIR}/ranger-audit-consumer-solr/scripts/stop-consumer-solr.sh" ]; then
-  bash "${PARENT_DIR}/ranger-audit-consumer-solr/scripts/stop-consumer-solr.sh" || true
+# Stop Solr Dispatcher
+echo "[2/3] Stopping Ranger Audit Dispatcher - Solr..."
+if [ -f "${PARENT_DIR}/audit-dispatcher/scripts/stop-audit-dispatcher.sh" ]; then
+  bash "${PARENT_DIR}/audit-dispatcher/scripts/stop-audit-dispatcher.sh" solr || true
   echo ""
 else
-  echo "[WARNING] Solr Consumer stop script not found, skipping..."
+  echo "[WARNING] Solr Dispatcher stop script not found, skipping..."
 fi
 
-# Stop Audit Server
-echo "[3/3] Stopping Ranger Audit Server Service..."
-if [ -f "${PARENT_DIR}/ranger-audit-server-service/scripts/stop-audit-server.sh" ]; then
-  bash "${PARENT_DIR}/ranger-audit-server-service/scripts/stop-audit-server.sh" || true
+# Stop Audit Ingestor
+echo "[3/3] Stopping Ranger Audit Ingestor Service..."
+if [ -f "${PARENT_DIR}/audit-ingestor/scripts/stop-audit-ingestor.sh" ]; then
+  bash "${PARENT_DIR}/audit-ingestor/scripts/stop-audit-ingestor.sh" || true
   echo ""
 else
-  echo "[WARNING] Audit Server stop script not found, skipping..."
+  echo "[WARNING] Audit Ingestor stop script not found, skipping..."
 fi
 
 echo "=========================================="

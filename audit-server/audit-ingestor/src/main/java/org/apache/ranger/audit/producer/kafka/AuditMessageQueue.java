@@ -255,7 +255,7 @@ public class AuditMessageQueue extends AuditDestination {
                 });
                 successCount = authzEvents.size();
                 allSuccess   = true;
-                LOG.debug("ranger-audit-server/ranger-audit-server-service/src/main/java/org/apache/ranger/audit/producer/kafka/AuditMessageQueue.javaSuccessfully sent batch of {} events to Kafka topic: {} with key: {}", successCount, topicName, finalBatchKey);
+                LOG.debug("Successfully sent batch of {} events to Kafka topic: {} with key: {}", successCount, topicName, finalBatchKey);
             } else {
                 LOG.warn("Kafka producer not available, spooling batch of {} messages to recovery", authzEvents.size());
                 for (String message : messages) {

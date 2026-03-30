@@ -66,7 +66,7 @@ public class AuditConfig extends RangerConfiguration {
      * Add a resource file to the configuration.
      * Subclasses can override to load their specific config files.
      *
-     * @param resourcePath Path to the resource file (e.g., "conf/ranger-audit-server-site.xml")
+     * @param resourcePath Path to the resource file (e.g., "conf/ranger-audit-ingestor-site.xml")
      * @param required Whether this resource is required
      * @return true if resource was loaded successfully or is optional, false otherwise
      */

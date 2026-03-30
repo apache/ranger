@@ -34,7 +34,7 @@ public class AuditServerApplication {
     private static final Logger LOG = LoggerFactory.getLogger(AuditServerApplication.class);
 
     private static final String APP_NAME      = "audit-ingestor";
-    private static final String CONFIG_PREFIX = "ranger.audit.server.";
+    private static final String CONFIG_PREFIX = "ranger.audit.ingestor.";
 
     private AuditServerApplication() {
     }

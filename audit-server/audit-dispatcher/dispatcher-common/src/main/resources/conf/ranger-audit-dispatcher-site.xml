@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<configuration>
+    <!-- DISPATCHER TYPE SELECTION -->
+    <property>
+        <name>ranger.audit.dispatcher.type</name>
+        <value>solr</value>
+        <description>
+            The type of dispatcher to run.
+            Supported values: solr, hdfs
+        </description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.war.file</name>
+        <value>ranger-audit-dispatcher.war</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.launcher.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherLauncher</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.main.class</name>
+        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherApplication</value>
+    </property>
+
+    <!-- COMMON SERVER CONFIGURATION -->
+    <property>
+        <name>ranger.audit.dispatcher.host</name>
+        <value>0.0.0.0</value>
+        <description>Service hostname</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.http.port</name>
+        <value>7090</value>
+        <description>HTTP port for the dispatcher service</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.contextName</name>
+        <value>/</value>
+    </property>
+
+
+    <!-- COMMON KAFKA DISPATCHER CONFIGURATION -->
+    <property>
+        <name>ranger.audit.dispatcher.kafka.bootstrap.servers</name>
+        <value>ranger-kafka:9092</value>
+        <description>Kafka broker hosts</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.topic.name</name>
+        <value>ranger_audits</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.group.id</name>
+        <value>ranger_audit_dispatcher</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.security.protocol</name>
+        <value>SASL_PLAINTEXT</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.mechanism</name>
+        <value>GSSAPI</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kafka.sasl.kerberos.service.name</name>
+        <value>kafka</value>
+    </property>
+
+    <!-- COMMON KERBEROS CONFIGURATION -->
+    <property>
+        <name>ranger.audit.dispatcher.hadoop.security.authentication</name>
+        <value>KERBEROS</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kerberos.principal</name>
+        <value>rangerauditserver/_HOST@EXAMPLE.COM</value>
+        <description>Principal for Kafka dispatcher and destination authentication</description>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.kerberos.keytab</name>
+        <value>/etc/keytabs/rangerauditserver.keytab</value>
+    </property>
+
+    <property>
+        <name>ranger.audit.dispatcher.bind.address</name>
+        <value>0.0.0.0</value>
+        <description>Hostname for resolving _HOST in Kerberos principal</description>
+    </property>
+
+</configuration>

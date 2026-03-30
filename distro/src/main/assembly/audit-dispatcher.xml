@@ -23,7 +23,7 @@
   <baseDirectory>${project.parent.name}-${project.version}-audit-dispatcher</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
   <fileSets>
-    <!-- Scripts directory (Unified) -->
+    <!-- Scripts directory -->
     <fileSet>
       <outputDirectory>scripts</outputDirectory>
       <directory>${project.parent.basedir}/audit-server/audit-dispatcher/scripts</directory>
@@ -34,42 +34,33 @@
       <fileMode>755</fileMode>
     </fileSet>
 
-    <!-- Configuration files (Unified) -->
+    <!-- Configuration files -->
     <fileSet>
       <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-common/src/main/resources/conf</directory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-common/src/main/resources/conf</directory>
       <includes>
-        <include>ranger-audit-consumer-site.xml</include>
+        <include>ranger-audit-dispatcher-site.xml</include>
       </includes>
       <fileMode>644</fileMode>
     </fileSet>
 
-    <!-- Solr Configuration file -->
     <fileSet>
       <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-solr/src/main/resources/conf</directory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-solr/src/main/resources/conf</directory>
       <includes>
-        <include>ranger-audit-consumer-solr-site.xml</include>
-      </includes>
-      <fileMode>644</fileMode>
-    </fileSet>
-
-    <!-- HDFS Configuration file -->
-    <fileSet>
-      <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-hdfs/src/main/resources/conf</directory>
-      <includes>
-        <include>ranger-audit-consumer-hdfs-site.xml</include>
-      </includes>
-      <fileMode>644</fileMode>
-    </fileSet>
-    
-    <!-- Logback configuration (Use Solr's as base for now) -->
-    <fileSet>
-      <outputDirectory>conf</outputDirectory>
-      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-solr/src/main/resources/conf</directory>
-      <includes>
+        <include>ranger-audit-dispatcher-solr-site.xml</include>
         <include>logback.xml</include>
+      </includes>
+      <fileMode>644</fileMode>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>conf</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-hdfs/src/main/resources/conf</directory>
+      <includes>
+        <include>ranger-audit-dispatcher-hdfs-site.xml</include>
+        <include>core-site.xml</include>
+        <include>hdfs-site.xml</include>
       </includes>
       <fileMode>644</fileMode>
     </fileSet>
@@ -99,21 +90,46 @@
         <exclude>**/*</exclude>
       </excludes>
     </fileSet>
+
+    <!-- HDFS Dispatcher dependencies -->
+    <fileSet>
+      <outputDirectory>lib/dispatchers/hdfs</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-hdfs/target/lib</directory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>lib/dispatchers/hdfs</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-hdfs/target</directory>
+      <includes>
+        <include>audit-dispatcher-hdfs-${project.version}.jar</include>
+      </includes>
+    </fileSet>
+
+    <!-- Solr Dispatcher dependencies -->
+    <fileSet>
+      <outputDirectory>lib/dispatchers/solr</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-solr/target/lib</directory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <outputDirectory>lib/dispatchers/solr</outputDirectory>
+      <directory>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-solr/target</directory>
+      <includes>
+        <include>audit-dispatcher-solr-${project.version}.jar</include>
+      </includes>
+    </fileSet>
   </fileSets>
 
   <files>
-    <!-- Solr WAR file -->
+    <!-- Unified WAR file -->
     <file>
       <outputDirectory>webapp</outputDirectory>
-      <source>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-solr/target/audit-consumer-solr-${project.version}.war</source>
-      <destName>ranger-audit-consumer-solr.war</destName>
-    </file>
-    
-    <!-- HDFS WAR file -->
-    <file>
-      <outputDirectory>webapp</outputDirectory>
-      <source>${project.parent.basedir}/audit-server/audit-dispatcher/consumer-hdfs/target/audit-consumer-hdfs-${project.version}.war</source>
-      <destName>ranger-audit-consumer-hdfs.war</destName>
+      <source>${project.parent.basedir}/audit-server/audit-dispatcher/dispatcher-app/target/ranger-audit-dispatcher-${project.version}.war</source>
+      <destName>ranger-audit-dispatcher.war</destName>
     </file>
   </files>
 </assembly>

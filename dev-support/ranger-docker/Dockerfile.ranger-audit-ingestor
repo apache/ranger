@@ -38,17 +38,17 @@ VOLUME /etc/keytabs
 # Set up working directory
 WORKDIR /opt/ranger/audit-ingestor
 
-# Copy ranger-audit-server distribution
-COPY ./dist/ranger-${RANGER_VERSION}-audit-server.tar.gz /tmp/
+# Copy ranger-audit-ingestor distribution
+COPY ./dist/ranger-${RANGER_VERSION}-audit-ingestor.tar.gz /tmp/
 
 # Copy scripts and Kerberos configuration
-COPY ./scripts/audit-server/service-check-functions.sh    ${RANGER_SCRIPTS}/
-COPY ./scripts/audit-server/ranger-audit-server.sh        ${RANGER_SCRIPTS}/
+COPY ./scripts/audit-ingestor/service-check-functions.sh    ${RANGER_SCRIPTS}/
+COPY ./scripts/audit-ingestor/ranger-audit-ingestor.sh        ${RANGER_SCRIPTS}/
 COPY ./scripts/kdc/krb5.conf /etc/krb5.conf
 
 # Extract and setup
-RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-server.tar.gz -C /opt/ranger/audit-ingestor --strip-components=1 && \
-    rm -f /tmp/ranger-${RANGER_VERSION}-audit-server.tar.gz && \
+RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-ingestor.tar.gz -C /opt/ranger/audit-ingestor --strip-components=1 && \
+    rm -f /tmp/ranger-${RANGER_VERSION}-audit-ingestor.tar.gz && \
     mkdir -p /var/log/ranger/audit-ingestor/audit/spool && \
     mkdir -p /var/log/ranger/audit-ingestor/audit/archive && \
     mkdir -p /home/ranger/scripts && \
@@ -56,7 +56,7 @@ RUN tar xzf /tmp/ranger-${RANGER_VERSION}-audit-server.tar.gz -C /opt/ranger/aud
     ln -sf /var/log/ranger/audit-ingestor /opt/ranger/audit-ingestor/logs && \
     chown -R ranger:ranger /opt/ranger/audit-ingestor/ /var/log/ranger/ ${RANGER_SCRIPTS} && \
     chmod -R 755 /opt/ranger/audit-ingestor && \
-    chmod 755 ${RANGER_SCRIPTS}/ranger-audit-server.sh
+    chmod 755 ${RANGER_SCRIPTS}/ranger-audit-ingestor.sh
 
 # Set Java home
 ENV JAVA_HOME=/opt/java/openjdk
@@ -83,4 +83,4 @@ USER ranger
 
 # Start the audit ingestor using the custom startup script
 WORKDIR /opt/ranger/audit-ingestor
-ENTRYPOINT ${RANGER_SCRIPTS}/ranger-audit-server.sh
+ENTRYPOINT ${RANGER_SCRIPTS}/ranger-audit-ingestor.sh

@@ -303,7 +303,7 @@ public class AuditREST {
     }
 
     /**
-     * Rules are loaded from ranger.audit.service.auth.to.local property in ranger-audit-server-site.xml.
+     * Rules are loaded from ranger.audit.service.auth.to.local property in ranger-audit-ingestor-site.xml.
      */
     private static void initializeAuthToLocal() {
         AuditServerConfig config = AuditServerConfig.getInstance();
@@ -317,7 +317,7 @@ public class AuditREST {
             }
         } else {
             LOG.warn("No auth_to_local rules configured. Kerberos principal mapping may not work correctly.");
-            LOG.warn("Set property '{}' in ranger-audit-server-site.xml", AuditServerConstants.PROP_AUTH_TO_LOCAL);
+            LOG.warn("Set property '{}' in ranger-audit-ingestor-site.xml", AuditServerConstants.PROP_AUTH_TO_LOCAL);
         }
     }
 

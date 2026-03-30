@@ -56,15 +56,15 @@ public class AuditMessageQueueUtils {
     public String createAuditsTopicIfNotExists(Properties props, String propPrefix) {
         LOG.info("==> AuditMessageQueueUtils:createAuditsTopicIfNotExists()");
 
-        String ret                   = null;
-        String topicName             = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
-        String bootstrapServers      = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS);
-        String securityProtocol      = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
-        String saslMechanism         = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM);
-        int    connMaxIdleTimeoutMS  = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONN_MAX_IDEAL_MS, 10000);
-        int    partitions            = getPartitions(props, propPrefix);
-        short  replicationFactor     = (short) MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REPLICATION_FACTOR, AuditServerConstants.DEFAULT_REPLICATION_FACTOR);
-        int    reqTimeoutMS          = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REQ_TIMEOUT_MS, 5000);
+        String ret                  = null;
+        String topicName            = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_TOPIC_NAME, AuditServerConstants.DEFAULT_TOPIC);
+        String bootstrapServers     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS);
+        String securityProtocol     = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SECURITY_PROTOCOL, AuditServerConstants.DEFAULT_SECURITY_PROTOCOL);
+        String saslMechanism        = MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_SASL_MECHANISM, AuditServerConstants.DEFAULT_SASL_MECHANISM);
+        int    connMaxIdleTimeoutMS = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_CONN_MAX_IDEAL_MS, 10000);
+        int    partitions           = getPartitions(props, propPrefix);
+        short  replicationFactor    = (short) MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REPLICATION_FACTOR, AuditServerConstants.DEFAULT_REPLICATION_FACTOR);
+        int    reqTimeoutMS         = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_REQ_TIMEOUT_MS, 5000);
 
         // Retry configuration for Kafka connection during startup
         int maxRetries     = MiscUtil.getIntProperty(props, propPrefix + "." + AuditServerConstants.PROP_KAFKA_STARTUP_MAX_RETRIES, 10);
@@ -199,7 +199,7 @@ public class AuditMessageQueueUtils {
         }
 
         if (keytab == null || principal == null) {
-            AuditServerLogFormatter.builder("Please configure the following properties in ranger-audit-server-site.xml:")
+            AuditServerLogFormatter.builder("Please configure the following properties in ranger-audit-ingestor-site.xml:")
                     .add(propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_PRINCIPAL, "ranger/_HOST@YOUR-REALM")
                     .add(propPrefix + "." + AuditServerConstants.PROP_AUDIT_SERVICE_KEYTAB, "/path/to/ranger.keytab")
                     .logError(LOG);
