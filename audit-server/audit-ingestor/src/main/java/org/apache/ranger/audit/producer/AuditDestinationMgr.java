@@ -100,22 +100,15 @@ public class AuditDestinationMgr {
 
         auditServerUtils = new AuditServerUtils();
 
-        AuditServerConfig auditConfig = AuditServerConfig.getInstance();
-        Properties        properties  = auditConfig.getProperties();
-
-        if (properties != null) {
-            auditServerUtils.setAuditConfig(properties);
-        }
-
-        String  kafkaDestPrefix                  = AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.DEFAULT_SERVICE_NAME;
-        boolean isAuditToKafkaDestinationEnabled = MiscUtil.getBooleanProperty(properties, kafkaDestPrefix, false);
+        AuditServerConfig auditConfig                      = AuditServerConfig.getInstance();
+        Properties        properties                       = auditConfig.getProperties();
+        String            kafkaDestPrefix                  = AuditProviderFactory.AUDIT_DEST_BASE + "." + AuditServerConstants.DEFAULT_SERVICE_NAME;
+        boolean           isAuditToKafkaDestinationEnabled = MiscUtil.getBooleanProperty(properties, kafkaDestPrefix, false);
 
         if (isAuditToKafkaDestinationEnabled) {
             auditHandler = new AuditMessageQueue();
-
             auditHandler.init(properties, kafkaDestPrefix);
             auditHandler.start();
-
             LOG.info("Kafka producer initialized and started");
         } else {
             LOG.warn("Kafka audit destination is not enabled. Producer service will not function.");

@@ -142,18 +142,6 @@ public class AuditMessageQueueUtils {
         return ret;
     }
 
-    public boolean isSolrConsumerEnabled() {
-        return isSolrConsumerEnabled;
-    }
-
-    public boolean isHDFSConsumerEnabled() {
-        return isHDFSConsumerEnabled;
-    }
-
-    public boolean isTopicReady() {
-        return isTopicReady;
-    }
-
     public void setTopicReady(boolean topicReady) {
         isTopicReady = topicReady;
     }

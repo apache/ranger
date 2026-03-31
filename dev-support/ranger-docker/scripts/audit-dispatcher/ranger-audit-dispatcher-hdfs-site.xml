@@ -13,6 +13,10 @@
 -->
 <configuration>
     <!-- HDFS DISPATCHER SERVICE CONFIGURATION -->
+    <property>
+        <name>ranger.audit.dispatcher.hdfs.class</name>
+        <value>org.apache.ranger.audit.dispatcher.HdfsDispatcherManager</value>
+    </property>
 
     <!-- COMMON SERVER CONFIGURATION -->
     <!-- COMMON KAFKA DISPATCHER CONFIGURATION -->

@@ -19,17 +19,22 @@
 
 package org.apache.ranger.audit.server;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 
 /**
  * Base configuration class for Ranger Audit Server services.
  * Can be extended by specific services to load their custom configuration files.
  */
-public class AuditConfig extends RangerConfiguration {
+public class AuditConfig extends Configuration {
     private static final    Logger      LOG = LoggerFactory.getLogger(AuditConfig.class);
     private static volatile AuditConfig sInstance;
 
@@ -70,7 +75,7 @@ public class AuditConfig extends RangerConfiguration {
      * @param required Whether this resource is required
      * @return true if resource was loaded successfully or is optional, false otherwise
      */
-    protected boolean addAuditResource(String resourcePath, boolean required) {
+    public boolean addAuditResource(String resourcePath, boolean required) {
         LOG.debug("==> addAuditResource(path={}, required={})", resourcePath, required);
 
         boolean success = addResourceIfReadable(resourcePath);
@@ -86,5 +91,59 @@ public class AuditConfig extends RangerConfiguration {
         LOG.debug("<== addAuditResource(path={}, required={}), result={}", resourcePath, required, success);
 
         return success || !required;
+    }
+
+    public boolean addResourceIfReadable(String aResourceName) {
+        LOG.debug("==> addResourceIfReadable({})", aResourceName);
+
+        boolean ret  = false;
+        URL fUrl = getFileLocation(aResourceName);
+
+        if (fUrl != null) {
+            LOG.debug("addResourceIfReadable({}): resource file is {}", aResourceName, fUrl);
+
+            try {
+                addResource(fUrl);
+
+                ret = true;
+            } catch (Exception e) {
+                LOG.error("Unable to load the resource name [{}]. Ignoring the resource:{}", aResourceName, fUrl);
+
+                LOG.debug("Resource loading failed for {}", fUrl, e);
+            }
+        } else {
+            LOG.debug("addResourceIfReadable({}): couldn't find resource file location", aResourceName);
+        }
+
+        LOG.debug("<== addResourceIfReadable({}), result={}", aResourceName, ret);
+
+        return ret;
+    }
+
+    public URL getFileLocation(String fileName) {
+        URL lurl = null;
+
+        if (!StringUtils.isEmpty(fileName)) {
+            lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
+
+            if (lurl == null) {
+                lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
+            }
+
+            if (lurl == null) {
+                File f = new File(fileName);
+                if (f.exists()) {
+                    try {
+                        lurl = f.toURI().toURL();
+                    } catch (MalformedURLException e) {
+                        LOG.error("Unable to load the resource name [{}]. Ignoring the resource:{}", fileName, f.getPath());
+                    }
+                } else {
+                    LOG.debug("Conf file path {} does not exists", fileName);
+                }
+            }
+        }
+
+        return lurl;
     }
 }

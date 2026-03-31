@@ -24,12 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AuditDispatcherApplication {
-    private static final Logger LOG                           = LoggerFactory.getLogger(AuditDispatcherApplication.class);
-    private static final String APP_NAME                      = "audit-dispatcher";
-    private static final String CONFIG_PREFIX                 = "ranger.audit.dispatcher.";
-    private static final String COMMON_CONFIG_FILE            = "ranger-audit-dispatcher-site.xml";
-    private static final String HDFS_DISPATCHER_MANAGER_CLASS = "org.apache.ranger.audit.dispatcher.HdfsDispatcherManager";
-    private static final String SOLR_DISPATCHER_MANAGER_CLASS = "org.apache.ranger.audit.dispatcher.SolrDispatcherManager";
+    private static final Logger LOG                = LoggerFactory.getLogger(AuditDispatcherApplication.class);
+    private static final String APP_NAME           = "audit-dispatcher";
+    private static final String CONFIG_PREFIX      = "ranger.audit.dispatcher.";
+    private static final String COMMON_CONFIG_FILE = "ranger-audit-dispatcher-site.xml";
 
     private AuditDispatcherApplication() {
     }
@@ -42,9 +40,6 @@ public class AuditDispatcherApplication {
         String dispatcherType = System.getProperty(CONFIG_PREFIX + "type");
         if (dispatcherType == null) {
             dispatcherType = config.get(CONFIG_PREFIX + "type");
-            if (dispatcherType != null) {
-                System.setProperty(CONFIG_PREFIX + "type", dispatcherType);
-            }
         }
 
         // Load dispatcher-specific configuration from classpath
@@ -63,10 +58,9 @@ public class AuditDispatcherApplication {
         // Initialization dispatcher manager based on dispatcher type before starting EmbeddedServer
         boolean initSuccess = false;
         try {
-            if ("hdfs".equalsIgnoreCase(dispatcherType)) {
-                initSuccess = initializeDispatcherManager(HDFS_DISPATCHER_MANAGER_CLASS);
-            } else if ("solr".equalsIgnoreCase(dispatcherType)) {
-                initSuccess = initializeDispatcherManager(SOLR_DISPATCHER_MANAGER_CLASS);
+            String dispatcherMgrClass = config.get(CONFIG_PREFIX + dispatcherType + ".class");
+            if (dispatcherMgrClass != null && !dispatcherMgrClass.trim().isEmpty()) {
+                initSuccess = initializeDispatcherManager(dispatcherMgrClass);
             } else {
                 LOG.error("Unknown dispatcher type: {}. Cannot initialize dispatcher manager.", dispatcherType);
             }
@@ -89,10 +83,10 @@ public class AuditDispatcherApplication {
         }
     }
 
-    private static boolean initializeDispatcherManager(String managerClassName) throws Exception {
-        Object manager = Class.forName(managerClassName, true, Thread.currentThread().getContextClassLoader()).newInstance();
+    private static boolean initializeDispatcherManager(String dispatcherMgrClass) throws Exception {
+        Object manager = Class.forName(dispatcherMgrClass, true, Thread.currentThread().getContextClassLoader()).newInstance();
         manager.getClass().getMethod("init").invoke(manager);
-        LOG.info("{} initialized successfully", managerClassName);
+        LOG.info("{} initialized successfully", dispatcherMgrClass);
         return true;
     }
 }

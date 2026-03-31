@@ -14,14 +14,11 @@
 <configuration>
     <!-- SOLR DISPATCHER SERVICE CONFIGURATION -->
     <property>
-        <name>ranger.audit.dispatcher.solr.war.file</name>
-        <value>ranger-audit-dispatcher.war</value>
+        <name>ranger.audit.dispatcher.solr.class</name>
+        <value>org.apache.ranger.audit.dispatcher.SolrDispatcherManager</value>
     </property>
 
-    <property>
-        <name>ranger.audit.dispatcher.solr.main.class</name>
-        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherApplication</value>
-    </property>
+
 
     <property>
         <name>log.dir</name>

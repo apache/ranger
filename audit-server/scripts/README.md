@@ -348,7 +348,11 @@ Create configuration files in `src/main/resources/conf/`:
 <configuration>
     <property>
         <name>ranger.audit.dispatcher.type</name>
-        <value>your-destination</value>
+        <value>{your-destination}</value>
+    </property>
+    <property>
+        <name>ranger.audit.dispatcher.{your-destination}.class</name>
+        <value>org.apache.ranger.audit.dispatcher.{your-destination}DispatcherManager</value>
     </property>
     <!-- Add destination-specific configurations -->
 </configuration>

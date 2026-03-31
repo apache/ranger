@@ -14,14 +14,11 @@
 <configuration>
     <!-- HDFS DISPATCHER SERVICE CONFIGURATION -->
     <property>
-        <name>ranger.audit.dispatcher.hdfs.war.file</name>
-        <value>ranger-audit-dispatcher.war</value>
+        <name>ranger.audit.dispatcher.hdfs.class</name>
+        <value>org.apache.ranger.audit.dispatcher.HdfsDispatcherManager</value>
     </property>
 
-    <property>
-        <name>ranger.audit.dispatcher.hdfs.main.class</name>
-        <value>org.apache.ranger.audit.dispatcher.AuditDispatcherApplication</value>
-    </property>
+
 
     <property>
         <name>log.dir</name>

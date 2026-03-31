@@ -13,6 +13,10 @@
 -->
 <configuration>
     <!-- SOLR DISPATCHER SERVICE CONFIGURATION -->
+    <property>
+        <name>ranger.audit.dispatcher.solr.class</name>
+        <value>org.apache.ranger.audit.dispatcher.SolrDispatcherManager</value>
+    </property>
 
     <!-- COMMON SERVER CONFIGURATION -->
     <!-- COMMON KAFKA DISPATCHER CONFIGURATION -->
