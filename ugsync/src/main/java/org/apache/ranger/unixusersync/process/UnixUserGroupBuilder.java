@@ -19,6 +19,7 @@
 
 package org.apache.ranger.unixusersync.process;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.collect.HashBasedTable;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Table;
@@ -85,6 +86,10 @@ public class UnixUserGroupBuilder implements UserGroupSource {
     private UnixSyncSourceInfo               unixSyncSourceInfo;
     private boolean                          isStartupFlag;
     private boolean                          computeDeletes;
+    private String                           regExUserNameValidator;
+    private String                           regExGroupNameValidator;
+    private boolean                          validateUserName;
+    private boolean                          validateGroupName;
 
     Set<String> allGroups = new HashSet<>();
 
@@ -96,6 +101,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
         unixGroupFile         = config.getUnixGroupFile();
         timeout               = config.getUpdateMillisMin();
         enumerateGroupMembers = config.isGroupEnumerateEnabled();
+        validateUserName        = config.isUserNameValidateEnabled(); ;
+        validateGroupName       = config.isGroupNameValidateEnabled() ;
+        regExUserNameValidator  = config.getUserNameValidateRegEx() ;
+        regExGroupNameValidator = config.getGroupNameValidateRegEx(); ;
+
 
         LOG.debug("Minimum UserId: {}, minimum GroupId: {}", minimumUserId, minimumGroupId);
     }
@@ -330,6 +340,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
                     continue;
                 }
 
+                if (validateUserName) {
+                    if (!isValidUserName(userName)) {
+                        LOG.warn("Ignoring Unix Username: [{}]: failed to confirm to validation-pattern: [{}]", userName, regExUserNameValidator);
+                        continue;
+                    }
+                }
+
                 int numUserId;
 
                 try {
@@ -457,6 +474,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
         if (numGroupId < minimumGroupId) {
             return;
+        }
+
+        if (validateGroupName) {
+            if (!isValidGroupName(groupName)) {
+                LOG.warn("Ignoring Unix GroupName: [{}]: failed to confirm to validation-pattern: [{}]", groupName, regExGroupNameValidator);
+                return;
+            }
         }
 
         groupId2groupNameMap.put(groupId, groupName);
@@ -591,5 +615,12 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
             LOG.debug("Done adding extra groups");
         }
+    }
+    private boolean isValidUserName(String aUserName) {
+        return (aUserName != null && aUserName.matches(regExUserNameValidator)) ;
+    }
+
+    private boolean isValidGroupName(String aGroupName) {
+        return (aGroupName != null && aGroupName.matches(regExGroupNameValidator)) ;
     }
 }

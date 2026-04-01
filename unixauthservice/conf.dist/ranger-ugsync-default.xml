@@ -73,4 +73,20 @@
 		<name>ranger.usersync.dest.ranger.session.cookie.name</name>
 		<value>RANGERADMINSESSIONID</value>
 	</property>
+	<property>
+		<name>ranger.usersync.username.validation.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.usersync.username.validation.regEx</name>
+		<value>^[a-z_][a-z0-9_-]{0,31}$</value>
+	</property>
+	<property>
+		<name>ranger.usersync.groupname.validation.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.usersync.groupname.validation.regEx</name>
+		<value>^[a-z][a-z0-9-]{0,30}$</value>
+	</property>
 </configuration>

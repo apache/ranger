@@ -200,6 +200,16 @@ public class UserGroupSyncConfig {
     private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS   = "usersync.ssl.key.password";
     private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
 
+    private static final String UGSYNC_USERNAME_VALIDATION_REGEX_PROPERTY_NAME = "ranger.usersync.username.validation.regEx";
+    private static final String UGSYNC_GROUPNAME_VALIDATION_REGEX_PROPERTY_NAME = "ranger.usersync.groupname.validation.regEx";
+    private static final String UGSYNC_USERNAME_VALIDATE_PROPERTY_NAME = "ranger.usersync.username.validation.enabled";
+    private static final String UGSYNC_GROUPNAME_VALIDATE_PROPERTY_NAME = "ranger.usersync.groupname.validation.enabled";
+
+    private static final String DEFAULT_REGEX_USERNAME_VALIDATOR = "^[a-z_][a-z0-9_-]{0,31}$" ;
+    private static final String DEFAULT_REGEX_GROUPNAME_VALIDATOR = "^[a-z][a-z0-9-]{0,30}$" ;
+    private static final boolean DEFAULT_USERNAME_VALIDATE_ENABLED = true ;
+    private static final boolean DEFAULT_GROUPNAME_VALIDATE_ENABLED = true ;
+
     private static volatile UserGroupSyncConfig me;
     private final           Properties          prop = new Properties();
     private                 Configuration       userGroupConfig;
@@ -1437,5 +1447,30 @@ public class UserGroupSyncConfig {
         }
 
         return ret;
+    }
+
+    public boolean isUserNameValidateEnabled() {
+        boolean ret = DEFAULT_USERNAME_VALIDATE_ENABLED ;
+         String validate = prop.getProperty(UGSYNC_USERNAME_VALIDATE_PROPERTY_NAME) ;
+         if (validate != null) {
+             ret = Boolean.parseBoolean(validate);
+         }
+         return ret;
+    }
+    public boolean isGroupNameValidateEnabled() {
+        boolean ret = DEFAULT_GROUPNAME_VALIDATE_ENABLED ;
+         String validate = prop.getProperty(UGSYNC_GROUPNAME_VALIDATE_PROPERTY_NAME) ;
+         if (validate != null) {
+             ret = Boolean.parseBoolean(validate);
+         }
+         return ret;
+    }
+
+    public String getUserNameValidateRegEx() {
+        return prop.getProperty(UGSYNC_USERNAME_VALIDATION_REGEX_PROPERTY_NAME,DEFAULT_REGEX_USERNAME_VALIDATOR) ;
+    }
+
+    public String getGroupNameValidateRegEx() {
+        return prop.getProperty(UGSYNC_GROUPNAME_VALIDATION_REGEX_PROPERTY_NAME,DEFAULT_REGEX_GROUPNAME_VALIDATOR) ;
     }
 }
