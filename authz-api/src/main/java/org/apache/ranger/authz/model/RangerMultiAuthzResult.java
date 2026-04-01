@@ -39,11 +39,22 @@ public class RangerMultiAuthzResult {
     }
 
     public RangerMultiAuthzResult(String requestId) {
-        this(requestId, null);
+        this.requestId = requestId;
+    }
+
+    public RangerMultiAuthzResult(String requestId, AccessDecision decision) {
+        this.requestId = requestId;
+        this.decision  = decision;
     }
 
     public RangerMultiAuthzResult(String requestId, List<RangerAuthzResult> accesses) {
         this.requestId = requestId;
+        this.accesses  = accesses;
+    }
+
+    public RangerMultiAuthzResult(String requestId, AccessDecision decision, List<RangerAuthzResult> accesses) {
+        this.requestId = requestId;
+        this.decision  = decision;
         this.accesses  = accesses;
     }
 
