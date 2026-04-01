@@ -1285,7 +1285,7 @@
 <h2 id="introduction">Introduction<a class="headerlink" href="#introduction" title="Permanent link">&para;</a></h2>
 <p>This guide will walk you through the steps to run Trino with Apache Ranger as the Access Control Enforcer.</p>
 <h3 id="run-trino-container">Run Trino Container<a class="headerlink" href="#run-trino-container" title="Permanent link">&para;</a></h3>
-<div class="highlight"><span class="filename">Run Trino in Ranger's Network</span><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>trinodb/trino
+<div class="highlight"><span class="filename">Run Trino in Ranger&#x27;s Network</span><pre><span></span><code>docker<span class="w"> </span>pull<span class="w"> </span>trinodb/trino
 docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">8080</span>:8080<span class="w"> </span>--name<span class="w"> </span>trino<span class="w"> </span>--network<span class="w"> </span>rangernw<span class="w"> </span>trinodb/trino
 
 <span class="c1"># for more details: https://hub.docker.com/r/trinodb/trino</span>
