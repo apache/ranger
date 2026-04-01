@@ -19,7 +19,6 @@
 
 package org.apache.ranger.unixusersync.process;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.thirdparty.com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.thirdparty.com.google.common.collect.HashBasedTable;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Table;
@@ -552,13 +551,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
                 String command;
 
-                if (useGid) {
+                if (useGid) { //Linux will use this section of code
                     command = String.format(groupCmd, group.getKey());
-                } else {
+                } else { // Mac will use this section of code
                     command = String.format(groupCmd, group.getValue());
                 }
 
-                String[] cmd = new String[] {"bash", "-c", command + " " + group.getKey()};
+                String[] cmd = new String[] {"bash", "-c", command };
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Executing: {}", Arrays.toString(cmd));

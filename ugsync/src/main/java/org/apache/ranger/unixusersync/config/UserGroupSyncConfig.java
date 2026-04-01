@@ -205,8 +205,8 @@ public class UserGroupSyncConfig {
     private static final String UGSYNC_USERNAME_VALIDATE_PROPERTY_NAME = "ranger.usersync.username.validation.enabled";
     private static final String UGSYNC_GROUPNAME_VALIDATE_PROPERTY_NAME = "ranger.usersync.groupname.validation.enabled";
 
-    private static final String DEFAULT_REGEX_USERNAME_VALIDATOR = "^[a-z_][a-z0-9_-]{0,31}$" ;
-    private static final String DEFAULT_REGEX_GROUPNAME_VALIDATOR = "^[a-z][a-z0-9-]{0,30}$" ;
+    private static final String DEFAULT_REGEX_USERNAME_VALIDATOR = "^[\\p{L}\\p{Mn}\\p{Nd}\\._-]{3,64}$" ;
+    private static final String DEFAULT_REGEX_GROUPNAME_VALIDATOR = "^[\\p{L}\\p{N}._\\-\\s]{1,256}$"    ;
     private static final boolean DEFAULT_USERNAME_VALIDATE_ENABLED = true ;
     private static final boolean DEFAULT_GROUPNAME_VALIDATE_ENABLED = true ;
 
