@@ -66,7 +66,7 @@ import java.util.List;
 import java.util.Map;
 
 public class EmbeddedServer {
-    private static final Logger LOG                                 = LoggerFactory.getLogger(EmbeddedServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServer.class);
 
     private static final String ACCESS_LOG_PREFIX                   = "accesslog.prefix";
     private static final String ACCESS_LOG_DATE_FORMAT              = "accesslog.dateformat";
@@ -91,25 +91,26 @@ public class EmbeddedServer {
     private final Configuration configuration;
     private final String        appName;
     private final String        configPrefix;
-    private volatile Tomcat     server;
-    private volatile Context    webappContext;
 
-    public EmbeddedServer(Configuration configuration, String appName, String configPrefix) {
-        LOG.info("==> EmbeddedServer(appName={}, configPrefix={})", appName, configPrefix);
-
-        this.configuration = new Configuration(configuration);
-        this.appName       = appName;
-        this.configPrefix  = configPrefix;
-
-        LOG.info("<== EmbeddedServer(appName={}, configPrefix={}", appName, configPrefix);
-    }
+    private volatile Tomcat  server;
+    private volatile Context webappContext;
 
     public static void main(String[] args) {
-        Configuration config       = AuditConfig.getInstance();
+        Configuration config       = new AuditConfig();
         String        appName      = AuditServerConstants.AUDIT_SERVER_APPNAME;
         String        configPrefix = AuditServerConstants.PROP_PREFIX_AUDIT_SERVER;
 
         new EmbeddedServer(config, appName, configPrefix).start();
+    }
+
+    public EmbeddedServer(Configuration configuration, String appName, String configPrefix) {
+        LOG.info("==> EmbeddedServer(appName={}, configPrefix={})", appName, configPrefix);
+
+        this.configuration = configuration;
+        this.appName       = appName;
+        this.configPrefix  = configPrefix;
+
+        LOG.info("<== EmbeddedServer(appName={}, configPrefix={}", appName, configPrefix);
     }
 
     @SuppressWarnings("deprecation")

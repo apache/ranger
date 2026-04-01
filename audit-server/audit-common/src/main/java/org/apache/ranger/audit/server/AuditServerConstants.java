@@ -56,8 +56,8 @@ public class AuditServerConstants {
     public static final String PROP_AUDIT_SERVICE_PRINCIPAL                  = "kerberos.principal";
     public static final String PROP_AUDIT_SERVICE_KEYTAB                     = "kerberos.keytab";
     public static final String PROP_KAFKA_PROP_PREFIX                        = "xasecure.audit.destination.kafka";
-    public static final String PROP_KAFKA_STARTUP_MAX_RETRIES                = "kafka.startup.max.retries";
-    public static final String PROP_KAFKA_STARTUP_RETRY_DELAY_MS             = "kafka.startup.retry.delay.ms";
+    public static final String PROP_KAFKA_TOPIC_INIT_MAX_RETRIES             = "kafka.topic.init.max.retries";
+    public static final String PROP_KAFKA_TOPIC_INIT_RETRY_DELAY_MS          = "kafka.topic.init.retry.delay.ms";
 
     // ranger_audits topic configuration
     public static final String PROP_TOPIC_PARTITIONS                       = "topic.partitions";

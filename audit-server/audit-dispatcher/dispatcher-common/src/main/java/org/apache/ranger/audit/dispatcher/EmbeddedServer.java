@@ -107,7 +107,7 @@ public class EmbeddedServer {
     }
 
     public static void main(String[] args) {
-        Configuration config       = AuditConfig.getInstance();
+        Configuration config       = new AuditConfig();
         String        appName      = AuditServerConstants.AUDIT_SERVER_APPNAME;
         String        configPrefix = AuditServerConstants.PROP_PREFIX_AUDIT_SERVER;
 

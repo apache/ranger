@@ -252,7 +252,7 @@ public class AuditRecoveryRetry implements Runnable {
 
     private boolean retrySendToKafka(String key, String message) {
         // Get current producer from parent - may have been recreated after Kafka came back online
-        KafkaProducer<String, String> currentProducer = (messageQueue != null) ? messageQueue.kafkaProducer : null;
+        KafkaProducer<String, String> currentProducer = (messageQueue != null) ? messageQueue.getKafkaProducer() : null;
 
         if (currentProducer == null) {
             LOG.warn("Kafka producer is null, cannot retry message - will retry on next cycle");

@@ -39,15 +39,14 @@ import java.util.Properties;
  * It creates the necessary audit topics, producer threads and recovery threads.
  */
 public class AuditMessageQueue extends AuditDestination {
-    public KafkaProducer<String, String> kafkaProducer;
-    public AuditProducer                 auditProducerRunnable;
-    public AuditMessageQueueUtils        auditMessageQueueUtils;
-    public String                        topicName;
-
-    private Thread                       producerThread;
-    private AuditRecoveryManager         recoveryManager;
-
     private static final Logger LOG = LoggerFactory.getLogger(AuditMessageQueue.class);
+
+    private KafkaProducer<String, String> kafkaProducer;
+    private AuditProducer                 auditProducerRunnable;
+    private AuditMessageQueueUtils        auditMessageQueueUtils;
+    private String                        topicName;
+    private Thread                        producerThread;
+    private AuditRecoveryManager          recoveryManager;
 
     @Override
     public void init(Properties props, String propPrefix) {
@@ -55,7 +54,7 @@ public class AuditMessageQueue extends AuditDestination {
 
         super.init(props, propPrefix);
 
-        auditMessageQueueUtils = new AuditMessageQueueUtils(props);
+        auditMessageQueueUtils = new AuditMessageQueueUtils();
 
         createAuditsTopic(props, propPrefix);
         createKafkaProducer(props, propPrefix);
@@ -135,18 +134,6 @@ public class AuditMessageQueue extends AuditDestination {
         if (event instanceof AuthzAuditEvent) {
             AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
 
-            if (authzEvent.getAgentHostname() == null) {
-                authzEvent.setAgentHostname(MiscUtil.getHostname());
-            }
-
-            if (authzEvent.getLogType() == null) {
-                authzEvent.setLogType("RangerAudit");
-            }
-
-            if (authzEvent.getEventId() == null) {
-                authzEvent.setEventId(MiscUtil.generateUniqueId());
-            }
-
             /**
              Partition key is agentId (aka plugin ID). AuditPartitioner allocates configured plugins
              (hdfs, hiveServer2, etc.) to fixed partition sets of partitions.
@@ -159,6 +146,7 @@ public class AuditMessageQueue extends AuditDestination {
                 if (topicName == null || kafkaProducer == null) {
                     init(props, propPrefix);
                 }
+
                 if (kafkaProducer != null) {
                     MiscUtil.executePrivilegedAction((PrivilegedExceptionAction<Void>) () -> {
                         AuditProducer.send(kafkaProducer, topicName, key, message);
@@ -292,6 +280,10 @@ public class AuditMessageQueue extends AuditDestination {
         LOG.debug("<== AuditMessageQueue.log(Collection, batchKey): successCount={}, failCount={}", successCount, failCount);
 
         return allSuccess;
+    }
+
+    KafkaProducer<String, String> getKafkaProducer() {
+        return kafkaProducer;
     }
 
     private void startRangerAuditRecoveryThread() {

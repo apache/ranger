@@ -38,7 +38,7 @@ public abstract class AuditDispatcherBase implements AuditDispatcher {
     public final String                        dispatcherGroupId;
 
     public AuditDispatcherBase(Properties props, String propPrefix, String dispatcherGroupId) throws Exception {
-        AuditMessageQueueUtils auditMessageQueueUtils = new AuditMessageQueueUtils(props);
+        AuditMessageQueueUtils auditMessageQueueUtils = new AuditMessageQueueUtils();
 
         this.dispatcherGroupId = getDispatcherGroupId(props, propPrefix, dispatcherGroupId);
 

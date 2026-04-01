@@ -49,7 +49,7 @@ public class AuditProducer implements Runnable {
     public AuditProducer(Properties props, String propPrefix) throws Exception {
         LOG.debug("==> AuditProducer()");
 
-        AuditMessageQueueUtils auditMessageQueueUtils = new AuditMessageQueueUtils(props);
+        AuditMessageQueueUtils auditMessageQueueUtils = new AuditMessageQueueUtils();
         producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, MiscUtil.getStringProperty(props, propPrefix + "." + AuditServerConstants.PROP_BOOTSTRAP_SERVERS));
         producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
         producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, Class.forName("org.apache.kafka.common.serialization.StringSerializer"));

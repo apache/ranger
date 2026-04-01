@@ -38,7 +38,7 @@ public class AuditDispatcherLauncher {
 
     public static void main(String[] args) {
         try {
-            AuditConfig config = AuditConfig.getInstance();
+            AuditConfig config = new AuditConfig();
             config.addResourceIfReadable("ranger-audit-dispatcher-site.xml");
 
             String dispatcherType = System.getProperty("ranger.audit.dispatcher.type");

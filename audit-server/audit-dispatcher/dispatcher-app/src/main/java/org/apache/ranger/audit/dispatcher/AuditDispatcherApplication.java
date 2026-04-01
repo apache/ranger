@@ -33,7 +33,7 @@ public class AuditDispatcherApplication {
     }
 
     public static void main(String[] args) {
-        AuditConfig config = AuditConfig.getInstance();
+        AuditConfig config = new AuditConfig();
         config.addResourceIfReadable(COMMON_CONFIG_FILE);
         LOG.info("Loaded common configuration from classpath: {}", COMMON_CONFIG_FILE);
 

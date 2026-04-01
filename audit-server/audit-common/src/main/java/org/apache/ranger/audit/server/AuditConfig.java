@@ -21,7 +21,6 @@ package org.apache.ranger.audit.server;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,32 +34,10 @@ import java.util.Properties;
  * Can be extended by specific services to load their custom configuration files.
  */
 public class AuditConfig extends Configuration {
-    private static final    Logger      LOG = LoggerFactory.getLogger(AuditConfig.class);
-    private static volatile AuditConfig sInstance;
+    private static final Logger LOG = LoggerFactory.getLogger(AuditConfig.class);
 
-    protected AuditConfig() {
+    public AuditConfig() {
         super();
-    }
-
-    /**
-     * Get the singleton instance of AuditConfig.
-     * Subclasses should override this method to return their specific instance.
-     */
-    public static AuditConfig getInstance() {
-        AuditConfig ret = AuditConfig.sInstance;
-
-        if (ret == null) {
-            synchronized (AuditConfig.class) {
-                ret = AuditConfig.sInstance;
-
-                if (ret == null) {
-                    ret = new AuditConfig();
-                    AuditConfig.sInstance = ret;
-                }
-            }
-        }
-
-        return ret;
     }
 
     public Properties getProperties() {
@@ -124,10 +101,10 @@ public class AuditConfig extends Configuration {
         URL lurl = null;
 
         if (!StringUtils.isEmpty(fileName)) {
-            lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
+            lurl = AuditConfig.class.getClassLoader().getResource(fileName);
 
             if (lurl == null) {
-                lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
+                lurl = AuditConfig.class.getClassLoader().getResource("/" + fileName);
             }
 
             if (lurl == null) {

@@ -23,17 +23,16 @@ import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AuditServerUtils {
-    private static final Logger LOG = LoggerFactory.getLogger(AuditServerUtils.class);
+    private AuditServerUtils() {
+    }
 
-    public boolean waitUntilTopicReady(Admin admin, String topic, Duration totalWait) throws Exception {
+    public static boolean waitUntilTopicReady(Admin admin, String topic, Duration totalWait) throws Exception {
         long endTime     = System.nanoTime() + totalWait.toNanos();
         long baseSleepMs = 100L;
         long maxSleepMs  = 2000L;
@@ -44,6 +43,7 @@ public class AuditServerUtils {
                 TopicDescription     topicDescription     = describeTopicsResult.values().get(topic).get();
                 boolean              allHaveLeader        = topicDescription.partitions().stream().allMatch(partitionInfo -> partitionInfo.leader() != null);
                 boolean              allHaveISR           = topicDescription.partitions().stream().allMatch(partitionInfo -> !partitionInfo.isr().isEmpty());
+
                 if (allHaveLeader && allHaveISR) {
                     return true;
                 }
@@ -57,17 +57,22 @@ public class AuditServerUtils {
 
             // Sleep until the created topic is available for metadata fetch
             baseSleepMs = Math.min(maxSleepMs, baseSleepMs * 2);
+
             long sleep = baseSleepMs + ThreadLocalRandom.current().nextLong(0, baseSleepMs / 2 + 1);
+
             Thread.sleep(sleep);
         }
+
         return false;
     }
 
     private static Throwable rootCause(Throwable t) {
         Throwable throwable = t;
+
         while (throwable.getCause() != null) {
             throwable = throwable.getCause();
         }
+
         return throwable;
     }
 }

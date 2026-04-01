@@ -27,8 +27,10 @@ import org.slf4j.LoggerFactory;
  * Loads audit server configuration files.
  */
 public class AuditServerConfig extends AuditConfig {
-    private static final    Logger            LOG              = LoggerFactory.getLogger(AuditServerConfig.class);
-    private static final    String            CONFIG_FILE_PATH = "conf/ranger-audit-ingestor-site.xml";
+    private static final Logger LOG = LoggerFactory.getLogger(AuditServerConfig.class);
+
+    private static final String CONFIG_FILE_PATH = "conf/ranger-audit-ingestor-site.xml";
+
     private static volatile AuditServerConfig sInstance;
 
     private AuditServerConfig() {

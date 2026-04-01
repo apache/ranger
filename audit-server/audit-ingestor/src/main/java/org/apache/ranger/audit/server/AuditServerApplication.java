@@ -50,6 +50,7 @@ public class AuditServerApplication {
             LOG.info("Configuration loaded successfully");
 
             EmbeddedServer server = new EmbeddedServer(config, APP_NAME, CONFIG_PREFIX);
+
             server.start();
 
             LOG.info("==> Ranger Audit Server Service Started Successfully");
