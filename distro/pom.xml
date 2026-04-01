@@ -272,6 +272,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-pdp</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugin-classloader</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
@@ -462,6 +468,7 @@
                                         <descriptor>src/main/assembly/tagsync.xml</descriptor>
                                         <descriptor>src/main/assembly/migration-util.xml</descriptor>
                                         <descriptor>src/main/assembly/kms.xml</descriptor>
+                                        <descriptor>src/main/assembly/pdp.xml</descriptor>
                                         <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
                                         <descriptor>src/main/assembly/ranger-src.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
@@ -1047,6 +1054,7 @@
                                         <descriptor>src/main/assembly/tagsync.xml</descriptor>
                                         <descriptor>src/main/assembly/migration-util.xml</descriptor>
                                         <descriptor>src/main/assembly/kms.xml</descriptor>
+                                        <descriptor>src/main/assembly/pdp.xml</descriptor>
                                         <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
                                         <descriptor>src/main/assembly/ranger-src.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>

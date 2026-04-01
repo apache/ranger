@@ -807,6 +807,7 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>pdp</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
@@ -1155,6 +1156,7 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>pdp</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>
@@ -1242,6 +1244,7 @@
                 <module>jisql</module>
                 <module>kms</module>
                 <module>knox-agent</module>
+                <module>pdp</module>
                 <module>plugin-atlas</module>
                 <module>plugin-elasticsearch</module>
                 <module>plugin-kafka</module>

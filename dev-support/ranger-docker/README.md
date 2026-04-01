@@ -71,14 +71,14 @@ cd dev-support/ranger-docker
 
 ### Run Ranger Services in Containers
 
-#### Bring up ranger-core services: ranger, usersync, tagsync and ranger-kms in containers
+#### Bring up ranger-core services: ranger, usersync, tagsync, pdp and kms in containers
 ~~~
 # To enable file based sync source for usersync do:
 # export ENABLE_FILE_SYNC_SOURCE=true
 
 # valid values for RANGER_DB_TYPE: mysql/postgres/oracle
 
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml up -d
 
 # Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
 ~~~
@@ -104,7 +104,7 @@ Similarly, check the `depends` section of the `docker-compose.ranger-service.yam
 #### Bring up all containers
 ~~~
 ./scripts/ozone/ozone-plugin-docker-setup.sh
-docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
+docker compose -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-pdp.yml -f docker-compose.ranger-kms.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml -f docker-compose.ranger-ozone.yml up -d
 ~~~
           
 #### To rebuild specific images and start containers with the new image:

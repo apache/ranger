@@ -5,6 +5,7 @@
 !dist/ranger-*-kms.tar.gz
 !dist/ranger-*-usersync.tar.gz
 !dist/ranger-*-tagsync.tar.gz
+!dist/ranger-*-pdp.tar.gz
 !dist/ranger-*-hdfs-plugin.tar.gz
 !dist/ranger-*-yarn-plugin.tar.gz
 !dist/ranger-*-hive-plugin.tar.gz
