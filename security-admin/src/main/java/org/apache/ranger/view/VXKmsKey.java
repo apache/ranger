@@ -48,7 +48,7 @@ public class VXKmsKey extends VXDataObject implements java.io.Serializable {
     /**
      * Length
      */
-    protected int    length;
+    protected int    length = 256;
     /**
      * Description
      */
